@@ -1,0 +1,223 @@
+<div class="nav">
+    <ul>
+        <li><span>Overview</span></li>
+        <!-- ko if: $root.isSystemAdmin() -->
+        <li><span>Permissions</span></li>
+        <!-- /ko -->
+        <li><span>Involvement</span></li>
+        <li><span>Configuration <i class="fa fa-angle-right"></i></span>
+            <ul>
+                <li class="header"><span>Configuration</span>
+                <li><span>Hardware</span></li>
+                <li><span>Control</span></li>
+                <li><span>References</span></li>
+                <li class="back"><span><i class="fa fa-angle-left"></i> back</span></li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+<div class="view">
+    <div class="container-fluid">
+        <div class="row header">
+            <div class="col-xs-12">
+                <h4>Overview</h4>
+            </div>
+        </div>
+    </div>
+    <div id="overview" class="content">
+    </div>
+
+    <div id="permissions" class="content">
+        <div data-bind="component: { name: 'ctl-permissions', params: { isTabLoaded: tabTriggers.permissions, rootContext: $root } }"></div>
+    </div>
+
+    <div id="involvement" class="content">
+        <div data-bind="component: { name: 'ctl-involvement', params: { id: data._id(), isTabLoaded: tabTriggers.involvement, rootContext: $root } }"></div>
+    </div>
+
+    <div id="hardware" class="content">
+        <div class="row">
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Device Point', rootContext: $root } } -->
+            <!-- /ko -->
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Remote Unit Point', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+    </div>
+
+    <div id="control" class="content">
+        <div class="row">
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Controller', data: data, columnClasses: 'col col-sm-3 col-xs-12', enumSetName: 'Controller', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Control Priority', data: data, columnClasses: 'col col-sm-3 col-xs-12', enumSetName: 'Control Priority', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Startup Delay', data: data, columnClasses: 'col col-sm-3 col-xs-12', min: '0:0:0', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Override Time', data: data, columnClasses: 'col col-sm-3 col-xs-12', min: '0:0:0', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Control Band Value', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'CFM Deadband', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Warmup Deadband', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Fan On CFM Setpoint', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Fan Off CFM Setpoint', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Digital Heat 1 Run Unoccupied', data: data, columnClasses: 'col col-sm-6 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Digital Heat 2 Run Unoccupied', data: data, columnClasses: 'col col-sm-6 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Digital Heat 3 Run Unoccupied', data: data, columnClasses: 'col col-sm-6 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <table class="table">
+                <thead>
+                    <tr style="background-color: #CCC;">
+                        <td></td>
+                        <td style="font-weight: bold;">Cooling</td>
+                        <td style="font-weight: bold;">Heating</td>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>Occupied Setpoint</td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Occupied Cool Setpoint Value', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Occupied Heat Setpoint Value', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                    <tr>
+                        <td>Unoccupied Setpoint</td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Unoccupied Cool Setpoint Value', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Unoccupied Heat Setpoint Value', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                    <tr>
+                        <td>Occupied Maximum CFM</td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Occupied Max Cool CFM', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Occupied Max Heat CFM', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                    <tr>
+                        <td>Occupied Minimum CFM</td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Occupied Min Cool CFM', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Occupied Min Heat CFM', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                    <tr>
+                        <td>Unoccupied Maximum CFM</td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Unoccupied Max Cool CFM', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Unoccupied Max Heat CFM', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                    <tr>
+                        <td>Unoccupied Minimum CFM</td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Unoccupied Min Cool CFM', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Unoccupied Min Heat CFM', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                    <tr>
+                        <td>CFM Calibration Factor</td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Calibration Factor', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td>N/A</td>
+                    </tr>
+                </tbody>
+                
+                <thead>
+                    <tr style="background-color: #CCC;">
+                        <td></td>
+                        <td style="font-weight: bold;">Cooling (Damper)</td>
+                        <td style="font-weight: bold;">Heat 1</td>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>Proportional Band</td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Damper Proportional Band', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Heat 1 Proportional Band', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                    <tr>
+                        <td>Reset Gain</td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Damper Reset Gain', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Heat 1 Reset Gain', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                    <tr>
+                        <td>Minimum Output</td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Damper Min Output', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Heat 1 Min Output', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                    <tr>
+                        <td>Maximum Output</td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Damper Max Output', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Heat 1 Max Output', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                    <tr>
+                        <td>Unoccupied Output</td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Damper Unoccupied Output', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-number', params: { propertyName: 'Heat 1 Unoccupied Output', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                    <tr>
+                        <td>Run Unoccupied</td>
+                        <td data-bind="component: { name: 'ctl-switch', params: { propertyName: 'Damper Run Unoccupied', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-switch', params: { propertyName: 'Heat 1 Run Unoccupied', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                    <tr>
+                        <td>Reverse Action</td>
+                        <td data-bind="component: { name: 'ctl-switch', params: { propertyName: 'Damper Reverse Action', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                        <td data-bind="component: { name: 'ctl-switch', params: { propertyName: 'Heat 1 Reverse Action', data: data, columnClasses: '', showLabel: false, rootContext: $root } }"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="references" class="content">
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Occupied Input', rootContext: $root } } -->
+        <!-- /ko -->
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Zone Temp Point', rootContext: $root } } -->
+        <!-- /ko -->
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Zone Offset Point', rootContext: $root } } -->
+        <!-- /ko -->
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'CFM Input Point', rootContext: $root } } -->
+        <!-- /ko -->
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Source Air Temp Point', rootContext: $root } } -->
+        <!-- /ko -->
+        <hr>
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Lights Control Point', rootContext: $root } } -->
+        <!-- /ko -->
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Digital Heat 1 Control Point', rootContext: $root } } -->
+        <!-- /ko -->
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Digital Heat 2 Control Point', rootContext: $root } } -->
+        <!-- /ko -->
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Digital Heat 3 Control Point', rootContext: $root } } -->
+        <!-- /ko -->
+        <hr>
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Damper Control Point', rootContext: $root } } -->
+        <!-- /ko -->
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Occupied Cool Setpoint', rootContext: $root } } -->
+        <!-- /ko -->
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Unoccupied Cool Setpoint', rootContext: $root } } -->
+        <!-- /ko -->
+        <hr>
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Heat 1 Control Point', rootContext: $root } } -->
+        <!-- /ko -->
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Occupied Heat Setpoint', rootContext: $root } } -->
+        <!-- /ko -->
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Unoccupied Heat Setpoint', rootContext: $root } } -->
+        <!-- /ko -->
+        <hr>
+        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Fan Control Point', rootContext: $root } } -->
+        <!-- /ko -->
+    </div>
+</div>

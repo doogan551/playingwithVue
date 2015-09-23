@@ -1,0 +1,17 @@
+h5 Present Value
+.row
+.container.well.well-sm
+    .row
+        .form-group
+            .col-xs-12
+                label Maximum Value
+                input.input-medium(type='text', data-bind='event: { keyup: changeVal.bind($data,\'Maximum Value\') },value:getSelectedDProp(\'Maximum Value\')')
+        .form-group
+            .col-xs-12
+                label Minimum Value
+                input.input-medium(type='text', data-bind='event: { keyup: changeVal.bind($data,\'Minimum Value\') },value:getSelectedDProp(\'Minimum Value\')')
+        .form-group
+            .col-xs-12
+                label
+                    b Calculation Type:
+                select.input-medium(data-bind='event: {change: changeSelect.bind($element, $data,\'Calculation Type\', true) }, options:dropdownRange(\'Calculation Type\'), optionsText: \'key\', optionsValue:\'val\', optionsCaption: \'[Not Selected]\', value:getSelectedDPropEvalue(\'Calculation Type\')')

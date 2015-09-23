@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<title>Test file browser</title>
+	<link rel="stylesheet" href="/css/util/diFileBrowser.css">
+</head>
+<body>
+<div data-role="page" data-dialog="true" class="filemanager" style="display: none;">
+	<div class="filecounter">Files:</div>
+	<div class="search">
+		<input type="search" placeholder="Find a file.." />
+	</div>
+
+	<div class="imagebrowsingdata">
+		<div class="imagedetails"></div>
+		<ul class="data"></ul>
+	</div>
+
+	<img class="offscreenimage"></img>
+
+	<div class="nothingfound">
+		<div class="nofiles"></div>
+		<span>No files here.</span>
+	</div>
+
+</div>
+
+<script type="text/javascript" src="/js/lib/jquery.min.js"></script>
+<script type="text/javascript" src="/js/lib/require.min.js"></script>
+<script type="text/javascript" src="/js/util/components/filebrowser/diFileBrowser.js"></script>
+
+<script>
+	(function () {
+		var diFB = new diFileBrowser();
+		diFB.init();
+		diFB.getData();
+	}());
+</script>
+</body>
+</html>

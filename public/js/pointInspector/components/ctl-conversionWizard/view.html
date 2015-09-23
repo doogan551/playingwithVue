@@ -1,0 +1,133 @@
+<div class="btn btn-default btn-xs" data-bind="click: conversionWizard">Conversion Wizard</div>
+
+<!-- Modal -->
+<div class="modal bs-example-modal-lg text-uppercase" tabindex="-1" data-backdrop="static" data-bind="modal: modal.showModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" data-bind="text: modal.title">title</h4>
+            </div>
+            <div class="modal-body">
+                <!-- ko if: modal.template() == 'read' -->
+                    <div>
+                        <div class="modalScene modalMain container-fluid">
+                                
+                            <div class="row" id="firstRow">
+                                <div class="row">
+                                    <div class="dataField col-sm-12">
+                                        <label class="dataField col-sm-3">Product</label>
+                                        <select class="input-sm" data-bind="options: sensorIODevices, optionsText:'option', optionsValue:'enum', optionsAfterRender:setOptionsDisable, value: selectedIODevice, disable: hasError"></select>
+                                    </div>
+                                </div>
+                                <br/>
+                                <div class="row">
+                                    <div class="dataField col-sm-12">
+                                        <label  class="dataField col-sm-3" data-bind="visible: isSensorIOTypeVisible">Input Type</label>
+                                        <select class="input-sm" data-bind="options: sensorIOTypes, optionsText:'option', optionsValue:'enum', optionsAfterRender:setOptionsDisable, visible: isSensorIOTypeVisible, value:selectedSensorIOType, disable: hasError"></select>
+                                    </div>
+                                </div>
+                                <br/>
+                                <div class="row">
+                                    <div class="dataField col-sm-12">
+                                        <label  class="dataField col-sm-3" data-bind="visible: isSensorRTDTypeVisible">RTD Type</label>
+                                        <select class="input-sm" data-bind="options: sensorRTDTypes, optionsText:'option', optionsValue:'enum', optionsAfterRender:setOptionsDisable, visible: isSensorRTDTypeVisible, value:selectedSensorRTDType, disable: hasError"></select>
+                                        <label  class="dataField col-sm-3" data-bind="visible: isVelocityTypeVisible">Sensor Type</label>
+                                        <select class="input-sm" data-bind="options: velocityTypes, optionsText:'option', optionsValue:'enum', optionsAfterRender:setOptionsDisable, visible: isVelocityTypeVisible, value:selectedVelocityType, disable: hasError"></select>
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                            <div class="row" id="secondRowLabels">
+                                <div class="dataField col-sm-4">
+                                    <label data-bind="visible: secondRowFirstColVis, text:secondRowFirstCol"></label>
+                                </div>
+                                <div class="dataField col-sm-4">
+                                    <label data-bind="visible: secondRowSecondColVis, text:secondRowSecondCol"></label>
+                                </div>
+                            </div>
+                            <div class="row" id="secondRow">
+                                <div class="col-sm-4" id="secondRowNonSensor">
+                                    <input class="input form-control input-sm" data-bind="value:minSensorValue, visible:minSensorValueVisibility, enable:enableMinSensor" />
+                                    
+                                </div>
+                                <div data-bind="visible:flowSensorVisiblity" id="secondRowSensor">
+                                    <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Sensor Point', rootContext: $root } } -->
+                                    <!-- /ko -->
+                                </div>
+                                <div class="col-sm-4">
+                                    <input class="input form-control input-sm" data-bind="value:maxSensorValue, visible:maxSensorValueVisibility, enable:enableMaxSensor" />
+                                </div>
+                            </div>
+                            <br />
+                            <div class="row" id="thirdRowLabels">
+                                <div class="dataField col-sm-4">
+                                    <label data-bind="visible: thirdRowFirstColVis, text:thirdRowFirstCol"></label>
+                                </div>
+                                <div class="dataField col-sm-4" id="thirdRowSecondCol">
+                                    <label data-bind="visible: thirdRowSecondColVis, text:thirdRowSecondCol"></label>
+                                </div>
+                            </div>
+                            <div class="row" id="thirdRow">
+                                <div class="col-sm-4">
+                                    <input class="input form-control input-sm" data-bind="value:minValue, visible:minValueVisibility, enable:enableMinValue" />
+                                    <input class="input form-control input-sm" data-bind="value:velocityPressure, visible:velocityPressureVisibility" />
+                                    <input class="input form-control input-sm" data-bind="value:ductAreaValue, visible:ductAreaVisibility" />
+                                </div>
+                                <div class="col-sm-4">
+                                    <input class="input form-control input-sm" data-bind="value:maxValue, visible:maxValueVisibility, enable:enableMaxValue"/>
+                                    <input class="input form-control input-sm" data-bind="value:velocityFlow, visible:velocityFlowVisibility" />
+                                </div>
+                            </div>
+                            <br />
+                            <div class="row" id="errorRow">
+                                <div class="dataField col-sm-12 alert-danger" role="alert">
+                                    <label data-bind="text:errorMsg, visible:hasError"/>
+                                </div>                                
+                            </div>
+                            <br />
+                            <div class="row" id="resultsRow">
+                                <div class="row">
+                                    <div class="dataField col-sm-12 text-center">
+                                        <label class="col-sm-9">Resulting Conversion Coefficients</label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="dataField col-sm-12">
+                                        <label class="col-sm-6">Conversion Coefficient 1</label>
+                                        <span class="coefficient col-sm-6" data-bind="text:conversionCoef1" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="dataField col-sm-12">
+                                        <label class="col-sm-6">Conversion Coefficient 2</label>
+                                        <span class="coefficient col-sm-6" data-bind="text:conversionCoef2" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="dataField col-sm-12">
+                                        <label class="col-sm-6">Conversion Coefficient 3</label>
+                                        <span class="coefficient col-sm-6" data-bind="text:conversionCoef3" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="dataField col-sm-12">
+                                        <label class="col-sm-6">Conversion Coefficient 4</label>
+                                        <span class="coefficient col-sm-6" data-bind="text:conversionCoef4" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <!-- /ko -->
+            </div>
+            <div class="modal-footer">
+                <div class="beforeLoad">
+                <button type="button" class="btn btn-link btn-sm" data-dismiss="modal" data-bind="click: modal.cancel">Cancel</button>
+                <button type="button" class="btnCalc btn btn-primary btn-sm" data-bind="click : modal.calculate, text: modal.calculateText"></button>
+                <button type="button" class="btnSubmit btn btn-primary btn-sm" data-bind="click : modal.submit, text: modal.submitText"></button>
+            </div>
+                
+        </div>
+    </div>
+</div>

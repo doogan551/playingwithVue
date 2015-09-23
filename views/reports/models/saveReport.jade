@@ -1,0 +1,25 @@
+#modal-saveReport.modal.fade(data-refresh='true')
+    form#saveReportForm(method='POST')
+        .modal-dialog
+            .modal-content
+                .modal-header
+                    button.close(type='button', data-dismiss='modal', aria-hidden='true') ×
+                    h4.modal-title Report Template Dialog
+                .modal-body
+                            .container
+                                .row.well-sm
+                                    .form-group
+                                        label.col-sm-2.control-label(for="reportName") Template Name
+                                        .col-sm-4
+                                            input#reportName
+                                .row.well-sm
+                                    .col-sm-6
+                                        #errorMessage.alert-danger
+                                .row.well-sm
+                                    .col-sm-6
+                                        #successMessage.alert-success
+                .modal-footer
+                        button.btn.btn-default(type='button', data-dismiss='modal') Close
+                        button.btn.btn-primary#submitSaveReport(type='submit') Submit
+
+script(src='/js/reports/saveReport.js')

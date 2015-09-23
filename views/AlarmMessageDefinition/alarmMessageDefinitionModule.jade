@@ -1,0 +1,30 @@
+.grid-container(data-bind='with:gridViewModel')
+    #filterGridCont(data-bind='with:definitions')
+        #filterCont(data-bind='event:{load:function() { console.log(this); } }')
+            .input-group#filterContainer(data-states='{"ready":"3","editing":"2","data":"2","dirty":"2","error":"2"}')
+                input#filter.form-control(type="text",data-bind='value:searchFilter,valueUpdate:"keyup"',placeholder="Search Alarm Messages")
+                span#clearSearchFilter.input-group-addon(data-bind='visible:searchFilter, click:function() { this.searchFilter("") }')
+                    btn.fa.fa-times-circle(data-states='{"ready":"3","editing":"2","dirty":"2"}')
+                span.input-group-addon
+                    span(data-bind='text:resultLength')
+            br
+        #gridCont
+            #grid.grid.table(data-bind='koGrid:gridOptions')
+#editorContainer(data-bind='template:{name:"tmplEditor",foreach:editor,as:"editor"}')
+#windowConfirmWrapper(data-bind='with:deletor')
+    #windowConfirmModal.modal(tabindex='-1', role='dialog',data-backdrop="false", aria-hidden='true')
+        .modal-dialog.modal-lg
+            .modal-content
+                .modal-body
+                    button.close(type='button', data-dismiss='modal', aria-hidden='true',data-bind='click:buttons.cancel.fn') ×
+                    p Delete this Alarm Message Definition?
+                .modal-footer(style="text-align:left")
+                  button.btn.btn-primary(data-dismiss='modal', aria-hidden='true',data-bind='click:buttons.okay.fn') Ok
+                  button.btn.btn-default(data-dismiss='modal', aria-hidden='true',data-bind='click:buttons.cancel.fn') Cancel
+#windowAlertWrapper(data-bind='if:false')
+    #windowAlertModal.modal(data-bind='',tabindex='-1', role='dialog', aria-hidden='true')
+        .modal-body
+            button.close(type='button', data-dismiss='modal', aria-hidden='true') ×
+            p alert text 
+        .modal-footer
+            button.btn.btn-danger(data-dismiss='modal', aria-hidden='true') Close

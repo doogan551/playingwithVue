@@ -1,0 +1,255 @@
+<div class="nav">
+    <ul>
+        <li><span>Overview</span></li>
+        <!-- ko if: $root.isSystemAdmin() -->
+        <li><span>Permissions</span></li>
+        <!-- /ko -->
+        <li><span>Involvement</span></li>
+        <li><span>Schedule</span></li>
+        <li><span>Alarm History</span></li>
+        <li><span>Configuration <i class="fa fa-angle-right"></i></span>
+            <ul>
+                <li class="header"><span>Configuration</span>
+                <li><span>Hardware</span></li>
+                <li><span>Value</span></li>
+                <li><span>Alarms</span></li>
+                <li><span>Notifications</span></li>
+                <li class="back"><span><i class="fa fa-angle-left"></i> back</span></li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+<div class="view">
+    <div class="container-fluid">
+        <div class="row header">
+            <div class="col-xs-12">
+                <h4>Overview</h4>
+            </div>
+        </div>
+    </div>
+    <div id="overview" class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col col-xs-12">
+                    <!-- ko component: { name: 'ctl-valueBar', params: { rootContext: $root } } -->
+                    <!-- /ko -->
+                </div>
+            </div>
+            <div class="row">
+                <div class="col col-sm-6 col-xs-12">
+                    <div class="dataField">
+                        <label>Value</label>
+                        <div data-bind="component: { name: 'ctl-ROvalue-eu', params: { propertyName: 'Value', value: data['Value'], engUnit: data['Engineering Units'], rootContext: $root } }"></div>
+                        <div class="actions">
+                            <!-- ko component: { name: 'ctl-readValue', params: { rootContext: $root } } -->
+                            <!-- /ko -->
+                            <!-- ko if: data['Trend Samples'].Value() > 0 -->
+                            <!-- ko component: { name: 'ctl-viewTrend', params: { rootContext: $root } } -->
+                            <!-- /ko -->
+                            <!-- /ko -->
+
+                            <!-- ko component: { name: 'ctl-viewControls', params: { rootContext: $root } } -->
+                            <!-- /ko -->
+                            <!-- ko if: $root.authorize(data, $root.permissionLevels.CONTROL) -->
+                            <!-- ko component: { name: 'ctl-sendControl', params: { rootContext: $root } } -->
+                            <!-- /ko -->
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+                <div class="col col-sm-6 col-xs-12">
+                    <div class="dataField">
+                        <label>Last Report Time</label>
+                        <span class="lh30" data-bind="text: moment.unix(data['Last Report Time'].Value()).calendar()"></span>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col col-sm-6 col-xs-12">
+                    <div class="dataField">
+                        <label>Controller</label>
+                        <span class="lh30" data-bind="text: data.Controller.Value()"></span>
+                    </div>
+                </div>
+                <div class="col col-sm-6 col-xs-12">
+                    <div class="dataField">
+                        <label>Control Priority</label>
+                        <span class="lh30" data-bind="text: data['Control Priority'].Value()"></span>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Out of Service', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+                <!-- /ko -->
+            </div>
+            <hr>
+            <div class="row">
+                <div data-bind="component: { name: 'ctl-description', params: { description: data.Description.Value, rootContext: $root } }"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="permissions" class="content">
+        <div data-bind="component: { name: 'ctl-permissions', params: { isTabLoaded: tabTriggers.permissions, rootContext: $root } }"></div>
+    </div>
+
+    <div id="involvement" class="content">
+        <div data-bind="component: { name: 'ctl-involvement', params: { id: data._id(), isTabLoaded: tabTriggers.involvement, rootContext: $root } }"></div>
+    </div>
+
+    <div id="schedule" class="content">
+        <div data-bind="component: { name: 'ctl-scheduleEntries', params: { id: data._id(), point: data, pointType: data['Point Type'].Value(),isTabLoaded: tabTriggers.entries, rootContext: $root } }"></div>
+    </div>
+
+    <div id="alarms" class="content">
+        <div class="row">
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Alarm Display Point', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Alarms Off', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Alarm Repeat Enable', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <div class="clearfix visible-xs"></div>
+            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Alarm Class', data: data, columnClasses: 'col col-sm-6 col-xs-12', enumSetName: 'Alarm Classes', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Alarm Repeat Time', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: '0:0:0', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Alarm Delay Time', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: '0:0:0', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'High Alarm Limit', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Low Alarm Limit', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Alarm Deadband', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Enable Warning Alarms', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'High Warning Limit', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Low Warning Limit', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Interlock Point', rootContext: $root } } -->
+            <!-- /ko -->
+            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Interlock State', data: data, columnClasses: 'col col-sm-6 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Alarm Adjust Point', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Alarm Adjust Band', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Warning Adjust Band', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+    </div>
+
+    <div id="hardware" class="content">
+        <div id="tabToolbar">
+            <!-- ko if: isInEditMode  -->
+                <!-- ko if: $root.utility.getPointRefProperty("Sensor Point").data.Value() === 0  -->
+                    <!-- ko component: { name: 'ctl-conversionWizard', params: { rootContext: $root } } -->
+                    <!-- /ko -->
+                <!-- /ko -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Device Point', rootContext: $root } } -->
+            <!-- /ko -->
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Remote Unit Point', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Channel', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Open Channel', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Close Channel', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'VAV Channel', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Polarity', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Polarities', rootContext: $root } } -->
+            <!-- /ko -->
+            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Output Type', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Poll Function', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Modbus Poll Functions', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Poll Register', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Poll Data Type', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Modbus Data Types', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Instance', data: data, columnClasses: 'col col-sm-4 col-xs-12', min: 0, max: 4194303, rootContext: $root } } -->
+            <!-- /ko -->
+            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Control Function', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Modbus Control Functions', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Control Register', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Control Data Type', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Modbus Data Types', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Sensor Point', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Conversion Coefficient 1', data: data, noTruncate: true, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Conversion Coefficient 2', data: data, noTruncate: true, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+    </div>
+
+    <div id="value" class="content">
+        <div class="row">
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'COV Enable', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'COV Increment', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 0, rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Broadcast Enable', data: data, columnClasses: 'col col-sm-3 col-xs-4', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Broadcast Period', data: data, columnClasses: 'col col-sm-3 col-xs-4', min: '0:0:15', max: '0:59:59', rootContext: $root } } -->
+            <!-- /ko -->        </div>
+        <hr>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Trend Samples', data: data, columnClasses: 'col col-sm-3 col-xs-4', min: 0, max: 255, rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Trend COV Increment', data: data, columnClasses: 'col col-sm-3 col-xs-4', min: 0, rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Trend Interval', data: data, columnClasses: 'col col-sm-3 col-xs-4', min: '0:0:1', max: '0:59:59', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Trend Enable', data: data, columnClasses: 'col col-sm-3 col-xs-4', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Minimum Value', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Maximum Value', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Default Value', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 0, max: Math.abs(data['Maximum Value'].Value() - data['Minimum Value'].Value()) * .1, rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+    </div>
+
+    <div id="notifications" class="content">
+        <div data-bind="component: { name: 'ctl-notifications', params: { data: data['Alarm Messages'], rootContext: $root } }"></div>
+    </div>
+</div>

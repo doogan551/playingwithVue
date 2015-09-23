@@ -1,0 +1,204 @@
+<div class="nav">
+    <ul>
+        <li><span>Overview</span></li>
+        <!-- ko if: $root.isSystemAdmin() -->
+        <li><span>Permissions</span></li>
+        <!-- /ko -->
+        <li><span>Involvement</span></li>
+        <li><span>Schedule</span></li>
+        <li><span>Symbols <i class="fa fa-angle-right"></i></span>
+            <ul>
+                <li class="header"><span>Symbols</span>
+                <li><span>Points</span></li>
+                <li><span>Integers</span></li>
+                <li><span>Booleans</span></li>
+                <li><span>Reals</span></li>
+                <li class="back"><span><i class="fa fa-angle-left"></i> back</span></li>
+            </ul>
+        </li>
+        <li><span>Configuration <i class="fa fa-angle-right"></i></span>
+            <ul>
+                <li class="header"><span>Configuration</span>
+                <li><span>Hardware</span></li>
+                <li class="back"><span><i class="fa fa-angle-left"></i> back</span></li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+<div class="view">
+    <div class="container-fluid">
+        <div class="row header">
+            <div class="col-xs-12">
+                <h4>Overview</h4>
+            </div>
+        </div>
+    </div>
+    <div id="overview" class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col col-sm-3 col-xs-6">
+                    <div class="dataField">
+                        <label>Program State</label>
+                        <span data-bind="text: data['Program State'].Value"></span>
+                    </div>
+                </div>
+                <div class="col col-sm-3 col-xs-6">
+                    <div class="dataField">
+                        <label>Program Error</label>
+                        <span data-bind="text: data['Program Error'].Value"></span>
+                    </div>
+                </div>
+                
+                <div class="col col-sm-6 col-xs-12">
+                    <div class="dataField">
+                        <label>Last Report Time</label>
+                        <span class="lh30" data-bind="text: moment.unix(data['Last Report Time'].Value()).calendar()"></span>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Reset State', data: data, columnClasses: 'col col-sm-3 col-xs-12', enumSetName: 'Program Change Request', rootContext: $root } } -->
+                <!-- /ko -->
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Program Change Request', data: data, columnClasses: 'col col-sm-3 col-xs-12', enumSetName: 'Program Change Request', rootContext: $root } } -->
+                <!-- /ko -->
+            </div>
+            <hr>
+            <div class="row">
+                <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Script Point', rootContext: $root } } -->
+                <!-- /ko -->
+            </div>
+            <div class="row">
+                <div data-bind="component: { name: 'ctl-description', params: { description: data.Description.Value, rootContext: $root } }"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="permissions" class="content">
+        <div data-bind="component: { name: 'ctl-permissions', params: { isTabLoaded: tabTriggers.permissions, rootContext: $root } }"></div>
+    </div>
+
+    <div id="involvement" class="content">
+        <div data-bind="component: { name: 'ctl-involvement', params: { id: data._id(), isTabLoaded: tabTriggers.involvement, rootContext: $root } }"></div>
+    </div>
+
+    <div id="schedule" class="content">
+        <div data-bind="component: { name: 'ctl-scheduleEntries', params: { id: data._id(), point: data, pointType: data['Point Type'].Value(),isTabLoaded: tabTriggers.entries, rootContext: $root } }"></div>
+    </div>
+
+    <div id="hardware" class="content">
+        <div class="row">
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Device Point', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+    </div>
+
+    <div id="points" class="content">
+        <div class="table-responsive">
+            <table class="grid table table-condensed register-table">
+                <thead>
+                <tr>
+                    <th style="width: 25px">Register</th>
+                    <th style="width: 200px">Script Symbol</th>
+                    <th>Initial Value</th>
+                </tr>
+                </thead>
+                <!-- ko ifnot:$root.modelUpdate -->
+                <tbody data-bind="foreach: data['Point Registers']">
+                <tr>
+                    <td data-bind="text: $index()+1"></td>
+                    <td data-bind="text: $parent.data['Point Register Names']()[$index()]"></td>
+                    <td>
+                        <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Point Register', showLabel:false, rootContext: $root, appIndex: $index()+1 } } -->
+                        <!-- /ko -->
+                    </td>
+                </tr>
+                </tbody>
+                 <!-- /ko -->
+            </table>
+        </div>
+    </div>
+
+    <div id="integers" class="content">
+        <div class="table-responsive">
+            <table class="grid table table-condensed register-table">
+                <thead>
+                <tr>
+                    <th style="width: 25px">Register</th>
+                    <th style="width: 200px">Script Symbol</th>
+                    <th>Initial Value</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: data['Integer Registers']">
+                <tr>
+                    <td data-bind="text: $index()+1"></td>
+                    <td data-bind="text: $parent.data['Integer Register Names']()[$index()]"></td>
+                    <td>
+                        <!-- ko if: $parent.isInEditMode -->
+                        <input type="text" data-bind="numeric: $parent.data['Integer Registers']()[$index()], valueType: 3, noValidation: true, disable: $parent.data.isReadOnly" class="form-control input-sm">
+                        <!-- /ko -->
+                        <!-- ko ifnot: $parent.isInEditMode -->
+                        <span data-bind="text: $data"></span>
+                        <!-- /ko -->
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="booleans" class="content">
+        <div class="table-responsive">
+            <table class="grid table table-condensed register-table">
+                <thead>
+                <tr>
+                    <th style="width: 25px">Register</th>
+                    <th style="width: 200px">Script Symbol</th>
+                    <th>Initial Value</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: data['Boolean Registers']">
+                <tr>
+                    <td data-bind="text: $index()+1"></td>
+                    <td data-bind="text: $parent.data['Boolean Register Names']()[$index()]"></td>
+                    <td>
+                        <label>
+                            <input type="checkbox" data-bind="checked: $parent.data['Boolean Registers']()[$index()], enable: $parent.isInEditMode">
+                            <span data-bind="text: $data"></span>
+                        </label>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="reals" class="content">
+        <div class="table-responsive">
+            <table class="grid table table-condensed register-table">
+                <thead>
+                <tr>
+                    <th style="width: 25px">Register</th>
+                    <th style="width: 200px">Script Symbol</th>
+                    <th>Initial Value</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: data['Real Registers']">
+                <tr>
+                    <td data-bind="text: $index() + 1"></td>
+                    <td data-bind="text: $parent.data['Real Register Names']()[$index()]"></td>
+                    <td>
+                        <!-- ko if: $parent.isInEditMode -->
+                        <input type="text" data-bind="numeric: $parent.data['Real Registers']()[$index()], valueType: 1, noValidation: true, disable: $parent.data.isReadOnly" class="form-control input-sm">
+                        <!-- /ko -->
+                        <!-- ko ifnot: $parent.isInEditMode -->
+                        <span data-bind="text: $data"></span>
+                        <!-- /ko -->
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

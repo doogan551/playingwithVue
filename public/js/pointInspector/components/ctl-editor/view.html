@@ -1,0 +1,20 @@
+
+<div class="row" style="position:absolute; top:0; right:15px; bottom:0; left:15px;">
+    <div class="col-xs-12" style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;">
+        <ul id="menu" ></ul>
+        <textarea id="code" data-bind="editor: script"></textarea>
+    </div>
+</div>
+<!-- ko if: isInEditMode -->
+<div id="buildActions">
+    <!-- ko if: status() == 'changed' -->
+    <button class="btn btn-default btn-xs" data-bind="click: compile"><i class="fa fa-refresh"></i> Compile</button>
+    <!-- /ko -->
+    <!-- ko if: status() == 'committed' || status() == 'error' -->
+    <button class="btn btn-default btn-xs" data-bind="click: compile"><i class="fa fa-refresh"></i> Recompile</button>
+    <!-- /ko -->
+    <!-- ko if: status() == 'compiled' -->
+    <button class="btn btn-default btn-xs" data-bind="click: commit"><i class="fa fa-refresh"></i> Commit</button>
+    <!-- /ko -->
+</div>
+<!-- /ko -->

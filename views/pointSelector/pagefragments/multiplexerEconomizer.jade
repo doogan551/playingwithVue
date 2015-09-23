@@ -1,0 +1,12 @@
+h5 Present Value
+.row
+.container.well.well-sm
+    .row
+        .form-group
+            .col-xs-12
+                label Maximum Value
+                input.input-medium(type='text', data-bind='event: { keyup: changeVal.bind($data,\'Maximum Value\') },value:getSelectedDProp(\'Maximum Value\')')
+        .form-group
+            .col-xs-12
+                label Minimum Value
+                input.input-medium(type='text', data-bind='event: { keyup: changeVal.bind($data,\'Minimum Value\') },value:getSelectedDProp(\'Minimum Value\')')

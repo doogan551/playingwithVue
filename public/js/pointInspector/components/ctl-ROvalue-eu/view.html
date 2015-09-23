@@ -1,0 +1,13 @@
+<div class="valueHolder">
+    <div class="value">
+        <span class="val" data-bind="formattedNumericText: value"></span>
+        <!-- ko ifnot: isInEditMode -->
+        <div class="engUnit" data-bind="text: engUnit.Value"></div>
+        <!-- /ko -->
+        <!-- ko if: isInEditMode -->
+        <span class="engUnit">
+            <input data-bind="value: engUnit.Value, disabled: engUnit.isReadOnly" class="inline-form-control" type="text" placeholder="Engineering Units"/>
+        </span>
+        <!-- /ko -->
+    </div>
+</div>

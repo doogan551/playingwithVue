@@ -1,0 +1,53 @@
+<div data-bind="click: toggleModal" class="btn btn-default btn-xs btnViewControls"><i class="fa fa-search"></i> View Controls</div>
+
+<!-- Modal -->
+<div class="modal fade bs-example-modal-sm viewControls" tabindex="-1" data-backdrop="static" data-bind="modal: showModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">View Controls</h4>
+            </div>
+            
+            <div class="modal-body container-fluid">
+                <div>
+                	<!-- Getting -->
+                    <div class="modalScene modalWait">
+                        <p>Retrieving controls...</p>
+                        <h1><i class="fa fa-refresh fa-spin"></i></h1>
+                    </div>
+                    <!-- Error -->
+                    <div class="modalScene modalError">
+                        <h1><i class="fa fa-exclamation-triangle text-warning"></i> Error</h1>
+                        <p data-bind="text: errorText"></p>
+                        <p>Close this dialog or <a href="javascript://" data-bind="click: getControls">try again</a></p>
+                    </div>
+                    <!-- Controls -->
+                    <div class="modalScene modalValue">
+                        <table class="grid table table-condensed">
+                            <thead>
+                            <tr>
+                                <th>Level</th>
+                                <th>Value</th>
+                                <th>Controller</th>
+                            </tr>
+                            </thead>
+                            <tbody data-bind="foreach: controls">
+                            <tr data-bind="css: { hiliteRow: isHighestPriority }, style: { color: controller() === '' ? '#CCC':'' } ">
+                                <td data-bind="text: level"></td>
+                                <td data-bind="text: value"></td>
+                                <td data-bind="text: controller"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link btn-sm" data-dismiss="modal">Close</button>
+                <button type="button" class="btnSubmit btn btn-primary btn-sm" data-bind="click : getControls">Refresh</button>
+            </div>
+        </div>
+    </div>
+</div>

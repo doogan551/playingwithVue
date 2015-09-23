@@ -1,0 +1,19 @@
+doctype html
+html
+    head
+        title GPL 2.0 Import
+        style(type="text/css").
+            .error {
+                color: purple;
+            }
+            .empty {
+                color: green;
+            }
+    body
+        table#output
+            tr
+                th
+                th
+        script(type='text/javascript', src='/js/lib/socket.io.js')
+        script(type='text/javascript', src='/js/lib/jquery.min.js')
+        script(type='text/javascript', src='/js/gplNew/gplImport.js')

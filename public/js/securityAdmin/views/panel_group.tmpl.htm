@@ -1,0 +1,83 @@
+<div id="DT_Security_panelWindow" class="ui-panel-inner">
+    <a data-bind="click: dorsett.hidePanel" style="float:right" href="#" data-rel="close" data-role="button"
+       data-icon="delete" data-iconpos="notext" data-theme="a" data-corners="true" data-shadow="true"
+       data-iconshadow="true" data-wrapperels="span" title="Close"></a>
+
+    <div class="profilePhoto ui-shadow">
+        <div class="photobg groupIcon"></div>
+    </div>
+
+
+    <div class="clear"></div>
+    <h4 class="profileName" data-bind="text: $data['User Group Name']"></h4>
+
+    <fieldset id="fsMetadata" class="border-none">
+        <label>Group Name <span class="validationMessage" data-bind="validationMessage: $data['User Group Name']"></span><input type="text" data-mini="true" data-bind="value: $data['User Group Name'], JMEnable: isEditMode, JMValidationError: $data['User Group Name']"></label>
+        <label>Description <textarea data-mini="true" data-bind="value: Description, JMEnable: isEditMode"></textarea></label>
+    </fieldset>
+
+    <fieldset class="border-full">
+        <legend>Users</legend>
+        <!-- ko if: isEditMode -->
+        <ul data-role="listview" class="listview listview-readonly membershipList">
+            <li class="dropzone" data-bind="drop: {addTo: Users, accept: '.user'}">
+                <div>Drop a user here</div>
+            </li>
+            <!-- ko foreach: Users -->
+            <li>
+                <div class="profilePhoto ui-shadow">
+                    <div class="photobgsmall male" data-bind="loadImage: Photo"></div>
+                </div>
+                <div class="userGroupData">
+                    <!-- ko text: FullName --><!--/ko -->
+                    <label data-corners="false" data-shadow="false"><input type="checkbox" data-mini="true" data-theme="a" data-bind="checked: $data['Group Admin']"> Group Admin</label>
+                    <span class="closeBtn"><a href="#" data-bind="click: dorsett.removeUserFromGroup" class="ui-icon-nodisc" data-role="button" data-theme="r"
+                                              data-icon="delete" data-iconpos="notext" data-theme="a" data-corners="true" data-shadow="true"
+                                              data-iconshadow="true" data-wrapperels="span" title="Remove user"></a></span>
+                </div>
+            </li>
+            <!-- /ko -->
+        </ul>
+        <!-- /ko -->
+        <!-- ko ifnot: isEditMode -->
+        <ul data-role="listview" data-mini="true" data-icon="delete" class="listview-readonly">
+            <!-- ko foreach: Users -->
+            <li>
+                <div class="profilePhoto ui-shadow">
+                    <div class="photobgsmall male" data-bind="loadImage: Photo"></div>
+                </div>
+                <div class="userGroupData">
+                    <!-- ko text: FullName --><!-- /ko -->
+                    <!-- ko if: $data['Group Admin'] --><p>(Group Admin)</p><!-- /ko -->
+                </div>
+            </li>
+            <!-- /ko -->
+            <!-- ko if: Users().length == 0 -->
+            <li>No users assigned</li>
+            <!-- /ko -->
+        </ul>
+        <!-- /ko -->
+    </fieldset>
+
+    <fieldset id="fsMetadata" class="border-none">
+        <label data-corners="false" data-shadow="false"><input type="checkbox" data-mini="true" data-theme="d" data-bind="checked: pAccess(2), JMEnable: isEditMode"> Control</label>
+        <label data-corners="false" data-shadow="false"><input type="checkbox" data-mini="true" data-theme="d" data-bind="checked: pAccess(4), JMEnable: isEditMode"> Acknowledge</label>
+        <label data-corners="false" data-shadow="false"><input type="checkbox" data-mini="true" data-theme="d" data-bind="checked: pAccess(8), JMEnable: isEditMode"> Write</label>
+    </fieldset>
+
+    <!-- ko ifnot: isEditMode -->
+    <div class="ui-grid-a">
+        <div class="ui-block-a" style="width: 100%">
+            <a id="editButton" href="#" data-role="button" data-theme="a" data-bind="click: dorsett.editMode">Edit Group</a>
+            <a id="pointAccess" href="#" data-role="button" data-theme="a" data-bind="click: function() {dorsett.viewPointAccess('group')}">Edit Point Access</a>
+        </div>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko if: isEditMode -->
+    <a href="#" data-role="button" data-theme="g" data-bind="click: dorsett.saveGroup">Save</a>
+    <a href="#" data-role="button" data-theme="a" data-bind="click: dorsett.cancelEditMode">Cancel</a>
+    <a href="#confirmDialog" data-bind="click: dorsett.deleteGroup" data-rel="popup" data-position-to="window" data-transition="fade" data-role="button" data-theme="r">Delete</a>
+    <!-- /ko -->
+
+</div>

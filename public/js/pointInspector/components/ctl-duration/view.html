@@ -1,0 +1,45 @@
+<!-- ko if: data.isDisplayable -->
+<!-- ko ifnot: naked -->
+<div data-bind="attr: { class: columnClasses }">
+    <div class="dataField">
+        <label data-bind="text: propertyName, visible: showLabel"></label>
+        <!-- ko if: isInEditMode -->
+        <div class="durationCtrl" data-bind="duration: data.Value, min: min, max: max, noValidation: noValidation, css: { disabled: data.isReadOnly }">
+            <input class="hr" type="text" maxlength="2" data-bind="disable: data.isReadOnly">
+            <span class="timeSeg">hr</span>
+            <input class="min" type="text" maxlength="2" data-bind="disable: data.isReadOnly">
+            <span class="timeSeg">min</span>
+            <input class="sec" type="text" maxlength="2" data-bind="disable: data.isReadOnly">
+            <span class="timeSeg">sec</span>
+        </div>
+        <!-- /ko -->
+        <!-- ko ifnot: isInEditMode -->
+        <div data-bind="css: readOnlyText, duration: data.Value">
+            <span class="hr"></span>
+            <span class="min"></span>
+            <span class="sec"></span>
+        </div>
+        <!-- /ko -->
+    </div>
+</div>
+<!-- /ko -->
+<!-- ko if: naked -->
+<!-- ko if: isInEditMode -->
+<div class="durationCtrl" data-bind="duration: data.Value, min: min, max: max, noValidation: noValidation, css: { disabled: data.isReadOnly }">
+    <input class="hr" type="text" maxlength="2" data-bind="disable: data.isReadOnly">
+    <span class="timeSeg">hr</span>
+    <input class="min" type="text" maxlength="2" data-bind="disable: data.isReadOnly">
+    <span class="timeSeg">min</span>
+    <input class="sec" type="text" maxlength="2" data-bind="disable: data.isReadOnly">
+    <span class="timeSeg">sec</span>
+</div>
+<!-- /ko -->
+<!-- ko ifnot: isInEditMode -->
+<div data-bind="css: readOnlyText, duration: data.Value">
+    <span class="hr"></span>
+    <span class="min"></span>
+    <span class="sec"></span>
+</div>
+<!-- /ko -->
+<!-- /ko -->
+<!-- /ko -->

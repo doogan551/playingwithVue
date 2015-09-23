@@ -1,0 +1,4 @@
+#confirm(data-states='{"confirm":"0"}',data-bind='if:state()==="confirm"')
+    .btn-group(data-bind='with:machine.states["confirm"]')
+        button#confirmOkay.btn.btn-success(data-bind='click:handlers.okay') I definitely want to do this
+        button#cancelOkay.btn.btn-warning(data-bind='click:handlers.cancel') I changed my mind

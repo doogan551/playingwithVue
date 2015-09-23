@@ -1,0 +1,22 @@
+<!-- ko if: isVisible -->
+<!-- ko if: showReliability() -->
+<span class="statusItem">
+    <span data-bind="text: 'Reliability: ' + reliability()" class="label-color warning"></span>
+</span>
+<!-- /ko -->
+<!-- ko if: showAlarmState() -->
+<span class="statusItem">
+    <span data-bind="text: 'Alarm State: ' + alarmState()" class="label-color danger"></span>
+</span>
+<!-- /ko -->
+<!-- ko if: showCfgRequired() -->
+<span class="statusItem">
+    <span class="label-color warning">Configuration Required</span>
+</span>
+<!-- /ko -->
+<!-- ko if: showUpdateRequired() -->
+<span class="statusItem">
+    <span class="label-color warning">Update Pending</span>
+</span>
+<!-- /ko -->
+<!-- /ko -->

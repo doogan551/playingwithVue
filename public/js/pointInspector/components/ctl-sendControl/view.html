@@ -1,0 +1,78 @@
+<div data-bind="click: toggleModal" class="btn btn-default btn-xs btnSendControl"><i class="fa fa-bullseye"></i> Send Control</div>
+
+<!-- Modal -->
+<div class="modal fade bs-example-modal-sm sendControl" tabindex="-1" data-backdrop="static" data-bind="modal: showModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">
+                    Send Control
+                    <!-- ko if: root.point.data.Controller -->
+                    <!-- MultiState Value points do not support Controller -->
+                    <span class="currentController">
+                        Current Controller:
+                        <span data-bind="text: root.point.data.Controller.Value()"></span>
+                    </span>
+                    <!-- /ko -->
+                </h4>
+            </div>
+
+            <div class="modal-body container-fluid">
+                <div>
+                    <!-- Send Control Dialogue -->
+                    <div class="row">
+                        <div class="col col-xs-12 col-sm-6">
+                            <div class="dataField">
+                                <label>Value</label>
+                                <div class="form-group">
+                                    <!-- ko if: isEnumValueType -->
+                                    <select data-bind="options: data.Value.ValueOptions, optionsText: 'name', optionsValue: 'value', value: controlValue" class="form-control input-sm"></select>
+                                    <!-- /ko -->
+
+                                    <!-- ko ifnot: isEnumValueType -->
+                                    <input data-bind="textInput: controlValue" class="form-control input-sm val" type="text"/>
+                                    <!-- <input type="text" data-bind="propertyName: propertyName, numeric: data.Value, valueType: data.ValueType, min: min, max: max" class="form-control input-sm"> -->
+                                    <!-- /ko -->
+                                </div>
+                            </div>
+                        </div>
+                        <!-- ko if: data['Point Type'].Value() !== 'MultiState Value' -->
+                        <!-- MultiState Value points do not support Control Priority -->
+                        <div class="col col-xs-12 col-sm-6">
+                            <div class="dataField">
+                                <label>Control Priority</label>
+                                <div class="form-group">
+                                    <select data-bind="options: utility.workspace.systemEnums.controlpriorities.slice(1), optionsText: 'name', optionsValue: 'value', value: controlPriority" class="form-control input-sm"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /ko -->
+                    </div>
+                    <!-- ko if: data['Point Type'].Value() !== 'MultiState Value' -->
+                    <!-- MultiState Value points do not support Relinquish -->
+                    <div class="row">
+                        <div class="col col-xs-12 col-sm-12">
+                            <button type="button" class="btnSubmit btn btn-primary btn-sm pull-right" data-bind="click : relinquish">Relinquish Control</button>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <!-- ko if: disableControl -->
+                <div class="text-left">
+                    <h1><i class="fa fa-exclamation-triangle text-warning"></i> Error</h1>
+                    <p>You have an invalid controller ID which prevents you from issuing controls. You may still relinquish controls.</p>
+                </div>
+                <!-- /ko -->
+
+                <button type="button" class="btn btn-link btn-sm" data-dismiss="modal">Cancel</button>
+                <!-- ko ifnot: disableControl -->
+                <button type="button" class="btnSubmit btn btn-primary btn-sm" data-bind="click : sendControl"><i class="fa"></i> Send Control</button>
+                <!-- /ko -->
+            </div>
+        </div>
+    </div>
+</div>

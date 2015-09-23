@@ -1,0 +1,91 @@
+<div class="nav">
+    <ul>
+        <li><span>Overview</span></li>
+        <!-- ko if: $root.isSystemAdmin() -->
+        <li><span>Permissions</span></li>
+        <!-- /ko -->
+        <li><span>Involvement</span></li>
+        <li><span>Source</span></li>
+    </ul>
+</div>
+
+<div class="view">
+    <div class="container-fluid">
+        <div class="row header">
+            <div class="col-xs-12">
+                <h4>Overview</h4>
+            </div>
+        </div>
+    </div>
+    <div id="overview" class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-xs-12 col-sm-6">
+                    <div class="dataField">
+                        <label>Compiled Code Size</label>
+                        <span class="lh30">
+                            <span data-bind="text: data['Compiled Code Size']"></span> Bytes
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-xs-12 col-sm-6">
+                    <div class="dataField">
+                        <label>Point Register Count</label>
+                        <span class="lh30" data-bind="text: data['Point Register Count']"></span>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                    <div class="dataField">
+                        <label>Integer Register Count</label>
+                        <span class="lh30" data-bind="text: data['Integer Register Count']"></span>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                    <div class="dataField">
+                        <label>Real Register Count</label>
+                        <span class="lh30" data-bind="text: data['Real Register Count']"></span>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                    <div class="dataField">
+                        <label>Boolean Register Count</label>
+                        <span class="lh30" data-bind="text: data['Boolean Register Count']"></span>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div data-bind="component: { name: 'ctl-description', params: { description: data.Description.Value, rootContext: $root } }"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="permissions" class="content">
+        <div data-bind="component: { name: 'ctl-permissions', params: { isTabLoaded: tabTriggers.permissions, rootContext: $root } }"></div>
+    </div>
+
+    <div id="involvement" class="content">
+        <div data-bind="component: { name: 'ctl-involvement', params: { id: data._id(), isTabLoaded: tabTriggers.involvement, rootContext: $root } }"></div>
+    </div>
+
+    <div id="source" class="content">
+        <div class="scriptTab productionTab active"><i class="fa fa-lock"></i>Production</div>
+        <div class="scriptTab developmentTab"><i class="fa" data-bind="css: { 'fa-lock' : !isInEditMode() }"></i>Development</div>
+
+        <div class="scriptEditor productionEditor">
+            <textarea data-bind="editor: data['Script Source File'], name: 'productionEditor', isReadOnly: true"></textarea>
+        </div>
+        <div class="scriptEditor developmentEditor">
+            <textarea data-bind="editor: data['Development Source File'], name: 'developmentEditor'"></textarea>
+        </div>
+
+        <!-- ko if: isInEditMode() && selectedScript().name == 'development' -->
+        <div id="buildActions">
+            <button class="btn btn-default btn-xs btnCompile" data-bind="click: compile"><i class="fa fa-refresh"></i> Compile</button>
+        </div>
+        <!-- /ko -->
+    </div>
+</div>

@@ -1,0 +1,10 @@
+extends ../layout
+
+block content
+  style
+    |body{background-color:#494949;}
+  div#import
+    h2 Select DbTransfer Package
+    form(method="post", enctype="multipart/form-data")
+      input(type="file", name="displayImage")
+      input(type="submit", value="Begin Import")

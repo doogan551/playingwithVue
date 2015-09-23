@@ -1,0 +1,91 @@
+<div class="nav">
+    <ul>
+        <li><span>Overview</span></li>
+        <!-- ko if: $root.isSystemAdmin() -->
+        <li><span>Permissions</span></li>
+        <!-- /ko -->
+    </ul>
+</div>
+
+<div class="view">
+    <div class="container-fluid">
+        <div class="row header">
+            <div class="col-xs-12">
+                <h4>Overview</h4>
+            </div>
+        </div>
+    </div>
+    <div id="overview" class="content">
+        <div class="row">
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Continuous Show', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Repeat Count', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Close On Complete', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Maximize Displays', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div>
+            <div class="table-responsive">
+                <table class="grid table table-condensed">
+                    <thead>
+                    <tr>
+                        <th>Display</th>
+                        <th width="75">Duration</th>
+                        <th width="27">&nbsp;</th>
+                    </tr>
+                    </thead>
+                    <!-- ko if: isInEditMode -->
+                    <tbody>
+                    <tr>
+                        <td align="left" colspan="3">
+                            <div data-bind="click: addPointRef" class="btn btn-info btn-xs" title="Add Display"><i class="fa fa-fw fa-plus"></i></div>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <!-- /ko -->
+                    <tbody data-bind="foreach: data['Point Refs']" class="items">
+                    <tr>
+                        <td>
+                            <!-- ko if: $parent.isInEditMode -->
+                            <div class="grabHandle" ></div>
+                            <!-- /ko -->
+                            <span class="lh30" style="position: absolute; width: 80%" data-bind="event: { mouseenter: $parent.showPreview, mouseleave: $parent.hidePreview }">
+                            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Slide Display', rootContext: $root, columnClasses: 'col-lg-11', showLabel: false, doValidate: false, appIndex: ($index()+1)} } -->
+                            <!-- /ko -->
+                                <div class="displayPreview">
+                                    <div>
+                                        <img data-bind="dataSrc: Value">
+                                    </div>
+                                </div>
+                            </span>
+                        </td>
+                        <td>
+                            <!-- ko if: $parent.isInEditMode -->
+                            <input type="text" data-bind="propertyName: 'duration', numeric: $root.point.data.Slides()[$index()].duration, valueType: 3, min: 0" class="form-control input-sm">
+                            <!-- /ko -->
+                            <!-- ko ifnot: $parent.isInEditMode -->
+                            <span class="lh30" data-bind="propertyName: 'duration', numeric: $root.point.data.Slides()[$index()].duration, valueType: 3"></span>
+                            <!-- /ko -->
+                        </td>
+                    </tr>
+                    </tbody>
+                    <!-- ko if: isInEditMode -->
+                    <tbody>
+                    <tr>
+                        <td align="left" colspan="3">
+                            <div data-bind="click: addPointRef" class="btn btn-info btn-xs" title="Add Display"><i class="fa fa-fw fa-plus"></i></div>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <!-- /ko -->
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="permissions" class="content">
+        <div data-bind="component: { name: 'ctl-permissions', params: { isTabLoaded: tabTriggers.permissions, rootContext: $root } }"></div>
+    </div>
+</div>

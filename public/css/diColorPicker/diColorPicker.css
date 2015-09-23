@@ -1,0 +1,117 @@
+/*   normal format  */
+.vertical-customColors {
+    /* display: inline-block;  */
+    width: 60px;
+    height: 232px;
+    list-style-type: none;
+    padding-left: 0px;
+    position: relative;
+    top: -243px;
+    left: 260px;
+    box-shadow: 0px 0px 5px 1px rgba(119, 119, 119, 0.5);
+    -moz-box-shadow: 0px 0px 5px 1px rgba(119, 119, 119, 0.5);
+    -webkit-box-shadow: 0px 0px 5px 1px rgba(119, 119, 119, 0.5);
+}
+.customColors {
+    margin-left: 9px;
+    width: 235px;
+    height: 65px;
+    padding-left: 3px;
+    box-shadow: 0px 0px 5px 1px rgba(119, 119, 119, 0.5);
+    -moz-box-shadow: 0px 0px 5px 1px rgba(119, 119, 119, 0.5);
+    -webkit-box-shadow: 0px 0px 5px 1px rgba(119, 119, 119, 0.5);
+}
+.customColors ul {
+    list-style-type: none;
+    padding-left: 0px;
+}
+.customColors li {
+    display: inline-block;
+    list-style: none;
+    padding: 2px;
+}
+.vertical-customColors li:nth-of-type(even)  {
+    float: left;
+    list-style: none;
+    padding: 2px;
+}
+.vertical-customColors li:nth-of-type(odd) {
+    float: right;
+    list-style: none;
+    padding: 2px;
+}
+.colorSwatch {
+    border: 0px;
+    width:  25px;
+    height: 25px;
+    padding: 0px 0px 0px 0px;
+    margin:  0px 0px 0px 0px;
+}
+.colorSwatch.selected {
+    box-sizing: content-box;
+    border: 2px solid #3D4048;
+    width:  21px;
+    height: 21px;
+    padding: 0px 0px 0px 0px;
+    margin:  0px 0px 0px 0px;
+}
+
+/*   small format  */
+.sm-vertical-customColors {
+    width: 45px;
+    height: 165px;
+    list-style-type: none;
+    padding-left: 0px;
+    position: relative;
+    top: -178px;
+    left: 195px;
+    box-shadow: 0px 0px 10px 1px rgba(119, 119, 119, 0.5);
+    -moz-box-shadow: 0px 0px 10px 1px rgba(119, 119, 119, 0.5);
+    -webkit-box-shadow: 0px 0px 10px 1px rgba(119, 119, 119, 0.5);
+    display: inline-block;
+}
+.sm-customColors {
+    margin-left: 4px;
+    display: -webkit-box;
+    width: 170px;
+    height: 45px;
+    list-style-type: none;
+    padding-left: 0px;
+    box-shadow: 0px 0px 10px 1px rgba(119, 119, 119, 0.5);
+    -moz-box-shadow: 0px 0px 10px 1px rgba(119, 119, 119, 0.5);
+    -webkit-box-shadow: 0px 0px 10px 1px rgba(119, 119, 119, 0.5);
+}
+.sm-customColors ul {
+    list-style-type: none;
+    padding-left: 0px;
+}
+.sm-customColors li {
+    display: inline-block;
+    list-style: none;
+    padding: 2px;
+}
+.sm-vertical-customColors li:nth-of-type(even)  {
+    list-style: none;
+    padding: 2px;
+}
+.sm-vertical-customColors li:nth-of-type(odd) {
+    float: right;
+    list-style: none;
+    padding: 2px;
+}
+.sm-colorSwatch {
+    border: none;
+    width:  16px;
+    height: 16px;
+    padding: 0px 0px 0px 0px;
+    margin:  0px 0px 0px 0px;
+}
+.sm-colorSwatch.selected {
+    box-sizing: inherit;
+    border: 1px solid #3D4048;
+    width:  14px;
+    height: 14px;
+    padding: 0px 0px 0px 0px;
+    margin:  0px 0px 0px 0px;
+}
+

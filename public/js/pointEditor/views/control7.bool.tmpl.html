@@ -1,0 +1,5 @@
+<!--
+    For some reason Knockout changes value after calling change event,
+    so had to use click event instead.
+-->
+<input type="checkbox" data-bind="checked: prop.Value, propName: propName, disable: prop.isReadOnly() || !prop.isDisplayable(), event: { click: function() {pointEditor.changeHandler($element, $context, propName); return true;} }">

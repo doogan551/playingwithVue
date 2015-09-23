@@ -1,0 +1,8 @@
+<!-- ko if: data.isDisplayable -->
+<div data-bind="attr: { class: columnClasses }">
+    <div class="dataField">
+        <label data-bind="text: propertyName"></label>
+        <span class="lh30" data-bind="text: moment.unix(data.Value()).calendar()"></span>
+    </div>
+</div>
+<!-- /ko -->

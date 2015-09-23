@@ -1,0 +1,98 @@
+<div class="nav">
+    <ul>
+        <li><span>Overview</span></li>
+        <!-- ko if: $root.isSystemAdmin() -->
+        <li><span>Permissions</span></li>
+        <!-- /ko -->
+        <li><span>Involvement</span></li>
+    </ul>
+</div>
+
+<div class="view">
+    <div class="container-fluid">
+        <div class="row header">
+            <div class="col-xs-12">
+                <h4>Overview</h4>
+            </div>
+        </div>
+    </div>
+    <div id="overview" class="content">
+        <div id="tabToolbar">
+            <!-- ko if: isInEditMode -->
+                <!-- ko component: { name: 'ctl-conversionWizard', params: { rootContext: $root } } -->
+                <!-- /ko -->
+            <!-- /ko -->
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Sensor Type', enumSetName: 'Sensor Types', columnClasses: 'col col-xs-12 col-sm-3', data: data, rootContext: $root } } -->
+                <!-- /ko -->
+                <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Conversion Type', enumSetName: 'Conversion Types', columnClasses: 'col col-xs-12 col-sm-3', data: data, rootContext: $root } } -->
+                <!-- /ko -->
+            </div>
+            <hr>
+            <div style="position: relative;">
+                <!-- ko foreach: [1,2,3,4] -->
+                <div class="row">
+                <!-- ko component: { name: 'ctl-number', params: { propertyName: 'Conversion Coefficient ' + $data, noTruncate: true, data: $parent.data, columnClasses: 'col col-xs-6 col col-sm-6', rootContext: $root } } -->
+                <!-- /ko -->
+                </div>
+                <!-- /ko -->
+                <div class="testConversion">
+                    <div class="col dataField">
+                        <label>Test Conversion</label>
+                        <div class="testValueContainer">
+                            <input type="text" class="form-control input-sm lh30" data-bind="textInput: testValue" placeholder="Enter a value">
+                            <i class="fa fa-times-circle" data-bind="click: function() { testValue('') }"></i>
+                        </div>
+                    </div>
+                    <div class="col dataField">
+                        <label>Result</label>
+                        <div class="lh30" data-bind="text: testResult"></div>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div data-bind="component: { name: 'ctl-description', params: { description: data.Description.Value, rootContext: $root } }"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="permissions" class="content">
+        <div data-bind="component: { name: 'ctl-permissions', params: { isTabLoaded: tabTriggers.permissions, rootContext: $root } }"></div>
+    </div>
+
+    <div id="involvement" class="content">
+        <div data-bind="component: { name: 'ctl-involvement', params: { id: data._id(), isTabLoaded: tabTriggers.involvement, rootContext: $root } }"></div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade bs-example-modal-sm readValue" tabindex="-1" data-backdrop="static" data-bind="modal: showModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Conversion Wizard</h4>
+            </div>
+            <div class="modal-body container-fluid">
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
+                <p>&nbsp;</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link btn-sm" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btnSubmit btn btn-primary btn-sm" data-bind="">OK</button>
+            </div>
+        </div>
+    </div>
+</div>

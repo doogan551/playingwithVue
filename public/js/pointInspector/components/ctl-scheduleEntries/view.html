@@ -1,0 +1,501 @@
+<div data-bind="visible: gettingData" class="gettingData">
+    <i class="fa fa-spinner fa-spin"></i>
+</div>
+
+<div data-bind="visible: networkError" class="bigMessage">
+    <i class="fa fa-exclamation-triangle"></i>
+    <div>
+        <h3>Network Error</h3>
+        <p>
+            A network error ocurred.
+            Click <a href="javascript: void;" data-bind="click: render">here</a> to try again.
+        </p>
+    </div>
+</div>
+
+<div id="tabToolbar"> 
+    <div class="search">
+        <input type="text" data-bind="textInput: searchTerm">
+        <i class="fa fa-search searchIcon"></i>
+        <i class="fa fa-times-circle clearSearchIcon" data-bind="click: clearSearch"></i>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+            <div class="col-sm-2">
+                <!-- ko if: pointType == "Schedule" -->
+                <!-- ko if: $parent.isInEditMode()-->
+                
+                    <div class="checkbox">
+                        <input type="checkbox" data-bind="checked:executeNow, click:toggleExecuteNow, enable:isInEditMode">Execute Now
+                    </div>
+                <!-- /ko -->
+                <!-- ko if: !$parent.isInEditMode()-->
+                    <div class="checkbox">
+                        <input type="checkbox" data-bind="checked:executeNow, click:toggleExecuteNow, enable:isInEditMode"><span class="roControls">Execute Now</span>
+                    </div>
+                <!-- /ko -->
+                <!-- /ko -->
+            </div>
+            <div class="col-sm-2">
+                <!-- ko if: $parent.isInEditMode()-->
+                
+                    <div class="checkbox">
+                        <input type="checkbox" data-bind="checked:enableAll, click:allEnable, enable:isInEditMode">All Enable
+                    </div>
+                
+                <!-- /ko -->
+                <!-- ko if: !$parent.isInEditMode()-->
+                    <div class="checkbox">
+                        <input type="checkbox" data-bind="checked:enableAll, click:allEnable, enable:isInEditMode"><span class="roControls">All Enable</span>
+                    </div>
+                <!-- /ko -->
+            </div>
+            <div class="col-sm-7">
+                <div class="col-sm-3 text-right"> 
+                    <div class="btn btn-default btn-xs" data-bind="click:adjustInterval, css:enableBtn"><i class="fa fa-clock-o", style="color:rgb(0,0,0)"></i> Set Base Time</div>
+                </div>
+                <div class="col-sm-3">
+                    <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Control Time', data: $data.emptyEntry, columnClasses: '', readOnlyText: 'roControls', min: '0:0:0', showLabel: false, rootContext: $root, noValidation: true } } -->
+                    <!-- /ko -->
+                </div>
+                <div class="col-sm-3"></div>
+            </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-2"></div>
+        <div class="col-sm-2">
+            <!-- ko if: $parent.isInEditMode()-->
+                    <div class="checkbox">
+                        <input type="checkbox" data-bind="checked:hostSchedule, click:allHost, enable:isInEditMode">All Host
+                    </div>
+            <!-- /ko -->
+            <!-- ko if: !$parent.isInEditMode()-->
+                    <div class="checkbox">
+                        <input type="checkbox" data-bind="checked:hostSchedule, click:allHost, enable:isInEditMode"><span class="roControls">All Host</span>
+                    </div>
+            <!-- /ko -->
+        </div>
+            
+        <div class="col-sm-7">
+            <div class="col-sm-3 text-right">
+                <div class="btn btn-default btn-xs" data-bind="click:applyDays, css:enableBtn"><i class="fa fa-calendar-o", style="color:rgb(0,0,0)"></i> Apply Days</div>
+            </div>
+
+            <!-- ko if: $parent.isInEditMode()-->
+                <div class="col-sm-7">
+                    <span data-bind="text:Sunday, click: toggleDayGlobal, css:SundayActive", data-enum="1", class="dayselector cursorPointer"></span>
+                    <span data-bind="text:Monday, click: toggleDayGlobal, css:MondayActive", data-enum="64", class="dayselector cursorPointer"></span>
+                    <span data-bind="text:Tuesday, click: toggleDayGlobal, css:TuesdayActive", data-enum="32", class="dayselector cursorPointer"></span>
+                    <span data-bind="text:Wednesday, click: toggleDayGlobal, css:WednesdayActive", data-enum="16", class="dayselector cursorPointer"></span>
+                    <span data-bind="text:Thursday, click: toggleDayGlobal, css:ThursdayActive", data-enum="8", class="dayselector cursorPointer"></span>
+                    <span data-bind="text:Friday, click: toggleDayGlobal, css:FridayActive", data-enum="4", class="dayselector cursorPointer"></span>
+                    <span data-bind="text:Saturday, click: toggleDayGlobal, css:SaturdayActive", data-enum="2", class="dayselector cursorPointer"></span>
+                    <span data-bind="text:Holiday, click: toggleDayGlobal, css:HolidayActive", data-enum="128", class="dayselector cursorPointer"></span>
+                </div>
+            <!-- /ko -->
+                
+            <!-- ko if: !$parent.isInEditMode()-->
+                <div class="col-sm-7">
+                    <span data-bind="text:Sunday, css:SundayActive", class="dayselector roDays"></span>
+                    <span data-bind="text:Monday, css:MondayActive", class="dayselector roDays"></span>
+                    <span data-bind="text:Tuesday, css:TuesdayActive", class="dayselector roDays"></span>
+                    <span data-bind="text:Wednesday, css:WednesdayActive", class="dayselector roDays"></span>
+                    <span data-bind="text:Thursday, css:ThursdayActive", class="dayselector roDays"></span>
+                    <span data-bind="text:Friday, css:FridayActive", class="dayselector roDays"></span>
+                    <span data-bind="text:Saturday, css:SaturdayActive", class="dayselector roDays"></span>
+                    <span data-bind="text:Holiday, css:HolidayActive", class="dayselector roDays"></span>
+                </div>
+            <!-- /ko -->
+        </div>
+        
+    </div>
+    <div class="row">
+        <div class="col-sm-2"></div>
+        <div class="col-sm-2">
+            <!-- ko if: $parent.isInEditMode()-->
+                    <div class="checkbox">
+                        <input type="checkbox" data-bind="checked:heating, click:allHeating, enable:isInEditMode">All Heating
+                    </div>
+            <!-- /ko -->
+            <!-- ko if: !$parent.isInEditMode()-->
+                    <div class="checkbox">
+                        <input type="checkbox" data-bind="checked:heating, click:allHeating, enable:isInEditMode"><span class="roControls">All Heating</span>
+                    </div>
+            <!-- /ko -->
+        </div>
+        <div class="col-sm-7">
+            <div class="col-sm-3 text-right">
+                <div class="btn btn-default btn-xs" data-bind="click:applyBegin, css:enableBtn"><i class="fa fa-calendar-o", style="color:rgb(0,0,0)"></i> Apply Begin Date</div>
+            </div>
+            <!-- ko if: $parent.isInEditMode() -->
+                <div class="col-sm-7">
+                    <select data-bind= "options:months, 
+                                        optionsText: 'name',
+                                        optionsValue: 'value',
+                                        value:emptyEntry['Begin Month'].Value", 
+                    class='input-xxs col-sm-3 col-xs-3' />
+                    <span class='dateseperator col-sm-1 col-xs-1'>/</span>
+                    <select data-bind="options:days, 
+                                        optionsText: 'name',
+                                        optionsValue: 'value',
+                                        value:emptyEntry['Begin Day'].Value", 
+                    class=' input-xxs col-sm-3 col-xs-3' />
+                    <span class='dateseperator col-sm-1 col-xs-1'>/</span>
+                    <select data-bind="options:years, 
+                                        optionsText: 'name',
+                                        optionsValue: 'value',
+                                        value:emptyEntry['Begin Year'].Value", 
+                    class=' input-xxs col-sm-3 col-xs-3' />
+                </div>
+            <!-- /ko -->
+            <!-- ko if: !$parent.isInEditMode()-->
+                <div class="col-sm-7">
+                    <span data-bind="text:beginDate" class="dayselector roDates"></span>
+                </div>
+            <!-- /ko -->
+        </div>
+
+    </div>
+    <div class="row">
+        <div class="col-sm-2"></div>
+        <div class="col-sm-2">
+            <!-- ko if: $parent.isInEditMode()-->
+                    <div class="checkbox">
+                        <input type="checkbox" data-bind="checked:cooling, click:allCooling, enable:isInEditMode">All Cooling
+                    </div>
+            <!-- /ko -->
+            <!-- ko if: !$parent.isInEditMode()-->
+                    <div class="checkbox">
+                        <input type="checkbox" data-bind="checked:cooling, click:allCooling, enable:isInEditMode"><span class="roControls">All Cooling</span>
+                    </div>
+            <!-- /ko -->
+        </div>
+        <div class="col-sm-7">
+            <div class="col-sm-3 text-right">
+                <div class="btn btn-default btn-xs" data-bind="click:applyEnd, css:enableBtn"></i> <i class="fa fa-calendar-o", style="color:rgb(0,0,0)"></i> Apply End Date</div>
+            </div>
+            <!-- ko if: $parent.isInEditMode()-->
+                <div class="col-sm-7">
+                    <select data-bind= "options:months, 
+                                        optionsText: 'name',
+                                        optionsValue: 'value',
+                                        value:emptyEntry['End Month'].Value,
+                                        disable: emptyEntry['End Month'].isReadOnly", 
+                    class='input-xxs col-sm-3 col-xs-3' />
+                    <span class='dateseperator col-sm-1 col-xs-1'>/</span>
+                    <select data-bind="options:days, 
+                                        optionsText: 'name',
+                                        optionsValue: 'value',
+                                        value:emptyEntry['End Day'].Value,
+                                        disable: emptyEntry['End Day'].isReadOnly", 
+                    class=' input-xxs col-sm-3 col-xs-3' />
+                    <span class='dateseperator col-sm-1 col-xs-1'>/</span>
+                    <select data-bind="options:years, 
+                                        optionsText: 'name',
+                                        optionsValue: 'value',
+                                        value:emptyEntry['End Year'].Value,
+                                        disable: emptyEntry['End Year'].isReadOnly", 
+                    class=' input-xxs col-sm-3 col-xs-3' />
+                </div>
+            <!-- /ko -->
+            <!-- ko if: !$parent.isInEditMode()-->
+                <div class="col-sm-7">
+                    <span data-bind="text:endDate" class="dayselector roDates"></span>
+                </div>
+            <!-- /ko -->
+        </div> 
+        
+    </div>
+</div>
+<br />
+<div class="btn btn-default btn-xs newRowBtn" data-bind="click:addRow, visible:isInEditMode"><i class="fa fa-plus-circle", style="color:rgb(91,192,222)"></i><span data-bind="text:newRow" /></div>
+<div class="tableWrapper">
+
+    <div class="table-responsive scheduleentry pointRefsCol" data-bind="visible: !networkError()">
+        <table class="grid table table-condensed entryTable">
+            <thead>
+            <tr>
+                <th class="cursorPointer" data-bind="click: sortTable.bind($data, ($data.pointType == 'Schedule')?'refPoint':'scheduleName')"><div>Control Point<i class="fa fa-chevron-up"></i></div>
+                </th>         
+            </tr>
+            </thead>
+            
+            <tbody data-bind="visible: filteredEntries().length == 0">
+            <tr>
+                <td colspan="13">&nbsp;</td>
+            </tr>
+            </tbody>
+            <tbody data-bind="foreach: {data:filteredEntries}" class="entrybody">
+                <tr class="entryRow firstRow" data-bind="event:{mouseover:$data.notNew}, css:$data.altBgColor($index), attr:{id:$data.point._id()}">
+                    <td class="pointRefCol">
+                        <!-- ko if: $parent.pointType == "Schedule" -->
+                            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Control Point', rootContext: $root, point:$data.point, oldPoint:$data.oldPoint, columnClasses: '', showLabel: false, doValidate: false, allowRemove: false} } -->
+                            <!-- /ko -->
+                        <!-- /ko -->
+                        <!-- ko if: $parent.pointType != "Schedule" && !!$data.scheduleName() -->
+                            <div class="scheduleBox">
+                                <a href="javascript://" data-bind="text: $data.scheduleName(), click: $data.openPointReview"></a>
+                            </div>
+                            
+                        <!-- /ko -->
+                    </td>
+                </tr>
+                <tr class="entryRow secondRow" data-bind="event:{mouseover:$data.notNew}, css:$data.altBgColor($index)">
+                    <td class="row">
+                        <div class="col-sm-3 btn btn-default btn-xs" data-bind="click:$parent.cloneRow, css:$parent.enableBtn, visible:!$data.isDeleted() && $data.refPoint != null"><i class="fa fa-retweet", style="color:rgb(0,0,0)"></i> Clone</div>
+                        <div class="col-sm-3 btn btn-default btn-xs" data-bind="click:removeEntry, css:$parent.enableBtn, visible:!$data.isDeleted()"><i class="fa fa-minus-circle", style="color:rgb(217,83,79)"></i> Delete</div>
+                        <div class="col-sm-3 btn btn-default btn-xs" data-bind="click:returnEntry, css:$parent.enableBtn, visible:$data.isDeleted()"><i class="fa fa-reply", style="color:rgb(0,0,255)"></i> Undo</div>
+                    </td>
+                </tr>
+                <tr class="entryRow thirdRow" data-bind="event:{mouseover:$data.notNew}, css:$data.altBgColor($index)">
+                    <td>
+                        &nbsp;
+                    </td>
+                </tr>
+                <tr class="entryRow fourthRow" data-bind="event:{mouseover:$data.notNew}, css:$data.altBgColor($index)">
+                    <td>
+                        &nbsp;
+                    </td>
+                </tr>
+                <tr class="entryRow fifthRow" data-bind="event:{mouseover:$data.notNew}, css:$data.altBgColor($index)">
+                    <td>
+                        &nbsp;
+                    </td>
+                </tr>
+            </tbody>
+            
+        </table>
+
+        <div class="btn btn-default btn-xs" data-bind="click:addRow, visible:isInEditMode"><i class="fa fa-plus-circle", style="color:rgb(91,192,222)"></i><span data-bind="text:newRow" /></div>
+    </div>
+
+    <div class="table-responsive scheduleentry entryDataCols" data-bind="visible: !networkError()">
+        <table class="grid table table-condensed entryTable">
+            <thead>
+            <tr>
+                <!-- <th class="cursorPointer" data-bind="click: sortTable.bind($data, 'refPoint')"><div>Point Name<i class="fa fa-chevron-up"></i></div></th> -->
+                <th class="cursorPointer smallCol" data-bind="click: sortTable.bind($data, 'Control Time')"><div>Time<i class="fa"></i></div></th>
+                <th class="smallCol"><div>Controls<i class="fa"></i></div></th>
+                <th><div>Property<i class="fa"></i></div></th>
+                <th class="datesCol"><div>Time Period<i class="fa"></i></div></th>
+            </tr>
+            </thead>
+            
+            <tbody data-bind="visible: filteredEntries().length == 0">
+            <tr>
+                <td colspan="13">None</td>
+            </tr>
+            </tbody>
+            <tbody data-bind="foreach: {data:filteredEntries}" class="entrybody">
+            <tr class="entryRow firstRow" data-bind="event:{mouseover:$data.notNew}, css:$data.altBgColor($index)">
+                <td>
+                    <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Control Time', data: $data.point, columnClasses: '', readOnlyText: 'roControls',min: '0:0:0', showLabel: false, rootContext: $root, noValidation: true } } -->
+                    <!-- /ko -->
+                </td>
+                <td>
+                    <input type="checkbox" data-bind="checked:$data.point['Enable Schedule'].Value, enable:$data.isEditable"><span data-bind="css:$data.isRoCtrl()"> Enable</span>
+                </td>
+                <td class="dropdownCol">
+                    <!-- ko if: $data.hasRef() -->
+                        <!-- ko if: $data.isEditable() -->
+                            <select data-bind="options:$data.properties, value:$data.point['Control Property'].Value, enable:$parent.isInEditMode", class='input-xxs'></select>
+                        <!-- /ko -->             
+                        <!-- ko ifnot: $data.isEditable() -->
+                            <div class="roControls">
+                                <span data-bind="text: $data.point['Control Property'].Value"></span>
+                            </div>
+                        <!-- /ko -->
+                    <!-- /ko -->
+                </td>        
+                <!-- ko if: $data.isEditable()-->
+                    <td>
+                        <span data-bind="text:Sunday, click: $parent.toggleDay, css:SundayActive", data-enum="1", class="dayselector cursorPointer"></span>
+                        <span data-bind="text:Monday, click: $parent.toggleDay, css:MondayActive", data-enum="64", class="dayselector cursorPointer"></span>
+                        <span data-bind="text:Tuesday, click: $parent.toggleDay, css:TuesdayActive", data-enum="32", class="dayselector cursorPointer"></span>
+                        <span data-bind="text:Wednesday, click: $parent.toggleDay, css:WednesdayActive", data-enum="16", class="dayselector cursorPointer"></span>
+                        <span data-bind="text:Thursday, click: $parent.toggleDay, css:ThursdayActive", data-enum="8", class="dayselector cursorPointer"></span>
+                        <span data-bind="text:Friday, click: $parent.toggleDay, css:FridayActive", data-enum="4", class="dayselector cursorPointer"></span>
+                        <span data-bind="text:Saturday, click: $parent.toggleDay, css:SaturdayActive", data-enum="2", class="dayselector cursorPointer"></span>
+                        <span data-bind="text:Holiday, click: $parent.toggleDay, css:HolidayActive", data-enum="128", class="dayselector cursorPointer"></span>
+                    </td>
+                <!-- /ko -->
+                    
+                <!-- ko ifnot: $data.isEditable()-->
+                    <td>
+                        <span data-bind="text:Sunday, css:SundayActive", class="dayselector roDays"></span>
+                        <span data-bind="text:Monday, css:MondayActive", class="dayselector roDays"></span>
+                        <span data-bind="text:Tuesday, css:TuesdayActive", class="dayselector roDays"></span>
+                        <span data-bind="text:Wednesday, css:WednesdayActive", class="dayselector roDays"></span>
+                        <span data-bind="text:Thursday, css:ThursdayActive", class="dayselector roDays"></span>
+                        <span data-bind="text:Friday, css:FridayActive", class="dayselector roDays"></span>
+                        <span data-bind="text:Saturday, css:SaturdayActive", class="dayselector roDays"></span>
+                        <span data-bind="text:Holiday, css:HolidayActive", class="dayselector roDays"></span>
+                    </td>
+                <!-- /ko -->
+                
+            </tr>
+            <tr class="entryRow secondRow" data-bind="event:{mouseover:$data.notNew}, css:$data.altBgColor($index)">
+                <td></td>
+                <td>
+                    <input type="checkbox" data-bind="checked:$data.point['Host Schedule'].Value, enable:($data.isEditable() && !$parent.hostSchedule())"><span data-bind="css:$data.isRoCtrl()"> Host</span>
+                </td>
+                <td class="dropdownCol">
+                    <!-- ko if: $data.hasRef() && !$data.point["Active Release"].Value() -->
+                        <!-- ko if: $data.valueTypeSelector() == 1 -->
+                            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Control Value', data: $data.point, columnClasses: '', min: 0, showLabel: false, rootContext: $root, doValidate: false } } -->
+                            <!-- /ko -->
+                        <!-- /ko -->
+                        <!-- ko if: $data.valueTypeSelector() == 5-->
+                            <!-- ko if: $data.isEditable() -->
+                                <select data-bind= "options:ValueOptions, 
+                                                    optionsText: 'name',
+                                                    optionsValue: 'value',
+                                                    value: $data.point['Control Value'].eValue,
+                                                    enumTextValue: $data.point['Control Value'].Value,
+                                                    enable: $data.isEditable",
+                                class='input-xxs'></select>
+                            <!-- /ko -->
+                            <!-- ko ifnot: $data.isEditable() -->
+                                <div class="roControls">
+                                    <span data-bind="text: $data.point['Control Value'].Value"></span>
+                                </div>
+                            <!-- /ko -->
+                        <!-- /ko -->
+                        <!-- ko if: $data.valueTypeSelector() == 7-->
+                            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Control Value', data: $data.point, columnClasses: '', showLabel: false, rootContext: $root, doValidate: false } } -->
+                            <!-- /ko -->
+                        <!-- /ko -->
+                    <!-- /ko -->
+                </td>
+                <td>
+                    &nbsp;<i class="fa fa-calendar-o", style="color:rgb(0,0,0)"></i> Begin Date
+                </td>
+                
+            </tr>
+            <tr class="entryRow thirdRow" data-bind="event:{mouseover:$data.notNew}, css:$data.altBgColor($index)">
+                <td></td>
+                <td>
+                    <input type="checkbox" data-bind="checked:$data.point['Heating Season'].Value, enable:$data.isEditable"><span data-bind="css:$data.isRoCtrl()"> Heating</span>
+                </td>
+                <td>
+                    <!-- ko if: $data.visibleController()-->
+                        <!-- ko if: $data.isEditable()-->
+                        <select data-bind= "options:$parent.priorities, 
+                                            optionsText: 'name',
+                                            optionsValue: 'value',
+                                            value:$data.point['Control Priority'].eValue,
+                                            enumTextValue: $data.point['Control Priority'].Value", 
+                            class='input-xxs col-sm-12 col-xs-12' />
+                        <!-- /ko -->
+                        <!-- ko if: !$data.isEditable()-->
+                        <div class="roControls">
+                            <span data-bind="text:$data.point['Control Priority'].Value"></span>
+                        </div>
+                        <!-- /ko -->
+                    <!-- /ko -->
+                    <!-- ko if: !$data.visibleController()-->
+                        <div class="roControls">
+                            &nbsp;
+                        </div>
+                    <!-- /ko -->
+                </td>
+                <!-- ko if: $data.isEditable() -->
+                    <td>
+                        <select data-bind= "options:months, 
+                                            optionsText: 'name',
+                                            optionsValue: 'value',
+                                            value:$data.point['Begin Month'].Value", 
+                        class='input-xxs col-sm-3 col-xs-3' />
+                        <span class='dateseperator col-sm-1 col-xs-1'>/</span>
+                        <select data-bind="options:days, 
+                                            optionsText: 'name',
+                                            optionsValue: 'value',
+                                            value:$data.point['Begin Day'].Value", 
+                        class=' input-xxs col-sm-3 col-xs-3' />
+                        <span class='dateseperator col-sm-1 col-xs-1'>/</span>
+                        <select data-bind="options:years, 
+                                            optionsText: 'name',
+                                            optionsValue: 'value',
+                                            value:$data.point['Begin Year'].Value", 
+                        class=' input-xxs col-sm-3 col-xs-3' />
+                    </td>
+                <!-- /ko -->
+                <!-- ko if: !$data.isEditable()-->
+                    <td>
+                        <span data-bind="text:beginDate" class="dayselector roDates"></span>
+                    </td>
+                <!-- /ko -->
+            </tr>
+            <tr class="entryRow fourthRow" data-bind="event:{mouseover:$data.notNew}, css:$data.altBgColor($index)">
+                <td></td>
+                <td>
+                    <input type="checkbox" data-bind="checked:$data.point['Cooling Season'].Value, enable:$data.isEditable"><span data-bind="css:$data.isRoCtrl()"> Cooling</span>
+                </td>
+                <td>
+                    <!-- ko if: $data.visibleController()-->
+                        <!-- ko if: $data.isEditable()-->
+                        <select data-bind= "options:$parent.controllers, 
+                                            optionsText: 'name',
+                                            optionsValue: 'value',
+                                            value:$data.point['Controller'].eValue,
+                                            enumTextValue: $data.point['Controller'].Value", 
+                            class='input-xxs col-sm-12 col-xs-12' />
+                        <!-- /ko -->
+                        <!-- ko if: !$data.isEditable()-->
+                        <div class="roControls">
+                            (<span data-bind="text:$data.point['Controller'].eValue"></span>) <span data-bind="text:$data.point['Controller'].Value"></span>
+                        </div>
+                        <!-- /ko -->
+                    <!-- /ko -->
+                </td>
+                <td>
+                    &nbsp;<i class="fa fa-calendar-o", style="color:rgb(0,0,0)"></i> End Date
+                </td>
+                
+            </tr>
+            <tr class="entryRow fifthRow" data-bind="event:{mouseover:$data.notNew}, css:$data.altBgColor($index)">
+                <td></td>
+                <td></td>
+                <td>
+                <!-- ko if:$data.visibleController()-->
+                    <input type="checkbox" data-bind="checked:$data.point['Active Release'].Value, enable:$data.isEditable"><span data-bind="css:$data.isRoCtrl()"> Release</span>
+                <!-- /ko -->
+                </td>
+                
+                <!-- ko if: $data.isEditable()-->
+                    <td>
+                        <select data-bind= "options:months, 
+                                            optionsText: 'name',
+                                            optionsValue: 'value',
+                                            value:$data.point['End Month'].Value,
+                                            disable: $data.point['End Month'].isReadOnly", 
+                        class='input-xxs col-sm-3 col-xs-3' />
+                        <span class='dateseperator col-sm-1 col-xs-1'>/</span>
+                        <select data-bind="options:days, 
+                                            optionsText: 'name',
+                                            optionsValue: 'value',
+                                            value:$data.point['End Day'].Value,
+                                            disable: $data.point['End Day'].isReadOnly", 
+                        class=' input-xxs col-sm-3 col-xs-3' />
+                        <span class='dateseperator col-sm-1 col-xs-1'>/</span>
+                        <select data-bind="options:years, 
+                                            optionsText: 'name',
+                                            optionsValue: 'value',
+                                            value:$data.point['End Year'].Value,
+                                            disable: $data.point['End Year'].isReadOnly", 
+                        class=' input-xxs col-sm-3 col-xs-3' />
+                    </td>
+                <!-- /ko -->
+                <!-- ko if: !$data.isEditable()-->
+                    <td>
+                        <span data-bind="text:endDate" class="dayselector roDates"></span>
+                    </td>
+                <!-- /ko -->
+                
+            </tr>
+            </tbody>
+            
+        </table>
+    </div>
+</div>

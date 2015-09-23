@@ -1,0 +1,20 @@
+doctype html
+html
+    head
+        title
+            | Infoscan by Dorsett Technologies
+        style.
+            html, body {
+                margin: 0;
+            }
+            #fetcher {
+                position:absolute;
+                width:5000px;
+                height:5000px;
+            }
+        script.
+            var pointId = null;//!{id};
+        script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
+        script(type='text/javascript', src='/js/thumbnailGenerator/generatorClient.js')
+    body
+        iframe#fetcher

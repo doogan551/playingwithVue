@@ -1,0 +1,31 @@
+.row
+.container.well.well-sm
+    .row
+        .form-group
+            label.col-xs-6.checkbox(style="padding-left:40px")
+                input(type='checkbox', data-bind='enable:getSelectedDProp(\'Shutdown Enable\'),checked:getSelectedDProp(\'Shutdown Enable\')')
+                | Shutdown Enable
+    .row
+        .form-group
+            label.col-xs-6.checkbox(style="padding-left:40px")
+                input(type='checkbox', data-bind='enable:getSelectedDProp(\'Shutdown Enable\'), checked:getSelectedDProp(\'Shutdown Release\')')
+                | Relinquish
+    .row
+        .form-group
+            label.col-xs-6.checkbox(style="padding-left:40px")
+                input(type='checkbox', data-bind='enable:getSelectedDProp(\'Shutdown Enable\'), checked:getSelectedDProp(\'Shutdown Control\')')
+                | Output Enable
+    .row
+        .form-group
+            label.col-xs-6.control-label
+                | Output Value
+            .col-xs-6
+                input.form-control.input-sm(type='text', data-bind='visible:isFloat(\'Shutdown Value\'), enable:getSelectedDProp(\'Shutdown Enable\'),  event: { keyup: changeVal.bind($data,\'Shutdown Value\') },value:getSelectedDProp(\'Shutdown Value\')')
+                select.form-control.input-sm(data-bind="visible:isEnum2('Shutdown Value'), enable:getSelectedDProp('Shutdown Enable'), event: {change: changeSelect.bind($element, $data,'Shutdown Value', false) }, options:dropdownRange('Shutdown Value'), optionsText: 'key', optionsValue:'val', optionsCaption: '[Not Selected]', value:getSelectedDPropEvalue('Shutdown Value')")
+    .row
+        .form-group
+            label.col-xs-6.control-label
+                | Shutdown State
+            .col-xs-6
+                select.form-control.input-sm(data-bind='enable:getSelectedDProp(\'Shutdown Enable\'), event: {change: changeSelect.bind($element, $data,\'Shutdown State\', false) },  options:dropdownRange(\'Shutdown State\'), optionsText: \'key\', optionsValue:\'val\', optionsCaption: \'[Not Selected]\', value:getSelectedDPropEvalue(\'Shutdown State\')')
+

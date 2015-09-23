@@ -1,0 +1,19 @@
+<!-- ko if: isInEditMode -->
+<div class="col col-xs-12">
+    <div class="dataField">
+        <label>Description</label>
+        <input type="text" data-bind="value: description, validateOnBlur: 'Description'" class="description form-control">
+    </div>
+</div>
+<!-- /ko -->
+
+<!-- ko ifnot: isInEditMode -->
+    <!-- ko if: $.trim(description()) != '' -->
+<div class="col col-xs-12">
+    <div class="dataField">
+        <label>Description</label>
+        <span class="lh30" data-bind="text: description"></span>
+    </div>
+</div>
+<!-- /ko -->
+<!-- /ko -->

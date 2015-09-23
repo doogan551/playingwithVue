@@ -1,0 +1,21 @@
+<!-- ko if: data.isDisplayable -->
+<div data-bind="attr: { class: columnClasses }">
+    <div class="dataField">
+        <label data-bind="text: propertyName, visible: showLabel"></label>
+        <!-- ko if: isInEditMode -->
+        <select data-bind="options: getOptions(),
+                           optionsText: 'name',
+                           optionsValue: 'value',
+                           enumTextValue: data.Value,
+                           value: data.eValue,
+                           propertyName: propertyName,
+                           disable: data.isReadOnly" class="form-control input-sm"></select>
+        <!-- /ko -->
+        <!-- ko ifnot: isInEditMode -->
+        <div class="lh30">
+            <span data-bind="text: data.Value"></span>
+        </div>
+        <!-- /ko -->
+    </div>
+</div>
+<!-- /ko -->

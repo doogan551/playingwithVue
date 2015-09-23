@@ -1,0 +1,203 @@
+body {
+    overflow: hidden;
+}
+
+.hideLoading {
+    display: none;
+}
+
+.loaded .hideLoading {
+    display: block;
+}
+
+.viewMode .editSection,
+.editMode .viewSection {
+    display: none !important;
+}
+
+.blockOverlay,
+.blockMsg {
+    z-index: 9999 !important;
+}
+
+.modal .panel {
+    margin-bottom: 0;
+}
+
+.modal .input-row {
+    /*margin-bottom: 7px;*/
+    padding: 2px;
+}
+
+.modal .input-row .checkbox {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+#gplSequenceProperties .row {
+    margin-left: auto;
+}
+
+.dataField > label {
+    margin-top: 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    /*text-transform: uppercase;*/
+    font-size: 14px;
+    font-weight: bold;
+    color: #e4e4e4;
+    display: block;
+    margin-bottom: 4px;
+    /*border-bottom: 1px solid #CECECE;*/
+}
+
+.dataField > input[type="checkbox"] {
+    margin: 0;
+}
+
+.dataField .short-input {
+    width: 30px;
+    padding: 0;
+    text-align: center;
+}
+
+.subtitle {
+    /*font-size: 1.1em;*/
+    /*font-weight: bold;*/
+    border: 1px solid #ccc;
+    margin: 10px auto;
+    padding: 0 10px;
+    border-radius: 3px;
+}
+
+.subtitle .row,
+.subtitle .col {
+    margin-bottom: 0;
+}
+
+.subtitle div,
+.subtitle label {
+    font-weight: normal;
+}
+
+.subtitle div {
+    font-size: 1em;
+    margin-bottom: 10px;
+}
+
+.subtitle label {
+    margin-bottom: 0;
+}
+
+.devicePoint button,
+.pointName button {
+    margin-right: 10px;
+}
+
+.bottomBar {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    height: 40px;
+    text-align: center;
+    background-color: #333;
+    padding-top: 5px;
+    border-top: 1px solid #ccc;
+}
+
+.bottomBar button {
+    margin-left: 5px;
+}
+
+.bottomBar .pop {
+    margin-top: 4px;
+    margin-left: 10px;
+    font-size: 0.9em;
+}
+
+.bottomBar .pop a {
+    color: #ffffff;
+}
+
+.pop .fa-arrow-circle-up,
+.pop .fa-arrow-circle-down {
+    margin-right: 3px;
+    -ms-transform: rotate(45deg); /* IE 9 */
+    -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
+    transform: rotate(45deg);
+}
+
+.sequenceName {
+    margin-right: 10px;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+
+.colorpicker span {
+    color: #ccc;
+}
+
+.colorpicker {
+    margin-bottom: 5px;
+}
+
+
+
+.contextMenu {
+    font-size: 0.8em;
+    background-color: #333333;
+    color: #cccccc;
+    box-shadow: 3px 3px 2px #333333;
+    width: auto;
+}
+
+.contextMenu .head {
+    font-weight: bold;
+    text-align: center;
+    width: 100%;
+    display: inline-block;
+    border-bottom: 1px solid #ccc;
+}
+
+.contextMenu li {
+    display: none;
+    padding: 2px 0;
+}
+
+.contextMenu .block .block,
+.contextMenu .line .line,
+.contextMenu .default .default,
+.contextMenu ul .all {
+    display: list-item;
+}
+
+.contextMenu li a {
+    color: #ccc;
+    /*padding-left: 18px;*/
+    /*text-indent: -15px;*/
+    display: block;
+    width: 100%;
+}
+
+.contextMenu li a:hover {
+    color: #333;
+    background-color: #ccc;
+}
+
+.contextMenu .jqx-fill-state-hover-flat {
+    background-image: none;
+    background-color: #d3d3d3;
+}
+
+/* overrides */
+
+.modal-body {
+    padding: 15px;
+}
+
+.modal-header,
+.modal-footer {
+    padding: 10px;
+}

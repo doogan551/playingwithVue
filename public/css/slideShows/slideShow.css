@@ -1,0 +1,108 @@
+body{
+    background-color:#000;
+    overflow:hidden;
+}
+#case{
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+    overflow:hidden;
+    position:absolute;
+    display:block;
+    overflow:visible;
+    background: transparent;
+    height:100vh;
+    width:100vw;
+    z-index:4;
+}
+.error {
+    display:none;
+}
+.previousframe {
+    height: 100%;
+    width: 100%;
+    visibility: hidden;
+}
+.currentframe {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    overflow:hidden;
+    height: 100%;
+    width: 100%;
+    display: block;
+    visibility: visible;
+}
+.nextframe {
+    height: 100%;
+    width: 100%;
+    visibility: hidden;
+}
+iframe{
+    border:0;
+}
+#loading{
+    z-index:5;
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+    overflow:hidden;
+    position:absolute;
+    display:block;
+    overflow:visible;
+    height:100vh;
+    width:100vw;
+    background-color:#000;
+}
+.glyphicon-cog {
+    cursor:pointer;
+    position: fixed;
+    left: 3px;
+    top: 96%;
+}
+.navbar {
+    top: -4px;
+    display: none;
+}
+.glyphicon-cog:hover + .navbar {
+    display: block;
+    position: fixed;
+    top: 95%;
+    left: 16px;
+}
+.navbar:hover {
+    display: block;
+    position: fixed;
+    top: 95%;
+    left: 16px;
+}
+.navbar.lockedopen {
+    display: block;
+    position: fixed;
+    top: 95%;
+    left: 16px;
+}
+.modal-backdrop{
+    display:none;
+}
+.showing{
+    z-index:2;
+}
+.slide-container{
+    overflow:hidden;
+    display: block;
+}
+.slidescontainer{
+    overflow:hidden;
+    height: 100%;
+    width: 100%;
+    display: block;
+}
+.icon-refresh-animate {
+  animation-name: rotateThis;
+  animation-duration: .5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}

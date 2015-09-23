@@ -1,0 +1,34 @@
+    <div data-bind="visible: gettingData" class="gettingData">
+        <i class="fa fa-spinner fa-spin"></i>
+    </div>
+
+    <!-- ko ifnot: gettingData-->
+    <div class="table-responsive">
+        <table class="grid table table-condensed">
+            <thead>
+            <tr>
+                <th>Ack</th>
+                <th>Notify</th>
+                <th>Type</th>
+                <th>Name</th>
+                <th>Message</th>
+            </tr>
+            </thead>
+            <tbody data-bind="foreach: data">
+            <tr>
+                <td>
+                    <input type="checkbox" data-bind="checked: ack, enable: $parent.isInEditMode">
+                </td>
+                <td>
+                    <input type="checkbox" data-bind="checked: notify, enable: $parent.isInEditMode">
+                </td>
+                <td data-bind="text: $parent.getMessageById(msgId()).msgTypeName"></td>
+                <td data-bind="text: $parent.getMessageById(msgId()).msgName"></td>
+                <td>
+                    <select class="form-control input-sm" data-bind="value: msgId,options: $parent.getAlarmMessagesByType(msgType()), optionsText: 'msgFormat', optionsValue: '_id', enable: $parent.isInEditMode "><option>Test</option></select>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <!-- /ko -->

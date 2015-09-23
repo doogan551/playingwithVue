@@ -1,0 +1,298 @@
+extends layout
+
+block content
+  //script(src='/display/vert.js')
+  script(src='/display/ang.js')
+  script(src='/display/angular.js')
+  link(rel='stylesheet', href='/display/main.css')
+  link(rel='stylesheet', href='/display/display.css')
+  script(src='/display/spectrum.js')
+  link(rel='stylesheet', href='/display/spectrum.css')
+  script(src='/display/display.js')
+  #backDrop(ng-click="blur()")
+    #display(style='-webkit-transform: scale({{zoom/100}});background-color:{{display["Background Color"]|ms2rgb}};width:{{display.Width}}px;height:{{display.Height}}px;')
+      #displayClip
+      #displayGrid1
+      #displayObjects
+        #displayBg(ng-click="blur()")
+        .object(
+          draggable="true",
+          ng-repeat="object in display['Screen Objects']",
+          ng-click="edit(object)",
+          data-upi="{{object.upi}}",
+          data-precision="{{object.Precision}}",
+          data-animationFile="{{object['Animation File']}}",
+          data-animationid="{{object['Animation ID']}}",
+          data-pointType="{{object['Point Type']}}",
+          data-screenObject="{{object['Screen Object']}}",
+          style='color:{{object["Foreground Color"]|ms2rgb}};font-size:{{object["Font Size"]|pts2px}};font-family:{{object["Font Name"]|fonts}};background-color:{{object["Background Color"]|ms2rgbBG}};left:{{object.Left}}px;top:{{object.Top}}px;width:{{object.Width|wh}};height:{{object.Height|wh}}')
+              {{object|renderObject}}
+              div(class='highlight-{{object.sel}}')
+      #zoverlay &nbsp;
+      #selection
+      #displayGrid2
+      div.handle.sizeNw
+      div.handle.sizeNe
+      div.handle.sizeSw
+      div.handle.sizeSe
+
+    div(class='topBar',style='background-image: linear-gradient(#3c3c3c,#242424);position: absolute; width: 100%;', data-role='header')
+      div(style='float: left;')
+        a#minDisplay(data-swipe-close='false', data-rel='open', data-mini='true', data-role='button', data-icon='d-min', data-inline='true') Pop In
+        a#editDisplay(href='#leftPanel', data-swipe-close='false', data-rel='open', data-mini='true', data-role='button', data-icon='d-wrench',  data-inline='true') Edit Display
+      h1 {{display.Name}}
+      a#saveDisplay.ui-btn-right(href='#', data-mini='true', data-role='button', data-icon='d-save',  data-inline='true') Save Display
+    div(class='topBar',style='background-image: linear-gradient(#3c3c3c,#242424);position: absolute; width: 100%;bottom:0px;', data-role='header', data-theme='a')
+          #zslide
+            input#zoomShow(data-inline='true',data-icon='d-zoom', value='{{zoom|percent}}', type='text', data-mini='true', data-theme='a')
+            a.resetZoom(class="ui-icon-nodisc", data-role='button', data-icon='search', data-iconpos='notext', data-theme='a', data-iconshadow='false', data-inline='true') Reset Zoom
+            input#zoom-slider(class='ui-btn-corner-all', data-icon='d-zoom',ng-change="updateZoom()",ng-model='zoom',type='range', name='slider-fill-mini', value='100', min='25', max='300', data-mini='true', data-highlight='true')
+          h3 &nbsp;
+
+
+block panels
+  #popSelector(data-role='popup', data-overlay-theme='a', data-theme='a', data-corners='false', data-tolerance='15,15')
+    a.ui-btn-right(class='closePop', data-rel='back', data-role='button', data-theme='a', data-icon='delete', data-iconpos='notext') Close
+    iframe(id='popFrame', src='', width='800', height='600', seamless='seamless')
+  #confirmStage.ui-corner-all(data-role='popup', data-overlay-theme='a', data-theme='c', data-dismissible='false', style='max-width: 400px;')
+    .ui-corner-top(data-role='header', data-theme='a')
+      h1 Stage Display?
+    .ui-corner-bottom.ui-content(data-role='content', style='padding: 5px;', data-theme='d')
+      h3.ui-title
+        | Are you sure you want to load this display as the staging version? Any current staging changes will be lost.
+      a(href='#', data-role='button', data-inline='true', data-rel='back', data-transition='flow', data-theme='b') Stage and Edit
+      a(href='#', data-role='button', data-inline='true', data-rel='back', data-theme='c') Cancel
+
+
+  #rightPanel(style='border-left: 1px solid #121212;', data-role='panel', data-swipe-close='false', data-dismissible='false', data-position='right', data-display='overlay')
+    div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+      h4 Layout Properties
+      #hw.ui-grid-a
+        .ui-block-a(style='padding: 5px; padding-left: 0px;')
+          div(style='padding: 0px; margin: 0px;', data-role='fieldcontain')
+            label(for='dispH') Height: 
+            input#dispH(ng-model='editItem.Height',type='text', maxlength='4', size='4', data-mini='true', name='textinput-fc', value='')
+        .ui-block-b(style='padding: 5px;')
+          div(style='padding: 0px; margin: 0px;', data-role='fieldcontain')
+            label(for='dispW') Width: 
+            input#dispW(ng-model='editItem.Width',type='text', maxlength='4', size='4', data-mini='true', name='textinput-fc', value='')
+      #hw.ui-grid-a
+        .ui-block-a(style='padding: 5px; padding-left: 0px;')
+          div(style='padding: 0px; margin: 0px;', data-role='fieldcontain')
+            label(for='dispH') Top: 
+            input#dispH(ng-model='editItem.Top',type='text', maxlength='4', size='4', data-mini='true', name='textinput-fc', value='')
+        .ui-block-b(style='padding: 5px;')
+          div(style='padding: 0px; margin: 0px;', data-role='fieldcontain')
+            label(for='dispW') Left: 
+            input#dispW(ng-model='editItem.Left',type='text', maxlength='4', size='4', data-mini='true', name='textinput-fc', value='')
+    div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+      h4 Text Properties
+      label(for='textarea') Text:
+      textarea#textarea(ng-model='editItem.upi', cols='40', rows='8', name='textarea', data-clear-btn='true')
+      //label(for='ftest') font test:
+      //input#ftest(ng-model='editItem["Font Name"]', ng-change="updateFont()", type='text', data-clear-btn='true')
+      label.select(for='select-choice-a') Font:
+      select#fontName(data-mini='true', name='select-choice-a', data-native-menu='false')
+        option(value='Fixedsys') Fixedsys
+        option(value='fixedsys') fixedsys
+        option(value='Bookman Old Style') Bookman Old Style
+      div(style='overflow:hidden;')
+        div(style='float: left; width: 130px; padding-right: 5px;')
+          select#select-choice-mini(name='select-choice-mini', data-mini='true', data-native-menu='false')
+            option(value='standard') Size: 10pt
+            option(value='standard') Size: 12pt
+            option(value='rush') Size: 14pt
+            option(value='rush') Size: 18pt
+            option(value='rush') Size: 24pt
+        fieldset(data-role='controlgroup', data-type='horizontal', data-inline='true', data-mini='true')
+          input#checkbox-6(type='checkbox', name='checkbox-6')
+          label(for='checkbox-6') b
+          input#checkbox-7(type='checkbox', name='checkbox-7', checked='')
+          label(for='checkbox-7')
+            em i
+          input#checkbox-8(type='checkbox', name='checkbox-8')
+          label(for='checkbox-8') u
+        label(for='textarea') Foreground Color:
+        input(ng-model='editItem["Foreground Color"]', type="text")
+        label(for='textarea') Background Color:
+        input(ng-model='editItem["Background Color"]', type="text")
+    div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+      h4 Trend Points
+      a( class='popSelector', data-mini='true', data-rel='popup', data-position-to='window', data-role='button', data-inline='true', data-transition='pop', data-icon='d-open', data-theme='b') Choose Point
+    div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+      h4 Chart Properties
+      label(for='text-1') Title
+      input#text-1(type='text', name='text-1', value='')
+      label(for='text-1') Y Axis
+      input#text-1(type='text', name='text-1', value='')
+    div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+      h4 Linked Dynamic
+      label(for='text-1') Point Id:
+      input#text-1(type='text', name='text-1', value='')
+      label(for='text-1') Point Name:
+      input#text-1(type='text', name='text-1', value='')
+      a(href='#popupMap', data-mini='true', data-rel='popup', data-position-to='window', data-role='button', data-inline='true', data-transition='pop', data-icon='d-open', data-theme='b') Choose Display
+
+
+
+
+  #leftPanel(data-swipe-close='false', data-role='panel', data-dismissible='false', data-position='left', data-display='overlay')
+    div(style='position: absolute; top: 0px;right:0px; left: 0px; width: 300px; height: 60px;')
+      div(style='position: absolute; top: 0px; left: 0px; right:0px; width: 301px;')
+        #navBar(style='margin: 0px;', data-role='navbar')
+          ul
+            li
+              a#dnav1.ui-btn-active(href='#', data-icon='d-disp',data-theme='a') Display
+            li
+              a#dnav2(href='#', data-icon='d-lib',data-theme='a') Objects
+            li
+              span#clipCount.badge
+              a#dnav3(href='#', data-icon='d-clip',data-theme='a') Clipboard
+            li
+              a#dnav4(href='#', data-icon='d-clock',data-theme='a') Versions
+
+
+    #div(style="position:absolute;top:58px;left:0px;right:0px;bottom:0px;overflow:auto;")
+      #rInner(style='position:absolute;top:0px;margin-left:0px;margin-right:0px;width:300px;overflow-x:hidden;bottom:0px')
+        #dProps.leftPanels
+          div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+            h4 Display Dimensions
+            form
+              ul(data-role='listview', data-inset='true')
+                  li(data-role='fieldcontain')
+                    label(for='slider2') Height:&nbsp;
+                    input#slider2(ng-change="update()", ng-model='display.Width', type='range', name='slider2', data-mini='true', value='{{displayWidth()}}', min='100', max='1200', data-highlight='true')
+                  li(data-role='fieldcontain')
+                    label(for='slider1') Width:&nbsp;
+                    input#slider1(ng-change="update()", ng-model='display.Height', type='range', name='slider1', data-mini='true', value='{{displayHeight()}}', min='100', max='2000', data-highlight='true')
+                  li(data-role='fieldcontain',style='display:none;overflow:hidden')
+                    label(for='handles',style='float:left;width:120px;padding-top:3px;') Resize Handles:
+                    div(style='float:left;padding-left:0px;')
+                      select#handles(name='handles', data-role='slider', data-mini='true')
+                        option(value='hide') hide
+                        option(value='show') show
+                  li(data-role='fieldcontain')
+                    input#checkbox-mini-0.custom(type='checkbox', name='checkbox-mini-0', data-mini='true',data-iconpos="right")
+                    label(for='checkbox-mini-0') Show Resize Handles
+
+
+
+
+          div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+            h4 Background
+            div Color (RGB)
+            input(ng-model="bgHex", type='text')
+            div Color (HEX)
+            input#bgColor(type='text')
+            div Color (MSSACCESS)
+            input(ng-model="display['Background Color']",type='text')
+            div Image
+          div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+            h4 Information
+            div Id
+            div Name
+            div Current Zoom Level
+        #dClip.leftPanels
+          div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+            h4 Current Items
+            .objectBox
+              table#table-custom-2.ui-body-d.ui-shadow.table-stripe.ui-responsive(width='100%', data-role='table', data-column-btn-theme='b')
+                thead
+                  tr.ui-bar-d
+                    th(colspan='2', data-priority='3')
+                      a(href='#', data-role='button', data-mini='true', data-inline='true', data-icon='d-paste', data-theme='b') Paste
+                      a(href='#', data-role='button', data-mini='true', data-inline='true', data-icon='d-trash') Clear
+                tbody
+                  tr
+                    td button
+                    td btn text here
+                  tr
+                    td text
+                    td a bunch of text in here lets see if it
+                  tr
+                    td text
+                    td a bunch of text in here lets see if it
+                  tr
+                    td text
+                    td a bunch of text in here lets see if it
+        #dVersion.leftPanels
+          div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+            h4 Version History
+            .objectBox
+              table#table-custom-2.ui-body-d.ui-shadow.table-stripe.ui-responsive(width='100%', data-role='table', data-column-btn-theme='b')
+                thead
+                  tr.ui-bar-d
+                    th(data-priority='2') Date
+                    th(width='160', data-priority='3')  
+                tbody
+                  tr
+                    td(style='color: green;') 6/5/2013 13:49:44
+                    td
+                      .displayGroup(data-role='controlgroup', data-type='horizontal', data-inline='true', style='float: right;', data-mini='true')
+                        a#addDisplay(href='#confirmStage', data-rel='popup', data-mini='true', data-role='button', data-icon='d-wrench', data-theme='a', data-inline='true') Stage
+                        a#newDisplay(href='#', data-mini='true', data-role='button', data-icon='d-eye', data-theme='a', data-inline='true') View
+                  tr
+                    td(style='color: orange;') 6/5/2013 13:49:44
+                    td
+                      .displayGroup(data-role='controlgroup', data-type='horizontal', data-inline='true', style='float: right;', data-mini='true')
+                        a#addDisplay(href='#confirmStage', data-rel='popup', data-mini='true', data-role='button', data-icon='d-wrench', data-theme='a', data-inline='true') Stage
+                        a#newDisplay(href='#', data-mini='true', data-role='button', data-icon='d-eye', data-theme='a', data-inline='true') View
+                  tr
+                    td 6/5/2013 13:49:44
+                    td
+                      .displayGroup(data-role='controlgroup', data-type='horizontal', data-inline='true', style='float: right;', data-mini='true')
+                        a#addDisplay(href='#confirmStage', data-rel='popup', data-mini='true', data-role='button', data-icon='d-wrench', data-theme='a', data-inline='true') Stage
+                        a#newDisplay(href='#', data-mini='true', data-role='button', data-icon='d-eye', data-theme='a', data-inline='true') View
+                  tr
+                    td 6/5/2013 13:49:44
+                    td
+                      .displayGroup(data-role='controlgroup', data-type='horizontal', data-inline='true', style='float: right;', data-mini='true')
+                        a#addDisplay(href='#confirmStage', data-rel='popup', data-mini='true', data-role='button', data-icon='d-wrench', data-theme='a', data-inline='true') Stage
+                        a#newDisplay(href='#', data-mini='true', data-role='button', data-icon='d-eye', data-theme='a', data-inline='true') View
+        #dLib.leftPanels
+          div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+            h4 Button
+            .objectBox
+              a#btn(ng-dblclick="addNewObject(freshObj)", draggable='true', class='library', data-role='button', data-mini='true', data-theme='a', data-inline='true') Button
+          div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+            h4 Image
+            .objectBox
+              img(style='float: left; padding-right: 10px;', src='/display/cc/black/png/picture_icon&32.png')
+              div(style='line-height: 32px;') Normal Image
+          div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+            h4 Text
+            .objectBox
+              img(style='float: left; padding-right: 10px;', src='/display/cc/black/png/text_letter_t_icon&32.png')
+              div(style='line-height: 32px;') Static Text
+            .objectBox
+              img(style='float: left; padding-right: 10px;', src='/display/cc/black/png/text_letter_t_icon&32.png')
+              div(style='line-height: 32px;') Dynamic Point
+          div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+            h4 Trend Plot
+            .objectBox
+              img(style='float: left; padding-right: 10px;', src='/display/cc/black/png/chart_line_icon&32.png')
+              div(style='line-height: 32px;') History Chart
+          div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
+            h4 Current Objects (68)
+            .objectBox
+              table#table-custom-2.ui-body-d.ui-shadow.table-stripe.ui-responsive(width='100%', data-role='table', data-column-btn-theme='b')
+                thead
+                  tr.ui-bar-d
+                    th(data-priority='2') Type
+                    th(data-priority='3') Data
+                tbody
+                  tr
+                    td button
+                    td btn text here
+                  tr
+                    td text
+                    td a bunch of text in here lets see if it
+                  tr
+                    td text
+                    td a bunch of text in here lets see if it
+                  tr
+                    td text
+                    td a bunch of text in here lets see if it
+
+    a#closeP(onclick='$("#closeP").hide();$("#openP").show();',href='#leftPanel', data-rel='open',  data-iconshadow="false", style='border-left:none;border-top-left-radius: 0px; border-bottom-left-radius: 0px;position: absolute; top: -8px; right: -30px;', data-role='button', data-icon='arrow-l', data-iconpos='notext', data-theme='a', data-inline='true') Close Panel
+    a#openP(onclick='$("#openP").hide();$("#closeP").show();',href='#leftPanel', data-rel='open',  data-iconshadow="false", style='display:none;border-left:none;border-top-left-radius: 0px; border-bottom-left-radius: 0px;position: absolute; top: -8px; right: -30px;', data-role='button', data-icon='arrow-r', data-iconpos='notext', data-theme='a', data-inline='true') Open Panel

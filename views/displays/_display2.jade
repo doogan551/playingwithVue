@@ -1,0 +1,18 @@
+#displayGrid1
+#displayObjects
+  #displayBg(
+    ng-click="blur()"
+    ng-style='getBGStyle(display)')
+  .object(
+    draggable="true",
+    ng-repeat="object in objs",
+    ng-click="action(object)",
+    ng-bind-html-unsafe="object|renderObject",
+    ng-style='getStyle(object)')
+#zoverlay &nbsp;
+#selection
+#displayGrid2
+div.handle.sizeNw
+div.handle.sizeNe
+div.handle.sizeSw
+div.handle.sizeSe

@@ -1,0 +1,16 @@
+<div class="valueHolder">
+    <div class="value">
+        <!-- ko ifnot: isInEditMode -->
+        <span class="val" data-bind="formattedNumericText: value"></span>
+        <div class="engUnit" data-bind="text: engUnit.Value"></div>
+        <!-- /ko -->
+        <!-- ko if: isInEditMode -->
+        <div class="lh30">
+            <input type="text" data-bind="propertyName: propertyName, numeric: value, valueType: valueType, min: min, max: max, disable: data.isReadOnly" class="val form-control input-sm">
+        </div>
+        <span class="engUnit">
+            <input data-bind="value: engUnit.Value, disable: engUnit.isReadOnly" class="inline-form-control" type="text" placeholder="Engineering Units"/>
+        </span>
+        <!-- /ko -->
+    </div>
+</div>

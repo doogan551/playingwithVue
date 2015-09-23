@@ -1,0 +1,1182 @@
+@import "nib"
+
+global-reset();{ revert: true }
+
+bar = #535353
+barWell = #494949
+barBorder = #2a2a2a
+dark = #282828
+barHighlight = #696969
+barShadow = #505050
+spacer = #1c1c1c
+textColor = #bfbfbf
+inactiveText = #909090
+
+html, body
+  height 100%
+
+body
+  font-family helvetica, sans-serif
+  background-color dark
+  min-width 800px
+  height 100%
+  margin 0px
+  padding 0px
+  overflow hidden
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+section.main
+  height 100%
+
+
+
+.hidden
+  display none
+
+
+/* Header
+-------------------------------------------------- */
+#bar
+  display block
+  height 5px
+  position absolute
+  width 100%
+  top 30px
+  left 0px
+  background bar
+  margin-top 0px
+  margin-bottom 0px
+
+  box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+
+header
+  font-size 16px
+  position absolute
+  width 100%
+  background-color barWell
+  padding 0px 0
+  border-bottom 1px solid barBorder
+  border-top 1px solid barBorder
+  box-shadow 0 1px 2px 0 rgba(0,0,0,25%) inset
+  height 29px
+  a
+    height 18px
+    text-decoration none
+    color textColor
+    &:hover
+      color white
+  .back
+    width 10px
+    position fixed
+    text-indent -9999px
+    margin-top -5px
+    font-size 18px
+    margin-left 10px
+    padding-left 25px
+    background url('/images/backArrow.png') no-repeat
+    background-size 19px 39px
+    background-position 0 0
+    text-shadow 0 -1px 1px barBorder
+    &:hover
+      background-position 0 -22px
+
+  ul.displays
+    color inactiveText
+    float left
+    overflow hidden
+    position relative
+
+    height 29px
+    //border 1px solid red
+    text-shadow 0 -1px 1px barBorder
+    margin-left 60px
+    li.more
+      position absolute
+      display none
+      top 0px
+      right 0px
+      background-image url('/images/downArrow.png')
+      background-repeat no-repeat
+      width 25px
+      border none;
+      background-position 55px 10px
+    li
+      display inline-block
+      font-size 14px
+      cursor pointer
+      height 19px
+      border-left 1px solid barBorder
+      padding 6px 6px 4px 10px
+      margin-top 0px
+      margin-bottom 0px
+      padding-right:55px;
+      float left
+      background-color barWell
+      position relative
+      //box-shadow 0 1px 2px 0 rgba(0,0,0,25%) inset
+      border-right 1px solid barBorder
+
+      &:last-child
+        //border-right 1px solid barBorder
+      &:hover
+        color textColor
+      &.activeDoc
+        color white
+        background-color #a7a7a7
+        border-bottom 1px solid #535353
+        //box-shadow 0 1px 1px 0 barHighlight inset, 0 2px 0 0 bar
+        &:hover
+          color white
+      a.closeTab
+        width 010pxpx
+        font-size 16px
+        margin-top -1px
+        color inactiveText
+        line-height 15px
+        padding 0px 4px 0px 4px
+        display inline
+        float right
+        display inline-block
+        //transform rotate(45deg)
+        position absolute
+        top 5px
+        right 5px
+        margin-left 15px
+        &:hover
+          color textColor
+          border-radius 10px
+      a.popTab
+        width 10px
+        margin-top -1px
+        color inactiveText
+        line-height 15px
+        padding 0px 4px 0px 4px
+        position absolute
+        top 8px
+
+        right 22px
+        display inline
+        display inline-block
+        margin-left 2px
+        &:hover
+          color textColor
+          border-radius 10px
+      a.pinTab
+        width 10px
+        margin-top -1px
+        color inactiveText
+        line-height 15px
+        padding 0px 4px 0px 4px
+        position absolute
+        top 8px
+
+        right 34px
+        display inline
+        display inline-block
+        margin-left 2px
+        &:hover
+          color textColor
+          border-radius 10px
+
+
+
+/* Left Toolbar
+-------------------------------------------------- */
+
+.leftToolbar
+  position absolute
+  left 0px
+  top 0px
+  width 220px
+  height 100%
+  background-color bar
+  border-right 1px solid black
+  box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+
+.tabs
+
+  cursor pointer
+  font-size 16px
+  height 39px
+  box-shadow 0 -1px 1px 0 barShadow inset
+  border-bottom 1px solid black
+  li
+    list-style-type none
+    color inactiveText
+    text-shadow 0 -1px 1px barBorder
+    float left
+
+    width 50px
+    padding 9px 10px 5px 10px
+    box-shadow  0 1px 1px 0 barHighlight, 0 1px 2px 0 rgba(0,0,0,25%) inset
+    border-bottom 1px solid black
+    background-color barWell
+    &:hover
+      color textColor
+    &:first-child
+      width 59px
+      border-right 1px solid black
+    &.active
+      color white
+      border-bottom none
+      box-shadow 0 1px 1px 0 barHighlight inset
+      background-color bar
+
+.viewControls
+  position absolute
+  bottom 0
+  left 0
+  width 220px
+  border-top 1px solid barBorder
+  ul
+    margin 0
+    padding 0
+    li
+      margin 0
+      padding 0
+      cursor pointer
+      height 27px
+      list-style-type none
+      float left
+      text-indent -9999px
+      width 24.5%
+      border-right 1px solid barBorder
+      box-shadow  0 1px 1px 0 barHighlight, 0 1px 2px 0 rgba(0,0,0,25%) inset
+      background-color barWell
+      &:last-child
+        border-right 1px solid barWell
+      &.active
+        box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+        background-color bar
+        background-position 17px 3px
+
+.activeObjects
+  list-style-type none
+  padding 0
+  width 100%
+  position relative
+  overflow-y scroll
+  overflow-x hidden
+  li
+    margin 0
+    padding 5px 10px 4px 10px
+    width 200px
+    border-bottom 1px solid black
+    color textColor
+    font-size 10px
+    font-weight normal
+    text-decoration none
+    text-shadow 0 -1px 1px barBorder
+    box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+    &:hover
+      background-color #5e5e5e
+      color white
+    div.handle
+      cursor move
+      height 15px
+      width 15px
+      margin-top 1px
+      margin-right -5px
+      float right
+      background url('/images/list2.png') no-repeat
+    a.edit
+      height 15px
+      width 15px
+      margin-top 1px
+      margin-right 5px
+      margin-left 5px
+      float right
+      background url('/images/editsmall.png') no-repeat
+  &:after
+    content ""
+    display block
+    width 100%
+    height 6px
+    box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+    border-bottom 1px solid black
+
+.select-tool
+  background url('/images/selectarrow.png') no-repeat
+  background-size 18px 93px
+  background-position 17px -34px
+  height 10px
+  width 10px
+  &:hover
+    background-position 17px -71px
+
+.pan-tool
+  background url('/images/panhand.png') no-repeat
+  background-size 18px 93px
+  background-position 17px -34px
+  height 10px
+  width 10px
+  &:hover
+    background-position 17px -71px
+
+.zoomin-tool
+  background url('/images/zoomin.png') no-repeat
+  background-size 18px 93px
+  background-position 17px -34px
+  height 10px
+  width 10px
+  display none
+  &:hover
+    background-position 17px -71px
+
+.zoom-tool
+
+  height 10px
+  width 10px
+  display none
+  //background url('../images/zoom.png') no-repeat
+  background-size 18px 93px
+  background-position 7px -30px
+  &:hover
+    background-position 7px -68px
+
+.zoomout-tool
+  background url('/images/zoomout.png') no-repeat
+  background-size 18px 93px
+  background-position 17px -34px
+  height 10px
+  width 10px
+  &:hover
+    background-position 17px -71px
+
+
+/* Right Toolbar
+-------------------------------------------------- */
+
+.rightToolbar
+  float right
+  width 220px
+  min-height 100%
+  background-color bar
+  border-left 1px solid black
+  box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+
+.selectionTitle
+  cursor pointer
+  margin-top 35px
+  margin-bottom 0
+  color #fff
+  text-shadow 0 -1px 1px barBorder
+  font-size 18px
+  font-weight normal
+  padding 9px 10px 7px 10px
+  box-shadow  0 1px 1px 0 barHighlight, 0 1px 1px 0 barHighlight inset
+  border-bottom 1px solid black
+  background url('../images/editName.png') no-repeat
+  background-size 19px 60px
+  background-position 193px -35px
+  &:hover
+    background-position 193px 7px
+
+.rightToolbar > .accordion:before
+  content ""
+  display block
+  width 100%
+  height 6px
+  box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+  border-bottom 1px solid black
+
+.itemControls
+  position absolute
+  bottom 0
+  right 0
+  width 220px
+  border-top 1px solid barBorder
+  ul
+    margin 0
+    padding 0
+    li
+      cursor pointer
+      height 27px
+      list-style-type none
+      float left
+      text-indent -9999px
+      width 24.5%
+      border-right 1px solid barBorder
+      box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+      background-color bar
+      &:last-child
+        border-right 1px solid bar
+      &.active
+        box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+        background-color bar
+        background-position 17px 6px
+
+.lock
+  background url('/images/unlocked.png') no-repeat
+  background-size 18px 93px
+  background-position 18px -71px
+  height 10px
+  width 10px
+  &:hover
+    background-position 18px 2px
+
+.lock.locked
+  background url('/images/lock.png') no-repeat
+  background-size 18px 93px
+  background-position 18px -71px
+  &:hover
+    background-position 18px 4px
+
+.moveabove
+  background url('/images/front.png') no-repeat
+  background-size 18px 93px
+  background-position 17px -71px
+  height 10px
+  width 10px
+  &:hover
+    background-position 17px 4px
+
+.movebelow
+  background url('/images/behind.png') no-repeat
+  background-size 18px 93px
+  background-position 17px -71px
+  height 10px
+  width 10px
+  &:hover
+    background-position 17px 4px
+
+.duplicate
+  background url('/images/duplicate.png') no-repeat
+  background-size 18px 93px
+  background-position 17px -71px
+  height 10px
+  width 10px
+  &:hover
+    background-position 17px 4px
+
+
+/* Accordion Styles
+-------------------------------------------------- */
+
+.accordion
+  //overflow-y hidden
+  //overflow-x hidden
+  list-style-type none
+  padding 0
+  width 100%
+  li h3.accordion-heading
+    margin 0
+    cursor pointer
+    padding 5px 10px
+    width 200px
+    border-bottom 1px solid black
+    color textColor
+    font-size 16px
+    font-weight normal
+    text-decoration none
+    text-shadow 0 -1px 1px barBorder
+    box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+    background url('/images/plus.png') no-repeat
+    background-position 200px center
+    &:hover
+      background-color #5e5e5e
+      color white
+  h3.accordion-heading.open
+    color white
+    background url('/images/minus.png') no-repeat
+    background-position 200px center
+  &:after
+    content ""
+    display block
+    width 100%
+    height 6px
+    box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+    border-bottom 1px solid black
+
+.accordion-content
+  padding 10px
+  background-color barWell
+  border-bottom 1px solid barBorder
+  list-style-type none
+  p
+    margin 0
+    font-size 14px
+    color textColor
+    text-shadow 0 -1px 1px barBorder
+    padding-bottom 1px
+  li
+    cursor move
+    font-size 14px
+    color textColor
+    padding 5px
+    margin-bottom 4px
+    border 1px solid barBorder
+    border-radius 2px
+    opacity .8
+    &:last-child
+      margin-bottom 0
+    &:hover
+      box-shadow 0 1px 2px 0 rgba(0,0,0,25%)
+      background-color: bar
+  label
+    font-size 14px
+    color textColor
+    text-shadow 0 -1px 1px barBorder
+  input
+    margin-top 3px
+    margin-bottom 10px
+    width 188px
+    border 1px solid barBorder
+    padding 2px 5px
+    box-shadow 0 1px 3px 0 rgba(0,0,0,50%) inset
+    font-size 14px
+  select
+    margin-top 3px
+    margin-bottom 10px
+    width 200px
+  .button
+    display block
+    font-size 14px
+    color textColor
+    text-decoration none
+    background-color bar
+    text-shadow 0 -1px 1px barBorder
+    box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+    padding 5px
+    border 1px solid barBorder
+    border-radius 2px
+    margin-top 4px
+    &:hover
+      background-color #5e5e5e
+      color white
+  #font
+    margin-bottom 4px
+  #fontsize
+    margin-top 0
+    width 100px
+    margin-bottom 10px
+  .coordx, .coordy
+    display inline-block
+    width 67px
+    margin-right 3px
+  .coordy
+    margin-right 0
+  .fontstyles
+    list-style-type none
+    li
+      cursor pointer
+      box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+      border-radius 3px
+      font-size 14px
+      padding 2px 2px 4px 9px
+      margin-left 5px
+      width 15px
+      height 11px
+      position relative
+      margin-top -24px
+      margin-bottom 5px
+      background-color bar
+      &:hover
+        background-color #5e5e5e
+    #bold
+      font-weight bold
+      padding 2px 3px 4px 8px
+      top -5px
+      right -101px
+    #bold.styleOn
+      background-color barWell
+      box-shadow  0 1px 1px 0 barHighlight, 0 1px 2px 0 rgba(0,0,0,25%) inset
+      color white
+    #italic
+      font-style italic
+      top -5px
+      right -134px
+    #italic.styleOn
+      background-color barWell
+      box-shadow  0 1px 1px 0 barHighlight, 0 1px 2px 0 rgba(0,0,0,25%) inset
+      color white
+    #underline
+      text-decoration underline
+      padding 0 2px 6px 9px
+      top -5px
+      right -167px
+    #underline.styleOn
+      background-color barWell
+      box-shadow  0 1px 1px 0 barHighlight, 0 1px 2px 0 rgba(0,0,0,25%) inset
+      color white
+  .colorpicker
+    cursor pointer
+    margin-top 3px
+    margin-bottom 10px
+    height 22px
+    width 198px
+    background-color #6cb4e5
+    border 1px solid barBorder
+    box-shadow 0 1px 3px 0 rgba(0,0,0,50%) inset
+
+/* Zoom Bar
+-------------------------------------------------- */
+div.zoomBar
+  position absolute
+  left 0
+  top 70%
+  padding 5px
+  padding-left 0
+  background-color bar
+  border-radius 0 4px 4px 0
+  border 1px solid barBorder
+  border-left 0
+  box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+  li
+    background-color bar
+    box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+    border 1px solid barBorder
+    border-left none
+    float left
+    clear left
+    display block
+    text-indent -9999px
+    height 30px
+    width 30px
+    margin-bottom -1px
+  .zoomin-tool
+    border-radius 0 3px 0 0
+    background url('/images/zoomin.png') no-repeat
+    background-size 18px 93px
+    background-position 6px -69px
+    background-color bar
+    &:hover
+      background-position 6px 6px
+    &:active
+      background-position 6px -69px
+      background-color barWell
+      box-shadow 0 1px 2px 0 rgba(0,0,0,25%) inset
+  .zoomout-tool
+    border-radius 0 0 3px 0
+    background url('/images/zoomout.png') no-repeat
+    background-size 18px 93px
+    background-position 6px -69px
+    background-color bar
+    &:hover
+      background-position 6px 6px
+    &:active
+      background-position 6px -69px
+      background-color barWell
+      box-shadow 0 1px 2px 0 rgba(0,0,0,25%) inset
+
+
+/* Example Buttons (placeholder content)
+-------------------------------------------------- */
+
+.exampleButtons
+  position absolute
+  top 200px
+  left 500px
+  a
+    height 13px
+    font-size 12px
+    padding 1px 5px 0 5px
+    cursor pointer
+    display block
+    margin 30px
+    text-align center
+    background linear-gradient(top, #ccc, #888)
+    color #222
+    text-shadow 0 1px 0 rgba(255,255,255,30%)
+    border-radius 3px
+    border 1px solid rgba(0,0,0,75%)
+    box-shadow 0 -1px 0px 0 rgba(0,0,0,50%) inset, 0 1px 1px 0 rgba(255,255,255,50%) inset
+    &:hover
+      background linear-gradient(top, #ddd, #999)
+  a.rounded
+    border-radius 50px !important
+  a.flat
+    color #333
+    background none
+    background-color #ccc
+    box-shadow none
+    text-shadow none
+    border 1px solid #aaa
+    &:hover
+      background-color #bbb
+
+.displayCanvas
+  position absolute
+  top 200px
+  left 500px
+  a
+    height 13px
+    font-size 12px
+    padding 0px 0px 0px 0px
+    padding-top 1px
+    cursor pointer
+    display block
+    text-align center
+    text-decoration none
+    margin 0px
+    background linear-gradient(top, #ccc, #888)
+    color #222
+    text-shadow 0 1px 0 rgba(255,255,255,30%)
+    border-radius 3px
+    border 1px solid rgba(0,0,0,75%)
+    box-shadow 0 -1px 0px 0 rgba(0,0,0,50%) inset, 0 1px 1px 0 rgba(255,255,255,50%) inset
+    &:hover
+      background linear-gradient(top, #ddd, #999)
+  a.rounded
+    border-radius 50px !important
+  a.flat
+    color #333
+    background none
+    background-color #ccc
+    box-shadow none
+    text-shadow none
+    border 1px solid #aaa
+    &:hover
+      background-color #bbb
+
+#basic a
+  height 13px
+  font-size 12px
+  padding 0px 0px 0px 0px
+  padding-top 1px
+  cursor pointer
+  display block
+  text-align center
+  text-decoration none
+  margin 0px
+  width 99px
+  background linear-gradient(top, #ccc, #888)
+  color #222
+  text-shadow 0 1px 0 rgba(255,255,255,30%)
+  border-radius 3px
+  border 1px solid rgba(0,0,0,75%)
+  box-shadow 0 -1px 0px 0 rgba(0,0,0,50%) inset, 0 1px 1px 0 rgba(255,255,255,50%) inset
+
+/* Mini Explorer Modal
+-------------------------------------------------- */
+
+.miniExplorer
+  display none
+  width 700px
+  background-color bar
+  top 50%
+  left 50%
+  margin-top -250px
+  margin-left -360px
+  position fixed
+  box-shadow 0 -5px 1000px 1000px rgba(0,0,0,25%), 0 10px 30px rgba(0,0,0,25%), 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset;
+  border 1px solid black
+  border-radius 3px
+  padding 8px
+  h2
+    padding 0px 0px 5px 0px
+    margin-bottom 5px
+    font-size 19px
+    color textColor
+    text-shadow 0 -1px 0 black
+    &:after
+      height 2px
+      margin-top 5px
+      border-bottom 1px solid barBorder
+      box-shadow 0 -1px 1px 0 barShadow inset, 0 1px 1px 0 barHighlight;
+      content ""
+      position relative
+      width 716px
+      display block
+      margin-left -8px
+  .fileWindow
+    margin-top 0
+    width 25%
+    background-color white
+    float left
+    box-shadow inset 0 0 1px rgba(0,0,0,50%)
+    .fileSearch
+      font-size 12px
+      margin 3%
+      padding-left 13%
+      width 79.5%
+      height 20px
+      border 1px solid #d4d4d4
+      box-shadow inset 0 1px 2px rgba(0,0,0,15%)
+      background url('../images/search.png') no-repeat
+      background-size 15px 15px
+      background-position 4px 4px
+
+.miniExplorer
+  ul
+    height 230px
+    overflow-y scroll
+    li
+      font-size 13px
+      padding 3px 6px 3px 27px
+      border-bottom 1px solid #ebebeb
+      background url('/images/tags.png') no-repeat
+      background-size 15px 12px
+      background-position 6px 4px
+      &:first-child
+        border-top 1px solid #ebebeb
+  .fileButtons
+    float left
+    display block
+    margin-top 8px
+    border-top 1px solid barBorder
+    box-shadow 0 -1px 1px 0 barShadow, 0 1px 1px 0 barHighlight inset;
+    width 716px
+    margin-left -8px
+  a
+    float right
+    border 1px solid barBorder
+    border-radius 3px
+    padding 6px 30px
+    color textColor
+    text-shadow 0 -1px 0 black
+    text-decoration none
+    text-align center
+    margin 10px 10px 0 0
+    box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset;
+    &:hover
+      background-color #5e5e5e
+      color white
+
+h1.front
+  color #bfbfbf
+  font-size 25px
+  text-align center
+
+div.search
+  position absolute
+  left 0px
+  top 29  px
+  padding 5px
+
+  background-color bar
+  border-radius 0px 0px 4px 4px
+  border 1px solid barBorder
+  border-top 0px
+  border-right 0px
+  border-left 0px
+  z-index 8000
+  display none
+
+  box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset
+  input
+    width 200px
+
+#main .ui-menu-item
+  font-size 12px
+
+.import
+  position absolute
+  top 8px
+  right 10px
+
+.importTitle
+  position absolute
+  top 6px
+  left 50px
+  color #bfbfbf
+
+.importBody
+  color #bfbfbf
+  padding-top 60px
+  padding-left 55px
+
+.importBody p
+  padding-bottom 20px
+#progress
+  height 500px
+  width 500px
+  overflow auto
+ul.ui-autocomplete
+  max-height 400px
+  overflow auto
+  z-index 8000
+
+.displayContainer
+
+  //width 900px
+  height 100%
+  width 800px
+  overflow hidden
+  float left
+  margin-top 38px
+  position relative
+  z-index 0
+  //background-color red
+
+.displayCanvas
+  background-repeat no-repeat
+  background-position 0px 0px
+  background-size 100%
+  position relative
+  top 0px
+  left 0px
+  //background-color blue
+
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+}
+::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0,0,0,.5);
+    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+.exampleButtons
+  display none
+
+#main .displayCanvas .glow
+  //-moz-box-shadow:0px 0px 26px 12px rgba(255, 255, 255, 0.93);
+  //-webkit-box-shadow:0px 0px 26px 12px rgba(255, 255, 255, 0.93);
+  //box-shadow:0px 0px 26px 12px rgba(255, 255, 255, 0.93);
+
+
+
+div.menu
+  position absolute
+  display none
+  background-color #535353
+  border 1px solid #bfbfbf
+  li
+    list-style-type none
+    padding 0px
+    margin 0px
+    display block
+    a
+      display block
+      //border-bottom 1px solid #bfbfbf
+      color #bfbfbf
+      padding 5px
+      text-decoration none
+      font-size 10px
+.view-display
+  position absolute
+  left 5px;
+.edit-display
+    margin-top 5px
+    width 10px
+    position absolute
+    left 5px
+    top 0px
+    text-indent -9999px
+    font-size 18px
+    margin-left 15px
+    padding-left 10px
+    text-shadow 0 -1px 1px barBorder
+    background url('/images/edit.png') no-repeat
+    background-size 19px 39px
+    background-position 0 -22px
+    &:hover
+      background-position 0 0
+    display none
+.view-display
+    //margin-top -5px
+    top 5px
+    width 10px
+    position absolute
+    text-indent -9999px
+    font-size 18px
+    left 25px
+    padding-left 10px
+    text-shadow 0 -1px 1px barBorder
+    background url('/images/display.png') no-repeat
+    background-size 19px 39px
+    background-position 0 -22px
+    &:hover
+      background-position 0 0
+    line-height 23px
+    height 23px
+    display none
+
+.history
+    //margin-top -5px
+    top 5px
+    width 10px
+    position absolute
+    text-indent -9999px
+    font-size 18px
+    left 110px
+    padding-left 10px
+    text-shadow 0 -1px 1px barBorder
+    background url('/images/history.png') no-repeat
+    background-size 19px 39px
+    background-position 0 -22px
+    &:hover
+      background-position 0 0
+    line-height 23px
+    height 23px
+    display none
+.openDisplay
+  color inactiveText
+  text-shadow 0 -1px 1px barBorder
+
+  font-size 24px
+  position relative
+
+  margin-left 12px
+
+  &:hover
+    color textColor
+
+.rightNav
+  float right
+  padding-right 10px
+
+.import-button
+    //margin-top -5px
+    margin-top 5px
+    width 10px
+    float left
+    text-indent -9999px
+    font-size 18px
+    margin-left 15px
+    padding-left 10px
+    text-shadow 0 -1px 1px barBorder
+    background url('/images/import2.png') no-repeat
+    background-size 19px 39px
+    background-position 0 -22px
+    &:hover
+      background-position 0 0
+    line-height 23px
+    height 23px
+    //display none
+    //display none
+.add-button
+    //margin-top -5px
+    margin-top 5px
+    width 10px
+    float left
+    text-indent -9999px
+    font-size 18px
+    margin-left 15px
+    padding-left 10px
+    text-shadow 0 -1px 1px barBorder
+    background url('/images/add.png') no-repeat
+    background-size 19px 39px
+    background-position 0 -22px
+    &:hover
+      background-position 0 0
+    line-height 23px
+    height 23px
+
+.save-button
+    //margin-top -5px
+    margin-top 5px
+    width 10px
+    float left
+    text-indent -9999px
+    font-size 18px
+    margin-left 15px
+    padding-left 10px
+    text-shadow 0 -1px 1px barBorder
+    background url('/images/save.png') no-repeat
+    background-size 19px 39px
+    background-position 0 -22px
+    &:hover
+      background-position 0 0
+    line-height 23px
+    height 23px
+    display none
+#import
+  padding 10px
+  color #bfbfbf
+
+/* Alert Modals
+-------------------------------------------------- */
+
+.mask
+  position absolute
+  width 100%
+  height 100%
+  background-image url('/images/shadow.png');
+
+.alert,
+.confirm
+  // display none
+  width 400px
+  background-color bar
+  top 50%
+  left 50%
+  margin-top -150px
+  margin-left -200px
+  position fixed
+  //box-shadow 0 -5px 1000px 1000px rgba(0,0,0,25%), 0 10px 30px rgba(0,0,0,25%), 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset;
+  -webkit-box-shadow: 0px 0px 120px 40px rgba(0, 0, 0, .8);
+  box-shadow: 0px 0px 120px 40px rgba(0, 0, 0, .8);
+  border 1px solid black
+  border-radius 3px
+  padding 8px
+  h2
+    padding 0px 0px 5px 0px
+    margin-top 3px
+    margin-left 5px
+    font-size 19px
+    color textColor
+    text-shadow 0 -1px 0 black
+    &:after
+      height 2px
+      margin-top 8px
+      border-bottom 1px solid barBorder
+      box-shadow 0 -1px 1px 0 barShadow inset, 0 1px 1px 0 barHighlight;
+      content ""
+      position relative
+      width 416px
+      display block
+      margin-left -13px
+  p
+    color textColor
+    text-shadow 0 -1px 0 black
+    margin 20px 5px
+  a
+    float right
+    border 1px solid barBorder
+    border-radius 3px
+    padding 6px 30px
+    color textColor
+    text-shadow 0 -1px 0 black
+    text-decoration none
+    text-align center
+    margin 10px 10px 5px 0
+    box-shadow 0 1px 1px 0 barHighlight inset, 0 -1px 1px 0 barShadow inset;
+    &:hover
+      background-color #5e5e5e
+      color white
+
+#frameBox
+  width 100%
+  height 100%
+  margin-top 36px
+  position absolute
+  top 0px
+  left 0px
+#frameBox .display
+  width 100%
+  height 100%
+  overflow hidden
+  position absolute
+  left 0px
+  right 0px
+
+#display .glow
+  //-moz-box-shadow:0px 0px 26px 12px rgba(255, 255, 255, 0.93);
+  //-webkit-box-shadow:0px 0px 26px 12px rgba(255, 255, 255, 0.93);
+  //box-shadow:0px 0px 26px 12px rgba(255, 255, 255, 0.93);
+
+
+div.pop
+  position absolute
+  width 235px
+  display none
+  top 35px
+  .bg
+    background-image url('/images/popBg.png')
+    padding-left 30px
+    padding-right 30px
+    color #909090
+    cursor pointer
+    font-size 14px
+    line-height 18px
+
+.editTitle
+  display none

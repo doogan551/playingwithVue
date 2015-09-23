@@ -1,0 +1,470 @@
+﻿/* Add jQuery UI styling */
+.ui-datepicker-trigger:hover {
+    cursor: pointer;
+}
+
+/* Override bootstrap */
+input {
+    margin-bottom: 0px;
+}
+
+label {
+    display: inline;
+}
+/* End override bootstrap */
+
+/* Begin Fontawesome styling */
+a.fa-chevron-circle-left, a.fa-chevron-circle-right {
+    color: #999;
+    text-decoration: underline;
+}
+
+a.fa-chevron-circle-left:hover, a.fa-chevron-circle-right:hover {
+    color: #666;
+    text-decoration: underline;
+}
+/* End Fontawesome styling */
+
+
+/* Continue with our styling */
+/* Begin styling for all page sections */
+html,
+body,
+#content,
+#content > div {
+    height: 100%;
+}
+
+.title {
+    border-bottom:2px solid #666666;
+    padding-bottom:5px;
+    margin-bottom: 5px;
+    font-size:20px;
+    color:#333333;
+}
+
+img {
+    vertical-align: middle;
+    border:0;
+}
+
+#navbar {
+    position:absolute;
+    top: 0px;
+    bottom: 0px;
+    height: 100%;
+    background-color: #333;
+    width: 190px;
+}
+
+#navbar ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+#navbar li {
+    display: block;
+    font-size: 16px;
+    padding:10px;
+    color: #CCC;
+    font-family: "Trebuchet MS", Helvetica, sans-serif;
+    text-shadow:none;
+    font-weight: normal;
+    border-bottom: 1px solid #666666;
+}
+
+#navbar li:hover {
+    color: #FFF;
+    background-color: #222;
+    cursor: pointer;
+}
+
+#navbar li.selected {
+    color: #FFF;
+    background-color: #428C29;
+    cursor: pointer;
+}
+
+#navbar li .fa {
+    font-size: 10px;
+    margin-right: 5px;
+    margin-bottom: 4px;
+    vertical-align: middle;
+}
+
+.sortable th {
+    cursor: pointer;
+}
+
+.validationMessage {
+    color: #d00;
+    display: block;
+}
+/* End styling for all page sections */
+
+/* Begin styling for CALENDAR page section */
+#content {
+    padding-left:210px;
+    font-size: small;
+    padding-right: 40px;
+    padding-top: 10px;
+}
+
+#defHol {
+    font-size:14px;
+}
+
+#holidaysTable {
+    width:100%;
+}
+
+#holidaysTable td {
+    padding: 2px;
+    border-bottom: 1px solid #CCC;
+    height:30px;
+}
+
+#year {
+    color: #999;
+    font-weight: bold;
+    margin-left: 30px;
+    margin-right: 30px;
+}
+
+#yearContainer {
+    float: right;
+}
+
+#season {
+    font-size: 20px;
+    padding-bottom: 3px;
+}
+
+#season label {
+    font-weight: normal;
+}
+
+#season input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    -moz-opacity: 0;
+    -webkit-opacity: 0;
+    -o-opacity: 0;
+}
+#season input[type="radio"] + label {
+    position: relative;
+    padding: 0 0 0 25px;
+    font-size: 16px;
+    line-height: 16px;
+}
+#season input[type="radio"] + label:before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 2px;
+    height: 14px;
+    width: 14px;
+    margin-top:0px;
+    left:3px;
+    background: white;
+    border: 1px solid gray;
+    box-shadow: inset 0px 0px 0px 2px white;
+    -webkit-box-shadow: inset 0px 0px 0px 2px white;
+    -moz-box-shadow: inset 0px 0px 0px 2px white;
+    -o-box-shadow: inset 0px 0px 0px 2px white;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -o-border-radius: 8px;
+}
+#season input[type="radio"]:checked + label:before {
+    background: #1D6EBF;
+}
+
+.dow {
+    width:80px;
+    color: darkgray
+}
+
+.month {
+    width:75px;
+}
+
+.date {
+    width: 30px;
+    text-align: center;
+    font-size: 16px;
+}
+
+.comment {
+    width: 225px;
+    vertical-align: middle;
+}
+
+.icon {
+    width: 21px;
+    vertical-align: middle;
+}
+
+.spacer15 {
+    width: 15px;
+}
+
+.delete a {
+    color:red;
+    font-weight: bold;
+}
+
+.italics {
+    font-style: italic;
+}
+
+.hide {
+    visibility: hidden;
+    display: none;
+}
+
+.show {
+    visibility: visible;
+}
+
+#jqxCalendar {
+    display: none;
+    position: absolute;
+    top: -115px;
+}
+/* End styling for CALENDAR page section */
+
+
+/* Begin styling for ABOUT page section */
+#dorlogo {
+    padding-right: 5px;
+    position: relative;
+    bottom: 2px;
+}
+
+#infologo {
+    padding-top: 10px;
+}
+
+#rev {
+    position:relative;
+    top:10px;
+}
+/* End styling for ABOUT page section */
+
+
+/* controller section */
+/*#controllerGrid,
+#controllerInstructions,
+#controllerActionBar {
+   margin-bottom: 15px;
+}*/
+
+.scrollableContainer {
+    position: relative;
+    height: 90%;
+}
+
+.scrollableGridContainer {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.scrollableTableContainer {
+    overflow-y: auto;
+    height: 100%;
+}
+
+.scrollableTableHeader {
+    height: 30px;
+    position: absolute;
+}
+
+#controllerContainer {
+    position: relative;
+    height: 80%;
+}
+
+#controllerGridContainer {
+    height: 90%;
+    position: relative;
+    padding-top: 20px;
+    margin-bottom: 10px;
+}
+
+#controllerTableContainer {
+    overflow-y: auto;
+    height: 100%;
+}
+
+#controllerTableHeader {
+    height: 30px;
+    position: absolute;
+}
+
+.linedTable {
+    width: 100%;
+}
+
+.linedTable tbody tr {
+    height: 30px;
+    border-bottom: 1px solid #ccc;
+}
+
+.linedTable th,
+.linedTable td {
+    padding: 2px;
+}
+
+#controllerGrid th {
+    position: static;
+}
+
+#controllerGrid th div {
+    position: absolute;
+    top: 0px;
+}
+
+.controllerID {
+    width: 40px !important;
+}
+
+.controllerName {
+    width: 200px !important;
+}
+
+/*.controllerDescription {
+    width: auto !important;
+}*/
+
+.controllerDelete {
+    width: 17px !important;
+}
+
+.clickToEdit .form-control {
+    padding: 2px;
+    height: auto;
+}
+
+.clickToEdit {
+    cursor: pointer;
+}
+
+#controllerAlert {
+    position: absolute;
+    z-index: 1000;
+    left: 50%;
+}
+
+#controllerMessage {
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px;
+    position: relative;
+    left: -50%;
+}
+
+#controllerEntryForm {
+    width: 400px;
+    margin-bottom: 0px;
+}
+
+#addControllerActionBar {
+    margin-top: 10px;
+}
+
+.jqx-grid-cell .showOnHover {
+    display: none;
+}
+
+.jqx-grid-cell-hover .showOnHover {
+    display: block;
+}
+
+.di-grid {
+    border-color: #fff;
+}
+
+.di-grid .jqx-input {
+    width: 98% !important;
+    margin-top: 5px !important;
+    height: 25px !important;
+}
+
+.di-grid .jqx-grid-header .jqx-widget-header {
+    background-color: #fff;
+    border-bottom-width: 1px;
+    border-bottom-color: #666;
+}
+
+.di-grid .jqx-grid-header .jqx-grid-column-menubutton {
+    border-left-width: 0px;
+}
+
+.di-grid .jqx-grid-column-header {
+    border-width: 0;
+}
+
+.di-grid .jqx-grid-cell {
+    border-width: 0 0 1px 0;
+}
+
+/* controller section */
+
+/* nav action section */
+#navActions {
+    position: absolute;
+    bottom: 15px;
+    width: 100%;
+}
+
+#navActions button {
+    margin-left: 15px;
+}
+/* nav action section */
+
+/* control codes */
+.showOnHover,
+tr:hover .hideOnHover {
+    display: none;
+}
+
+.hideOnHover,
+tr:hover .showOnHover {
+    display: block;
+}
+
+.qualityCodeOptions {
+    margin-bottom: 5px;
+}
+
+.qualityCodeRow {
+    width: 80%;
+}
+
+.qualityCodeRow > div {
+    width: 40%;
+    display: inline-block;
+}
+
+.qualityCodeRow label {
+    font-weight: normal;
+}
+
+#qualityCodesList thead tr {
+    height: 0px;
+}
+
+#qualityCodesList tr {
+    height: 35px;
+}
+
+#qualityCodesList td {
+    vertical-align: middle;
+}
+
+#qualityCodesList input {
+    width: 30px;
+}
+/* control codes */

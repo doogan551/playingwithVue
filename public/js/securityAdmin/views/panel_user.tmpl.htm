@@ -1,0 +1,133 @@
+<div id="DT_Security_panelWindow" class="ui-panel-inner">
+    <a data-bind="click: dorsett.hidePanel" class="closeBtn" href="#" data-rel="close" data-role="button"
+       data-icon="delete" data-iconpos="notext" data-theme="a" data-corners="true" data-shadow="true"
+       data-iconshadow="true" data-wrapperels="span" title="Close"></a>
+
+    <div class="profilePhoto ui-shadow">
+        <div class="photobg male" data-bind="loadImage: Photo()"></div>
+    </div>
+    <div class="small_text userGroupData" data-bind="if: !!_id">
+        <b>Last Login</b> <span data-bind="text: $data['Last Login Time']"></span><br>
+        <b>Last Activity</b> <span data-bind="text: $data['Last Activity Time']"></span>
+    </div>
+
+    <div class="clear"></div>
+    <h4 class="profileName" data-bind="text: $data['First Name']() + ' ' + $data['Last Name']()"></h4>
+
+    <div data-role="navbar" class="tabs">
+        <ul>
+            <li class="ui-block-a"><a href="#" class="ui-btn-active">Profile</a></li>
+            <li class="ui-block-b"><a href="#" class="ui-disabled">System Access</a></li>
+        </ul>
+    </div>
+
+    <div class="tabPage profile">
+        <fieldset id="fsMetadata" class="border-none">
+            <label>First Name <span class="validationMessage" data-bind="validationMessage: $data['First Name']"></span><input type="text" data-mini="true" data-bind="value: $data['First Name'], JMEnable: isEditMode, JMValidationError: $data['First Name']"></label>
+            <label>Last Name <span class="validationMessage" data-bind="validationMessage: $data['Last Name']"></span><input type="text" data-mini="true" data-bind="value: $data['Last Name'], JMEnable: isEditMode, JMValidationError: $data['Last Name']"></label>
+            <label>Title <span class="validationMessage" data-bind="validationMessage: Title"></span><input type="text" data-mini="true" data-bind="value: Title, JMEnable: isEditMode, JMValidationError: Title"></label>
+            <label>Username <span class="validationMessage" data-bind="validationMessage: username"></span><span data-bind="visible: (isEditMode() && _id !== null)">(Read-Only)</span><input type="text" data-mini="true" data-bind="value: username, JMEnable: isEditMode, JMValidationError: username, enable: _id === null"></label>
+            <label>Auto Logout Duration <input type="text" data-mini="true" data-bind="value: $data['Auto Logout Duration'], JMEnable: isEditMode"></label>
+            <br>
+            <label data-corners="false" data-shadow="false">System Admin <input type="checkbox" data-mini="true" data-theme="d" data-bind="checked: $data['System Admin'], JMEnable: isEditMode"></label>
+        </fieldset>
+
+        <fieldset class="border-full">
+            <legend>Contact Information</legend>
+            <!-- ko ifnot: isEditMode -->
+            <ul data-role="listview" data-mini="true" data-icon="delete" class="listview-readonly">
+                <!-- ko foreach: $data['Contact Info'] -->
+                <li data-bind="text: Type() + ': ' + Value() "></li>
+                <!-- /ko -->
+                <!-- ko if: $data['Contact Info']().length == 0 -->
+                <li>No Contact Info</li>
+                <!-- /ko -->
+            </ul>
+            <!-- /ko -->
+            <!-- ko if: isEditMode -->
+            <ul id="contactInfoList" data-role="listview" data-mini="true" class="listview listview-readonly">
+                <!-- ko foreach: $data['Contact Info'] -->
+                <li data-role="fieldcontain">
+                    <label data-bind="text: Type, attr: {for: 'contactField' + $index()}"></label>
+                    <input type="text" data-bind="value: Value, attr: {id: 'contactField' + $index()}, mask: Type(), JMValidationError: Value">
+                    <div class="validationMessage" data-bind="validationMessage: Value"></div>
+                    <span class="closeBtn"><a href="#" data-bind="click: dorsett.removeContactInfo" class="ui-icon-nodisc" data-role="button" data-theme="r"
+                        data-icon="delete" data-iconpos="notext" data-theme="a" data-corners="true" data-shadow="true"
+                        data-iconshadow="true" data-wrapperels="span" title="Remove item"></a></span>
+                </li>
+                <!-- /ko -->
+                <li data-icon="plus">
+                    <a href="#contactInfoDialog" data-bind="click: dorsett.openContactInfoDialog" data-rel="popup" data-position-to="window" data-transition="fade" data-mini="true">Add New Contact Information</a>
+                </li>
+            </ul>
+            <!-- /ko -->
+        </fieldset>
+
+        <fieldset class="border-full">
+            <legend>Memberships</legend>
+            <!-- ko if: isEditMode -->
+            <ul data-role="listview" class="listview listview-readonly membershipList">
+                <li id="DT_Security_user_membership_dropzone" class="dropzone" data-bind="drop: {addTo: Groups, accept: '.group'}">
+                    <div>Drop a group here</div>
+                </li>
+                <!-- ko foreach: Groups -->
+                <li>
+                    <!-- ko text: $data['User Group Name'] --><!--/ko -->
+                   <label data-corners="false" data-shadow="false"><input type="checkbox" data-mini="true" data-theme="a" data-bind="checked: $data['Group Admin']"> Group Admin</label>
+                    <span class="closeBtn"><a href="#" data-bind="click: dorsett.removeGroupFromUser" class="ui-icon-nodisc" data-role="button" data-theme="r"
+                       data-icon="delete" data-iconpos="notext" data-theme="a" data-corners="true" data-shadow="true"
+                       data-iconshadow="true" data-wrapperels="span" title="Remove from group"></a></span>
+                </li>
+                <!-- /ko -->
+            </ul>
+            <!-- /ko -->
+            <!-- ko ifnot: isEditMode -->
+            <ul data-role="listview" data-mini="true" data-icon="delete" class="listview-readonly">
+                <!-- ko foreach: Groups -->
+                <li>
+                    <!-- ko text: $data['User Group Name'] --><!-- /ko -->
+                    <!-- ko if: $data['Group Admin'] --><p>(Group Admin)</p><!-- /ko -->
+                </li>
+                <!-- /ko -->
+                <!-- ko if: Groups().length == 0 -->
+                <li>No groups assigned</li>
+                <!-- /ko -->
+            </ul>
+            <!-- /ko -->
+        </fieldset>
+
+        <!-- ko if: isEditMode -->
+        <fieldset id="passwordArea" class="border-full">
+            <legend>Password</legend>
+            <label for="PasswordReset" data-corners="false" data-shadow="false">Require change at next login</label> <input id="PasswordReset" type="checkbox" data-bind="JMChecked: $data['Password Reset']">
+            <div class="validationMessage" data-bind="validationMessage: Password"></div>
+            <a href="#passwordDialog" data-bind="click: dorsett.openPasswordDialog" data-rel="popup" data-position-to="window" data-transition="fade" data-role="button" data-corners="false" data-icon="gear" data-iconpos="right" data-theme="c">
+                <!-- ko if: !!_id -->
+                Reset Password
+                <!-- /ko -->
+                <!-- ko ifnot: !!_id -->
+                Set Password
+                <!-- /ko -->
+            </a>
+        </fieldset>
+        <!-- /ko -->
+    </div>
+
+    <!-- ko ifnot: isEditMode -->
+    <div class="ui-grid-a">
+        <div class="ui-block-a" style="width: 100%">
+            <a id="editButton" href="#" data-role="button" data-theme="a" data-bind="click: dorsett.editMode">Edit User</a>
+        </div>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko if: isEditMode -->
+        <a href="#" data-role="button" data-theme="g" data-bind="click: dorsett.saveUser">Save</a>
+        <a href="#" data-role="button" data-theme="a" data-bind="click: dorsett.cancelEditMode">Cancel</a>
+        <a href="#confirmDialog" data-bind="click: dorsett.deleteUser" data-rel="popup" data-position-to="window" data-transition="fade" data-role="button" data-theme="r">Delete</a>
+    <!-- /ko -->
+
+
+
+
+</div>

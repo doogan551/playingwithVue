@@ -1,0 +1,128 @@
+#accordion.editMode.dragAround.panel-group(style='display:none')
+    .panel.panel-info
+        .panel-heading(data-toggle="collapse", data-parent='#accordion', data-target="#collapseOne")
+            h4.panel-title
+                span.fa.fa-cog
+        #collapseOne.panel-collapse.collapse
+            .panel-body
+                a#undoAction.list-group-item.list-group-item-success(href='javascript:;')
+                    span.fa.fa-undo
+                a#redoAction.list-group-item.list-group-item-success(href='javascript:;')
+                    span.fa.fa-repeat
+                a#deleteAction.list-group-item.list-group-item-success(href='javascript:;')
+                    span.fa.fa-trash
+                //a#zoomInAction.list-group-item.list-group-item-success(href='javascript:;')
+                    span.fa.fa-search-plus.fa-2x
+                //a#resetZoomAction.list-group-item.list-group-item-success(href='javascript:;')
+                    span.fa.fa-retweet.fa-2x
+                //a#zoomOutAction.list-group-item.list-group-item-success(href='javascript:;')
+                    span.fa.fa-search-minus.fa-2x
+                a#saveAction.list-group-item.list-group-item-success(href='javascript:window.app.view.openSaveDialog();')
+                    span.fa.fa-file
+#myPanel.pocp_left.editMode
+    .pocp
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.InputObjExternalPoint', title='Monitor Point Object', src='/img/icons/MonitorExternal.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.OutputObjExternalPoint', title='Control Point Object', src='/img/icons/OutputExternalPoint.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.ConstantValueObj', title='Constant', src='/img/icons/ConstantExternalPoint.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.SingleSetPointBinarySelectorObject', title=' Single Set Point Binary Selector', src='/img/icons/SingleSetPointBinary.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.DualSetPointBinarySelectorObject', title='Dual Set Point Binary Selector', src='/img/icons/DualSetPointBinary.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.DelayPointObject', title='Delay Point Object', src='/img/icons/Delay.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.PulsedDelayPointObject', title='Pulsed Delay Point Object', src='/img/icons/Pulsed.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.SingleSetPointAnalogSelectorObject', title='Single Set Point Analog Selector', src='/img/icons/SingleSetpointAnalog.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.DualSetPointAnalogSelectorObject', title='Dual Set Point Analog Selector', src='/img/icons/DualSetpointAnalog.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.LogicalPointObject', title='Logical Point Object', src='/img/icons/Logical.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.MultiplexerPointObject', title='Multiplexer Point Object', src='/img/icons/Multiplexer.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.RampPointObject', title='Ramp Point Object', src='/img/icons/Ramp.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.TotalizerPointObject', title='Totalizer Point Object', src='/img/icons/Totalizer.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.AveragePointObject', title='Average Point Object', src='/img/icons/Average.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.SummationPointObject', title='Summation Point Object', src='/img/icons/Summation.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.SelectValueLargestPointObject', title='Select Value Largest Point Object', src='/img/icons/SelectValueHigh%20Value.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.SelectValueSmallestPointObject', title='Select Value Smallest Point Object', src='/img/icons/SelectValueLow%20Value.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.AdditionPointObject', title='Add - Math Point Object', src='/img/icons/AddFalse.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.SubtractionPointObject', title='Subtract - Math Point Object', src='/img/icons/SubtractFalse.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.MultiplicationPointObject',title='Divide - Math Point Object', src='/img/icons/MultiplyFalse.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.DivisionPointObject', title='Multiply - Math Point Object', src='/img/icons/DivideFalse.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.ProportionalPointObject', title='Proportional Point Object', src='/img/icons/P%20OnlyFalse.svg')
+        //img.icons.draw2d_droppable(data-shape='draw2d.shape.node.ProportionalReversePointObject', title='Proportional Point Object (Reverse)', src='/img/icons/P%20OnlyTrue.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.SetPointAdjustNormalPointObject', title='Set Point Adjust Point Object', src='/img/icons/SetPointAdjustNormal.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.SetPointAdjustReversedPointObject', title='Set Point Adjust Point Object (Reverse)', src='/img/icons/SetPointAdjustReversed.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.EconomizerPointObject', title='Economizer Point Object', src='/img/icons/Economizer.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.EnthalpyPointObject', title='Enthalpy Point Object', src='/img/icons/Enthalpy.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.EnthalpyDewPointObject', title='Enthalpy Dew Point Object', src='/img/icons/Dew%20Point.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.EnthalpyWetBulbObject', title='Enthalpy Wet bulb Point Object', src='/img/icons/Wet%20Bulb.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.AlarmStatusPointObject', title='Alarm Status Point Object', src='/img/icons/symbols.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.GreaterComparatorPointObject', title='Comparator Point Object', src='/img/icons/Greater.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.GreaterOrEqualComparatorPointObject', title='Comparator Point Object', src='/img/icons/GreaterOrEqual.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.LessComparatorPointObject', title='Comparator Point Object', src='/img/icons/Less.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.LessOrEqualComparatorPointObject', title='Comparator Point Object', src='/img/icons/LessOrEqual.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.NotEqualComparatorPointObject', title='Comparator Point Object', src='/img/icons/NotEqual.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.EqualComparatorPointObject', title='Comparator Point Object', src='/img/icons/Equal.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.AndDigitalLogicPointObject', title='And - Digital Logic Point Object', src='/img/icons/And.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.OrDigitalLogicPointObject', title='Or - Digital Logic Point Object', src='/img/icons/Or.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.node.XorDigitalLogicPointObject', title='Exclusive Or - Digital Logic Point Object', src='/img/icons/Xor.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.note.ExtLabel', title='Post It', src='/img/icons/text.svg')
+        img.icons.draw2d_droppable(data-shape='draw2d.shape.note.ExtDynamicPoint', title='Dynamic Point', src='/img/icons/point2.svg')
+#modal-sequenceProp.modal.fade(data-refresh='true')
+    .modal-dialog
+        .modal-content
+            .modal-header
+                button.close(data-dismiss='modal', aria-hidden='true') ×
+                h4.modal-title Sequence Properties
+            .modal-body
+                div(data-bind="afterRender: renderedHandler")
+                    include ./SequenceProperties
+            .modal-footer
+                button.btn.btn-danger.closeModalButton(data-dismiss='modal') Close
+#modal-SaveDialog.modal.fade
+    .modal-dialog
+        .modal-content
+            .modal-header
+                button.close(data-dismiss='modal', aria-hidden='true') ×
+                h4.modal-title Saving Options
+            .modal-body.well
+                .row
+                    .col-xs-6
+                        | Save and Activate Sequence
+                        button.btn.btn-success(onclick='javascript:window.app.view.saveAndPublish();') Save and Publish
+                    .col-xs-6
+                        | Save Sequence without Activation
+                        button.btn.btn-primary(onclick='javascript:window.app.view.saveWork();') Save For Later
+                .row
+                    .col-xs-6
+                        | Discard Changes and Return to View Mode
+                        button#discardChanges.btn.btn-info(data-bind='click:discardChangesDialog') Discard Changes
+                    .col-xs-6
+                        | Back to Edit Mode to make further changes
+                        button.btn.btn-danger(data-dismiss='modal') Cancel & Back
+#modal-ConfirmDialog.modal.fade
+    .modal-dialog
+        .modal-content
+            .modal-header
+                button.close(data-dismiss='modal', aria-hidden='true') ×
+                h4.modal-title Confirm Dialog
+            .modal-body.well
+                .row
+                    .col-xs-12
+                        h4
+                            | You have made some changes that have not been saved yet. Do you want to continue?
+                .row
+                    .col-xs-6
+                        button.btn.btn-success(data-bind='click:switchToViewMode') Yes, Switch to View Mode
+                    .col-xs-6
+                        button.btn.btn-danger(data-bind='click:switchCancel') Cancel & Back
+#modal-ConfirmDiscardDialog.modal.fade
+    .modal-dialog
+        .modal-content
+            .modal-header
+                button.close(data-dismiss='modal', aria-hidden='true') ×
+                h4.modal-title Confirm Dialog
+            .modal-body.well
+                .row
+                    .col-xs-12
+                        h4
+                            | All your work done in edit mode will be removed and cannot be restored. Do you want to continue?
+                .row
+                    .col-xs-6
+                        button.btn.btn-success(data-bind='click:discardChanges', data-dismiss='modal') Yes, Please Discard Changes
+                    .col-xs-6
+                        button.btn.btn-danger(data-dismiss='modal') Cancel & Back

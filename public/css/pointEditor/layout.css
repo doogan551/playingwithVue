@@ -1,0 +1,114 @@
+html {
+    -ms-overflow-style: scrollbar;
+}
+body {
+    margin: 10px;
+    -ms-overflow-style: scrollbar;
+}
+
+.title {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space:nowrap;
+}
+
+#main {
+    margin-top: 83px;
+}
+
+.floatingHeader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #ddd;
+    /*border-bottom: 2px solid #ccc;*/
+    z-index: 5000;
+}
+
+.floatingHeader input[type=button] {
+    float: right;
+    margin-left: 5px;
+}
+
+.floatingHeader h3 {
+    margin: 13px;
+    font-size: 18px;
+ }
+
+table.pointGrid tr:first-child th,
+table.pointGrid tr:first-child td {
+    border-width: 0px;
+}
+
+.pointId {
+    float: left;
+    margin: 5px 0 0 10px;
+    font-size: 10px;
+    line-height: 22px;
+}
+
+.actionGroup {
+    padding: 5px;
+    overflow: hidden;
+    background-color: #ccc;
+    box-shadow: inset 0px 3px 7px -3px rgba(0,0,0,.25);
+}
+
+.overlay {
+    /*display: none;*/
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(255, 255, 255, .70);
+    z-index: 5001;
+}
+
+.overlay .message {
+    width: 50%;
+    height: 50%;
+    overflow: auto;
+    margin: auto;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    font-size: 24px;
+    text-align: center;
+}
+.overlay .message div {
+    display: inline-block;
+    vertical-align: middle;
+    height: 100%;
+    width: 1px;
+ }
+.overlay .message i.spin {
+    -webkit-animation: spin 1s infinite linear;
+    animation: spin 1s infinite linear;
+}
+.overlay .message span {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+
+/**
+* Overrides
+**/
+input[readonly].makeEditable {
+    background-color: #fff !important;
+    cursor: ns-resize;
+}
+input[disabled].makeEditable {
+    background-color: #eee !important;
+    cursor: not-allowed;
+}
+tr.active th,
+tr.active td {
+    background-color: #eee !important;
+    color: #999;
+}
+.refPoint .btn {
+    float: right;
+    margin-left: 5px;
+}

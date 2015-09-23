@@ -1,0 +1,5 @@
+<span data-bind="point: Value" class="refPoint form-control-static">
+    <span data-bind="text: PointName"></span>
+    <input type="button" class="selectPoint btn btn-primary" data-bind="disable: isReadOnly() || !isDisplayable()" value="Select point">
+    <input type="button" class="removePoint btn" data-bind="disable: isReadOnly() || !isDisplayable()" value="Remove Point">
+</span>

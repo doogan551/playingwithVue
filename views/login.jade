@@ -1,0 +1,15 @@
+doctype html
+html
+  head
+    title Your comment web app
+  body
+    h1 Login
+    form(action='/session/login' method='post')
+        div
+            label Username
+            input(type='text' name='username')
+        div
+            label password
+            input(type='password' name='password')
+        div
+            input(type='submit' value='Submit')

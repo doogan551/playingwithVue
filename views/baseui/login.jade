@@ -1,0 +1,33 @@
+
+extends layout
+
+block content
+	#login-container
+		form( method="post")#login-form.well.span4
+			img(src='/img/dorsett_logo.png', alt='Dorsett')
+			label Username 
+			input(type="text", name="username", id='user-tf',value=username).span4.required
+			label Password
+			input(type="password", name="password", id='pass-tf').span4.required
+			button(type="submit")#btn-login.btn.btn-primary
+				i.icon-lock.icon-white
+				| Sign in
+			label#remember-me.checkbox Remember Me
+				input(type="checkbox", checked='checked')
+			div.clear-fix
+			div.btm-links
+				a(href='#')#forgot-password Forgot Your Password?
+				//a(href='/signup')#create-account Create An Account
+
+	include ../baseui/modals/alert
+	include ../baseui/modals/lost-password
+
+block scripts
+	script(src='/js/lib/jquery.min.js')
+	script(src='/js/lib/jquery.form.js')
+	script(src='/js/lib/bootstrap-modal.js')
+	script(src='/js/lib/bootstrap-transition.js')
+	script(src='/js/baseui/login.js')
+	script(src='/js/baseui/controllers/loginController.js')
+	script(src='/js/baseui/form-validators/loginValidator.js')
+	script(src='/js/baseui/form-validators/emailValidator.js')

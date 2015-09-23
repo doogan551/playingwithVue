@@ -1,0 +1,102 @@
+    <div class="gettingData" data-bind="visible: gettingData">
+        <i class="fa fa-spinner fa-spin"></i>
+    </div>
+
+    <div class="bigMessage" data-bind="visible: networkError">
+        <i class="fa fa-exclamation-triangle"></i>
+        <div>
+            <h3>Network Error</h3>
+            <p>
+                A network error ocurred while trying to get permissions.
+                Click <a href="javascript: void;" data-bind="click: render">here</a> to try again.
+            </p>
+        </div>
+    </div>
+
+    <div class="bigMessage" data-bind="visible: showNoPermissionsMsg">
+        <i class="fa fa-lock"></i>
+        <div>
+            <h3>No Permissions Assigned</h3>
+            <p>Only administrators can access this point.</p>
+        </div>
+    </div>
+
+    <div class="miniMessage" data-bind="visible: $root.isInEditMode() && !userCanEditPermissions()">
+        <i class="fa fa-lock"></i>
+        <div>You do not have sufficient privileges to edit permissions. Please contact your system or group administrator to modify permissions.</div>
+    </div>
+
+    <div class="table-responsive" data-bind="visible: showPermissionsTable">
+        <table class="grid table table-condensed permissions">
+            <thead>
+                <tr>
+                    <th data-bind="visible: showRemoveGroupIcon"></th>
+                    <th class="group" data-bind="click: toggleAllUsers">
+                        <i class="fa fa-folder"></i>
+                        <span class="groupTitle">User Groups</span>
+                    </th>
+                    <th>Read</th>
+                    <th>Write</th>
+                    <th>Control</th>
+                    <th>Acknowledge Alarms</th>
+                </tr>
+            </thead>
+
+            <!-- Groups assigned to the point -->
+            <tbody data-bind="foreach: groupsOnPoint">
+                <tr>
+                    <td data-bind="visible: $parent.showRemoveGroupIcon, click: $parent.removeGroup.bind($data, $parent)" title="Click to remove this group's access to this point."><i class="fa fa-minus-square removeGroup"></i></td>
+                    <td class="group" data-bind="click: $parent.toggleUsers" title="Click to show/hide users">
+                        <i class="fa fa-folder"></i>
+                        <span class="groupTitle" data-bind="text: name"></span>
+                        <div class="userList" data-bind="foreach: $parent.getGroupUsers(_id)">
+                            <div data-bind="html: $data"></div>
+                        </div>
+                    </td>
+                    <td><i data-bind="css: { 'fa fa-check': $data.canRead }"></i></td>
+                    <td><i data-bind="css: { 'fa fa-check': $data.canWrite }"></i></td>
+                    <td><i data-bind="css: { 'fa fa-check': $data.canControl }"></i></td>
+                    <td><i data-bind="css: { 'fa fa-check': $data.canAcknowledge }"></i></td>
+                </tr>
+            </tbody>
+            
+            <!-- Groups not on point -->
+            <tbody data-bind="visible: showGroupsNotOnPoint">
+                <tr>
+                    <td class="deep header" colspan="5">Add Group</td>
+                </tr>
+                <!-- ko foreach: groupsNotOnPoint -->
+                <tr>
+                    <td data-bind="click: $parent.addGroup.bind($data, $parent)" title="Click to allow this group to access this point."><i class="fa fa-plus-square addGroup"></i></td>
+                    <td class="group" data-bind="click: $parent.toggleUsers" title="Click to show/hide users">
+                        <i class="fa fa-folder"></i>
+                        <span class="groupTitle" data-bind="text: name"></span>
+                        <div class="userList" data-bind="foreach: $parent.getGroupUsers(_id)">
+                            <div data-bind="html: $data"></div>
+                        </div>
+                    </td>
+                    <td><i data-bind="css: { 'fa fa-check': $data.canRead }"></i></td>
+                    <td><i data-bind="css: { 'fa fa-check': $data.canWrite }"></i></td>
+                    <td><i data-bind="css: { 'fa fa-check': $data.canControl }"></i></td>
+                    <td><i data-bind="css: { 'fa fa-check': $data.canAcknowledge }"></i></td>
+                </tr>
+                <!-- /ko -->
+            </tbody>
+
+            <!-- Users on Point -->
+            <tbody data-bind="visible: showUsers">
+                <tr>
+                    <td colspan="5" class="deep header"><i class="fa fa-user userIcon"></i>Calculated User Permissions</td>
+                </tr>
+                <!-- ko foreach: usersOnPoint -->
+                <tr>
+                    <td class="user" data-bind="html: $parent.getUserName($data)"></td>
+                    <td><i data-bind="css: { 'fa fa-check': canRead }"></i></td>
+                    <td><i data-bind="css: { 'fa fa-check': canWrite }"></i></td>
+                    <td><i data-bind="css: { 'fa fa-check': canControl }"></i></td>
+                    <td><i data-bind="css: { 'fa fa-check': canAcknowledge }"></i></td>
+                </tr>
+                <!-- /ko -->
+            </tbody>
+        </table>
+    </div>

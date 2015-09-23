@@ -1,0 +1,15 @@
+
+extends layout
+
+block content
+	include newuser
+	include ../baseui/modals/alert
+
+block scripts
+	script(src='/js/lib/jquery.min.js')
+	script(src='/js/lib/jquery.form.js')
+	script(src='/js/lib/bootstrap-modal.js')
+	script(src='/js/lib/bootstrap-transition.js')
+	script(src='/js/baseui/signup.js')
+	script(src='/js/baseui/controllers/signupController.js')
+	script(src='/js/baseui/form-validators/accountValidator.js')

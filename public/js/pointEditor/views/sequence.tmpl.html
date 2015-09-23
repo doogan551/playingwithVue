@@ -1,0 +1,79 @@
+<div class="form-group">
+    <div class="floatingHeader">
+        <h3 data-bind="text: data.Name"></h3>
+        <div class="actionGroup">
+            <div data-bind="text: data._id" class="pointId"></div>
+            <input type="button" data-bind="click: save" class="btn btn-sm btn-success" value="Save point">
+        </div>
+    </div>
+
+    <table class="pointGrid table table-condensed">
+        <thead>
+            <tr>
+                <th width="200"></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        <!-- ko with: data['Point Type'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Point Type</th>
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Point Type', enumOptions: pointEditor.utility.config.Utility.pointTypes.getEnums('Point Types', 'Sequence') } }"></td>
+        </tr>
+        <!-- /ko -->
+        <!-- ko with: data['Controller'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Controller</th> 
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Controller', enumOptions: pointEditor.utility.workspace.systemEnums.controllers } }"></td>
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Description'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Description</th> 
+            <td data-bind="template: { name: 'control2.text', data: { prop: $data, propName: 'Description' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Device Point'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Device Point</th> 
+            <td data-bind="template: { name: 'control8.point', data: { prop: $data, propName: 'Device Point' } }"></td> 
+        </tr> 
+        <!-- /ko -->
+        <!-- ko with: data['Point Instance'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Point Instance</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Point Instance' } }"></td> 
+        </tr> 
+        <!-- /ko -->
+        <!-- ko with: data['Show Label'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Show Label</th> 
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Show Label' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Show Value'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Show Value</th> 
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Show Value' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Update Interval'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Update Interval</th> 
+            <td data-bind="template: { name: 'control13.minSec', data: { prop: $data, propName: 'Update Interval' } }"></td> 
+        </tr> 
+        <!-- /ko -->
+
+
+
+        <!-- ko foreach: data['Point Refs'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row" data-bind="text: PropertyName"></th>
+            <td data-bind="template: { name: 'control8.point' }"></td>
+        </tr>
+        <!-- /ko -->
+
+
+        </tbody>
+    </table>
+</div>

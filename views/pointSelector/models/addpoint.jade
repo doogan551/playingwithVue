@@ -1,0 +1,25 @@
+style.
+    #addPoint label.error {
+        color: red;
+        font-style: italic;
+        font-size:7.5pt;
+    }
+
+#modal-addPoint.modal.fade(data-refresh='true')
+    .modal-dialog
+        .modal-content
+            .modal-header
+                button.close(type='button', data-dismiss='modal', aria-hidden='true') ×
+                h4.modal-title Add Point Wizard
+            .modal-body
+                form#addPoint(role='form')
+                    div#addForm
+                        p Loading....
+                    div.errorMsg.alert.alert-danger
+            .modal-footer
+                    button.btn.btn-default(type='button', data-dismiss='modal') Close
+                    button.btn.btn-primary#nextAction(type='submit') Next
+
+script(src='/js/lib/jquery.validate.min.js')
+script(type='text/javascript',src='/js/pointSelector/addPoint.js')
+script(src='/js/lib/jquery.blockUI.js')

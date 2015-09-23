@@ -1,0 +1,106 @@
+<div data-bind="click: toggleModal" class="btn btn-default btn-xs btnViewTrend"><i class="fa fa-signal"></i> View Trend</div>
+
+<!-- Modal -->
+<div class="modal fade bs-example-modal-sm viewTrend" tabindex="-1" data-backdrop="static" data-bind="modal: showModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">View Trend</h4>
+                <div>
+                    <div class="btn btn-default btn-xs btnUpload" data-bind="click:doUpload">Upload</div>
+                    <div class="btn btn-default btn-xs btnHistory" data-bind="click:doHistory">History</div>
+                    <!-- ko if: reqType() == 'history' && minDate() > -1 -->
+                    <div class="btn btn-default btn-xs btnSetTime" data-bind="click:showTime">Set time</div>
+                    <!-- /ko -->
+                    <div class="modalScene modalTime">
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class='col-sm-12'>
+                                    <div class='col-sm-5'>
+                                        <label class="timelabel">Latest time</label><span data-bind="text:maxDateFormat"></span>
+                                    </div>
+                                    <div class='col-sm-5'>
+                                        <label class="timelabel">Oldest time</label><span data-bind="text:minDateFormat"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class='col-sm-1'></div>
+                                <div class='col-sm-7'>
+                                    <div class="form-group">
+                                        <div class='input-group date' id='datetimepicker1'>
+                                            <input type='text' class="form-control" />
+                                            <span class="input-group-addon">
+                                                <span class="glyphicon glyphicon-calendar"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class='col-sm-1'>
+                                    <button type="button" class="btnSubmit btn btn-primary btn-sm" data-bind="click : setDateTime">OK</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-body container-fluid">
+                <div>
+                	<!-- Getting -->
+                    <div class="modalScene modalWait">
+                        <p>Retrieving trend data...</p>
+                        <h1><i class="fa fa-refresh fa-spin"></i></h1>
+                    </div>
+                    <!-- Error -->
+                    <div class="modalScene modalError">
+                        <h1><i class="fa fa-exclamation-triangle text-warning"></i> Error</h1>
+                        <p data-bind="text: errorText"></p>
+                        <p>Close this dialog or <a href="javascript://" data-bind="click: refreshData">try again</a></p>
+                    </div>
+                    <!-- Trend Data -->
+                    <div class="modalScene modalValue">
+                        <table class="grid table table-condensed">
+                            <thead>
+                            <tr>
+                                <th class="trendTimeCol" data-bind="click: reverseSort">Time <i class="fa fa-chevron-up" style="padding-left: 5px;"></i></th>
+                                <th>Value</th>
+                                <th>Status Flags</th>
+                            </tr>
+                            </thead>
+                            <tbody data-bind="foreach: trendDataSorted">
+                            <tr>
+                                <td data-bind="text: prettyTime"></td>
+                                <td data-bind="text: valueString"></td>
+                                <td>
+                                    <!-- ko ifnot: $data['status flags'] === 0 -->
+                                    <span class="trendStatusItem" data-bind="visible: oos,        style: { 'backgroundColor': 1 ? $parent.sfColors.oos.bg        : '', 'color': 1 ? $parent.sfColors.oos.color        : '' }">Out of Service</span>
+                                    <span class="trendStatusItem" data-bind="visible: inFault,    style: { 'backgroundColor': 1 ? $parent.sfColors.inFault.bg    : '', 'color': 1 ? $parent.sfColors.inFault.color    : '' }">In Fault</span>
+                                    <span class="trendStatusItem" data-bind="visible: inAlarm,    style: { 'backgroundColor': 1 ? $parent.sfColors.inAlarm.bg    : '', 'color': 1 ? $parent.sfColors.inAlarm.color    : '' }">In Alarm</span>
+                                    <span class="trendStatusItem" data-bind="visible: overridden, style: { 'backgroundColor': 1 ? $parent.sfColors.overridden.bg : '', 'color': 1 ? $parent.sfColors.overridden.color : '' }">Overridden</span>
+                                    <!-- /ko -->
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <!-- ko if: trendData().length == 0 -->
+                        <span>No trend data available</span>
+                        <!-- /ko -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <!-- Paging -->
+                <!-- ko if: reqType() == 'history' -->
+                    <div class="btn btn-default btn-xs prevBtn" data-bind="click:previousPage" disabled="disabled">Previous</div>
+                    <div class="btn btn-default btn-xs nextBtn" data-bind="click:nextPage" disabled="disabled">Next</div>
+                <!-- /ko -->
+                <button type="button" class="btn btn-link btn-sm" data-dismiss="modal">Close</button>
+                <button type="button" class="btnSubmit btn btn-primary btn-sm" data-bind="click : refreshData, text:reButton"></button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /ko -->

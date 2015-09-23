@@ -1,0 +1,71 @@
+doctype html
+html
+	head
+		title #{title}
+		meta(name='viewport', content='width=device-width')
+		link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.base.css', type='text/css')
+		link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.flat.css', type='text/css')
+		link(rel='stylesheet', href='/css/lib/bootstrap3.min.css')
+		link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
+		link(rel='stylesheet', href='/css/pointSelector/style.css')
+		link(type='text/css', rel='stylesheet', href='/css/lib/itoast.css')
+		
+		script(src='/js/lib/jquery.min.js')
+		script(src='/js/lib/bootstrap3.min.js')
+		script(src='/js/lib/jquery.validate.min.js')
+		script(src='/js/lib/knockout-2.3.0.js')
+		script(src='/js/lib/Class.js')
+		script(src='/js/lib/iToast.min.js')
+
+		script(src='/js/lib/jqwidgets/jqxcore.js')
+		script(src='/js/lib/jqwidgets/jqxwindow.js')
+		script(src='/js/lib/jqwidgets/jqxdata.js')
+		script(src='/js/lib/jqwidgets/jqxbuttons.js')
+		script(src='/js/lib/jqwidgets/jqxscrollbar.js')
+		script(src='/js/lib/jqwidgets/jqxlistbox.js')
+		script(src='/js/lib/jqwidgets/jqxdropdownlist.js')
+		script(src='/js/lib/jqwidgets/jqxdropdownbutton.js')
+		script(src='/js/lib/jqwidgets/jqxmenu.js')
+		script(src='/js/lib/jqwidgets/jqxgrid.js')
+		script(src='/js/lib/jqwidgets/jqxgrid.pager.js')
+		script(src='/js/lib/jqwidgets/jqxgrid.sort.js')
+		script(src='/js/lib/jqwidgets/jqxgrid.filter.js')
+		script(src='/js/lib/jqwidgets/jqxgrid.selection.js')
+		script(src='/js/lib/jqwidgets/jqxcheckbox.js')
+		script(src='/js/lib/jqwidgets/jqxtree.js')
+		script(src='/js/lib/jqwidgets/jqxexpander.js')
+		script(src='/js/lib/jqwidgets/jqxswitchbutton.js')
+		script(src='/js/lib/jqwidgets/jqxbuttongroup.js')
+		script(src='/js/lib/jqwidgets/jqxinput.js')
+		zzscript(src='/js/lib/config.js')
+		script(src='/js/pointselector/pointselector.js')
+		style.
+			body {
+				//background-color: #629BC7;
+			}
+			.row{
+				margin-top:5px;
+			}
+			.row1{
+				margin-top:5px;
+			}
+
+			.jqx-widget-ui-sunny {
+				font-size: 11pt;
+			}
+			.jqx-widget-content-ui-sunny {
+				font-size: 11pt
+			}
+			.jqx-widget-header-ui-sunny {
+				font-size: 11pt
+			}
+
+		body
+		script.
+			var arr = JSON.parse('!{pointtypes}');
+			var pt = JSON.parse('!{point}');
+			var actionAllowed = JSON.parse('!{actionAllowed}');
+			var nav =  '#{navigator}';
+			var selectionmode = '#{selectionmode}';
+		block content
+

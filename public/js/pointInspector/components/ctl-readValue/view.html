@@ -1,0 +1,77 @@
+<div data-bind="click: toggleModal" class="btn btn-default btn-xs btnReadValue"><i class="fa fa-crosshairs"></i> Read Value</div>
+
+<!-- Modal -->
+<div class="modal fade bs-example-modal-sm readValue" tabindex="-1" data-backdrop="static" data-bind="modal: showModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Read Value</h4>
+            </div>
+            <div class="modal-body container-fluid">
+                <div>
+                    <div class="modalScene modalError">
+                        <h1><i class="fa fa-exclamation-triangle text-warning"></i> Error</h1>
+                        <p data-bind="text: errorText"></p>
+                        <p>Close this dialog or <a href="javascript://" data-bind="click: readValue">try again</a></p>
+                    </div>
+                    <div class="modalScene modalWait">
+                        <p>Retrieving value...</p>
+                        <h1><i class="fa fa-refresh fa-spin"></i></h1>
+                    </div>
+                    <div class="modalScene modalValue">
+                        <!-- ko if: isEnumValueType -->
+                        <span class="value" data-bind="text: presentValue"></span>
+                        <!-- /ko -->
+                        <!-- ko ifnot: isEnumValueType -->
+                        <span class="value" data-bind="formattedNumericText: presentValue, valueType: data.Value.ValueType"></span>
+                        <!-- /ko -->
+                        <!-- ko if: data['Engineering Units'] -->
+                        &nbsp;<span class="engUnit" data-bind="text: data['Engineering Units'].Value"></span>
+                        <!-- /ko -->
+                    </div>
+                    <div class="modalScene modalValue valueStatus">
+                        <div class="statusFlags">
+                            <div data-bind="style: { 'color': statusFlags['Out of Service']() ? '' : '#CCC' } ">
+                                <i class="fa" data-bind="css: { 'fa-check-square': statusFlags['Out of Service'](), 'fa-square-o': !statusFlags['Out of Service']() } "></i>&nbsp;
+                                <span>Out of Service</span>
+                            </div>
+                            <div data-bind="style: { 'color': statusFlags['Override']() ? '' : '#CCC' } ">
+                                <i class="fa" data-bind="css: { 'fa-check-square': statusFlags['Override'](), 'fa-square-o': !statusFlags['Override']() } "></i>&nbsp;
+                                <span>Override</span>
+                            </div>
+                            <div data-bind="style: { 'color': statusFlags['In Fault']() ? '' : '#CCC' } ">
+                                <i class="fa" data-bind="css: { 'fa-check-square': statusFlags['In Fault'](), 'fa-square-o': !statusFlags['In Fault']() } "></i>&nbsp;
+                                <span>In Fault</span>
+                            </div>
+                            <div data-bind="style: { 'color': statusFlags['In Alarm']() ? '' : '#CCC' } ">
+                                <i class="fa" data-bind="css: { 'fa-check-square': statusFlags['In Alarm'](), 'fa-square-o': !statusFlags['In Alarm']() } "></i>&nbsp;
+                                <span>In Alarm</span>
+                            </div>
+                        </div>
+                        <div class="statusText">
+                            <div>
+                                <span>Alarm State:</span>
+                                <span data-bind="text: alarmState"></span>
+                            </div>
+                            <div>
+                                <span>Reliability:</span>
+                                <span data-bind="text: reliability"></span>
+                            </div>
+                            <!-- ko if: point.data['Point Type'].Value() === 'Binary Output' -->
+                            <div>
+                                <span>Authorized Value:</span>
+                                <span data-bind="text: authorizedValue"></span>
+                            </div>
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link btn-sm" data-dismiss="modal">Close</button>
+                <button type="button" class="btnSubmit btn btn-primary btn-sm" data-bind="click: readValue">Refresh</button>
+            </div>
+        </div>
+    </div>
+</div>

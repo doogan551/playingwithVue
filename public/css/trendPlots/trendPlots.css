@@ -1,0 +1,27 @@
+body {
+    /*color: #333;*/
+    background-color: #ccc;
+}
+.series,
+.chart {
+    border: 1px solid #999;
+    border-radius: 3px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    background-color: #f4f4f4;
+}
+
+.config {
+    padding: 0 10px;
+}
+
+#values {
+    font-weight: bold;
+}
+
+#configureChartModal .short-input {
+    width: 60px;
+    padding: 0;
+    text-align: center;
+}

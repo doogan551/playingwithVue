@@ -1,0 +1,440 @@
+@charset "utf-8";
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font: 14px normal Helvetica, Arial, sans-serif;
+    z-index: -4;
+}
+
+#diFileBrowserPopup {
+    position: relative;
+    width: 840px;
+    height: 560px;
+    padding: 2px 2px 5px 2px;
+    top: 5px;
+    left: 0px;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    font: 14px normal Helvetica, Arial, sans-serif;
+    z-index: -4;
+    text-shadow: none;
+}
+
+.difilemanager {
+    border-radius: 5px;
+    width: 99%;
+    height: 99%;
+    max-width: 1340px;
+    position: relative;
+    margin: 4px;
+    color: #232323;
+    background-color: #FFFFFF;
+    visibility: visible;
+}
+
+.difilemanager .filebrowserok {
+    height: 35px;
+    width: 55px;
+    text-align: center;
+    cursor: pointer
+    margin-right: 5px;
+    margin-left: 5px;
+    float: right;
+    right: 115px;
+    position: absolute;
+    top: 500px;
+    display: none;
+    color: #2f3e46
+    box-shadow: 0 1px 3px /*{global-box-shadow-size}*/ rgba(0,0,0,.2) /*{global-box-shadow-color}*/;
+    background-clip: padding-box;
+    border-radius: 1em /*{global-radii-buttons}*/;
+    border: 1px solid #ccc /*{c-bup-border}*/;
+    background: #eee /*{c-bup-background-color}*/;
+    font-weight: bold;
+    color: #222 /*{c-bup-color}*/;
+    text-shadow: 0 /*{c-bup-shadow-x}*/ 1px /*{c-bup-shadow-y}*/ 0 /*{c-bup-shadow-radius}*/ #fff /*{c-bup-shadow-color}*/;
+}
+
+.difilemanager .filebrowsercancel {
+    height: 35px;
+    width: 95px;
+    text-align: center;
+    cursor: pointer
+    margin-right: 5px;
+    margin-left: 5px;
+    float: right;
+    right: 15px;
+    position: absolute;
+    top: 500px;
+    display: none;
+    color: #2f3e46
+box-shadow: 0 1px 3px /*{global-box-shadow-size}*/ rgba(0,0,0,.2) /*{global-box-shadow-color}*/;
+    background-clip: padding-box;
+    border-radius: 1em /*{global-radii-buttons}*/;
+    border: 1px solid #ccc /*{c-bup-border}*/;
+    background: #eee /*{c-bup-background-color}*/;
+    font-weight: bold;
+    color: #222 /*{c-bup-color}*/;
+    text-shadow: 0 /*{c-bup-shadow-x}*/ 1px /*{c-bup-shadow-y}*/ 0 /*{c-bup-shadow-radius}*/ #fff /*{c-bup-shadow-color}*/;
+}
+
+.difilemanager .difilemanagerheader {
+    border-radius: 3px;
+    background-color: #AAAAAA;
+    position: relative;
+    width: 100%;
+    height: 48px;
+    color: #232323;
+    top: 0px;
+}
+
+.difilemanager .difilemanagertitle {
+    padding-top: 5px;
+    padding-left: 5px;
+    font-size: 24px;
+    margin-left: 40%;
+    height: 15px;
+}
+
+
+.difilemanager .difilecounter {
+    padding-top: 5px;
+    padding-left: 5px;
+    float: left;
+    width: 200px;
+    color: #232323;
+}
+
+.difilemanager .difilesearch {
+    border-radius: 3px;
+    position: relative;
+    left: 160px;
+    top: -21px;
+    cursor: pointer;
+    right: 0;
+    font-size: 17px;
+    color: #ffffff;
+    display: block;
+    width: 210px;
+    height: 40px;
+    float: right;
+}
+
+
+.difilemanager .difilesearch input[type=search] {
+    border-radius: 40px;
+    color: #4D535E;
+    background-color: #FFF;
+    width: 250px;
+    height: 32px;
+    margin-left: -50px;
+    padding-left: 20px;
+    text-decoration-color: #4d535e;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 20px;
+    outline: none;
+    border: none;
+    padding-right: 10px;
+    -webkit-appearance: none;
+}
+
+::-webkit-input-placeholder {
+    /* WebKit browsers */
+    color: #4d535e;
+}
+
+::-moz-placeholder {
+    /* Mozilla Firefox 19+ */
+    color: #4d535e;
+    opacity: 1;
+}
+
+:-ms-input-placeholder {
+    /* Internet Explorer 10+ */
+    color: #4d535e;
+}
+
+.diimagebrowsingdata {
+    border-radius: 5px;
+    display: none;
+    background-color: #FFFFFF;
+    position: relative;
+    top: 3px;
+    width: 825px;
+    height: 90%;
+    margin-left: 0px;
+    padding: 0px;
+}
+
+.offscreenimage {
+    position: absolute;
+    top: -5000px;
+    left: -5000px;
+}
+
+.diimagedetails {
+    border-radius: 3px;
+    padding: 3px;
+    color: #232323;
+    background-color: #FFFFFF;
+    width: 475px;
+    height: 345px;
+    float: right;
+    top: 50px;
+    left: 336px;
+}
+
+.difilemanager .difilelist {
+    display: inline-block;
+    border-radius: 5px;
+    overflow: scroll;
+    overflow-x: hidden;
+    height: 99%;
+    top: -10px;
+    margin-left: 5px;
+    margin-bottom: 15px;
+    width: 335px;
+}
+
+.difilemanager .difilelist .difiles {
+    display: inline-block;
+    position: relative;
+}
+
+
+.difilemanager .thinScroll::-webkit-scrollbar{
+    width:8px;
+    border-radius:10px;
+    background-color:#cccccc;
+}
+
+.difilemanager .thinScroll::-webkit-scrollbar-track{
+    border:1px gray solid;
+    border-radius:10px;
+    -webkit-box-shadow:0 0 6px gray inset;
+}
+
+.difilemanager .thinScroll::-webkit-scrollbar-thumb{
+    background-color: #6e6e7c;
+    border-radius:6px;
+    height: 20%;
+}
+
+.difilemanager .thinScroll::-webkit-scrollbar-thumb:hover{
+    background-color:#6e6e7c;
+    border:1px solid #333333;
+}
+.difilemanager .thinScroll::-webkit-scrollbar-thumb:active{
+    background-color:#6e6e7c;
+    border:1px solid #333333;
+}
+
+.difilemanager .difilelist.animated {
+    -webkit-animation: showSlowlyElement 700ms; /* Chrome, Safari, Opera */
+    animation: showSlowlyElement 700ms; /* Standard syntax */
+}
+
+.difilemanager .difilelist li {
+    border-radius: 3px;
+    background-color: #FFFFFF;
+    border: 1px #AAAAAA groove;
+    width: 323px;
+    height: 44px;
+    list-style-type: none;
+    margin-top: 1px;
+    margin-right: 3px;
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    padding: 0.3em;
+    /*z-index: 1;*/
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: 0.3s background-color;
+}
+
+.difilemanager .difilelist li.expanditem  {
+    height: 140px;
+}
+
+.difilemanager .difilelist li:hover {
+    background-color: #AAAAAA;
+}
+
+.difilemanager .difilelist li.selectedFile {
+    background-color: #4080BC;
+}
+
+.difilemanager .difilelist li a {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.difilemanager .difilelist li .name {
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 20px;
+    width: 100%;
+    white-space: nowrap;
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    top: 1%;
+    margin-left: 10px;
+}
+
+.difilemanager .difilelist li .filedetail {
+    color: #232323;
+    font-weight: 400;
+    width: 55px;
+    height: 10px;
+    white-space: nowrap;
+    position: relative;
+    display: inline-block;
+    margin-left: 2px;
+    margin-top: -18px;
+}
+
+.filename {
+    font-size: 18px;
+    left: 3px;
+}
+
+.difilemanager .difilelist li .filename {
+    font-size: 16px;
+}
+
+.difilemanager .difilelist li .filedate {
+    font-size: 10px;
+    margin-left: 15px;
+}
+.difilemanager .difilelist li .filesize {
+    font-size: 10px;
+    margin-left: 15px;
+}
+
+.difilemanager .difilelist li .filedate:hover {
+    font-size: 14px;
+    margin-left: 15px;
+}
+.difilemanager .difilelist li .filesize:hover {
+    font-size: 14px;
+    margin-left: 15px;
+}
+
+.difilemanager .difilelist li .thumbnailimage {
+    width: 25%;
+    height: 45%;
+    display: inline-block;
+    margin-left: 10px;
+    margin-top: 5px;
+}
+
+.rightimage {
+    width: 95%;
+    height: 87%;
+    display: inline-block;
+    margin-left: 10px;
+    margin-top: 5px;
+}
+
+.difilemanager .difilelist li .smallimage {
+    width: 48%;
+    height: 61%;
+    display: none;
+    margin-left: 10px;
+    margin-top: 5px;
+}
+
+.difilemanager .difilelist li .smallimageloaded {
+    width: 48%;
+    height: 61%;
+    display: inline-block;;
+    margin-left: 10px;
+    margin-top: 5px;
+}
+
+
+.difilemanager .difilelist li .smallimageloaded:hover {
+    width: 95%;
+    height: 95%;
+}
+
+.difilemanager .dinothingfound {
+    position: relative;
+    background-color: #373743;
+    width: 240px;
+    height: 240px;
+    float: left;
+    margin-left: 35%;
+    margin-top: 10%;
+    display: none;
+    font-family: Arial;
+    -webkit-animation: showSlowlyElement 700ms; /* Chrome, Safari, Opera */
+    animation: showSlowlyElement 700ms; /* Standard syntax */
+}
+
+.difilemanager .dinothingfound .dinofiles {
+    margin: 30px auto;
+    top: 24px;
+    border-radius: 50%;
+    position: relative;
+    background-color: #d72f6e;
+    width: 120px;
+    height: 120px;
+    line-height: 11.4em;
+}
+
+.filemanager .nothingfound .dinofiles:after {
+    content: '×';
+    position: absolute;
+    color: #ffffff;
+    font-size: 14em;
+    margin-right: 0.092em;
+    right: 0;
+}
+
+.difilemanager .dinothingfound span {
+    margin-left: 68px;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 20px;
+    height: 13px;
+    position: relative;
+    top: 2em;
+}
+
+
+/* Chrome, Safari, Opera */
+@-webkit-keyframes showSlowlyElement {
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    0% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+}
+
+/* Standard syntax */
+@keyframes showSlowlyElement {
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    0% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+}

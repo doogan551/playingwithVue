@@ -1,0 +1,195 @@
+@import url('./KoGrid.css') screen;
+
+/* OVERRIDES */
+.kgViewport {
+    height: auto !important;
+}
+.kgTopPanel {
+    position: fixed !important;
+}
+/* END OVERRIDES */
+
+.noSelect {
+    -webkit-user-select: none; /* Chrome all / Safari all */
+    -moz-user-select: none; /* Firefox all */
+    -ms-user-select: none; /* IE 10+ */
+
+    -o-user-select: none;
+    user-select: none;
+
+    cursor: default;
+}
+
+.color-opener {
+    padding:5px;
+    display:inline-block;
+    border:1px solid black;
+}
+.definitions-sys-header-color{
+    background-color:#fff;
+}
+
+#editor{
+    width:900px;
+    height:auto;
+    position:absolute;
+    z-index: 2000;
+    top: 50px;
+    left: 50%;
+    overflow-y: visible;
+    margin-left: -450px;
+}
+.isSystemMessage{
+    background-color:red
+}
+
+.grid-blur{
+    /*background: url('./images/whiteblur.png');*/
+    background-color: #000;
+    opacity: 0.75;
+    z-index: 1000;
+    position:absolute;
+    width:100vw;
+    height:100vh;
+    top:0px;
+    left:0px;
+    right:0px;
+    bottom:0px;
+}
+#gridCont {
+    overflow: auto;
+    position: absolute;
+    top: 150px;
+    bottom: 20px;
+    left: 210px;
+    right: 40px;
+}
+#editor .jumbotron{
+    font-size:16px;
+}
+@viewport{
+    width:device-width;
+    height:device-height;
+}
+p.placeholder{display:none;}
+#msgFormatSizer{
+    white-space:pre;
+    position:absolute;
+    z-index:0;
+    
+}
+.modal-backdrop{
+}
+.popover{
+    min-width:400px;
+    max-height:300px;
+    overflow-y:scroll;
+}
+#grid
+{
+    font-size:14px;
+    margin:0px;
+    padding:0px;
+    position:relative;
+    width:auto;
+    height:auto;
+    overflow-y: visible;
+    overflow-x: hidden;
+}
+#grid .kgCell:not(.col0){
+    cursor:pointer;
+}
+.grid-container{
+/*  
+    padding:0px;
+    margin:0px;
+    height:auto;
+    width:auto;
+*/    
+    overflow: visible;
+
+}
+#clearSearchFilter{
+    margin-left:-3;
+    cursor: pointer;
+}
+#confirm{
+    position:absolute;
+    top:0;
+    left:0;
+    z-index:3000;
+    padding:0;
+    margin:0;
+    width:auto;
+    background:transparent;
+    height:0px;
+    overflow:visible;
+}
+#valueTypeContainer{
+    position:absolute;
+    z-index:1000;
+
+}
+.value-token{
+    position: absolute;
+    right:20px;
+    left:600px;
+    top: 20px;
+    bottom: 20px;
+    padding:10px;
+    background-color: #FFD;
+    border-radius: 5px;
+    border: 1px solid #EEE;
+}
+.value-token h2,.value-token h3{
+    padding:0px;
+    margin:0px;
+}
+span.swatchColor{
+    background-color:#fff;
+    color:#000;
+}
+.swatch{
+    width:15px;
+    height:15px;
+    display:inline-block;
+    padding:2px;
+    border:1px double black;
+}
+input#msgFormat{
+    border: 1px solid #888;
+    padding:3px;
+    margin:0px;
+    font-size: 16px;
+    width: 500px;
+}
+div#msgFormat {
+    padding: 3px 7px;
+    font-size: 16px;
+    display: inline-block;
+    max-width: 500px;
+}
+input#msgName {
+    font-size: 16px;
+    width: 500px;
+    padding: 3px;
+}
+#editor label {
+    color: #888;
+    display: block;
+    margin-bottom: 5px;
+}
+#wrap {
+  min-height: 100%;
+  height: auto;
+  /* Negative indent footer by its height */
+  margin: 0 auto -60px;
+  /* Pad bottom by footer height */
+  padding: 0 0 60px;
+}
+
+/* Set the fixed height of t    he footer here */
+#footer {
+  height: 60px;
+  background-color: #f5f5f5;
+}

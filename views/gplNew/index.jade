@@ -1,0 +1,123 @@
+doctype html
+html
+    head
+        title
+        link(rel='stylesheet', href='/css/lib/bootstrap3.min.css')
+        link(rel='stylesheet', href='/css/gpl/gpl.css')
+        script.
+            var gplData = {
+                    upi: !{upi},
+                    point: !{point},
+                    references: !{references}
+                };
+    body(oncontextmenu="return false")
+        canvas#gplCanvas
+
+        .bottomBar
+            button.btn.btn-primary.btn-sm#validate(type="button", style="display:none", data-bind="visible: isEdit === true") Validate
+            button.btn.btn-primary.btn-sm#save(type="button", style="display:none", data-bind="visible: isEdit === true") Save
+            button.btn.btn-primary.btn-sm#edit(type="button", style="display:none", data-bind="visible: isEdit !== true") Edit
+            button.btn.btn-primary.btn-sm.sequenceName(style="display:none", type="button", data-bind="text: sequenceName, visible: sequenceName !== undefined")
+
+        #gplMessage.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
+            .modal-dialog.modal-sm
+                .modal-content
+                    .panel.panel-default
+                        .panel-heading
+                            h3.panel-title GPL Message
+                        #gplMessageBody.panel-body
+
+        #editInputOutput.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
+            .modal-dialog
+                .modal-content
+                    .modal-header
+                        button.close(type="button", data-dismiss="modal")
+                            span(aria-hidden="true")
+                            span.sr-only Close
+                        h4.modal-title(data-bind="text: blockTitle")
+
+                    .modal-body
+                        //- Monitor and Control block editing
+                        .clearfix(data-bind="visible: editPointType() !== 'ConstantBlock'")
+                            .subtitle Reference type
+                                .row
+                                    .col-md-4.col
+                                        label.radio-inline
+                                            input(type="radio", name="editPointReferenceType", value="External", data-bind="checked: editPointReferenceType")
+                                            |External Point
+                                    .col-md-4.col
+                                        label.radio-inline
+                                            input(type="radio", name="editPointReferenceType", value="Internal", data-bind="checked: editPointReferenceType")
+                                            |Internal GPL
+                                    .col-md-4.col(data-bind="visible: editPointType() !== 'ControlBlock'")
+                                        label.radio-inline
+                                            input(type="radio", name="editPointReferenceType", value="externalgpl", data-bind="checked: editPointReferenceType")
+                                            |External GPL
+
+                            .subtitle(data-bind="visible: editPointReferenceType() === 'External'") Reference
+                                .row.pointName
+                                    .col-md-12
+                                        button.btn.btn-xs.btn-primary(data-bind="click: editPointReference") Data Point
+                                        span(data-bind="text: editPointName")
+
+                            .subtitle(data-bind="visible: editPointReferenceType() === 'Internal'") Reference
+                                .row
+                                    .col-md-12
+                                        span Block Reference:
+                                        select(data-bind="options: blockReferences, optionsValue: function(item) {return item.value;}, optionsText: function(item) {return item.label;}")
+
+                            .subtitle.col-md-5 Numeric Format
+                                .input-row  # of Characters
+                                    input.pull-right(type="number", min="1", max="10", data-bind="value: editPointCharacters")
+
+                                .input-row # of Decimals
+                                    input.pull-right(type="number", min="1", max="10", data-bind="value: editPointDecimals")
+
+                            .subtitle.col-md-5.pull-right Label Format
+                                .input-row
+                                    .checkbox
+                                        label Show Label
+                                            input(type="checkbox", data-bind="checked: editPointShowLabel")
+                                    .checkbox
+                                        label Show Present Value
+                                            input(type="checkbox", data-bind="checked: editPointShowValue")
+
+                        .clearfix(data-bind="visible: editPointType() === 'ConstantBlock'")
+                            .subtitle Configuration
+                                .row
+                                    .col-md-6
+                                        .input-row
+                                            label(for="constantvalue") Value
+                                            input#constantvalue(type="number", data-bind="value: editPointValue")
+                                    .col-md-6
+                                        .input-row
+                                            label(for="constantlabel") Label
+                                            input#constantlabel(type="text", data-bind="value: editPointLabel")
+                            .subtitle.col-md-5 Numeric Format
+                                .input-row  # of Characters
+                                    input.pull-right(type="number", min="1", max="10", data-bind="value: editPointCharacters")
+
+                                .input-row # of Decimals
+                                    input.pull-right(type="number", min="1", max="10", data-bind="value: editPointDecimals")
+
+                            .subtitle.col-md-5.pull-right Label Format
+                                .input-row
+                                    .checkbox
+                                        label Show Label
+                                            input(type="checkbox")
+                                    .checkbox
+                                        label Show Present Value
+                                            input(type="checkbox")
+
+                    .modal-footer
+                        button.btn.btn-default(data-dismiss="modal") Close
+                        button.btn.btn-primary(data-bind="click: updatePoint") Save
+
+        script(type='text/javascript', src='/js/lib/jquery.min.js')
+        script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
+        script(type='text/javascript', src='/js/lib/bootstrap3.min.js')
+        script(type='text/javascript', src='/js/lib/fabric.js')
+        script(type='text/javascript', src='/js/lib/socket.io.js')
+        script(type='text/javascript', src='/js/lib/knockout-3.1.0.js')
+        script(type='text/javascript', src='/js/gplNew/gpl.textblock.js')
+        script(type='text/javascript', src='/js/gplNew/gplnew.js')

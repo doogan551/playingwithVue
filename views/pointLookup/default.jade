@@ -1,0 +1,152 @@
+doctype html
+html
+    head
+        title #{title}
+        link(rel="stylesheet", href="/css/lib/jqwidgets/jqx.base.css", type="text/css")
+        link(rel="stylesheet", href="/css/lib/jqwidgets/jqx.customArctic.css", type="text/css")
+        link(rel="stylesheet", href="/css/lib/bootstrap3.min.css")
+        link(rel="stylesheet", href="/css/lib/font-awesome-4.1.0/css/font-awesome.min.css")
+        link(rel="stylesheet", href="/css/lib/bannerJS/style.css")
+        link(rel="stylesheet", href="/css/pointLookup/style.css")
+
+    body
+        #splitter.height100percent
+            #pointTypeColumn
+                .pointTypeHeader
+                    .blockHeader Point Types
+                    .checkbox
+                        label
+                            input(data-bind="checked: allPointTypes", type="checkbox")
+                            span All
+                    //.pointTypeDropdownTrigger.fa.fa-sort-desc(href="#", data-toggle="popover", data-trigger="manual")
+                    //ul.pointTypeDropdown
+                    //    li
+                    //        a All
+                    //    li
+                    //        a All Analog
+                    //    li
+                    //        a All Binary
+                #pointTypeListContainer
+                    #pointTypes.noBorder
+            #gridContainer
+                #jqxtabs.noBorder
+                    ul
+                        li(style="margin-left: 30px")
+                            span.tabLabel Search&nbsp;
+                            i.searchBusy.fa.fa-refresh.fa-spin
+                        li
+                            span.tabLabel Browse&nbsp;
+                            i.browseBusy.fa.fa-refresh.fa-spin
+                    #listSearch
+                        .toolbar.row
+                            .col-xs-3
+                                .input-group
+                                    input.input-sm.form-control.searchInput(data-bind="value: grid.name1.filter, valueUpdate: 'afterkeydown', hasFocus: isFocused", type="text", placeholder="Segment 1", tabindex="101")
+                                    i.fa.fa-times-circle.clearSearchIcon(data-bind="click:clearSearch" data-segment="name1" data-tab="grid")
+                                    .input-group-btn(tabindex="-1")
+                                        button.btn.btn-sm.disabled
+                                            i.fa.fa-filter
+                            .col-xs-3
+                                .input-group
+                                    input.input-sm.form-control.searchInput(data-bind="value: grid.name2.filter, enable: grid.name2.filterOn, valueUpdate: 'afterkeydown'", type="text", placeholder="Segment 2", tabindex="102")
+                                    i.fa.fa-times-circle.clearSearchIcon(data-bind="click:clearSearch" data-segment="name2" data-tab="grid")
+                                    .input-group-btn(tabindex="-1")
+                                        button#segment2.btn.btn-sm.btn-success(data-bind="click: function(vm) { grid.toggleFilter(2) }", tabindex="-1")
+                                            i.fa.fa-filter
+                            .col-xs-3
+                                .input-group
+                                    input.input-sm.form-control.searchInput(data-bind="value: grid.name3.filter, enable: grid.name3.filterOn, valueUpdate: 'afterkeydown'", type="text", placeholder="Segment 3", tabindex="103")
+                                    i.fa.fa-times-circle.clearSearchIcon(data-bind="click:clearSearch" data-segment="name3" data-tab="grid")
+                                    .input-group-btn(tabindex="-1")
+                                        button#segment3.btn.btn-sm.btn-success(data-bind="click: function(vm) { grid.toggleFilter(3) }", tabindex="-1")
+                                            i.fa.fa-filter
+                            .col-xs-3
+                                .input-group
+                                    input.input-sm.form-control.searchInput(data-bind="value: grid.name4.filter, enable: grid.name4.filterOn, valueUpdate: 'afterkeydown'", type="text", placeholder="Segment 4", tabindex="104")
+                                    i.fa.fa-times-circle.clearSearchIcon(data-bind="click:clearSearch" data-segment="name4" data-tab="grid")
+                                    .input-group-btn(tabindex="-1")
+                                        button#segment4.btn.btn-sm.btn-success(data-bind="click: function(vm) { grid.toggleFilter(4) }", tabindex="-1")
+                                            i.fa.fa-filter
+                        #gridContainer
+                            #jqxgrid
+                    #millerBrowse
+                        .toolbar.row
+                            .col-xs-3
+                                input.input-sm.form-control.searchInput(data-bind="value: browse.filter1, valueUpdate: 'afterkeydown'", type="text", placeholder="Segment 1", tabindex="108")
+                                i.fa.fa-times-circle.clearSearchIcon.clearBrowse(data-bind="click:clearSearch" data-segment="filter1" data-tab="browse")
+                            .col-xs-3
+                                input.input-sm.form-control.searchInput(data-bind="value: browse.filter2, valueUpdate: 'afterkeydown'", type="text", placeholder="Segment 2", tabindex="109")
+                                i.fa.fa-times-circle.clearSearchIcon.clearBrowse(data-bind="click:clearSearch" data-segment="filter2" data-tab="browse")
+                            .col-xs-3
+                                input.input-sm.form-control.searchInput(data-bind="value: browse.filter3, valueUpdate: 'afterkeydown'", type="text", placeholder="Segment 3", tabindex="110")
+                                i.fa.fa-times-circle.clearSearchIcon.clearBrowse(data-bind="click:clearSearch" data-segment="filter3" data-tab="browse")
+                            .col-xs-3
+                                input.input-sm.form-control.searchInput(data-bind="value: browse.filter4, valueUpdate: 'afterkeydown'", type="text", placeholder="Segment 4", tabindex="111")
+                                i.fa.fa-times-circle.clearSearchIcon.clearBrowse(data-bind="click:clearSearch" data-segment="filter4" data-tab="browse")
+                        .row.browseRow
+                            .col-xs-3
+                                #browseList1(data-bind="jqxListBox: {source: browse.filteredData1, height: '100%', width: '100%', displayMember: 'name1', valueMember: 'id', equalItemsWidth:true, renderer: browseListRender(1), theme: widgetTheme}")
+                            .col-xs-3
+                                #browseList2(data-bind="jqxListBox: {source: browse.filteredData2, height: '100%', width: '100%', displayMember: 'name2', valueMember: 'id', equalItemsWidth:true, renderer: browseListRender(2), theme: widgetTheme}")
+                            .col-xs-3
+                                #browseList3(data-bind="jqxListBox: {source: browse.filteredData3, height: '100%', width: '100%', displayMember: 'name3', valueMember: 'id', equalItemsWidth:true, renderer: browseListRender(3), theme: widgetTheme}")
+                            .col-xs-3
+                                #browseList4(data-bind="jqxListBox: {source: browse.filteredData4, height: '100%', width: '100%', displayMember: 'name4', valueMember: 'id', equalItemsWidth:true, renderer: browseListRender(4), theme: widgetTheme}")
+                .permTitle
+                .actionGroup
+                    button.btn.btn-sm.btn-primary.resetNavBtn(data-bind="click: resetNavigator") Clear Names
+                    .checkbox-inline.showDeleted
+                        label
+                            input(data-bind="checked: showDeleted", type="checkbox")
+                            span Show Deleted
+                    // ko if: systemAdmin
+                    .checkbox-inline.showInactive
+                        label
+                            input(data-bind="checked: showInactive", type="checkbox")
+                            span Show Inactive
+                    // /ko
+                    button.newPointBtn.btn.btn-sm.btn-primary Create New Point
+        .reportFilter
+            span
+                b FILTER:&nbsp;
+            span Segment 1:
+            span.filter(data-bind='text: reportFilter.name1, css: { hasFilter: reportFilter.name1() != "" }')
+            span Segment 2:
+            span.filter(data-bind='text: reportFilter.name2, css: { hasFilter: reportFilter.name2() != "" }')
+            span Segment 3:
+            span.filter(data-bind='text: reportFilter.name3, css: { hasFilter: reportFilter.name3() != "" }')
+            span Segment 4:
+            span.filter(data-bind='text: reportFilter.name4, css: { hasFilter: reportFilter.name4() != "" }')
+        .contextMenu
+
+        script(src="/js/lib/jquery.min.js")
+        script(src="/js/lib/jquery.easing.1.3.js")
+        script(src="/js/lib/knockout-3.1.0.js")
+        script(src="/js/lib/jquery.html5PlaceholderShim.js.min.js")
+        script(src="/js/lib/bootstrap3.min.js")
+        script(src="/js/lib/jqwidgets/jqxcore.js")
+        script(src="/js/lib/jqwidgets/jqxdata.js")
+        script(src="/js/lib/jqwidgets/jqxknockout.js")
+        script(src="/js/lib/jqwidgets/jqxbuttons.js")
+        script(src="/js/lib/jqwidgets/jqxscrollbar.js")
+        script(src="/js/lib/jqwidgets/jqxlistbox-MODIFIED.js")
+        script(src="/js/lib/jqwidgets/jqxsplitter.js")
+        script(src="/js/lib/jqwidgets/jqxtabs.js")
+        script(src="/js/lib/jqwidgets/jqxgrid.js")
+        script(src="/js/lib/jqwidgets/jqxgrid.selection.js")
+        script(src="/js/lib/jqwidgets/jqxcheckbox.js")
+        script(src="/js/lib/jqwidgets/jqxmenu.js")
+        script(src="/js/lib/jqwidgets/jqxwindow.js")
+        script(src="/js/lib/bannerJS/banner.js")
+        script(src="/js/pointLookup/pointLookup.js")
+        script.
+            (function(module) {
+                module.MODE         = !{mode};
+                module.MODES        = !{modes};
+                module.POINT        = !{point};
+                module.GROUPID      = !{groupId};
+                module.POINTTYPE    = !{pointType};
+                module.POINTTYPES   = !{pointtypes};
+                module.DEVICEID     = !{deviceId};
+                module.REMOTEUNITID = !{remoteUnitId};
+            })(window.pointLookup || {});

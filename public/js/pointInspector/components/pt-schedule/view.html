@@ -1,0 +1,35 @@
+<div class="nav">
+    <ul>
+        <li><span>Overview</span></li>
+        <!-- ko if: $root.isSystemAdmin() -->
+        <li><span>Permissions</span></li>
+        <!-- /ko -->
+        <li><span>Involvement</span></li>
+    </ul>
+</div>
+
+<div class="view">
+    <div class="container-fluid">
+        <div class="row header">
+            <div class="col-xs-12">
+                <h4>Overview</h4>
+            </div>
+        </div>
+    </div>
+    <div id="overview" class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div data-bind="component: { name: 'ctl-description', params: { description: data.Description.Value, rootContext: $root } }"></div>
+            </div>
+        </div>
+         <div data-bind="component: { name: 'ctl-scheduleEntries', params: { id: data._id(), point: data, pointType: data['Point Type'].Value(),isTabLoaded: tabTriggers.entries, rootContext: $root } }"></div>
+    </div>
+
+    <div id="permissions" class="content">
+        <div data-bind="component: { name: 'ctl-permissions', params: { isTabLoaded: tabTriggers.permissions, rootContext: $root } }"></div>
+    </div>
+
+    <div id="involvement" class="content">
+        <div data-bind="component: { name: 'ctl-involvement', params: { id: data._id(), isTabLoaded: tabTriggers.involvement, rootContext: $root } }"></div>
+    </div>
+</div>

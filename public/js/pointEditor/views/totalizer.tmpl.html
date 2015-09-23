@@ -1,0 +1,265 @@
+<div class="form-group">
+    <div class="floatingHeader">
+        <h3 data-bind="text: data.Name"></h3>
+        <div class="actionGroup">
+            <div data-bind="text: data._id" class="pointId"></div>
+            <input type="button" data-bind="click: save" class="btn btn-sm btn-success" value="Save point">
+        </div>
+    </div>
+
+    <table class="pointGrid table table-condensed">
+        <thead>
+            <tr>
+                <th width="200"></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        <!-- ko with: data['Point Type'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Point Type</th>
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Point Type', enumOptions: pointEditor.utility.config.Utility.pointTypes.getEnums('Point Types', 'Totalizer') } }"></td>
+        </tr>
+        <!-- /ko -->
+        <!-- ko with: data['Alarm Inhibit'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Alarm Inhibit</th> 
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Alarm Inhibit' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Alarm State'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Alarm State</th> 
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Alarm State', enumOptions: pointEditor.utility.config.Utility.pointTypes.getEnums('Alarm States', 'Totalizer') } }"></td>
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Broadcast Enable'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Broadcast Enable</th> 
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Broadcast Enable' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['COV Enable'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">COV Enable</th> 
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'COV Enable' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['COV Increment'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">COV Increment</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, id: 'COVIncrement', propName: 'COV Increment' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Control Point'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Control Point</th> 
+            <td data-bind="template: { name: 'control8.point', data: { prop: $data, propName: 'Control Point' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Control Priority'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Control Priority</th> 
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Control Priority', enumOptions: pointEditor.utility.workspace.systemEnums.controlpriorities } }"></td>
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Controller'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Controller</th> 
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Controller', enumOptions: pointEditor.utility.workspace.systemEnums.controllers } }"></td>
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Description'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Description</th> 
+            <td data-bind="template: { name: 'control2.text', data: { prop: $data, propName: 'Description' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Device Point'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Device Point</th> 
+            <td data-bind="template: { name: 'control8.point', data: { prop: $data, propName: 'Device Point' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Engineering Units'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Engineering Units</th> 
+            <td data-bind="template: { name: 'control2.text', data: { prop: $data, propName: 'Engineering Units' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Input Rate'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Input Rate</th> 
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Input Rate', enumOptions: pointEditor.utility.config.Utility.pointTypes.getEnums('Input Rates', 'Totalizer') } }"></td>
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Last Report Time'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Last Report Time</th> 
+            <td data-bind="template: { name: 'control11.timeT', data: { prop: $data, propName: 'Last Report Time' } }"></td>
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Maximum Change'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Maximum Change</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, id: 'MaximumChange', propName: 'Maximum Change' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Maximum Value'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Maximum Value</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, id: 'MaximumValue', propName: 'Maximum Value' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Minimum Value'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Minimum Value</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, id: 'MinimumValue', propName: 'Minimum Value' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Monitor Point'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Monitor Point</th> 
+            <td data-bind="template: { name: 'control8.point', data: { prop: $data, propName: 'Monitor Point' } }"></td> 
+        </tr> 
+        <!-- /ko -->
+        <!-- ko with: data['Out of Service'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Out of Service</th> 
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Out of Service' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Point Instance'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Point Instance</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Point Instance' } }"></td> 
+        </tr> 
+        <!-- /ko -->
+        <!-- ko with: data['Quality Code Enable'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Quality Code Enable</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Quality Code Enable' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Reliability'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Reliability</th> 
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Reliability', enumOptions: pointEditor.utility.config.Utility.pointTypes.getEnums('Reliabilities', 'Totalizer') } }"></td>
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Remarks'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Remarks</th> 
+            <td data-bind="template: { name: 'control2.text', data: { prop: $data, propName: 'Remarks' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Remote Unit Point'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Remote Unit Point</th> 
+            <td data-bind="template: { name: 'control8.point', data: { prop: $data, propName: 'Remote Unit Point' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Reset Interval'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Reset Interval</th> 
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Reset Interval', enumOptions: pointEditor.utility.config.Utility.pointTypes.getEnums('Reset Intervals', 'Totalizer') } }"></td>
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Reset Time'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Reset Time</th> 
+            <td data-bind="template: { name: 'control17.hrMin', data: { prop: $data, propName: 'Reset Time' } }"></td>
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Shutdown Control'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Shutdown Control</th> 
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Shutdown Control' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Shutdown Enable'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Shutdown Enable</th> 
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Shutdown Enable' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Shutdown Point'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Shutdown Point</th> 
+            <td data-bind="template: { name: 'control8.point', data: { prop: $data, propName: 'Shutdown Point' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Shutdown Release'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Shutdown Release</th> 
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Shutdown Release' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Shutdown State'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Shutdown State</th> 
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Shutdown State', enumOptions: $data.ValueOptions } }"></td>
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Shutdown Value'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Shutdown Value</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, id: 'ShutdownValue', propName: 'Shutdown Value' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Status Flags'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Status Flags</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Status Flags' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Trend COV Increment'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Trend COV Increment</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, id: 'TrendCOVIncrement', propName: 'Trend COV Increment' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Trend Enable'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Trend Enable</th> 
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Trend Enable' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Trend Interval'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Trend Interval</th> 
+            <td data-bind="template: { name: 'control13.minSec', data: { prop: $data, propName: 'Trend Interval' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Trend Samples'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Trend Samples</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Trend Samples' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Update Interval'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Update Interval</th> 
+            <td data-bind="template: { name: 'control13.minSec', data: { prop: $data, propName: 'Update Interval' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Value'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Value</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, id: 'Value', propName: 'Value' } }"></td> 
+        </tr> 
+        <!-- /ko -->
+
+
+
+        <!-- ko foreach: data['Point Refs'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row" data-bind="text: PropertyName"></th>
+            <td data-bind="template: { name: 'control8.point' }"></td>
+        </tr>
+        <!-- /ko -->
+
+
+        </tbody>
+    </table>
+</div>

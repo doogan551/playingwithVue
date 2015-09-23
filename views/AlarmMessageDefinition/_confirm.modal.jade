@@ -1,0 +1,11 @@
+#confirm(data-states='{"confirm":"3"}',class='modal',data-bind='if:false,visible:stateManager.visibilize($element),attr:{"data-show":stateManager.visibilize($element),"data-toggle":"modal","data-target":"#confirm"}',role='dialog',aria-labeledby='myModalLabel')
+    .modal-dialog
+        .modal-content
+            .modal-header
+                button.close(data-dismiss='modal') x
+                h4.modal-title Confirm Action
+            .modal-body
+                p.message(data-bind='text:stateManager.currentState().data.confirm.message')
+            .modal-footer
+                button#confirmOkay.btn.btn-primary(data-bind='click:function() { stateManager.currentState().data.confirm.okay(); }',data-dismiss="modal") Okay
+                button#cancelOkay.btn.btn-default(data-bind='click:function() { stateManager.currentState().data.confirm.cancel(); }',data-dismiss="modal") Cancel

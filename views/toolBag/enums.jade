@@ -1,0 +1,250 @@
+html
+	head
+		link(rel='stylesheet', type='text/css', href="/css/lib/bootstrap-3.0.3.min.css")
+		link(rel='stylesheet', type='text/css', href="/css/lib/font-awesome-4.0.3/css/font-awesome.min.css")
+		style.
+			body {
+				padding: 20px;
+			}
+			ul {
+				list-style-type: none;
+				padding-left: 10px;
+			}
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				table-layout: fixed;
+				line-height: 1.55;
+			}
+			tr {
+				border-bottom: 1px solid #ccc;
+				cursor: default;
+			}
+			td {
+				padding-left: 10px;
+				vertical-align: middle;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+			h1 {
+				// Bootstrap override
+				padding: 0;
+				margin: 0;
+				display: inline;
+			}
+
+			.col1 {
+				display: inline-block;
+				width: 275px;
+				padding-left: 5px;
+				padding-right: 20px;
+			}
+			.col2 {
+				display: inline-block;
+				width: 275px;
+				padding-right: 20px;
+			}
+			.col3 {
+				display: inline-block;
+			}
+			.header > .col3 {
+				width: 150px;
+				padding-right: 20px;
+			}
+			span.input-group-addon {
+				width: 38px;
+			}
+			span.input-group-addon:hover {
+				cursor: pointer;
+			}
+			.scrollable {
+				overflow-y: scroll;
+				overflow-x: hidden;
+			}			
+			.list {
+				position: absolute;
+				top: 75px;
+				bottom: 20px;
+				left: 20px;
+				width: 275px;
+			}
+			.list span {
+				cursor: pointer;
+				font-weight: normal;
+				display: inline-block;
+				padding-left: 5px;
+			}
+			.list span:hover {
+				text-decoration: underline;
+			}
+			.fa-ban {
+				color: red;
+			}
+			.fa-check-circle {
+				color: #777;
+			}
+
+			.header {
+				min-width: 750px;
+			}
+			.content {
+				position: absolute;
+				top: 75px;
+				left: 325px;
+				right: 20px;
+				bottom: 20px;
+			}
+			.tableContent {
+				position: absolute;
+				top: 40px;
+				left: 0;
+				right: 0;
+				bottom: 0;
+			}
+
+	body
+		.pull-left
+			h1 Enums Tools
+			i.fa.fa-info-circle.fa-2x(data-toggle="modal", data-target="#myModal", style="margin-left: 20px; color: #677; cursor: pointer")
+		.pull-right
+			span(data-bind="html: generateFileMsg, style: { color: generateFileError() ? 'red':'black'}")
+			| &nbsp; &nbsp;
+			a.btn.btn-primary(data-bind="click: generateCppHeaderFile")
+				// ko if: generateFileBusy
+				i.fa.fa-spinner.fa-spin
+				| &nbsp; 
+				// /ko
+				| Generate C++ Header File
+
+
+		.list.scrollable
+			ul
+				// ko foreach: enumsList
+				li
+					// ko if: isEnabled()
+					i.fa.fa-check-circle
+					// /ko
+
+					// ko if: !isEnabled()
+					i.fa.fa-ban
+					// /ko
+
+					span(data-bind="text: $data.name, click: $root.toggleOption, event: { contextmenu: $root.toggleOtherOptions }")
+				// /ko
+		
+		.content
+			.header
+				.col1
+					.input-group
+						input.form-control(type="text", data-bind="value: enumSetFilter, valueUpdate: 'input'", placeholder="Enum Collection", data-type="search")
+						span.input-group-addon(data-bind="click: toggleSort.bind($data, 'enumSet')")
+							// ko if: sortColumn() === "enumSet"
+							i.fa(data-bind="css: {'fa-sort-alpha-asc': sortAscending(), 'fa-sort-alpha-desc': !sortAscending()}")
+							// /ko
+				.col2
+					.input-group
+						input.form-control(type="text", placeholder="Property Name", data-bind="value: propertyNameFilter, valueUpdate: 'input'")
+						span.input-group-addon(data-bind="click: toggleSort.bind($data, 'propertyName')")
+							// ko if: sortColumn() === "propertyName"
+							i.fa(data-bind="css: {'fa-sort-alpha-asc': sortAscending(), 'fa-sort-alpha-desc': !sortAscending()}")
+							// /ko
+				.col3
+					.input-group
+						input.form-control(type="text", placeholder="Enum", data-bind="value: enumFilter, valueUpdate: 'input'")
+						span.input-group-addon(data-bind="click: toggleSort.bind($data, 'enum')")
+							// ko if: sortColumn() === "enum"
+							i.fa(data-bind="css: {'fa-sort-numeric-asc': sortAscending(), 'fa-sort-numeric-desc': !sortAscending()}")
+							// /ko
+
+			.tableContent.scrollable
+				table
+					tbody(data-bind="foreach: filteredPropertyList")
+						tr
+							td.col1(data-bind="text: $data.enumSet")
+							td.col2(data-bind="text: $data.propertyName")
+							td.col3(data-bind="text: $data.enum")
+
+		.modal.fade#myModal
+			.modal-dialog
+				.modal-content
+					.modal-header
+						button.close(type='button', data-dismiss='modal')
+							span(aria-hidden='true') ×
+							span.sr-only Close
+						h4.modal-title Properties & Point Types Analysis
+					.modal-body
+						.row
+							.col-md-6
+								// ko with: propertyEnumData
+								.h3 Properties
+								br
+								.h4 
+									.small Minimum Enum
+									span(data-bind="text: minimum")
+								br
+								.h4 
+									.small Maximm Enum
+									span(data-bind="text: maximum")
+								br
+								.h4
+									.small Duplicate Enums
+									// ko if: duplicateEnums().length === 0
+									span None
+									// /ko
+									// ko foreach: duplicateEnums
+									span(data-bind="text: $data")
+									span &nbsp; &nbsp;
+									// /ko
+								br
+								.h4
+									.small Duplicate Names
+									// ko if: duplicateNames().length === 0
+									span None
+									// /ko
+									// ko foreach: duplicateNames
+									span(data-bind="text: $data")
+									span &nbsp; &nbsp;
+									// /ko
+								// /ko
+							.col-md-6
+								// ko with: pointTypeEnumData
+								.h3 Point Types
+								br
+								.h4 
+									.small Minimum Enum
+									span(data-bind="text: minimum")
+								br
+								.h4 
+									.small Maximm Enum
+									span(data-bind="text: maximum")
+								br
+								.h4
+									.small Duplicate Enums
+									// ko if: duplicateEnums().length === 0
+									span None
+									// /ko
+									// ko foreach: duplicateEnums
+									span(data-bind="text: $data")
+									span &nbsp; &nbsp;
+									// /ko
+								br
+								.h4
+									.small Duplicate Names
+									// ko if: duplicateNames().length === 0
+									span None
+									// /ko
+									// ko foreach: duplicateNames
+									span(data-bind="text: $data")
+									span &nbsp; &nbsp;
+									// /ko
+								// /ko		
+				// /.modal-content
+			// /.modal-dialog
+		// /.modal
+
+		script(type='text/javascript', src="/js/lib/jquery.min.js")
+		script(type='text/javascript', src="/js/lib/knockout-3.2.0.js")
+		script(type='text/javascript', src="/js/lib/bootstrap-3.0.3.min.js")
+		script(type='text/javascript', src="/js/lib/config.js")
+		script(type='text/javascript', src="/js/toolbag/enums.js")

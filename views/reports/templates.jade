@@ -1,0 +1,20 @@
+//
+   Created by Soven on 9/27/2014.
+script#edit-template(type="text/x-kendo-template")
+    # if (data.valueType === "Float" || data.name=== "Value" ) { #
+    #=data.precision#
+    # } #
+script#conditionTemplate(type="text/x-kendo-template")
+    # if (!data.firstRow) { #
+    #=data.condition#
+    # } #
+script#valueViewTemplate(type="text/x-kendo-template")
+    # if (data.value != "" && (data.valueType == "HourMinSec")) { #
+    #= kendo.toString(new Date(data.value), "h:mm tt") #
+    #}else if (data.valueType == "Float"){ #
+    #= kendo.toString(data.value, "{0:n2}") #
+    # }else if (data.value != "" && (data.valueType == "DateTime" || data.valueType == "Timet")){ #
+    #= kendo.toString(new Date(data.value), "g") #
+    # }else{ #
+    #=data.value #
+    # } #

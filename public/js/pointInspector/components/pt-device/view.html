@@ -1,0 +1,220 @@
+<div class="nav">
+    <ul>
+        <li><span>Overview</span></li>
+        <!-- ko if: $root.isSystemAdmin() -->
+        <li><span>Permissions</span></li>
+        <!-- /ko -->
+        <li><span>Involvement</span></li>
+        <li><span>Alarm History</span></li>
+        <li><span>Configuration <i class="fa fa-angle-right"></i></span>
+            <ul>
+                <li class="header"><span>Configuration</span>
+                <li><span>General</span></li>
+                <li><span>Value</span></li>
+                <li><span>Network</span></li>
+                <li><span>Alarms</span></li>
+                <li><span>Notifications</span></li>
+                <li class="back"><span><i class="fa fa-angle-left"></i> back</span></li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+<div class="view">
+    <div class="container-fluid">
+        <div class="row header">
+            <div class="col-xs-12">
+                <h4>Overview</h4>
+            </div>
+        </div>
+    </div>
+    <div id="overview" class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col col-xs-12">
+                    <div class="dataField">
+                        <label>Value</label>
+                        <div class="valueHolder">
+                            <span class="val" data-bind="text: data.Value.Value"></span>
+                        </div>
+                        <div class="actions">
+                            <!-- ko if: $root.authorize(data, $root.permissionLevels.CONTROL) -->
+                                <div data-bind="click: initialize" class="btn btn-default btn-xs"><i class="fa fa-flash"></i> Warm Restart</div>
+                                <div data-bind="click: function() { initialize (0) }" class="btn btn-default btn-xs"><i class="fa fa-reply"></i> Reset</div>
+                                <!-- ko if: $root.isValidFirmwareLoader(data) -->
+                                    <!-- ko component: { name: 'ctl-firmwareLoader', params: { rootContext: $root } } -->
+                                    <!-- /ko -->
+                                <!-- /ko -->
+                            <!-- /ko -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Model Type', data: data, columnClasses: 'col col-sm-4 col-xs-6', enumSetName: 'Device Model Types', rootContext: $root } } -->
+                <!-- /ko -->
+                <div class="col col-sm-4 col-xs-6">
+                    <div class="dataField">
+                        <label>Firmware Version</label>
+                        <span class="lh30" data-bind="text: data['Firmware Version'].Value()"></span>
+                    </div>
+                </div>
+                <div class="col col-sm-4 col-xs-6">
+                    <div class="dataField">
+                        <label>Device Time</label>
+                        <div class="input-group">
+                            <input type="text" disabled class="form-control input-sm" data-bind="value: deviceTime">
+                            <span class="input-group-btn">
+                                <button class="btn btn-info btn-sm" type="button" data-bind="click: getDeviceTime">Read</button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col col-sm-3 col-xs-6">
+                    <div class="dataField">
+                        <label>Last Report Time</label>
+                        <span class="lh30" data-bind="text: moment.unix(data['Last Report Time'].Value()).calendar()"></span>
+                    </div>
+                </div>
+                <div class="col col-sm-3 col-xs-6">
+                    <div class="dataField">
+                        <label>Device Status</label>
+                        <span class="lh30" data-bind="text: data['Device Status'].Value()"></span>
+                    </div>
+                </div>
+                <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Configure Device', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+                <!-- /ko -->
+                <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Stop Scan', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+                <!-- /ko -->
+            </div>
+            <div class="row">
+                <div data-bind="component: { name: 'ctl-description', params: { description: data.Description.Value, rootContext: $root } }"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="permissions" class="content">
+        <div data-bind="component: { name: 'ctl-permissions', params: { isTabLoaded: tabTriggers.permissions, rootContext: $root } }"></div>
+    </div>
+
+    <div id="involvement" class="content">
+        <div data-bind="component: { name: 'ctl-involvement', params: { id: data._id(), isTabLoaded: tabTriggers.involvement, rootContext: $root } }"></div>
+    </div>
+
+    <div id="general" class="content">
+        <div class="row">
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Startup Delay', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'COV Period', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+    </div>
+
+    <div id="value" class="content">
+        <div class="row">
+            <!--  ko component: { name: 'ctl-text', params: { propertyName: 'Active Text', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-text', params: { propertyName: 'Inactive Text', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+    </div>
+
+    <div id="network" class="content">
+        <div class="row">
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Uplink Port', data: data, columnClasses: 'col col-sm-6 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'APDU Timeout', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 0, max: 5, rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'APDU Retries', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 5, max: 60, rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Ethernet Protocol', data: data, columnClasses: 'col col-sm-3 col-xs-6', enumSetName: 'Ethernet Protocols', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Ethernet Network', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 0, max: 65534, rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-ip', params: { propertyName: 'Ethernet Address', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            
+            <!-- ko with: data['Ethernet IP Port'] -->
+            <!-- ko if: isDisplayable -->
+            <div class="col col-sm-3 col-xs-6">
+                <div class="dataField">
+                    <label>Ethernet IP Port</label>
+                    <span class="lh30" data-bind="text: Value"></span>
+                </div>
+            </div>
+            <!-- /ko -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Downlink Network', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 0, max: 1000, rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Downlink Broadcast Delay', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 0, max: 1000, rootContext: $root } } -->
+            <!-- /ko -->
+            
+            <!-- ko with: data['Downlink IP Port'] -->
+            <!-- ko if: isDisplayable -->
+            <div class="col col-sm-3 col-xs-6">
+                <div class="dataField">
+                    <label>Downlink IP Port</label>
+                    <span class="lh30" data-bind="text: Value"></span>
+                </div>
+            </div>
+            <!-- /ko -->
+            <!-- /ko -->
+        </div>
+        <!-- ko foreach: [1,2,3,4] -->
+        <hr>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: ['Port ' , $data, ' Protocol'].join(''), data: $parent.data, columnClasses: 'col col-sm-3 col-xs-6', enumSetName: 'Port Protocols', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: ['Port ' , $data, ' Network'].join(''), data: $parent.data, columnClasses: 'col col-sm-3 col-xs-6', min: 0, max: 65534, rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-ip', params: { propertyName: ['Port ' , $data, ' Address'].join(''), data: $parent.data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: ['Port ' , $data, ' Maximum Address'].join(''), data: $parent.data, columnClasses: 'col col-sm-3 col-xs-6', min: 1, max: 127, rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <!-- /ko -->
+    </div>
+
+    <div id="alarms" class="content">
+        <div class="row">
+            <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Alarm Display Point', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Alarms Off', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Alarm Repeat Enable', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+            <div class="clearfix visible-xs"></div>
+            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Alarm Class', data: data, columnClasses: 'col col-sm-6 col-xs-12', enumSetName: 'Alarm Classes', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Alarm Repeat Time', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: '0:0:0', rootContext: $root } } -->
+            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Alarm Delay Time', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: '0:0:0', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!-- ko component: { name: 'ctl-dropdown', params: { propertyName: 'Alarm Value', data: data, columnClasses: 'col col-sm-6 col-xs-12', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+    </div>
+
+    <div id="notifications" class="content">
+        <div data-bind="component: { name: 'ctl-notifications', params: { data: data['Alarm Messages'], rootContext: $root } }"></div>
+    </div>
+</div>

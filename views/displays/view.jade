@@ -1,0 +1,24 @@
+extends layout
+
+block content
+  script.
+    var upi = !{upi};//parseInt(!{JSON.stringify(upi)}, 10);
+    //- console.log(displayJson);
+  script(src='/js/lib/angular.js')
+  script(src='/js/lib/jquery.mousewheel.js')
+  script(src='/js/displays/functions.js')
+  link(rel='stylesheet', href='/css/displays/main.css')
+  link(rel='stylesheet', href='/css/displays/display.css')
+
+  script(src="/js/lib/highstock.js")
+  script(src="/js/lib/highcharts-more.js")
+  script(src='/trendtest/trendTest2.js')
+  script(src='/js/displays/view.js')
+  #backDrop(ng-style="{'background-color' : convertColor(display['Background Color'])}")
+    #display(ng-style='getDisplayStyle(display)')
+      include _displayview
+
+    //div(class='topBar',style='position: absolute; width: 100%;', data-role='header', data-theme='a')
+
+    include _bottomBar.jade
+  #tip tool tip
