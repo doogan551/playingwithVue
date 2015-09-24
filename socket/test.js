@@ -11,7 +11,7 @@ var common = {
 
 var socket = function () {
   Utility.getOne({
-    collection: 'System Info',
+    collection: 'SystemInfo',
     query: {
       Name: 'Quality Codes'
     }
@@ -19,7 +19,7 @@ var socket = function () {
     common.qualityCodes = codes.Entries;
   });
   Utility.getOne({
-    collection: 'System Info',
+    collection: 'SystemInfo',
     query: {
       Name: 'Control Priorities'
     }

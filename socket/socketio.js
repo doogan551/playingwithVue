@@ -29,18 +29,20 @@ var eventEmitter = new events.EventEmitter();
 module.exports = function socketio(common) {
   var io = common.sockets.get().io;
 
-  io.sockets.on('connection', function (sock) {
+  io.sockets.on('connection', function(sock) {
     var sockId, socket, user;
     socket = sock;
     sockId = sock.id;
-    user = io.request.user;
 
-    sock.on('getStatus', function () {
-      sock.emit('statusUpdate', systemStatus);
+    user = sock.request.user;
+
+    sock.on('getStatus', function() {
+      // sock.emit('statusUpdate', systemStatus);
+      console.log('system  status not gotten');
     });
 
     //socket function called from client to let server know a new display is open
-    sock.on('displayOpen', function (data) {
+    sock.on('displayOpen', function(data) {
 
       if (data.data.display.message === undefined) {
         //pop on displays array
@@ -59,7 +61,7 @@ module.exports = function socketio(common) {
     });
 
     //removes display from active list when closed
-    sock.on('disconnect', function () {
+    sock.on('disconnect', function() {
       //checks to see if closed socket was an active display, and removes it from the list.
       var splicenum = -1;
 
@@ -85,13 +87,13 @@ module.exports = function socketio(common) {
       }
     });
 
-    sock.on('getRecentAlarms', function (data) {
+    sock.on('getRecentAlarms', function(data) {
       if (typeof data === "string")
         data = JSON.parse(data);
 
       maintainAlarmViews(sock.id, "Recent", data, common);
 
-      getRecentAlarms(data, function (err, alarms, count) {
+      getRecentAlarms(data, function(err, alarms, count) {
         sock.emit('recentAlarms', {
           alarms: alarms,
           count: count,
@@ -100,13 +102,13 @@ module.exports = function socketio(common) {
       });
     });
 
-    sock.on('getUnacknowledged', function (data) {
+    sock.on('getUnacknowledged', function(data) {
       if (typeof data === "string")
         data = JSON.parse(data);
 
       maintainAlarmViews(sock.id, "Unacknowledged", data, common);
 
-      getUnacknowledged(data, function (err, alarms, count) {
+      getUnacknowledged(data, function(err, alarms, count) {
         sock.emit('unacknowledged', {
           alarms: alarms,
           count: count,
@@ -115,13 +117,13 @@ module.exports = function socketio(common) {
       });
     });
 
-    sock.on('getActiveAlarms', function (data) {
+    sock.on('getActiveAlarms', function(data) {
       if (typeof data === "string")
         data = JSON.parse(data);
 
       maintainAlarmViews(sock.id, "Active", data, common);
 
-      getActiveAlarmsNew(data, function (err, alarms, count) {
+      getActiveAlarmsNew(data, function(err, alarms, count) {
         sock.emit('activeAlarms', {
           alarms: alarms,
           count: count,
@@ -130,11 +132,11 @@ module.exports = function socketio(common) {
       });
     });
 
-    sock.on('sendAcknowledge', function (data) {
+    sock.on('sendAcknowledge', function(data) {
       if (typeof data === "string")
         data = JSON.parse(data);
 
-      sendAcknowledge(data, function (err, result) {
+      sendAcknowledge(data, function(err, result) {
         sock.emit('acknowledgeResponse', {
           result: result,
           reqID: data.reqID
@@ -142,7 +144,7 @@ module.exports = function socketio(common) {
       });
     });
 
-    sock.on('fieldCommand', function (data) {
+    sock.on('fieldCommand', function(data) {
       jsonData = JSON.parse(data);
       var error, logData, i;
       //data = JSON.stringify(data);
@@ -201,10 +203,10 @@ module.exports = function socketio(common) {
 
       if ([2, 7].indexOf(jsonData["Command Type"]) > -1) {
         logData = Utils.buildActivityLog(logData);
-        mydb.collection(activityLogCollection).insert(logData, function (err, result) {});
+        mydb.collection(activityLogCollection).insert(logData, function(err, result) {});
       }
 
-      cppApi.command(data, function (err, msg) {
+      cppApi.command(data, function(err, msg) {
 
         if (err !== 0 && err !== null) {
           error = JSON.parse(err);
@@ -218,7 +220,7 @@ module.exports = function socketio(common) {
       });
     });
 
-    sock.on('firmwareLoader', function (data) {
+    sock.on('firmwareLoader', function(data) {
 
       var error, filePath, dataJSON = JSON.stringify(data),
         logData = {
@@ -229,7 +231,7 @@ module.exports = function socketio(common) {
           Security: data.logData.point.Security,
           log: data.logData.point["Firmware Version"] + " Firmware '" + data.fileName + "' loaded"
         },
-        sendCommand = function (filePath) {
+        sendCommand = function(filePath) {
           var command = {
             "Command Type": 11,
             "devices": data.devices,
@@ -238,7 +240,7 @@ module.exports = function socketio(common) {
             "firmwarefile": filePath,
           };
           command = JSON.stringify(command);
-          cppApi.command(command, function (data) {
+          cppApi.command(command, function(data) {
             data = JSON.parse(data);
             if (data.err !== undefined) {
               sock.emit('returnFromLoader', {
@@ -273,18 +275,18 @@ module.exports = function socketio(common) {
 					}
 					testProgress(0);*/
         },
-        logMessage = function (logData) {
+        logMessage = function(logData) {
           logData = Utils.buildActivityLog(logData);
-          mydb.collection(activityLogCollection).insert(logData, function (err, result) {});
+          mydb.collection(activityLogCollection).insert(logData, function(err, result) {});
         };
 
       if (data.uploadFile !== undefined) {
         filePath = process.env.driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
         logMessage(logData);
-        fs.writeFile(filePath, data.uploadFile, function (err) {
+        fs.writeFile(filePath, data.uploadFile, function(err) {
           sendCommand(filePath);
           if (false) {
-            fs.unlink(filePath, function (err) {
+            fs.unlink(filePath, function(err) {
 
             });
           }
@@ -297,52 +299,52 @@ module.exports = function socketio(common) {
 
     });
 
-    sock.on('startbackup', function (data) {
+    sock.on('startbackup', function(data) {
       sock.emit('returnfrombackup', {
         message: 'done'
       });
     });
 
-    sock.on('checkPropertiesForOne', function (data) {
-      checkProperties(data, function (data) {
+    sock.on('checkPropertiesForOne', function(data) {
+      checkProperties(data, function(data) {
         sock.emit('returnProperties', data); // Handle the received results
       });
     });
 
-    sock.on('getBlockTypes', function () {
-      getBlockTypes(function (result) {
+    sock.on('getBlockTypes', function() {
+      getBlockTypes(function(result) {
         sock.emit('gplTypes', result);
       });
     });
 
-    sock.on('doGplImport', function (data) {
+    sock.on('doGplImport', function(data) {
       doGplImport(data, sock);
     });
 
-    sock.on('doRefreshSequence', function (data) {
+    sock.on('doRefreshSequence', function(data) {
       doRefreshSequence(data, sock);
     });
 
-    sock.on('updateSequence', function (data) {
-      doUpdateSequence(data, function(result){
+    sock.on('updateSequence', function(data) {
+      doUpdateSequence(data, function(result) {
         socket.emit('sequenceUpdateMessage', result);
       });
     });
 
-    sock.on('compileScript', function (data) {
-      compileScript(data, function (response) {
+    sock.on('compileScript', function(data) {
+      compileScript(data, function(response) {
         sock.emit('compiledScript', response);
       });
     });
 
-    sock.on('updatePoint', function (data) {
+    sock.on('updatePoint', function(data) {
       if (typeof data === 'string')
         data = JSON.parse(data);
       newUpdate(data.oldPoint, data.newPoint, {
         method: "update",
         from: "ui",
         path: (data.hasOwnProperty('path')) ? data.path : null
-      }, user, function (response, point) {
+      }, user, function(response, point) {
         if (response.err) {
           if (response.err.code === 11000) {
             sock.emit('pointUpdated', {
@@ -364,44 +366,44 @@ module.exports = function socketio(common) {
       });
     });
 
-    sock.on('updateSequencePoints', function (data) {
+    sock.on('updateSequencePoints', function(data) {
       var returnPoints = [];
 
       async.waterfall([
-          function (callback) {
-            async.mapSeries(data.adds, function (point, callback) {
-              addPoint(point, user, null, function (response, updatedPoint) {
+          function(callback) {
+            async.mapSeries(data.adds, function(point, callback) {
+              addPoint(point, user, null, function(response, updatedPoint) {
                 callback(response.err, updatedPoint);
               });
-            }, function (err, newPoints) {
+            }, function(err, newPoints) {
               callback(err, returnPoints.concat(newPoints));
             });
           },
 
-          function (returnPoints, callback) {
-            async.mapSeries(data.updates, function (point, callback) {
+          function(returnPoints, callback) {
+            async.mapSeries(data.updates, function(point, callback) {
               newUpdate(point.oldPoint, point.newPoint, {
                 method: "update",
                 from: "ui"
-              }, user, function (response, updatedPoint) {
+              }, user, function(response, updatedPoint) {
                 callback(response.err, updatedPoint);
               });
-            }, function (err, newPoints) {
+            }, function(err, newPoints) {
               callback(err, returnPoints.concat(newPoints));
             });
           },
 
-          function (returnPoints, callback) {
-            async.mapSeries(data.deletes, function (upi, callback) {
-              deletePoint(upi, "hard", user, null, function (response) {
+          function(returnPoints, callback) {
+            async.mapSeries(data.deletes, function(upi, callback) {
+              deletePoint(upi, "hard", user, null, function(response) {
                 callback(response.err);
               });
-            }, function (err, newPoints) {
+            }, function(err, newPoints) {
               callback(err, returnPoints);
             });
           }
         ],
-        function (err, returnPoints) {
+        function(err, returnPoints) {
           if (err) {
             sock.emit('sequencePointsUpdated', {
               err: err
@@ -415,8 +417,8 @@ module.exports = function socketio(common) {
         });
     });
 
-    sock.on('addPoint', function (data) {
-      addPoint(data.point, user, null, function (response, point) {
+    sock.on('addPoint', function(data) {
+      addPoint(data.point, user, null, function(response, point) {
         if (response.err) {
           sock.emit('pointUpdated', {
             err: response.err
@@ -430,31 +432,31 @@ module.exports = function socketio(common) {
       });
     });
 
-    sock.on('deletePoint', function (data) {
+    sock.on('deletePoint', function(data) {
       if (typeof data === "string") {
         data = JSON.parse(data);
       }
 
-      deletePoint(data.upi, data.method, user, null, function (msg) {
+      deletePoint(data.upi, data.method, user, null, function(msg) {
         msg.reqID = data.reqID;
         sock.emit('pointUpdated', JSON.stringify(msg));
       });
     });
 
-    sock.on('restorePoint', function (data) {
+    sock.on('restorePoint', function(data) {
       if (typeof data === "string") {
         data = JSON.parse(data);
       }
 
-      restorePoint(data.upi, user, function (msg) {
+      restorePoint(data.upi, user, function(msg) {
         msg.reqID = data.reqID;
         sock.emit('pointUpdated', JSON.stringify(msg));
       });
     });
 
-    sock.on('updateSchedules', function (data) {
+    sock.on('updateSchedules', function(data) {
       data.user = user;
-      updateSchedules(data, function (err) {
+      updateSchedules(data, function(err) {
         if (err) {
           sock.emit('scheduleUpdated', {
             err: err
@@ -468,8 +470,8 @@ module.exports = function socketio(common) {
       });
     });
 
-    sock.on('getScheduleEntries', function (data) {
-      getScheduleEntries(data, function (err, entries) {
+    sock.on('getScheduleEntries', function(data) {
+      getScheduleEntries(data, function(err, entries) {
         sock.emit('returnEntries', {
           err: err,
           entries: entries
@@ -501,9 +503,9 @@ function getVals(common, cb) {
     }
   }
 
-  updateArray.forEach(function (upi) {
+  updateArray.forEach(function(upi) {
 
-    getInitialVals(upi, function (point) {
+    getInitialVals(upi, function(point) {
       if (point) {
         if (point.Value && point.Value.eValue !== undefined && point.Value.eValue !== null) {
 
@@ -618,7 +620,7 @@ function getUnacknowledged(data, callback) {
     };
   }
 
-  groups = user.groups.map(function (group) {
+  groups = user.groups.map(function(group) {
     return group._id.toString();
   });
 
@@ -630,8 +632,8 @@ function getUnacknowledged(data, callback) {
 
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
   var start = new Date();
-  mydb.collection(alarmsCollection).find(query).sort(sort).skip((currentPage - 1) * itemsPerPage).limit(numberItems).toArray(function (err, alarms) {
-    mydb.collection(alarmsCollection).count(query, function (err, count) {
+  mydb.collection(alarmsCollection).find(query).sort(sort).skip((currentPage - 1) * itemsPerPage).limit(numberItems).toArray(function(err, alarms) {
+    mydb.collection(alarmsCollection).count(query, function(err, count) {
       if (err) callback(err, null, null);
       callback(err, alarms, count);
     });
@@ -676,7 +678,7 @@ function getActiveAlarms(data, callback) {
     }]
   };
 
-  groups = user.groups.map(function (group) {
+  groups = user.groups.map(function(group) {
     return group._id.toString();
   });
 
@@ -695,7 +697,7 @@ function getActiveAlarms(data, callback) {
   mydb.collection(pointsCollection).find(query, {
     _actvAlmId: 1,
     _id: 1
-  }).toArray(function (err, alarms) {
+  }).toArray(function(err, alarms) {
 
     if (err) callback(err, null, null);
 
@@ -750,8 +752,8 @@ function getActiveAlarms(data, callback) {
       };
     }
     var start = new Date();
-    mydb.collection(alarmsCollection).find(alarmsQuery).skip((currentPage - 1) * itemsPerPage).limit(numberItems).sort(sort).toArray(function (err, recents) {
-      mydb.collection(alarmsCollection).count(alarmsQuery, function (err, count) {
+    mydb.collection(alarmsCollection).find(alarmsQuery).skip((currentPage - 1) * itemsPerPage).limit(numberItems).sort(sort).toArray(function(err, recents) {
+      mydb.collection(alarmsCollection).count(alarmsQuery, function(err, count) {
 
         callback(err, recents, count);
       });
@@ -840,7 +842,7 @@ function getActiveAlarmsNew(data, callback) {
     };
   }
 
-  groups = user.groups.map(function (group) {
+  groups = user.groups.map(function(group) {
     return group._id.toString();
   });
 
@@ -853,9 +855,9 @@ function getActiveAlarmsNew(data, callback) {
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
 
   var start = new Date();
-  mydb.collection("ActiveAlarms").find(query).skip((currentPage - 1) * itemsPerPage).limit(numberItems).sort(sort).toArray(function (err, alarms) {
+  mydb.collection("ActiveAlarms").find(query).skip((currentPage - 1) * itemsPerPage).limit(numberItems).sort(sort).toArray(function(err, alarms) {
     if (err) console.error(err);
-    mydb.collection("ActiveAlarms").count(query, function (err, count) {
+    mydb.collection("ActiveAlarms").count(query, function(err, count) {
       if (err) console.error(err);
       callback(err, alarms, count);
     });
@@ -886,7 +888,7 @@ function sendAcknowledge(data, callback) {
     }
   }, {
     multi: true
-  }, function (err, result) {
+  }, function(err, result) {
     callback(err, result);
   });
 }
@@ -894,10 +896,10 @@ function sendAcknowledge(data, callback) {
 function updateAlarms(finalCB) {
   var alarmsStart = new Date();
   async.forEach(openAlarms,
-    function (openAlarm, callback) {
+    function(openAlarm, callback) {
       if (openAlarm.alarmView === "Recent") {
 
-        getRecentAlarms(openAlarm.data, function (err, recents, count) {
+        getRecentAlarms(openAlarm.data, function(err, recents, count) {
           io.sockets.socket(openAlarm.sockId).emit('recentAlarms', {
             alarms: recents,
             count: count
@@ -907,7 +909,7 @@ function updateAlarms(finalCB) {
         });
       }
       if (openAlarm.alarmView === "Active") {
-        getActiveAlarms(openAlarm.data, function (err, recents, count) {
+        getActiveAlarms(openAlarm.data, function(err, recents, count) {
 
           io.sockets.socket(openAlarm.sockId).emit('activeAlarms', {
             alarms: recents,
@@ -917,7 +919,7 @@ function updateAlarms(finalCB) {
         });
       }
       if (openAlarm.alarmView === "Unacknowledged") {
-        getUnacknowledged(openAlarm.data, function (err, recents, count) {
+        getUnacknowledged(openAlarm.data, function(err, recents, count) {
 
           io.sockets.socket(openAlarm.sockId).emit('unacknowledged', {
             alarms: recents,
@@ -927,7 +929,7 @@ function updateAlarms(finalCB) {
         });
       }
     },
-    function (err) {
+    function(err) {
       return finalCB();
     });
 }
@@ -945,11 +947,11 @@ function compileScript(data, callback) {
   }, function _tempDirCreated(err, path, cleanupCallback) {
 
     filepath = path + '/' + fileName + '.dsl';
-    fs.writeFile(filepath, script, function (err) {
+    fs.writeFile(filepath, script, function(err) {
 
-      compiler.compile(filepath, path + '/' + fileName, function (err) {
+      compiler.compile(filepath, path + '/' + fileName, function(err) {
 
-        fs.readFile(path + '/' + fileName + '.err', function (err, data) {
+        fs.readFile(path + '/' + fileName + '.err', function(err, data) {
           if (data.length > 0)
             return callback({
               err: data.toString().replace(re, '')
@@ -976,7 +978,7 @@ function restorePoint(upi, user, callback) {
     }
   }, {
     new: true
-  }, function (err, point) {
+  }, function(err, point) {
 
     if (err)
       return callback({
@@ -986,13 +988,13 @@ function restorePoint(upi, user, callback) {
     logData.activity = actLogsEnums["Point Restore"].enum;
     logData.log = "Point restored";
     logData.point = point;
-    mydb.collection(activityLogCollection).insert(Utils.buildActivityLog(logData), function (err, result) {
+    mydb.collection(activityLogCollection).insert(Utils.buildActivityLog(logData), function(err, result) {
       if (point["Point Type.Value"] === "Schedule") {
         // get points based on parentupi
       } else {
         updateDependencies(point, {
           method: "restore"
-        }, user, function () {
+        }, user, function() {
           return callback({
             message: "success"
           });
@@ -1019,8 +1021,8 @@ function updateSchedules(data, callback) {
 
   async.waterfall([
 
-    function (wfCB) {
-      async.forEachSeries(updateScheds, function (updateSched, feCB) {
+    function(wfCB) {
+      async.forEachSeries(updateScheds, function(updateSched, feCB) {
         logData = {
           timestamp: Date.now(),
           user: user
@@ -1050,20 +1052,20 @@ function updateSchedules(data, callback) {
         if (!_.isEmpty(updateObj.$set)) {
           mydb.collection(pointsCollection).update({
             _id: updateSched._id
-          }, updateObj, function (err, result) {
+          }, updateObj, function(err, result) {
             if (err)
               feCB(err);
 
             ctrlPoint = Config.Utility.getPropertyObject("Control Point", updateSched);
             mydb.collection(pointsCollection).findOne({
               _id: ctrlPoint.Value
-            }, function (err, point) {
+            }, function(err, point) {
               logData.point = point;
               logData.Security = point.Security;
               logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Edit"].enum;
               logData.log = "Schedule entry edited";
               logData = Utils.buildActivityLog(logData);
-              mydb.collection(activityLogCollection).insert(logData, function (err, result) {
+              mydb.collection(activityLogCollection).insert(logData, function(err, result) {
                 feCB(err);
               });
             });
@@ -1073,12 +1075,12 @@ function updateSchedules(data, callback) {
 
         }
 
-      }, function (err) {
+      }, function(err) {
         wfCB(err);
       });
     },
-    function (wfCB) {
-      async.forEachSeries(newScheds, function (newSched, feCB) {
+    function(wfCB) {
+      async.forEachSeries(newScheds, function(newSched, feCB) {
         logData = {
           timestamp: Date.now(),
           user: user
@@ -1092,7 +1094,7 @@ function updateSchedules(data, callback) {
           from: "updateSchedules",
           schedule: schedule
         };
-        addPoint(newSched, user, options, function (returnData) {
+        addPoint(newSched, user, options, function(returnData) {
           if (returnData.err)
             feCB(returnData.err);
           if (newSched._pStatus !== 0)
@@ -1101,29 +1103,29 @@ function updateSchedules(data, callback) {
           ctrlPoint = Config.Utility.getPropertyObject("Control Point", newSched);
           mydb.collection(pointsCollection).findOne({
             _id: ctrlPoint.Value
-          }, function (err, point) {
+          }, function(err, point) {
             logData.point = point;
             logData.Security = point.Security;
             logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Add"].enum;
             logData.log = "Schedule entry added";
             logData = Utils.buildActivityLog(logData);
-            mydb.collection(activityLogCollection).insert(logData, function (err, result) {
+            mydb.collection(activityLogCollection).insert(logData, function(err, result) {
               feCB(err);
             });
           });
         });
-      }, function (err) {
+      }, function(err) {
         wfCB(err);
       });
     },
-    function (wfCB) {
-      async.forEachSeries(cancelScheds, function (cancelSched, feCB) {
+    function(wfCB) {
+      async.forEachSeries(cancelScheds, function(cancelSched, feCB) {
         logData = {
           timestamp: Date.now(),
           user: user
         };
 
-        deletePoint(cancelSched._id, "hard", user, null, function (returnData) {
+        deletePoint(cancelSched._id, "hard", user, null, function(returnData) {
           if (returnData.err)
             feCB(returnData.err);
           if (cancelSched._pStatus !== 0)
@@ -1131,23 +1133,23 @@ function updateSchedules(data, callback) {
           ctrlPoint = Config.Utility.getPropertyObject("Control Point", cancelSched);
           mydb.collection(pointsCollection).findOne({
             _id: ctrlPoint.Value
-          }, function (err, point) {
+          }, function(err, point) {
             logData.point = point;
             logData.Security = point.Security;
             logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Delete"].enum;
             logData.log = "Schedule entry deleted";
             logData = Utils.buildActivityLog(logData);
-            mydb.collection(activityLogCollection).insert(logData, function (err, result) {
+            mydb.collection(activityLogCollection).insert(logData, function(err, result) {
               feCB(err);
             });
           });
         });
-      }, function (err) {
+      }, function(err) {
         wfCB(err);
       });
     },
-    function (wfCB) {
-      async.forEachSeries(hardScheds, function (hardSched, feCB) {
+    function(wfCB) {
+      async.forEachSeries(hardScheds, function(hardSched, feCB) {
         logData = {
           timestamp: Date.now(),
           user: user
@@ -1162,7 +1164,7 @@ function updateSchedules(data, callback) {
           addToDevices(hardSched, devices);
         }
 
-        deletePoint(hardSched._id, "hard", user, options, function (returnData) {
+        deletePoint(hardSched._id, "hard", user, options, function(returnData) {
           if (returnData.err)
             feCB(returnData.err);
           if (hardSched._pStatus !== 0)
@@ -1171,28 +1173,28 @@ function updateSchedules(data, callback) {
           ctrlPoint = Config.Utility.getPropertyObject("Control Point", hardSched);
           mydb.collection(pointsCollection).findOne({
             _id: ctrlPoint.Value
-          }, function (err, point) {
+          }, function(err, point) {
             logData.point = point;
             logData.Security = point.Security;
             logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Delete"].enum;
             logData.log = "Schedule entry deleted";
             logData = Utils.buildActivityLog(logData);
-            mydb.collection(activityLogCollection).insert(logData, function (err, result) {
+            mydb.collection(activityLogCollection).insert(logData, function(err, result) {
               feCB(err);
             });
           });
         });
-      }, function (err) {
+      }, function(err) {
         wfCB(err);
       });
     }
-  ], function (err) {
+  ], function(err) {
     if (err)
       console.log("updateScheds err:", err);
-    signalHostTOD(signalTOD, function (err) {
+    signalHostTOD(signalTOD, function(err) {
       if (err)
         return callback(err);
-      updateDeviceToDs(devices, function (err) {
+      updateDeviceToDs(devices, function(err) {
         return callback((err !== null) ? err : "success");
       });
     });
@@ -1261,7 +1263,7 @@ function checkProperties(data, callback) {
   if (template !== undefined) {
 
     // Convert mongo cursor result to array
-    dbResult.toArray(function (recsErr, recs) {
+    dbResult.toArray(function(recsErr, recs) {
 
       var prop, // Work vars
         key,

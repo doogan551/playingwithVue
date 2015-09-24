@@ -37,7 +37,7 @@ exports.getOne = function (criteria, cb) {
   // console.log(query, coll);
   collection = db.get().collection(coll);
 
-  collection.findOne(query, fields).toArray(cb);
+  collection.findOne(query, fields, cb);
 };
 
 exports.aggregate = function (criteria, cb) {

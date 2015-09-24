@@ -1,3 +1,4 @@
+var db = require('../helpers/db');
 var ObjectID = require('mongodb').ObjectID;
 var Utility = require('./utility');
 
