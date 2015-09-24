@@ -1,6 +1,5 @@
 // CORE MODULES
 var fs = require('fs');
-var net = require('net');
 var events = require('events');
 
 // NPM MODULES
@@ -549,6 +548,683 @@ function getVals(common, cb) {
   });
 }
 
+function getInitialVals(id, callback) {
+  var fields = {
+    Value: 1,
+    Name: 1,
+    eValue: 1,
+    "Alarm State": 1,
+    _relDevice: 1,
+    _relRMU: 1,
+    _relPoint: 1,
+    "Status Flags": 1,
+    "Alarms Off": 1,
+    "COV Enable": 1,
+    "Control Pending": 1,
+    "Quality Code Enable": 1
+  };
+
+  mydb.collection(pointsCollection).findOne({
+    _id: parseInt(id, 10)
+  }, fields, function(err, point) {
+    if (point)
+      point = setQualityLabel(point);
+
+    callback(point);
+  });
+}
+
+function getBlockTypes(cb) {
+  mydb.collection('points').find({
+    SequenceData: {
+      $exists: true
+    }
+  }, {
+    "SequenceData.Sequence.Block": 1
+  }).toArray(function(err, results) {
+    var c,
+      cc,
+      len = results.length,
+      row,
+      blockType,
+      blockTypes = {};
+
+    for (c = 0; c < len; c++) {
+      row = results[c].SequenceData.Sequence.Block;
+      for (cc = 0; cc < row.length; cc++) {
+        blockType = row[cc].data.BlockType;
+        blockTypes[blockType] = blockTypes[blockType] || true;
+      }
+    }
+
+    cb({
+      err: err,
+      types: blockTypes
+    });
+  });
+}
+
+function doUpdateSequence(data, socket) {
+  var name = data.sequenceName,
+    sequenceData = data.sequenceData;
+
+  // mydb.collection('points').findOne({
+  //     "Name": name
+  // }, {
+  //     '_id': 1
+  // },
+  // function(err, result) {
+  //     if(result) {
+  //         var _id = result._id;
+
+  //         if(!err) {
+  mydb.collection('points').update({
+    "Name": name
+  }, {
+    $set: {
+      'SequenceData': sequenceData
+    }
+  }, function(updateErr, updateRecords) {
+    if (updateErr) {
+      socket.emit('sequenceUpdateMessage', 'Error: ' + updateErr.err);
+    } else {
+      socket.emit('sequenceUpdateMessage', 'success');
+    }
+  });
+  //         } else {
+  //             socket.emit('sequenceUpdateMessage', {
+  //                 type: 'error',
+  //                 message: err.err,
+  //                 name: name
+  //             });
+  //             complete();
+  //         }
+  //     } else {
+  //         socket.emit('sequenceUpdateMessage', {
+  //             type: 'empty',
+  //             message: 'empty',
+  //             name: name
+  //         });
+  //         complete();
+  //     }
+  // });
+}
+
+function maintainAlarmViews(socketid, view, data) {
+
+  if (typeof data === "string")
+    data = JSON.parse(data);
+
+  for (var i = 0; i < openAlarms.length; i++) {
+    if (openAlarms[i].sockId === socketid && openAlarms[i].alarmView === view) {
+      openAlarms[i].data = data;
+      return;
+    }
+  }
+
+  openAlarms.push({
+    sockId: socketid,
+    alarmView: view,
+    data: data
+  });
+}
+
+function getUnacknowledged(data, callback) {
+  var currentPage, itemsPerPage, numberItems, user, groups, query, count, alarmIds, sort;
+
+  if (typeof data === "string")
+    data = JSON.parse(data);
+
+  currentPage = parseInt(data.currentPage, 10);
+  itemsPerPage = parseInt(data.itemsPerPage, 10);
+  user = data.user;
+  sort = {};
+
+  if (!itemsPerPage) {
+    itemsPerPage = 200;
+  }
+  if (!currentPage || currentPage < 1) {
+    currentPage = 1;
+  }
+
+  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
+
+  user = data.user;
+
+  query = {
+    ackStatus: 1
+  };
+
+  if (data.name1 !== undefined) {
+    if (data.name1 !== null) {
+      query.Name1 = new RegExp("^" + data.name1, 'i');
+    } else {
+      query.Name1 = "";
+    }
+  }
+  if (data.name2 !== undefined) {
+    if (data.name2 !== null) {
+      query.Name2 = new RegExp("^" + data.name2, 'i');
+    } else {
+      query.Name2 = "";
+    }
+  }
+  if (data.name3 !== undefined) {
+    if (data.name3 !== null) {
+      query.Name3 = new RegExp("^" + data.name3, 'i');
+    } else {
+      query.Name3 = "";
+    }
+  }
+  if (data.name4 !== undefined) {
+    if (data.name4 !== null) {
+      query.Name4 = new RegExp("^" + data.name4, 'i');
+    } else {
+      query.Name4 = "";
+    }
+  }
+  if (data.msgCat) {
+    query.msgCat = {
+      $in: data.msgCat
+    };
+  }
+  if (data.almClass) {
+    query.almClass = {
+      $in: data.almClass
+    };
+  }
+
+  if (data.pointTypes) {
+    query.PointType = {
+      $in: data.pointTypes
+    };
+  }
+
+  groups = user.groups.map(function(group) {
+    return group._id.toString();
+  });
+
+  if (!user["System Admin"].Value) {
+    query.Security = {
+      $in: groups
+    };
+  }
+
+  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
+  var start = new Date();
+  mydb.collection(alarmsCollection).find(query).sort(sort).skip((currentPage - 1) * itemsPerPage).limit(numberItems).toArray(function(err, alarms) {
+    mydb.collection(alarmsCollection).count(query, function(err, count) {
+      if (err) callback(err, null, null);
+      callback(err, alarms, count);
+    });
+  });
+}
+
+function sendUpdate(dynamic) {
+  io.sockets.socket(dynamic.sock).emit('recieveUpdate', {
+    sock: dynamic.sock,
+    upi: dynamic.upi,
+    dynamic: dynamic.dyn
+  });
+}
+
+function getVals() {
+
+  var updateArray = [];
+
+  for (var i = 0; i < openDisplays.length; i++) {
+    if (openDisplays[i].display["Screen Objects"]) {
+      for (var j = 0; j < openDisplays[i].display["Screen Objects"].length; j++) {
+        if ((parseInt(openDisplays[i].display["Screen Objects"][j].upi, 10) !== 0 && openDisplays[i].display["Screen Objects"][j].upi !== "0") && updateArray.indexOf(openDisplays[i].display["Screen Objects"][j].upi) === -1) {
+          updateArray.push(openDisplays[i].display["Screen Objects"][j].upi);
+        }
+      }
+    }
+  }
+
+  updateArray.forEach(function(upi) {
+
+    getInitialVals(upi, function(point) {
+      if (point) {
+        if (point.Value && point.Value.eValue !== undefined && point.Value.eValue !== null) {
+
+          var pv = point.Value;
+
+          for (var prop in pv.ValueOptions) {
+
+            if (pv.ValueOptions[prop] === point.Value.eValue)
+              point.Value.Value = prop;
+          }
+        }
+        for (var i = 0; i < openDisplays.length; i++) {
+          for (var j = 0; j < openDisplays[i].display["Screen Objects"].length; j++) {
+
+            if (openDisplays[i].display["Screen Objects"][j].upi === point._id) {
+              var dyn = {};
+              if (point.Value) {
+
+                dyn.Value = point.Value.Value;
+                dyn.eValue = point.Value.eValue;
+                openDisplays[i].display["Screen Objects"][j].Value = point.Value.Value;
+                openDisplays[i].display["Screen Objects"][j].eValue = point.Value.eValue;
+                openDisplays[i].display["Screen Objects"][j]["Quality Label"] = point["Quality Label"];
+              }
+
+              dyn["Quality Label"] = point["Quality Label"];
+              dyn.Name = point.Name;
+              sendUpdate({
+                sock: openDisplays[i].sockId,
+                upi: point._id,
+                dyn: dyn
+              });
+              break;
+            }
+          }
+        }
+
+      }
+    });
+
+  });
+}
+
+function getActiveAlarms(data, callback) {
+  var currentPage, itemsPerPage, numberItems, user, groups, query, sort, alarmIds;
+
+  if (typeof data === "string")
+    data = JSON.parse(data);
+
+  currentPage = parseInt(data.currentPage, 10);
+  itemsPerPage = parseInt(data.itemsPerPage, 10);
+  user = data.user;
+
+  if (!itemsPerPage) {
+    itemsPerPage = 200;
+  }
+  if (!currentPage || currentPage < 1) {
+    currentPage = 1;
+  }
+
+  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
+
+  sort = {};
+  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
+
+  query = {
+    _pStatus: 0,
+    _actvAlmId: {
+      $ne: BSON.ObjectID("000000000000000000000000")
+    },
+    $or: [{
+      "Point Type.Value": "Device"
+    }, {
+      "Point Type.Value": "Remote Unit",
+      "_relDevice": 0
+    }, {
+      "_relDevice": 0,
+      "_relRMU": 0
+    }]
+  };
+
+  groups = user.groups.map(function(group) {
+    return group._id.toString();
+  });
+
+  if (!user["System Admin"].Value) {
+    query.Security = {
+      $in: groups
+    };
+  }
+
+  if (data.pointTypes) {
+    query["Point Type.eValue"] = {
+      $in: data.pointTypes
+    };
+  }
+
+  mydb.collection(pointsCollection).find(query, {
+    _actvAlmId: 1,
+    _id: 1
+  }).toArray(function(err, alarms) {
+
+    if (err) callback(err, null, null);
+
+    alarmIds = [];
+    for (var i = 0; i < alarms.length; i++) {
+      if (alarms[i]._actvAlmId !== 0)
+        alarmIds.push(alarms[i]._actvAlmId);
+    }
+    var alarmsQuery = {
+      _id: {
+        $in: alarmIds
+      }
+    };
+
+    if (data.name1 !== undefined) {
+      if (data.name1 !== null) {
+        alarmsQuery.Name1 = new RegExp("^" + data.name1, 'i');
+      } else {
+        alarmsQuery.Name1 = "";
+      }
+    }
+    if (data.name2 !== undefined) {
+      if (data.name2 !== null) {
+        alarmsQuery.Name2 = new RegExp("^" + data.name2, 'i');
+      } else {
+        alarmsQuery.Name2 = "";
+      }
+    }
+    if (data.name3 !== undefined) {
+      if (data.name3 !== null) {
+        alarmsQuery.Name3 = new RegExp("^" + data.name3, 'i');
+      } else {
+        alarmsQuery.Name3 = "";
+      }
+    }
+    if (data.name4 !== undefined) {
+      if (data.name4 !== null) {
+        alarmsQuery.Name4 = new RegExp("^" + data.name4, 'i');
+      } else {
+        alarmsQuery.Name4 = "";
+      }
+    }
+
+    if (data.msgCat) {
+      alarmsQuery.msgCat = {
+        $in: data.msgCat
+      };
+    }
+    if (data.almClass) {
+      alarmsQuery.almClass = {
+        $in: data.almClass
+      };
+    }
+    var start = new Date();
+    mydb.collection(alarmsCollection).find(alarmsQuery).skip((currentPage - 1) * itemsPerPage).limit(numberItems).sort(sort).toArray(function(err, recents) {
+      mydb.collection(alarmsCollection).count(alarmsQuery, function(err, count) {
+
+        callback(err, recents, count);
+      });
+    });
+  });
+}
+
+function getActiveAlarmsNew(data, callback) {
+  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, user, query, sort, groups = [];
+
+  if (typeof data === "string")
+    data = JSON.parse(data);
+  currentPage = parseInt(data.currentPage, 10);
+  itemsPerPage = parseInt(data.itemsPerPage, 10);
+  startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
+  endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
+
+  sort = {};
+
+  if (!itemsPerPage) {
+    itemsPerPage = 200;
+  }
+  if (!currentPage || currentPage < 1) {
+    currentPage = 1;
+  }
+
+  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
+
+  user = data.user;
+
+  query = {
+    $and: [{
+      msgTime: {
+        $gte: startDate
+      }
+    }, {
+      msgTime: {
+        $lte: endDate
+      }
+    }]
+  };
+
+  if (data.name1 !== undefined) {
+    if (data.name1 !== null) {
+      query.Name1 = new RegExp("^" + data.name1, 'i');
+    } else {
+      query.Name1 = "";
+    }
+
+  }
+  if (data.name2 !== undefined) {
+    if (data.name2 !== null) {
+      query.Name2 = new RegExp("^" + data.name2, 'i');
+    } else {
+      query.Name2 = "";
+    }
+  }
+  if (data.name3 !== undefined) {
+    if (data.name3 !== null) {
+      query.Name3 = new RegExp("^" + data.name3, 'i');
+    } else {
+      query.Name3 = "";
+    }
+  }
+  if (data.name4 !== undefined) {
+    if (data.name4 !== null) {
+      query.Name4 = new RegExp("^" + data.name4, 'i');
+    } else {
+      query.Name4 = "";
+    }
+  }
+  if (data.msgCat) {
+    query.msgCat = {
+      $in: data.msgCat
+    };
+  }
+  if (data.almClass) {
+    query.almClass = {
+      $in: data.almClass
+    };
+  }
+
+  if (data.pointTypes) {
+    query.PointType = {
+      $in: data.pointTypes
+    };
+  }
+
+  groups = user.groups.map(function(group) {
+    return group._id.toString();
+  });
+
+  if (!user["System Admin"].Value) {
+    query.Security = {
+      $in: groups
+    };
+  }
+
+  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
+
+  var start = new Date();
+  mydb.collection("ActiveAlarms").find(query).skip((currentPage - 1) * itemsPerPage).limit(numberItems).sort(sort).toArray(function(err, alarms) {
+    if (err) console.error(err);
+    mydb.collection("ActiveAlarms").count(query, function(err, count) {
+      if (err) console.error(err);
+      callback(err, alarms, count);
+    });
+  });
+}
+
+function sendAcknowledge(data, callback) {
+  var ids, username, time;
+
+  ids = data.ids;
+  username = data.username;
+  time = Math.floor(new Date().getTime() / 1000);
+
+  for (var j = 0; j < ids.length; j++) {
+    ids[j] = BSON.ObjectID(ids[j]);
+  }
+
+  mydb.collection(alarmsCollection).update({
+    _id: {
+      $in: ids
+    },
+    ackStatus: 1
+  }, {
+    $set: {
+      ackStatus: 2,
+      ackUser: username,
+      ackTime: time
+    }
+  }, {
+    multi: true
+  }, function(err, result) {
+    callback(err, result);
+  });
+}
+
+function updateAlarms(finalCB) {
+  var alarmsStart = new Date();
+  async.forEach(openAlarms,
+    function(openAlarm, callback) {
+      if (openAlarm.alarmView === "Recent") {
+
+        getRecentAlarms(openAlarm.data, function(err, recents, count) {
+          io.sockets.socket(openAlarm.sockId).emit('recentAlarms', {
+            alarms: recents,
+            count: count
+          });
+
+          return callback(null);
+        });
+      }
+      if (openAlarm.alarmView === "Active") {
+        getActiveAlarms(openAlarm.data, function(err, recents, count) {
+
+          io.sockets.socket(openAlarm.sockId).emit('activeAlarms', {
+            alarms: recents,
+            count: count
+          });
+          return callback(null);
+        });
+      }
+      if (openAlarm.alarmView === "Unacknowledged") {
+        getUnacknowledged(openAlarm.data, function(err, recents, count) {
+
+          io.sockets.socket(openAlarm.sockId).emit('unacknowledged', {
+            alarms: recents,
+            count: count
+          });
+          return callback(null);
+        });
+      }
+    },
+    function(err) {
+      return finalCB();
+    });
+}
+
+function getRecentAlarms(data, callback) {
+  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, user, query, sort, groups = [];
+
+  if (typeof data === "string")
+    data = JSON.parse(data);
+  currentPage = parseInt(data.currentPage, 10);
+  itemsPerPage = parseInt(data.itemsPerPage, 10);
+  startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
+  endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
+
+  sort = {};
+
+  if (!itemsPerPage) {
+    itemsPerPage = 200;
+  }
+  if (!currentPage || currentPage < 1) {
+    currentPage = 1;
+  }
+
+  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
+
+  user = data.user;
+
+  query = {
+    $and: [{
+      msgTime: {
+        $gte: startDate
+      }
+    }, {
+      msgTime: {
+        $lte: endDate
+      }
+    }]
+  };
+
+  if (data.name1 !== undefined) {
+    if (data.name1 !== null) {
+      query.Name1 = new RegExp("^" + data.name1, 'i');
+    } else {
+      query.Name1 = "";
+    }
+
+  }
+  if (data.name2 !== undefined) {
+    if (data.name2 !== null) {
+      query.Name2 = new RegExp("^" + data.name2, 'i');
+    } else {
+      query.Name2 = "";
+    }
+  }
+  if (data.name3 !== undefined) {
+    if (data.name3 !== null) {
+      query.Name3 = new RegExp("^" + data.name3, 'i');
+    } else {
+      query.Name3 = "";
+    }
+  }
+  if (data.name4 !== undefined) {
+    if (data.name4 !== null) {
+      query.Name4 = new RegExp("^" + data.name4, 'i');
+    } else {
+      query.Name4 = "";
+    }
+  }
+  if (data.msgCat) {
+    query.msgCat = {
+      $in: data.msgCat
+    };
+  }
+  if (data.almClass) {
+    query.almClass = {
+      $in: data.almClass
+    };
+  }
+
+  if (data.pointTypes) {
+    query.PointType = {
+      $in: data.pointTypes
+    };
+  }
+
+  groups = user.groups.map(function(group) {
+    return group._id.toString();
+  });
+
+  if (!user["System Admin"].Value) {
+    query.Security = {
+      $in: groups
+    };
+  }
+
+  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
+
+  var start = new Date();
+  mydb.collection(alarmsCollection).find(query).skip((currentPage - 1) * itemsPerPage).limit(numberItems).sort(sort).toArray(function(err, alarms) {
+    if (err) console.error(err);
+    mydb.collection(alarmsCollection).count(query, function(err, count) {
+      if (err) console.error(err);
+      callback(err, alarms, count);
+    });
+  });
+}
+
 function getUnacknowledged(data, callback) {
   var currentPage, itemsPerPage, numberItems, user, groups, query, count, alarmIds, sort;
 
@@ -891,47 +1567,6 @@ function sendAcknowledge(data, callback) {
   }, function(err, result) {
     callback(err, result);
   });
-}
-
-function updateAlarms(finalCB) {
-  var alarmsStart = new Date();
-  async.forEach(openAlarms,
-    function(openAlarm, callback) {
-      if (openAlarm.alarmView === "Recent") {
-
-        getRecentAlarms(openAlarm.data, function(err, recents, count) {
-          io.sockets.socket(openAlarm.sockId).emit('recentAlarms', {
-            alarms: recents,
-            count: count
-          });
-
-          return callback(null);
-        });
-      }
-      if (openAlarm.alarmView === "Active") {
-        getActiveAlarms(openAlarm.data, function(err, recents, count) {
-
-          io.sockets.socket(openAlarm.sockId).emit('activeAlarms', {
-            alarms: recents,
-            count: count
-          });
-          return callback(null);
-        });
-      }
-      if (openAlarm.alarmView === "Unacknowledged") {
-        getUnacknowledged(openAlarm.data, function(err, recents, count) {
-
-          io.sockets.socket(openAlarm.sockId).emit('unacknowledged', {
-            alarms: recents,
-            count: count
-          });
-          return callback(null);
-        });
-      }
-    },
-    function(err) {
-      return finalCB();
-    });
 }
 
 function compileScript(data, callback) {

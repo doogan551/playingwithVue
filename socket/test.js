@@ -9,13 +9,13 @@ var common = {
   openAlarms: openAlarms
 };
 
-var socket = function () {
+var socket = function() {
   Utility.getOne({
     collection: 'SystemInfo',
     query: {
       Name: 'Quality Codes'
     }
-  }, function (err, codes) {
+  }, function(err, codes) {
     common.qualityCodes = codes.Entries;
   });
   Utility.getOne({
@@ -23,13 +23,13 @@ var socket = function () {
     query: {
       Name: 'Control Priorities'
     }
-  }, function (err, priorities) {
+  }, function(err, priorities) {
     common.controlPriorities = priorities.Entries;
   });
   loader();
 };
 
-var loader = function () {
+var loader = function() {
   require('./socketio')(common);
   require('./oplog')(common);
   require('./tcp')(common);

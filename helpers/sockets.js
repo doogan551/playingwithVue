@@ -22,7 +22,6 @@ exports.connect = function(sessionStore, cookieParser, done) {
         success: onAuthorizeSuccess
     }));
 
-
     function onAuthorizeSuccess(data, accept) {
         console.log('successful connection to socket.io');
         accept();
