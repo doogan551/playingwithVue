@@ -1,5 +1,7 @@
 // OTHERS
 var Utility = require('../models/utility');
+var utils = require('../helpers/utils');
+var constants = utils.CONSTANTS;
 
 var openDisplays = [];
 var openAlarms = [];
@@ -135,11 +137,15 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
   ];
   // JDR - Removed "Authorized Value" from readOnlyProps because it changes when ValueOptions change. Keep this note.
 
-  mydb.collection(pointsCollection).findOne({
-    _id: newPoint._id
-  }, {
-    _pStatus: 1,
-    _id: 0
+  Utility.getOne({
+    collection: 'points',
+    criteria: {
+      _id: newPoint._id
+    },
+    fields: {
+      _pStatus: 1,
+      _id: 0
+    }
   }, function(err, dbPoint) {
     if (err)
       return callback({
@@ -815,12 +821,18 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
           updateObject._updPoint = true;
           downloadPoint = false;
         }
-        mydb.collection(pointsCollection).findAndModify({
-          _id: newPoint._id
-        }, [], {
-          $set: updateObject
-        }, {
-          'new': true
+        Utility.findAndModify({
+          collection: 'points',
+          query: {
+            _id: newPoint._id
+          },
+          sort: [],
+          updateObj: {
+            $set: updateObject
+          },
+          options: {
+            new: true
+          }
         }, function(err, result) {
           if (err) return callback({
             err: err
@@ -1008,8 +1020,11 @@ function updateRefs(updateReferences, newPoint, flags, callback) {
 // newupdate
 function doActivityLogs(generateActivityLog, logs, callback) {
   if (generateActivityLog) {
-    async.forEach(logs, function(log, cb) {
-      mydb.collection(activityLogCollection).insert(log, function(err, response) {
+    async.each(logs, function(log, cb) {
+      Utility.insert({
+        collection: constants('activityLogCollection'),
+        insertObj: log
+      }, function(err, response) {
         cb(err);
       });
     }, callback);
@@ -1020,13 +1035,17 @@ function doActivityLogs(generateActivityLog, logs, callback) {
 // newupdate
 function updDownlinkNetwk(updateDownlinkNetwk, newPoint, callback) {
   if (updateDownlinkNetwk) {
-    mydb.collection(pointsCollection).update({
-      "Point Type.Value": "Device",
-      "Uplink Port.Value": "Ethernet",
-      "Downlink Network.Value": newPoint["Ethernet Network"].Value
-    }, {
-      $set: {
-        _updPoint: true
+    Utility.update({
+      collection: constants('pointsCollection'),
+      query: {
+        "Point Type.Value": "Device",
+        "Uplink Port.Value": "Ethernet",
+        "Downlink Network.Value": newPoint["Ethernet Network"].Value
+      },
+      updateObj: {
+        $set: {
+          _updPoint: true
+        }
       }
     }, function(err, result) {
       callback(err);
@@ -1056,11 +1075,15 @@ function updPoint(downloadPoint, newPoint, callback) {
 
       if (err) {
         if (code >= 2300 && code < 2304) {
-          mydb.collection(pointsCollection).update({
-            _id: newPoint._id
-          }, {
-            $set: {
-              _updPoint: true
+          Utility.update({
+            collection: constants('pointsCollection'),
+            query: {
+              _id: newPoint._id
+            },
+            updateObj: {
+              $set: {
+                _updPoint: true
+              }
             }
           }, function(dberr, result) {
             if (dberr)
@@ -1133,17 +1156,22 @@ function updateDependencies(refPoint, flags, user, callback) {
           updateDependencyProperty = */
   ;
 
-  mydb.collection(pointsCollection).find({
-    "Point Refs.Value": refPoint._id
-  }, {
-    _id: 1
-  }).toArray(function(err, dependencies) {
+  Utility.get({
+    collection: constants('pointsCollection'),
+    query: {
+      "Point Refs.Value": refPoint._id
+    },
+    fields: {
+      _id: 1
+    }
+  }, function(err, dependencies) {
 
-
-
-    async.forEachSeries(dependencies, function(dependencyId, depCB) {
-      mydb.collection(pointsCollection).findOne({
-        _id: dependencyId._id
+    async.eachSeries(dependencies, function(dependencyId, depCB) {
+      Utility.getOne({
+        collection: constants('pointsCollection'),
+        query: {
+          _id: dependencyId._id
+        }
       }, function(err, dependency) {
         // TODO Check for errors
         async.waterfall([
@@ -1153,8 +1181,11 @@ function updateDependencies(refPoint, flags, user, callback) {
               updateScheduleEntries(dependency, devices, null, function(todSignal) {
                 signalTOD = (signalTOD | todSignal) ? true : false;
                 // does deletePoint need to be called here?
-                mydb.collection(pointsCollection).remove({
-                  _id: dependency._id
+                Utility.remove({
+                  collection: constants('pointsCollection'),
+                  query: {
+                    _id: dependency._id
+                  }
                 }, function(err, result) {
                   cb1(err);
                 });
@@ -1260,7 +1291,10 @@ function deletePoint(upi, method, user, options, callback) {
       var query = {
         _id: _upi
       };
-      mydb.collection(pointsCollection).findOne(query, function(err, point) {
+      Utility.getOne({
+        collection: constants('pointsCollection'),
+        query: query
+      }, function(err, point) {
         // Save point reference
         _point = point;
         // STOP PROCESSING if the the point wasn't found
@@ -1285,12 +1319,21 @@ function deletePoint(upi, method, user, options, callback) {
         };
 
       if (method === 'hard') {
-        mydb.collection(pointsCollection).remove(query, function(err, result) {
+        Utility.remove({
+          collection: constants('pointsCollection'),
+          query: query
+        }, function(err, result) {
           cb(err);
         });
       } else {
         query._pStatus = 0;
-        mydb.collection(pointsCollection).findAndModify(query, sort, update, options, function(err, point) {
+        Utility.findAndModify({
+          collection: constants('pointsCollection'),
+          query: query,
+          sort: sort,
+          updateObj: update,
+          options: options
+        }, function(err, point) {
           // Update our point reference
           _point = point;
           // STOP PROCESSING if we couldn't modify the point or if it wasn't found
@@ -1316,7 +1359,12 @@ function deletePoint(upi, method, user, options, callback) {
           }
         };
       // Not specifiying new: true because we don't need the updated document after the update
-      mydb.collection('upis').findAndModify(query, sort, update, function(err, result) {
+      Utility.findAndModify({
+        collection: constants('upis'),
+        query: query,
+        sort: sort,
+        updateObj: update
+      }, function(err, result) {
         if (err) {
           _buildWarning('could not update the UPI collection');
         }
@@ -1331,7 +1379,10 @@ function deletePoint(upi, method, user, options, callback) {
       var query = {
         _id: _upi
       };
-      mydb.collection(historyCollection).remove(query, function(err, result) {
+      Utility.remove({
+        collection: constants('historyCollection'),
+        query: query
+      }, function(err, result) {
         if (err) {
           _buildWarning('could not remove all history entries');
         }
@@ -1355,7 +1406,10 @@ function deletePoint(upi, method, user, options, callback) {
         _logData.log = "Point deleted";
       }
       _logData.point = _point;
-      mydb.collection(activityLogCollection).insert(Utils.buildActivityLog(_logData), function(err, result) {
+      Utility.isnert({
+        collection: constants('activityLogCollection'),
+        insertObj: Utils.buildActivityLog(_logData)
+      }, function(err, result) {
         if (err) {
           _buildWarning('could not create activity log');
         }
@@ -1435,10 +1489,13 @@ function deleteScheduleEntries(method, pointType, upi, user, callback) {
     };
   }
 
-  mydb.collection(pointsCollection).find(query).toArray(function(err, points) {
+  Utility.find({
+    collection: constants('pointsCollection'),
+    query: query
+  }, function(err, points) {
     var devices = [],
       signalTOD = false;
-    async.forEachSeries(points, function(point, asyncCB) {
+    async.eachSeries(points, function(point, asyncCB) {
       // if host schedule - set flag
       updateScheduleEntries(point, devices, null, function(todSignal) {
         signalTOD = (signalTOD | todSignal) ? true : false;
@@ -1461,16 +1518,21 @@ function deleteScheduleEntries(method, pointType, upi, user, callback) {
 
 //updateDependencies, deleteScheduleEntries, updateSchedules(io)
 function updateDeviceToDs(devices, callback) {
-  mydb.collection(pointsCollection).update({
-    _id: {
-      $in: devices
+  Utility.update({
+    collection: constants('pointsCollection'),
+    query: {
+      _id: {
+        $in: devices
+      }
+    },
+    updateObj: {
+      $set: {
+        _updTOD: true
+      }
+    },
+    options: {
+      multi: true
     }
-  }, {
-    $set: {
-      _updTOD: true
-    }
-  }, {
-    multi: true
   }, function(err, result) {
     callback(err);
   });
@@ -1538,11 +1600,15 @@ function updateCfgRequired(point, callback) {
   } else if (Config.Utility.getPropertyObject("Device Point", point) !== null) {
     point._cfgRequired = true;
     if (Config.Utility.getPropertyObject("Device Point", point).PointInst !== 0) {
-      mydb.collection(pointsCollection).update({
-        _id: Config.Utility.getPropertyObject("Device Point", point).PointInst
-      }, {
-        $set: {
-          _cfgRequired: true
+      Utility.update({
+        collection: constants('pointsCollection'),
+        query: {
+          _id: Config.Utility.getPropertyObject("Device Point", point).PointInst
+        },
+        updateObj: {
+          $set: {
+            _cfgRequired: true
+          }
         }
       }, function(err, result) {
         callback(err);
@@ -1558,7 +1624,7 @@ function updateCfgRequired(point, callback) {
 //loop
 function updateAlarms(finalCB) {
   var alarmsStart = new Date();
-  async.forEach(openAlarms,
+  async.each(openAlarms,
     function(openAlarm, callback) {
       if (openAlarm.alarmView === "Recent") {
 
@@ -1601,19 +1667,24 @@ function autoAcknowledgeAlarms(callback) {
   var now, twentyFourHoursAgo;
   now = Math.floor(Date.now() / 1000);
   twentyFourHoursAgo = now - 86400;
-  mydb.collection(alarmsCollection).update({
-    msgTime: {
-      $lte: twentyFourHoursAgo
+  Utility.update({
+    collection: constants('alarmsCollection'),
+    query: {
+      msgTime: {
+        $lte: twentyFourHoursAgo
+      },
+      ackStatus: 1
     },
-    ackStatus: 1
-  }, {
-    $set: {
-      ackUser: "System",
-      ackTime: now,
-      ackStatus: 2
+    updateObj: {
+      $set: {
+        ackUser: "System",
+        ackTime: now,
+        ackStatus: 2
+      }
+    },
+    options: {
+      multi: true
     }
-  }, {
-    multi: true
   }, function(err, result) {
     callback(result);
   });

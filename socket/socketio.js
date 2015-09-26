@@ -202,7 +202,10 @@ module.exports = function socketio(common) {
 
       if ([2, 7].indexOf(jsonData["Command Type"]) > -1) {
         logData = Utils.buildActivityLog(logData);
-        mydb.collection(activityLogCollection).insert(logData, function(err, result) {});
+        Utility.insert({
+          collection: activityLogCollection,
+          insertObj: logData
+        }, function(err, result) {});
       }
 
       cppApi.command(data, function(err, msg) {
@@ -276,7 +279,10 @@ module.exports = function socketio(common) {
         },
         logMessage = function(logData) {
           logData = Utils.buildActivityLog(logData);
-          mydb.collection(activityLogCollection).insert(logData, function(err, result) {});
+          Utility.insert({
+            collection: activityLogCollection,
+            insertObj: logData
+          }, function(err, result) {});
         };
 
       if (data.uploadFile !== undefined) {
@@ -564,9 +570,13 @@ function getInitialVals(id, callback) {
     "Quality Code Enable": 1
   };
 
-  mydb.collection(pointsCollection).findOne({
-    _id: parseInt(id, 10)
-  }, fields, function(err, point) {
+  Utility.getOne({
+    collection: pointsCollection,
+    query: {
+      _id: parseInt(id, 10)
+    },
+    fields: fields
+  }, function(err, point) {
     if (point)
       point = setQualityLabel(point);
 
@@ -575,13 +585,17 @@ function getInitialVals(id, callback) {
 }
 
 function getBlockTypes(cb) {
-  mydb.collection('points').find({
-    SequenceData: {
-      $exists: true
+  Utility.get({
+    collection: pointsCollection,
+    query: {
+      SequenceData: {
+        $exists: true
+      }
+    },
+    updateObj: {
+      "SequenceData.Sequence.Block": 1
     }
-  }, {
-    "SequenceData.Sequence.Block": 1
-  }).toArray(function(err, results) {
+  }, function(err, results) {
     var c,
       cc,
       len = results.length,
@@ -607,11 +621,15 @@ function getBlockTypes(cb) {
 function doRefreshSequence(data, socket) {
   var _id = data.sequenceID;
 
-  mydb.collection('points').update({
-    _id: _id
-  }, {
-    $set: {
-      '_pollTime': new Date().getTime()
+  Utility.update({
+    collection: pointsCollection,
+    query: {
+      _id: _id
+    },
+    updateObj: {
+      $set: {
+        '_pollTime': new Date().getTime()
+      }
     }
   }, function(err, updated) {
     if (err) {}
@@ -632,11 +650,16 @@ function doUpdateSequence(data, socket) {
   //         var _id = result._id;
 
   //         if(!err) {
-  mydb.collection('points').update({
-    "Name": name
-  }, {
-    $set: {
-      'SequenceData': sequenceData
+
+  Utility.update({
+    collection: pointsCollection,
+    query: {
+      "Name": name
+    },
+    updateObj: {
+      $set: {
+        'SequenceData': sequenceData
+      }
     }
   }, function(updateErr, updateRecords) {
     if (updateErr) {
@@ -766,8 +789,17 @@ function getUnacknowledged(data, callback) {
 
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
   var start = new Date();
-  mydb.collection(alarmsCollection).find(query).sort(sort).skip((currentPage - 1) * itemsPerPage).limit(numberItems).toArray(function(err, alarms) {
-    mydb.collection(alarmsCollection).count(query, function(err, count) {
+  Utility.get({
+    collection: alarmsCollection,
+    query: query,
+    sort: sort,
+    skip: (currentPage - 1) * itemsPerPage,
+    limit: numberItems
+  }, function(err, alarms) {
+    Utility.count({
+      collection: alarmsCollection,
+      query: query
+    }, function(err, count) {
       if (err) callback(err, null, null);
       callback(err, alarms, count);
     });
@@ -895,11 +927,14 @@ function getActiveAlarms(data, callback) {
       $in: data.pointTypes
     };
   }
-
-  mydb.collection(pointsCollection).find(query, {
-    _actvAlmId: 1,
-    _id: 1
-  }).toArray(function(err, alarms) {
+  Utility.get({
+    collection: pointsCollection,
+    query: query,
+    fields: {
+      _actvAlmId: 1,
+      _id: 1
+    }
+  }, function(err, alarms) {
 
     if (err) callback(err, null, null);
 
@@ -954,9 +989,17 @@ function getActiveAlarms(data, callback) {
       };
     }
     var start = new Date();
-    mydb.collection(alarmsCollection).find(alarmsQuery).skip((currentPage - 1) * itemsPerPage).limit(numberItems).sort(sort).toArray(function(err, recents) {
-      mydb.collection(alarmsCollection).count(alarmsQuery, function(err, count) {
-
+    Utility.get({
+      collection: alarmsCollection,
+      query: alarmsQuery,
+      sort: sort,
+      skip: (currentPage - 1) * itemsPerPage,
+      limit: numberItems
+    }, function(err, recents) {
+      Utility.count({
+        collection: alarmsCollection,
+        query: alarmsQuery
+      }, function(err, count) {
         callback(err, recents, count);
       });
     });
@@ -1057,10 +1100,18 @@ function getActiveAlarmsNew(data, callback) {
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
 
   var start = new Date();
-  mydb.collection("ActiveAlarms").find(query).skip((currentPage - 1) * itemsPerPage).limit(numberItems).sort(sort).toArray(function(err, alarms) {
-    if (err) console.error(err);
-    mydb.collection("ActiveAlarms").count(query, function(err, count) {
-      if (err) console.error(err);
+  Utility.get({
+    collection: "ActiveAlarms",
+    query: query,
+    sort: sort,
+    skip: (currentPage - 1) * itemsPerPage,
+    limit: numberItems
+  }, function(err, alarms) {
+    Utility.count({
+      collection: "ActiveAlarms",
+      query: query
+    }, function(err, count) {
+
       callback(err, alarms, count);
     });
   });
@@ -1077,19 +1128,24 @@ function sendAcknowledge(data, callback) {
     ids[j] = BSON.ObjectID(ids[j]);
   }
 
-  mydb.collection(alarmsCollection).update({
-    _id: {
-      $in: ids
+  Utility.update({
+    collection: alarmsCollection,
+    query: {
+      _id: {
+        $in: ids
+      },
+      ackStatus: 1
     },
-    ackStatus: 1
-  }, {
-    $set: {
-      ackStatus: 2,
-      ackUser: username,
-      ackTime: time
+    updateObj: {
+      $set: {
+        ackStatus: 2,
+        ackUser: username,
+        ackTime: time
+      }
+    },
+    options: {
+      multi: true
     }
-  }, {
-    multi: true
   }, function(err, result) {
     callback(err, result);
   });
@@ -1189,10 +1245,18 @@ function getRecentAlarms(data, callback) {
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
 
   var start = new Date();
-  mydb.collection(alarmsCollection).find(query).skip((currentPage - 1) * itemsPerPage).limit(numberItems).sort(sort).toArray(function(err, alarms) {
-    if (err) console.error(err);
-    mydb.collection(alarmsCollection).count(query, function(err, count) {
-      if (err) console.error(err);
+  Utility.get({
+    collection: alarmsCollection,
+    query: query,
+    sort: sort,
+    skip: (currentPage - 1) * itemsPerPage,
+    limit: numberItems
+  }, function(err, alarms) {
+    Utility.count({
+      collection: alarmsCollection,
+      query: query
+    }, function(err, count) {
+
       callback(err, alarms, count);
     });
   });
@@ -1281,8 +1345,17 @@ function getUnacknowledged(data, callback) {
 
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
   var start = new Date();
-  mydb.collection(alarmsCollection).find(query).sort(sort).skip((currentPage - 1) * itemsPerPage).limit(numberItems).toArray(function(err, alarms) {
-    mydb.collection(alarmsCollection).count(query, function(err, count) {
+  Utility.get({
+    collection: alarmsCollection,
+    query: query,
+    sort: sort,
+    skip: (currentPage - 1) * itemsPerPage,
+    limit: numberItems
+  }, function(err, alarms) {
+    Utility.count({
+      collection: alarmsCollection,
+      query: query
+    }, function(err, count) {
       if (err) callback(err, null, null);
       callback(err, alarms, count);
     });
@@ -1342,11 +1415,14 @@ function getActiveAlarms(data, callback) {
       $in: data.pointTypes
     };
   }
-
-  mydb.collection(pointsCollection).find(query, {
-    _actvAlmId: 1,
-    _id: 1
-  }).toArray(function(err, alarms) {
+  Utility.get({
+    collection: pointsCollection,
+    query: query,
+    fields: {
+      _actvAlmId: 1,
+      _id: 1
+    }
+  }, function(err, alarms) {
 
     if (err) callback(err, null, null);
 
@@ -1401,9 +1477,17 @@ function getActiveAlarms(data, callback) {
       };
     }
     var start = new Date();
-    mydb.collection(alarmsCollection).find(alarmsQuery).skip((currentPage - 1) * itemsPerPage).limit(numberItems).sort(sort).toArray(function(err, recents) {
-      mydb.collection(alarmsCollection).count(alarmsQuery, function(err, count) {
-
+    Utility.get({
+      collection: alarmsCollection,
+      query: alarmsQuery,
+      sort: sort,
+      skip: (currentPage - 1) * itemsPerPage,
+      limit: numberItems
+    }, function(err, recents) {
+      Utility.count({
+        collection: alarmsCollection,
+        query: alarmsQuery
+      }, function(err, count) {
         callback(err, recents, count);
       });
     });
@@ -1504,10 +1588,18 @@ function getActiveAlarmsNew(data, callback) {
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
 
   var start = new Date();
-  mydb.collection("ActiveAlarms").find(query).skip((currentPage - 1) * itemsPerPage).limit(numberItems).sort(sort).toArray(function(err, alarms) {
-    if (err) console.error(err);
-    mydb.collection("ActiveAlarms").count(query, function(err, count) {
-      if (err) console.error(err);
+  Utility.get({
+    collection: "ActiveAlarms",
+    query: query,
+    sort: sort,
+    skip: (currentPage - 1) * itemsPerPage,
+    limit: numberItems
+  }, function(err, recents) {
+    Utility.count({
+      collection: "ActiveAlarms",
+      query: query
+    }, function(err, alarms) {
+
       callback(err, alarms, count);
     });
   });
@@ -1524,19 +1616,24 @@ function sendAcknowledge(data, callback) {
     ids[j] = BSON.ObjectID(ids[j]);
   }
 
-  mydb.collection(alarmsCollection).update({
-    _id: {
-      $in: ids
+  Utility.update({
+    collection: alarmsCollection,
+    query: {
+      _id: {
+        $in: ids
+      },
+      ackStatus: 1
     },
-    ackStatus: 1
-  }, {
-    $set: {
-      ackStatus: 2,
-      ackUser: username,
-      ackTime: time
+    updateObj: {
+      $set: {
+        ackStatus: 2,
+        ackUser: username,
+        ackTime: time
+      }
+    },
+    options: {
+      multi: true
     }
-  }, {
-    multi: true
   }, function(err, result) {
     callback(err, result);
   });
@@ -1604,7 +1701,12 @@ function addPoint(point, user, options, callback) {
     updateObj._actvAlmId = BSON.ObjectID(updateObj._actvAlmId);
     updateObj._curAlmId = BSON.ObjectID(updateObj._curAlmId);
 
-    mydb.collection(pointsCollection).update(searchQuery, updateObj, function(err, freeName) {
+
+    Utility.update({
+      collection: pointsCollection,
+      query: searchQuery,
+      updateObj: updateObj
+    }, function(err, freeName) {
       if (err)
         callback(err);
       else {
@@ -1615,7 +1717,10 @@ function addPoint(point, user, options, callback) {
             msg: "success"
           }, point);
         }
-        mydb.collection(activityLogCollection).insert(Utils.buildActivityLog(logData), function(err, result) {
+        Utility.insert({
+          collection: activityLogCollection,
+          insertObj: logData
+        }, function(err, result) {
           callback({
             msg: "success"
           }, point);
@@ -1631,14 +1736,20 @@ function restorePoint(upi, user, callback) {
     user: user,
     timestamp: Date.now()
   };
-  mydb.collection(pointsCollection).findAndModify({
-    _id: upi
-  }, [], {
-    $set: {
-      _pStatus: 0
+  Utility.findAndModify({
+    collection: pointsCollection,
+    query: {
+      _id: upi
+    },
+    sort: [],
+    updateObj: {
+      $set: {
+        _pStatus: 0
+      }
+    },
+    options: {
+      new: true
     }
-  }, {
-    new: true
   }, function(err, point) {
 
     if (err)
@@ -1649,7 +1760,10 @@ function restorePoint(upi, user, callback) {
     logData.activity = actLogsEnums["Point Restore"].enum;
     logData.log = "Point restored";
     logData.point = point;
-    mydb.collection(activityLogCollection).insert(Utils.buildActivityLog(logData), function(err, result) {
+    Utility.insert({
+      collection: activityLogCollection,
+      insertObj: logData
+    }, function(err, result) {
       if (point["Point Type.Value"] === "Schedule") {
         // get points based on parentupi
       } else {
@@ -1711,22 +1825,32 @@ function updateSchedules(data, callback) {
         }
 
         if (!_.isEmpty(updateObj.$set)) {
-          mydb.collection(pointsCollection).update({
-            _id: updateSched._id
-          }, updateObj, function(err, result) {
+          Utility.update({
+            collection: pointsCollection,
+            query: {
+              _id: updateSched._id
+            },
+            updateObj: updateObj
+          }, function(err, result) {
             if (err)
               feCB(err);
 
             ctrlPoint = Config.Utility.getPropertyObject("Control Point", updateSched);
-            mydb.collection(pointsCollection).findOne({
-              _id: ctrlPoint.Value
+            Utility.getOne({
+              collection: pointsCollection,
+              query: {
+                _id: ctrlPoint.Value
+              }
             }, function(err, point) {
               logData.point = point;
               logData.Security = point.Security;
               logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Edit"].enum;
               logData.log = "Schedule entry edited";
               logData = Utils.buildActivityLog(logData);
-              mydb.collection(activityLogCollection).insert(logData, function(err, result) {
+              Utility.insert({
+                collection: activityLogCollection,
+                insertObj: logData
+              }, function(err, result) {
                 feCB(err);
               });
             });
@@ -1762,15 +1886,21 @@ function updateSchedules(data, callback) {
             return feCB(null);
 
           ctrlPoint = Config.Utility.getPropertyObject("Control Point", newSched);
-          mydb.collection(pointsCollection).findOne({
-            _id: ctrlPoint.Value
+          Utility.getOne({
+            collection: pointsCollection,
+            query: {
+              _id: ctrlPoint.Value
+            }
           }, function(err, point) {
             logData.point = point;
             logData.Security = point.Security;
             logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Add"].enum;
             logData.log = "Schedule entry added";
             logData = Utils.buildActivityLog(logData);
-            mydb.collection(activityLogCollection).insert(logData, function(err, result) {
+            Utility.insert({
+              collection: activityLogCollection,
+              insertObj: logData
+            }, function(err, result) {
               feCB(err);
             });
           });
@@ -1792,15 +1922,21 @@ function updateSchedules(data, callback) {
           if (cancelSched._pStatus !== 0)
             return feCB(null);
           ctrlPoint = Config.Utility.getPropertyObject("Control Point", cancelSched);
-          mydb.collection(pointsCollection).findOne({
-            _id: ctrlPoint.Value
+          Utility.getOne({
+            collection: pointsCollection,
+            query: {
+              _id: ctrlPoint.Value
+            }
           }, function(err, point) {
             logData.point = point;
             logData.Security = point.Security;
             logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Delete"].enum;
             logData.log = "Schedule entry deleted";
             logData = Utils.buildActivityLog(logData);
-            mydb.collection(activityLogCollection).insert(logData, function(err, result) {
+            Utility.insert({
+              collection: activityLogCollection,
+              insertObj: logData
+            }, function(err, result) {
               feCB(err);
             });
           });
@@ -1832,15 +1968,21 @@ function updateSchedules(data, callback) {
             return feCB(null);
 
           ctrlPoint = Config.Utility.getPropertyObject("Control Point", hardSched);
-          mydb.collection(pointsCollection).findOne({
-            _id: ctrlPoint.Value
+          Utility.getOne({
+            collection: pointsCollection,
+            query: {
+              _id: ctrlPoint.Value
+            }
           }, function(err, point) {
             logData.point = point;
             logData.Security = point.Security;
             logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Delete"].enum;
             logData.log = "Schedule entry deleted";
             logData = Utils.buildActivityLog(logData);
-            mydb.collection(activityLogCollection).insert(logData, function(err, result) {
+            Utility.insert({
+              collection: activityLogCollection,
+              insertObj: logData
+            }, function(err, result) {
               feCB(err);
             });
           });
@@ -1867,20 +2009,26 @@ function getScheduleEntries(data, callback) {
     upi = data.upi;
 
   if (isSchedule) {
-    mydb.collection(pointsCollection).find({
-      "Point Type.Value": "Schedule Entry",
-      _parentUpi: upi
-    }).toArray(callback);
+    Utility.get({
+      collection: pointsCollection,
+      query: {
+        "Point Type.Value": "Schedule Entry",
+        _parentUpi: upi
+      }
+    }, callback);
   } else {
-    mydb.collection(pointsCollection).find({
-      "Point Type.Value": "Schedule Entry",
-      "Point Refs": {
-        $elemMatch: {
-          "Value": upi,
-          "PropertyName": "Control Point"
+    Utility.get({
+      collection: pointsCollection,
+      query: {
+        "Point Type.Value": "Schedule Entry",
+        "Point Refs": {
+          $elemMatch: {
+            "Value": upi,
+            "PropertyName": "Control Point"
+          }
         }
       }
-    }).toArray(callback);
+    }, callback);
   }
 }
 
@@ -1916,15 +2064,13 @@ function checkProperties(data, callback) {
   data.err = false;
   data.errMsg = '';
 
-  dbResult = mydb.collection('points').find({
-    'Point Type.Value': data.pointType
-  }); // Get all records
-
-  // If we found a template for the specified point type (i.e. it's a recognized point type)
   if (template !== undefined) {
-
-    // Convert mongo cursor result to array
-    dbResult.toArray(function(recsErr, recs) {
+    Utility.get({
+      collection: pointsCollection,
+      query: {
+        'Point Type.Value': data.pointType
+      }
+    }, function(recsErr, recs) {
 
       var prop, // Work vars
         key,
@@ -2087,10 +2233,10 @@ function checkProperties(data, callback) {
       }
       callback(data); // Perform the callback
     }); // end dbResult.toArray(function ())
-  }
-  // Could not find point type in template
-  else {
 
+    // Could not find point type in template
+
+  } else {
     // TODO change summary to error. Verify viewModel looks @ error key
     data.err = true;
     data.errMsg = "Error! Point type '" + data.pointType + "' was not found in the template."; // Log this error
