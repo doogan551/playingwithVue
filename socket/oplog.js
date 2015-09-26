@@ -1,4 +1,9 @@
-// change db
+// NODE MODULES
+var async = require('async');
+
+// OTHERS
+var Utility = require('../models/utility');
+var Config = require('../public/js/lib/config.js');
 
 module.exports = function(common) {
     var oplog = common.sockets.get().oplog;
@@ -119,9 +124,13 @@ module.exports = function(common) {
             updateArray = [];
             async.waterfall([
                     function(wfcb) {
-                        mydb.collection(pointsCollection).findOne({
-                            _id: doc.o2._id
-                        }, fields, function(err, point) {
+                        Utility.getOne({
+                            criteria: {
+                                _id: doc.o2._id
+                            },
+                            collection: 'points',
+                            fields: fields
+                        }, function(err, point) {
                             wfcb(err, point);
                         });
                     },
@@ -282,24 +291,35 @@ module.exports = function(common) {
 };
 
 function addActiveAlarm(alarmId, callback) {
-    mydb.collection(alarmsCollection).findOne({
-        _id: alarmId
-    }, function(err1, alarm) {
-        if (alarm !== null) {
-            mydb.collection('ActiveAlarms').insert(alarm, function(err2, result) {
-                console.log('inserted', alarm.upi);
-                callback(err1 /*|| err2*/ );
-            });
-        }
-    });
+    Utility.getOne({
+            criteria: {
+                _id: alarmId
+            },
+            collection: 'Alarms'
+        },
+        function(err1, alarm) {
+            if (alarm !== null) {
+                Utility.insert({
+                    collection: 'ActiveAlarms',
+                    insertObj: alarm
+                }, function(err2, result) {
+                    console.log('inserted', alarm.upi);
+                    callback(err1 /*|| err2*/ );
+                });
+            }
+        });
 }
 
 function removeActiveAlarm(upi, callback) {
-    mydb.collection('ActiveAlarms').remove({
-        upi: upi
-    }, function(err, result) {
-        callback(err);
-    });
+    Utility.remove({
+            criteria: {
+                upi: upi
+            },
+            collection: 'ActiveAlarms'
+        },
+        function(err, result) {
+            callback(err);
+        });
 }
 
 
@@ -316,11 +336,16 @@ function updateFromTail(_id, value, reliability) {
     }
     /*if (curAlarm !== undefined && curAlarm !== null)
         updateObj.$set._curAlmId = BSON.ObjectID(curAlarm);*/
-    mydb.collection(pointsCollection).update({
-        _id: _id
-    }, updateObj, function(err, result) {
+    Utility.remove({
+            criteria: {
+                _id: _id
+            },
+            updateObj: updateObj,
+            collection: 'points'
+        },
+        function(err, result) {
 
-    });
+        });
 }
 
 function checkDynamicProperties(obj) {
@@ -413,13 +438,29 @@ function getChangedVals(id, callback) {
         "Control Pending": 1,
         "Quality Code Enable": 1
     };
-
-    mydb.collection(pointsCollection).findOne({
-        _id: parseInt(id, 10)
-    }, fields, function(err, point) {
-
-
+    Utility.getOne({
+        criteria: {
+            _id: parseInt(id, 10)
+        },
+        fields: fields,
+        collection: 'points'
+    }, function(err, point) {
         callback(point);
     });
 
+}
+
+function checkUserAccess(user, pointSecurity) {
+
+    if (user["System Admin"].Value === true)
+        return true;
+    else {
+        for (var i = 0; i < user.groups.length; i++) {
+            if (pointSecurity.indexOf(user.groups[i]._id) !== -1)
+                return true;
+        }
+        return false;
+        // iterate over pointSecurity's groups and check if user is in any of them
+        // return true, else return false when done iterating
+    }
 }

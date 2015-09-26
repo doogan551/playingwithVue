@@ -1,3 +1,4 @@
+console.log(process.env.NODE_ENV);
 var express = require('express');
 var app = express();
 var db = require('./helpers/db');
@@ -70,7 +71,7 @@ db.connect(connectionString.join(''), function (err) {
   } else {
 
     sockets.connect(sessionStore, cookieParser, function () {
-      require('./socket/test').socket();
+      require('./socket/common').socket();
       app.listen(port, function () {
         console.log('listening on port', port);
       });

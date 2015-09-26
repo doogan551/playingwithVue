@@ -10,8 +10,8 @@ var tmp = require('tmp');
 var rimraf = require('rimraf');
 
 // OTHERS
-var utils = require('../helpers/utils.js')
-var config = require('../public/js/lib/config.js');
+var utils = require('../helpers/utils.js');
+var Config = require('../public/js/lib/config.js');
 // var cppApi = new(require('Cpp_API').Tasks)();
 // var monitorSender = new(require('MonitorSender').Tasks)();
 var compiler = require('../helpers/scriptCompiler.js');
@@ -21,7 +21,7 @@ var historyCollection = utils.CONSTANTS("historyCollection");
 var alarmsCollection = utils.CONSTANTS("alarmsCollection");
 var activityLogCollection = utils.CONSTANTS("activityLogCollection");
 var qualityCodes = [];
-var actLogsEnums = config.Enums["Activity Logs"];
+var actLogsEnums = Config.Enums["Activity Logs"];
 var controllerPriorities = [];
 var eventEmitter = new events.EventEmitter();
 
@@ -339,7 +339,7 @@ module.exports = function socketio(common) {
     sock.on('updatePoint', function(data) {
       if (typeof data === 'string')
         data = JSON.parse(data);
-      newUpdate(data.oldPoint, data.newPoint, {
+      common.newUpdate(data.oldPoint, data.newPoint, {
         method: "update",
         from: "ui",
         path: (data.hasOwnProperty('path')) ? data.path : null
@@ -381,7 +381,7 @@ module.exports = function socketio(common) {
 
           function(returnPoints, callback) {
             async.mapSeries(data.updates, function(point, callback) {
-              newUpdate(point.oldPoint, point.newPoint, {
+              common.newUpdate(point.oldPoint, point.newPoint, {
                 method: "update",
                 from: "ui"
               }, user, function(response, updatedPoint) {
@@ -394,7 +394,7 @@ module.exports = function socketio(common) {
 
           function(returnPoints, callback) {
             async.mapSeries(data.deletes, function(upi, callback) {
-              deletePoint(upi, "hard", user, null, function(response) {
+              common.deletePoint(upi, "hard", user, null, function(response) {
                 callback(response.err);
               });
             }, function(err, newPoints) {
@@ -436,7 +436,7 @@ module.exports = function socketio(common) {
         data = JSON.parse(data);
       }
 
-      deletePoint(data.upi, data.method, user, null, function(msg) {
+      common.deletePoint(data.upi, data.method, user, null, function(msg) {
         msg.reqID = data.reqID;
         sock.emit('pointUpdated', JSON.stringify(msg));
       });
@@ -601,6 +601,20 @@ function getBlockTypes(cb) {
       err: err,
       types: blockTypes
     });
+  });
+}
+
+function doRefreshSequence(data, socket) {
+  var _id = data.sequenceID;
+
+  mydb.collection('points').update({
+    _id: _id
+  }, {
+    $set: {
+      '_pollTime': new Date().getTime()
+    }
+  }, function(err, updated) {
+    if (err) {}
   });
 }
 
@@ -1081,47 +1095,6 @@ function sendAcknowledge(data, callback) {
   });
 }
 
-function updateAlarms(finalCB) {
-  var alarmsStart = new Date();
-  async.forEach(openAlarms,
-    function(openAlarm, callback) {
-      if (openAlarm.alarmView === "Recent") {
-
-        getRecentAlarms(openAlarm.data, function(err, recents, count) {
-          io.sockets.socket(openAlarm.sockId).emit('recentAlarms', {
-            alarms: recents,
-            count: count
-          });
-
-          return callback(null);
-        });
-      }
-      if (openAlarm.alarmView === "Active") {
-        getActiveAlarms(openAlarm.data, function(err, recents, count) {
-
-          io.sockets.socket(openAlarm.sockId).emit('activeAlarms', {
-            alarms: recents,
-            count: count
-          });
-          return callback(null);
-        });
-      }
-      if (openAlarm.alarmView === "Unacknowledged") {
-        getUnacknowledged(openAlarm.data, function(err, recents, count) {
-
-          io.sockets.socket(openAlarm.sockId).emit('unacknowledged', {
-            alarms: recents,
-            count: count
-          });
-          return callback(null);
-        });
-      }
-    },
-    function(err) {
-      return finalCB();
-    });
-}
-
 function getRecentAlarms(data, callback) {
   var currentPage, itemsPerPage, numberItems, startDate, endDate, count, user, query, sort, groups = [];
 
@@ -1600,6 +1573,59 @@ function compileScript(data, callback) {
   });
 }
 
+function addPoint(point, user, options, callback) {
+  var logData = {
+    user: user,
+    timestamp: Date.now(),
+    point: point,
+    activity: actLogsEnums["Point Add"].enum,
+    log: "Point added"
+  };
+
+
+  common.updateCfgRequired(point, function(err) {
+    if (err)
+      callback(err);
+
+    point._pStatus = 0;
+    point["Point Instance"].Value = point._id;
+
+    var searchQuery = {};
+    var updateObj = {};
+
+    if (!point.Security)
+      point.Security = [];
+
+    //strip activity log and then insert act msg into db
+
+    searchQuery._id = point._id;
+    delete point._id;
+    updateObj = point;
+    updateObj._actvAlmId = BSON.ObjectID(updateObj._actvAlmId);
+    updateObj._curAlmId = BSON.ObjectID(updateObj._curAlmId);
+
+    mydb.collection(pointsCollection).update(searchQuery, updateObj, function(err, freeName) {
+      if (err)
+        callback(err);
+      else {
+        point._id = searchQuery._id;
+        logData.point._id = searchQuery._id;
+        if (!!options && options.from === "updateSchedules") {
+          return callback({
+            msg: "success"
+          }, point);
+        }
+        mydb.collection(activityLogCollection).insert(Utils.buildActivityLog(logData), function(err, result) {
+          callback({
+            msg: "success"
+          }, point);
+        });
+      }
+    });
+
+  });
+}
+
 function restorePoint(upi, user, callback) {
   var logData = {
     user: user,
@@ -1627,7 +1653,7 @@ function restorePoint(upi, user, callback) {
       if (point["Point Type.Value"] === "Schedule") {
         // get points based on parentupi
       } else {
-        updateDependencies(point, {
+        common.updateDependencies(point, {
           method: "restore"
         }, user, function() {
           return callback({
@@ -1657,7 +1683,7 @@ function updateSchedules(data, callback) {
   async.waterfall([
 
     function(wfCB) {
-      async.forEachSeries(updateScheds, function(updateSched, feCB) {
+      async.eachSeries(updateScheds, function(updateSched, feCB) {
         logData = {
           timestamp: Date.now(),
           user: user
@@ -1681,7 +1707,7 @@ function updateSchedules(data, callback) {
           signalTOD = true;
         }
         if (updateSched["Host Schedule"].Value === false || oldPoint["Host Schedule"].Value === false) {
-          addToDevices(updateSched, devices, oldPoint);
+          common.addToDevices(updateSched, devices, oldPoint);
         }
 
         if (!_.isEmpty(updateObj.$set)) {
@@ -1715,7 +1741,7 @@ function updateSchedules(data, callback) {
       });
     },
     function(wfCB) {
-      async.forEachSeries(newScheds, function(newSched, feCB) {
+      async.eachSeries(newScheds, function(newSched, feCB) {
         logData = {
           timestamp: Date.now(),
           user: user
@@ -1723,7 +1749,7 @@ function updateSchedules(data, callback) {
         if (newSched["Host Schedule"].Value === true) {
           signalTOD = true;
         } else {
-          addToDevices(newSched, devices);
+          common.addToDevices(newSched, devices);
         }
         options = {
           from: "updateSchedules",
@@ -1754,13 +1780,13 @@ function updateSchedules(data, callback) {
       });
     },
     function(wfCB) {
-      async.forEachSeries(cancelScheds, function(cancelSched, feCB) {
+      async.eachSeries(cancelScheds, function(cancelSched, feCB) {
         logData = {
           timestamp: Date.now(),
           user: user
         };
 
-        deletePoint(cancelSched._id, "hard", user, null, function(returnData) {
+        common.deletePoint(cancelSched._id, "hard", user, null, function(returnData) {
           if (returnData.err)
             feCB(returnData.err);
           if (cancelSched._pStatus !== 0)
@@ -1784,7 +1810,7 @@ function updateSchedules(data, callback) {
       });
     },
     function(wfCB) {
-      async.forEachSeries(hardScheds, function(hardSched, feCB) {
+      async.eachSeries(hardScheds, function(hardSched, feCB) {
         logData = {
           timestamp: Date.now(),
           user: user
@@ -1796,10 +1822,10 @@ function updateSchedules(data, callback) {
         if (hardSched["Host Schedule"].Value === true) {
           signalTOD = true;
         } else {
-          addToDevices(hardSched, devices);
+          common.addToDevices(hardSched, devices);
         }
 
-        deletePoint(hardSched._id, "hard", user, options, function(returnData) {
+        common.deletePoint(hardSched._id, "hard", user, options, function(returnData) {
           if (returnData.err)
             feCB(returnData.err);
           if (hardSched._pStatus !== 0)
@@ -1826,10 +1852,10 @@ function updateSchedules(data, callback) {
   ], function(err) {
     if (err)
       console.log("updateScheds err:", err);
-    signalHostTOD(signalTOD, function(err) {
+    common.signalHostTOD(signalTOD, function(err) {
       if (err)
         return callback(err);
-      updateDeviceToDs(devices, function(err) {
+      common.updateDeviceToDs(devices, function(err) {
         return callback((err !== null) ? err : "success");
       });
     });

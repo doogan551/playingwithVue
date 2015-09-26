@@ -81,7 +81,7 @@ function runScheduleEntry(scheduleEntry, callback) {
                         }
                     }
                 }, function(err, result) {
-                    signalExecTOD(true, function(err, msg) {
+                    common.signalExecTOD(true, function(err, msg) {
                         callback(err);
                     });
                 });
@@ -118,7 +118,7 @@ function runScheduleEntry(scheduleEntry, callback) {
                 if (result.err)
                     callback(result.err);
                 else {
-                    newUpdate(oldPoint, point, {
+                    common.newUpdate(oldPoint, point, {
                         method: "update",
                         from: "updateToD"
                     }, {

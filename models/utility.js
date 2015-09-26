@@ -116,18 +116,38 @@ exports.count = function (criteria, cb) {
   collection.count(query, cb);
 };
 
-exports.findAndCount = function (critera, cb) {
+exports.findAndCount = function (criteria, cb) {
   var _points;
 
-  exports.get(critera, function (err, points) {
+  exports.get(criteria, function (err, points) {
     if (err) {
       return cb(err);
     } else {
       _points = points;
 
-      exports.count(critera, function (err, count) {
+      exports.count(criteria, function (err, count) {
         cb(err, _points, count);
       });
     }
   });
+};
+
+exports.insert = function (criteria, cb) {
+  var query = criteria.query;
+  var coll = criteria.collection;
+  var options = criteria.options;
+
+  var collection = db.get().collection(coll);
+
+  collection.remove(query, options, cb);
+};
+
+exports.remove = function (criteria, cb) {
+  var insertObj = criteria.insertObj;
+  var coll = criteria.collection;
+  var options = criteria.options;
+
+  var collection = db.get().collection(coll);
+
+  collection.insert(query, options, cb);
 };
