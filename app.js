@@ -1,3 +1,4 @@
+var startTime = new Date();
 console.log(process.env.NODE_ENV);
 var express = require('express');
 var app = express();
@@ -69,11 +70,12 @@ db.connect(connectionString.join(''), function (err) {
     console.log('unable to connect');
     process.exit(1);
   } else {
-
+    console.log('mongo connected to', connectionString.join(''));
     sockets.connect(sessionStore, cookieParser, function () {
       require('./socket/common').socket();
       app.listen(port, function () {
         console.log('listening on port', port);
+        console.log('server started in', (new Date()-startTime)/1000, 'seconds');
       });
     });
   }

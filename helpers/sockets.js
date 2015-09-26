@@ -11,8 +11,11 @@ exports.connect = function(sessionStore, cookieParser, done) {
     // if (!!state.socket) return done();
     var passportSocketIo = require('passport.socketio');
     state.io = require('socket.io').listen(8085);
+    console.log('socket listening on port', 8085);
     state.tcp = require('net').createServer().listen(5002, "127.0.0.1");
+    console.log('tcp server listening on ', "127.0.0.1:5002");
     state.oplog = require('mongo-oplog')('mongodb://localhost/local', 'oplog.rs').tail();
+    console.log('oplog connected - need to get address from options');
     state.io.use(passportSocketIo.authorize({
         cookieParser: cookieParser,
         key: 'express.sid',

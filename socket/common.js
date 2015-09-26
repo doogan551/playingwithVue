@@ -1,3 +1,6 @@
+// NODE MODULES
+var async = require('async');
+
 // OTHERS
 var Utility = require('../models/utility');
 var utils = require('../helpers/utils');
