@@ -8,8 +8,14 @@ var defaults = {
         },
         'siteConfig': {
             'port': 80,
-            siteTitle: 'Info Scan',
-            appname: 'infoscan'
+            'siteTitle': 'Info Scan',
+            'appname': 'infoscan'
+        },
+        'socketConfig': {
+            'ioPort': 8085,
+            'tcpPort': 5002,
+            'tcpAddress': '127.0.0.1',
+            'oplogDb': 'local'
         }
     }
 };

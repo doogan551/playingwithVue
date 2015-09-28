@@ -71,7 +71,7 @@ db.connect(connectionString.join(''), function (err) {
     process.exit(1);
   } else {
     console.log('mongo connected to', connectionString.join(''));
-    sockets.connect(sessionStore, cookieParser, function () {
+    sockets.connect(config, sessionStore, cookieParser, function () {
       require('./socket/common').socket();
       app.listen(port, function () {
         console.log('listening on port', port);

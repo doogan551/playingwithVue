@@ -6,16 +6,19 @@ var state = {
 
 var _app = null;
 
-exports.connect = function(sessionStore, cookieParser, done) {
+exports.connect = function(config, sessionStore, cookieParser, done) {
+    var socketConfig = config.get('Infoscan.socketConfig');
+    var dbConfig = config.get('Infoscan.dbConfig');
+    var oplogString = dbConfig.driver + '://' + dbConfig.host + '/' + socketConfig.oplogDb;
 
     // if (!!state.socket) return done();
     var passportSocketIo = require('passport.socketio');
-    state.io = require('socket.io').listen(8085);
-    console.log('socket listening on port', 8085);
-    state.tcp = require('net').createServer().listen(5002, "127.0.0.1");
-    console.log('tcp server listening on ', "127.0.0.1:5002");
-    state.oplog = require('mongo-oplog')('mongodb://localhost/local', 'oplog.rs').tail();
-    console.log('oplog connected - need to get address from options');
+    state.io = require('socket.io').listen(socketConfig.ioPort);
+    console.log('socket listening on port', socketConfig.ioPort);
+    state.tcp = require('net').createServer().listen(socketConfig.tcpPort, socketConfig.tcpAddress);
+    console.log('tcp server listening on ', socketConfig.tcpAddress + ":" + socketConfig.tcpPort);
+    state.oplog = require('mongo-oplog')(oplogString, 'oplog.rs').tail();
+    console.log('oplog connected to', oplogString);
     state.io.use(passportSocketIo.authorize({
         cookieParser: cookieParser,
         key: 'express.sid',
