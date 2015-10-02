@@ -3,7 +3,12 @@
 - tabs/indentions = 2 spaces
 - rearrange var's - core > npm > local
 - name anonymous functions
+- get node-inspector module
+- get terminal-kit module
+- review need for validator module
+- formidable module for files in req
 
+- teamviewer or vnc
 
 
 
