@@ -4,12 +4,15 @@ var async = require('async');
 // OTHERS
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config.js');
+var openAlarms = [];
+var openDisplays = [];
+var io;
 
 module.exports = function(common) {
     var oplog = common.sockets.get().oplog;
-    var io = common.sockets.get().io;
-    var openAlarms = common.openAlarms;
-    var openDisplays = common.openDisplays;
+    io = common.sockets.get().io;
+    openAlarms = common.openAlarms;
+    openDisplays = common.openDisplays;
 
     oplog.on('insert', function(doc) {
         var startDate, endDate;
@@ -78,6 +81,9 @@ module.exports = function(common) {
                 }
             }
 
+        } else if (doc.ns === 'infoscan.historydata') {
+            // console.log('history update', doc);
+            module.exports.updateDashboard(doc.o);
         }
         /* else if (doc.ns === 'infoscan.ActiveAlarms') {
                     console.log('insert active', doc);
@@ -239,6 +245,15 @@ module.exports = function(common) {
                     });
                 }
             }
+        } else if (doc.ns === 'infoscan.historydata') {
+            Utility.getOne({
+                collection: 'historydata',
+                query: {
+                    _id: doc.o2._id
+                }
+            }, function(err, historyPoint) {
+                module.exports.updateDashboard(historyPoint);
+            });
         }
 
         function updateReliability(point, callback) {
@@ -286,6 +301,56 @@ module.exports = function(common) {
                     });
                 }
             }
+        }
+    });
+};
+
+module.exports.addDashboardDynamics = function(data) {
+    for (var i = 0; i < openDashboards.length; i++) {
+        if (!!openDashboards[i].socketid && openDashboards[i].touid === data.touid && openDashboards[i].socketid === data.socketid) {
+            return;
+        }
+    }
+    openDashboards.push(data);
+};
+
+module.exports.updateDashboard = function(doc, callback) {
+    var history = require('../controllers/history.js');
+    var startTime = new Date();
+
+    async.forEach(openDashboards, function(dashboard, cb) {
+        dashboard.upis = dashboard.upis.map(function(upi) {
+            return parseInt(upi, 10);
+        });
+        dashboard.range = {
+            start: parseInt(dashboard.range.start, 10),
+            end: parseInt(dashboard.range.end, 10)
+        };
+        if (dashboard.upis.indexOf(doc.upi) > -1 && ((doc.timestamp >= dashboard.range.start && doc.timestamp <= dashboard.range.end) || (dashboard.scale.match(/latest/)))) {
+            if (dashboard.fx === 'missingData') {
+                /*history.getMissing(dashboard, function(err, results) {
+                    dashboard.result = results;
+                    io.sockets.socket(dashboard.socketid).emit('updateDashboard', dashboard);
+                    return cb();
+                });*/
+                return cb();
+            } else {
+                var dashboards = history.buildOps([dashboard]);
+                history.getUsageCall(dashboards, function(err, results) {
+                    results = history.unbuildOps(results);
+                    io.sockets.socket(dashboard.socketid).emit('updateDashboard', results);
+                    return cb();
+                });
+            }
+        } else {
+            return cb();
+        }
+    }, function(err) {
+
+        if (typeof callback === 'function') {
+            return callback(err);
+        } else {
+            return;
         }
     });
 };

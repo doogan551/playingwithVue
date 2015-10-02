@@ -1,4 +1,3 @@
-var db = require('../helpers/db');
 var Utility = require('../models/utility');
 
 module.exports = {
