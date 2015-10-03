@@ -74,6 +74,23 @@ exports.update = function (criteria, cb) {
   collection.update(query, updateObj, options, cb);
 };
 
+exports.save = function (criteria, cb) {
+  var saveObj = criteria.saveObj
+  var options = (!!criteria.options) ? criteria.options : {};
+  var coll = criteria.collection;
+  var collection;
+
+  if (!coll) {
+    return cb({
+      err: "Please provide a collection."
+    });
+  }
+
+  collection = db.get().collection(coll);
+
+  collection.save(saveObj, options, cb);
+};
+
 exports.findAndModify = function (criteria, cb) {
   var query = (!!criteria.query) ? criteria.query : {};
   var sort = (!!criteria.sort) ? criteria.sort : [];

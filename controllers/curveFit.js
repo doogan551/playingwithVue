@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
-var CurveFit = require('../models/curveFit');
+var _ = require('lodash');
+var CurveFit = require('../models/curvefit');
 var rtdTables = require('../lib/rtdTables.js');
 var utils = require('../helpers/utils.js');
 

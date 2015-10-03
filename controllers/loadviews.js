@@ -29,5 +29,13 @@ router.get('/syspref', function (req, res) {
 	});
 });
 
+router.get('/devicetree', function (req, res) {
+  res.render("devicetree/devicetree");
+});
+
+router.get('/displays', function (req, res) {
+  res.render("displays/index.jade");
+});
+
 
 module.exports = router;
