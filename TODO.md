@@ -7,6 +7,7 @@
 - get terminal-kit module
 - review need for validator module
 - formidable module for files in req
+- multi-core support
 
 - teamviewer or vnc
 
