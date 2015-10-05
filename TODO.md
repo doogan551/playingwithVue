@@ -8,6 +8,9 @@
 - review need for validator module
 - formidable module for files in req
 - multi-core support
+- get build procedure working
+- try to seperate iis and node - need autorestart functionality on crash
+- iis to refresh all processes on restart automatically
 
 - teamviewer or vnc
 
