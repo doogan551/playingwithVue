@@ -1,8 +1,8 @@
 - All controllers call model of same name or functionally named. Do not call Utility from controllers. Call Utility from models.
 - strings surrouned by ''
 - tabs/indentions = 2 spaces
-- rearrange var's - core > npm > local
-- name anonymous functions
+- rearrange var requires - core > npm > local
+* name anonymous functions
 - get node-inspector module
 - get terminal-kit module
 - review need for validator module

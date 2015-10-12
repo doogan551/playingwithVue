@@ -25,7 +25,7 @@ var sessionStore = new RedisStore(config.get('redisConfig'));
 require('./config/passport')(passport); // pass passport for configuration
 
 app.use(express.static(__dirname + '/public'));
-app.use(morgan(':date[iso] :method :url :status :res[content-length] :response-time'));
+app.use(morgan(':date[iso] :remote-addr :method :url :status :res[content-length] :response-time'));
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
