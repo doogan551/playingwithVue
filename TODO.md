@@ -1,3 +1,4 @@
+- Make sure router has all controllers listed
 - All controllers call model of same name or functionally named. Do not call Utility from controllers. Call Utility from models.
 - strings surrouned by ''
 - tabs/indentions = 2 spaces
