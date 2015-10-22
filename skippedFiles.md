@@ -11,11 +11,11 @@ controllers/pointEditor.js
 *controllers/pointLookup.js
 *controllers/points.js
 controllers/pointSelector.js
-*controllers/reporting.js
-*controllers/reports.js
+controllers/reporting.js
 *controllers/security.js
 *controllers/session.js
-*controllers/settings.js
-*controllers/system.js
+*controllers/settings.js - where is this being used? needs to be model or helper
 controllers/thumbnailGenerator.js
 *controllers/toolBag.js
+*controllers/userManager.js - make a model
+controllers/workspace.js - or session.js?

@@ -1,7 +1,7 @@
 var db = require('../helpers/db');
 var winston = require('winston');
 
-exports.get = function (criteria, cb) {
+exports.get = function(criteria, cb) {
   var query = (!!criteria.query) ? criteria.query : {};
   var coll = criteria.collection;
   var limit = (!!criteria.limit) ? criteria.limit : 0;
@@ -22,7 +22,7 @@ exports.get = function (criteria, cb) {
   collection.find(query, fields).limit(limit).toArray(cb);
 };
 
-exports.getOne = function (criteria, cb) {
+exports.getOne = function(criteria, cb) {
   var query = (!!criteria.query) ? criteria.query : {};
   var coll = criteria.collection;
   var fields = (!!criteria.fields) ? criteria.fields : {};
@@ -40,7 +40,7 @@ exports.getOne = function (criteria, cb) {
   collection.findOne(query, fields, cb);
 };
 
-exports.aggregate = function (criteria, cb) {
+exports.aggregate = function(criteria, cb) {
   var query = (!!criteria.query) ? criteria.query : {};
   var coll = criteria.collection;
   var collection;
@@ -56,7 +56,7 @@ exports.aggregate = function (criteria, cb) {
   collection.aggregate(query, cb);
 };
 
-exports.update = function (criteria, cb) {
+exports.update = function(criteria, cb) {
   var query = (!!criteria.query) ? criteria.query : {};
   var updateObj = (!!criteria.updateObj) ? criteria.updateObj : {};
   var options = (!!criteria.options) ? criteria.options : {};
@@ -74,8 +74,8 @@ exports.update = function (criteria, cb) {
   collection.update(query, updateObj, options, cb);
 };
 
-exports.save = function (criteria, cb) {
-  var saveObj = criteria.saveObj
+exports.save = function(criteria, cb) {
+  var saveObj = criteria.saveObj;
   var options = (!!criteria.options) ? criteria.options : {};
   var coll = criteria.collection;
   var collection;
@@ -91,7 +91,7 @@ exports.save = function (criteria, cb) {
   collection.save(saveObj, options, cb);
 };
 
-exports.findAndModify = function (criteria, cb) {
+exports.findAndModify = function(criteria, cb) {
   var query = (!!criteria.query) ? criteria.query : {};
   var sort = (!!criteria.sort) ? criteria.sort : [];
   var updateObj = (!!criteria.updateObj) ? criteria.updateObj : {};
@@ -107,16 +107,16 @@ exports.findAndModify = function (criteria, cb) {
 
   collection = db.get().collection(coll);
 
-  collection.findAndModify(query, sort, updateObj, options, function(err, result){
-    if(err){
+  collection.findAndModify(query, sort, updateObj, options, function(err, result) {
+    if (err) {
       return cb(err);
-    }else{
+    } else {
       return cb(null, result.value);
     }
   });
 };
 
-exports.count = function (criteria, cb) {
+exports.count = function(criteria, cb) {
   var query = (!!criteria.query) ? criteria.query : {};
   var coll = criteria.collection;
   var collection;
@@ -133,24 +133,34 @@ exports.count = function (criteria, cb) {
   collection.count(query, cb);
 };
 
-exports.findAndCount = function (criteria, cb) {
+exports.findAndCount = function(criteria, cb) {
   var _points;
 
-  exports.get(criteria, function (err, points) {
+  exports.get(criteria, function(err, points) {
     if (err) {
       return cb(err);
     } else {
       _points = points;
 
-      exports.count(criteria, function (err, count) {
+      exports.count(criteria, function(err, count) {
         cb(err, _points, count);
       });
     }
   });
 };
 
-exports.insert = function (criteria, cb) {
+exports.insert = function(criteria, cb) {
   var query = criteria.query;
+  var coll = criteria.collection;
+  var options = criteria.options;
+
+  var collection = db.get().collection(coll);
+
+  collection.insert(query, options, cb);
+};
+
+exports.remove = function(criteria, cb) {
+  var insertObj = criteria.insertObj;
   var coll = criteria.collection;
   var options = criteria.options;
 
@@ -159,12 +169,13 @@ exports.insert = function (criteria, cb) {
   collection.remove(query, options, cb);
 };
 
-exports.remove = function (criteria, cb) {
-  var insertObj = criteria.insertObj;
+exports.distinct = function(criteria, cb) {
+  var query = criteria.query;
   var coll = criteria.collection;
+  var field = criteria.field;
   var options = criteria.options;
 
   var collection = db.get().collection(coll);
 
-  collection.insert(query, options, cb);
+  collection.distinct(field, query, options, cb);
 };

@@ -26,18 +26,26 @@ module.exports = function(router, controllers) {
   });
 
   router.use('/', controllers.loadviews);
-
-  router.use('/pointlookup', controllers.pointlookup);
+  router.use('/', controllers.session);
+  router.use('/', controllers.workspace);
 
   router.use('/api/activitylogs', controllers.activitylogs);
   router.use('/api/calendar', controllers.calendar);
   router.use('/api/curvefit', controllers.curvefit);
-  router.use('/api/dashboard', controllers.calendar);
+  router.use('/dashboard', controllers.calendar);
   router.use('/api/devicetree', controllers.devicetree);
-  router.use('/api/displays', controllers.display);
+  router.use('/displays', controllers.display);
+  router.use('/api/firmwareloader', controllers.firmwareloader);
+  router.use('/gpl', controllers.gpl);
+  router.use('/pointlookup', controllers.pointlookup);
   router.use('/api/points', controllers.points);
   router.use('/api/security', controllers.security);
+  router.use('/api/scripts', controllers.scripts);
+  router.use('/api/slideshows', controllers.slideshow);
   router.use('/api/system', controllers.system);
+  router.use('/thumbnail', controllers.thumbnails);
+  router.use('/api/trenddata', controllers.trenddata);
+  router.use('/api/trendplots', controllers.trendplots);
 
   return router;
 };

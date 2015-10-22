@@ -136,11 +136,43 @@ var buildActivityLog = function(data) {
 	return log;
 };
 
+var converters = {
+	isNumber: function(n) {
+		return !isNaN(parseFloat(n)) && isFinite(n);
+	},
+
+	isBool: function(n) {
+		if (this.isNumber(n))
+			return false;
+
+		return (n.toLowerCase() === 'true') ? true : (n.toLowerCase() === 'false') ? true : false;
+	},
+
+	convertBool: function(n) {
+		return (this.isBool(n)) ? (n.toLowerCase() === 'true') : n;
+	},
+
+	convertNumber: function(n) {
+		return (this.isNumber(n)) ? parseFloat(n) : n;
+	},
+
+	convertType: function(n, type) {
+		switch (type) {
+			case "String":
+				return n.toString();
+			default:
+				return this.convertBool(this.convertNumber(n));
+		}
+
+	}
+};
+
 module.exports = {
 	CONSTANTS: CONSTANTS,
 	FileLocationsForControllers: FileLocationsForControllers,
 	encrypt: encrypt,
 	sendResponse: sendResponse,
 	buildNameSegmentQuery: buildNameSegmentQuery,
-	buildActivityLog: buildActivityLog
+	buildActivityLog: buildActivityLog,
+	converters: converters
 };
