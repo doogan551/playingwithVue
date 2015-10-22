@@ -3,11 +3,11 @@ var router = express.Router();
 var passport = require('passport');
 
 router.get('/pointinspector/:id', function(req, res, next) {
-  res.render('pointInspector/index');
+  res.render('pointInspector/index.jade');
 });
 
 router.get('/splash', function(req, res, next) {
-  res.render('baseui/splash');
+  res.render('baseui/splash.jade');
 });
 
 router.get('/activitylogs', function(req, res) {
@@ -23,14 +23,14 @@ router.get('/alarms/print', function(req, res) {
 });
 
 router.get('/syspref', function(req, res) {
-  res.render("baseui/syspref", {
+  res.render("baseui/syspref.jade", {
     title: 'InfoScan System Preferences',
     user: req.user
   });
 });
 
 router.get('/devicetree', function(req, res) {
-  res.render("devicetree/devicetree");
+  res.render("devicetree/devicetree.jade");
 });
 
 router.get('/displays', function(req, res) {
@@ -38,7 +38,7 @@ router.get('/displays', function(req, res) {
 });
 
 router.get('/securityadmin', function(req, res) {
-  res.render('securityAdmin/securityAdmin');
+  res.render('securityAdmin/securityAdmin.jade');
 });
 
 router.get('/slideShows/', function(req, res) {
@@ -50,7 +50,27 @@ router.get('/slideShows/viewer', function(req, res) {
 });
 
 router.get('/thumbnail/capture', function(req, res) {
-  res.render("thumbnailGenerator/capture");
+  res.render("thumbnailGenerator/capture.jade");
+});
+
+router.get('/toolbag', function(req, res) {
+  res.render('toolbag/dbMonitor.jade');
+});
+
+router.get('/toolbag/dbTemplate', function(req, res) {
+  res.render('toolbag/dbTemplate.jade');
+});
+
+router.get('/toolbag/dbMonitor', function(req, res) {
+  res.render('toolbag/dbMonitor.jade');
+});
+
+router.get('/toolbag/propertyUsage', function(req, res) {
+  res.render("toolbag/propertyUsage.jade");
+});
+
+router.get('/toolbag/enums', function(req, res) {
+  res.render("toolbag/enums.jade");
 });
 
 router.get('/trendplots', function(req, res) {
