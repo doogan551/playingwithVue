@@ -12,9 +12,6 @@ controllers/pointEditor.js
 *controllers/points.js
 controllers/pointSelector.js
 controllers/reporting.js
-*controllers/security.js
-*controllers/session.js
 *controllers/settings.js - where is this being used? needs to be model or helper
 controllers/thumbnailGenerator.js
 *controllers/userManager.js - make a model
-controllers/workspace.js - or session.js?

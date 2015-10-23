@@ -40,3 +40,5 @@ router.get('/toolbag/downloadCppHeaderFile', function(req, res, next) {
 
 	res.download(filepath + filename, filename);
 });
+
+module.exports = router;

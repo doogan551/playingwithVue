@@ -2,7 +2,7 @@ var tmp = require('tmp');
 var fs = require('fs');
 
 var Utility = require('../models/utility');
-var compiler = require('../lib/scriptCompiler.js');
+var compiler = require('../helpers/scriptCompiler.js');
 
 module.exports = {
 

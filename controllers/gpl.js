@@ -65,3 +65,5 @@ router.get('/getReferences/:upoint', function(req, res, next) {
 		Utils.sendResponse(res, ret);
 	});
 });
+
+module.exports = router;

@@ -8,15 +8,13 @@ router.post('/groups/savegroup', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Groups.saveGroup(data, function(err, users) {
+  Security.Groups.saveGroup(data, function(err, newGroup) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, newGroup);
   });
 });
 
@@ -24,14 +22,14 @@ router.post('/groups/getusers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Groups.getUsers(data, function(err, users) {
+  Security.Groups.getUsers(data, function(err, group) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
     return utils.sendResponse(res, {
-      Users: users
+      Users: group.Users
     });
   });
 });
@@ -40,15 +38,13 @@ router.post('/groups/addusers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Groups.addUsers(data, function(err, users) {
+  Security.Groups.addUsers(data, function(err, result) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, result);
   });
 });
 
@@ -56,15 +52,13 @@ router.post('/groups/removeusers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Groups.removeUsers(data, function(err, users) {
+  Security.Groups.removeUsers(data, function(err, result) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, result);
   });
 });
 
@@ -79,7 +73,7 @@ router.post('/groups/removegroup', function(req, res, next) {
       });
     }
     return utils.sendResponse(res, {
-      Users: users
+      message: 'success'
     });
   });
 });
@@ -88,15 +82,13 @@ router.post('/groups/getallgroups', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Groups.getAllGroups(data, function(err, users) {
+  Security.Groups.getAllGroups(data, function(err, groups) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, groups);
   });
 });
 
@@ -104,15 +96,13 @@ router.post('/groups/getpoints', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Groups.getPoints(data, function(err, users) {
+  Security.Groups.getPoints(data, function(err, points) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, points);
   });
 });
 
@@ -120,15 +110,13 @@ router.post('/users/getgroups', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Users.getGroups(data, function(err, users) {
+  Security.Users.getGroups(data, function(err, groups) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, groups);
   });
 });
 
@@ -136,14 +124,14 @@ router.post('/users/removeuser', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Users.removeUser(data, function(err, users) {
+  Security.Users.removeUser(data, function(err) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
     return utils.sendResponse(res, {
-      Users: users
+      message: 'success'
     });
   });
 });
@@ -151,16 +139,14 @@ router.post('/users/removeuser', function(req, res, next) {
 router.post('/users/getallusers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
-
+  console.log('test');
   Security.Users.getAllUsers(data, function(err, users) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, users);
   });
 });
 
@@ -168,15 +154,13 @@ router.post('/security/users/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Users.getUser(data, function(err, users) {
+  Security.Users.getUser(data, function(err, user) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, user);
   });
 });
 
@@ -184,14 +168,14 @@ router.post('/points/addgroups', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Points.addGroups(data, function(err, users) {
+  Security.Points.addGroups(data, function(err) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
     return utils.sendResponse(res, {
-      Users: users
+      message: 'success'
     });
   });
 });
@@ -200,14 +184,14 @@ router.post('/points/removegroups', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Points.removeGroups(data, function(err, users) {
+  Security.Points.removeGroups(data, function(err) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
     return utils.sendResponse(res, {
-      Users: users
+      message: 'success'
     });
   });
 });
@@ -222,9 +206,7 @@ router.post('/points/addusers', function(req, res, next) {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, {});
   });
 });
 
@@ -238,9 +220,7 @@ router.post('/points/removeusers', function(req, res, next) {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, {});
   });
 });
 
@@ -248,14 +228,14 @@ router.post('/users/createpassword', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Users.createPassword(data, function(err, users) {
+  Security.Users.createPassword(data, function(err, text) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
     return utils.sendResponse(res, {
-      Users: users
+      password: text
     });
   });
 });
@@ -264,15 +244,13 @@ router.post('/users/saveuser', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Users.saveUser(data, function(err, users) {
+  Security.Users.saveUser(data, function(err, result) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, result);
   });
 });
 
@@ -280,14 +258,14 @@ router.post('/users/editPhoto', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Users.editPhoto(data, function(err, users) {
+  Security.Users.editPhoto(data, function(err, filename) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
     return utils.sendResponse(res, {
-      Users: users
+      imageUrl: filename
     });
   });
 });
@@ -296,31 +274,29 @@ router.post('/groups/editPhoto', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Groups.editPhoto(data, function(err, users) {
+  Security.Groups.editPhoto(data, function(err, filename) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
     return utils.sendResponse(res, {
-      Users: users
+      imageUrl: filename
     });
   });
 });
 
-router.post('/security/users/newuser', function(req, res, next) {
+router.post('/users/newuser', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Users.newUser(data, function(err, users) {
+  Security.Users.newUser(data, function(err, newUser) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, newUser);
   });
 });
 
@@ -328,15 +304,13 @@ router.post('/users/updateuser', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Users.udpateUser(data, function(err, users) {
+  Security.Users.udpateUser(data, function(err, newUser) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, newUser);
   });
 });
 
@@ -344,15 +318,13 @@ router.post('/groups/updategroup', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Groups.updateGroup(data, function(err, users) {
+  Security.Groups.updateGroup(data, function(err, newGroup) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, newGroup);
   });
 });
 
@@ -360,15 +332,13 @@ router.post('/groups/newgroup', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Groups.newGroup(data, function(err, users) {
+  Security.Groups.newGroup(data, function(err, newGroup) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, newGroup);
   });
 });
 
@@ -376,17 +346,14 @@ router.post('/groups/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Groups.getGroup(data, function(err, users) {
+  Security.Groups.getGroup(data, function(err, group) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
       });
     }
-    return utils.sendResponse(res, {
-      Users: users
-    });
+    return utils.sendResponse(res, group);
   });
 });
-
 
 module.exports = router;

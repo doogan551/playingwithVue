@@ -1,7 +1,5 @@
-var filters = require('../lib/filters');
-var Config = require('../public/js/lib/config.js');
+/*var Config = require('../public/js/lib/config.js');
 var async = require('async');
-var Utils = require('../lib/utils.js');
 var path = require('path');
 var sys = require('sys');
 var fs = require('fs');
@@ -10,7 +8,7 @@ var gm = require('gm');
 var glob = require('glob');
 var pointsCollection = "points";
 var versionsCollection = "versions";
-var BSON = require('mongodb').BSONPure;
+var BSON = require('mongodb').BSONPure;*/
 
 var Utility = require('../models/utility');
 

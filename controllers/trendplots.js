@@ -18,3 +18,5 @@ router.post('/', function(req, res, next) {
     return utils.sendResponse(res, data);
   });
 });
+
+module.exports = router;

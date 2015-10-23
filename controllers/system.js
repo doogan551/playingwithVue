@@ -44,11 +44,7 @@ router.get('/controllers', function(req, res, next) {
 
 
 router.get('/getcounts/:type', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-  var callback = function(err, count) {
-
-  };
+  var type = req.params.type;
 
   System.getCounts(type, function(err, count) {
     if (err) {

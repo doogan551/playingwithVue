@@ -218,3 +218,5 @@ var reportMainCallback = function(err, locals) {
     }
   }
 };
+
+module.exports = router;

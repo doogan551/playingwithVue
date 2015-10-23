@@ -56,3 +56,5 @@ router.post('/uploadBackground', function(req, res, next) {
 		}
 	});
 });
+
+module.exports = router;

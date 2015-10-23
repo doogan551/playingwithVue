@@ -2,1104 +2,13 @@ var Utility = require('../models/utility');
 var User = require('../models/user');
 var config = require('../public/js/lib/config.js');
 var utils = require('../helpers/utils.js');
-var BSON = require('mongodb').BSONPure;
+var mongodb = require('mongodb');
 var fs = require('fs');
 
 var pointsCollection = utils.CONSTANTS("pointsCollection");
 var usersCollection = utils.CONSTANTS("usersCollection");
 var userGroupsCollection = utils.CONSTANTS("userGroupsCollection");
 var systemInfoCollection = utils.CONSTANTS("systemInfoProperties");
-
-module.exports = {
-  Users: {
-    getAllUsers: function(data, cb) {
-      var properties;
-      var returnUsers = [];
-      var i;
-      var j;
-      var tempObj;
-
-      var searchCriteria = {};
-      var criteria = {
-        collection: 'Users',
-        query: {}
-      };
-
-      User.get(criteria, function(err, users) {
-        if (err) {
-          return cb(err);
-        }
-        properties = data.Properties;
-
-        if (properties !== undefined) {
-          for (i = 0; i < users.length; i++) {
-            tempObj = {};
-            for (j = 0; j < properties.length; j++) {
-
-              if (typeof users[i][properties[j]] == 'undefined') {
-                continue;
-              }
-
-              if (typeof users[i][properties[j]].Value == 'undefined') {
-                tempObj[properties[j]] = users[i][properties[j]];
-              } else {
-                tempObj[properties[j]] = users[i][properties[j]].Value;
-              }
-            }
-
-            returnUsers.push(tempObj);
-          }
-        } else {
-          returnUsers = users;
-        }
-
-        return cb(null, returnUsers);
-      });
-    },
-    getGroups: function(data, cb) {
-      var user = data.User;
-
-      var userString = "Users." + user;
-
-      var searchCriteria = {};
-      searchCriteria[userString] = {
-        $exists: true
-      };
-      var criteria = {
-        collection: userGroupsCollection,
-        query: searchCriteria
-      };
-      Utility.get(criteria, function(err, groups) {
-        if (err) {
-          return cb(err);
-        }
-        var returnArray = [];
-
-        for (i = 0; i < groups.length; i++) {
-          returnArray.push({
-            "User Group Name": groups[i]["User Group Name"],
-            "User Group Id": groups[i]._id
-          });
-        }
-
-        return cb(null, returnArray);
-      });
-    },
-    removeUser: function(data, cb) {
-      var userid = data.userid;
-
-      if (userid.length < 12) {
-        userid = parseInt(userid, 10);
-      } else {
-        userid = new BSON.ObjectID(userid);
-      }
-
-      var searchCriteria = {
-        "_id": userid
-      };
-
-      var groupCount = 0;
-      var pointCount = 0;
-
-      var criteria = {
-        collection: usersCollection,
-        criteria: searchCriteria,
-        fields: {
-          _id: 0,
-          username: 1
-        }
-      };
-      Utility.getOne(criteria, function(err, username) {
-
-        Utility.remove(criteria, function(err, result) {
-          if (err) {
-            return cb(err);
-          }
-
-          async.waterfall([
-
-              function(callback) {
-                // TODO Add fx
-                updateControllers("remove", username.username, callback);
-              },
-
-              function(callback) {
-
-                var groupSearch = {};
-                var groupSearchString = "Users." + userid;
-                groupSearch[groupSearchString] = {
-                  $exists: true
-                };
-
-                criteria = {
-                  collection: userGroupsCollection,
-                  query: groupSearch
-                };
-                Utility.get(criteria, function(err, groups) {
-                  if (err) {
-                    return cb(err);
-                  }
-
-                  if (groups.length > 0) {
-                    groups.forEach(function(group) {
-                      delete group.Users[userid];
-                      groupUpdate = {
-                        $set: {}
-                      };
-                      groupUpdate.$set.Users = group.Users;
-
-                      criteria.query = {
-                        _id: group._id
-                      };
-                      criteria.updateObj = groupUpdate;
-
-                      Utility.update(criteria, function(err, result2) {
-                        if (err) {
-                          return callback(err, null);
-                        }
-                        pointCount++;
-                        if (pointCount === groups.length) {
-                          callback(null, groups);
-                        }
-                      });
-                    });
-                  } else {
-                    callback(null, groups);
-                  }
-
-
-                });
-              },
-              function(groups, callback) {
-                var updateSearch, updateCriteria;
-                updateSearch = {
-                  Security: {
-                    $elemMatch: {
-                      userId: userid
-                    }
-                  }
-                };
-
-                updateCriteria = {
-                  $pull: {
-                    "Security": {
-                      userId: userid
-                    }
-                  }
-                };
-                // TODO check for empty groups on points
-                criteria = {
-                  collection: pointsCollection,
-                  query: updateSearch,
-                  updateObj: updateCriteria,
-                  options: {
-                    multi: true
-                  }
-                };
-                Utility.update(criteria, function(err, groups) {
-                  return callback(err, {
-                    "message": "success"
-                  });
-                });
-              }
-            ],
-            cb);
-        });
-      });
-    },
-    getUser: function(data, cb) {
-      var id = req.params.id;
-
-      if (id.length < 12) {
-        upi = parseInt(id, 10);
-      } else {
-        upi = new BSON.ObjectID(id);
-      }
-
-      var searchCriteria = {
-        _id: upi
-      };
-
-      var criteria = {
-        collection: usersCollection,
-        query: searchCriteria
-      };
-      Utility.getOne(criteria, cb);
-    },
-    createPassword: function(data, cb) {
-      var text = "";
-      var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-      for (i = 0; i < 8; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-      }
-
-      return cb(text);
-    },
-    editPhoto: function(data, cb) {
-      var userid = BSON.ObjectID(data.user);
-      var image = data.image;
-      var filename = data.name;
-      var imgData = image.replace(/^data:image\/\w+;base64,/, "");
-
-      fs.writeFile(process.cwd() + '/public/img/users/' + filename, imgData, 'base64', function(err) {
-        if (!err) {
-          var criteria = {
-            collection: usersCollection,
-            query: {
-              _id: userid
-            },
-            updateObj: {
-              $set: {
-                "Photo.Value": filename
-              }
-            }
-          };
-          Utility.update(criteria, function(err, result) {
-            if (err) {
-              return cb(err);
-            } else {
-              return cb(null, filename);
-            }
-          });
-        } else {
-          return cb(err);
-        }
-      });
-    },
-    saveUser: Users.saveUser,
-    newUser: Users.newUser,
-    updateUser: Users.updateUser
-  },
-  Groups: {
-    getUsers: function(data, cb) {
-      var groupUpi = data["User Group Upi"];
-
-      var id = new BSON.ObjectID(groupUpi);
-
-      var searchCriteria = {};
-      if (id) {
-        searchCriteria = {
-          "_id": id
-        };
-      } else {
-        return cb("No groups given");
-      }
-
-      var criteria = {
-        collection: userGroupsCollection,
-        query: searchCriteria
-      };
-
-      Utility.getOne(criteria, cb);
-    },
-    addUsers: function(data, cb) {
-      var groupUpis = data["User Group Upis"];
-      var users = (data.Users !== undefined) ? data.Users : [];
-      var criteria = {};
-
-      var count = 0;
-
-      if (groupUpis) {
-
-        var groupIds = [];
-        for (a = 0; a < groupUpis.length; a++) {
-          if (groupUpis[a].length < 12) {
-            groupIds.push(parseInt(groupUpis[a], 10));
-          } else {
-            groupIds.push(new BSON.ObjectID(groupUpis[a]));
-          }
-        }
-        var groupCount = 0;
-
-        groupIds.forEach(function(groupId) {
-
-          users.forEach(function(user) {
-            async.waterfall([
-
-              function(callback) {
-                var searchCriteria, updateCriteria,
-                  adminString, usernameString, options;
-                searchCriteria = {
-                  _id: groupId
-                };
-                updateCriteria = {
-                  $set: {}
-                };
-                adminString = "Users." + user.userid + ".Group Admin";
-                usernameString = "Users." + user.userid + ".username";
-                if (user["Group Admin"] === true || user["Group Admin"] === "true")
-                  updateCriteria.$set[adminString] = true;
-                else
-                  updateCriteria.$set[adminString] = false;
-
-                //updateCriteria.$set[usernameString] = user.username;
-
-                options = {
-                  upsert: true
-                };
-
-                criteria = {
-                  collection: userGroupsCollection,
-                  query: searchCriteria,
-                  updateObj: updateCriteria,
-                  options: options
-                };
-                Utility.update(criteria, function(err, result) {
-                  if (err) {
-                    callback(err, null);
-                  }
-                  count++;
-                  if (count === users.length) {
-                    criteria = {
-                      collection: userGroupsCollection,
-                      query: result
-                    };
-                    Utility.getOne(criteria, callback);
-                  }
-                });
-              },
-              function(group, callback) {
-                var usersString, searchCriteria, updateCriteria;
-                usersString = "User Groups." + group._id;
-                searchCriteria = {};
-                searchCriteria[usersString] = {
-                  $exists: true
-                };
-
-                updateCriteria = {
-                  $set: {}
-                };
-
-                updateCriteria.$set["User Groups." + group._id + ".Users"] = group.Users;
-
-                criteria = {
-                  collection: userGroupsCollection,
-                  query: searchCriteria,
-                  updateObj: updateCriteria,
-                  options: {
-                    multi: 1
-                  }
-                };
-
-                Utility.update(criteria, function(err, groups) {
-                  callback(err, {
-                    "message": "success"
-                  });
-                });
-              }
-            ], function(err, result) {
-              if (err) {
-                return cb(err);
-              }
-              groupCount++;
-              if (groupCount === groupIds.length) {
-                return cb(null, result);
-              }
-            });
-
-          });
-        });
-
-      } else
-        return cb("No groups given");
-    },
-    removeUsers: function(data, cb) {
-      var users = data.Users ? data.Users : [];
-      var groupUpis = (data["User Group Upis"]) ? data["User Group Upis"] : [];
-      var criteria = {};
-
-      if (groupUpis) {
-
-        var groupIds = [];
-        for (a = 0; a < groupUpis.length; a++) {
-          if (groupUpis[a].length < 12) {
-            groupIds.push(parseInt(groupUpis[a], 10));
-          } else {
-            groupIds.push(new BSON.ObjectID(groupUpis[a]));
-          }
-        }
-        var groupCount = 0;
-
-        groupIds.forEach(function(groupId) {
-          var count = 0;
-          users.forEach(function(user) {
-            async.waterfall([
-
-              function(callback) {
-                var searchCriteria = {
-                  _id: groupId
-                };
-                var updateCriteria = {
-                  $set: {}
-                };
-
-                criteria = {
-                  collection: userGroupsCollection,
-                  query: searchCriteria
-                };
-
-                Utility.getOne(criteria, function(err, group) {
-                  if (group.Users[user]) {
-                    delete group.Users[user];
-                  }
-
-                  updateCriteria.$set.Users = group.Users;
-                  criteria = {
-                    collection: userGroupsCollection,
-                    query: searchCriteria,
-                    updateObj: searchCriteria
-                  };
-
-                  Utility.update(criteria, function(err, result) {
-                    if (err) callback(err, null);
-
-                    count++;
-
-                    if (count === users.length) {
-                      criteria = {
-                        collection: userGroupsCollection,
-                        query: result
-                      };
-
-                      Utility.getOne(criteria, function(err, group) {
-                        callback(null, group);
-                      });
-                    }
-                  });
-                });
-              },
-              function(group, callback) {
-                var usersString = "User Groups." + group._id;
-                var searchCriteria = {};
-                searchCriteria[usersString] = {
-                  $exists: true
-                };
-
-                var updateCriteria = {
-                  $set: {}
-                };
-
-                updateCriteria.$set["User Groups." + group._id + ".Users"] = group.Users;
-                criteria = {
-                  collection: userGroupsCollection,
-                  query: searchCriteria,
-                  updateObj: updateCriteria,
-                  options: {
-                    multi: true
-                  }
-                };
-                Utility.getOne(criteria, function(err, groups) {
-                  if (err) {
-                    return callback(err, null);
-                  }
-                  return callback(null, {
-                    "message": "success"
-                  });
-
-                });
-              }
-            ], cb);
-
-          });
-        });
-
-      } else {
-        return cb("No groups given");
-      }
-    },
-    removeGroup: function(data, cb) {
-      var groupUpi = data["User Group Upi"];
-      var criteria = {};
-      var removeCriteria = {};
-
-      if (groupUpi) {
-        if (groupUpi.length < 12) {
-          groupId = parseInt(groupUpi, 10);
-        } else {
-          groupId = new BSON.ObjectID(groupUpi);
-        }
-
-        removeCriteria = {
-          _id: groupId
-        };
-
-        criteria = {
-          collection: userGroupsCollection,
-          query: removeCriteria
-        };
-        Utility.remove(criteria, function(err, result) {
-          if (err) {
-            return cb(err);
-          }
-          var searchCriteria = {
-            Security: {
-              $elemMatch: {
-                groupId: groupId
-              }
-            }
-          };
-          var updateCriteria = {
-            $pull: {
-              Security: {
-                groupId: groupId
-              }
-            }
-          };
-
-          criteria = {
-            collection: pointsCollection,
-            query: searchCriteria,
-            updateObj: updateCriteria,
-            options: {
-              multi: true
-            }
-          };
-          Utility.remove(criteria, cb);
-
-        });
-
-      } else {
-        return cb("No group given");
-      }
-    },
-    getAllGroups: function(data, cb) {
-      var searchCriteria = {};
-      var criteria = {
-        collection: userGroupsCollection,
-        query: searchCriteria
-      };
-
-      Utility.get(criteria, function(err, groups) {
-        if (err) {
-          return cb(err);
-        }
-
-        var properties = data.Properties;
-        var returnArray = [];
-        var tempObj;
-        var i;
-
-        if (typeof properties == 'undefined') {
-          returnArray = groups;
-        } else {
-          for (i = 0; i < groups.length; i++) {
-            tempObj = {};
-            for (j = 0; j < properties.length; j++) {
-              if (typeof groups[i][properties[j]] == 'undefined') continue;
-              if (typeof groups[i][properties[j]].Value == 'undefined') {
-                tempObj[properties[j]] = groups[i][properties[j]];
-              } else {
-                tempObj[properties[j]] = groups[i][properties[j]].Value;
-              }
-            }
-            returnArray.push(tempObj);
-          }
-        }
-
-        return cb(null, returnArray);
-
-      });
-    },
-    getPoints: function(data, cb) {
-      var group = data["User Group Upi"];
-
-      if (group.length < 12) {
-        group = parseInt(group, 10);
-      } else {
-        group = new BSON.ObjectID(group);
-      }
-
-      var searchCriteria = {
-        Security: {
-          $elemMatch: {
-            groupId: group
-          }
-        }
-      };
-
-      var criteria = {
-        collection: pointsCollection,
-        query: searchCriteria
-      };
-      Utility.get(criteria, function(err, points) {
-        if (err) {
-          return cb(err);
-        }
-
-        var i;
-        var j;
-        var properties = data.Properties;
-        var returnArray = [];
-
-        for (i = 0; i < points.length; i++) {
-          var tempObj = {};
-          if (properties !== undefined) {
-            for (j = 0; j < properties.length; j++) {
-              if (properties[j] === "Name" || properties[j] === "_id" || properties[j] === "name1" || properties[j] === "name2" || properties[j] === "name3" || properties[j] === "name4") {
-                tempObj[properties[j]] = points[i][properties[j]];
-              } else {
-                tempObj[properties[j]] = points[i][properties[j]].Value;
-              }
-
-            }
-          } else {
-            tempObj = {
-              _id: points[i]._id,
-              name1: points[i].name1,
-              name2: points[i].name2,
-              name3: points[i].name3,
-              name4: points[i].name4,
-              Name: points[i].Name
-            };
-          }
-          returnArray.push(tempObj);
-        }
-
-        var returnObj = {
-          Points: returnArray
-        };
-
-        return cb(null, returnArray);
-      });
-    },
-    getGroup: function(data, cb) {
-      var id = data.id;
-
-      if (id.length < 12) {
-        upi = parseInt(id, 10);
-      } else {
-        upi = new BSON.ObjectID(id);
-      }
-
-      searchCriteria = {
-        _id: upi
-      };
-
-      var criteria = {
-        collection: userGroupsCollection,
-        query: searchCriteria
-      };
-      Utility.getOne(criteria, cb);
-    },
-    editPhoto: function(data, cb) {
-      var userid = BSON.ObjectID(data.user);
-      var image = data.image;
-      var filename = data.name;
-      var imgData = image.replace(/^data:image\/\w+;base64,/, "");
-
-      fs.writeFile(process.cwd() + '/public/img/users/' + filename, imgData, 'base64', function(err) {
-        if (!err) {
-          var criteria = {
-            collection: userGroupsCollection,
-            query: {
-              _id: userid
-            },
-            updateObj: {
-              $set: {
-                "Photo": filename
-              }
-            }
-          };
-          Utility.update(criteria, function(err, result) {
-            if (err) {
-              return cb(err);
-            } else {
-              return cb(null, filename);
-            }
-          });
-        } else {
-          return cb(err);
-        }
-      });
-    },
-    saveGroup: Groups.saveGroup,
-    newGroup: Groups.newGroup,
-    updateGroup: Groups.updateGroup
-  },
-  Points: {
-    addGroups: function(data, cb) {
-      var newGroups = (data["Groups"]) ? data["Groups"] : [];
-      var points = (data.Points) ? data.Points : [];
-      var searchFilters = (data.searchFilters) ? data.searchFilters : null;
-      var criteria = {};
-
-      if (points.length < 1 || !searchFilters) {
-        return cb("No points or filters given.");
-      }
-
-      var updateCriteria = {
-        $addToSet: {
-          Security: {
-            $each: []
-          }
-        }
-      };
-
-      for (m = 0; m < newGroups.length; m++) {
-        newGroups[m].groupId = new BSON.ObjectID(newGroups[m].groupId);
-
-        newGroups[m].Permissions = parseInt(newGroups[m].Permissions, 10);
-        if ((newGroups[m].Permissions & WRITE) !== 0) // If write, get read, ack and control
-          newGroups[m].Permissions = newGroups[m].Permissions | READ | ACKNOWLEDGE | CONTROL;
-        if ((newGroups[m].Permissions & CONTROL) !== 0) // If control, get read
-          newGroups[m].Permissions = newGroups[m].Permissions | READ;
-        if (newGroups[m].Permissions === undefined)
-          newGroups[m].Permissions = 0;
-
-        updateCriteria.$addToSet.Security.$each.push(newGroups[m]);
-      }
-
-
-
-      async.eachSeries(newGroups, function(newGroup, callback) {
-        async.waterfall([
-
-          function(wfCb) {
-            criteria = {
-              collection: userGroupsCollection,
-              query: {
-                _id: newGroup.groupId
-              }
-            };
-            Utility.getOne(criteria, function(err, group) {
-              wfCb(err, (group !== null) ? group.Users : null);
-            });
-          },
-          function(users, wfCb) {
-            var id;
-            if (searchFilters) {
-              if (upi.length < 12) {
-                id = parseInt(upi, 10);
-              } else {
-                id = new BSON.ObjectID(upi);
-              }
-              var searchCriteria = {};
-              searchCriteria.name1 = {
-                '$regex': '(?i)' + "^" + searchFilters.name1
-              };
-              searchCriteria.name2 = {
-                '$regex': '(?i)' + "^" + searchFilters.name2
-              };
-              searchCriteria.name3 = {
-                '$regex': '(?i)' + "^" + searchFilters.name3
-              };
-              searchCriteria.name4 = {
-                '$regex': '(?i)' + "^" + searchFilters.name4
-              };
-
-              for (var user in users) {
-                updateCriteria.$addToSet.Security.$each.push({
-                  userId: new BSON.ObjectID(user),
-                  groupId: newGroup.groupId
-                });
-              }
-              criteria = {
-                collection: pointsCollection,
-                query: searchCriteria,
-                updateObj: updateCriteria,
-                options: {
-                  multi: true
-                }
-              };
-              Utility.update(criteria, function(err, point) {
-                wfCb(err, true);
-              });
-            } else {
-              async.eachSeries(points, function(upi, cb2) {
-                if (upi.length < 12) {
-                  id = parseInt(upi, 10);
-                } else {
-                  id = new BSON.ObjectID(upi);
-                }
-                var searchCriteria = {
-                  "_id": id
-                };
-
-                for (var user in users) {
-                  updateCriteria.$addToSet.Security.$each.push({
-                    userId: new BSON.ObjectID(user),
-                    groupId: newGroup.groupId
-                  });
-                }
-                criteria = {
-                  collection: pointsCollection,
-                  query: searchCriteria,
-                  updateObj: updateCriteria,
-                  options: {
-                    multi: true
-                  }
-                };
-                Utility.update(criteria, function(err, point) {
-                  cb2(err);
-                });
-              }, function(err) {
-                wfCb(err, true);
-              });
-            }
-          }
-        ], function(err, result) {
-          callback(err);
-        });
-
-      }, function(err) {
-        return cb(err, {
-          message: "success"
-        });
-      });
-    },
-    removeGroups: function(data, cb) {
-      var groupUpis = (data["User Group Upis"]) ? data["User Group Upis"] : [];
-      var points = (data.Points) ? data.Points : [];
-      var id;
-
-      if (points.length < 1) {
-        return cb("No points given.");
-      }
-
-      var updateCriteria = {
-        $pull: {
-          "Security": {
-            $and: []
-          }
-        }
-      };
-
-      for (i = 0; i < groupUpis.length; i++) {
-        updateCriteria.$pull.Security.$and.push({
-          groupId: new BSON.ObjectID(groupUpis[i])
-        });
-      }
-
-      var count = 0;
-
-      async.forEachSeries(points, function(upi, callback) {
-
-        if (upi.length < 12) {
-          id = parseInt(upi, 10);
-        } else {
-          id = new BSON.ObjectID(upi);
-        }
-
-        searchCriteria = {
-          "_id": id
-        };
-
-        var criteria = {
-          collection: pointsCollection,
-          query: searchCriteria,
-          updateObj: updateCriteria
-        };
-
-        Utility.update(criteria, function(err, result) {
-          callback(err);
-        });
-
-      }, function(err) {
-        return cb(err, {
-          message: "success"
-        });
-      });
-    },
-    addUsers: function(data, cb) {
-      return cb("Deprecated. Not storing users on points- only groups.");
-      /*newUsers = (data.Users) ? data.Users : [];
-      points = (data.Points) ? data.Points : [];
-      searchFilters = (data.searchFilters) ? data.searchFilters : null;
-
-      if (points.length < 1 && !searchFilters) {
-        return Utils.sendResponse(res, {
-          err: "No point criteria given."
-        });
-      }
-
-      count = 0;
-
-      updateCriteria = {
-        $addToSet: {
-          "Security": {
-            $each: []
-          }
-        }
-      };
-
-      updateUsers = [];
-
-      for (i = 0; i < newUsers.length; i++) {
-        if (typeof newUsers[i].userId !== "object")
-          newUsers[i].userId = new BSON.ObjectID(newUsers[i].userId);
-
-        newUsers[i].Permissions = parseInt(newUsers[i].Permissions, 10);
-
-        if ((newUsers[i].Permissions & CONTROL) !== 0)
-          newUsers[i].Permissions = newUsers[i].Permissions | READ;
-        if ((newUsers[i].Permissions & WRITE) !== 0)
-          newUsers[i].Permissions = newUsers[i].Permissions | READ | ACKNOWLEDGE | CONTROL;
-        if (newUsers[i].Permissions === undefined)
-          newUsers[i].Permissions = 0;
-      }
-
-
-
-      if (searchFilters) {
-        searchCriteria = {};
-
-        if (searchFilters.name1)
-          searchCriteria.name1 = {
-            '$regex': '(?i)' + "^" + searchFilters.name1
-          };
-        if (searchFilters.name2)
-          searchCriteria.name2 = {
-            '$regex': '(?i)' + "^" + searchFilters.name2
-          };
-        if (searchFilters.name3)
-          searchCriteria.name3 = {
-            '$regex': '(?i)' + "^" + searchFilters.name3
-          };
-        if (searchFilters.name4)
-          searchCriteria.name4 = {
-            '$regex': '(?i)' + "^" + searchFilters.name4
-          };
-
-        for (i = 0; i < newUsers.length; i++) {
-          updateCriteria.$addToSet.Security.$each.push(newUsers[i]);
-        }
-        //console.log("searchCriteria", searchCriteria);
-        //console.log("updateCriteria", updateCriteria);
-        db.collection(pointsCollection).update(searchCriteria, updateCriteria, {
-          multi: 1
-        }, function(err, result) {
-          if (err) return Utils.sendResponse(res, {
-            err: err
-          });
-          return Utils.sendResponse(res, {
-            message: "success"
-          });
-        });
-      } else {
-        async.forEachSeries(points, function(upi, callback) {
-
-            if (upi.length < 12) {
-              id = parseInt(upi, 10);
-            } else {
-              id = new BSON.ObjectID(upi);
-            }
-
-            var searchCriteria = {
-              "_id": id
-            };
-
-            db.collection(pointsCollection).findOne(searchCriteria, function(err, point) {
-
-              for (j = 0; j < point.Security.length; j++) {
-                for (m = 0; m < newUsers.length; m++) {
-                  if (point.Security[j].userId.equals(newUsers[m].userId) && point.Security[j].Permissions !== newUsers[m].Permissions) {
-                    updateUsers.push(newUsers[m]);
-                    newUsers.splice(m, 1);
-                    m--;
-                  }
-                }
-              }
-
-              for (n = 0; n < newUsers.length; n++) {
-                updateCriteria.$addToSet.Security.$each.push(newUsers[n]);
-              }
-
-              db.collection(pointsCollection).update(searchCriteria, updateCriteria, function(err, result) {
-                if (updateUsers.length > 0) {
-                  async.forEachSeries(updateUsers, function(user, cb) {
-                    permSearch = {
-                      _id: id,
-                      "Security.userId": user.userId
-                    };
-                    permUpdate = {
-                      $set: {
-                        "Security.$.Permissions": user.Permissions
-                      }
-                    };
-                    db.collection(pointsCollection).update(permSearch, permUpdate, function(err, result) {
-                      cb(err);
-                    });
-                  }, function(err) {
-                    callback(err);
-                  });
-                } else {
-                  callback(err);
-                }
-              });
-            });
-
-          },
-          function(err) {
-            if (err) return Utils.sendResponse(res, {
-              err: err
-            });
-            return Utils.sendResponse(res, {
-              message: "success"
-            });
-          });
-      }*/
-    },
-    removeUsers: function(data, cb) {
-      return cb('Deprecated. Not storing users on points- only groups.');
-      /*users = (data.userids) ? data.userids : [];
-      points = (data.Points) ? data.Points : [];
-
-      updateCriteria = {
-        $pull: {
-          "Security": {
-            "userId": {
-              $in: []
-            }
-          }
-        }
-      };
-
-      if (points.length < 1) {
-        //console.log("No points given.");
-        return Utils.sendResponse(res, {
-          err: "No points given."
-        });
-      }
-
-      for (i = 0; i < users.length; i++) {
-        updateCriteria.$pull.Security.userId.$in.push(
-          new BSON.ObjectID(users[i])
-        );
-      }
-
-      count = 0;
-
-
-      async.forEach(points, function(upi, callback) {
-
-        if (upi.length < 12) {
-          id = parseInt(upi, 10);
-        } else {
-          id = new BSON.ObjectID(upi);
-        }
-
-        var searchCriteria = {
-          "_id": id
-        };
-
-        //console.log("searchCriteria", searchCriteria, "updateCriteria", JSON.stringify(updateCriteria));
-        db.collection(pointsCollection).update(searchCriteria, updateCriteria, function(err, result) {
-          callback(err);
-        });
-
-      }, function(err) {
-        if (err) return Utils.sendResponse(res, {
-          err: err
-        });
-
-        return Utils.sendResponse(res, {
-          message: "success"
-        });
-      });*/
-    }
-  }
-};
 
 var Users = {
   saveUser: function(data, cb) {
@@ -1212,7 +121,9 @@ var Users = {
     Utility.get(criteria, function(err, conts) {
       for (var i = 0; i < conts[0]["Entries"].length; i++) {
         if (conts[0]["Entries"][i]["Controller Name"] === username) {
-          return cb("This controller name already exists.");
+          return cb(null, {
+            message: "This controller name already exists."
+          });
         }
       }
 
@@ -1222,7 +133,9 @@ var Users = {
       };
       Utility.get(criteria, function(err, docs) {
         if (docs.length > 0) {
-          return cb("This username already exists.");
+          return cb(null, {
+            message: "This username already exists."
+          });
         } else {
           criteria = {
             collection: usersCollection,
@@ -1245,7 +158,7 @@ var Users = {
                     if (group.groupid.length < 12) {
                       group.groupid = parseInt(group.groupid, 10);
                     } else {
-                      group.groupid = new BSON.ObjectID(group.groupid);
+                      group.groupid = new mongodb.ObjectID(group.groupid);
                     }
 
                     async.waterfall([
@@ -1378,7 +291,7 @@ var Users = {
     if (userid.length < 12) {
       userid = parseInt(userid, 10);
     } else {
-      userid = new BSON.ObjectID(userid);
+      userid = new mongodb.ObjectID(userid);
     }
 
     var searchCriteria = {
@@ -1394,7 +307,7 @@ var Users = {
         updateCriteria.$set[key] = updateData[key];
         updateCriteria.$set["Username.Value"] = updateData[key];
       } else if (key == "Password") {
-        password = Utils.encrypt(updateData[key]);
+        password = utils.encrypt(updateData[key]);
         value = key + ".Value";
         updateCriteria.$set[value] = password;
       } else if (key != "_id" && key != "User Groups") {
@@ -1533,7 +446,7 @@ var Users = {
             if (group.groupid.length < 12) {
               group.groupid = parseInt(group.groupid, 10);
             } else {
-              group.groupid = new BSON.ObjectID(group.groupid);
+              group.groupid = new mongodb.ObjectID(group.groupid);
             }
 
             async.waterfall([
@@ -1663,10 +576,1312 @@ var Groups = {
     }
   },
   newGroup: function(data, cb) {
+    var groupName = data["User Group Name"];
+    var users = (data.Users) ? data.Users : [];
+    var description = (data.Description) ? data.Description : "";
 
+    if (!groupName) {
+      return cb("No group name given.");
+    }
+
+    var userObj = {};
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].userid !== undefined) {
+        userObj[users[i].userid] = {};
+
+        if (users[i]["Group Admin"] === "true" || users[i]["Group Admin"] === true) {
+          userObj[users[i].userid]["Group Admin"] = true;
+        } else {
+          userObj[users[i].userid]["Group Admin"] = false;
+        }
+      }
+    }
+
+
+    var searchCriteria = {
+      "User Group Name": groupName
+    };
+    var insertCriteria = {
+      "User Group Name": groupName,
+      "Users": userObj,
+      "Description": description,
+      _pAccess: parseInt(data._pAccess, 10) | READ,
+      "Photo": {
+        Value: ''
+      }
+    };
+
+    var criteria = {
+      collection: userGroupsCollection,
+      query: searchCriteria
+    };
+
+    Utility.get(criteria, function(err, groups) {
+      if (err) {
+        return cb(err);
+      }
+      if (groups.length === 0) {
+        criteria = {
+          collection: userGroupsCollection,
+          insertObj: insertCriteria
+        };
+
+        Utility.insert(criteria, function(err, result) {
+          if (err) {
+            return cb(err);
+          } else {
+            criteria = {
+              collection: userGroupsCollection,
+              query: searchCriteria
+            };
+
+            Utility.insert(criteria, cb);
+          }
+        });
+      } else {
+        return cb("Group already exists");
+      }
+    });
   },
   updateGroup: function(data, cb) {
+    var groupName = data["User Group Name"];
+    var groupUpi = data["User Group Upi"];
+    var updateData = data["Update Data"];
+    var users = (updateData.Users !== undefined) ? updateData.Users : [];
+    var usersChange = false;
 
+    var searchCriteria = {};
+    if (groupUpi) {
+
+      if (groupUpi.length < 12) {
+
+        groupId = parseInt(groupUpi, 10);
+      } else {
+
+        groupId = new mongodb.ObjectID(groupUpi);
+      }
+      searchCriteria = {
+        _id: groupId
+      };
+
+      var updateCriteria = {
+        $set: {}
+      };
+
+      for (var key in updateData) {
+        if (key == "User Group Name" || key == "Description")
+          updateCriteria.$set[key] = updateData[key];
+      }
+
+      updateCriteria.$set.Users = {};
+      if (users.length !== 0) { // users on group obj
+        users.forEach(function(user) {
+          updateCriteria.$set.Users[user.userid] = {};
+          updateCriteria.$set.Users[user.userid]["Group Admin"] = (user["Group Admin"] !== undefined && user["Group Admin"] === true) ? user["Group Admin"] : false;
+        });
+      }
+      if (updateData._pAccess !== undefined) {
+        updateCriteria.$set._pAccess = parseInt(updateData._pAccess, 10);
+      }
+
+      var criteria = {
+        collection: userGroupsCollection,
+        query: searchCriteria,
+        updateObj: updateCriteria,
+        options: {
+          upsert: 1
+        }
+      };
+
+      Utility.update(criteria, function(err, result) {
+        if (err) {
+          return cb(err);
+        }
+
+        criteria = {
+          collection: userGroupsCollection,
+          query: {
+            _id: groupId
+          }
+        };
+
+        Utility.getOne(criteria, cb);
+      });
+
+
+    } else {
+      return cb("No group given");
+    }
   }
 
+};
+
+var updateControllers = function(op, username, callback) {
+  var searchCriteria = {
+    Name: "Controllers"
+  };
+
+  var criteria = {
+    collection: systemInfoCollection,
+    query: searchCriteria
+  };
+
+  Utility.getOne(criteria, function(err, controllers) {
+    if (op === "add") {
+      var id = 0;
+      var ids = [];
+      var maxId = 0;
+
+      for (var a = 0; a < controllers.Entries.length; a++) {
+        ids.push(controllers.Entries[a]["Controller ID"]);
+        maxId = (controllers.Entries[a]["Controller ID"] > maxId) ? controllers.Entries[a]["Controller ID"] : maxId;
+      }
+
+      for (var i = 0; i < ids.length; i++) {
+        if (ids[i] !== i + 1) {
+          id = i + 1;
+
+          if (ids.indexOf(id) === -1) {
+            break;
+          } else {
+            id = 0;
+          }
+
+        }
+      }
+
+      if (id === 0) {
+        id = maxId + 1;
+      }
+
+      controllers.Entries.push({
+        "Controller ID": id,
+        "Controller Name": username,
+        "Description": username,
+        isUser: true
+      });
+
+      criteria = {
+        collection: systemInfoCollection,
+        query: searchCriteria,
+        updateObj: {
+          $set: {
+            Entries: controllers.Entries
+          }
+        }
+      };
+      Utility.update(criteria, function(err, result) {
+        callback(err);
+      });
+    } else if (op === "remove") {
+      for (var j = 0; j < controllers.Entries.length; j++) {
+        if (controllers.Entries[j]["Controller Name"] === username) {
+          controllers.Entries.splice(j, 1);
+        }
+      }
+      criteria = {
+        collection: systemInfoCollection,
+        query: searchCriteria,
+        updateObj: {
+          $set: {
+            Entries: controllers.Entries
+          }
+        }
+      };
+      Utility.update(criteria, function(err, result) {
+        callback(err);
+      });
+    }
+
+  });
+};
+
+module.exports = {
+  Users: {
+    getAllUsers: function(data, cb) {
+      var properties;
+      var returnUsers = [];
+      var i;
+      var j;
+      var tempObj;
+
+      var searchCriteria = {};
+      var criteria = {
+        collection: 'Users',
+        query: {}
+      };
+
+      User.get(criteria, function(err, users) {
+        if (err) {
+          return cb(err);
+        }
+        properties = data.Properties;
+
+        if (properties !== undefined) {
+          for (i = 0; i < users.length; i++) {
+            tempObj = {};
+            for (j = 0; j < properties.length; j++) {
+
+              if (typeof users[i][properties[j]] == 'undefined') {
+                continue;
+              }
+
+              if (typeof users[i][properties[j]].Value == 'undefined') {
+                tempObj[properties[j]] = users[i][properties[j]];
+              } else {
+                tempObj[properties[j]] = users[i][properties[j]].Value;
+              }
+            }
+
+            returnUsers.push(tempObj);
+          }
+        } else {
+          returnUsers = users;
+        }
+
+        return cb(null, {Users:returnUsers});
+      });
+    },
+    getGroups: function(data, cb) {
+      var user = data.User;
+
+      var userString = "Users." + user;
+
+      var searchCriteria = {};
+      searchCriteria[userString] = {
+        $exists: true
+      };
+      var criteria = {
+        collection: userGroupsCollection,
+        query: searchCriteria
+      };
+      Utility.get(criteria, function(err, groups) {
+        if (err) {
+          return cb(err);
+        }
+        var returnArray = [];
+
+        for (i = 0; i < groups.length; i++) {
+          returnArray.push({
+            "User Group Name": groups[i]["User Group Name"],
+            "User Group Id": groups[i]._id
+          });
+        }
+
+        return cb(null, returnArray);
+      });
+    },
+    removeUser: function(data, cb) {
+      var userid = data.userid;
+
+      if (userid.length < 12) {
+        userid = parseInt(userid, 10);
+      } else {
+        userid = new mongodb.ObjectID(userid);
+      }
+
+      var searchCriteria = {
+        "_id": userid
+      };
+
+      var groupCount = 0;
+      var pointCount = 0;
+
+      var criteria = {
+        collection: usersCollection,
+        criteria: searchCriteria,
+        fields: {
+          _id: 0,
+          username: 1
+        }
+      };
+      Utility.getOne(criteria, function(err, username) {
+
+        Utility.remove(criteria, function(err, result) {
+          if (err) {
+            return cb(err);
+          }
+
+          async.waterfall([
+
+              function(callback) {
+                // TODO Add fx
+                updateControllers("remove", username.username, callback);
+              },
+
+              function(callback) {
+
+                var groupSearch = {};
+                var groupSearchString = "Users." + userid;
+                groupSearch[groupSearchString] = {
+                  $exists: true
+                };
+
+                criteria = {
+                  collection: userGroupsCollection,
+                  query: groupSearch
+                };
+                Utility.get(criteria, function(err, groups) {
+                  if (err) {
+                    return cb(err);
+                  }
+
+                  if (groups.length > 0) {
+                    groups.forEach(function(group) {
+                      delete group.Users[userid];
+                      groupUpdate = {
+                        $set: {}
+                      };
+                      groupUpdate.$set.Users = group.Users;
+
+                      criteria.query = {
+                        _id: group._id
+                      };
+                      criteria.updateObj = groupUpdate;
+
+                      Utility.update(criteria, function(err, result2) {
+                        if (err) {
+                          return callback(err, null);
+                        }
+                        pointCount++;
+                        if (pointCount === groups.length) {
+                          callback(null, groups);
+                        }
+                      });
+                    });
+                  } else {
+                    callback(null, groups);
+                  }
+
+
+                });
+              },
+              function(groups, callback) {
+                var updateSearch, updateCriteria;
+                updateSearch = {
+                  Security: {
+                    $elemMatch: {
+                      userId: userid
+                    }
+                  }
+                };
+
+                updateCriteria = {
+                  $pull: {
+                    "Security": {
+                      userId: userid
+                    }
+                  }
+                };
+                // TODO check for empty groups on points
+                criteria = {
+                  collection: pointsCollection,
+                  query: updateSearch,
+                  updateObj: updateCriteria,
+                  options: {
+                    multi: true
+                  }
+                };
+                Utility.update(criteria, function(err, groups) {
+                  return callback(err, {
+                    "message": "success"
+                  });
+                });
+              }
+            ],
+            cb);
+        });
+      });
+    },
+    getUser: function(data, cb) {
+      var id = req.params.id;
+
+      if (id.length < 12) {
+        upi = parseInt(id, 10);
+      } else {
+        upi = new mongodb.ObjectID(id);
+      }
+
+      var searchCriteria = {
+        _id: upi
+      };
+
+      var criteria = {
+        collection: usersCollection,
+        query: searchCriteria
+      };
+      Utility.getOne(criteria, cb);
+    },
+    createPassword: function(data, cb) {
+      var text = "";
+      var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+      for (i = 0; i < 8; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+      }
+
+      return cb(null, text);
+    },
+    editPhoto: function(data, cb) {
+      var userid = mongodb.ObjectID(data.user);
+      var image = data.image;
+      var filename = data.name;
+      var imgData = image.replace(/^data:image\/\w+;base64,/, "");
+
+      fs.writeFile(process.cwd() + '/public/img/users/' + filename, imgData, 'base64', function(err) {
+        if (!err) {
+          var criteria = {
+            collection: usersCollection,
+            query: {
+              _id: userid
+            },
+            updateObj: {
+              $set: {
+                "Photo.Value": filename
+              }
+            }
+          };
+          Utility.update(criteria, function(err, result) {
+            if (err) {
+              return cb(err);
+            } else {
+              return cb(null, filename);
+            }
+          });
+        } else {
+          return cb(err);
+        }
+      });
+    },
+    saveUser: Users.saveUser,
+    newUser: Users.newUser,
+    updateUser: Users.updateUser
+  },
+  Groups: {
+    getUsers: function(data, cb) {
+      var groupUpi = data["User Group Upi"];
+
+      var id = new mongodb.ObjectID(groupUpi);
+
+      var searchCriteria = {};
+      if (id) {
+        searchCriteria = {
+          "_id": id
+        };
+      } else {
+        return cb("No groups given");
+      }
+
+      var criteria = {
+        collection: userGroupsCollection,
+        query: searchCriteria
+      };
+
+      Utility.getOne(criteria, cb);
+    },
+    addUsers: function(data, cb) {
+      var groupUpis = data["User Group Upis"];
+      var users = (data.Users !== undefined) ? data.Users : [];
+      var criteria = {};
+
+      var count = 0;
+
+      if (groupUpis) {
+
+        var groupIds = [];
+        for (a = 0; a < groupUpis.length; a++) {
+          if (groupUpis[a].length < 12) {
+            groupIds.push(parseInt(groupUpis[a], 10));
+          } else {
+            groupIds.push(new mongodb.ObjectID(groupUpis[a]));
+          }
+        }
+        var groupCount = 0;
+
+        groupIds.forEach(function(groupId) {
+
+          users.forEach(function(user) {
+            async.waterfall([
+
+              function(callback) {
+                var searchCriteria, updateCriteria,
+                  adminString, usernameString, options;
+                searchCriteria = {
+                  _id: groupId
+                };
+                updateCriteria = {
+                  $set: {}
+                };
+                adminString = "Users." + user.userid + ".Group Admin";
+                usernameString = "Users." + user.userid + ".username";
+                if (user["Group Admin"] === true || user["Group Admin"] === "true")
+                  updateCriteria.$set[adminString] = true;
+                else
+                  updateCriteria.$set[adminString] = false;
+
+                //updateCriteria.$set[usernameString] = user.username;
+
+                options = {
+                  upsert: true
+                };
+
+                criteria = {
+                  collection: userGroupsCollection,
+                  query: searchCriteria,
+                  updateObj: updateCriteria,
+                  options: options
+                };
+                Utility.update(criteria, function(err, result) {
+                  if (err) {
+                    callback(err, null);
+                  }
+                  count++;
+                  if (count === users.length) {
+                    criteria = {
+                      collection: userGroupsCollection,
+                      query: result
+                    };
+                    Utility.getOne(criteria, callback);
+                  }
+                });
+              },
+              function(group, callback) {
+                var usersString, searchCriteria, updateCriteria;
+                usersString = "User Groups." + group._id;
+                searchCriteria = {};
+                searchCriteria[usersString] = {
+                  $exists: true
+                };
+
+                updateCriteria = {
+                  $set: {}
+                };
+
+                updateCriteria.$set["User Groups." + group._id + ".Users"] = group.Users;
+
+                criteria = {
+                  collection: userGroupsCollection,
+                  query: searchCriteria,
+                  updateObj: updateCriteria,
+                  options: {
+                    multi: 1
+                  }
+                };
+
+                Utility.update(criteria, function(err, groups) {
+                  callback(err, {
+                    "message": "success"
+                  });
+                });
+              }
+            ], function(err, result) {
+              if (err) {
+                return cb(err);
+              }
+              groupCount++;
+              if (groupCount === groupIds.length) {
+                return cb(null, result);
+              }
+            });
+
+          });
+        });
+
+      } else {
+        return cb("No groups given");
+      }
+    },
+    removeUsers: function(data, cb) {
+      var users = data.Users ? data.Users : [];
+      var groupUpis = (data["User Group Upis"]) ? data["User Group Upis"] : [];
+      var criteria = {};
+
+      if (groupUpis) {
+
+        var groupIds = [];
+        for (a = 0; a < groupUpis.length; a++) {
+          if (groupUpis[a].length < 12) {
+            groupIds.push(parseInt(groupUpis[a], 10));
+          } else {
+            groupIds.push(new mongodb.ObjectID(groupUpis[a]));
+          }
+        }
+        var groupCount = 0;
+
+        groupIds.forEach(function(groupId) {
+          var count = 0;
+          users.forEach(function(user) {
+            async.waterfall([
+
+              function(callback) {
+                var searchCriteria = {
+                  _id: groupId
+                };
+                var updateCriteria = {
+                  $set: {}
+                };
+
+                criteria = {
+                  collection: userGroupsCollection,
+                  query: searchCriteria
+                };
+
+                Utility.getOne(criteria, function(err, group) {
+                  if (group.Users[user]) {
+                    delete group.Users[user];
+                  }
+
+                  updateCriteria.$set.Users = group.Users;
+                  criteria = {
+                    collection: userGroupsCollection,
+                    query: searchCriteria,
+                    updateObj: searchCriteria
+                  };
+
+                  Utility.update(criteria, function(err, result) {
+                    if (err) callback(err, null);
+
+                    count++;
+
+                    if (count === users.length) {
+                      criteria = {
+                        collection: userGroupsCollection,
+                        query: result
+                      };
+
+                      Utility.getOne(criteria, function(err, group) {
+                        callback(null, group);
+                      });
+                    }
+                  });
+                });
+              },
+              function(group, callback) {
+                var usersString = "User Groups." + group._id;
+                var searchCriteria = {};
+                searchCriteria[usersString] = {
+                  $exists: true
+                };
+
+                var updateCriteria = {
+                  $set: {}
+                };
+
+                updateCriteria.$set["User Groups." + group._id + ".Users"] = group.Users;
+                criteria = {
+                  collection: userGroupsCollection,
+                  query: searchCriteria,
+                  updateObj: updateCriteria,
+                  options: {
+                    multi: true
+                  }
+                };
+                Utility.getOne(criteria, function(err, groups) {
+                  if (err) {
+                    return callback(err, null);
+                  }
+                  return callback(null, {
+                    "message": "success"
+                  });
+
+                });
+              }
+            ], function(err, result) {
+              if (err) {
+                return cb(err);
+              }
+              groupCount++;
+              if (groupCount === groupIds.length) {
+                return cb(null, result);
+              }
+            });
+
+          });
+        });
+
+      } else {
+        return cb("No groups given");
+      }
+    },
+    removeGroup: function(data, cb) {
+      var groupUpi = data["User Group Upi"];
+      var criteria = {};
+      var removeCriteria = {};
+
+      if (groupUpi) {
+        if (groupUpi.length < 12) {
+          groupId = parseInt(groupUpi, 10);
+        } else {
+          groupId = new mongodb.ObjectID(groupUpi);
+        }
+
+        removeCriteria = {
+          _id: groupId
+        };
+
+        criteria = {
+          collection: userGroupsCollection,
+          query: removeCriteria
+        };
+        Utility.remove(criteria, function(err, result) {
+          if (err) {
+            return cb(err);
+          }
+          var searchCriteria = {
+            Security: {
+              $elemMatch: {
+                groupId: groupId
+              }
+            }
+          };
+          var updateCriteria = {
+            $pull: {
+              Security: {
+                groupId: groupId
+              }
+            }
+          };
+
+          criteria = {
+            collection: pointsCollection,
+            query: searchCriteria,
+            updateObj: updateCriteria,
+            options: {
+              multi: true
+            }
+          };
+          Utility.remove(criteria, cb);
+
+        });
+
+      } else {
+        return cb("No group given");
+      }
+    },
+    getAllGroups: function(data, cb) {
+      var searchCriteria = {};
+      var criteria = {
+        collection: userGroupsCollection,
+        query: searchCriteria
+      };
+
+      Utility.get(criteria, function(err, groups) {
+        if (err) {
+          return cb(err);
+        }
+
+        var properties = data.Properties;
+        var returnArray = [];
+        var tempObj;
+        var i;
+
+        if (typeof properties == 'undefined') {
+          returnArray = groups;
+        } else {
+          for (i = 0; i < groups.length; i++) {
+            tempObj = {};
+            for (j = 0; j < properties.length; j++) {
+              if (typeof groups[i][properties[j]] == 'undefined') continue;
+              if (typeof groups[i][properties[j]].Value == 'undefined') {
+                tempObj[properties[j]] = groups[i][properties[j]];
+              } else {
+                tempObj[properties[j]] = groups[i][properties[j]].Value;
+              }
+            }
+            returnArray.push(tempObj);
+          }
+        }
+
+        return cb(null, returnArray);
+
+      });
+    },
+    getPoints: function(data, cb) {
+      var group = data["User Group Upi"];
+
+      if (group.length < 12) {
+        group = parseInt(group, 10);
+      } else {
+        group = new mongodb.ObjectID(group);
+      }
+
+      var searchCriteria = {
+        Security: {
+          $elemMatch: {
+            groupId: group
+          }
+        }
+      };
+
+      var criteria = {
+        collection: pointsCollection,
+        query: searchCriteria
+      };
+      Utility.get(criteria, function(err, points) {
+        if (err) {
+          return cb(err);
+        }
+
+        var i;
+        var j;
+        var properties = data.Properties;
+        var returnArray = [];
+
+        for (i = 0; i < points.length; i++) {
+          var tempObj = {};
+          if (properties !== undefined) {
+            for (j = 0; j < properties.length; j++) {
+              if (properties[j] === "Name" || properties[j] === "_id" || properties[j] === "name1" || properties[j] === "name2" || properties[j] === "name3" || properties[j] === "name4") {
+                tempObj[properties[j]] = points[i][properties[j]];
+              } else {
+                tempObj[properties[j]] = points[i][properties[j]].Value;
+              }
+
+            }
+          } else {
+            tempObj = {
+              _id: points[i]._id,
+              name1: points[i].name1,
+              name2: points[i].name2,
+              name3: points[i].name3,
+              name4: points[i].name4,
+              Name: points[i].Name
+            };
+          }
+          returnArray.push(tempObj);
+        }
+
+        var returnObj = {
+          Points: returnArray
+        };
+
+        return cb(null, returnArray);
+      });
+    },
+    getGroup: function(data, cb) {
+      var id = data.id;
+
+      if (id.length < 12) {
+        upi = parseInt(id, 10);
+      } else {
+        upi = new mongodb.ObjectID(id);
+      }
+
+      searchCriteria = {
+        _id: upi
+      };
+
+      var criteria = {
+        collection: userGroupsCollection,
+        query: searchCriteria
+      };
+      Utility.getOne(criteria, cb);
+    },
+    editPhoto: function(data, cb) {
+      var userid = mongodb.ObjectID(data.user);
+      var image = data.image;
+      var filename = data.name;
+      var imgData = image.replace(/^data:image\/\w+;base64,/, "");
+
+      fs.writeFile(process.cwd() + '/public/img/users/' + filename, imgData, 'base64', function(err) {
+        if (!err) {
+          var criteria = {
+            collection: userGroupsCollection,
+            query: {
+              _id: userid
+            },
+            updateObj: {
+              $set: {
+                "Photo": filename
+              }
+            }
+          };
+          Utility.update(criteria, function(err, result) {
+            if (err) {
+              return cb(err);
+            } else {
+              return cb(null, filename);
+            }
+          });
+        } else {
+          return cb(err);
+        }
+      });
+    },
+    saveGroup: Groups.saveGroup,
+    newGroup: Groups.newGroup,
+    updateGroup: Groups.updateGroup
+  },
+  Points: {
+    addGroups: function(data, cb) {
+      var newGroups = (data["Groups"]) ? data["Groups"] : [];
+      var points = (data.Points) ? data.Points : [];
+      var searchFilters = (data.searchFilters) ? data.searchFilters : null;
+      var criteria = {};
+
+      if (points.length < 1 || !searchFilters) {
+        return cb("No points or filters given.");
+      }
+
+      var updateCriteria = {
+        $addToSet: {
+          Security: {
+            $each: []
+          }
+        }
+      };
+
+      for (m = 0; m < newGroups.length; m++) {
+        newGroups[m].groupId = new mongodb.ObjectID(newGroups[m].groupId);
+
+        newGroups[m].Permissions = parseInt(newGroups[m].Permissions, 10);
+        if ((newGroups[m].Permissions & WRITE) !== 0) // If write, get read, ack and control
+          newGroups[m].Permissions = newGroups[m].Permissions | READ | ACKNOWLEDGE | CONTROL;
+        if ((newGroups[m].Permissions & CONTROL) !== 0) // If control, get read
+          newGroups[m].Permissions = newGroups[m].Permissions | READ;
+        if (newGroups[m].Permissions === undefined)
+          newGroups[m].Permissions = 0;
+
+        updateCriteria.$addToSet.Security.$each.push(newGroups[m]);
+      }
+
+
+
+      async.eachSeries(newGroups, function(newGroup, callback) {
+        async.waterfall([
+
+          function(wfCb) {
+            criteria = {
+              collection: userGroupsCollection,
+              query: {
+                _id: newGroup.groupId
+              }
+            };
+            Utility.getOne(criteria, function(err, group) {
+              wfCb(err, (group !== null) ? group.Users : null);
+            });
+          },
+          function(users, wfCb) {
+            var id;
+            if (searchFilters) {
+              if (upi.length < 12) {
+                id = parseInt(upi, 10);
+              } else {
+                id = new mongodb.ObjectID(upi);
+              }
+              var searchCriteria = {};
+              searchCriteria.name1 = {
+                '$regex': '(?i)' + "^" + searchFilters.name1
+              };
+              searchCriteria.name2 = {
+                '$regex': '(?i)' + "^" + searchFilters.name2
+              };
+              searchCriteria.name3 = {
+                '$regex': '(?i)' + "^" + searchFilters.name3
+              };
+              searchCriteria.name4 = {
+                '$regex': '(?i)' + "^" + searchFilters.name4
+              };
+
+              for (var user in users) {
+                updateCriteria.$addToSet.Security.$each.push({
+                  userId: new mongodb.ObjectID(user),
+                  groupId: newGroup.groupId
+                });
+              }
+              criteria = {
+                collection: pointsCollection,
+                query: searchCriteria,
+                updateObj: updateCriteria,
+                options: {
+                  multi: true
+                }
+              };
+              Utility.update(criteria, function(err, point) {
+                wfCb(err, true);
+              });
+            } else {
+              async.eachSeries(points, function(upi, cb2) {
+                if (upi.length < 12) {
+                  id = parseInt(upi, 10);
+                } else {
+                  id = new mongodb.ObjectID(upi);
+                }
+                var searchCriteria = {
+                  "_id": id
+                };
+
+                for (var user in users) {
+                  updateCriteria.$addToSet.Security.$each.push({
+                    userId: new mongodb.ObjectID(user),
+                    groupId: newGroup.groupId
+                  });
+                }
+                criteria = {
+                  collection: pointsCollection,
+                  query: searchCriteria,
+                  updateObj: updateCriteria,
+                  options: {
+                    multi: true
+                  }
+                };
+                Utility.update(criteria, function(err, point) {
+                  cb2(err);
+                });
+              }, function(err) {
+                wfCb(err, true);
+              });
+            }
+          }
+        ], function(err, result) {
+          callback(err);
+        });
+
+      }, function(err) {
+        return cb(err);
+      });
+    },
+    removeGroups: function(data, cb) {
+      var groupUpis = (data["User Group Upis"]) ? data["User Group Upis"] : [];
+      var points = (data.Points) ? data.Points : [];
+      var id;
+
+      if (points.length < 1) {
+        return cb("No points given.");
+      }
+
+      var updateCriteria = {
+        $pull: {
+          "Security": {
+            $and: []
+          }
+        }
+      };
+
+      for (i = 0; i < groupUpis.length; i++) {
+        updateCriteria.$pull.Security.$and.push({
+          groupId: new mongodb.ObjectID(groupUpis[i])
+        });
+      }
+
+      var count = 0;
+
+      async.forEachSeries(points, function(upi, callback) {
+
+        if (upi.length < 12) {
+          id = parseInt(upi, 10);
+        } else {
+          id = new mongodb.ObjectID(upi);
+        }
+
+        searchCriteria = {
+          "_id": id
+        };
+
+        var criteria = {
+          collection: pointsCollection,
+          query: searchCriteria,
+          updateObj: updateCriteria
+        };
+
+        Utility.update(criteria, function(err, result) {
+          callback(err);
+        });
+
+      }, cb);
+    },
+    addUsers: function(data, cb) {
+      return cb("Deprecated. Not storing users on points- only groups.");
+      /*newUsers = (data.Users) ? data.Users : [];
+      points = (data.Points) ? data.Points : [];
+      searchFilters = (data.searchFilters) ? data.searchFilters : null;
+
+      if (points.length < 1 && !searchFilters) {
+        return Utils.sendResponse(res, {
+          err: "No point criteria given."
+        });
+      }
+
+      count = 0;
+
+      updateCriteria = {
+        $addToSet: {
+          "Security": {
+            $each: []
+          }
+        }
+      };
+
+      updateUsers = [];
+
+      for (i = 0; i < newUsers.length; i++) {
+        if (typeof newUsers[i].userId !== "object")
+          newUsers[i].userId = new mongodb.ObjectID(newUsers[i].userId);
+
+        newUsers[i].Permissions = parseInt(newUsers[i].Permissions, 10);
+
+        if ((newUsers[i].Permissions & CONTROL) !== 0)
+          newUsers[i].Permissions = newUsers[i].Permissions | READ;
+        if ((newUsers[i].Permissions & WRITE) !== 0)
+          newUsers[i].Permissions = newUsers[i].Permissions | READ | ACKNOWLEDGE | CONTROL;
+        if (newUsers[i].Permissions === undefined)
+          newUsers[i].Permissions = 0;
+      }
+
+
+
+      if (searchFilters) {
+        searchCriteria = {};
+
+        if (searchFilters.name1)
+          searchCriteria.name1 = {
+            '$regex': '(?i)' + "^" + searchFilters.name1
+          };
+        if (searchFilters.name2)
+          searchCriteria.name2 = {
+            '$regex': '(?i)' + "^" + searchFilters.name2
+          };
+        if (searchFilters.name3)
+          searchCriteria.name3 = {
+            '$regex': '(?i)' + "^" + searchFilters.name3
+          };
+        if (searchFilters.name4)
+          searchCriteria.name4 = {
+            '$regex': '(?i)' + "^" + searchFilters.name4
+          };
+
+        for (i = 0; i < newUsers.length; i++) {
+          updateCriteria.$addToSet.Security.$each.push(newUsers[i]);
+        }
+        db.collection(pointsCollection).update(searchCriteria, updateCriteria, {
+          multi: 1
+        }, function(err, result) {
+          if (err) return Utils.sendResponse(res, {
+            err: err
+          });
+          return Utils.sendResponse(res, {
+            message: "success"
+          });
+        });
+      } else {
+        async.forEachSeries(points, function(upi, callback) {
+
+            if (upi.length < 12) {
+              id = parseInt(upi, 10);
+            } else {
+              id = new mongodb.ObjectID(upi);
+            }
+
+            var searchCriteria = {
+              "_id": id
+            };
+
+            db.collection(pointsCollection).findOne(searchCriteria, function(err, point) {
+
+              for (j = 0; j < point.Security.length; j++) {
+                for (m = 0; m < newUsers.length; m++) {
+                  if (point.Security[j].userId.equals(newUsers[m].userId) && point.Security[j].Permissions !== newUsers[m].Permissions) {
+                    updateUsers.push(newUsers[m]);
+                    newUsers.splice(m, 1);
+                    m--;
+                  }
+                }
+              }
+
+              for (n = 0; n < newUsers.length; n++) {
+                updateCriteria.$addToSet.Security.$each.push(newUsers[n]);
+              }
+
+              db.collection(pointsCollection).update(searchCriteria, updateCriteria, function(err, result) {
+                if (updateUsers.length > 0) {
+                  async.forEachSeries(updateUsers, function(user, cb) {
+                    permSearch = {
+                      _id: id,
+                      "Security.userId": user.userId
+                    };
+                    permUpdate = {
+                      $set: {
+                        "Security.$.Permissions": user.Permissions
+                      }
+                    };
+                    db.collection(pointsCollection).update(permSearch, permUpdate, function(err, result) {
+                      cb(err);
+                    });
+                  }, function(err) {
+                    callback(err);
+                  });
+                } else {
+                  callback(err);
+                }
+              });
+            });
+
+          },
+          function(err) {
+            if (err) return Utils.sendResponse(res, {
+              err: err
+            });
+            return Utils.sendResponse(res, {
+              message: "success"
+            });
+          });
+      }*/
+    },
+    removeUsers: function(data, cb) {
+      return cb('Deprecated. Not storing users on points- only groups.');
+      /*users = (data.userids) ? data.userids : [];
+      points = (data.Points) ? data.Points : [];
+
+      updateCriteria = {
+        $pull: {
+          "Security": {
+            "userId": {
+              $in: []
+            }
+          }
+        }
+      };
+
+      if (points.length < 1) {
+        return Utils.sendResponse(res, {
+          err: "No points given."
+        });
+      }
+
+      for (i = 0; i < users.length; i++) {
+        updateCriteria.$pull.Security.userId.$in.push(
+          new mongodb.ObjectID(users[i])
+        );
+      }
+
+      count = 0;
+
+
+      async.forEach(points, function(upi, callback) {
+
+        if (upi.length < 12) {
+          id = parseInt(upi, 10);
+        } else {
+          id = new mongodb.ObjectID(upi);
+        }
+
+        var searchCriteria = {
+          "_id": id
+        };
+
+        db.collection(pointsCollection).update(searchCriteria, updateCriteria, function(err, result) {
+          callback(err);
+        });
+
+      }, function(err) {
+        if (err) return Utils.sendResponse(res, {
+          err: err
+        });
+
+        return Utils.sendResponse(res, {
+          message: "success"
+        });
+      });*/
+    }
+  }
 };

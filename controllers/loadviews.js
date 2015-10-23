@@ -37,6 +37,10 @@ router.get('/displays', function(req, res) {
   res.render("displays/index.jade");
 });
 
+router.get('/report', function(req, res) {
+  res.render('reports/index');
+});
+
 router.get('/securityadmin', function(req, res) {
   res.render('securityAdmin/securityAdmin.jade');
 });

@@ -53,3 +53,5 @@ router.post('/api/scripts/readscript', function(req, res, next) {
 		}
 	});
 });
+
+module.exports = router;

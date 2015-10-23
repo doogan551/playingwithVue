@@ -8,6 +8,7 @@ router.get('/login', function(req, res) {
 });
 
 router.post('/authenticate', function(req, res, next){
+  console.log('--------session');
 	passport.authenticate('local', function(err, user, info){
 		if (err) {
 			return next(err);
@@ -24,7 +25,6 @@ router.post('/authenticate', function(req, res, next){
 		});
 	})(req, res, next);
 });
-
 
 router.get('/logout', function(req, res) {
 	req.logout();

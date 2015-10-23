@@ -26,3 +26,5 @@ router.post('/dofit', function(req, res, next) {
 
   CurveFit.doFit(data, callback);
 });
+
+module.exports = router;

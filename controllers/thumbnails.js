@@ -39,3 +39,5 @@ router.post('/thumbnail/save', function(req, res, next) {
 		}
 	});
 });
+
+module.exports = router;

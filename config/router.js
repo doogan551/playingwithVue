@@ -39,11 +39,15 @@ module.exports = function(router, controllers) {
   router.use('/gpl', controllers.gpl);
   router.use('/pointlookup', controllers.pointlookup);
   router.use('/api/points', controllers.points);
+  router.use('/reports1', controllers.points);
+  router.use('/report', controllers.points);
+  router.use('/api/reporttemplates', controllers.reporttemplates);
   router.use('/api/security', controllers.security);
   router.use('/api/scripts', controllers.scripts);
   router.use('/api/slideshows', controllers.slideshow);
   router.use('/api/system', controllers.system);
   router.use('/thumbnail', controllers.thumbnails);
+  router.use('/toolbag', controllers.toolbag);
   router.use('/api/trenddata', controllers.trenddata);
   router.use('/api/trendplots', controllers.trendplots);
 

@@ -18,3 +18,5 @@ router.get('/gettree', function(req, res, next) {
 		}
 	});
 });
+
+module.exports = router;
