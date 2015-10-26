@@ -39,8 +39,8 @@ module.exports = function(router, controllers) {
   router.use('/gpl', controllers.gpl);
   router.use('/pointlookup', controllers.pointlookup);
   router.use('/api/points', controllers.points);
-  router.use('/reports1', controllers.points);
-  router.use('/report', controllers.points);
+  router.use('/reports1', controllers.reports);
+  router.use('/report', controllers.reports);
   router.use('/api/reporttemplates', controllers.reporttemplates);
   router.use('/api/security', controllers.security);
   router.use('/api/scripts', controllers.scripts);

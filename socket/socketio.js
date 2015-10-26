@@ -15,6 +15,7 @@ var Config = require('../public/js/lib/config.js');
 // var cppApi = new(require('Cpp_API').Tasks)();
 // var monitorSender = new(require('MonitorSender').Tasks)();
 var compiler = require('../helpers/scriptCompiler.js');
+var Utility = require('../models/utility.js');
 
 var pointsCollection = utils.CONSTANTS("pointsCollection");
 var historyCollection = utils.CONSTANTS("historyCollection");
@@ -25,8 +26,13 @@ var actLogsEnums = Config.Enums["Activity Logs"];
 var controllerPriorities = [];
 var eventEmitter = new events.EventEmitter();
 
+var openDisplays = [];
+var openAlarms = [];
+
 module.exports = function socketio(common) {
   var io = common.sockets.get().io;
+  openDisplays = common.openDisplays;
+  openAlarms = common.openAlarms;
 
   io.sockets.on('connection', function(sock) {
     var sockId, socket, user;

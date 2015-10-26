@@ -1,14 +1,15 @@
 var db = require('../helpers/db');
 var Utility = require('../models/utility');
 var config = require('../public/js/lib/config.js');
+var async = require('async');
 
 module.exports = {
-  getPointsByQuery: function (data, cb) {
+  getPointsByQuery: function(data, cb) {
     var collection = db.get().collection('points');
     var query = {};
     collection.find(query).limit(200).toArray(cb);
   },
-  getPointById: function (data, cb) {
+  getPointById: function(data, cb) {
     var searchCriteria = {};
     var hasPermission = false;
     var pointid;
@@ -19,7 +20,7 @@ module.exports = {
     pointid = data.id;
     properties = [];
 
-    groups = data.user.groups.map(function (group) {
+    groups = data.user.groups.map(function(group) {
       return group._id.toString();
     });
 
@@ -32,7 +33,7 @@ module.exports = {
       query: searchCriteria,
       collection: 'points',
       limit: 1
-    }, function (err, points) {
+    }, function(err, points) {
 
       if (err)
         return cb(err, null, null);
@@ -61,7 +62,7 @@ module.exports = {
     });
   },
 
-  newPoint: function (data, cb) {
+  newPoint: function(data, cb) {
     var id = data.id || null;
     var pointType = !!data.pointType && JSON.stringify(decodeURI(data.pointType));
     var locals = {
@@ -89,7 +90,7 @@ module.exports = {
           collection: 'points',
           limit: 1
         },
-        function (err, points) {
+        function(err, points) {
           if (err) {
             return cb(err, null);
           }
@@ -113,7 +114,7 @@ module.exports = {
     }
   },
 
-  pointLookup: function (data, cb) {
+  pointLookup: function(data, cb) {
     var property = data.property && decodeURI(data.property);
     var pointType = (data.pointType && data.pointType !== 'null' && decodeURI(data.pointType)) || null;
     var pointTypes = config.Utility.pointTypes.getAllowedPointTypes(property, pointType);
@@ -134,9 +135,9 @@ module.exports = {
   },
 
   //API functions
-  search: function (data, cb) {
+  search: function(data, cb) {
     //Group IDs the user belongs to
-    var userGroupIDs = data.user.groups.map(function (group) {
+    var userGroupIDs = data.user.groups.map(function(group) {
       return group._id.toString();
     });
     // Do we have a device ID?
@@ -158,7 +159,7 @@ module.exports = {
     var isSysAdmin = data.user["System Admin"].Value;
     var searchQuery;
     // If no point type array passed in, use default
-    var pointTypes = data.pointTypes || config.Utility.pointTypes.getAllowedPointTypes().map(function (type) {
+    var pointTypes = data.pointTypes || config.Utility.pointTypes.getAllowedPointTypes().map(function(type) {
       return type.key;
     });
     // Name segments, sort names and values
@@ -193,14 +194,14 @@ module.exports = {
       _name3: 1,
       _name4: 1
     };
-    var reduceToUserGroups = function () {
+    var reduceToUserGroups = function() {
       return {
         Security: {
           $in: userGroupIDs
         }
       };
     };
-    var groupUserGroups = function () {
+    var groupUserGroups = function() {
       return {
         _id: "$_id",
         Security: {
@@ -241,7 +242,7 @@ module.exports = {
       };
     };
     // Builds $match portion of query for initial selection
-    var buildQuery = function () {
+    var buildQuery = function() {
       var query = {},
         segment,
         _pStatus = 0;
@@ -324,34 +325,696 @@ module.exports = {
       });
     }
 
-    // console.log('SEARCH QUERY!', JSON.stringify(searchQuery));
-    Utility.aggregate({
-      query: searchQuery,
-      collection: 'points'
-    }, function (err, points) {
-      if (err) {
-        return cb(err, null);
-      }
+    if (!!userGroupIDs.length) {
+      Utility.aggregate({
+        query: searchQuery,
+        collection: 'points'
+      }, function(err, points) {
+        if (err) {
+          return cb(err, null);
+        }
 
-      return cb(null, points);
-    });
+        return cb(null, points);
+      });
+    } else {
+      return cb(null, []);
+    }
   },
 
-  browse: function (data, cb) {
+  browse: function(data, cb) {
+    console.log(data);
     if (data.permissions) {
       toggleGroup(data, browse, cb);
     } else {
       browse(data, cb);
     }
   },
-  toggleGroup: function (data, cb) {
-    toggleGroup(data, cb);
+  toggleGroup: function(data, cb) {
+    toggleGroup(data, null, cb);
+  },
+  searchDependencies2: function(data, cb) {
+    var refs = [];
+    var returnObj = {
+      target: {},
+      "Point Refs": [],
+      "Dependencies": []
+    };
+    var addAppIndex = function(buildObject, pointRef) {
+      var propName = pointRef.PropertyName;
+      if (propName === 'Point Register') {
+        buildObject.extendedProperty = [propName, ' ', pointRef.AppIndex].join('');
+      }
+      return;
+    };
+
+    var upi = parseInt(data.upi, 10);
+
+    var criteria = {
+      collection: 'points',
+      query: {
+        _id: upi
+      }
+    };
+
+    Utility.getOne(criteria, function(err, targetPoint) {
+      if (err) {
+        return cb(err);
+      }
+      if (!targetPoint) {
+        return cb('Point not found.');
+      }
+
+      returnObj.target.Name = targetPoint.Name;
+      returnObj.target["Point Type"] = targetPoint["Point Type"].Value;
+
+      async.eachSeries(targetPoint["Point Refs"], function(pointRef, callback) {
+        buildPointRefs(pointRef.Value, function(err, ref, device) {
+          var obj = {
+            _id: pointRef.Value,
+            Property: pointRef.PropertyName,
+            "Point Type": (ref !== null) ? ref["Point Type"].Value : null,
+            Name: pointRef.PointName,
+            _pStatus: (ref !== null) ? ref._pStatus : null,
+            Device: (device !== null) ? {
+              Name: device.Name,
+              _id: device._id,
+              _pStatus: device._pStatus
+            } : null
+          };
+          addAppIndex(obj, pointRef);
+          returnObj["Point Refs"].push(obj);
+          callback(err);
+        });
+      }, function(err) {
+        criteria = {
+          collection: 'points',
+          query: {
+            "Point Refs.PointInst": upi,
+            _pStatus: 0
+          }
+        };
+        Utility.get(criteria, function(err, dependencies) {
+          if (err) {
+            return cb(err);
+          }
+
+          var count = 0;
+          async.eachSeries(dependencies, function(dependency, depCB) {
+
+            var deviceUpi = 0;
+            var matchedDependencies = [];
+
+            for (var m = 0; m < dependency["Point Refs"].length; m++) {
+
+              if (dependency["Point Refs"][m].PropertyName === "Device Point" && dependency["Point Refs"][m].Value !== 0)
+                deviceUpi = dependency["Point Refs"][m].Value;
+              if (dependency["Point Refs"][m].PropertyName === "Sequence Device" && dependency["Point Refs"][m].Value !== 0)
+                deviceUpi = dependency["Point Refs"][m].Value;
+              if (dependency["Point Refs"][m].Value === upi) {
+                matchedDependencies.push(dependency["Point Refs"][m]);
+              }
+            }
+            async.eachSeries(matchedDependencies, function(depPointRef, depPRCB) {
+              if (depPointRef.Value === upi) {
+                if (dependency["Point Type"].Value === "Schedule Entry" && depPointRef.PropertyName === "Control Point") {
+                  if (dependency._parentUpi === 0) {
+                    returnObj["Point Refs"].push({
+                      _id: 0,
+                      Property: depPointRef.PropertyName,
+                      "Point Type": dependency["Point Type"].Value,
+                      Name: null,
+                      _pStatus: null,
+                      Device: null
+                    });
+                    depPRCB(null);
+                  } else {
+                    criteria = {
+                      collection: 'points',
+                      query: {
+                        _id: dependency._parentUpi
+                      }
+                    };
+
+                    Utility.getOne(criteria, function(err, schedule) {
+                      returnObj.Dependencies.push({
+                        _id: schedule._id,
+                        Property: depPointRef.PropertyName,
+                        "Point Type": dependency["Point Type"].Value,
+                        Name: schedule.Name,
+                        _pStatus: dependency._pStatus,
+                        Device: null
+                      });
+                      depPRCB(null);
+                    });
+                  }
+                } else {
+                  findDevicePoint(deviceUpi, function(err, device) {
+                    if (err) {
+                      return depPRCB(err);
+                    }
+                    var obj = {
+                      _id: dependency._id,
+                      Property: depPointRef.PropertyName,
+                      "Point Type": dependency["Point Type"].Value,
+                      Name: dependency.Name,
+                      _pStatus: dependency._pStatus,
+                      Device: (device !== null) ? {
+                        Name: device.Name,
+                        _id: device._id,
+                        _pStatus: device._pStatus
+                      } : null
+                    };
+                    addAppIndex(obj, depPointRef);
+                    returnObj.Dependencies.push(obj);
+                    depPRCB(null);
+                  });
+                }
+              } else
+                setTimeout(function() {
+                  depPRCB(null);
+                }, 0);
+
+            }, function(err) {
+              depCB(err);
+            });
+          }, function(err) {
+            return cb(err, returnObj);
+          });
+
+        });
+      });
+
+
+    });
+
+    function buildPointRefs(upi, callback) {
+      var deviceUpi = 0;
+      if (upi !== 0) {
+        criteria = {
+          collection: 'points',
+          query: {
+            _id: upi
+          },
+          fields: {
+            _pStatus: 1,
+            "Point Refs": 1,
+            "Point Type": 1
+          }
+        };
+        Utility.getOne(criteria, function(err, ref) {
+          if (err) {
+            return callback(err);
+          }
+          for (var m = 0; m < ref["Point Refs"].length; m++) {
+            if (ref["Point Refs"][m].PropertyName === "Device Point" && ref["Point Refs"][m].Value !== 0)
+              deviceUpi = ref["Point Refs"][m].Value;
+          }
+          findDevicePoint(deviceUpi, function(err, device) {
+            callback(err, ref, device);
+          });
+
+        });
+      } else
+        callback(null, null, null);
+    }
+
+    function findDevicePoint(upi, callback) {
+      if (upi !== 0) {
+        criteria = {
+          collection: 'points',
+          query: {
+            _id: upi
+          },
+          fields: {
+            Name: 1,
+            _pStatus: 1
+          }
+        };
+        Utility.getOne(criteria, callback);
+      } else
+        callback(null, null);
+    }
+  },
+  getNames: function(data, cb) {
+    var upis = data.upis;
+    async.map(upis, function(upi, callback) {
+      var criteria = {
+        collection: 'points',
+        query: {
+          _id: upi * 1,
+          _pStatus: 0
+        },
+        fields: {
+          Name: 1
+        }
+      };
+      Utility.getOne(criteria, callback);
+    }, cb);
+  },
+  getPoint: function(data, cb) {
+    var pointid = parseInt(data.pointid, 10);
+
+    var searchCriteria = {
+      '_id': pointid,
+      _pStatus: 0
+    };
+
+    if (data.user["System Admin"].Value !== true && data.user["System Admin"].Value !== "true") {
+      searchCriteria.Security = {
+        $in: req["User Groups"]
+      };
+    }
+
+    var criteria = {
+      collection: 'points',
+      query: searchCriteria
+    };
+
+    Utility.getOne(criteria, cb);
+  },
+  initPoint: function(data, cb) {
+    var criteria = {};
+
+    var name1 = data.name1;
+    var name2 = data.name2;
+    var name3 = data.name3;
+    var name4 = data.name4;
+
+    var Name;
+    var _Name;
+    var _name1;
+    var _name2;
+    var _name3;
+    var _name4;
+
+    var pointType = data.pointType;
+    var targetUpi = (data.targetUpi) ? parseInt(data.targetUpi, 10) : 0;
+    var parentUpi = (data.parentUpi) ? parseInt(data.parentUpi, 10) : 0;
+    if ((pointType === "Report" || pointType === "Sensor") && data.subType === undefined) {
+      return cb("No type defined");
+    } else {
+      subType = data.subType;
+    }
+
+    doInitPoint(name1, name2, name3, name4, pointType, targetUpi, subType, cb);
+
+    function doInitPoint(name1, name2, name3, name4, pointType, targetUpi, subType, callback) {
+
+      buildName(name1, name2, name3, name4);
+
+      criteria = {
+        collection: 'points',
+        query: {
+          _Name: _Name
+        }
+      };
+
+      Utility.getOne(criteria, function(err, freeName) {
+        if (err) {
+          return callback(err);
+        }
+        if (freeName !== null && pointType !== "Schedule Entry") {
+          return callback("Name already exists.");
+        }
+
+
+        criteria = {
+          collection: 'upis',
+          query: {
+            _pStatus: 1
+          },
+          sort: [
+            ['_id', 'asc']
+          ],
+          updateObj: {
+            $set: {
+              _pStatus: 0
+            }
+          },
+          options: {
+            'new': true
+          }
+        };
+
+        Utility.findAndModify(criteria, function(err, upiObj) {
+          if (err) {
+            return callback(err);
+          }
+
+          if (pointType === "Schedule Entry") {
+            name2 = upiObj._id.toString();
+            buildName(name1, name2, name3, name4);
+          }
+
+          if (targetUpi && targetUpi !== 0) {
+            criteria = {
+              collection: 'points',
+              query: {
+                _id: targetUpi
+              }
+            };
+
+            Utility.getOne(criteria, function(err, targetPoint) {
+              if (err) {
+                return cb(err);
+              }
+
+              if (!targetPoint) {
+                return callback("Target point not found.");
+              }
+
+              targetPoint._pStatus = 1;
+              fixPoint(upiObj, targetPoint, true, callback);
+            });
+          } else {
+            fixPoint(upiObj, Config.Templates.getTemplate(pointType), callback);
+          }
+        });
+      });
+
+      function buildName(name1, name2, name3, name4) {
+        _name1 = (name1) ? name1.toLowerCase() : "";
+        _name2 = (name2) ? name2.toLowerCase() : "";
+        _name3 = (name3) ? name3.toLowerCase() : "";
+        _name4 = (name4) ? name4.toLowerCase() : "";
+
+        Name = "";
+
+        if (name1)
+          Name = Name + name1;
+        if (name2)
+          Name = Name + "_" + name2;
+        if (name3)
+          Name = Name + "_" + name3;
+        if (name4)
+          Name = Name + "_" + name4;
+
+        _Name = Name.toLowerCase();
+      }
+    }
+
+    function cloneGPLSequence(oldSequence, callback) {
+      var oName1;
+      var oName2;
+      var oName3;
+      var oName4;
+      var oName;
+      var oPointType;
+
+      async.eachSeries(oldSequence.SequenceData.sequence.block, function(block, acb) {
+        if (block.upi === undefined || block.upi === 0) {
+          acb(null);
+        } else {
+          console.log(block);
+          oName1 = oldSequence.name1;
+          oName2 = oldSequence.name2;
+          oName3 = oldSequence.name3;
+          oName4 = oldSequence.name4;
+
+          if (oName1 === '' || oName1 === undefined) {
+            oName1 = block.label;
+            oName2 = '';
+            oName3 = '';
+            oName4 = '';
+          } else if (oName2 === '' || oName2 === undefined) {
+            oName2 = block.label;
+            oName3 = '';
+            oName4 = '';
+          } else if (oName3 === '' || oName3 === undefined) {
+            oName3 = block.label;
+            oName4 = '';
+          } else {
+            oName4 = block.label;
+          }
+
+          doInitPoint(oName1, oName2, oName3, oName4, null, block.upi, null, function(err, point) {
+            if (err) {
+              acb(err);
+            } else {
+              block.upi = point._id;
+              acb(null);
+            }
+          });
+        }
+      }, callback);
+    }
+
+
+    function fixPoint(upiObj, template, isClone, callback) {
+      template.Name = Name;
+      template.name1 = (name1) ? name1 : "";
+      template.name2 = (name2) ? name2 : "";
+      template.name3 = (name3) ? name3 : "";
+      template.name4 = (name4) ? name4 : "";
+
+      template._Name = _Name;
+      template._name1 = (_name1) ? _name1 : "";
+      template._name2 = (_name2) ? _name2 : "";
+      template._name3 = (_name3) ? _name3 : "";
+      template._name4 = (_name4) ? _name4 : "";
+
+      template._id = upiObj._id;
+
+      template._actvAlmId = BSON.ObjectID("000000000000000000000000");
+
+      template._cfgRequired = true;
+
+      if (template["Point Type"].Value === "Display") { // default background color for new Displays
+        template["Background Color"].Value = Config.Templates.getTemplate("Display")["Background Color"];
+      }
+      console.log("isClone", isClone);
+      if (!isClone) {
+        if (template["Point Type"].Value === "Sensor") {
+          template["Sensor Type"].Value = (subType) ? subType.Value : "Input";
+          template["Sensor Type"].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
+        } else if (template["Point Type"].Value === "Report") {
+          template["Report Type"].Value = (subType) ? subType.Value : "Property";
+          template["Report Type"].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
+        }
+
+        template._parentUpi = parentUpi;
+
+        criteria = {
+          collection: 'AlarmDefs',
+          query: {
+            isSystemMessage: true
+          },
+          fields: {
+            msgType: 1
+          }
+        };
+
+        Utility.get(criteria, function(err, alarmDefs) {
+          if (err) {
+            return callback(err);
+          }
+          if (template["Alarm Messages"] !== undefined) {
+            for (var i = 0; i < template["Alarm Messages"].length; i++) {
+              for (var j = 0; j < alarmDefs.length; j++) {
+                if (template["Alarm Messages"][i].msgType === alarmDefs[j].msgType) {
+                  template["Alarm Messages"][i].msgId = alarmDefs[j]._id;
+                }
+              }
+            }
+          }
+
+          criteria = {
+            collection: 'SystemInfo',
+            query: {
+              Name: 'Preferences'
+            },
+            fields: {
+              "Quality Code Default Mask": 1,
+              _id: 0
+            }
+          };
+
+          Utility.getOne(criteria, function(err, defaultQualityCodeMask) {
+            if (err) {
+              return callback(err);
+            }
+            if (template["Quality Code Enable"] !== undefined) {
+              template["Quality Code Enable"].Value = defaultQualityCodeMask["Quality Code Default Mask"];
+            }
+            addTemplateToDB(template, callback);
+
+          });
+        });
+      } else {
+        if (template["Point Type"].Value === "Sequence") {
+          cloneGPLSequence(template, function() {
+            addTemplateToDB(template, callback);
+          });
+        } else {
+          if (template["Point Type"].Value !== "Schedule Entry" && template._parentUpi !== 0) {
+            template._parentUpi = 0;
+            for (var i = 0; i < template["Point Refs"].length; i++) {
+              template["Point Refs"][i].isReadOnly = false;
+            }
+          }
+          addTemplateToDB(template, callback);
+        }
+      }
+
+    }
+
+    function addTemplateToDB(template, callback) {
+      criteria = {
+        collection: 'points',
+        insertObj: template
+      };
+      Utility.insert(criteria, function(err, result) {
+        return callback(err, template);
+      });
+    }
+  },
+  getPointRefsSmall: function(data, cb) {
+    var searchCriteria = {};
+    var filterProps = {
+      Name: 1,
+      Value: 1,
+      "Point Type": 1,
+      "Point Refs": 1
+    };
+    var hasPermission = false;
+
+    var upi = data.upi;
+    var properties = [];
+
+    searchCriteria._id = parseInt(upi, 10);
+    searchCriteria._pStatus = {
+      $in: [0, 1]
+    };
+
+    var criteria = {
+      collection: 'points',
+      query: searchQuery,
+      fields: filterProps
+    };
+
+    Utility.getOne(criteria, function(err, point) {
+      if (err) {
+        return cb(err);
+      }
+      if (point === null) {
+        return cb(null, 'No point found.');
+      }
+
+      return cb(null, null, point);
+    });
+  },
+  findAlarmDisplays: function(data, cb) {
+    var criteria = {};
+    var firstSearch = {};
+    var thirdSearch = {};
+    var tempId = 0;
+    var displays = [];
+
+    var upi = parseInt(data.upi, 10);
+
+    firstSearch._id = upi;
+    var secondSearch = {
+      "Point Type.Value": "Display"
+    };
+
+    var groups = data.user.groups.map(function(group) {
+      return group._id.toString();
+    });
+
+    if (!data.user["System Admin"].Value) {
+      thirdSearch.Security = {
+        $in: groups
+      };
+      secondSearch.Security = {
+        $in: groups
+      };
+    }
+
+    criteria = {
+      collection: 'points',
+      query: firstSearch,
+      fields: {
+        Name: 1,
+        "Point Refs": 1
+      }
+    };
+
+    Utility.getOne(criteria, function(err, targetPoint) {
+      if (err) {
+        cb(err);
+      }
+
+      if (targetPoint !== null) {
+
+        for (var i = 0; i < targetPoint["Point Refs"].length; i++) {
+          if (targetPoint["Point Refs"][i].PropertyName === "Alarm Display Point") {
+            if (targetPoint["Point Refs"][i].Value !== 0) {
+              tempId = targetPoint["Point Refs"][i].Value;
+              displays.push({
+                _id: targetPoint["Point Refs"][i].Value,
+                Name: targetPoint["Point Refs"][i].PointName
+              });
+            }
+            break;
+          }
+        }
+        thirdSearch._id = (displays.length > 0) ? displays[0]._id : 0;
+        if (thirdSearch._id !== 0) {
+          criteria = {
+            collection: 'points',
+            query: thirdSearch,
+            fields: {
+              _id: 1
+            }
+          };
+
+          Utility.getOne(criteria, function(err, point) {
+            if (err) {
+              return cb(err);
+            }
+            if (!point) {
+              displays = [];
+            }
+            doSecondSearch(targetPoint, function(err) {
+              return cb(err, displays);
+            });
+
+          });
+        } else {
+          doSecondSearch(targetPoint, function(err) {
+              return cb(err, displays);
+          });
+        }
+      } else {
+        return cb('Point not found.');
+      }
+
+    });
+
+    function doSecondSearch(targetPoint, callback) {
+      secondSearch["Point Refs.Value"] = targetPoint._id;
+      criteria = {
+        collection: 'points',
+        query: secondSearch,
+        fields: {
+          Name: 1
+        }
+      };
+
+      Utility.get(criteria, function(err, references) {
+
+        async.eachSeries(references, function(ref, acb) {
+          displays.push(ref);
+          acb(null);
+        }, callback);
+      });
+    }
   }
 };
 
-var browse = function (data, cb) {
+var browse = function(data, cb) {
     //Group IDs the user belongs to
-    var userGroupIDs = data.user.groups.map(function (group) {
+    var userGroupIDs = data.user.groups.map(function(group) {
       return group._id.toString();
     });
     // Do we have a device ID?
@@ -370,7 +1033,7 @@ var browse = function (data, cb) {
     var isSysAdmin = data.user["System Admin"].Value;
     var searchQuery;
     // If no point type array passed in, use default
-    var pointTypes = data.pointTypes || config.Utility.pointTypes.getAllPointTypes().map(function (type) {
+    var pointTypes = data.pointTypes || config.Utility.pointTypes.getAllPointTypes().map(function(type) {
       return type.key;
     });
     // Name segments, sort names and values
@@ -448,7 +1111,7 @@ var browse = function (data, cb) {
     // Final sort
     var sort = {};
     // Builds $match portion of query for initial selection
-    var buildQuery = function () {
+    var buildQuery = function() {
       var query = {},
         segment,
         _pStatus = 0;
@@ -500,14 +1163,14 @@ var browse = function (data, cb) {
 
       return query;
     };
-    var reduceToUserGroups = function () {
+    var reduceToUserGroups = function() {
       return {
         Security: {
           $in: userGroupIDs
         }
       };
     };
-    var groupUserGroups = function () {
+    var groupUserGroups = function() {
       var point = {
         _id: "$_id",
         Security: {
@@ -600,7 +1263,7 @@ var browse = function (data, cb) {
     Utility.aggregate({
       query: searchQuery,
       collection: 'points'
-    }, function (err, points) {
+    }, function(err, points) {
       if (err) {
         return cb(err, null);
       }
@@ -608,8 +1271,8 @@ var browse = function (data, cb) {
     });
   },
 
-  toggleGroup = function (data, next, cb) {
-    var pointTypes = data.pointTypes || config.Utility.pointTypes.getAllowedPointTypes().map(function (type) {
+  toggleGroup = function(data, next, cb) {
+    var pointTypes = data.pointTypes || config.Utility.pointTypes.getAllowedPointTypes().map(function(type) {
       return type.key;
     });
     var permissions = data.permissions;
@@ -654,7 +1317,7 @@ var browse = function (data, cb) {
       options: {
         multi: true
       }
-    }, function (err, updateCount, status) {
+    }, function(err, updateCount, status) {
       if (err) {
         return cb(err, null);
       } else if (next) {
@@ -665,33 +1328,35 @@ var browse = function (data, cb) {
     });
   };
 
-  exports.getInitialVals = function(id, cb) {
-    var fields = {
-      Value: 1,
-      Name: 1,
-      eValue: 1,
-      "Alarm State": 1,
-      _relDevice: 1,
-      _relRMU: 1,
-      _relPoint: 1,
-      "Status Flags": 1,
-      "Alarms Off": 1,
-      "COV Enable": 1,
-      "Control Pending": 1,
-      "Quality Code Enable": 1
-    };
-
-    var criteria = {
-      collection:'points',
-      query:{_id:parseInt(id, 10)},
-      fields: fields
-    }
-
-    Utility.getOne(criteria, function (err, point) {
-      if (point)
-        point = setQualityLabel(point);
-
-      return cb(point);
-    });
-
+exports.getInitialVals = function(id, cb) {
+  var fields = {
+    Value: 1,
+    Name: 1,
+    eValue: 1,
+    "Alarm State": 1,
+    _relDevice: 1,
+    _relRMU: 1,
+    _relPoint: 1,
+    "Status Flags": 1,
+    "Alarms Off": 1,
+    "COV Enable": 1,
+    "Control Pending": 1,
+    "Quality Code Enable": 1
   };
+
+  var criteria = {
+    collection: 'points',
+    query: {
+      _id: parseInt(id, 10)
+    },
+    fields: fields
+  };
+
+  Utility.getOne(criteria, function(err, point) {
+    if (point)
+      point = setQualityLabel(point);
+
+    return cb(point);
+  });
+
+};

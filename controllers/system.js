@@ -16,7 +16,6 @@ router.get('/controlpriorities', function(req, res, next) {
   });
 });
 
-
 router.get('/qualitycodes', function(req, res, next) {
   System.getSystemInfoByName('Quality Codes', function(err, codes) {
     if (err) {
@@ -29,7 +28,6 @@ router.get('/qualitycodes', function(req, res, next) {
   });
 });
 
-
 router.get('/controllers', function(req, res, next) {
   System.getSystemInfoByName('Controllers', function(err, controllers) {
     if (err) {
@@ -41,7 +39,6 @@ router.get('/controllers', function(req, res, next) {
     }
   });
 });
-
 
 router.get('/getcounts/:type', function(req, res, next) {
   var type = req.params.type;
@@ -56,7 +53,6 @@ router.get('/getcounts/:type', function(req, res, next) {
     }
   });
 });
-
 
 router.post('/updatecontrolpriorities', function(req, res, next) {
   var data = _.merge(req.params, req.body);

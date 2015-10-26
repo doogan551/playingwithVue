@@ -168,5 +168,8 @@ router.get('/trend', function(req, res, next) {
 		pars
 	);
 });
+// router.get('/displays/plot', controllers.displays.plot);
+// router.get('/displays/plot64', controllers.displays.plot64);
+// router.get('/console', controllers.console.index);
 
 module.exports = router;
