@@ -172,10 +172,11 @@ var Users = {
                         };
                         adminString = "Users." + user._id + ".Group Admin";
                         usernameString = "Users." + user._id + ".username";
-                        if (group["Group Admin"] === true || group["Group Admin"] === "true")
+                        if (group["Group Admin"] === true || group["Group Admin"] === "true") {
                           updateCriteria.$set[adminString] = true;
-                        else
+                        } else {
                           updateCriteria.$set[adminString] = false;
+                        }
 
                         options = {
                           upsert: true
@@ -839,7 +840,9 @@ module.exports = {
           returnUsers = users;
         }
 
-        return cb(null, {Users:returnUsers});
+        return cb(null, {
+          Users: returnUsers
+        });
       });
     },
     getGroups: function(data, cb) {
@@ -934,11 +937,13 @@ module.exports = {
                       };
                       groupUpdate.$set.Users = group.Users;
 
-                      criteria.query = {
-                        _id: group._id
+                      criteria = {
+                        collection: userGroupsCollection,
+                        query: {
+                          _id: group._id
+                        },
+                        updateObj: groupUpdate
                       };
-                      criteria.updateObj = groupUpdate;
-
                       Utility.update(criteria, function(err, result2) {
                         if (err) {
                           return callback(err, null);
@@ -952,8 +957,6 @@ module.exports = {
                   } else {
                     callback(null, groups);
                   }
-
-
                 });
               },
               function(groups, callback) {
