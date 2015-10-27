@@ -31,13 +31,4 @@
 - cluster/reverse proxy - loc 6114 - ZERO DOWNTIME RESTART
 
 - teamviewer or vnc
-
-
-
--activitylogs - 2015/6/5
--points (added) - 2015/6/4
--security (added) - 2015/6/5
--system - 2015/6/4
--user - 2015/6/5
--usergroups - 2015/6/3
--utility - 2015/6/1
+- GitLab or Bitbucket
