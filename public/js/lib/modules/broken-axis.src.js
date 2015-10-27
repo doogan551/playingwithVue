@@ -1,5 +1,5 @@
 /**
- * Highcharts JS v4.1.1 (2015-02-17)
+ * Highcharts JS v4.1.7 (2015-06-26)
  * Highcharts Broken Axis module
  * 
  * Author: Stephane Vanraes, Torstein Honsi
@@ -37,29 +37,32 @@
 		},
 
 		isInAnyBreak: function (val, testKeep) {
-			// Sanity Check			
-			if (!this.options.breaks) { return false; }
 
 			var breaks = this.options.breaks,
-				i = breaks.length,
-				inbrk = false,
-				keep = false;
+				i = breaks && breaks.length,
+				inbrk,
+				keep,
+				ret;
 
+			
+			if (i) { 
 
-			while (i--) {
-				if (this.isInBreak(breaks[i], val)) {
-					inbrk = true;
-					if (!keep) {
-						keep = pick(breaks[i].showPoints, this.isXAxis ? false : true);
+				while (i--) {
+					if (this.isInBreak(breaks[i], val)) {
+						inbrk = true;
+						if (!keep) {
+							keep = pick(breaks[i].showPoints, this.isXAxis ? false : true);
+						}
 					}
 				}
-			}
 
-			if (inbrk && testKeep) {
-				return inbrk && !keep;
-			} else {
-				return inbrk;
+				if (inbrk && testKeep) {
+					ret = inbrk && !keep;
+				} else {
+					ret = inbrk;
+				}
 			}
+			return ret;
 		}
 	});
 
@@ -89,7 +92,6 @@
 	});
 	
 	wrap(Axis.prototype, 'init', function (proceed, chart, userOptions) {
-
 		// Force Axis to be not-ordinal when breaks are defined
 		if (userOptions.breaks && userOptions.breaks.length) {
 			userOptions.ordinal = false;
@@ -101,7 +103,7 @@
 
 			var axis = this;
 			
-			axis.postTranslate = true;
+			axis.doPostTranslate = true;
 
 			this.val2lin = function (val) {
 				var nval = val,
@@ -111,7 +113,7 @@
 				for (i = 0; i < axis.breakArray.length; i++) {
 					brk = axis.breakArray[i];
 					if (brk.to <= val) {
-						nval -= (brk.len);
+						nval -= brk.len;
 					} else if (brk.from >= val) {
 						break;
 					} else if (axis.isInBreak(brk, val)) {
@@ -133,13 +135,23 @@
 					if (brk.from >= nval) {
 						break;
 					} else if (brk.to < nval) {
-						nval += (brk.to - brk.from);
+						nval += brk.len;
 					} else if (axis.isInBreak(brk, nval)) {
-						nval += (brk.to - brk.from);
+						nval += brk.len;
 					}
 				}
-
 				return nval;
+			};
+
+			this.setExtremes = function (newMin, newMax, redraw, animation, eventArguments) {
+				// If trying to set extremes inside a break, extend it to before and after the break ( #3857 )
+				while (this.isInAnyBreak(newMin)) {
+					newMin -= this.closestPointRange;
+				}				
+				while (this.isInAnyBreak(newMax)) {
+					newMax -= this.closestPointRange;
+				}
+				Axis.prototype.setExtremes.call(this, newMin, newMax, redraw, animation, eventArguments);
 			};
 
 			this.setAxisTranslation = function (saveOld) {
@@ -158,14 +170,15 @@
 					i,
 					j;
 
-				// Min & Max Check
+				// Min & max check (#4247)
 				for (i in breaks) {
 					brk = breaks[i];
+					repeat = brk.repeat || Infinity;
 					if (axis.isInBreak(brk, min)) {
-						min += (brk.to % brk.repeat) - (min % brk.repeat);
+						min += (brk.to % repeat) - (min % repeat);
 					}
 					if (axis.isInBreak(brk, max)) {
-						max -= (max % brk.repeat) - (brk.from % brk.repeat);
+						max -= (max % repeat) - (brk.from % repeat);
 					}
 				}
 
@@ -232,7 +245,6 @@
 
 				axis.min = min;
 				axis.max = max;
-
 			};
 		}
 	});
@@ -246,15 +258,21 @@
 			yAxis = series.yAxis,
 			points = series.points,
 			point,
-			i = points.length;
+			i = points.length,
+			connectNulls = series.options.connectNulls,
+			nullGap;
 
 
 		if (xAxis && yAxis && (xAxis.options.breaks || yAxis.options.breaks)) {
 			while (i--) {
 				point = points[i];
 
-				if (xAxis.isInAnyBreak(point.x, true) || yAxis.isInAnyBreak(point.y, true)) {
+				nullGap = point.y === null && connectNulls === false; // respect nulls inside the break (#4275)
+				if (!nullGap && (xAxis.isInAnyBreak(point.x, true) || yAxis.isInAnyBreak(point.y, true))) {
 					points.splice(i, 1);
+					if (this.data[i]) {
+						this.data[i].destroyElements(); // removes the graphics for this point if they exist
+					}
 				}
 			}
 		}

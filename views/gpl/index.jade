@@ -6,16 +6,20 @@ html
         link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.flat.css')
         link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
         link(rel='stylesheet', href='/css/lib/bootstrap.darkly.css')
+        link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
         link(rel='stylesheet', href='/css/gpl/gpl.css')
         script.
             var gplData = {
                     upi: !{upi},
                     point: !{point},
-                    references: !{references},
-                    controllers: !{controllers}
+                    references: !{references}
                 };
     body(oncontextmenu="return false", data-bind="css: {loaded: loaded}")
+        .mask
+        .gplTooltip(style="display: none")
         canvas#gplCanvas
+        canvas#toolbarCanvas
+        //-(style="display: none; width: auto")
 
         .bottomBar.hideLoading
             //- span Grid Size
@@ -26,6 +30,11 @@ html
             button.btn.btn-primary.btn-sm#saveForLater(type="button", style="display:none", data-bind="visible: isEdit === true") Save For Later
             button.btn.btn-danger.btn-sm#cancel(type="button", style="display:none", data-bind="visible: isEdit === true") Cancel
             button.btn.btn-primary.btn-sm#edit(type="button", style="display:none", data-bind="visible: isEdit !== true") Edit
+            .zoomSection.pull-right
+                a.mr5(href="", title="Reset Zoom", data-bind="click: resetZoom")
+                    i.fa.fa-search
+                input.prettyInput(type="number", min="25", max="400", data-bind="value: currentZoom")
+                | &nbsp;%
             .pull-left.pop
                 a(href="", data-bind="click: popInOut")
                     .fa(style="display:none", data-bind="css: popInOutClass(), visible: loaded")
@@ -35,7 +44,7 @@ html
             //- button.btn.btn-primary.btn-sm.pull-left(type="button", style="display:none", data-bind="text: popInOutText(), click: popInOut, visible: loaded")
 
         #gplSequenceProperties.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
-            .modal-dialog.modal-lg
+            .modal-dialog
                 .modal-content
                     .modal-header
                         button.close(type="button", data-dismiss="modal")
@@ -48,37 +57,39 @@ html
                                 .col-sm-12
                                     .form-group
                                         button.btn.btn-xs.btn-primary(data-bind="click: selectDevicePoint") Select Device
-                                    small(data-bind="text: deviceName")
-                            .row
-                                .col-sm-6
-                                    button.btn.btn-xs.btn-primary(data-bind="click: showBackgroundColorModal") Select Background Color
-                                    span(style="vertical-align: middle; margin-right: 10px; display: inline-block; border-radius: 3px", data-bind="style: {width: '50px', backgroundColor: backgroundColorHex()}") &nbsp;
-                                    span(data-bind="text: backgroundColor")
+                                        small(data-bind="text: deviceName")
                             hr
                             .row
-                                .col-sm-3
+                                .col-sm-5.spacedControls
                                     .form-group.dataField
                                         label Description
                                         input.form-control.input-sm(type="text", data-bind="textInput: deviceDescription", placeholder="Sequence Description")
-                                .col-sm-3
                                     .form-group.dataField
                                         label Controller
-                                        select.form-control.input-sm(data-bind="options: controllers, optionsText: 'Controller Name', optionsValue: 'Controller ID', value: deviceControllerValue")
+                                        select.form-control.input-sm(data-bind="options: controllers, optionsText: 'name', optionsValue: 'value', value: deviceControllerValue")
                                         br
                                         button.btn.btn-xs.btn-primary(data-bind="click: applyController") Apply All
-                                .col-sm-2
+
+                                .col-sm-7
+                                    .col-sm-12
+                                        div Background Color
+                                        div#bgColorPicker(data-dropdown="true", data-sm-palette="true", data-vertical="true", data-insertpalette="true")
+
+                            hr
+                            .row
+                                .col-sm-4
                                     .form-group.dataField
                                         label Update Interval
                                         input.short-input.form-control.input-sm(type="text", min="0", max="59", placeholder="Min", data-bind="textInput: deviceUpdateIntervalMinutes")
                                         | :
                                         input.short-input.form-control.input-sm(type="text", min="0", max="59", placeholder="Sec", data-bind="textInput: deviceUpdateIntervalSeconds")
                                         button.btn.btn-xs.btn-primary(data-bind="click: applyUpdateInterval") Apply All
-                                .col-sm-2
+                                .col-sm-4
                                     .form-group.dataField
                                         label Show Value
                                         input.form-control.input-sm(type="checkbox", data-bind="checked: deviceShowValue")
                                         button.btn.btn-xs.btn-primary(data-bind="click: applyShowValue") Apply All
-                                .col-sm-2
+                                .col-sm-4
                                     .form-group.dataField
                                         label Show Label
                                         input.form-control.input-sm(type="checkbox", data-bind="checked: deviceShowLabel")
@@ -94,7 +105,7 @@ html
                         .row
                             .col-sm-12.center-block
                                 div.colorpicker
-                                    div(data-bind="colorpicker: deviceBackgroundColor")
+                                    div#bgColorPicker(data-dropdown="true", data-sm-palette="true", data-vertical="true", data-insertpalette="true")
                     .modal-footer
                         button.btn.btn-default.btn-sm(data-bind="click: hideBackgroundColorModal", data-dismiss="modal") Close
                         button.btn.btn-primary.btn-sm(data-bind="click: updateBackgroundColor") Save
@@ -115,8 +126,8 @@ html
                     .modal-body
                         .row.text-center This sequence has an edit version.  Do you wish to load that version?
                     .modal-footer
-                        button.btn.btn-success.btn-sm(type="button", data-bind="click: useEditVersion") Use Edit Version
-                        button.btn.btn-danger.btn-sm(type="button", data-bind="click: discardEditVersion") Discard
+                        button#useEditVersion.btn.btn-success.btn-sm(type="button") Use Edit Version
+                        button#discardEditVersion.btn.btn-danger.btn-sm(type="button") Discard
 
         #editPrecisionModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
             .modal-dialog.modal-sm
@@ -133,6 +144,46 @@ html
                         button.btn.btn-default.btn-sm(data-dismiss="modal") Close
                         button.btn.btn-primary.btn-sm(data-bind="click: updateBlockPrecision") Save
 
+        #editTextModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
+            .modal-dialog
+                .modal-content
+                    .modal-header
+                        h3.panel-title Edit Text
+                    .modal-body.clearfix
+                        .row
+                            .col-sm-6.spacedControls.noBoldControls
+                                .form-group
+                                    textarea.form-control(rows="3", data-bind="textInput: editText")
+                                .form-group.form-inline
+                                    label(for="editTextFontSize") Font Size
+                                    input#editTextFontSize.form-control.input-sm(type="number", min="8", max="72", data-bind="textInput: editTextFontSize")
+                                .form-group
+                                    .checkbox
+                                        label
+                                            input(type="checkbox", data-bind="checked: editTextBold")
+                                            | Bold
+
+                                    .checkbox
+                                        label
+                                            input(type="checkbox", data-bind="checked: editTextItalic")
+                                            | Italic
+
+                            .col-sm-6
+                                div#fontColorPicker(data-dropdown="true", data-sm-palette="true", data-vertical="true", data-insertpalette="true")
+
+                        //- br
+                        //- .form-group
+                        //-     label(for="editTextFontSize") Font Size
+                        //-     input#editTextFontSize(type="number", min="8", max="72", data-bind="textInput: editTextFontSize")
+                        //- .subtitle.col-xs-12.center-block Numeric Format
+                        //-     .input-row  # of Characters
+                        //-         input.pull-right(type="number", min="1", max="10", data-bind="value: editPointCharacters")
+                        //-     .input-row # of Decimals
+                        //-         input.pull-right(type="number", min="1", max="10", data-bind="value: editPointDecimals")
+                    .modal-footer
+                        button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+                        button.btn.btn-primary.btn-sm(data-bind="click: updateText") Save
+
         #editInputOutput.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
             .modal-dialog
                 .modal-content
@@ -145,41 +196,20 @@ html
                     .modal-body.form-inline
                         //- Monitor and Control block editing
                         .clearfix(data-bind="visible: editPointType() !== 'ConstantBlock'")
-                            //- .subtitle Reference type
-                                //- .row
-                                //-     .col-md-4.col
-                                //-         label.radio-inline
-                                //-             input(type="radio", name="editPointReferenceType", value="External", data-bind="checked: editPointReferenceType")
-                                //-             |External Point
-                                //-     .col-md-4.col
-                                //-         label.radio-inline
-                                //-             input(type="radio", name="editPointReferenceType", value="Internal", data-bind="checked: editPointReferenceType")
-                                //-             |Internal GPL
-                                //-     .col-md-4.col(data-bind="visible: editPointType() !== 'ControlBlock'")
-                                //-         label.radio-inline
-                                //-             input(type="radio", name="editPointReferenceType", value="externalgpl", data-bind="checked: editPointReferenceType")
-                                //-             |External GPL
-
                             .subtitle Reference
                                 .row.pointName
                                     .col-md-12
                                         button.btn.btn-xs.btn-primary(data-bind="click: editPointReference") Data Point
                                         span(data-bind="text: editPointName")
 
-                            //- .subtitle(data-bind="visible: editPointReferenceType() === 'Internal'") Reference
-                            //-     .row
-                            //-         .col-md-12
-                            //-             span Block Reference:
-                            //-             select(data-bind="value: selectedReference, options: blockReferences, optionsValue: 'value', optionsText: 'label'")
-
-                            .subtitle.col-md-5 Numeric Format
+                            .subtitle.col-xs-5 Numeric Format
                                 .input-row  # of Characters
                                     input.pull-right(type="number", min="1", max="10", data-bind="value: editPointCharacters")
 
                                 .input-row # of Decimals
                                     input.pull-right(type="number", min="1", max="10", data-bind="value: editPointDecimals")
 
-                            .subtitle.col-md-5.pull-right Label Format
+                            .subtitle.col-xs-5.pull-right Label Format
                                 .input-row
                                     .checkbox
                                         label Show Label
@@ -223,22 +253,24 @@ html
             ul.editSection
                 li.block(data-ignoretheme="true")
                     a(href="", data-bind="click: editBlockPrecision") Edit Precision
-                li.block(data-ignoretheme="true")
+                li.block.nonPoint(data-ignoretheme="true")
                     a(href="", data-bind="click: showPointEditor") Edit Point
                 li.block(data-ignoretheme="true")
                     a(href="", data-bind="click: deleteBlock") Delete Block
                 li.line(data-ignoretheme="true")
                     a(href="", data-bind="click: deleteLine") Delete Line
+                li.text(data-ignoretheme="true")
+                    a(href="", data-bind="click: deleteBlock") Delete Text
                 li.default(data-ignoretheme="true")
                     a(href="", data-bind="click:showUpdateSequenceModal") Sequence Properties
                 li.default(data-ignoretheme="true")
                     a(href="", data-bind="click: showDevicePoint") Edit Device Point
+                //- li.default(data-ignoretheme="true")
+                //-     a(href="", data-bind="click: addNewButton") Action Button
+                //- li.default(data-ignoretheme="true")
+                //-     a(href="", data-bind="click: addNewDynamic") Dynamic
                 li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click: addNewButton") Action Button
-                li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click: addNewDynamic") Dynamic
-                li.default(data-ignoretheme="true")
-                    a(href="", data-bind="click: addNewText") Text
+                    a(href="", data-bind="click: addNewText") Add Text
             ul.viewSection
                 li.default(data-ignoretheme="true")
                     a(href="", data-bind="click: showDevicePoint") Edit Device Point
@@ -253,5 +285,6 @@ html
         script(src='/js/lib/jqwidgets/jqxdropdownbutton.js')
         script(src='/js/lib/jqwidgets/jqxcolorpicker.js')
         script(src='/js/lib/jqwidgets/jqxmenu.js')
-        script(src='/js/gpl/gpl.textblock.js')
+        script(src='/js/util/components/colorpicker/diColorPicker.js')
+        //- script(src='/js/gpl/gpl.textblock.js')
         script(src='/js/gpl/gpl.js')

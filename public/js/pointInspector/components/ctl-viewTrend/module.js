@@ -205,6 +205,24 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
         $modalTime.toggle('fast');
     };
 
+    ViewModel.prototype.printHistory = function() {
+        var $modal = $('.modal.viewTrend'),
+            $modalTime = $modal.find('.modalTime'),
+            $modalValue = $modal.find('.modalValue');
+        // requires jquery-migrate to function properly
+        //$modalValue.printElement();
+        /*$modalTime.hide('fast', function() {
+            window.print();
+        });*/
+
+        var w = window.open();
+        var html = $modalValue.html();
+
+        $(w.document.body).html(html);
+        w.print();
+        w.close();
+    };
+
     ViewModel.prototype.getUpload = function() {
         if (this.gettingData)
             return;
@@ -269,9 +287,9 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
             if (!data.err && data.length !== 0) {
                 $('.nextBtn').removeAttr('disabled');
                 $('.prevBtn').removeAttr('disabled');
-            } else if(self.direction() === "next"){
+            } else if (self.direction() === "next") {
                 $('.nextBtn').attr('disabled', 'disabled');
-            } else if(self.direction() === "previous"){
+            } else if (self.direction() === "previous") {
                 $('.prevBtn').attr('disabled', 'disabled');
             }
 
@@ -407,8 +425,8 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
     ViewModel.prototype.previousPage = function() {
         var self = this;
         self.page(self.page() - 1);
-        if(self.page() === 0)
-            self.page(self.page()-1);
+        if (self.page() === 0)
+            self.page(self.page() - 1);
         self.direction('previous');
         self.getHistory();
     };
@@ -416,8 +434,8 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
     ViewModel.prototype.nextPage = function() {
         var self = this;
         self.page(self.page() + 1);
-        if(self.page() === 0)
-            self.page(self.page()+1);
+        if (self.page() === 0)
+            self.page(self.page() + 1);
         self.direction('next');
         self.getHistory();
     };

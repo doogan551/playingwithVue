@@ -76,6 +76,10 @@ html
                         .okCancel.text-center
                             button.btn.btn-success.closeIt(data-bind="click: applyDateTimeFilter") OK
                             a.cancel.cursorPointer.closeIt(data-bind="click: clearDateTimeFilter") Clear Filter
+
+                // PRINT BUTTON
+                button.btn.btn-default.btn-sm.btnPrint.pull-right(type="button" data-bind="click:printLogs") Print
+
             #activitylogContainer
                 .header
                     //.colSelect
@@ -155,7 +159,9 @@ html
         script(type='text/javascript', src='/js/lib/store.min.js')
         script(type='text/javascript', src='/js/lib/date.js')
         script(type='text/javascript', src='/js/lib/jquery.timepicker.min.js')
+        script(type='text/javascript', src='/js/lib/jquery.printarea.js')
         script(type='text/javascript', src='/js/lib/bootstrap-datepicker.js')
         script(type='text/javascript', src='/js/lib/jstween-1.1.min.js')
         script(type='text/javascript', src='/js/lib/moment.js')
         script(type='text/javascript', src='/js/activityLogs/activityLogs.js')
+

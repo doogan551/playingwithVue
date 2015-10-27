@@ -11,11 +11,17 @@ var $tabReportNotes = $("#tabReportNotes");
 var $runReportForm = $("#runReportForm");
 var $tabDesign = $("#tabDesign");
 var $runReport = $("#runReport");
+var $pointName1 = $("#pointName1");
+var $pointName2 = $("#pointName2");
+var $pointName3 = $("#pointName3");
+var $pointName4 = $("#pointName4");
+
 
 dorsett.reportUI = Class.extend({
         Name:"dorsett.reportUI",
         workspace:{},
         point : {},
+        originalPoint: {},
         //Init function to setup grids and dropdowns
         init: function (workspace, point) {
 
@@ -50,51 +56,77 @@ dorsett.reportUI = Class.extend({
 
                 });
 
-                $("#updatePoint").click(function(){
+                var nameChangeOnblur = function(parent, obj, nam){
                     var newPoint = JSON.parse(JSON.stringify(point));
-                    newPoint.name1 = $("#pointName1").val();
-                    newPoint.name2 = $("#pointName2").val();
-                    newPoint.name3 = $("#pointName3").val();
-                    newPoint.name4 = $("#pointName4").val();
-
-                    if(JSON.stringify(point) === JSON.stringify(newPoint)){
-                        return;
+                    newPoint[nam] = $(obj).val();
+                    var data = parent.workspace.config.Update.formatPoint({point:newPoint, 
+                    oldPoint: point, property:nam, 
+                    propertyObject:$(obj).val()});
+                    if(data.err){
+                       parent.hideDivBlock(data.err);
+                       $(obj).button("reset"); 
                     }
+                    else {
+                        point =  _.clone(data, true);
+                        $(obj).button("reset");
+                    }
+                }
+                $("#updatePoint").click(function(){
+                    var me = this;
+                    $(this).button('loading');
+                    $.when(
+                        nameChangeOnblur(self, $pointName1, "name1"),
+                        nameChangeOnblur(self, $pointName2, "name2"),
+                        nameChangeOnblur(self, $pointName3, "name3"),
+                        nameChangeOnblur(self, $pointName4, "name4"))
+                    .done(function(){
+                        var newPoint = JSON.parse(JSON.stringify(point));
+                        newPoint.name1 = $pointName1.val();
+                        newPoint.name2 = $pointName2.val();
+                        newPoint.name3 = $pointName3.val();
+                        newPoint.name4 = $pointName4.val();
 
-                    self.workspace.socket().emit('updatePoint', JSON.stringify({'newPoint': newPoint, 'oldPoint' : point}));
-                    self.workspace.socket().once('pointUpdated', function(data) {
-                        if (data.err)
-                        {
-                            self.hideDivBlock(data.err);
+                        if(JSON.stringify(self.originalPoint) === JSON.stringify(newPoint)){
+                            return;
                         }
-                        else
-                        {
-                            iToast.showNotification('Notification',data.message, {
-                                icon: 'save',
-                                theme: 'jetblack',
-                                position: 'top right'
-                            });
-                            point = JSON.parse(JSON.stringify(newPoint));
-                        }
 
-                        $("#cancelUpdate").trigger('click');
+                        self.workspace.socket().emit('updatePoint', JSON.stringify({'newPoint': newPoint, 'oldPoint' : self.originalPoint}));
+                        self.workspace.socket().once('pointUpdated', function(data) {
+                            if (data.err)
+                            {
+                                self.hideDivBlock(data.err);
+                            }
+                            else
+                            {
+                                iToast.showNotification('Notification',data.message, {
+                                    icon: 'save',
+                                    theme: 'jetblack',
+                                    position: 'top right'
+                                });
+                                self.originalPoint = point = _.clone(newPoint, true);
+                            }
 
+                            $("#cancelUpdate").trigger('click');
+                            $(me).button('reset');
+                    
+                        });     
                     });
+                    
                 });
 
                 $("#cancelUpdate").click(function(){
 
-                    $("#pointName1").val(point.name1).prop('disabled', true);
-                    $("#pointName2").val(point.name2).prop('disabled', true);
-                    $("#pointName3").val(point.name3).prop('disabled', true);
-                    $("#pointName4").val(point.name4).prop('disabled', true);
+                    $pointName1.val(point.name1).prop('disabled', true);
+                    $pointName2.val(point.name2).prop('disabled', true);
+                    $pointName3.val(point.name3).prop('disabled', true);
+                    $pointName4.val(point.name4).prop('disabled', true);
                     $("#updatePoint").hide();
                     $("#cancelUpdate").hide();
                     $("#editPoint").show();
 
                 });
 
-
+                this.originalPoint = _.clone(point, true);
             }
 
             if (point._pStatus) {
@@ -172,6 +204,10 @@ dorsett.reportUI = Class.extend({
         },
         signalRWork:function(callback){
             var myHub = $.connection.signalRHub;
+            //console.log($.connection.hub);
+            //this.hideDivBlock("");
+            
+            //return;
             var self = this;
 
             myHub.client.initialized = function (message) {
@@ -208,9 +244,10 @@ dorsett.reportUI = Class.extend({
                 //}
             };
 
-                        $.connection.hub.error(function (error) {
-                self.hideDivBlock("err", $.connection.hub.lastError.message);
-              
+            $.connection.hub.error(function (error) {
+                //self.hideDivBlock("err", $.connection.hub.lastError.message);
+                console.log(error);
+                self.hideDivBlock('err', error);
                 setTimeout(function() {
                    $.connection.hub.start();
                }, 10000); // Restart connection after 10 seconds.
@@ -251,8 +288,9 @@ dorsett.reportUI = Class.extend({
 
         //Initialize Report Components
         initializeReportComponents:function(){
-                $("#runReportForm").attr("target", "reportPreview")
-                    .attr("action", "/reportnet/initialize.aspx").submit();
+            console.log('Initialize Report');
+            $("#runReportForm").attr("target", "reportPreview")
+                .attr("action", "/reportnet/initialize.aspx").submit();
         },
 
 
@@ -355,6 +393,7 @@ dorsett.reportUI = Class.extend({
         hideDivBlockOnly: function () {
             //$.unblockUI();
             $("#spinnerClass").hide();
+            $("#sideMenu").unblock();
 
         },
 
@@ -396,6 +435,12 @@ dorsett.reportUI = Class.extend({
 
             }
         },
+
+        //Unblock Side menu
+        activeSideMenus: function(){
+            $("#sideMenu").unblock();
+        },
+
 
         //Css used for blocking (in progress)
         blockCss:{
@@ -628,6 +673,8 @@ dorsett.reportUI = Class.extend({
                 designTarget.width($(".tab-content").width()).height("1220px");
                 //self.blockFunction(self.busyImage);
                 $("#spinnerClass").show();
+                //We need to disable side menu
+                $('#sideMenu').block({ message: null }); 
 
                 $runReportForm.attr("target", "reportDesign")
                     .attr("action", "/reportnet/designer/"  + self.reportId + "/" + self.signalRHubReport.connection.id).submit();
@@ -713,7 +760,7 @@ dorsett.reportUI = Class.extend({
                 if (filters[f].name === "[Filter Column Not Set]") {
                     continue;
                 }
-                console.log(filters[f]);
+                //console.log(filters[f]);
                 filters[f] = self.ensureCorrectValueTypeForFilter(filters[f]);
                 self.filtersInfo[f] = {
                     column: filters[f].name.replace(/\s+/gi, "_"),
@@ -904,11 +951,22 @@ dorsett.reportUI = Class.extend({
 
         //This function is needed as value types are recognized by different name in Asp.net Reporting Components.
         ensureCorrectValueTypeForFilter:function(filter){
-            //console.log(filter.valueType);
-            switch(filter.valueType){
+            //console.log('FILTER', filter);
+            if (_.isEmpty(filter) || typeof filter === 'function' || !filter.name) {
+                return;
+            }
+            var base = dorsett.reportUI[dorsett.reportUI.alias];
+            //console.log(typeof filter, filter, _.isEmpty(filter));
+            var valType =base.workspace.config.Enums.Properties[filter.name].valueType;
+            
+            switch(valType){
                 case "DateTime":
                 case "Timet":
-                    filter.valueType = "DateTime";
+                case "MinSec":
+                case "HourMinSec":
+                case "HourMin":
+                    filter.expression = valType;
+                    filter.valueType = "DateTime";                    
                     filter.value = new Date(filter.value).toISOString();
                     break;
                 case "Float":
@@ -919,9 +977,26 @@ dorsett.reportUI = Class.extend({
                     filter.valueType = "String";
                     break;
             }
+          //console.log("ensureCorrectValueTypeForFilter", filter);
             return filter;
         },
         ensureCorrectValueTypeForFilterBasedOnOperator: function (f) {
+            // console.log("ensureCorrectValueTypeForFilterBasedOnOperator",f.valueType);
+            if (_.isEmpty(f)) {
+                return;
+            }
+            var base = dorsett.reportUI[dorsett.reportUI.alias];
+            var valType =base.workspace.config.Enums.Properties[f.name].valueType;
+            
+            switch(valType){
+                case "DateTime":
+                case "Timet":
+                case "MinSec":
+                case "HourMinSec":
+                case "HourMin":
+                return f;
+                break;
+            }
             var o = "String";
             switch (f.operator) {
                 case "EqualTo":
@@ -950,6 +1025,7 @@ dorsett.reportUI = Class.extend({
             for (var f in this.filtersInfo) {
                 if (this.filtersInfo[f].column === col) {
                     //console.log(col, this.filtersInfo[f]);
+                    
                     var o = "String";
                     switch (this.filtersInfo[f].condition) {
                         case "EqualTo":
@@ -999,6 +1075,7 @@ dorsett.reportUI = Class.extend({
                 case "Unsigned":
                 case "null":
                 case "MinSec":
+                case "HourMin":
                 case "HourMinSec":
                 case "DateTime":
                 case "Timet":
@@ -1201,7 +1278,7 @@ dorsett.reportUI = Class.extend({
         //cancel Unsaved report
         cancelUnsaveReport:function(){
             var self = this;
-            console.log("DEL", self.point._id);
+            //console.log("DEL", self.point._id);
             $.ajax({
                 url:'/api/points/deletepoint',
                 type:'POST',
@@ -1276,4 +1353,3 @@ dorsett.reportUI = Class.extend({
         }
 
 });
-

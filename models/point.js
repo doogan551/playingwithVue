@@ -342,7 +342,7 @@ module.exports = {
   },
 
   browse: function(data, cb) {
-    console.log(data);
+    // console.log('permissions', data.permissions);
     if (data.permissions) {
       toggleGroup(data, browse, cb);
     } else {

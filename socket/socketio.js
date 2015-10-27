@@ -38,7 +38,7 @@ module.exports = function socketio(common) {
     var sockId, socket, user;
     socket = sock;
     sockId = sock.id;
-
+    sock.emit('test', 'test');
     user = sock.request.user;
 
     sock.on('getStatus', function() {

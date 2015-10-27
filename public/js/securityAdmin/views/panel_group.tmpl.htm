@@ -4,7 +4,9 @@
        data-iconshadow="true" data-wrapperels="span" title="Close"></a>
 
     <div class="profilePhoto ui-shadow">
-        <div class="photobg groupIcon"></div>
+        <div class="photobg groupIcon" id="singlePhoto" data-bind="loadImage: Photo()"></div>
+        <div class="profilePhotoEdit" data-bind="click: dorsett.editGroupPhoto"><i class="fa fa-wrench"></i></div>
+        <div class="uploadPhoto"><input type="file" class="uploadPhoto" data-bind="event: { change: function() { dorsett.uploadImage($element.files[0]) } }"></input></div>
     </div>
 
 

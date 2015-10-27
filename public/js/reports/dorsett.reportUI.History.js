@@ -217,7 +217,7 @@ dorsett.reportUI.History = dorsett.reportUI.extend({
 
     //Responsible for getting all data in Configuration tab. This is what gets passed onto Report Preview page and beyond.
     getReportOption: function (collectDataOnly, callback) {
-        var self = this;
+        var self = dorsett.reportUI.History;
         var reportType = "History";
         self.columnsInfo = [];
         self.filtersInfo = {};
@@ -257,8 +257,10 @@ dorsett.reportUI.History = dorsett.reportUI.extend({
         }
 
         for (var f in filters){
-            //console.log(filters[f]);
-
+            if (!filters[f].name || _.isEmpty(filters[f]) || typeof filters[f] === 'function') {
+                continue;
+            }           
+            console.log(filters[f]);
             dataSources[reportType].filters[f] = {
                 column:filters[f].name.replace(/\s+/gi, "_"),
                 condition:filters[f].operator,
@@ -287,9 +289,12 @@ dorsett.reportUI.History = dorsett.reportUI.extend({
 
 
         for (var c in cols) {
-            if (cols[c].name === "[Column Not Set]") {
-                continue;
+            if (!cols[c].name || _.isEmpty(cols[c]) 
+                || cols[c].name === "[Column Not Set]"
+                || typeof cols[c] === 'function') {
+                        continue;
             }
+            console.log('Col', cols[c]);
             self.columnsInfo.push({
                 colName: "DOR" + cols[c].name.replace(/\s+/gi, "_"),
                 valueType: "String",
@@ -360,7 +365,7 @@ dorsett.reportUI.History = dorsett.reportUI.extend({
 
     //Save Report Config
     saveReportConfig:function(){
-        var self = this;
+        var self = dorsett.reportUI.History;
         self.getReportOption(false, function (jj) {
             point["Report Config"] = jj;
             var fg = self.filterGrid.dataSource.view();
@@ -370,6 +375,9 @@ dorsett.reportUI.History = dorsett.reportUI.extend({
             point["Point Refs"] = [];
 
             for (var c in cg) {
+                if (!cg[c].name || _.isEmpty(cg[c]) || cg[c].name === "[Column Not Set]") {
+                        continue;
+                }
                 var appIndex = Number(c);
                 $.ajax({
                     url: '/api/points/getpointref/small/' + cg[c].internalValue,
@@ -392,6 +400,9 @@ dorsett.reportUI.History = dorsett.reportUI.extend({
                 });
             }
             for (var f in fg) {
+                if (!fg[f].name) {
+                    continue;
+                }  
                 //console.log(fg[f].value);
                 point["Filter Data"].push({
                     condition: fg[f].condition,

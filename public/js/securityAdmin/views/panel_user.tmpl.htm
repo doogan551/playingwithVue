@@ -4,7 +4,9 @@
        data-iconshadow="true" data-wrapperels="span" title="Close"></a>
 
     <div class="profilePhoto ui-shadow">
-        <div class="photobg male" data-bind="loadImage: Photo()"></div>
+        <div class="photobg male" id="singlePhoto" data-bind="loadImage: Photo()"></div>
+        <div class="profilePhotoEdit" data-bind="click: dorsett.editUserPhoto"><i class="fa fa-wrench"></i></div>
+        <div class="uploadPhoto"><input type="file" class="uploadPhoto" data-bind="event: { change: function() { dorsett.uploadImage($element.files[0]) } }"></input></div>
     </div>
     <div class="small_text userGroupData" data-bind="if: !!_id">
         <b>Last Login</b> <span data-bind="text: $data['Last Login Time']"></span><br>
@@ -28,6 +30,7 @@
             <label>Title <span class="validationMessage" data-bind="validationMessage: Title"></span><input type="text" data-mini="true" data-bind="value: Title, JMEnable: isEditMode, JMValidationError: Title"></label>
             <label>Username <span class="validationMessage" data-bind="validationMessage: username"></span><span data-bind="visible: (isEditMode() && _id !== null)">(Read-Only)</span><input type="text" data-mini="true" data-bind="value: username, JMEnable: isEditMode, JMValidationError: username, enable: _id === null"></label>
             <label>Auto Logout Duration <input type="text" data-mini="true" data-bind="value: $data['Auto Logout Duration'], JMEnable: isEditMode"></label>
+            <label>Session Length <input type="text" data-mini="true" data-bind="value: $data['Session Length'], JMEnable: isEditMode"></label>
             <br>
             <label data-corners="false" data-shadow="false">System Admin <input type="checkbox" data-mini="true" data-theme="d" data-bind="checked: $data['System Admin'], JMEnable: isEditMode"></label>
         </fieldset>

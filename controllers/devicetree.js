@@ -10,11 +10,11 @@ router.get('/gettree', function(req, res, next) {
 
 	Devicetree.getTree(data, function(err, result) {
 		if (err) {
-			return Utils.sendResponse(res, {
+			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return Utils.sendResponse(res, result);
+			return utils.sendResponse(res, result);
 		}
 	});
 });

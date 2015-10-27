@@ -965,6 +965,50 @@
                 "enum": 15
             }
         },
+        "Time Zones": {
+            "tzEST": {
+                "enum": 5,
+                "name": "Eastern Time Zone",
+                "utc offset": 18000,
+                "dst used": true
+            },
+            "tzCST": {
+                "enum": 6,
+                "name": "Central Time Zone",
+                "utc offset": 21600,
+                "dst used": true
+            },
+            "tzMST": {
+                "enum": 7,
+                "name": "Mountain Time Zone",
+                "utc offset": 25200,
+                "dst used": true
+            },
+            "tzPST": {
+                "enum": 8,
+                "name": "Pacific Time Zone",
+                "utc offset": 28800,
+                "dst used": true
+            },
+            "tzAKST": {
+                "enum": 9,
+                "name": "Alaska Time Zone",
+                "utc offset": 32400,
+                "dst used": true
+            },
+            "tzAZ": {
+                "enum": 107,
+                "name": "Arizona Time Zone, No DST",
+                "utc offset": 25200,
+                "dst used": false
+            },
+            "tzHI": {
+                "enum": 109,
+                "name": "Hawaii Time Zone, No DST",
+                "utc offset": 32400,
+                "dst used": false
+            }
+        },
         "endPoints": {
             "default": {
                 "review": {
@@ -1460,6 +1504,11 @@
                 "valueType": "Bool",
                 "reportEnable": true
             },
+            "Control Array": {
+                "enum": 407,
+                "valueType": "None",
+                "reportEnable": false
+            },
             "Control Band Value": {
                 "enum": 296,
                 "valueType": "Float",
@@ -1632,7 +1681,7 @@
             },
             "Delay Time": {
                 "enum": 110,
-                "valueType": "MinSec",
+                "valueType": "HourMinSec",
                 "reportEnable": true
             },
             "Demand Enable": {
@@ -1773,6 +1822,11 @@
             "Dry Bulb Point": {
                 "enum": 140,
                 "valueType": "UniquePID",
+                "reportEnable": true
+            },
+            "Duct Area": {
+                "enum": 396,
+                "valueType": "Float",
                 "reportEnable": true
             },
             "eDate": {
@@ -2315,6 +2369,11 @@
                 "valueType": "Float",
                 "reportEnable": true
             },
+            "Maximum Sensor Value": {
+                "enum":397,
+                "valueType": "Float",
+                "reportEnable": true
+            },
             "Maximum Value": {
                 "enum": 91,
                 "valueType": "Float",
@@ -2322,12 +2381,17 @@
             },
             "Minimum Off Time": {
                 "enum": 106,
-                "valueType": "MinSec",
+                "valueType": "HourMinSec",
                 "reportEnable": true
             },
             "Minimum On Time": {
                 "enum": 107,
-                "valueType": "MinSec",
+                "valueType": "HourMinSec",
+                "reportEnable": true
+            },
+            "Minimum Sensor Value": {
+                "enum":398,
+                "valueType": "Float",
                 "reportEnable": true
             },
             "Minimum Value": {
@@ -2890,9 +2954,24 @@
                 "valueType": "Enum",
                 "reportEnable": true
             },
+            "Sensor IO Device": {
+                "enum":399,
+                "valueType": "Enum",
+                "reportEnable": true
+            },
+            "Sensor IO Type": {
+                "enum":400,
+                "valueType": "Enum",
+                "reportEnable": true
+            },
             "Sensor Point": {
                 "enum": 154,
                 "valueType": "UniquePID",
+                "reportEnable": true
+            },
+            "Sensor RTD Type": {
+                "enum":401,
+                "valueType": "Enum",
                 "reportEnable": true
             },
             "Sensor Type": {
@@ -2934,6 +3013,11 @@
                 "enum": 101,
                 "valueType": "Float",
                 "reportEnable": true
+            },
+            "SequenceData": {
+                "enum": 405,
+                "valueType": "None",
+                "reportEnable": false
             },
             "Sequence Details": {
                 "enum": 327,
@@ -3039,6 +3123,11 @@
                 "enum": 311,
                 "valueType": "Array",
                 "reportEnable": false
+            },
+            "Time Zone": {
+                "enum": 406,
+                "valueType": "Enum",
+                "reportEnable": true
             },
             "Total": {
                 "enum": 205,
@@ -3148,6 +3237,21 @@
             "VAV Channel": {
                 "enum": 66,
                 "valueType": "Enum",
+                "reportEnable": true
+            },
+            "Velocity Flow": {
+                "enum":402,
+                "valueType": "Float",
+                "reportEnable": true
+            },
+            "Velocity Type": {
+                "enum":403,
+                "valueType": "Enum",
+                "reportEnable": true
+            },
+            "Velocity Pressure": {
+                "enum":404,
+                "valueType": "Float",
                 "reportEnable": true
             },
             "Verify Delay": {
@@ -3331,7 +3435,6 @@
             "_updTOD": false,
             "_cfgRequired": true,
             "_actvAlmId": 0,
-            "_curAlmId": 0,
             "name1": "",
             "name2": "",
             "name3": "",
@@ -3374,20 +3477,18 @@
                     "Value": "Property",
                     "eValue": 0
                 },
-                "Point Refs": [
-                    {
-                        "PropertyName": "Qualifier Point",
-                        "PropertyEnum": 130,
-                        "AppIndex": 1,
-                        "isDisplayable": true,
-                        "isReadOnly": false,
-                        "Value": 0,
-                        "PointName": "",
-                        "PointType": 0,
-                        "PointInst": 0,
-                        "DevInst": 0
-                    }
-                ]
+                "Point Refs": [{
+                    "PropertyName": "Qualifier Point",
+                    "PropertyEnum": 130,
+                    "AppIndex": 1,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }]
             },
 
             "Display": {
@@ -3815,6 +3916,12 @@
                     "ValueType": 7,
                     "Value": true
                 },
+                "Time Zone": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": 6
+                },
                 "Uplink Port": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -4208,14 +4315,14 @@
                     "Value": "Input",
                     "eValue": 0
                 },
-                "Sensor I/O Device": {
+                "Sensor IO Device": {
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
                     "Value": "Custom",
                     "eValue": 0
                 },
-                "Sensor I/O Type": {
+                "Sensor IO Type": {
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 5,
@@ -4953,6 +5060,12 @@
                     "Max": 8,
                     "Min": 1
                 },
+                "Control Array": [{
+                    "Value": 0,
+                    "Level": 1,
+                    "Controller": 0,
+                    "Release Time": 0
+                }],
                 "Control Data Type": {
                     "isDisplayable": false,
                     "isReadOnly": false,
@@ -5402,6 +5515,12 @@
                     "ValueType": 13,
                     "Value": 15
                 },
+                "Control Array": [{
+                    "Value": 0,
+                    "Level": 1,
+                    "Controller": 0,
+                    "Release Time": 0
+                }],
                 "Control Pending": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -6201,6 +6320,12 @@
                     "Value": "Normal",
                     "eValue": 0
                 },
+                "Control Array": [{
+                    "Value": 0,
+                    "Level": 1,
+                    "Controller": 0,
+                    "Release Time": 0
+                }],
                 "Control Pending": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -6733,6 +6858,12 @@
                     "ValueType": 13,
                     "Value": 15
                 },
+                "Control Array": [{
+                    "Value": 0,
+                    "Level": 1,
+                    "Controller": 0,
+                    "Release Time": 0
+                }],
                 "Control Pending": {
                     "isDisplayable": true,
                     "isReadOnly": true,

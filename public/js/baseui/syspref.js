@@ -227,19 +227,7 @@ ko.validation.rules.ipAddress = {
 
 ko.validation.registerExtenders();
 
-ko.bindingHandlers.diColorpicker = {
-    init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-        var functionColor = valueAccessor(),
-            hexColor = ko.unwrap(functionColor),
-            $colorPickerDiv = $(element),
-            customColorsPicker = new CustomColorsPicker($colorPickerDiv, functionColor, hexColor);
-
-        customColorsPicker.render();
-    }
-};
-
 // Calendar screen ------------------------------------------------------------
-
 var calendarViewModel = function() {
     var viewModel = {
 
@@ -600,12 +588,7 @@ var calendarViewModel = function() {
     return viewModel;
 };
 
-sysPrefsViewModel.registerSection(calendarViewModel);
-
-// Calendar screen ------------------------------------------------------------
-
 // Controllers Screen ---------------------------------------------------------
-
 var controllerViewModel = function() {
     var self = this,
         originalData,
@@ -622,7 +605,7 @@ var controllerViewModel = function() {
             self.dirty(true);
         },
         Controller = function(row, idx) {
-            console.log('row', row);
+            // console.log('row', row);
             var id = row[ID],
                 name = row[NAME],
                 description = row.Description,
@@ -863,7 +846,7 @@ var controllerViewModel = function() {
                     obj;
 
                 for (c = 0; c < controllers.length; c++) {
-                    
+
                     row = controllers[c];
                     obj = {};
                     obj[ID] = row[ID];
@@ -896,12 +879,7 @@ var controllerViewModel = function() {
     };
 };
 
-sysPrefsViewModel.registerSection(controllerViewModel, 'init');
-
-// Controllers Screen ---------------------------------------------------------
-
 // Control Priority Text Screen ----------------------------------------------
-
 var controlPriorityTextViewModel = function() {
     var self = this,
         fullData,
@@ -972,12 +950,7 @@ var controlPriorityTextViewModel = function() {
     };
 };
 
-sysPrefsViewModel.registerSection(controlPriorityTextViewModel, 'getData');
-
-// Control Priority Text Screen ----------------------------------------------
-
 // Quality Codes Screen -------------------------------------------------------
-
 var qualityCodesViewModel = function() {
     var self = this,
         CODELABEL = 'Quality Code Label',
@@ -1076,10 +1049,7 @@ var qualityCodesViewModel = function() {
     };
 };
 
-sysPrefsViewModel.registerSection(qualityCodesViewModel, 'getData');
-
 // Custom Color Codes Screen -------------------------------------------------------
-
 var customColorCodesViewModel = function () {
     var self = this,
         originalData,
@@ -1141,10 +1111,7 @@ var customColorCodesViewModel = function () {
     self.customColorCodes = ko.observableArray();
 };
 
-sysPrefsViewModel.registerSection(customColorCodesViewModel, 'init');
-
 // Telemetry Screen -----------------------------------------------------------
-
 var telemetryViewModel = function() {
     var self = this,
         fullData,
@@ -1245,7 +1212,7 @@ var telemetryViewModel = function() {
 
                 self.dirty(false);
             }
-            console.log("setdata originalValues", originalValues);
+            // console.log("setdata originalValues", originalValues);
         },
         updateData = function() {
             var c, len = fieldList.length,
@@ -1314,12 +1281,7 @@ var telemetryViewModel = function() {
     };
 };
 
-sysPrefsViewModel.registerSection(telemetryViewModel, 'init');
-
-// Telemetry Screen -----------------------------------------------------------
-
 // Backup Screen --------------------------------------------------------------
-
 var backupViewModel = function() {
     var self = this,
         socket = window.opener && window.opener.workspaceManager.socket(),
@@ -1353,27 +1315,9 @@ var backupViewModel = function() {
         }
         self.showBackupMsg(true);
     });
-
-
 };
 
-sysPrefsViewModel.registerSection(backupViewModel, 'init');
-
-// Backup Screen --------------------------------------------------------------
-
-// About Infoscan -------------------------------------------------------------
-/*
-var aboutInfoScanViewModel = function() {
-    this.displayName = 'About InfoScan';
-
-    this.dirty = ko.observable(false);
-
-    this.hasError = ko.observable(false);
-};
-
-sysPrefsViewModel.registerSection(aboutInfoScanViewModel);
-*/
-
+// Alarm messages screen ------------------------------------------------------
 var alarmMessageDefinitions = _.partial(function(masterVm) {
     _.mixin(_.str.exports());
     var Amd, initialize, self, facadeViewModel;
@@ -1941,52 +1885,215 @@ var alarmMessageDefinitions = _.partial(function(masterVm) {
     return self;
 }, sysPrefsViewModel);
 
+// Weather screen -------------------------------------------------------------
+var weatherViewModel = function() {
+    var self = this,
+        dataUrl = '/api/system/weather',
+        saveUrl = '/api/system/updateWeather',
+        workspaceManager = window.opener && window.opener.workspaceManager,
+        openWindow =  workspaceManager && window.opener.workspaceManager.openWindowPositioned,
+        activePointStatus = workspaceManager && workspaceManager.config.Enums["Point Statuses"].Active.enum,
+        originalData,
+        openPointSelector = function (callback) {
+            var windowRef,
+                pointSelectedCallback = function (pid, name, type) {
+                    if (!!pid) {
+                        callback(pid, name, type);
+                    }
+                },
+                windowOpenedCallback = function () {
+                    windowRef.pointLookup.MODE = 'select';
+                    windowRef.pointLookup.init(pointSelectedCallback);
+                };
 
+            windowRef = openWindow('/pointLookup', 'Select Point', '', '', 'Select Weather Point', {
+                callback: windowOpenedCallback,
+                width: 1000
+            });
+        },
+        setData = function (data) {
+            var newData = [];
 
-sysPrefsViewModel.registerSection(alarmMessageDefinitions);
+            if (Array.isArray(data)) {
+                data.forEach(function (weatherPoint) {
+                    newData.push({
+                        title: weatherPoint.title,
+                        point: ko.observable(weatherPoint.point)
+                    });
+                });
+            } else {
+                for (var key in data) {
+                    newData.push({
+                        title: key,
+                        point: ko.observable(data[key])
+                    });
+                }
+            }
+            self.weatherPoints(newData);
+            self.dirty(false);
+        },
+        getData = function() {
+            $.ajax({
+                url: dataUrl
+            }).done(function (data) {
+                originalData = data;
+                setData(data);
+            });
+        },
+        getDataToSave = function () {
+            var data = {};
+            self.weatherPoints().forEach(function (weatherPoint) {
+                var point = weatherPoint.point(),
+                    upi = (point && point._id) || null;
+                data[weatherPoint.title] = upi;
+            });
+            return data;
+        },
+        saveData = function () {
+            // Create a snapshot in case the user modifies the data before save is completed
+            var snapshot = ko.toJS(self.weatherPoints);
+            // Save the data
+            $.ajax({
+                url: saveUrl,
+                data: getDataToSave(),
+                dataType: 'json',
+                type: 'post'
+            }).done(function (response) {
+                var err;
+                console.log(response);
+                if (response.message && response.message === 'success') {
+                    originalData = snapshot;
+                    self.dirty(false);
+                } else {
+                    err = response.err || 'Unknown error.';
+                    alert("We couldn't save the weather section for the following reason: " + err);
+                }
+            });
+        };
+
+    self.displayName = 'Weather';
+
+    self.dirty = ko.observable(false);
+
+    self.hasError = ko.observable(false);
+
+    self.weatherPoints = ko.observableArray([]);
+
+    self.init = function () {
+        getData();
+    };
+
+    self.save = function () {
+        saveData();
+    };
+
+    self.cancel = function () {
+        setData(originalData);
+    };
+
+    self.removePointRef = function (data) {
+        data.point(null);
+        self.dirty(true);
+    };
+
+    self.editPointRef = function (data) {
+        openPointSelector(function(upi, name, pointType) {
+            data.point({
+                _id: upi,
+                _pStatus: activePointStatus,
+                Name: name,
+                'Point Type': {
+                    Value: pointType
+                }
+            });
+            self.dirty(true);
+        });
+    };
+
+    self.openPointRef = function (data) {
+        var point = data.point(),
+            upi = point._id,
+            pointType = point['Point Type'].Value,
+            pointTypesUtility = workspaceManager && workspaceManager.config.Utility.pointTypes,
+            endPoint = pointTypesUtility.getUIEndpoint(pointType, upi),
+            options = {
+                width: 850,
+                height: 600
+            };
+        openWindow(endPoint.review.url, point.Name, pointType, endPoint.review.target, upi, options);
+    };
+};
+
 // About Infoscan -------------------------------------------------------------
+/*
+var aboutInfoScanViewModel = function() {
+    this.displayName = 'About InfoScan';
 
+    this.dirty = ko.observable(false);
+
+    this.hasError = ko.observable(false);
+};
+
+sysPrefsViewModel.registerSection(aboutInfoScanViewModel);
+*/
 
 // Shortcut for $(document).ready(function()...
 $(function() {
 
-    var year = new Date().getFullYear(),
-        calendarVM = sysPrefsViewModel.getSection('Calendar'),
-        hash = location.hash.substring(1);
+    function postInit () {
+        var year,
+            calendarVM,
+            hash;
 
-    calendarVM.updateDatePicker(year);
+        // If we're an iFrame, the workspace attaches an 'opener' handler (IE fix). We require this opener method to be established
+        // before it is instantiated. The workspace can't attach it until the iFrame is fully rendered, so we must wait if it doesn't exist yet
+        if (window.opener === undefined) {
+            window.setTimeout(postInit, 10);
+        } else {
+            sysPrefsViewModel.registerSection(calendarViewModel);
+            sysPrefsViewModel.registerSection(controllerViewModel, 'init');
+            sysPrefsViewModel.registerSection(controlPriorityTextViewModel, 'getData');
+            sysPrefsViewModel.registerSection(qualityCodesViewModel, 'getData');
+            sysPrefsViewModel.registerSection(customColorCodesViewModel, 'init');
+            sysPrefsViewModel.registerSection(telemetryViewModel, 'init');
+            sysPrefsViewModel.registerSection(backupViewModel, 'init');
+            sysPrefsViewModel.registerSection(alarmMessageDefinitions);
+            sysPrefsViewModel.registerSection(weatherViewModel, 'init');
 
-    calendarVM.year(year);
+            year = new Date().getFullYear();
+            calendarVM = sysPrefsViewModel.getSection('Calendar');
+            hash = location.hash.substring(1);
+            calendarVM.updateDatePicker(year);
+            calendarVM.year(year);
 
-    if (sysPrefsViewModel.section() === '') {
-        sysPrefsViewModel.section(sysPrefsViewModel.sections[0].displayName);
-    }
+            if (sysPrefsViewModel.section() === '') {
+                sysPrefsViewModel.section(sysPrefsViewModel.sections[0].displayName);
+            }
 
-    if (hash) {
-        sysPrefsViewModel.section(hash);
-    } else {
-        location.hash = '#' + sysPrefsViewModel.section();
-    }
+            if (hash) {
+                sysPrefsViewModel.section(hash);
+            } else {
+                location.hash = '#' + sysPrefsViewModel.section();
+            }
 
-    $('#jqxCalendar').jqxCalendar({
-        width: '250px',
-        enableViews: true
-    });
+            $('#jqxCalendar').jqxCalendar({
+                width: '250px',
+                enableViews: true
+            });
 
-    // Hide the calendar pop-up when the user clicks outside the jqxCalendar div
-    $(document).mouseup(function(e) {
-        var container = $('#jqxCalendar');
+            // Hide the calendar pop-up when the user clicks outside the jqxCalendar div
+            $(document).mouseup(function(e) {
+                var container = $('#jqxCalendar');
 
-        if (!container.is(e.target) && (container.has(e.target).length === 0)) {
-            container.css('display', 'none');
+                if (!container.is(e.target) && (container.has(e.target).length === 0)) {
+                    container.css('display', 'none');
+                }
+            });
+
+            ko.applyBindings(sysPrefsViewModel);
+            sysPrefsViewModel.runInitFunctions();
         }
-    });
+    }
 
-    ko.applyBindings(sysPrefsViewModel);
-
-    sysPrefsViewModel.runInitFunctions();
+    postInit();
 });
-
-// Another type of document ready routine. What's the difference and/or advantage???
-// $(document).bind('pagecreate', function() {
-// });

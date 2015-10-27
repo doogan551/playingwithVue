@@ -1,0 +1,68 @@
+.topBar(data-bind="css: {viewMode: !isInEditMode(), editMode: isInEditMode()} ")
+    .metersHeader
+        .title Electrical Meters
+        .meterCount(data-bind="text: listOfMeters().length + ' total, ' + inactiveMeterCount() + ' inactive'")
+    .buttonBar(data-bind="if: $root.canWrite($parent.securityBindings.security)")
+        button.hideInEdit.btn.btn-primary.btn-sm(type="button", data-bind="click: toEditMode") Edit
+        button.showInEdit.btn.btn-link.btn-sm(type="button", data-bind="click: cancelEditMode") Cancel
+        button.showInEdit.btn.btn-success.btn-sm(type="button", data-bind="click: save") Save
+    //- JDR: removing this for a couple reasons
+    //- 1: It is used to display 'Meter Name is BLANK' but it's not needed because the blank field is is focused and highlighted in red which makes the error obvious enough.
+    //- 2: It's located in an odd place; error messages should be located near the source of error; in this case, it's just as well to not show it at all
+    //-span.errormessage
+
+//template
+.mainContent(data-bind="css: {viewMode: !isInEditMode(), editMode: isInEditMode()} ")
+    .innerContent
+        .meters
+            // ko if: listOfMeters().length > 0 || isInEditMode()
+            table.grid.table
+                thead
+                    tr
+                        th.meterActive Active
+                        th.meterDisplayName
+                            div Name
+                            i.fa(data-bind="css: { 'fa-arrow-up' : metersSortOrder() === 'asc', 'fa-arrow-down' : metersSortOrder() === 'dsc' }")
+                        th Meter Points
+                        th.removemeter
+                // ko if: listOfMeters().length > 6
+                tbody.showInEdit
+                    tr
+                        td(colspan="4")
+                            a.showInEdit.addNewMeter-button(href="#") Add Meter
+                // /ko
+                tbody.sortablemeters(data-bind="foreach: listOfMeters")
+                    tr.meterdata
+                        td.meterActive
+                            .handle.showInEdit
+                            input(type="checkbox", class="meterActiveCheckbox", data-bind="checked: $data.isActive, enable: $parent.isInEditMode()")
+                        td.meterDisplayName
+                            span.hideInEdit(data-bind="text: displayedMeterName")
+                            input(type="text", class="showInEdit form-control", data-bind="value: displayedMeterName")
+                        td.meterPoints
+                            // ko foreach: meterPoints
+                            .meterPointColumn
+                                div(data-bind="css: meterPointDesc")
+                                    button.showInEdit.btn.btn-danger.btn-xs.fa.fa-times(data-bind="click: $parents[1].clearMeterPoint, attr: { upi: upi, parentIndex: $parentContext.$index, meterPointIndex: $index}, tooltip: { title: 'Clear' }")
+                                    button.showInEdit.btn.btn-info.btn-xs.fa.fa-pencil(data-bind="click: $parents[1].changeMeterPoint, attr: { upi: upi, parentIndex:  $parentContext.$index, meterPointIndex: $index}, tooltip: { title: 'Edit' }")
+                                    label(data-bind="text: meterPointDesc")
+                                    span(data-bind="text: meterPointName, click: $parents[1].showPointReview, attr: { upi: upi, meterPointDesc: meterPointDesc, parentIndex: $parentContext.$index}")
+                            // /ko
+                        td.removemeter
+                            a.span.showInEdit(data-bind="click: $parent.delete") Remove
+                tbody.showInEdit
+                    tr
+                        td(colspan="4")
+                            a.showInEdit.addNewMeter-button(href="#") Add Meter
+            // /ko
+            
+            // ko if: listOfMeters().length === 0
+            .infoMessage.hideInEdit
+                i.fa.fa-info-circle
+                span No meters have been added to this utility.&nbsp;
+                // ko if: $root.canWrite($parent.securityBindings.security)
+                span Select edit to add a meter.
+                // /ko                
+            // /ko
+
+    .clearfix

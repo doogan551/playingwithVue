@@ -5,9 +5,13 @@ var gpl = {
         labelCounters: {},
         eventLog: [],
         actionLog: [],
-        svgs: [],
         json: {},
-        editModeOffset: 125,
+        eventHandlers: {},
+        destroyFns: [],
+        canvases: {},
+        MAXZOOM: 4,
+        MINZOOM: 0.1,
+        editModeOffset: 77,
         scaleValue: 1,
         defaultLoopDelay: 10,
         resizeDelay: 150,
@@ -19,14 +23,18 @@ var gpl = {
         logLinePrefix: true,
         rendered: false,
         poppedIn: window.top.location.href !== window.location.href,
-        STACK_FRAME_RE: new RegExp(/at ((\S+)\s)?\(?([^:]+):(\d+):(\d+)/),
         idxPrefix: '_gplId_',
         toolbarFill: '#313131',
         iconPath: '/img/icons/',
         pointApiPath: '/api/points/',
-        eventHandlers: {},
-        configuredEvents: {},
+        defaultBackground: 'C8BEAA',
+        jqxTheme: 'flat',
         convertProperties: ['blockType', 'left', 'name', 'top', 'upi', 'label', 'connectionCount', 'precision', 'zIndex', 'labelVisible', 'presentValueVisible', 'connection', 'presentValueFont', 'value'],
+        $body: $('body'),
+        $tooltip: $('.gplTooltip'),
+        $fontColorPicker: $('#fontColorPicker'),
+        $bgColorPicker: $('#bgColorPicker'),
+        $editTextModal: $('#editTextModal'),
         $messageModal: $('#gplMessage'),
         $messageModalBody: $('#gplMessageBody'),
         $sequencePropertiesModal: $('#gplSequenceProperties'),
@@ -34,13 +42,10 @@ var gpl = {
         $editPrecisionModal: $('#editPrecisionModal'),
         $editVersionModal: $('#editVersionModal'),
         $colorpickerModal: $('#colorpickerModal'),
-        $fetcher: $('#fetcher'),
-        // $useEditVersionButton: $('#useEditVersion'),
-        // $discardEditVersionButton: $('#discardEditVersion'),
+        $useEditVersionButton: $('#useEditVersion'),
+        $discardEditVersionButton: $('#discardEditVersion'),
         point: window.gplData.point,
-        oldPoint: $.extend(true, {}, window.gplData.point),
         references: window.gplData.references,
-        controllers: window.gplData.controllers,
         upi: window.gplData.upi,
         DELETEKEY: 46,
         ESCAPEKEY: 27,
@@ -50,9 +55,6 @@ var gpl = {
             39: 'right',
             40: 'down'
         },
-        defaultBackground: 'C8BEAA',
-        jqxTheme: 'flat',
-        destroyFns: [],
         destroyObject: function(o) {
             var keys = Object.keys(o),
                 c;
@@ -72,6 +74,9 @@ var gpl = {
         },
         emptyFn: function() {
             return;
+        },
+        waitForSocketMessage: function(fn) {
+            gpl.socketWaitFn = fn;
         },
         isCyclic: function(obj) {
             var seenObjects = [];
@@ -153,7 +158,6 @@ var gpl = {
                         options.gplHandler.apply(this, arguments);
                     }
                     clearInterval(closeTimer);
-                    gpl.unblockUI();
                 },
                 checkUnload = function() {
                     var oldUnload = windowRef.onbeforeunload;
@@ -172,7 +176,7 @@ var gpl = {
                     }
                 };
 
-            gpl.blockUI();
+            gpl.fire('openwindow');
 
             windowRef = gpl._openWindow.apply(this, arguments);
 
@@ -182,12 +186,14 @@ var gpl = {
 
             return windowRef;
         },
-        defaultBlockMessage: '<h4>Please Wait...</h4>',
+        defaultBlockMessage: 'Please Wait...',
         blockUI: function(message) {
-            return;//$.blockUI({message: message || gpl.defaultBlockMessage});
+            gpl.log('Blocking UI:', message || gpl.defaultBlockMessage);
+            $.blockUI({message: message || gpl.defaultBlockMessage});
         },
         unblockUI: function() {
-            return;//$.unblockUI();
+            gpl.log('Unblocking UI');
+            $.unblockUI();
         },
         openPointSelector: function(callback, newUrl, pointType, property) {
             var url = newUrl || '/pointLookup',
@@ -224,35 +230,35 @@ var gpl = {
         initGpl: function() {
             var count = 0,
                 num = 0,
-                addFn = function(fn) {
-                    num++;
-                    fn();
-                },
                 complete = function() {
                     count++;
                     if(count === num) {
                         gpl.manager = new gpl.Manager();
                     }
+                },
+                addFn = function(fn) {
+                    num++;
+                    fn(complete);
                 };
 
             gpl.point = gpl.convertBooleanStrings(gpl.point);
             gpl.devicePointRef = gpl.deStringObject(gpl.point['Point Refs'][0]);
 
-            addFn(function() {
+            addFn(function(cb) {
                 $.ajax({
                     url: '/api/points/' + gpl.devicePointRef.PointInst
                 }).done(function(data) {
                     gpl.devicePoint = data;
-                    complete();
+                    cb();
                 });
             });
 
-            addFn(function() {
+            addFn(function(cb) {
                 $.ajax({
                     url: '/api/system/qualityCodes'
                 }).done(function(data) {
                     gpl._qualityCodes = data;
-                    complete();
+                    cb();
                 }).fail(function(xhr, stat, error) {
                     gpl.log('qualityCodes error', JSON.stringify(error));
                 });
@@ -323,19 +329,6 @@ var gpl = {
                 }
             });
         },
-        // getExternalReferences: function(upi) {
-        //     var cb = function(data) {
-        //             if(data) {
-        //                 gpl.log(data.SequenceData.sequence);
-        //             } else {
-        //                 gpl.log('error getting external gpl data');
-        //             }
-        //         };
-
-        //     $.ajax({
-        //         url: '/gpl/getReferences/' + upi
-        //     }).done(cb);
-        // },
         onRender: function(fn) {
             if(gpl.rendered === true) {
                 fn(gpl.boundingBox);
@@ -352,7 +345,22 @@ var gpl = {
                 errorFree = true;
 
             for(c=0; c<len && errorFree; c++) {
-                errorFree = fn(obj[keys[c]], keys[c]);
+                errorFree = fn(obj[keys[c]], keys[c], c);
+                if(errorFree === undefined) {
+                    errorFree = true;
+                }
+            }
+
+            return errorFree;
+        },
+        forEachArray: function(arr, fn) {
+            var c,
+                list = arr || [],
+                len = list.length,
+                errorFree = true;
+
+            for(c=0; c<len && errorFree; c++) {
+                errorFree = fn(list[c], c);
                 if(errorFree === undefined) {
                     errorFree = true;
                 }
@@ -385,23 +393,14 @@ var gpl = {
         showMessage: function(message) {
             gpl.$messageModalBody.html(message);
             gpl.$messageModal.modal('show');
+            if(gpl.socketWaitFn) {
+                gpl.socketWaitFn();
+                gpl.socketWaitFn = null;
+            }
         },
         on: function(event, handler) {
             gpl.eventHandlers[event] = gpl.eventHandlers[event] || [];
             gpl.eventHandlers[event].push(handler);
-
-            // if(!gpl.configuredEvents[event]) {
-            //     gpl.configuredEvents[event] = true;
-            //     if(type === 'canvas') {
-            //         self.canvas.on(event, function(evt) {
-            //             self.processEvent(event, evt);
-            //         });
-            //     } else {
-            //         $(domType).on(event, function(evt) {
-            //             self.processEvent(event, evt);
-            //         });
-            //     }
-            // }
         },
         fire: function(event, obj1, obj2) {
             var c,
@@ -426,6 +425,22 @@ var gpl = {
             gpl.itemIdx++;
             return gpl.idxPrefix + gpl.itemIdx;
         },
+        makePointRef: function(upi, name) {
+            var baseRef = {
+                    "PropertyName": "",
+                    "PropertyEnum": 0,
+                    "Value": upi,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": true,
+                    "PointName": name,
+                    "PointInst": upi,
+                    "DevInst": 0,
+                    "PointType": 0
+                };
+
+            return baseRef;
+        },
         isEdit: document.location.href.match('/edit/') !== null,
         noSocket: document.location.href.match('nosocket') !== null,
         noLog: document.location.href.match('nolog') !== null,
@@ -440,7 +455,7 @@ var gpl = {
                 out = '';
 
             if(addSuffix) {
-                separators[separators.length - 1] = suffix;
+                separators.push(suffix);
             }
 
             if(typeof date === 'number') {
@@ -456,7 +471,6 @@ var gpl = {
             return out;
         },
         log: function() {
-
             var stack,
                 steps,
                 lineNumber,
@@ -499,9 +513,8 @@ var gpl = {
                 };
 
             return pad(red) + pad(green) + pad(blue);
-
         },
-        validateMessage: null,
+        validationMessage: null,
         validate: {
             connection: function(anchor1, anchor2, skipErrorPrint) {
                     //get order as obj1 -> obj2
@@ -526,7 +539,7 @@ var gpl = {
                         }
 
                         if(!ret) {
-                            // gpl.validateMessage = 'Invalid connection for point type ' + pointType;
+                            // gpl.validationMessage = 'Invalid connection for point type ' + pointType;
                             if(!skipErrorPrint) {
                                 gpl.log('invalid', pointType, allowedPoints);
                             }
@@ -568,7 +581,7 @@ var gpl = {
                         allowedPoints2 = gpl.getPointTypes(property2, pointType2);
 
                         if(allowedPoints2.error) {
-                            // gpl.validateMessage = ['Error with', property2, pointType2, '--', allowedPoints2.error].join(' ');
+                            // gpl.validationMessage = ['Error with', property2, pointType2, '--', allowedPoints2.error].join(' ');
                             if(!skipErrorPrint) {
                                 gpl.log('error with', property2, pointType2, '--', allowedPoints2.error);
                             }
@@ -876,6 +889,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
     lockMovementY: true,
     anchorRadius: 2.5,
     hoverRadius: 5,
+    hoverCursor: gpl.isEdit?'url("/img/pencil.cur") 0 0, pointer':'default',
 
 
     initialize: function(config) {
@@ -1134,6 +1148,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         });
 
         this.add(anchor);
+
         return anchor;
     },
 
@@ -1349,8 +1364,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         for(c=0; c<this._shapes.length; c++) {
             shape = this._shapes[c];
-            shape.left = shape._originalLeft = left + shape.offsetLeft * gpl.scaleValue;// - this.width/2;
-            shape.top = shape._originalTop = top + shape.offsetTop * gpl.scaleValue;// - this.height/2;
+            shape.left = left + (shape._shapeOffsetLeft); //left + shape.offsetLeft * gpl.scaleValue;// - this.width/2;
+            shape.top = top + (shape._shapeOffsetTop);//top + shape.offsetTop * gpl.scaleValue;// - this.height/2;
             // gpl.log(shape.gplType, left, top, shape.offsetLeft, shape.offsetTop);
         }
     },
@@ -1364,6 +1379,22 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             list[c].lockMovementX = locked;
             list[c].lockMovementY = locked;
         }
+    },
+
+    scale: function(value) {
+        var c,
+            list = this._shapes,
+            len = list.length;
+
+        for(c=0; c<len; c++) {
+            list[c].scale(value);
+        }
+
+        if(this.backgroundImage) {
+            this.backgroundImage.scale(value);
+        }
+
+        this.scaleValue = value;
     },
 
     setOffset: function(offset) {
@@ -1446,12 +1477,12 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         this.renderAll();
     },
 
-    add: function(object) {
+    add: function(object, render) {
         object.offsetLeft = object.left - this.left;
         object.offsetTop = object.top - this.top;
         this._shapes.push(object);
-        if(this.initialized) {
-            gpl.blockManager.add(object);
+        if(this.initialized || this.isNonPoint) {
+            gpl.blockManager.add(object, this.targetCanvas, render);
         }
     },
 
@@ -1546,7 +1577,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         this.renderAll();
     },
 
-    updatePointDataProperties: function(pointData) {
+    updatePointRefs: function(pointData) {
         var refs = pointData['Point Refs'],
             len = refs.length,
             c;
@@ -1564,11 +1595,12 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         if(!this._origPointData) {
             this._origPointData = $.extend(true, {}, oldPoint);
-            this.updatePointDataProperties(this._origPointData);
+            this.updatePointRefs(this._origPointData);
         }
 
         this._pointData = $.extend(true, {}, newPoint);
-        this.updatePointDataProperties(this._pointData);
+        gpl.pointData[this.upi] = this._pointData;
+        this.updatePointRefs(this._pointData);
 
         if(processChanges) {
             this.processPointData(newPoint);
@@ -1577,6 +1609,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             }
             this.setLabel(newPoint.name4);
         }
+
+        this.pointName = this._pointData.Name;
 
         this.mapPointRefs();
     },
@@ -1594,7 +1628,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             obj[refs[c].PropertyName] = c;
         }
 
-        this._pointRefs = obj || {};
+        this._pointRefs = obj;
     },
 
     setPointRef: function(prop, upi, name) {
@@ -1694,7 +1728,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 } else {
                     if(anchor.required === true) {
                         ret = false;
-                        gpl.invalidMessage = 'No ' + anchor.anchorType + ' connection on ' + self.type + ' block';
+                        gpl.validationMessage = 'No ' + anchor.anchorType + ' connection on ' + self.type + ' block';
                         gpl.log('no lines associated', anchor.anchorType, 'on', self.type);
                     }
                 }
@@ -1727,6 +1761,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     delete: function() {
         var c,
             list = this.inputAnchors || [],
+            canvas = gpl.canvases[this.targetCanvas || 'main'],
             len = list.length,
             invalidate = function(anchor) {
                 var lines,
@@ -1755,7 +1790,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         len = this._shapes.length;
         for(c=0; c<len; c++) {
-            this.canvas.remove(this._shapes[c]);
+            canvas.remove(this._shapes[c]);
         }
 
         this.renderAll();
@@ -1842,16 +1877,21 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         this.initShapes();
 
-        gpl.blockManager.registerBlock(this, this.valueText);
+        gpl.blockManager.registerBlock(this, this.valueText, this.targetCanvas);
 
         if(this.upi && gpl.pointData[this.upi]) {
             this._pointData = gpl.pointData[this.upi];
+        }
+
+        if(this.scaleValue !== 1) {
+            this.scale(this.scaleValue);
         }
 
         this.initialized = true;
     },
 
     initConfig: function() {
+        this.targetCanvas = this.config.targetCanvas || 'main';
         this.gplId = gpl.makeId();
         this.precision = this.defaultPrecision;
 
@@ -1862,6 +1902,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         this._offsetLeft = 0;
         this._offsetTop = 0;
+
+        this.scaleValue = this.config.scaleValue || 1;
 
         this.shapeDefaults = {
             hasRotatingPoint: false,
@@ -1902,8 +1944,16 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     postInit: function() {
+        var c,
+            list = this._shapes;
+
         if(!this.config.inactive) {
             this.showShapes();
+        }
+
+        for(c=0; c<list.length; c++) {
+            list[c]._shapeOffsetLeft = list[c].left - this.left;
+            list[c]._shapeOffsetTop = list[c].top - this.top;
         }
     },
 
@@ -1939,7 +1989,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 gplType: 'label',
                 readOnly: true,
                 opacity: 1,
-                selectable: false
+                selectable: false,
+                gplId: this.gplId
             };
 
         // if(this.labelVisible === undefined) {
@@ -1992,7 +2043,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 selectable: false,
                 readOnly: true,
                 top: this.top - this.labelFontSize + this.height / 2 - this.labelMargin / 2,
-                originX: 'left'
+                originX: 'left',
+                gplId: this.gplId
             };
 
         if(this.valueAnchor === 'output') {
@@ -2003,10 +2055,12 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             config.originX = 'right';
         }
 
-        if(this.presentValueVisible === 0) {
-            this.presentValueVisible = false;
+        if(this.presentValueVisible === 0) {//take sequence option?
+            this.presentValueVisible = gpl.json.Show_Value;
         } else {
-            this.presentValueVisible = this.presentValueVisible || gpl.point['Show Value'].Value;
+            if(this.presentValueVisible === undefined) {
+                this.presentValueVisible = false;
+            }
         }
 
         if(this.presentValueVisible === false || this.config.showValue === false) {
@@ -2134,17 +2188,31 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     setActive: function() {
+        // this.targetCanvas = 'main';
         this.labelVisible = gpl.point['Show Label'].Value;
 
         this.bypassSave = false;
         this.showShapes();
 
-        if(this.labelVisible) {
-            this.labelText.opacity = 1;
-            this.labelText.visible = true;
-        }
+        // if(this.labelVisible) {
+        //     this.labelText.opacity = 1;
+        //     this.labelText.visible = true;
+        // }
 
         this.config.inactive = false;
+    },
+
+    convertIconNames: function() {
+        var self = this,
+            currIconName = self.icon.split('.')[0],
+            matrixEntry;
+
+        if(self.iconMatrix) {
+            matrixEntry = self.iconMatrix[currIconName];
+            if(matrixEntry) {
+                self.icon = matrixEntry + self.iconExtension;
+            }
+        }
     },
 
     setIcon: function(icon) {
@@ -2155,6 +2223,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         }
 
         if(self.icon) {
+            self.convertIconNames();
+
             if(self._icons[self.icon] === undefined) {
                 fabric.Image.fromURL(gpl.iconPath + self.icon, function(img) {
                     var width = img.width,
@@ -2175,6 +2245,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
                     img._originalLeft = left;
                     img._originalTop = top;
+                    img._shapeOffsetLeft = img.left - self.left;
+                    img._shapeOffsetTop = img.top - self.top;
                     img.gplId = self.gplId;
 
                     img.gplType = 'backgroundimage';
@@ -2186,7 +2258,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     self.backgroundImage = img;
                     self._icons[self.icon] = img;
 
-                    self.add(img);
+                    self.add(img, true);
                     self.renderAll();
                 });
             } else {
@@ -2721,7 +2793,9 @@ gpl.blocks.Average = fabric.util.createClass(gpl.Block, {
 
 gpl.blocks.Economizer = fabric.util.createClass(gpl.Block, {
     width: 30,
-    height: 40,
+    height: 60,
+    toolbarHeight: 30,
+    toolbarOffsetTop: -10,
 
     type: 'Economizer',
     pointType: 'Economizer',
@@ -2745,7 +2819,7 @@ gpl.blocks.Economizer = fabric.util.createClass(gpl.Block, {
                 fill: '#0075a2',
                 stroke: 'black',
                 width: 30,
-                height: 40
+                height: 60
             }
         }
     },
@@ -3103,6 +3177,14 @@ gpl.blocks.Comparator = fabric.util.createClass(gpl.Block, {
     pointType: 'Comparator',
     valueType: 'enum',
 
+    iconMatrix: {
+        '<': 'LT',
+        '>': 'GT',
+        '<=': 'LTEqual',
+        '>=': 'GTEqual',
+        '=': 'Equal'
+    },
+
     leftAnchors: [{
         anchorType: 'Input Point 1',
         required: true
@@ -3164,77 +3246,295 @@ gpl.blocks.Totalizer = fabric.util.createClass(gpl.Block, {
     }
 });
 
-gpl.blocks.TextBlock = fabric.Textbox;
+// gpl.blocks.TextBlock = fabric.Textbox;
 
-gpl.blocks.TextBlock1 = fabric.util.createClass(fabric.Textbox, {
-    type: 'TextBlock',
-    lineHeight: 1,
-    toolbarHeight: 30,
-    toolbarOffsetTop: 10,
-    toolbarOffsetLeft: -8,
-    toolbarWidth: 30,
-    proxyOffsetLeft: 8,
-    fontFamily: 'arial',
-    textAlign: 'center',
-    hasRotatingPoint: false,
-    hasControls: false,
-    // originY: 'bottom',
-    noIcon: true,
-
+fabric.Textbox = gpl.blocks.TextBlock = fabric.util.createClass(fabric.Text, fabric.Observable, {
+    isNonPoint: true,
     defaultWeight: 'normal',
     defaultFill: '#000000',
+    borderColor: '#000000',
+    cornerColor: '#000000',
     defaultFontSize: 12,
+    minWidth: 30,
+    cornerSize: 6,
+    hasRotatingPoint: false,
+
+    type: 'TextBlock',
+    gplType: 'text',
 
     initialize: function(config) {
-        this.config = config;
+        this.convertConfig(config);
+
+        this.callSuper('initialize', this.text, this.config);
+
+        this.set('lockUniScaling', false);
+        this.set('lockScalingY', true);
+        // this.set('hasBorders', config.hasBorders);
+        this.setControlsVisibility({
+            tl: false,
+            tr: false,
+            br: false,
+            bl: false,
+            ml: true,
+            mt: false,
+            mr: true,
+            mb: false,
+            mtr: false
+        });
 
         this.gplId = gpl.makeId();
-
-        this.convertConfig();
-        // this.callSuper('initialize', this.config.label || 'ABC', this.config);
-        gpl.texts[this.gplId] = this;//.push(this);
-        gpl.blockManager.add(this);
+        gpl.texts[this.gplId] = this;
+        gpl.blockManager.registerBlock(this);
     },
 
-    convertConfig: function() {
-        var cfg = this.config,
-            fontConfig = cfg.font;
+    convertConfig: function(config) {
+        var cfg = config,
+            fontConfig = cfg.font,
+            alignments = {
+                1: 'right',
+                0: 'left'
+            };
 
-        if(fontConfig) {
-            cfg.fontWeight = fontConfig.bold?'bold':'normal';
+        this.config = config;
+
+        if (fontConfig) {
+            cfg.fontWeight = fontConfig.bold ? 'bold' : 'normal';
             cfg.fill = '#' + gpl.convertColor(fontConfig.color || 0);
             cfg.fontSize = parseInt(fontConfig.size, 10) || this.defaultFontSize;
-            cfg.textDecoration = fontConfig.underline?'underline':'';
+            cfg.textDecoration = fontConfig.underline ? 'underline' : '';
+            cfg.fontFamily = fontConfig.name || 'Arial';
         } else {
-            cfg.fontWeight = this.defaultWeight;
-            cfg.fill = this.defaultFill;
-            cfg.fontSize = this.defaultFontSize;
+            if(config._v2 !== true) {
+                cfg.fontWeight = this.defaultWeight;
+                cfg.fill = this.defaultFill;
+                cfg.fontSize = this.defaultFontSize;
+            }
         }
 
-        cfg.lockUniScaling = true;
+        // cfg.lockUniScaling = true;
         cfg.originX = 'left';
         cfg.originY = 'top';
 
-        if(cfg.Font && cfg.Font.Underline === 'true') {
+        if (cfg.Font && cfg.Font.Underline === 'true') {
             cfg.textDecoration = 'underline';
         }
 
-        this.config.left += 10;
-        this.config.top += 5;
+        if(!cfg._v2) {
+            this.config.left += 10;
+            this.config.top += 5;
+        }
 
         this.config.selectable = !!gpl.isEdit;
 
-        this.config.width = parseInt(this.config.width, 10);
-        this.config.height = parseInt(this.config.height, 10);
+        this.config.width = parseInt(this.config.width, 10) || this.minWidth;
+        this.config.height = null;//parseInt(this.config.height, 10);
 
-        this.text = this.config.label || '';
+        this.config.textAlign = alignments[cfg.alignment] || 'center';
+
+        $.extend(this, this.config);
+
+        this.text = this.config.label || 'ABC';
+    },
+
+    setActive: function() {
+        this.inactive = false;
+        this.setCoords();
+    },
+
+    delete: function() {
+        gpl.manager.canvas.remove(this);
+        delete gpl.texts[this.gplId];
+    },
+
+    _wrapText: function(ctx, text) {
+        var lines = text.split(this._reNewline),
+            wrapped = [],
+            i;
+
+        for (i = 0; i < lines.length; i++) {
+            wrapped = wrapped.concat(this._wrapLine(ctx, lines[i] + '\n'));
+        }
+
+        return wrapped;
+    },
+    /**
+     * Wraps a line of text using the width of the Textbox and a context.
+     * @param {CanvasRenderingContext2D} ctx Context to use for measurements
+     * @param {String} text The string of text to split into lines
+     * @returns {Array} Array of line(s) into which the given text is wrapped
+     * to.
+     */
+    _wrapLine: function(ctx, text) {
+        var maxWidth = this.width,
+            words = text.split(' '),
+            lines = [],
+            line = "",
+            tmp;
+
+        if (ctx.measureText(text).width < maxWidth) {
+            lines.push(text);
+        } else {
+            while (words.length > 0) {
+                /*
+                 * If the textbox's width is less than the widest letter.
+                 * fontSize changes.
+                 */
+                if (maxWidth <= ctx.measureText('W').width) {
+                    return text.split('');
+                }
+
+                /*
+                 * This handles a word that is longer than the width of the
+                 * text area.
+                 */
+                while (Math.ceil(ctx.measureText(words[0]).width) >= maxWidth) {
+                    tmp = words[0];
+                    words[0] = tmp.slice(0, -1);
+                    if (words.length > 1) {
+                        words[1] = tmp.slice(-1) + words[1];
+                    } else {
+                        words.push(tmp.slice(-1));
+                    }
+                }
+
+                if (Math.ceil(ctx.measureText(line + words[0]).width) < maxWidth) {
+                    line += words.shift() + " ";
+                } else {
+                    lines.push(line);
+                    line = "";
+                }
+                if (words.length === 0) {
+                    lines.push(line.substring(0, line.length - 1));
+                }
+            }
+        }
+
+        return lines;
+    },
+    /**
+     * Gets lines of text to render in the Textbox. This function calculates
+     * text wrapping on the fly everytime it is called.
+     * @param {CanvasRenderingContext2D} ctx The context to use for measurements
+     * @returns {Array} Array of lines in the Textbox.
+     */
+    _getTextLines: function(ctx) {
+        var l;
+
+        ctx = (ctx || this.ctx);
+
+        ctx.save();
+        this._setTextStyles(ctx);
+
+        l = this._wrapText(ctx, this.text);
+
+        ctx.restore();
+
+        return l;
+    },
+    /**
+     * Overrides the superclass version of this function. The only change is
+     * that this function does not change the width of the Textbox. That is
+     * done manually by the user.
+     * @param {CanvasRenderingContext2D} ctx Context to render on
+     */
+    _renderViaNative: function(ctx) {
+        var textLines;
+
+        this._setTextStyles(ctx);
+
+        textLines = this._wrapText(ctx, this.text);
+
+        this.height = this._getTextHeight(ctx, textLines);
+
+        if (this.clipTo) {
+            fabric.util.clipContext(this, ctx);
+        }
+
+        this._renderTextBackground(ctx, textLines);
+        this._translateForTextAlign(ctx);
+        this._renderText(ctx, textLines);
+
+        if (this.textAlign !== 'left' && this.textAlign !== 'justify') {
+            ctx.restore();
+        }
+
+        this._renderTextDecoration(ctx, textLines);
+        if (this.clipTo) {
+            ctx.restore();
+        }
+
+        this._setBoundaries(ctx, textLines);
+        this._totalLineHeight = 0;
+    }
+});
+
+/**
+ * Returns fabric.Textbox instance from an object representation
+ * @static
+ * @memberOf fabric.Textbox
+ * @param {Object} object Object to create an instance from
+ * @return {fabric.Textbox} instance of fabric.Textbox
+ */
+fabric.Textbox.fromObject = function(object) {
+    return new fabric.Textbox(object.text, fabric.util.object.clone(object));
+};
+
+/**
+ * Contains all fabric.Textbox objects that have been created
+ * @static
+ * @memberof fabric.Textbox
+ * @type Array
+ */
+fabric.Textbox.instances = [];
+fabric.Textbox.__setObjectScaleOverridden = fabric.Canvas.prototype._setObjectScale;
+
+/**
+ * Override _setObjectScale and add Textbox specific resizing behavior. Resizing
+ * a Textbox doesn't scale text, it only changes width and makes text wrap automatically.
+ */
+fabric.Canvas.prototype._setObjectScale = function(localMouse, transform, lockScalingX, lockScalingY, by, lockScalingFlip) {
+
+    var t = transform.target,
+        setObjectScaleOverridden = fabric.Textbox.__setObjectScaleOverridden,
+        w;
+
+    if (t.type === 'TextBlock') {
+        w = t.width * ((localMouse.x / transform.scaleX) / (t.width + t.strokeWidth));
+        if (w >= t.minWidth) {
+            t.set('width', w);
+        }
+    } else {
+        setObjectScaleOverridden.call(fabric.Canvas.prototype, localMouse, transform, lockScalingX, lockScalingY, by, lockScalingFlip);
+    }
+};
+
+fabric.util.object.extend(fabric.Textbox.prototype, /** @lends fabric.Textbox.prototype */ {
+    /**
+     * Overrides superclass function and adjusts cursor offset value because
+     * lines do not necessarily end with a newline in Textbox.
+     * @param {Event} e
+     * @param {Boolean} isRight
+     * @returns {Number}
+     */
+    getDownCursorOffset: function(e, isRight) {
+        return this.callSuper('getDownCursorOffset', e, isRight) - 1;
+    },
+    /**
+     * Overrides superclass function and adjusts cursor offset value because
+     * lines do not necessarily end with a newline in Textbox.
+     * @param {Event} e
+     * @param {Boolean} isRight
+     * @returns {Number}
+     */
+    getUpCursorOffset: function(e, isRight) {
+        return this.callSuper('getUpCursorOffset', e, isRight) - 1;
     }
 });
 
 /* ------------- Misc Classes ------------ */
 
 gpl.SchematicLine = function(ox, oy, otarget, manager, isVertical) {
-    var self = this,
+    var slSelf = this,
         VALIDCOLOR = 'green',
         canvas = manager.canvas,
         segments = [],
@@ -3295,17 +3595,17 @@ gpl.SchematicLine = function(ox, oy, otarget, manager, isVertical) {
 
     block.lock(true);
 
-    self.setColor = function(color) {
+    slSelf.setColor = function(color) {
         forEachLine(function(line) {
             line.setStroke(color || '#000000');
         });
     };
 
-    self.getCoords = function() {
+    slSelf.getCoords = function() {
         return coords;
     };
 
-    self.completeLine = function(target) {
+    slSelf.completeLine = function(target) {
         var newCoords,
             event;
 
@@ -3314,47 +3614,46 @@ gpl.SchematicLine = function(ox, oy, otarget, manager, isVertical) {
                 x: target.left + target.width/2,
                 y: target.top + target.height/2
             };
-            self.handleMouseMove(event);
+            slSelf.handleMouseMove(event);
         }
 
         target.clearHover();
-        self.addSegment(solidLine, true);
+        slSelf.addSegment(solidLine, true);
         solidLine.off();
         canvas.remove(solidLine);
         solidLine = new fabric.Line([dashedLine.x1, dashedLine.y1, dashedLine.x2, dashedLine.y2], $.extend({}, lineDefaults));
-        self.addSegment(solidLine, true);
+        slSelf.addSegment(solidLine, true);
         dashedLine.off();
         canvas.remove(dashedLine);
         target.set('fill', target._oFill);
         target.set('stroke', target._oStroke);
-        self.detachEvents();
+        slSelf.detachEvents();
         newCoords = $.extend(true, [], coords);
         // gpl.log('creating new line', newCoords);
         manager.shapes.push(new gpl.ConnectionLine($.extend(true, [], newCoords), canvas, true));
-        self.clearSegments();
+        slSelf.clearSegments();
         gpl.manager.renderAll();
     };
 
-    self.clearSegments = function() {
+    slSelf.clearSegments = function() {
         while(segments.length > 0) {
-            self.removeSegment(true);
+            slSelf.removeSegment(true);
         }
         block.lock(false);
         gpl.manager.renderAll();
     };
 
-    self.delete = function() {
-        gpl.manager.clearState();
+    slSelf.delete = function() {
         solidLine.off();
         dashedLine.off();
         canvas.remove(solidLine);
         canvas.remove(dashedLine);
-        self.detachEvents();
-        self.clearSegments();
+        slSelf.detachEvents();
+        slSelf.clearSegments();
         gpl.manager.renderAll();
     };
 
-    self.syncLines = function() {
+    slSelf.syncLines = function() {
         var newCorner,
             lastCoords = coords.slice(-1)[0];
 
@@ -3385,7 +3684,7 @@ gpl.SchematicLine = function(ox, oy, otarget, manager, isVertical) {
         gpl.manager.renderAll();
     };
 
-    self.removeSegment = function(bypass) {
+    slSelf.removeSegment = function(bypass) {
         var segment;
 
         if(segments.length > 0) {
@@ -3398,13 +3697,13 @@ gpl.SchematicLine = function(ox, oy, otarget, manager, isVertical) {
         horiz = !horiz;
 
         if(!bypass) {
-            self.syncLines();
+            slSelf.syncLines();
         }
 
         return segment;
     };
 
-    self.addSegment = function(segment, skipSync) {
+    slSelf.addSegment = function(segment, skipSync) {
         segments.push(segment);
         coords.push({
             x: segment.x2,
@@ -3413,19 +3712,19 @@ gpl.SchematicLine = function(ox, oy, otarget, manager, isVertical) {
         canvas.add(segment);
         horiz = !horiz;
         if(!skipSync) {
-            self.syncLines();
+            slSelf.syncLines();
         }
     };
 
-    self.swapDirections = function() {
+    slSelf.swapDirections = function() {
         if(!spaceSegment) {
-            spaceSegment = self.removeSegment();
+            spaceSegment = slSelf.removeSegment();
         } else {
-            self.addSegment(spaceSegment);
+            slSelf.addSegment(spaceSegment);
         }
     };
 
-    self.handleMouseMove =  function(event) {
+    slSelf.handleMouseMove =  function(event) {
         var pointer = event.e?canvas.getPointer(event.e):event,
             x = pointer.x,// - pointer.x % gpl.gridSize,
             y = pointer.y,// - pointer.y % gpl.gridSize,
@@ -3437,16 +3736,16 @@ gpl.SchematicLine = function(ox, oy, otarget, manager, isVertical) {
 
         if(manager.isEditingLine) {
             if(moveTarget) {
-                self.valid = gpl.validate.connection(startAnchor, moveTarget, true);
-                if(self.valid && moveTarget !== startAnchor) {
+                slSelf.valid = gpl.validate.connection(startAnchor, moveTarget, true);
+                if(slSelf.valid && moveTarget !== startAnchor) {
                     moveTarget.hover();
-                    self.setColor(VALIDCOLOR);
+                    slSelf.setColor(VALIDCOLOR);
                     target = moveTarget;
                 }
             } else {
                 if(target) {
                     target.clearHover();
-                    self.setColor();
+                    slSelf.setColor();
                 }
             }
 
@@ -3461,14 +3760,14 @@ gpl.SchematicLine = function(ox, oy, otarget, manager, isVertical) {
         }
     };
 
-    self.handleMouseUp = function(event) {
-        self.mouseDown = false;
+    slSelf.handleMouseUp = function(event) {
+        slSelf.mouseDown = false;
         if(event.e.which === 3) {
-            self.delete();
+            slSelf.delete();
         }
     };
 
-    self.handleMouseDown = function(event) {
+    slSelf.handleMouseDown = function(event) {
         var pointer = canvas.getPointer(event.e),
             px = pointer.x,
             py = pointer.y,
@@ -3481,8 +3780,8 @@ gpl.SchematicLine = function(ox, oy, otarget, manager, isVertical) {
             });
 
         if(manager.isEditingLine) {
-            if(clickTarget && self.valid) {// && clickTarget.anchorType === endType) {
-                self.completeLine(clickTarget);
+            if(clickTarget && slSelf.valid) {// && clickTarget.anchorType === endType) {
+                slSelf.completeLine(clickTarget);
             } else {
                 prevX = x;
                 prevY = y;
@@ -3505,30 +3804,30 @@ gpl.SchematicLine = function(ox, oy, otarget, manager, isVertical) {
         }
     };
 
-    self.handleEnterKey = function() {
-        self.completeLine();
+    slSelf.handleEnterKey = function() {
+        slSelf.completeLine();
     };
 
-    self.handleSpacebar = function(event) {
-        self.swapDirections();
+    slSelf.handleSpacebar = function(event) {
+        slSelf.swapDirections();
     };
 
-    self.handleBackspace = function(event) {
-        self.removeSegment();
+    slSelf.handleBackspace = function(event) {
+        slSelf.removeSegment();
     };
 
-    self.handleKeyUp = function(event) {
+    slSelf.handleKeyUp = function(event) {
         if(event.which === gpl.ESCAPEKEY) {
-            self.delete();
+            slSelf.delete();
         }
     };
 
-    // self.handleKeyPress = function(event) {
+    // slSelf.handleKeyPress = function(event) {
     //     // if(event.which === 13) {
     //     //     handleEnterKey();
     //     // }
     //     // if(event.which === 32) {
-    //     //     self.handleSpacebar(event);
+    //     //     slSelf.handleSpacebar(event);
     //     // }
 
     //     // if(event.which === 46) {//46 delete, 8 backspace
@@ -3540,31 +3839,31 @@ gpl.SchematicLine = function(ox, oy, otarget, manager, isVertical) {
 
     eventHandlerList = [{
         event: 'keyup',
-        handler: self.handleKeyUp,
+        handler: slSelf.handleKeyUp,
         type: 'DOM'
     }, {
         event: 'mouse:move',
-        handler: self.handleMouseMove
+        handler: slSelf.handleMouseMove
     }, {
         event: 'mouse:up',
-        handler: self.handleMouseUp
+        handler: slSelf.handleMouseUp
     }, {
         event: 'mouse:down',
-        handler: self.handleMouseDown
+        handler: slSelf.handleMouseDown
     }];
 
-    self.detachEvents = function() {
-        canvas.defaultCursor = self.oldCursor;
+    slSelf.detachEvents = function() {
+        canvas.defaultCursor = slSelf.oldCursor;
         enableNonAnchors();
-        manager.clearState();
         manager.unregisterHandlers(eventHandlerList);
         setTimeout(function() {
+            manager.clearState();
             manager.isEditingLine = false;
         },500);
     };
 
-    self.attachEvents = function() {
-        self.oldCursor = canvas.defaultCursor;
+    slSelf.attachEvents = function() {
+        slSelf.oldCursor = canvas.defaultCursor;
         // canvas.defaultCursor = 'crosshair';
         disableNonAnchors();
         manager.setState('DrawingLine');
@@ -3580,138 +3879,11 @@ gpl.SchematicLine = function(ox, oy, otarget, manager, isVertical) {
 
     manager.isEditingLine = true;
 
-    self.attachEvents();
-};
-
-gpl.LineManager = function(manager) {
-    var self = this,
-        bringToFront = function(line) {
-            var c,
-                list = line.lines,
-                len = list.length;
-
-            for(c=0; c<len; c++) {
-                gpl.manager.bringToFront(list[c]);
-            }
-
-            gpl.manager.renderAll();
-        },
-        doRemove = function(line) {
-            self.removedLines[line.gplId] = line;
-            delete self.lines[line.gplId];
-        };
-
-    self.lines = {};
-    self.removedLines = {};
-
-    self.setSelected = function(line) {
-        if(self.selectedLine) {
-            self.selectedLine.deselect();
-        }
-
-        self.selectedLine = line;
-    };
-
-    self.registerLine = function(line) {
-        self.lines[line.gplId] = line;
-    };
-
-    self.getLine = function(gplId) {
-        return self.lines[gplId] || self.wideLines[gplId];
-    };
-
-    self.deleteLine = function(conf) {
-        var line;
-
-        if(typeof conf === 'string') {
-            line = self.lines[conf];
-        } else {
-            line = conf;
-        }
-
-        if(line) {
-            line.delete();
-
-            doRemove(line);
-
-            manager.renderAll();
-        } else {
-            gpl.log('no line to remove');
-        }
-    };
-
-    self.remove = function(line) {
-        doRemove(line);
-    };
-
-    self.convertLine = function(line) {
-        var ret = {
-            handle: line.coords
-        };
-
-        return ret;
-    };
-
-    self.prepSaveData = function(saveObject) {
-        var ret = [];
-
-        gpl.forEach(self.lines, function(obj) {
-            if(obj.state !== 'deleted') {
-                ret.push(self.convertLine(obj));
-            }
-        });
-
-        saveObject.line = ret;
-    };
-
-    gpl.on('addedLine', function(line) {
-        self.lines[line.gplId] = line;
-        bringToFront(line);
-    });
-
-    gpl.on('removeline', function(line) {
-        if(self.lines[line.gplId]) {
-            self.deleteLine(line.gplId);
-        }
-    });
-
-    gpl.manager.registerHandler({
-        event: 'selection:cleared',
-        handler: function(event) {
-            if(self.selectedLine) {
-                self.selectedLine.revertState();
-                self.selectedLine = null;
-            }
-        }
-    });
-
-    gpl.manager.addToBindings({
-        deleteLine: function() {
-            var line = manager.contextObject;
-
-            self.deleteLine(line.gplId);
-        }
-    });
-
-    gpl.on('save', function() {
-        self.prepSaveData(gpl.json);
-    });
-
-    gpl.on('saveForLater', function() {
-        self.prepSaveData(gpl.json.editVersion);
-    });
-
-    gpl.onDestroy(function() {
-        gpl.forEach(self.lines, function(line, gplId) {
-            line.delete();
-            delete self.lines[gplId];
-        });
-        delete self.lines;
-    });
+    slSelf.attachEvents();
 };
 
 gpl.ConnectionLine = function(coords, canvas, isNew) {
-    var self = this,
+    var clSelf = this,
         calculatedSegments = [],
         startX,
         startY,
@@ -3747,12 +3919,12 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
         forEachLine = function(fn, wide) {
             var cc;
 
-            for(cc=0; cc<self.lines.length; cc++) {
-                fn(self.lines[cc]);
+            for(cc=0; cc<clSelf.lines.length; cc++) {
+                fn(clSelf.lines[cc]);
             }
             if(wide) {
-                for(cc=0; cc<self.lines.length; cc++) {
-                    fn(self.lines[cc]);
+                for(cc=0; cc<clSelf.wideLines.length; cc++) {
+                    fn(clSelf.wideLines[cc]);
                 }
             }
         },
@@ -3777,7 +3949,7 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
                     y = [pp1.y, pp2.y];
                 },
                 invertPoint = function(arg) {
-                    // gpl.log(self.gplId, 'inverting point', arg);
+                    // gpl.log(clSelf.gplId, 'inverting point', arg);
                     newPoint = [(newPoint[0] + 1) % 2, (newPoint[1] + 1) % 2];
                 },
                 doManhattanLines = function() {
@@ -3788,7 +3960,7 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
                             if(sVert) {
                                 invertPoint('adx start');
                             }
-                        } else if(idx === self.coords.length - 2) {
+                        } else if(idx === clSelf.coords.length - 2) {
                             if(!eVert) {
                                 invertPoint('adx end');
                             }
@@ -3799,7 +3971,7 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
                             if(!sVert) {
                                 invertPoint('ady start');
                             }
-                        } else if(idx === self.coords.length - 2) {
+                        } else if(idx === clSelf.coords.length - 2) {
                             if(eVert) {
                                 invertPoint('ady end');
                             }
@@ -3815,7 +3987,7 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
             calcDifferences(p1, p2);
 
             //if only two points, make sure it has a line extending from the anchor
-            if(self.coords.length === 2) {//if has a vertex, make sure horiz/vert matches
+            if(clSelf.coords.length === 2) {//if has a vertex, make sure horiz/vert matches
                 if(sVert) {
                     if(dy > 0) {//next point is above
                         tmpPoint = {
@@ -3874,7 +4046,7 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
 
                 retPoint = doManhattanLines();
 
-                ret = [self.coords[0], newPoints[0], retPoint, newPoints[1], self.coords[1]];
+                ret = [clSelf.coords[0], newPoints[0], retPoint, newPoints[1], clSelf.coords[1]];
             } else {
                 retPoint = doManhattanLines();
                 ret = [retPoint];
@@ -3883,9 +4055,9 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
             return ret;
         },
         selectAllSegments = function() {
-            // gpl.log(self);
-            gpl.lineManager.setSelected(self);
-            self.setSelected();
+            // gpl.log(clSelf);
+            gpl.lineManager.setSelected(clSelf);
+            clSelf.setSelected();
         },
         drawSegments = function() {
             var cc,
@@ -3916,9 +4088,9 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
                 wideLine = new fabric.Line([x1 + 0.5 - xoffset, y1 - 0.5 - yoffset, x2 + 0.5 - xoffset, y2 - 0.5 - yoffset], proxyDefaults);//this offsets to make a clean line
                 line.on('selected', selectAllSegments);
                 wideLine.on('selected', selectAllSegments);
-                line.on('removed', self.delete);
-                line.gplId = self.gplId;
-                wideLine.gplId = self.gplId;
+                line.on('removed', clSelf.delete);
+                line.gplId = clSelf.gplId;
+                wideLine.gplId = clSelf.gplId;
                 canvas.add(line);
                 canvas.add(wideLine);
                 gpl.manager.sendToBack(wideLine);
@@ -3934,28 +4106,28 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
                 //     circle.set('fill', 'purple');
                 // }
                 // canvas.add(circle);
-                self.lines.push(line);
-                self.wideLines.push(wideLine);
-                // self.circles.push(circle);
+                clSelf.lines.push(line);
+                clSelf.wideLines.push(wideLine);
+                // clSelf.circles.push(circle);
             }
-            gpl.fire('addedLine', self);
+            gpl.fire('addedLine', clSelf);
         },
         drawLines = function() {
             var c,
                 addSegment = function(index) {//point1, point2) {
-                    var point1 = self.coords[index],
-                        point2 = self.coords[index + 1],
+                    var point1 = clSelf.coords[index],
+                        point2 = clSelf.coords[index + 1],
                         svert = false,
                         evert = false,
                         midpoints,
                         points;
 
                     if(point1.x !== point2.x && point1.y !== point2.y && location.href.substring(0).match('nomanhattan') === null) {//if it's a diagonal line
-                        if(index === 0 && self.startAnchor) {
-                            svert = self.startAnchor.isVertical;
+                        if(index === 0 && clSelf.startAnchor) {
+                            svert = clSelf.startAnchor.isVertical;
                         }
-                        if(index === self.coords.length - 2 && self.endAnchor) {
-                            evert = self.endAnchor.isVertical;
+                        if(index === clSelf.coords.length - 2 && clSelf.endAnchor) {
+                            evert = clSelf.endAnchor.isVertical;
                         }
 
                         midpoints = calcManhattanMidpoints(point1, point2, index, svert, evert);
@@ -3972,7 +4144,7 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
                     calculatedSegments = calculatedSegments.concat(points);
                 };
 
-            for(c=0; c<self.coords.length-1; c++) {
+            for(c=0; c<clSelf.coords.length-1; c++) {
                 addSegment(c);
             }
 
@@ -3980,15 +4152,15 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
         },
         fixCoords = function() {
             var c,
-                len = self.coords.length,
+                len = clSelf.coords.length,
                 coord,
                 x,
                 y,
                 centerInAnchor = function(anchor, coord1, coord2) {
-                    var top = anchor.top + anchor.radius,
-                        left = anchor.left + anchor.radius,
-                        c1 = self.coords[coord1],
-                        c2 = self.coords[coord2];
+                    var top = anchor.top + anchor.radius - 0.5,
+                        left = anchor.left + anchor.radius - 0.5,
+                        c1 = clSelf.coords[coord1],
+                        c2 = clSelf.coords[coord2];
 
                     if(anchor.isVertical) {//only check x
                         if(left !== c1.x) {
@@ -4003,13 +4175,13 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
                     }
                 };
 
-            // if(isNew) {
-            //     centerInAnchor(self.startAnchor, 0, 1);
-            //     centerInAnchor(self.endAnchor, len-1, len-2);
-            // }
+            if(isNew) {
+                centerInAnchor(clSelf.startAnchor, 0, 1);
+                centerInAnchor(clSelf.endAnchor, len-1, len-2);
+            }
 
             for(c=0; c<len; c++) {
-                coord = self.coords[c];
+                coord = clSelf.coords[c];
                 x = coord.x;
                 y = coord.y;
                 if(x % 1 !== 0) {
@@ -4021,28 +4193,28 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
             }
         };
 
-    self.coords = $.extend(true, [], coords);
+    clSelf.coords = $.extend(true, [], coords);
 
-    self.lines = [];
-    self.wideLines = [];
-    self.circles = [];
-    self.state = 'valid';
-    self.gplId = gpl.makeId();
-    lineDefaults.gplId = self.gplId;
+    clSelf.lines = [];
+    clSelf.wideLines = [];
+    clSelf.circles = [];
+    clSelf.state = 'valid';
+    clSelf.gplId = gpl.makeId();
+    lineDefaults.gplId = clSelf.gplId;
 
-    startX = self.coords[0].x;
-    startY = self.coords[0].y;
+    startX = clSelf.coords[0].x;
+    startY = clSelf.coords[0].y;
 
-    endX = self.coords[self.coords.length-1].x;
-    endY = self.coords[self.coords.length-1].y;
+    endX = clSelf.coords[clSelf.coords.length-1].x;
+    endY = clSelf.coords[clSelf.coords.length-1].y;
 
-    self.startAnchor = gpl.manager.getObject({
+    clSelf.startAnchor = gpl.manager.getObject({
         gplType: 'anchor',
         left: startX,
         top: startY
     });
 
-    self.endAnchor = gpl.manager.getObject({
+    clSelf.endAnchor = gpl.manager.getObject({
         gplType: 'anchor',
         left: endX,
         top: endY
@@ -4053,13 +4225,13 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
     // gpl.log('startAnchor:', startAnchor);
     // gpl.log('endAnchor:', endAnchor);
 
-    self.setColor = function(color) {
+    clSelf.setColor = function(color) {
         forEachLine(function(line) {
             line.setStroke(color || '#000000');
         });
     };
 
-    self.detach = function(anchor) {
+    clSelf.detach = function(anchor) {
         var block,
             property;
 
@@ -4067,39 +4239,39 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
             block = gpl.blockManager.getBlock(anchor.gplId);
             property = anchor.anchorType;
 
-            if(self.startAnchor === anchor) {
-                self.startAnchor = null;
-            } else if(self.endAnchor === anchor) {
-                self.endAnchor = null;
+            if(clSelf.startAnchor === anchor) {
+                clSelf.startAnchor = null;
+            } else if(clSelf.endAnchor === anchor) {
+                clSelf.endAnchor = null;
             }
 
             block.syncAnchorPoints();
         }
     };
 
-    self.getOtherAnchor = function(anchor) {
+    clSelf.getOtherAnchor = function(anchor) {
         var ret;
 
-        if(self.startAnchor === anchor) {
-            ret = self.endAnchor;
-        } else if(self.endAnchor === anchor) {
-            ret = self.startAnchor;
+        if(clSelf.startAnchor === anchor) {
+            ret = clSelf.endAnchor;
+        } else if(clSelf.endAnchor === anchor) {
+            ret = clSelf.startAnchor;
         }
 
         return ret || {};
     };
 
-    self.revertState = function() {
-        var state = self.prevState.charAt(0).toUpperCase() + self.prevState.substring(1);
+    clSelf.revertState = function() {
+        var state = clSelf.prevState.charAt(0).toUpperCase() + clSelf.prevState.substring(1);
 
-        if(self['set' + state]) {
-            self['set' + state]();
+        if(clSelf['set' + state]) {
+            clSelf['set' + state]();
         }
     };
 
-    self.setInvalid = function() {
-        self.prevState = self.state || 'valid';
-        self.state = 'invalid';
+    clSelf.setInvalid = function() {
+        clSelf.prevState = clSelf.state || 'valid';
+        clSelf.state = 'invalid';
         forEachLine(function(line) {
             line.set({
                 'stroke': invalidColor,
@@ -4109,10 +4281,10 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
         gpl.manager.renderAll();
     };
 
-    self.setValid = function() {
-        self.prevState = self.state || 'valid';
-        if(self.state !== 'valid') {
-            self.state = 'valid';
+    clSelf.setValid = function() {
+        clSelf.prevState = clSelf.state || 'valid';
+        if(clSelf.state !== 'valid') {
+            clSelf.state = 'valid';
             forEachLine(function(line) {
                 line.set({
                     'stroke': validColor,
@@ -4123,10 +4295,10 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
         }
     };
 
-    self.setSelected = function() {
-        self.prevState = self.state || 'valid';
-        self.state = 'selected';
-        gpl.lineManager.selectedLine = self;
+    clSelf.setSelected = function() {
+        clSelf.prevState = clSelf.state || 'valid';
+        clSelf.state = 'selected';
+        gpl.lineManager.selectedLine = clSelf;
         forEachLine(function(line) {
             line.set({
                 'stroke': selectedColor,
@@ -4135,24 +4307,24 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
         });
     };
 
-    self.deselect = function() {
-        self.revertState();
+    clSelf.deselect = function() {
+        clSelf.revertState();
     };
 
-    self.validate = function() {
+    clSelf.validate = function() {
         var valid = false;
 
-        if(self.startAnchor && self.endAnchor) {
-            valid = gpl.validate.connection(self.startAnchor, self.endAnchor);
+        if(clSelf.startAnchor && clSelf.endAnchor) {
+            valid = gpl.validate.connection(clSelf.startAnchor, clSelf.endAnchor);
         }
 
         if(!valid) {
-            self.setInvalid();
+            clSelf.setInvalid();
         }
         return valid;
     };
 
-    self.removeLines = function() {
+    clSelf.removeLines = function() {
         forEachLine(function(line) {
             line.off();
             canvas.remove(line);
@@ -4161,78 +4333,80 @@ gpl.ConnectionLine = function(coords, canvas, isNew) {
         canvas.renderAll();
 
         calculatedSegments = [];
-        self.lines = [];
-        self.wideLines = [];
+        clSelf.lines = [];
+        clSelf.wideLines = [];
     };
 
-    self.delete = function() {
-        if(self.state !== 'deleting' && self.state !== 'deleted') {
-            self.state = 'deleting';
+    clSelf.delete = function() {
+        if(clSelf.state !== 'deleting' && clSelf.state !== 'deleted') {
+            clSelf.state = 'deleting';
 
-            if(self.startAnchor) {
-                self.startAnchor.detach(self);
-                self.startAnchor = null;
+            if(clSelf.startAnchor) {
+                clSelf.startAnchor.detach(clSelf);
+                clSelf.startAnchor = null;
             }
 
-            if(self.endAnchor) {
-                self.endAnchor.detach(self);
-                self.endAnchor = null;
+            if(clSelf.endAnchor) {
+                clSelf.endAnchor.detach(clSelf);
+                clSelf.endAnchor = null;
             }
 
-            self.removeLines();
+            clSelf.removeLines();
 
-            gpl.lineManager.remove(self.gplId);
+            gpl.lineManager.remove(clSelf.gplId);
 
             gpl.manager.renderAll();
-            self.state = 'deleted';
+            clSelf.state = 'deleted';
         }
     };
 
-    self.redrawLine = function(gplId, newCoord) {
+    clSelf.redrawLine = function(gplId, newCoord) {
         var testAnchor = function(anchor) {
                 return anchor.gplId === gplId;
             },
-            startCoords = self.coords[0],
-            endCoords = self.coords.slice(-1)[0],
+            startCoords = clSelf.coords[0],
+            endCoords = clSelf.coords.slice(-1)[0],
             start,
             end;
 
-        self.removeLines();
+        clSelf.removeLines();
 
-        if(testAnchor(self.startAnchor)) {
+        if(testAnchor(clSelf.startAnchor)) {
             start = newCoord;
             end = endCoords;
-        } else if(testAnchor(self.endAnchor)) {
+        } else if(testAnchor(clSelf.endAnchor)) {
             start = startCoords;
             end = newCoord;
         }
 
-        self.coords = [start, end];
+        clSelf.coords = [start, end];
 
         drawLines();
     };
 
     drawLines();
 
-    if(!self.startAnchor || !self.endAnchor) {
-        self.setInvalid();
+    if(!clSelf.startAnchor || !clSelf.endAnchor) {
+        clSelf.setInvalid();
     }
 
-    if(self.startAnchor) {
-        self.startAnchor.attach(this);
+    if(clSelf.startAnchor) {
+        clSelf.startAnchor.attach(this);
     }
-    if(self.endAnchor) {
-        self.endAnchor.attach(this);
+    if(clSelf.endAnchor) {
+        clSelf.endAnchor.attach(this);
     }
 };
 
 gpl.Toolbar = function(manager) {
-    var self = this,
+    var tbSelf = this,
         types = manager.blockTypes,
         padding = 5,
         defaultHeight = 30,
         defaultWidth = 30,
-        width = 2 * defaultWidth + 3 * padding + 2,
+        width = 77,//2 * defaultWidth + 3 * padding + 2,
+        canvasWidth,
+        canvasHeight,
         columns = 2,
         numIcons = 0,
         rowHeight = 0,
@@ -4247,24 +4421,33 @@ gpl.Toolbar = function(manager) {
         },
         proxies = {},
         backgroundFill = gpl.toolbarFill,
-        canvas = manager.canvas,
+        canvas = gpl.canvases.toolbar,
+        mainCanvas = gpl.canvases.main,
         height = canvas.height,
         currX = padding,
         currY = padding,
         shapes = {},
         dragShape,
         makeId = gpl.makeId,
-        bringProxiesToFront = function() {
-            var proxy;
-            for(proxy in proxies) {
-                if(proxies.hasOwnProperty(proxy)) {
-                    gpl.manager.bringToFront(proxies[proxy]);
-                }
+        getProperties = function(obj) {
+            var ret = {},
+                c,
+                propList = ['zIndex', 'blockType', 'left', 'top', 'selectable', 'evented', 'hasControls', 'inactive', 'showValue', 'iconType', 'visible', 'opacity'];
+
+            for(c=0; c<propList.length; c++) {
+                ret[propList[c]] = obj[propList[c]];
             }
-            gpl.manager.renderAll();
+            return ret;
+        },
+        bringProxiesToFront = function() {
+            gpl.forEach(proxies, function(proxy) {
+                gpl.manager.bringToFront(proxy, canvas);
+            });
+
+            canvas.renderAll();
         },
         drawToolbar = function() {
-            self.background = new fabric.Rect({
+            tbSelf.background = new fabric.Rect({
                 left: 0,
                 top: 0,
                 fill: backgroundFill,
@@ -4272,24 +4455,52 @@ gpl.Toolbar = function(manager) {
                 height: height,
                 selectable: false
             });
-            canvas.add(self.background);
-            gpl.manager.renderAll();
+            canvas.add(tbSelf.background);
+            canvas.renderAll();
+        },
+        growCanvas = function() {
+            canvas.setWidth(window.innerWidth);
+            canvas.setHeight(window.innerHeight);
+        },
+        shrinkCanvas = function() {
+            canvas.setWidth(canvasWidth);
+            canvas.setHeight(canvasHeight);
         },
         handleDrop = function(event) {
-            var newShape = activeProxy.gplShape;
+            var newShape = activeProxy.gplShape,
+                newConfig = getProperties(newShape),//$.extend(true, {}, newShape.config),
+                Cls = newShape.constructor,
+                clone,
+                x = event.e.x,
+                y = event.e.y,
+                isOverCanvas = function() {
+                    var $canvasEl = gpl.manager.$mainCanvasEl,
+                        left = gpl.manager.panLeft,
+                        top = gpl.manager.panTop,
+                        currCanvasWidth = parseInt($canvasEl.css('width'), 10),
+                        currCanvasHeight = parseInt($canvasEl.css('height'), 10);
 
-            if(event.e.x >= gpl.editModeOffset) {
-                newShape.isToolbar = false;
-                newShape.bypassSave = false;
+                    return x >= left && x <= left + currCanvasWidth && y >= top && y <= top + currCanvasHeight;
+                };
 
-                if(newShape.calcOffsets) {
-                    newShape.calcOffsets();
-                }
-                newShape.setCoords();
-                gpl.manager.addNewPoint(newShape);
-            } else {
-                newShape.delete();
+            if(x >= gpl.editModeOffset) {//} && isOverCanvas()) {
+                newConfig.isToolbar = false;
+                newConfig.targetCanvas = 'main';
+                newConfig.bypassSave = false;
+                newConfig.left = newShape.left - gpl.manager.panLeft;
+                newConfig.left = newConfig.left / gpl.scaleValue;
+                newConfig.top = newShape.top - gpl.manager.panTop;
+                newConfig.top = newConfig.top / gpl.scaleValue;
+                newConfig.calcType = newShape.calcType;
+                newConfig.labelVisible = gpl.json.Show_Label;
+                delete newConfig.inactive;
+
+                clone = new Cls(newConfig);
+
+                manager.addNewPoint(clone);
             }
+
+            newShape.delete();
 
             activeProxy.gplShape = activeProxy.nextShape;
             activeProxy.gplId = activeProxy.gplShape.gplId;
@@ -4298,37 +4509,31 @@ gpl.Toolbar = function(manager) {
                 left: activeProxy._origLeft,
                 top: activeProxy._origTop
             });
+
             activeProxy.setCoords();
 
-            manager.bringToFront(activeProxy);
+            manager.bringToFront(activeProxy, canvas);
             manager.clearState();
 
             this.off('mouseup', handleDrop);
 
             canvas.discardActiveObject();
+            shrinkCanvas();
+            canvas.renderAll();
+            mainCanvas.renderAll();
         },
         handleClick = function(item) {
             var gplItem = shapes[item.gplId] || gpl.texts[item.gplId],
                 itemType = gplItem.type,
                 clone,
                 cloneConfig,
-                getProperties = function(obj) {
-                    var ret = {},
-                        c,
-                        propList = ['zIndex', 'blockType', 'left', 'top', 'selectable', 'evented', 'hasControls', 'inactive', 'showValue', 'iconType', 'visible', 'opacity'];
-
-                    for(c=0; c<propList.length; c++) {
-                        ret[propList[c]] = obj[propList[c]];
-                    }
-                    return ret;
-                },
                 id = makeId();
+
+            growCanvas();
 
             activeProxy = item;
 
             manager.setState('AddingBlock');
-
-            // item.isClone = gplItem.isClone = true;
 
             if(gplItem instanceof gpl.blocks.TextBlock) {
                 cloneConfig = getProperties(gplItem);
@@ -4342,11 +4547,14 @@ gpl.Toolbar = function(manager) {
             cloneConfig.bypassSave = true;
             cloneConfig.gplId = id;
             cloneConfig.isToolbar = true;
+            cloneConfig.targetCanvas = 'toolbar';
+            // cloneConfig.scaleValue = gpl.scaleValue;
 
             if(gplItem.setActive) {
                 gplItem.setActive();
             }
 
+            gplItem.scale(gpl.scaleValue);
 
             clone = new gpl.blocks[itemType](cloneConfig);
 
@@ -4373,6 +4581,7 @@ gpl.Toolbar = function(manager) {
                     left: currX,
                     top: currY,
                     isToolbar: true,
+                    targetCanvas: 'toolbar',
                     // hasControls: false,
                     gplId: id,
                     inactive: true,
@@ -4423,6 +4632,7 @@ gpl.Toolbar = function(manager) {
                         gplId: id,
                         inactive: true,
                         bypassSave: true,
+                        targetCanvas: 'toolbar',
                         iconType: iconType,
                         showValue: false
                     });
@@ -4444,7 +4654,7 @@ gpl.Toolbar = function(manager) {
                     }
 
                     proxyShape = new fabric.Rect(proxyCfg);
-                    manager.canvas.add(proxyShape);
+                    canvas.add(proxyShape);
                     proxies[proxyCfg.gplId] = proxyShape;
 
                     proxyShape.on('moving', function(){
@@ -4468,8 +4678,8 @@ gpl.Toolbar = function(manager) {
             }
         };
 
-    self.shapes = shapes;
-    self.proxies = proxies;
+    tbSelf.shapes = shapes;
+    tbSelf.proxies = proxies;
 
     drawToolbar();
 
@@ -4481,9 +4691,10 @@ gpl.Toolbar = function(manager) {
 
     bringProxiesToFront();
 
-    self.background.set('height', currY + 2 * padding);
+    tbSelf.background.set('height', currY + 2 * padding);
 
     manager.registerHandlers([{
+            canvas: canvas,
             event: 'object:selected',
             handler: function(event) {
                 var tgt = event.target;
@@ -4500,12 +4711,145 @@ gpl.Toolbar = function(manager) {
         //     }
         }]
     );
+
+    canvasHeight = tbSelf.background.height;
+    canvasWidth = width;
+    shrinkCanvas();
+
+    canvas.renderAll();
 };
 
 /* ------------ Managers ----------------- */
 
+gpl.LineManager = function(manager) {
+    var lmSelf = this,
+        bringToFront = function(line) {
+            var c,
+                list = line.lines,
+                len = list.length;
+
+            for(c=0; c<len; c++) {
+                gpl.manager.bringToFront(list[c]);
+            }
+
+            gpl.manager.renderAll();
+        },
+        doRemove = function(line) {
+            lmSelf.removedLines[line.gplId] = line;
+            delete lmSelf.lines[line.gplId];
+        };
+
+    lmSelf.lines = {};
+    lmSelf.removedLines = {};
+
+    lmSelf.setSelected = function(line) {
+        if(lmSelf.selectedLine) {
+            lmSelf.selectedLine.deselect();
+        }
+
+        lmSelf.selectedLine = line;
+    };
+
+    lmSelf.registerLine = function(line) {
+        lmSelf.lines[line.gplId] = line;
+    };
+
+    lmSelf.getLine = function(gplId) {
+        return lmSelf.lines[gplId];
+    };
+
+    lmSelf.deleteLine = function(conf) {
+        var line;
+
+        if(typeof conf === 'string') {
+            line = lmSelf.lines[conf];
+        } else {
+            line = conf;
+        }
+
+        if(line) {
+            line.delete();
+
+            doRemove(line);
+
+            manager.renderAll();
+        } else {
+            gpl.log('no line to remove');
+        }
+    };
+
+    lmSelf.remove = function(line) {
+        doRemove(line);
+    };
+
+    lmSelf.convertLine = function(line) {
+        var ret = {
+            handle: line.coords
+        };
+
+        return ret;
+    };
+
+    lmSelf.prepSaveData = function(saveObject) {
+        var ret = [];
+
+        gpl.forEach(lmSelf.lines, function(obj) {
+            if(obj.state !== 'deleted') {
+                ret.push(lmSelf.convertLine(obj));
+            }
+        });
+
+        saveObject.line = ret;
+    };
+
+    gpl.on('addedLine', function(line) {
+        lmSelf.lines[line.gplId] = line;
+        bringToFront(line);
+    });
+
+    gpl.on('removeline', function(line) {
+        if(lmSelf.lines[line.gplId]) {
+            lmSelf.deleteLine(line.gplId);
+        }
+    });
+
+    gpl.manager.registerHandler({
+        event: 'selection:cleared',
+        handler: function(event) {
+            if(lmSelf.selectedLine) {
+                lmSelf.selectedLine.revertState();
+                lmSelf.selectedLine = null;
+            }
+        }
+    });
+
+    gpl.manager.addToBindings({
+        deleteLine: function() {
+            var line = manager.contextObject;
+
+            lmSelf.deleteLine(line.gplId);
+        }
+    });
+
+    gpl.on('save', function() {
+        lmSelf.prepSaveData(gpl.json);
+    });
+
+    gpl.on('saveForLater', function() {
+        lmSelf.prepSaveData(gpl.json.editVersion);
+    });
+
+    gpl.onDestroy(function() {
+        gpl.forEach(lmSelf.lines, function(line, gplId) {
+            line.delete();
+            delete lmSelf.lines[gplId];
+        });
+        delete lmSelf.lines;
+    });
+};
+
 gpl.BlockManager = function(manager) {
-    var self = {
+    var bmSelf = {
         blocks: {},
         upis: {},
         newBlocks: {},
@@ -4515,9 +4859,12 @@ gpl.BlockManager = function(manager) {
         doubleClickDelay: 400,
         lastSelectedBlock: null,
         highlightFill: '#ffffff',
+        lastSelectedTime: new Date().getTime(),
+        manager: manager,
+        canvas: manager.canvas,
+        upiListeners: {},
         bindings: {
             blockTitle: ko.observable(),
-            // editPointReferenceType: ko.observable('External'),
             editPointType: ko.observable(),
             editPointName: ko.observable(),
             editPointCharacters: ko.observable(),
@@ -4526,14 +4873,38 @@ gpl.BlockManager = function(manager) {
             editPointLabel: ko.observable(),
             editPointShowValue: ko.observable(),
             editPointShowLabel: ko.observable(),
+            editText: ko.observable(),
+            editTextBold: ko.observable(),
+            editTextItalic: ko.observable(),
+            editTextFontSize: ko.observable(),
+            editTextColor: ko.observable('ff0000'),
             selectedReference: ko.observable(),
             gridSize: ko.observable(gpl.gridSize),
             blockReferences: ko.observableArray([]),
+            updateText: function() {
+                var text = bmSelf.bindings.editText(),
+                    fontSize = bmSelf.bindings.editTextFontSize(),
+                    color = '#' + bmSelf.bindings.editTextColor(),
+                    weight = bmSelf.bindings.editTextBold()?'bold':'normal',
+                    style = bmSelf.bindings.editTextItalic()?'italic':'normal';
+
+                bmSelf.textEditBlock.set({
+                    text: text,
+                    fontSize: fontSize,
+                    fill: color,
+                    fontWeight: weight,
+                    fontStyle: style
+                });
+
+                bmSelf.renderAll();
+
+                gpl.$editTextModal.modal('hide');
+            },
             deleteBlock: function() {
                 gpl.fire('deleteblock', manager.contextObject);
             },
             showDevicePoint: function() {
-                self.openPointEditor(true);
+                bmSelf.openPointEditor(true);
             },
             editBlockPrecision: function() {
                 var block = manager.contextObject,
@@ -4541,11 +4912,11 @@ gpl.BlockManager = function(manager) {
                     numChars = parseInt(precision[0], 10),
                     numDecimals = parseInt(precision[1], 10);
 
-                self.bindings.editPointCharacters(numChars);
-                self.bindings.editPointDecimals(numDecimals);
+                bmSelf.bindings.editPointCharacters(numChars);
+                bmSelf.bindings.editPointDecimals(numDecimals);
 
-                self.editBlock = block;
-                self.openPrecisionEditor();
+                bmSelf.editBlock = block;
+                bmSelf.openPrecisionEditor();
             },
             showPointEditor: function() {
                 var block = manager.contextObject;
@@ -4553,23 +4924,24 @@ gpl.BlockManager = function(manager) {
                 gpl.blockManager.openPointEditor(block, true);
             },
             updateBlockPrecision: function() {
-                self.editBlock.precision = parseFloat(self.bindings.editPointCharacters() + '.' + self.bindings.editPointDecimals());
-                self.editBlock.setPlaceholderText();
-                gpl.fire('editedblock', self.editBlock);
-                self.closePrecisionEditor();
+                bmSelf.editBlock.precision = parseFloat(bmSelf.bindings.editPointCharacters() + '.' + bmSelf.bindings.editPointDecimals());
+                bmSelf.editBlock.setPlaceholderText();
+                gpl.fire('editedblock', bmSelf.editBlock);
+                bmSelf.closePrecisionEditor();
             },
             editPointReference: function() {
                 var url = '/pointLookup/',
-                    isControl = self.editBlock.type === 'ControlBlock',
+                    editBlock = bmSelf.editBlock,
+                    isControl = editBlock.type === 'ControlBlock',
                     block,
                     deviceId = isControl?gpl.deviceId:null,
                     pointType,
                     property = isControl?'Control Point':'Monitor Point';
 
                 if(isControl) {
-                    block = self.editBlock.inputAnchors[0].getConnectedBlock();
+                    block = editBlock.inputAnchors[0].getConnectedBlock();
                 } else {
-                    block = self.editBlock.outputAnchor.getConnectedBlock();
+                    block = editBlock.outputAnchor.getConnectedBlock();
                 }
 
                 if(block) {
@@ -4582,56 +4954,106 @@ gpl.BlockManager = function(manager) {
                     }
                 }
 
-                self.doOpenPointSelector(url, property);
+                bmSelf.doOpenPointSelector(url, property);
             },
             updatePoint: function() {
-                var label = self.bindings.editPointLabel(),
-                    labelId,
-                    showValue = self.bindings.editPointShowValue(),
-                    showLabel = self.bindings.editPointShowLabel();
+                var label = bmSelf.bindings.editPointLabel(),
+                    // labelId,
+                    showValue = bmSelf.bindings.editPointShowValue(),
+                    showLabel = bmSelf.bindings.editPointShowLabel(),
+                    props = {
+                        output: 'Control Point',
+                        input: 'Monitor Point'
+                    },
+                    idx,
+                    tmpBlock,
+                    editBlock = bmSelf.editBlock,
+                    currReferences = bmSelf.upis[editBlock.upi] || [],
+                    newReferences = bmSelf.upis[bmSelf.editBlockUpi] || [],
+                    pointName,
+                    prop;
 
-                 if(self.editBlock.hasReferenceType) {//is monitor/control block
-                    self.editBlock.getReferencePoint(true);
-                    self.editBlock.setReferenceType(self.bindings.editPointReferenceType());
-                    self.editBlock.pointName = self.bindings.editPointName();
-                    self.editBlock.setLabel(self.editBlock.pointName.split('_').pop());
-                    self.editBlock.upi = self.editBlockUpi;
-                    self.editBlock.valueType = gpl.manager.valueTypes[self.editBlockPointType];
-                } else {//constant
-                    self.editBlock.setValue(+self.bindings.editPointValue());
-                }
+                 if(editBlock.hasReferenceType) {//is monitor/control block
+                    if(bmSelf.editBlockUpi !== editBlock.upi) {//new point
+                        gpl.forEachArray(currReferences, function(ref, c) {
+                            var refBlock = ref.block;
 
-                if(self.editBlock.isNonPoint === true && self.editBlock.referenceType !== 'External' && self.editBlock.blockType !== 'Constant') {
-                    labelId = self.bindings.selectedReference();
-                    label = self.getBlock(labelId).label;
+                            if(refBlock.gplId === editBlock.gplId) {
+                                idx = c;
+                                return false;
+                            }
+                            //remove
+                        });
 
-                    if(label !== self.editBlock.label) {
-                        self.editBlock.setLabel(label);
-                        self.bindings.editPointLabel(label);
+                        if(idx !== undefined) {
+                            currReferences.splice(idx, 1);
+                        }
+
+                        if(currReferences.length === 1) {
+                            tmpBlock = currReferences[0];
+                            if(tmpBlock.block.setReferenceType) {
+                                tmpBlock.block.setReferenceType('External');
+                            }
+                        }
+
+                        prop = props[editBlock.pointType];
+                        pointName = bmSelf.bindings.editPointName();
+
+                        editBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName);
+                        editBlock.pointName = pointName;
+                        editBlock.upi = bmSelf.editBlockUpi;
+                        editBlock.getReferencePoint();//isNew
+                        editBlock.setLabel(pointName.split('_').pop());
+                        editBlock.valueType = gpl.manager.valueTypes[bmSelf.editBlockPointType];
+
+                        newReferences.push({
+                            block: editBlock,
+                            valueText: editBlock.valueText
+                        });
+
+                        if(newReferences.length > 1) {
+                            gpl.forEachArray(newReferences, function(ref, c) {
+                                var refBlock = ref.block;
+                                if(refBlock.hasReferenceType) {
+                                    refBlock.setReferenceType('Internal');
+                                }
+                            });
+                        } else {
+                            editBlock.setReferenceType('External');
+                        }
+
+                        gpl.fire('editedblock', bmSelf.editBlock);//capture changes on currently referenced point
+
                     }
+                } else {//constant
+                    editBlock.setValue(+bmSelf.bindings.editPointValue());
                 }
 
-                self.editBlock.precision = parseFloat(self.bindings.editPointCharacters() + '.' + self.bindings.editPointDecimals());
+                // if(editBlock.isNonPoint === true && editBlock.referenceType !== 'External' && editBlock.blockType !== 'Constant') {
+                //     labelId = bmSelf.bindings.selectedReference();
+                //     label = bmSelf.getBlock(labelId).label;
 
-                self.editBlock.setShowLabel(showLabel);
-                self.editBlock.setShowValue(showValue);
+                //     if(label !== editBlock.label) {
+                //         editBlock.setLabel(label);
+                //         bmSelf.bindings.editPointLabel(label);
+                //     }
+                // }
+
+                editBlock.precision = parseFloat(bmSelf.bindings.editPointCharacters() + '.' + bmSelf.bindings.editPointDecimals());
+
+                editBlock.setShowLabel(showLabel);
+                editBlock.setShowValue(showValue);
 
                 gpl.$editInputOutputModal.modal('hide');
 
-                gpl.fire('editedblock', self.editBlock);
+                gpl.fire('editedblock', bmSelf.editBlock);
             }
         },
-        lastSelectedTime: new Date().getTime(),
-
-        manager: manager,
-        canvas: manager.canvas,
-
-        upiListeners: {},
 
         getActiveBlock: function() {
-            var target = self.canvas.getActiveObject(),
+            var target = bmSelf.canvas.getActiveObject(),
                 gplId = (target && target.gplId) || null,
-                activeBlock = self.blocks[gplId] || null;
+                activeBlock = bmSelf.blocks[gplId] || null;
 
             return {
                 target: target,
@@ -4644,15 +5066,16 @@ gpl.BlockManager = function(manager) {
                     adds: [],
                     updates: [],
                     deletes: []
-                };
+                },
+                refs = [gpl.point['Point Refs'][0]];
 
-            gpl.forEach(self.newBlocks, function(block) {
+            gpl.forEach(bmSelf.newBlocks, function(block) {
                 if(!block.isNonPoint) {
                     saveObj.adds.push(block.getPointData());
                 }
             });
 
-            gpl.forEach(self.editedBlocks, function(block) {
+            gpl.forEach(bmSelf.editedBlocks, function(block) {
                 if(!block.isNonPoint) {
                     saveObj.updates.push({
                         oldPoint: block._origPointData,
@@ -4661,26 +5084,33 @@ gpl.BlockManager = function(manager) {
                 }
             });
 
-            gpl.forEach(self.deletedBlocks, function(block) {
+            gpl.forEach(bmSelf.deletedBlocks, function(block) {
                 if(!block.isNonPoint) {
                     saveObj.deletes.push(block.upi);
                 }
             });
 
+            gpl.forEach(bmSelf.pointRefUpiMatrix, function(ref, k, c) {
+                ref.PropertyName = 'GPLBlock';
+                refs.push(ref);
+            });
+
+            gpl.point['Point Refs'] = refs;
+
             return saveObj;
         },
 
         resetChanges: function() {
-            self.newBlocks = {};
-            self.editedBlocks = {};
-            self.deletedBlocks = {};
+            bmSelf.newBlocks = {};
+            bmSelf.editedBlocks = {};
+            bmSelf.deletedBlocks = {};
         },
 
         doOpenPointSelector: function(url, property) {
             gpl.openPointSelector(function(upi, name, pointType) {
-                self.bindings.editPointName(name);
-                self.editBlockUpi = upi;
-                self.editBlockPointType = pointType;
+                bmSelf.bindings.editPointName(name);
+                bmSelf.editBlockUpi = upi;
+                bmSelf.editBlockPointType = pointType;
                 gpl.log(upi, name);
             }, url, null, property);
         },
@@ -4706,20 +5136,34 @@ gpl.BlockManager = function(manager) {
                 };
 
             // if(editableTypes[block.type]) {
-                self.editBlock = block;
-                self.editBlockUpi = block.upi;
-                self.bindings.blockTitle(block.label);
-                self.bindings.editPointType(block.type);
-                self.bindings.editPointName(block.pointName);
-                self.bindings.editPointCharacters(numChars);
-                self.bindings.editPointDecimals(numDecimals);
-                self.bindings.editPointValue(value);
-                self.bindings.editPointLabel(label);
-                self.bindings.editPointShowValue(block.labelVisible);
-                self.bindings.editPointShowLabel(block.presentValueVisible);
+                bmSelf.editBlock = block;
+                bmSelf.editBlockUpi = block.upi;
+                bmSelf.bindings.blockTitle(block.label);
+                bmSelf.bindings.editPointType(block.type);
+                bmSelf.bindings.editPointName(block.pointName);
+                bmSelf.bindings.editPointCharacters(numChars);
+                bmSelf.bindings.editPointDecimals(numDecimals);
+                bmSelf.bindings.editPointValue(value);
+                bmSelf.bindings.editPointLabel(label);
+                bmSelf.bindings.editPointShowValue(block.presentValueVisible);
+                bmSelf.bindings.editPointShowLabel(block.labelVisible);
 
                 gpl.$editInputOutputModal.modal('show');
             // }
+        },
+
+        openTextEditor: function(block) {
+            var newColor = block.fill.replace('#','');
+            manager.canvas.discardActiveObject();
+            bmSelf.textEditBlock = block;
+            bmSelf.bindings.editText(block.text);
+            bmSelf.bindings.editTextBold(block.fontWeight==='bold');
+            bmSelf.bindings.editTextItalic(block.fontStyle==='italic');
+            bmSelf.bindings.editTextFontSize(block.fontSize);
+            bmSelf.bindings.editTextColor(newColor);
+            // bmSelf.fontColorPicker.render();
+            bmSelf.fontColorPicker.updateColor(newColor);
+            gpl.$editTextModal.modal('show');
         },
 
         convertBlock: function(block) {
@@ -4733,14 +5177,21 @@ gpl.BlockManager = function(manager) {
                 shape = block._shapes[0];
                 ret.left = shape.left;
                 ret.top = shape.top;
-            } else {
-                ret = $.extend(true, {}, block.config);
-                ret.left = block.left;
-                ret.top = block.top;
-                ret.width = block.width;
-                ret.height = block.height;
-                ret.value = block.value;
-                gpl.log('no shapes');
+            } else {//textBlock
+                ret = {
+                    left: block.left,
+                    top: block.top,
+                    width: block.width,
+                    height: block.height,
+                    text: block.text,
+                    fontWeight: block.fontWeight,
+                    fontStyle: block.fontStyle,
+                    fontSize: block.fontSize,
+                    fontFamily: block.fontFamily,
+                    fill: block.fill,
+                    blockType: 'TextBlock',
+                    _v2: true
+                };
             }
 
             for(c=0; c<gpl.convertProperties.length; c++) {
@@ -4761,31 +5212,29 @@ gpl.BlockManager = function(manager) {
                 id = gpl.idxPrefix + parseInt(id, 10);
             }
 
-            ret = self.blocks[id];
+            ret = bmSelf.blocks[id];
 
             if(!ret) {
-                ret = self.newBlocks[id];
+                ret = bmSelf.newBlocks[id];
             }
 
             return ret;
         },
 
-        add: function(object) {
-            this.canvas.add(object);
+        add: function(object, canvas, render) {
+            gpl.canvases[canvas || 'main'].add(object);
+            if(render) {
+                gpl.canvases[canvas || 'main'].renderAll();
+            }
+            // this.canvas.add(object);
         },
 
-        remove: function(object) {
-            this.canvas.remove(object);
-        },
-
-        renderShape: function(Shape, config) {
-            gpl.log('rendering shape', config);
-            this.canvas.add(new Shape(config));
-            this.gpl.manager.renderAll();
+        remove: function(object, canvas) {
+            gpl.canvases[canvas || 'main'].remove(object);
         },
 
         renderAll: function() {
-            gpl.manager.renderAll();
+            manager.renderAll();
         },
 
         handleTypeChange: function(object, event) {
@@ -4797,14 +5246,18 @@ gpl.BlockManager = function(manager) {
             var ret = [],
                 lines = [];
 
-            gpl.forEach(self.blocks, function(obj) {
+            gpl.forEach(bmSelf.blocks, function(obj) {
                 if(!obj.bypassSave) {
                     if(obj.syncAnchorPoints) {
                         obj.syncAnchorPoints();
                     }
-                    ret.push(self.convertBlock(obj));
+                    ret.push(bmSelf.convertBlock(obj));
                 }
             });
+
+            // gpl.forEach(gpl.texts, function(obj) {
+            //     ret.push(bmSelf.convertBlock(obj));
+            // });
 
             saveObject.block = ret;
         },
@@ -4815,19 +5268,20 @@ gpl.BlockManager = function(manager) {
                 pointData = {},
                 upi,
                 c,
-                cleanup = function(ref) {
+                cleanup = function(ref, idx) {
                     pointData[ref._id] = ref;
                     return {
                         Name: ref.Name,
                         pointType: ref['Point Type'].Value,
-                        valueType: (ref['Value'].ValueType===5)?'enum':'float'
+                        valueType: (ref['Value'].ValueType===5)?'enum':'float',
+                        _idx: idx
                     };
                     // return ref;
                 };
 
             for(c=0; c<references.length; c++) {
                 upi = references[c]._id;
-                upiMap[upi] = cleanup(references[c]);
+                upiMap[upi] = cleanup(references[c], c);
             }
 
             gpl.pointUpiMap = upiMap;
@@ -4835,35 +5289,75 @@ gpl.BlockManager = function(manager) {
         },
 
         addUPIListener: function(upi, anchor, line, fn) {
-            self.upiListeners[upi] = self.upiListeners[upi] || [];
+            bmSelf.upiListeners[upi] = bmSelf.upiListeners[upi] || [];
 
-            self.upiListeners[upi].push({
+            bmSelf.upiListeners[upi].push({
                 fn: fn,
                 anchor: anchor,
                 line: line
             });
         },
 
-        init: function() {
-            // if(gpl.isEdit === true) {
-                manager.addToBindings(self.bindings);
-            // }
+        processPointRefs: function() {
+            var refs = gpl.point['Point Refs'],
+                c,
+                upi,
+                ret = {};
 
-            self.prepReferences();
+            for(c=0; c<refs.length; c++) {
+                upi = refs[c].PointInst;
+                ret[upi] = refs[c];
+            }
+
+            bmSelf.pointRefUpiMatrix = ret;
+            bmSelf.invalidPointRefs = {};
+        },
+
+        isActiveUPI: function(block, Cls) {
+            var ret = true,
+                upi = block.upi;
+
+            if(upi && Cls.prototype.isNonPoint !== true) {
+                ret = bmSelf.pointRefUpiMatrix[upi] !== undefined;
+            }
+
+            if(!ret) {
+                bmSelf.invalidPointRefs[upi] = {
+                    cls: Cls,
+                    cfg: block
+                };
+            }
+
+            return ret;
+        },
+
+        init: function() {
+            manager.addToBindings(bmSelf.bindings);
+
+            bmSelf.processPointRefs();
+
+            bmSelf.prepReferences();
         }
     };
 
-    self.bindings.gridSize.subscribe(function(val) {
+    bmSelf.bindings.gridSize.subscribe(function(val) {
         var newVal = parseInt(val, 10);
 
         if(isNaN(newVal) || newVal === 0) {
-            self.bindings.gridSize(gpl.gridSize || 1);
+            bmSelf.bindings.gridSize(gpl.gridSize || 1);
         } else {
             gpl.gridSize = newVal;
         }
     });
 
-    self.validateAll = function() {
+    bmSelf.handleFontColorChange = function(newColor) {
+        bmSelf.bindings.editTextColor(newColor);
+    };
+
+    bmSelf.fontColorPicker = new CustomColorsPicker(gpl.$fontColorPicker, bmSelf.handleFontColorChange, bmSelf.bindings.editTextColor());
+    bmSelf.fontColorPicker.render();
+
+    bmSelf.validateAll = function() {
         var valid = true,
             checkValid = function(block) {
                 if(!block.isToolbar && block.validate) {
@@ -4873,10 +5367,10 @@ gpl.BlockManager = function(manager) {
                 return valid;
             };
 
-        gpl.forEach(self.blocks, checkValid);
+        gpl.forEach(bmSelf.blocks, checkValid);
 
         if(valid) {
-            gpl.forEach(self.newBlocks, checkValid);
+            gpl.forEach(bmSelf.newBlocks, checkValid);
         }
 
         gpl.log('Validate All result:', valid);
@@ -4886,57 +5380,87 @@ gpl.BlockManager = function(manager) {
         return valid;
     };
 
-    self.highlight = function(shape) {
+    bmSelf.highlight = function(shape) {
         if(gpl.isEdit) {
-            if(self.highlightedObject) {
-                self.deselect();
+            if(bmSelf.highlightedObject) {
+                bmSelf.deselect();
             }
 
-            self.highlightedObject = shape;
+            bmSelf.highlightedObject = shape;
             if(!shape._origFill) {
                 shape._origFill = shape.fill;
             }
-            shape.set('fill', self.highlightFill);
+            shape.set('fill', bmSelf.highlightFill);
         }
     };
 
-    self.deselect = function() {
-        var obj = self.highlightedObject;
+    bmSelf.deselect = function() {
+        var obj = bmSelf.highlightedObject;
         if(obj) {
             obj.set('fill', obj._origFill);
         }
-        self.highlightedObject = null;
+        bmSelf.highlightedObject = null;
     };
 
     gpl.on('newblock', function(newBlock) {
+        var ref;
         gpl.hasEdits = true;
-        self.newBlocks[newBlock.gplId] = newBlock;
-        self.updateBlockReferences(newBlock);
+        bmSelf.newBlocks[newBlock.upi] = newBlock;
+        bmSelf.updateBlockReferences(newBlock);
+
+        if(!bmSelf.pointRefUpiMatrix[newBlock.upi]) {
+            ref = gpl.makePointRef(newBlock.upi, newBlock.pointName);
+            bmSelf.pointRefUpiMatrix[newBlock.upi] = ref;
+        }
     });
 
     gpl.on('editedblock', function(block) {
         gpl.hasEdits = true;
-        self.editedBlocks[block.gplId] = block;
+        bmSelf.editedBlocks[block.upi] = block;
     });
 
-    gpl.on('deleteblock', function(oldBlock) {
-        gpl.hasEdits = true;
-        self.deletedBlocks[oldBlock.gplId] = oldBlock;
-        delete self.blocks[oldBlock.gplId];
+    gpl.on('deleteblock', function(oldBlock, isCancel) {
+        var references = bmSelf.upis[oldBlock.upi] || [];
+
+        if(!isCancel) {
+            gpl.hasEdits = true;
+            bmSelf.deletedBlocks[oldBlock.upi] = oldBlock;
+        }
+
+        gpl.forEachArray(references, function(ref, c) {
+            var refBlock = ref.block;
+
+            if(refBlock.gplId === oldBlock.gplId) {
+                references.splice(c, 1);
+                return false;
+            }
+        });
+
+        if(references.length <= 1) {
+            gpl.forEachArray(references, function(ref) {
+                var refBlock = ref.block;
+
+                if(refBlock.hasReferenceType) {
+                    refBlock.setReferenceType('External');
+                }
+            });
+        }
+
+        delete bmSelf.blocks[oldBlock.upi];
         oldBlock.delete();
-        self.renderAll();
-        gpl.log('deleteblock handler');
+        bmSelf.renderAll();
+        gpl.log('block deleted');
     });
 
     gpl.on('save', function() {
-        self.prepSaveData(gpl.json);
+        bmSelf.prepSaveData(gpl.json);
     });
 
     gpl.on('saveForLater', function() {
-        self.prepSaveData(gpl.json.editVersion);
+        bmSelf.prepSaveData(gpl.json.editVersion);
     });
 
-    self.create = function(config) {
+    bmSelf.create = function(config) {
         var Cls = config.cls,
             cfg = config.cfg,
             obj;
@@ -4948,8 +5472,8 @@ gpl.BlockManager = function(manager) {
         return obj;
     };
 
-    self.applyUpdateInterval = function(interval) {
-        gpl.forEach(self.blocks, function(obj) {
+    bmSelf.applyUpdateInterval = function(interval) {
+        gpl.forEach(bmSelf.blocks, function(obj) {
             if(obj._pointData && obj._pointData['Update Interval']) {
                 gpl.fire('editedblock', obj);
                 obj._pointData['Update Interval'].Value = interval;
@@ -4957,8 +5481,8 @@ gpl.BlockManager = function(manager) {
         });
     };
 
-    self.applyController = function(name, value) {
-        gpl.forEach(self.blocks, function(obj) {
+    bmSelf.applyController = function(name, value) {
+        gpl.forEach(bmSelf.blocks, function(obj) {
             if(obj._pointData) {
                 gpl.fire('editedblock', obj);
                 obj._pointData.Controller.Value = name;
@@ -4967,44 +5491,45 @@ gpl.BlockManager = function(manager) {
         });
     };
 
-    self.applyShowLabel = function(bool) {
-        gpl.forEach(self.blocks, function(obj) {
+    bmSelf.applyShowLabel = function(bool) {
+        gpl.forEach(bmSelf.blocks, function(obj) {
             if(obj.setShowLabel && !obj.isToolbar) {
                 obj.setShowLabel(bool);
             }
         });
     };
 
-    self.applyShowValue = function(bool) {
-        gpl.forEach(self.blocks, function(obj) {
+    bmSelf.applyShowValue = function(bool) {
+        gpl.forEach(bmSelf.blocks, function(obj) {
             if(obj.setShowValue && !obj.isToolbar) {
                 obj.setShowValue(bool);
             }
         });
     };
 
-    self.updateBlockReferences = function(block) {
-        self.bindings.blockReferences.push({
+    bmSelf.updateBlockReferences = function(block) {
+        bmSelf.bindings.blockReferences.push({
             label: block.label,
             value: block.gplId
         });
 
-        self.bindings.blockReferences.sort(function(left, right) {
+        bmSelf.bindings.blockReferences.sort(function(left, right) {
             return left.label < right.label ? -1 : 1;
         });
     };
 
-    self.registerBlock = function(block, valueText) {
+    bmSelf.registerBlock = function(block, valueText, targetCanvas) {
         var items = block._shapes || [],
             item,
             c,
+            canvas = gpl.canvases[targetCanvas || 'main'],
             handleBlockMove = function(event) {
-                var data = self.getActiveBlock(),
+                var data = bmSelf.getActiveBlock(),
                     target = data.target,
                     movingBlock = data.block;
 
                 if(event.e.movementX !== 0 || event.e.movementY !== 0) {
-                    self.movingBlock = true;
+                    bmSelf.movingBlock = true;
 
                     if(movingBlock && movingBlock.syncObjects && target.gplType !== 'anchor') {
                         // gpl.log('moving block', movingBlock);
@@ -5016,11 +5541,11 @@ gpl.BlockManager = function(manager) {
                         obj1: movingBlock
                     });
                 } else {
-                    self.movingBlock = false;
+                    bmSelf.movingBlock = false;
                 }
             };
 
-        self.blocks[block.gplId] = block;
+        bmSelf.blocks[block.gplId] = block;
 
         // if(gpl.labelCounters[block.type] === undefined) {
         //     gpl.log('not setup', block.type, block);
@@ -5031,40 +5556,53 @@ gpl.BlockManager = function(manager) {
 
         // gpl.log('labeling', block.type, gpl.labelCounters[block.type]);
 
-        self.canvas.add(block);
+        canvas.add(block);
 
-        if(self.upis[block.upi] === undefined) {
-            self.upis[block.upi] = [];
-            self.screenObjects.push({
-                upi: block.upi,
-                'Quality Label': '',
-                isGplSocket: true
+        if(block.upi && !isNaN(block.upi)) {
+            bmSelf.upis[block.upi] = bmSelf.upis[block.upi] || [];
+
+            bmSelf.upis[block.upi].push({
+                block: block,
+                valueText: valueText
             });
-        }
 
-        self.upis[block.upi].push({
-            block: block,
-            valueText: valueText
-        });
+            if(bmSelf.upis[block.upi].length === 1) {
+                bmSelf.screenObjects.push({
+                    upi: block.upi,
+                    'Quality Label': '',
+                    isGplSocket: true
+                });
+            } else {
+                gpl.forEachArray(bmSelf.upis[block.upi], function(ref) {
+                    var refBlock = ref.block;
+
+                    if(refBlock.hasReferenceType) {//is control/monitor block
+                        refBlock.setReferenceType('Internal');
+                    }
+                });
+            }
+        }
 
         gpl.manager.addToBoundingRect(block);
 
         for(c=0; c<items.length; c++) {
             item = items[c];
-            self.canvas.add(item);
-            item.on('moving', handleBlockMove);
+            if(!item.canvas) {//double adds nonpoint shapes
+                canvas.add(item);
+                item.on('moving', handleBlockMove);
+            }
         }
 
         if(!block.isToolbar) {
-            self.updateBlockReferences(block);
+            bmSelf.updateBlockReferences(block);
         }
 
-        self.renderAll();
+        bmSelf.renderAll();
     };
 
-    self.processValue = function(upi, dyn) {
-        var upis = self.upis[upi],
-            upiListeners = self.upiListeners,
+    bmSelf.processValue = function(upi, dyn) {
+        var upis = bmSelf.upis[upi],
+            upiListeners = bmSelf.upiListeners,
             listeners = upiListeners[upi] || [],
             listener,
             text = dyn.Value,
@@ -5102,10 +5640,10 @@ gpl.BlockManager = function(manager) {
             // listeners(upi, dyn);
         }
 
-        self.renderAll();
+        bmSelf.renderAll();
     };
 
-    self.openPointEditor = function(block, override) {//for view mode clicks to edit
+    bmSelf.openPointEditor = function(block, override) {//for view mode clicks to edit
         var upi,
             pointData = block && block.getPointData && block.getPointData(),
             windowRef,
@@ -5125,7 +5663,7 @@ gpl.BlockManager = function(manager) {
         if(block) {
             if(block instanceof gpl.Block) {
                 if(override || (!block.isNonPoint || (block.isNonPoint && !gpl.isEdit))) {
-                    self.deselect();
+                    bmSelf.deselect();
                     upi = block.upi;
                     endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint(block.pointType, upi);
                     url = endPoint.review.url;
@@ -5150,7 +5688,7 @@ gpl.BlockManager = function(manager) {
                 } else {
                     //is constant/monitor/etc
                     if(block.type === 'ConstantBlock') {
-                        self.openBlockEditor(block);
+                        bmSelf.openBlockEditor(block);
                     }
                 }
             } else {//open device point
@@ -5164,27 +5702,34 @@ gpl.BlockManager = function(manager) {
         }
     };
 
-    self.handleMouseUp = function(event) {
-        var data = self.getActiveBlock(),
+    bmSelf.handleMouseUp = function(event) {
+        var data = bmSelf.getActiveBlock(),
+            eTarget = event.target,
             target = data.target,
             movingBlock = data.block;
 
-        if(self.movingBlock === true) {
-            self.movingBlock = false;
+        if(bmSelf.movingBlock === true) {
+            bmSelf.movingBlock = false;
             if(movingBlock && gpl.isEdit) {
                 movingBlock.redrawLines();
             }
         } else {
-            if(event.which === undefined && movingBlock && !self.handlingDoubleClick && !gpl.isEdit) {
-                self.openPointEditor(movingBlock);
-                self.deselect();
+            if(!target) {
+                target = eTarget;
+                if(target) {
+                    movingBlock = bmSelf.getBlock(target.gplId);
+                }
+            }
+            if(event.e.which === 1 && movingBlock && !bmSelf.handlingDoubleClick && !gpl.isEdit) {
+                bmSelf.openPointEditor(movingBlock);
+                bmSelf.deselect();
             }
         }
 
-        self.handlingDoubleClick = false;
+        bmSelf.handlingDoubleClick = false;
     };
 
-    self.handleDoubleClick = function(event) {
+    bmSelf.handleDoubleClick = function(event) {
         var target = event.target,
             gplId,
             targetBlock,
@@ -5192,26 +5737,30 @@ gpl.BlockManager = function(manager) {
 
         if(target && gpl.isEdit) {
             gplId = target.gplId;
-            targetBlock = self.blocks[gplId];
+            targetBlock = bmSelf.blocks[gplId];
 
-            if(now - self.lastSelectedTime < self.doubleClickDelay && targetBlock) {//doubleclick
-                self.handlingDoubleClick = true;
-                self.deselect();
+            if(now - bmSelf.lastSelectedTime < bmSelf.doubleClickDelay && targetBlock) {//doubleclick
+                bmSelf.handlingDoubleClick = true;
+                bmSelf.deselect();
                 // gpl.log('processing double click');
                 if(!targetBlock.isNonPoint) {
-                    self.openPointEditor(targetBlock);
+                    bmSelf.openPointEditor(targetBlock);
                 } else if(!targetBlock.useNativeEdit && gpl.isEdit) {
-                    self.openBlockEditor(targetBlock);
+                    if(targetBlock instanceof gpl.Block) {
+                        bmSelf.openBlockEditor(targetBlock);
+                    } else {
+                        bmSelf.openTextEditor(targetBlock);
+                    }
                 }
             } else {
                 // gpl.log('too much time');
-                self.lastSelectedTime = now;
-                self.lastSelectedBlock = targetBlock;
+                bmSelf.lastSelectedTime = now;
+                bmSelf.lastSelectedBlock = targetBlock;
             }
         }
     };
 
-    self.handleKeyUp = function(event) {
+    bmSelf.handleKeyUp = function(event) {
         var key = event.which,
             block,
             dir = gpl.ARROWKEYS[key],
@@ -5234,15 +5783,15 @@ gpl.BlockManager = function(manager) {
                 top: 0
             };
 
-        if(self.highlightedObject && dir) {
-            block = self.getBlock(self.highlightedObject.gplId);
+        if(bmSelf.highlightedObject && dir) {
+            block = bmSelf.getBlock(bmSelf.highlightedObject.gplId);
             offset = $.extend(offset, handlers[dir]);
             block.nudge(offset);
         }
     };
 
-    self.destroyBlocks = function() {
-        gpl.forEach(self.blocks, function(block, gplId) {
+    bmSelf.destroyBlocks = function() {
+        gpl.forEach(bmSelf.blocks, function(block, gplId) {
             var items = block._shapes || [],
                 c;
 
@@ -5253,43 +5802,43 @@ gpl.BlockManager = function(manager) {
             if(block.destroy) {
                 block.destroy();
             }
-            delete self.blocks[gplId];
+            delete bmSelf.blocks[gplId];
         });
     };
 
     manager.registerHandlers([{
         event: 'selection:cleared',
-        handler: self.deselect
+        handler: bmSelf.deselect
     }, {
         event: 'mouse:up',
-        handler: self.handleMouseUp
+        handler: bmSelf.handleMouseUp
     }, {
         event: 'mouse:down',
-        handler: self.handleDoubleClick
+        handler: bmSelf.handleDoubleClick
     }, {
         event: 'keyup',
-        handler: self.handleKeyUp,
+        handler: bmSelf.handleKeyUp,
         type: 'DOM',
         window: true
     }]);
 
-    self.init();
+    bmSelf.init();
 
     gpl.onDestroy(function() {
-        self.destroyBlocks();
-        delete self.blocks;
-        delete self.screenObjects;
-        delete self.upiListeners;
-        delete self.upis;
-        delete self.manager;
-        delete self.canvas;
+        bmSelf.destroyBlocks();
+        delete bmSelf.blocks;
+        delete bmSelf.screenObjects;
+        delete bmSelf.upiListeners;
+        delete bmSelf.upis;
+        delete bmSelf.manager;
+        delete bmSelf.canvas;
     });
 
-    return self;
+    return bmSelf;
 };
 
 gpl.Manager = function() {
-    var self = this,
+    var managerSelf = this,
         started = new Date().getTime(),
         configuredEvents = {},
         log = gpl.log,
@@ -5303,7 +5852,7 @@ gpl.Manager = function() {
 
         initLabels = function() {
             var type,
-                types = self.blockTypes;
+                types = managerSelf.blockTypes;
                 for(type in types) {
                     if(types.hasOwnProperty(type)) {
                         gpl.labelCounters[types[type].blockType] = 0;
@@ -5380,13 +5929,13 @@ gpl.Manager = function() {
                         setTimeout(function() {
                             // lastInit = new Date();
                             log('Running next init:' + initFn);
-                            self[initFn]();
+                            managerSelf[initFn]();
                             doNextInit();
                         }, initDelay);
                     } else {
                         log('Finished init functions');
-                        self.getBoundingBox();
-                        self.postInit();
+                        managerSelf.getBoundingBox();
+                        managerSelf.postInit();
                         gpl.skipEventLog = false;
 
                         if(gpl.isEdit) {
@@ -5397,11 +5946,11 @@ gpl.Manager = function() {
 
                         log('Finished initializing GPL Manager in', ((new Date().getTime() - started)/1000).toFixed(3), 'seconds');
 
-                        self.resizeWindow();
+                        managerSelf.resizeWindow(true);
                         setTimeout(function() {
                             gpl.rendered = true;
-                            self.resumeRender();
-                            self.bindings.loaded(true);
+                            managerSelf.resumeRender();
+                            managerSelf.bindings.loaded(true);
                             gpl.fire('rendered');
                         },100);
                     }
@@ -5409,8 +5958,18 @@ gpl.Manager = function() {
                 prop,
                 c;
 
-            self.confirmEditVersion = function() {
-                self.hideEditVersionModal();
+            managerSelf.useEditVersion = function() {
+                gpl.json.block = gpl.json.editVersion.block;
+                gpl.json.line = gpl.json.editVersion.line;
+                managerSelf.confirmEditVersion();
+            };
+
+            managerSelf.discardEditVersion = function() {
+                managerSelf.confirmEditVersion();
+            };
+
+            managerSelf.confirmEditVersion = function() {
+                managerSelf.hideEditVersionModal();
                 gpl.json.editVersion = {};
 
                 doNextInit();
@@ -5420,6 +5979,7 @@ gpl.Manager = function() {
             gpl.getPointTypes = window.opener && window.opener.workspaceManager && window.opener.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes;
             gpl.workspaceManager = window.opener && window.opener.workspaceManager;
             gpl._openWindow = window.opener && window.opener.workspaceManager && window.opener.workspaceManager.openWindowPositioned;
+            gpl.controllers = gpl.workspaceManager.systemEnums.controllers;
 
             if(!gpl.point.SequenceData) {
                 gpl.showMessage('Sequence data not found');
@@ -5440,26 +6000,28 @@ gpl.Manager = function() {
 
                 gpl.deviceId = gpl.point['Point Refs'][0].DevInst;
 
-                self.backgroundColor = gpl.json.backgroundColor;
+                managerSelf.backgroundColor = gpl.json.backgroundColor;
 
-                self.state = null;
-                self.editMode = false;
-                self.queueRenders = true;
-                self.haltRender = true;
-                self.lastRender = new Date().getTime();
-                self.gplObjects = {};
-                self.eventHandlers = {};
-                self.bindings = {};
-                self.shapes = [];
-                self.canvasElID = 'gplCanvas';
-                self.$canvasEl = $('#' + self.canvasElID);
-                self.$saveButton = $('#save');
-                self.$saveForLaterButton = $('#saveForLater');
-                self.$editButton = $('#edit');
-                self.$cancelButton = $('#cancel');
-                self.$validateButton = $('#validate');
-                self.$contextMenuList = $('#jqxMenu ul');
-                self.contextMenu = $('#jqxMenu').jqxMenu({
+                managerSelf.state = null;
+                managerSelf.editMode = false;
+                managerSelf.queueRenders = true;
+                managerSelf.haltRender = true;
+                managerSelf.panLeft = 0;
+                managerSelf.panTop = 0;
+                managerSelf.lastRender = new Date().getTime();
+                managerSelf.gplObjects = {};
+                managerSelf.eventHandlers = {};
+                managerSelf.bindings = {};
+                managerSelf.shapes = [];
+                managerSelf.mainCanvasElId = 'gplCanvas';
+                managerSelf.$mainCanvasEl = $('#' + managerSelf.mainCanvasElId);
+                managerSelf.$saveButton = $('#save');
+                managerSelf.$saveForLaterButton = $('#saveForLater');
+                managerSelf.$editButton = $('#edit');
+                managerSelf.$cancelButton = $('#cancel');
+                managerSelf.$validateButton = $('#validate');
+                managerSelf.$contextMenuList = $('#jqxMenu ul');
+                managerSelf.contextMenu = $('#jqxMenu').jqxMenu({
                     width: '140px',
                     // height: '140px',
                     animationShowDuration: 0,
@@ -5471,14 +6033,14 @@ gpl.Manager = function() {
                     mode: 'popup',
                     theme: gpl.jqxTheme
                 });
-                self.tooltipFill = '#3d3d3d';
-                self.tooltipFontColor = '#f4f4f4';
-                self.minX = 9999;
-                self.minY = 9999;
-                self.maxX = 0;
-                self.maxY = 0;
+                managerSelf.tooltipFill = '#3d3d3d';
+                managerSelf.tooltipFontColor = '#f4f4f4';
+                managerSelf.minX = 9999;
+                managerSelf.minY = 9999;
+                managerSelf.maxX = 0;
+                managerSelf.maxY = 0;
 
-                self.blockTypes = {
+                managerSelf.blockTypes = {
                     //icon: cls
                     Constant:               {blockType:'ConstantBlock'},
                     Output:                 {blockType:'ControlBlock'},
@@ -5507,7 +6069,7 @@ gpl.Manager = function() {
                     SPA:                    {blockType:'SPA'},
                     Ramp:                   {blockType:'Ramp'},
                     Totalizer:              {blockType:'Totalizer'},
-                    TextBlock:              {blockType:'TextBlock'},
+                    TextBlock:              {blockType:'TextBlock', skipToolbar: true},
                     AnalogDualSetPoint:     {blockType:'AnalogSetPoint'},
                     AnalogSingleSetPoint:   {blockType:'AnalogSetPoint'},
                     SUMWSingleSP:           {blockType:'AnalogSetPoint', skipToolbar: true},
@@ -5533,10 +6095,11 @@ gpl.Manager = function() {
                     gpl.json[prop.replace(' ','_')] = gpl.point[prop].Value || false;
                 }
 
-                self.valueTypes = {};
+                managerSelf.valueTypes = {};
+                managerSelf.pointTypeLookup = {};
 
                 gpl.forEach(gpl.blocks, function(cls, clsName) {
-                    self.valueTypes[cls.prototype.pointType] = cls.prototype.valueType;
+                    managerSelf.valueTypes[cls.prototype.pointType] = cls.prototype.valueType;
                 });
 
                 document.title = gpl.point.Name;
@@ -5546,15 +6109,15 @@ gpl.Manager = function() {
                 if(gpl.isEdit) {
                     if(gpl.json.editVersion && gpl.json.editVersion.block) {//has edit version
                         // if(now - gpl.point._pollTime > gpl.editVersionStaleTimeout) {//stale
-                            // gpl.$discardEditVersionButton.click(discardEditVersion);
-                            // gpl.$useEditVersionButton.click(useEditVersion);
-                            self.showEditVersionModal();
+                            gpl.$discardEditVersionButton.click(managerSelf.discardEditVersion);
+                            gpl.$useEditVersionButton.click(managerSelf.useEditVersion);
+                            managerSelf.showEditVersionModal();
                         // } else {//not stale
                         //     gpl.showMessage('This sequence currently being edited');
                         // }
                         //check if stale.  if not, block changes.  if so, ask if they want to use it?
                     } else {
-                        self.confirmEditVersion();
+                        managerSelf.confirmEditVersion();
                     }
                 } else {
                     doNextInit();
@@ -5566,11 +6129,11 @@ gpl.Manager = function() {
 
     gpl.skipEventLog = true;
 
-    self.postInit = function() {
+    managerSelf.postInit = function() {
         return;
     };
 
-    self.offsetEverything = function(num, line, block) {
+    managerSelf.offsetEverything = function(num, line, block) {
         var c,
             cc,
             handles,
@@ -5592,20 +6155,20 @@ gpl.Manager = function() {
             }
         }
 
-        self.socket.emit('updateSequence', {
-            sequenceName: gpl.point.Name,
-            sequenceData: {
-                sequence: gpl.json
-            }
-        });
+        // managerSelf.socket.emit('updateSequence', {
+        //     sequenceName: gpl.point.Name,
+        //     sequenceData: {
+        //         sequence: gpl.json
+        //     }
+        // });
 
     };
 
-    self.addToBindings = function(props) {
-        self.bindings = $.extend(self.bindings, props);
+    managerSelf.addToBindings = function(props) {
+        managerSelf.bindings = $.extend(managerSelf.bindings, props);
     };
 
-    self.addToBoundingRect = function(block) {
+    managerSelf.addToBoundingRect = function(block) {
         var items = block._shapes || [],
             start = new Date(),
             item,
@@ -5614,7 +6177,26 @@ gpl.Manager = function() {
             right,
             bottom,
             rect,
-            c;
+            newHeight = managerSelf.canvasHeight,
+            newWidth = managerSelf.canvasWidth,
+            resizeRight = function() {
+                if(newWidth < managerSelf.maxX) {
+                    newWidth = managerSelf.maxX;
+                }
+            },
+            resizeBottom = function() {
+                if(newHeight < managerSelf.maxY) {
+                    newHeight = managerSelf.maxY;
+                }
+            },
+            doResizes = function() {
+                if(newWidth !== managerSelf.canvasWidth || newHeight !== managerSelf.canvasHeight) {
+                    managerSelf.resizeCanvas(newWidth, newHeight);
+                }
+            },
+            resizes = [],
+            c,
+            cc;
 
         if(block.isToolbar !== true) {
             for(c=0; c<items.length; c++) {
@@ -5626,38 +6208,50 @@ gpl.Manager = function() {
                 right = left + rect.width;
 
                 if(block.isToolbar !== true) {
-                    if(left < self.minX) {
-                        self.minX = left;
+                    if(left < managerSelf.minX) {
+                        managerSelf.minX = left;
                     }
 
-                    if(right > self.maxX) {
-                        self.maxX = right;
+                    if(right > managerSelf.maxX) {
+                        managerSelf.maxX = right;
+                        resizes.push(resizeRight);
                     }
 
-                    if(top < self.minY) {
-                        self.minY = top;
+                    if(top < managerSelf.minY) {
+                        managerSelf.minY = top;
                     }
 
-                    if(bottom > self.maxY) {
-                        self.maxY = bottom;
+                    if(bottom > managerSelf.maxY) {
+                        managerSelf.maxY = bottom;
+                        resizes.push(resizeBottom);
                     }
                 }
             }
 
             if(gpl.rendered === true) {
-                self.getBoundingBox();
+                managerSelf.getBoundingBox();
             }
+
+            if(resizes.length > 0) {
+                for(cc=0; cc<resizes.length; cc++) {
+                    resizes[cc]();
+                }
+
+                doResizes();
+            }
+
+
         }
 
         gpl.boundingRectTime += new Date() - start;
         gpl.boundingRectCount++;
     };
 
-    self.getBoundingBox = function() {
-        var top = self.minY,
-            bottom = self.maxY,
-            left = self.minX,
-            right = self.maxX;
+    managerSelf.getBoundingBox = function() {
+        var top = managerSelf.minY,
+            bottom = managerSelf.maxY,
+            left = managerSelf.minX,
+            right = managerSelf.maxX;
             // lineDefaults = {
             //     stroke: '#ffffff',
             //     strokeWidth: 2
@@ -5680,76 +6274,93 @@ gpl.Manager = function() {
         // log('bounding box', gpl.boundingBox);
 
         // visual aid
-        // self.canvas.add(new fabric.Line([left, top, left, bottom], lineDefaults));
-        // self.canvas.add(new fabric.Line([left, bottom, right, bottom], lineDefaults));
-        // self.canvas.add(new fabric.Line([right, bottom, right, top], lineDefaults));
-        // self.canvas.add(new fabric.Line([right, top, left, top], lineDefaults));
+        // managerSelf.canvas.add(new fabric.Line([left, top, left, bottom], lineDefaults));
+        // managerSelf.canvas.add(new fabric.Line([left, bottom, right, bottom], lineDefaults));
+        // managerSelf.canvas.add(new fabric.Line([right, bottom, right, top], lineDefaults));
+        // managerSelf.canvas.add(new fabric.Line([right, top, left, top], lineDefaults));
     };
 
-    self.resizeWindow = function() {
+    managerSelf.resizeWindow = function(initial) {
         var box = gpl.boundingBox,
             right = box.right,
             bottom = box.bottom,
             verticalBuffer = 50,
             horizontalBuffer = 50,
             minHeight = 750,
+            minWidth = 900,
             width = right + horizontalBuffer,
             height,
             heightOffset = 70;
 
-        if(window.top === window) {
+        if(width < minWidth) {
+            width = minWidth;
+        }
+
+        if(!gpl.poppedIn) {
             if(gpl.isEdit) {
-                height = bottom>minHeight?bottom:minHeight;
-                // window.resizeTo(right, bottom>minHeight?bottom:minHeight);
+                height = (bottom + verticalBuffer > minHeight)?bottom + verticalBuffer:minHeight;
             } else {
                 height = bottom + verticalBuffer;
-                // window.resizeTo(right, bottom + verticalBuffer);
             }
 
             height += heightOffset;
+            managerSelf.currWidth = width;
+            managerSelf.currHeight = height;
 
             window.resizeTo(width, height);
+
+            if(initial) {
+                managerSelf.resizeCanvas(width, height);
+            }
         }
     };
 
-    self.scale = function(value) {
-        var inverted = 1/gpl.scaleValue,
-            scaleIt = function(prop) {
-                return parseFloat(prop) * inverted * value;
-            },
-            canvas = self.canvas;
-            // currentCanvasHeight = canvas.getHeight(),
-            // currentCanvasWidth = canvas.getWidth();
-            // scaledCanvasHeight = scaleIt(currentCanvasHeight),
-            // scaledCanvasWidth = scaleIt(currentCanvasWidth);
+    managerSelf.scale = function(value, fromBinding) {
+        var currentCanvasHeight = managerSelf.canvasHeight,
+            currentCanvasWidth = managerSelf.canvasWidth;
+
+        if(!currentCanvasWidth || !currentCanvasHeight) {
+            currentCanvasWidth = managerSelf.canvasWidth = parseInt(managerSelf.$mainCanvasEl.css('width'), 10);
+            currentCanvasHeight = managerSelf.canvasHeight = parseInt(managerSelf.$mainCanvasEl.css('height'), 10);
+        }
 
         if(value !== gpl.scaleValue) {
-            canvas.forEachObject(function(obj) {
-                var currentObjTop = obj.get('top'),
-                    currentObjLeft = obj.get('left'),
-                    currentObjScaleX = obj.get('scaleX'),
-                    currentObjScaleY = obj.get('scaleY'),
-                    scaledObjTop = scaleIt(currentObjTop),
-                    scaledObjLeft = scaleIt(currentObjLeft),
-                    scaledObjScaleX = scaleIt(currentObjScaleX),
-                    scaledObjScaleY = scaleIt(currentObjScaleY);
+            managerSelf.pauseRender();
+            gpl.scaleValue = value;
 
-                obj.set({
-                    top: scaledObjTop,
-                    left: scaledObjLeft,
-                    scaleX: scaledObjScaleX,
-                    scaleY: scaledObjScaleY
-                });
+            managerSelf.canvas.setZoom(value);
+            managerSelf.canvas.setWidth(currentCanvasWidth * value);
+            managerSelf.canvas.setHeight(currentCanvasHeight * value);
 
-                obj.setCoords();
-            });
+            if(!fromBinding) {
+                managerSelf.bindings.currentZoom(Math.round(value * 100));
+            }
 
-            gpl.scaleValue = canvas.scaleValue = value;
-            self.renderAll();
+            managerSelf.resumeRender();
         }
     };
 
-    self.addNewPoint = function(block) {
+    managerSelf.pan = function(dx, dy) {
+        managerSelf.contextMenu.jqxMenu('close');
+        managerSelf.hasPanned = true;
+
+        //is boolean
+        if(!!dx === dx) {
+            managerSelf.panLeft = 0;
+            managerSelf.panTop = 0;
+        } else {
+            managerSelf.panLeft += dx;
+            managerSelf.panTop += dy;
+        }
+
+        managerSelf.$mainCanvasContainer.css({
+            left: managerSelf.panLeft,
+            top: managerSelf.panTop
+        });
+
+    };
+
+    managerSelf.addNewPoint = function(block) {
         var windowRef,
             pointType = window.encodeURI(block.pointType),
             names = (gpl.pointNamePrefix + block.label).split('_'),
@@ -5759,10 +6370,11 @@ gpl.Manager = function() {
             name3 = names[2],
             name4 = names[3] || '',
             handler = function(obj) {
+                gpl.unblockUI();
                 if(obj && obj.target) {//is event
                     if(!called) {
                         log('New Point canceled, deleting block');
-                        block.delete();
+                        gpl.fire('deleteblock', block, true);
                         gpl.labelCounters[block.type]--;
                     }
                     return;
@@ -5776,6 +6388,7 @@ gpl.Manager = function() {
             };
 
         if(block.isNonPoint !== true && !(block instanceof gpl.blocks.TextBlock)) {
+            gpl.blockUI();
 
             windowRef = gpl.openWindow('/pointLookup/newPoint/restrictTo/' + pointType, 'New Point', '', '', 'newPoint', {
                 width: 980,
@@ -5792,14 +6405,16 @@ gpl.Manager = function() {
                     name4: name4
                 }
             };
+        } else {
+            gpl.fire('newblock', block);
         }
     };
 
-    self.doSave = function() {
-        var saveObj = gpl.blockManager.getSaveObject(),
-            isValid = self.validate(),
+    managerSelf.doSave = function() {
+        var saveObj,
+            isValid,
             finish = function() {
-                self.socket.emit('updateSequence', {
+                managerSelf.socket.emit('updateSequence', {
                     sequenceName: gpl.point.Name,
                     sequenceData: {
                         sequence: gpl.json
@@ -5808,7 +6423,11 @@ gpl.Manager = function() {
 
                 offsetPositions(false);
 
-                self.resumeRender();
+                if(gpl.point._pStatus === 1) {
+                    managerSelf.socket.emit('addPoint', {point:gpl.point});
+                }
+
+                managerSelf.resumeRender();
 
                 gpl.hasEdits = false;
 
@@ -5817,33 +6436,37 @@ gpl.Manager = function() {
                 gpl.captureThumbnail();
             };
 
+        gpl.blockUI();
+        gpl.waitForSocketMessage(gpl.unblockUI);
+
+        saveObj = gpl.blockManager.getSaveObject();
+        isValid = managerSelf.validate();
+
         if(isValid) {
             // log(saveObj);
 
-            self.pauseRender();
+            managerSelf.pauseRender();
 
             gpl.fire('save');
 
-            self.socket.emit('updateSequencePoints', saveObj);
+            managerSelf.socket.emit('updateSequencePoints', saveObj);
 
             offsetPositions(true);//resets/removes offset
 
-            if(gpl.point._pStatus === 1) {
-                self.socket.emit('addPoint', {point:gpl.point});
-            }
-
             finish();
         } else {
-            gpl.showMessage(gpl.validateMessage);
+            gpl.showMessage(gpl.validationMessage);
         }
     };
 
-    self.doSaveForLater = function() {
+    managerSelf.doSaveForLater = function() {
+        gpl.blockUI();
+        gpl.waitForSocketMessage(gpl.unblockUI);
         gpl.fire('saveForLater');
         offsetPositions(true, gpl.json.editVersion);
         offsetPositions(true);
 
-        self.socket.emit('updateSequence', {
+        managerSelf.socket.emit('updateSequence', {
             sequenceName: gpl.point.Name,
             sequenceData: {
                 sequence: gpl.json
@@ -5854,21 +6477,21 @@ gpl.Manager = function() {
         offsetPositions(false);
     };
 
-    self.doEdit = function() {
+    managerSelf.doEdit = function() {
         var endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Sequence', gpl.upi),
             url = endPoint.edit.url;
 
         gpl.openWindow(url, gpl.point.Name, 'Sequence', '', gpl.upi);
     };
 
-    self.doCancel = function() {
+    managerSelf.doCancel = function() {
         var endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Sequence', gpl.upi),
             url = endPoint.review.url;
 
         gpl.openWindow(url, gpl.point.Name, 'Sequence', '', gpl.upi);
     };
 
-    self.popInOut = function() {
+    managerSelf.popInOut = function() {
         var _target = 'mainWindow';
 
         if(gpl.poppedIn) {
@@ -5882,44 +6505,44 @@ gpl.Manager = function() {
         return false;
     };
 
-    self.popInOutText = function() {
+    managerSelf.popInOutText = function() {
         if(gpl.poppedIn) {
             return 'Pop Out';
         }
         return 'Pop In';
     };
 
-    self.popInOutClass = function() {
+    managerSelf.popInOutClass = function() {
         if(gpl.poppedIn) {
             return 'fa-arrow-circle-up';
         }
         return 'fa-arrow-circle-down';
     };
 
-    self.sequenceLoaded = ko.observable(false);
+    managerSelf.sequenceLoaded = ko.observable(false);
 
-    self.validate = function() {
+    managerSelf.validate = function() {
         var valid = gpl.blockManager.validateAll();
 
-        // gpl.showMessage(gpl.invalidMessage || (valid?'':'In') + 'valid');
-        // gpl.invalidMessage = null;
+        // gpl.showMessage(gpl.validationMessage || (valid?'':'In') + 'valid');
+        // gpl.validationMessage = null;
         return valid;
     };
 
-    self.getObject = function(config)  {
+    managerSelf.getObject = function(config)  {
         var start = new Date().getTime(),
             gap,
             gplType = config.gplType,
-            yoffset = config.yoffset || 0,
-            xoffset = config.xoffset || 0,
-            left = config.left,
-            top = config.top,
+            yoffset = (config.yoffset || 0),
+            xoffset = (config.xoffset || 0),
+            left = config.left + managerSelf.panLeft,
+            top = config.top + managerSelf.panTop,
             x1,
             x2,
             y1,
             y2,
             multiple = config.multiple || false,
-            objects = self.canvas.getObjects(),
+            objects = managerSelf.canvas.getObjects(),
             c,
             len = objects.length,
             obj,
@@ -5950,7 +6573,7 @@ gpl.Manager = function() {
                         }
                     }
                 } else {
-                    if(left >= obj.left && left <= (obj.left + obj.width) && top >= obj.top && top <= (obj.top + obj.height)) {
+                    if(left - managerSelf.panLeft >= obj.left && left - managerSelf.panLeft  <= (obj.left + obj.width) && top - managerSelf.panTop  >= obj.top && top - managerSelf.panTop  <= (obj.top + obj.height)) {
                         ret.push(obj);
                         if(!multiple) {
                             found = true;
@@ -5961,82 +6584,96 @@ gpl.Manager = function() {
         }
 
         gap = new Date().getTime() - start;
-        self._getObjectCount++;
-        self._getObjectTime += gap;
+        managerSelf._getObjectCount++;
+        managerSelf._getObjectTime += gap;
         return multiple?ret:ret[0];
     };
 
-    self.resizeCanvas = function() {
+    managerSelf.resizeCanvas = function(currWidth, currHeight, isWindowResize) {
         var start = new Date().getTime(),
             resizeDelay = gpl.resizeDelay,
-            prevResize = self.lastCanvasResize || start - resizeDelay,
+            prevResize = managerSelf.lastCanvasResize || start - resizeDelay,
             doResize = function(now) {
-                var width = window.innerWidth,
-                    height = window.innerHeight;
+                var width = currWidth || window.innerWidth,
+                    height = currHeight || window.innerHeight;
 
-                self.canvasResizing = true;
-
-                self.canvas.setWidth(width);
-                self.canvas.setHeight(height);
-                self.canvas.calcOffset();
-                self.lastCanvasResize = new Date().getTime();
-                self.canvasResizing = false;
-                // log('resized canvas to ', width, 'x', height, gpl.formatDate(self.lastWindowResize), gpl.formatDate(self.lastCanvasResize));
+                managerSelf.canvasResizing = true;
+                managerSelf.canvasWidth = width;
+                managerSelf.canvasHeight = height;
+                managerSelf.canvas.setWidth(width);
+                managerSelf.canvas.setHeight(height);
+                managerSelf.canvas.calcOffset();
+                // if(gpl.isEdit) {
+                    // managerSelf.toolbarCanvas.setWidth(width);
+                    // managerSelf.toolbarCanvas.setHeight(height);
+                    // managerSelf.toolbarCanvas.calcOffset();
+                // }
+                managerSelf.lastCanvasResize = new Date().getTime();
+                managerSelf.canvasResizing = false;
             },
             checkQueue = function() {
                 var now = new Date().getTime();
 
-                if(now - self.lastCanvasResize >= resizeDelay) {//only the one call
+                if(now - managerSelf.lastCanvasResize >= resizeDelay) {//only the one call
                     doResize();
                 }
             };
 
-        self.lastWindowResize = start;
+        if(!isWindowResize) {
+            if(currWidth < managerSelf.canvas.width && currHeight < managerSelf.canvas.height) {
+                return;
+            }
+        }
 
-        if(start - prevResize >= resizeDelay && !self.canvasResizing) {
+        managerSelf.lastWindowResize = start;
+
+        if(start - prevResize >= resizeDelay && !managerSelf.canvasResizing) {
             doResize();
         } else {
-            // log('skipping queue');
             setTimeout(function() {
                 checkQueue();
             }, resizeDelay);
         }
     };
 
-    self.renderAll = function() {
+    managerSelf.renderAll = function() {
         var now = new Date().getTime();
 
-        self.lastRender = now;
+        managerSelf.lastRender = now;
 
-        if(!self.haltRender) {
+        if(!managerSelf.haltRender) {
             // log('Rendering');
-            self.canvas.renderAll();
+            managerSelf.canvas.renderAll();
+            if(gpl.isEdit) {
+                gpl.canvases.toolbar.renderAll();
+            }
         }
     };
 
-    self.pauseRender = function() {
-        self.haltRender = true;
+    managerSelf.pauseRender = function() {
+        managerSelf.haltRender = true;
     };
 
-    self.resumeRender = function() {
-        self.haltRender = false;
-        self.renderAll();
+    managerSelf.resumeRender = function() {
+        managerSelf.haltRender = false;
+        managerSelf.renderAll();
     };
 
-    self.setState = function(state) {
-        // self.canvas.selection = false;
-        self.state = state;
+    managerSelf.setState = function(state) {
+        // managerSelf.canvas.selection = false;
+        managerSelf.state = state;
     };
 
-    self.clearState = function() {
-        // self.canvas.selection = true;
-        self.state = null;
+    managerSelf.clearState = function() {
+        // managerSelf.canvas.selection = true;
+        managerSelf.state = null;
     };
 
-    self.registerHandler = function(config) {
+    managerSelf.registerHandler = function(config) {
         var event = config.event,
             handler = config.handler,
             type = config.type || 'canvas',
+            targetCanvas = config.canvas || managerSelf.canvas,
             state = config.state || null,
             domType = config.window?window:document,
             makeHandler = function(handler, state) {
@@ -6053,37 +6690,37 @@ gpl.Manager = function() {
                 return handler;
             };
 
-        self.eventHandlers[event] = self.eventHandlers[event] || [];
-        self.eventHandlers[event].push(makeHandler(handler, state));
+        managerSelf.eventHandlers[event] = managerSelf.eventHandlers[event] || [];
+        managerSelf.eventHandlers[event].push(makeHandler(handler, state));
 
         if(!configuredEvents[event]) {
              configuredEvents[event] = true;
              if(type === 'canvas') {
-                self.canvas.on(event, function(evt) {
-                    self.processEvent(event, evt);
+                targetCanvas.on(event, function(evt) {
+                    managerSelf.processEvent(event, evt);
                 });
             } else {
                 $(domType).on(event, function(evt) {
-                    self.processEvent(event, evt);
+                    managerSelf.processEvent(event, evt);
                 });
             }
         }
     };
 
-    self.registerHandlers = function(handlers) {
+    managerSelf.registerHandlers = function(handlers) {
         var c,
             len = handlers.length;
 
         for(c=0; c<len; c++) {
-            self.registerHandler(handlers[c]);
+            managerSelf.registerHandler(handlers[c]);
         }
     };
 
-    self.unregisterHandler = function(config) {
+    managerSelf.unregisterHandler = function(config) {
         var event = config.event,
             handler = config.handler,
             c,
-            handlers = self.eventHandlers[event] || [];
+            handlers = managerSelf.eventHandlers[event] || [];
 
         for(c=handlers.length-1; c>=0; c--) {
             if(handlers[c] === handler) {
@@ -6092,18 +6729,18 @@ gpl.Manager = function() {
         }
     };
 
-    self.unregisterHandlers = function(handlers) {
+    managerSelf.unregisterHandlers = function(handlers) {
         var c,
             len = handlers.length;
 
         for(c=0; c<len; c++) {
-            self.unregisterHandler(handlers[c]);
+            managerSelf.unregisterHandler(handlers[c]);
         }
     };
 
-    self.processEvent = function(type, event) {
+    managerSelf.processEvent = function(type, event) {
         var c,
-            handlers = self.eventHandlers[type] || [],
+            handlers = managerSelf.eventHandlers[type] || [],
             len = handlers.length;
 
         for(c=0; c<len; c++) {
@@ -6111,42 +6748,44 @@ gpl.Manager = function() {
         }
     };
 
-    self.handleMouseOver = function(event) {
-        var target = gpl.blockManager.getBlock(event.target.gplId),
-            text = gpl.point.Name,
-            pointer = self.canvas.getPointer(event.e),
-            x,
-            y;
+    // managerSelf.handleMouseOver = function(event) {
+    //     var target = gpl.blockManager.getBlock(event.target.gplId),
+    //         text,
+    //         pointer = managerSelf.canvas.getPointer(event.e),
+    //         x,
+    //         y;
 
-        // if(event.target === self.tooltip || (target && event.target.gplId && !target.isToolbar)) {//} && target.gplId !== self._hoveredTarget.gplId) {
-        if(target && event.target.gplId && !target.isToolbar) {
-            // x = target.left;
-            // y = target.top - self.tooltip.height;
-            x = pointer.x;
-            y = pointer.y;
-            // log('mouse over gplId', event.target.gplId, target);
-            // log(gpl.point.Name, '-', target.tooltip || target.label);
-            text = target?(target.tooltip || target.label):null;
-            self._hoveredTarget = target;
-            self.updateTooltip(text, x, y);
-        } else {
-            // if(event.target !== self.tooltip) {
-                // log(target, event.target);
-                self.clearTooltip();
-            // }
-        }
-    };
+    //     // if(event.target === managerSelf.tooltip || (target && event.target.gplId && !target.isToolbar)) {//} && target.gplId !== managerSelf._hoveredTarget.gplId) {
+    //     if(target && event.target.gplId && !target.isToolbar) {
+    //         // x = target.left;
+    //         // y = target.top - managerSelf.tooltip.height;
+    //         x = pointer.x;
+    //         y = pointer.y;
+    //         // log('mouse over gplId', event.target.gplId, target);
+    //         // log(gpl.point.Name, '-', target.tooltip || target.label);
+    //         text = target?(target.tooltip || target.label):null;
+    //         managerSelf._hoveredTarget = target;
+    //         text = gpl.pointUpiMap[upi]
+    //         gpl.pointUpiMap[upi]
+    //         managerSelf.updateTooltip(text, x, y);
+    //     } else {
+    //         // if(event.target !== managerSelf.tooltip) {
+    //             // log(target, event.target);
+    //             managerSelf.clearTooltip();
+    //         // }
+    //     }
+    // };
 
-    self.handleMouseOut = function(e) {
+    managerSelf.handleMouseOut = function(e) {
         // log('mouse out', e);
-        if(self._hoveredTarget && e.target !== self.tooltip) {
-            self._hoveredTarget = null;
-            // self.clearTooltip();
+        if(managerSelf._hoveredTarget && e.target !== managerSelf.tooltip) {
+            managerSelf._hoveredTarget = null;
+            // managerSelf.clearTooltip();
         }
     };
 
-    self.openContextMenu = function(left, top, event) {
-        var obj = self.getObject({
+    managerSelf.openContextMenu = function(left, top, event) {
+        var obj = managerSelf.getObject({
                 left: left,
                 top: top,
                 yoffset: 5,
@@ -6154,51 +6793,57 @@ gpl.Manager = function() {
             }),
             getters = {
                 line: gpl.lineManager.getLine,
-                block: gpl.blockManager.getBlock
+                block: gpl.blockManager.getBlock,
+                text: function(id) {
+                    return gpl.texts[id];
+                }
             },
             getter,
             gplObj;
 
-        if(self.state !== 'DrawingLine') {
-            self.$contextMenuList.removeClass('block line default');
+        if(managerSelf.state !== 'DrawingLine' && !managerSelf.modalOpen && !managerSelf.hasPanned) {
+            managerSelf.$contextMenuList.removeClass('block line default nonPoint');
 
             if(obj) {
                 getter = getters[obj.gplType];
                 if(getter) {
-                    self.$contextMenuList.addClass(obj.gplType);
+                    managerSelf.$contextMenuList.addClass(obj.gplType);
                 } else {
-                    self.$contextMenuList.addClass('block');
+                    managerSelf.$contextMenuList.addClass('block');
                     getter = getters.block;
+                }
+                if(obj.blockType === 'Constant') {
+                    managerSelf.$contextMenuList.addClass('nonPoint');
                 }
                 gplObj = getter(obj.gplId);
             } else {
-                self.$contextMenuList.addClass('default');
+                managerSelf.$contextMenuList.addClass('default');
             }
 
-            self.contextMenu.jqxMenu('open', left, top);
-            self.contextX = left;
-            self.contextY = top;
-            self.contextObject = gplObj;
+            managerSelf.contextMenu.jqxMenu('open', left - 5, top - 5);
+            managerSelf.contextX = left;
+            managerSelf.contextY = top;
+            managerSelf.contextObject = gplObj;
         }
     };
 
-    self.destroy = function() {
+    managerSelf.destroy = function() {
         var c,
             len = (gpl.destroyFns || []).length;
 
         if(window.destroyed !== true) {
             window.destroyed = true;
-            if(self.toolbar) {
-                gpl.destroyObject(self.toolbar);
-                delete self.toolbar;
+            if(managerSelf.toolbar) {
+                gpl.destroyObject(managerSelf.toolbar);
+                delete managerSelf.toolbar;
             }
 
             gpl.forEach(gpl.eventHandlers, function(handlers) {
                 handlers = [];
             });
 
-            self.canvas.removeListeners();
-            self.canvas.dispose();
+            managerSelf.canvas.removeListeners();
+            managerSelf.canvas.dispose();
 
             for(c=0; c<len; c++) {
                 gpl.destroyFns[c]();
@@ -6210,55 +6855,66 @@ gpl.Manager = function() {
             delete window.gplData.upi;
             delete window.gplData.point;
             delete window.gplData.references;
-            delete window.gplData.controllers;
+            // delete window.gplData.controllers;
             delete window.gplData;
             gpl.destroyObject(gpl);
             gpl = {};
             $(document).off();
             $(window).off();
-            $(self.canvas.wrapperEl).remove();
+            $(managerSelf.canvas.wrapperEl).remove();
             $('body').html('');
         }
     };
 
-    self.handleNavigateAway = function(event) {
-
+    managerSelf.handleNavigateAway = function(event) {
         if(gpl.hasEdits) {
             return 'You have unsaved changes. Are you sure you want to leave this page?';
         }
 
-        self.destroy();
+        managerSelf.destroy();
     };
 
-    self.updateTooltip = function(text, x, y) {
-        if(text) {
-            self.tooltip.setText(text);
+    managerSelf.updateTooltip = function(text, x, y) {
+        if(!managerSelf.modalOpen) {
+            gpl.$tooltip.html(text);
+
+            gpl.$tooltip.css({
+                left: x + 15,
+                top: y + 15,
+                display: 'block'
+            });
+        } else {
+            managerSelf.clearTooltip();
         }
-        self.tooltip.set({
-            visible: true,
-            left: x + 15,
-            top: y + 15
-        });
-        self.tooltipRect.set({
-            visible: true,
-            left: x + 10,
-            top: y + 10,
-            width: self.tooltip.width + 10
-        });
-        self.bringToFront(self.tooltipRect);
-        self.bringToFront(self.tooltip);
-        self.renderAll();
+        // if(text) {
+        //     managerSelf.tooltip.setText(text);
+        // }
+        // managerSelf.tooltip.set({
+        //     visible: true,
+        //     left: x + 15,
+        //     top: y + 15
+        // });
+        // managerSelf.tooltipRect.set({
+        //     visible: true,
+        //     left: x + 10,
+        //     top: y + 10,
+        //     width: managerSelf.tooltip.width + 10
+        // });
+        // managerSelf.bringToFront(managerSelf.tooltipRect);
+        // managerSelf.bringToFront(managerSelf.tooltip);
+        // managerSelf.renderAll();
         // log('updating tooltip', text);
     };
 
-    self.clearTooltip = function() {
-        self.tooltip.set('visible', false);
-        self.tooltipRect.set('visible', false);
-        self.renderAll();
+    managerSelf.clearTooltip = function() {
+        gpl.$tooltip.css('display', 'none');
+        // managerSelf.tooltip.set('visible', false);
+        // managerSelf.tooltipRect.set('visible', false);
+        // managerSelf.renderAll();
         // log('clearing tooltip');
     };
 
-    self.showEditVersionModal = function() {
+    managerSelf.showEditVersionModal = function() {
         gpl.$editVersionModal.modal({
             keyboard: false,
             backdrop: 'static'
@@ -6266,18 +6922,18 @@ gpl.Manager = function() {
         gpl.$editVersionModal.modal('show');
     };
 
-    self.hideEditVersionModal = function() {
+    managerSelf.hideEditVersionModal = function() {
         gpl.$editVersionModal.modal('hide');
     };
 
-    self.initBindings = function() {
+    managerSelf.initBindings = function() {
         var handlers = {
                 deviceDescription: function(val){
                     gpl.point.Description.Value = val;//validate?
                 }
             },
             syncDeviceProperties = function() {
-                var props = ko.toJS(self.bindings),
+                var props = ko.toJS(managerSelf.bindings),
                     devicePoint = gpl.devicePointRef;
 
                 gpl.point.Description.Value = props.deviceDescription;
@@ -6285,26 +6941,24 @@ gpl.Manager = function() {
                 devicePoint.DevInst = devicePoint.PointInst = devicePoint.Value = props.deviceUpi;
             };
 
-        self.addToBindings({
+        managerSelf.addToBindings({
             isEdit: gpl.isEdit,
-            loaded: self.sequenceLoaded,
+            loaded: managerSelf.sequenceLoaded,
 
-            backgroundColor: ko.observable(self.backgroundColor),
-            deviceBackgroundColor: ko.observable(self.backgroundColor),
+            backgroundColor: ko.observable(managerSelf.backgroundColor),
+            deviceBackgroundColor: ko.observable(managerSelf.backgroundColor),
 
-            popInOut: self.popInOut,
-            popInOutText: self.popInOutText,
-            popInOutClass: self.popInOutClass,
+            popInOut: managerSelf.popInOut,
+            popInOutText: managerSelf.popInOutText,
+            popInOutClass: managerSelf.popInOutClass,
 
             controllers: gpl.controllers,
 
-            useEditVersion: function() {
-                gpl.json.block = gpl.json.editVersion.block;
-                gpl.json.line = gpl.json.editVersion.line;
-                self.confirmEditVersion();
-            },
-            discardEditVersion: function() {
-                self.confirmEditVersion();
+            currentZoom: ko.observable(Math.round(100 * gpl.scaleValue)),
+
+            resetZoom: function() {
+                managerSelf.scale(1);
+                managerSelf.pan(true);
             },
 
             showBackgroundColorModal: function() {
@@ -6312,42 +6966,42 @@ gpl.Manager = function() {
             },
 
             hideBackgroundColorModal: function() {
-                self.bindings.deviceBackgroundColor(self.bindings.backgroundColor());
+                managerSelf.bindings.deviceBackgroundColor(managerSelf.bindings.backgroundColor());
                 gpl.$colorpickerModal.modal('hide');
             },
 
             updateBackgroundColor: function() {
-                var val = self.bindings.backgroundColor();
-                self.bindings.backgroundColor(val);
-                self.canvas.backgroundColor = '#' + val;
-                self.bindings.hideBackgroundColorModal();
+                var val = managerSelf.bindings.deviceBackgroundColor();
+                managerSelf.bindings.backgroundColor(val);
+                managerSelf.canvas.backgroundColor = '#' + val;
+                // managerSelf.bindings.hideBackgroundColorModal();
                 gpl.json.backgroundColor = val;
-                self.renderAll();
+                managerSelf.renderAll();
             },
 
             applyShowLabel: function() {
-                var bool = self.bindings.deviceShowLabel();
-                self.pauseRender();
+                var bool = managerSelf.bindings.deviceShowLabel();
+                managerSelf.pauseRender();
                 gpl.blockManager.applyShowLabel(bool);
-                self.resumeRender();
+                managerSelf.resumeRender();
             },
 
             applyShowValue: function() {
-                var bool = self.bindings.deviceShowValue();
-                self.pauseRender();
+                var bool = managerSelf.bindings.deviceShowValue();
+                managerSelf.pauseRender();
                 gpl.blockManager.applyShowValue(bool);
-                self.resumeRender();
+                managerSelf.resumeRender();
             },
 
             applyUpdateInterval: function() {
-                var interval = self.bindings.deviceUpdateIntervalMinutes() * 60 + self.bindings.deviceUpdateIntervalSeconds();
+                var interval = managerSelf.bindings.deviceUpdateIntervalMinutes() * 60 + managerSelf.bindings.deviceUpdateIntervalSeconds();
 
                 gpl.blockManager.applyUpdateInterval(interval);
             },
 
             applyController: function() {
-                var controllerValue = self.bindings.deviceControllerValue(),
-                    controllerName = gpl.controllers[controllerValue]['Controller Name'];
+                var controllerValue = managerSelf.bindings.deviceControllerValue(),
+                    controllerName = gpl.controllers[controllerValue].name;
 
                 gpl.blockManager.applyController(controllerName, controllerValue);
             },
@@ -6367,7 +7021,7 @@ gpl.Manager = function() {
             deviceUpdateIntervalMinutes: ko.observable(Math.floor(+gpl.point['Update Interval'].Value / 60)),
 
             updateSequenceProperties: function() {
-                var props = ko.toJS(self.bindings);
+                var props = ko.toJS(managerSelf.bindings);
 
                 gpl.point['Update Interval'].Value = props.deviceUpdateIntervalMinutes * 60 + props.deviceUpdateIntervalSeconds;
                 gpl.point['Show Label'].Value = props.deviceShowLabel;
@@ -6375,6 +7029,7 @@ gpl.Manager = function() {
                 gpl.point.Description.Value = props.deviceDescription;
                 gpl.point.Controller.Value = props.deviceControllerName;
                 gpl.point.Controller.eValue = props.deviceControllerValue;
+                managerSelf.bindings.updateBackgroundColor();
 
                 console.log('update', props);
                 gpl.$sequencePropertiesModal.modal('hide');
@@ -6386,13 +7041,13 @@ gpl.Manager = function() {
             },
             selectDevicePoint: function() {
                 gpl.openPointSelector(function(upi, name) {
-                    self.bindings.deviceName(name);
-                    self.bindings.deviceUpi(upi);
+                    managerSelf.bindings.deviceName(name);
+                    managerSelf.bindings.deviceUpi(upi);
                 }, null, 'Device', 'Device Point');
             },
 
             addNewButton: function() {
-                log('NewButton', self.contextX, self.contextY);
+                log('NewButton', managerSelf.contextX, managerSelf.contextY);
             },
 
             addNewDynamic: function() {
@@ -6401,40 +7056,49 @@ gpl.Manager = function() {
 
             addNewText: function() {
                 var newBlock = gpl.blockManager.create({
-                    cls: fabric.Textbox,
+                    cls: gpl.blocks.TextBlock,
                     cfg: {
-                        left: self.contextX,
-                        top: self.contextY
+                        left: (managerSelf.contextX - 15)/gpl.scaleValue,//10 in textblock
+                        top: (managerSelf.contextY - 10)/gpl.scaleValue,//5 in textblock
+                        text: 'Text'
                     }
                 });
-                log('NewText');
+                gpl.blockManager.openTextEditor(newBlock);
             }
         });
 
-        self.bindings.backgroundColorHex = ko.computed(function() {
-            var color = self.bindings.backgroundColor();
-
-            return '#' + color;
+        managerSelf.bindings.currentZoom.subscribe(function(newValue) {
+            managerSelf.scale(newValue/100, true);
         });
 
-        self.$saveButton.click(function() {
-            self.doSave();
+        managerSelf.bindings.backgroundColorHex = ko.computed(function() {
+            var color = '#' + managerSelf.bindings.backgroundColor();
+
+            if(!gpl.isEdit) {
+                gpl.$body.css('background-color', color);
+            }
+
+            return color;
         });
 
-        self.$saveForLaterButton.click(function() {
-            self.doSaveForLater();
+        managerSelf.$saveButton.click(function() {
+            managerSelf.doSave();
         });
 
-        self.$editButton.click(function() {
-            self.doEdit();
+        managerSelf.$saveForLaterButton.click(function() {
+            managerSelf.doSaveForLater();
         });
 
-        self.$cancelButton.click(function() {
-            self.doCancel();
+        managerSelf.$editButton.click(function() {
+            managerSelf.doEdit();
         });
 
-        self.$validateButton.click(function() {
-            self.validate();
+        managerSelf.$cancelButton.click(function() {
+            managerSelf.doCancel();
+        });
+
+        managerSelf.$validateButton.click(function() {
+            managerSelf.validate();
         });
 
         gpl.$messageModal.modal({
@@ -6492,17 +7156,23 @@ gpl.Manager = function() {
         };
     };
 
-    self.initCanvas = function() {
+    managerSelf.initCanvas = function() {
         var editConfig = {
                 renderOnAddRemove: false,
                 selection: false,//group selection
-                backgroundColor: '#' + self.backgroundColor,
+                backgroundColor: '#' + managerSelf.backgroundColor,
+                hasControls: false,
+                hoverCursor: 'default'
+            },
+            toolbarConfig = {
+                renderOnAddRemove: false,
+                selection: false,
                 hasControls: false,
                 hoverCursor: 'default'
             },
             viewConfig= {
                 renderOnAddRemove: false,
-                backgroundColor: '#' + self.backgroundColor,
+                backgroundColor: '#' + managerSelf.backgroundColor,
                 hasControls: false,
                 selection: false,
                 draggable: false,
@@ -6534,52 +7204,40 @@ gpl.Manager = function() {
             this.forEachObject(this.addWithUpdate, this);
         };
 
-        // fabric.Canvas.prototype.findTarget = (function(origFn) {
-        //     return function() {
-        //         var target = origFn.apply(this, arguments);
+        fabric.Canvas.prototype._renderAll = fabric.Canvas.prototype.renderAll;
 
-        //         if (target) {
-        //             if (this._hoveredTarget !== target) {
-        //                 canvas.fire('object:over', {
-        //                     target: target
-        //                 });
-        //                 if (this._hoveredTarget) {
-        //                     canvas.fire('object:out', {
-        //                         target: this._hoveredTarget
-        //                     });
-        //                 }
-        //                 this._hoveredTarget = target;
-        //             }
-        //         } else if (this._hoveredTarget) {
-        //             canvas.fire('object:out', {
-        //                 target: this._hoveredTarget
-        //             });
-        //             this._hoveredTarget = null;
-        //         }
+        fabric.Canvas.prototype.renderAll = function() {
+            if(!managerSelf.haltRender) {
+                this._renderAll();
+            }
+        };
 
-        //         return target;
-        //     };
-        // }(fabric.Canvas.prototype.findTarget));
-
-        self.$canvasEl.attr({
+        managerSelf.$mainCanvasEl.attr({
             width: window.innerWidth || 1024,
             height: window.innerHeight || 800
         });
 
         if(gpl.isEdit) {
-            self.canvas = new fabric.Canvas(self.canvasElID, editConfig);
+            managerSelf.canvas = new fabric.Canvas(managerSelf.mainCanvasElId, editConfig);
+            gpl.canvases.main = managerSelf.canvas;
+            managerSelf.toolbarCanvas = new fabric.Canvas('toolbarCanvas', toolbarConfig);
+            gpl.canvases.toolbar = managerSelf.toolbarCanvas;
         } else {
             if(gpl.nobg) {
                 delete viewConfig.backgroundColor;
             }
-            self.canvas = new fabric.Canvas(self.canvasElID, viewConfig);
+            managerSelf.canvas = new fabric.Canvas(managerSelf.mainCanvasElId, viewConfig);
+            gpl.canvases.main = managerSelf.canvas;
         }
 
-        self._getObjectCount = 0;
-        self._getObjectTime = 0;
+        managerSelf.$mainUpperCanvas = $('#' + managerSelf.mainCanvasElId + ' + .upper-canvas');
+        managerSelf.$mainCanvasContainer = $('#' + managerSelf.mainCanvasElId).parent();
+
+        managerSelf._getObjectCount = 0;
+        managerSelf._getObjectTime = 0;
 
         // if(gpl.isEdit) {
-            // self.coordinateText = new fabric.Text('x,x', {
+            // managerSelf.coordinateText = new fabric.Text('x,x', {
             //     top: 0,
             //     left: window.innerWidth - 200,
             //     textAlign: 'center',
@@ -6588,20 +7246,20 @@ gpl.Manager = function() {
             //     gplType: 'label'
             // });
 
-            // self.canvas.add(self.coordinateText);
+            // managerSelf.canvas.add(managerSelf.coordinateText);
 
-            // self.registerHandler({
+            // managerSelf.registerHandler({
             //     event: 'mouse:move',
             //     handler: function(event) {
-            //         var pointer = self.canvas.getPointer(event.e);
-            //         self.coordinateText.text = pointer.x + ',' + pointer.y;
-            //         self.renderAll();
+            //         var pointer = managerSelf.canvas.getPointer(event.e);
+            //         managerSelf.coordinateText.text = pointer.x + ',' + pointer.y;
+            //         managerSelf.renderAll();
             //     }
             // });
         // }
 
-        self.showCoordinateText = function() {
-            self.coordinateText = new fabric.Text('x,x', {
+        managerSelf.showCoordinateText = function() {
+            managerSelf.coordinateText = new fabric.Text('x,x', {
                 top: 0,
                 left: window.innerWidth - 200,
                 textAlign: 'center',
@@ -6610,90 +7268,76 @@ gpl.Manager = function() {
                 gplType: 'label'
             });
 
-            self.canvas.add(self.coordinateText);
+            managerSelf.canvas.add(managerSelf.coordinateText);
 
-            self.registerHandler({
+            managerSelf.registerHandler({
                 event: 'mouse:move',
                 handler: function(event) {
-                    var pointer = self.canvas.getPointer(event.e);
-                    self.coordinateText.text = pointer.x + ',' + pointer.y;
-                    self.renderAll();
+                    var pointer = managerSelf.canvas.getPointer(event.e);
+                    managerSelf.coordinateText.text = Math.round(pointer.x) + ',' + Math.round(pointer.y);
+                    managerSelf.renderAll();
                 }
             });
         };
 
-        self.canvas.sendToBackGPL = function(obj) {
+        fabric.Canvas.prototype.sendToBackGPL = function(obj) {
             fabric.util.removeFromArray(this._objects, obj);
             this._objects.unshift(obj);
         };
 
-        self.canvas.bringToFrontGPL = function (obj) {
+        fabric.Canvas.prototype.bringToFrontGPL = function (obj) {
             fabric.util.removeFromArray(this._objects, obj);
             this._objects.push(obj);
         };
 
-        self.sendToBack = function(obj) {
-            self.canvas.sendToBackGPL(obj);
+        managerSelf.sendToBack = function(obj) {
+            managerSelf.canvas.sendToBackGPL(obj);
         };
 
-        self.bringToFront = function(obj) {
-            self.canvas.bringToFrontGPL(obj);
+        managerSelf.bringToFront = function(obj, canvas) {
+            (canvas || managerSelf.canvas).bringToFrontGPL(obj);
         };
 
-        self.tooltip = new fabric.IText('', {
-            // backgroundColor: self.tooltipFill,
-            fill: self.tooltipFontColor,
-            fontSize: 12,
-            fontFamily: 'arial',
-            fontWeight: 'normal',
-            // width: 30,
-            lineHeight: 1,
-            // padding: 150,
-            selectable: false,
-            evented: false,
-            visible: false
-        });
+        // managerSelf.tooltip = new fabric.IText('', {
+        //     // backgroundColor: managerSelf.tooltipFill,
+        //     fill: managerSelf.tooltipFontColor,
+        //     fontSize: 12,
+        //     fontFamily: 'arial',
+        //     fontWeight: 'normal',
+        //     // width: 30,
+        //     lineHeight: 1,
+        //     // padding: 150,
+        //     selectable: false,
+        //     evented: false,
+        //     visible: false
+        // });
 
-        self.tooltipRect = new fabric.Rect({
-            fill: self.tooltipFill,
-            height: 22,
-            width: 25,
-            selectable: false,
-            evented: false,
-            visible: false
-        });
+        // managerSelf.tooltipRect = new fabric.Rect({
+        //     fill: managerSelf.tooltipFill,
+        //     height: 22,
+        //     width: 25,
+        //     selectable: false,
+        //     evented: false,
+        //     visible: false,
+        //     rx: 3,
+        //     ry: 3
+        // });
 
-        self.canvas.add(self.tooltip);
+        // managerSelf.canvas.add(managerSelf.tooltip);
     };
 
-    self.initToolbar = function() {
-        // var $dragEls = $('.toolbar-item');
-
-        // $dragEls.draggable({
-        //     revert: 'invalid',
-        //     helper: 'clone',
-        //     opacity: 0.9,
-        //     cursor: 'move'
-        // });
-
-        // self.$canvasEl.droppable({
-        //     drop: function() {
-        //         console.log('drop', arguments);
-        //     }
-        // });
-
-        // self.canvas.calcOffset();
+    managerSelf.initToolbar = function() {
         if(gpl.isEdit) {
-            self.toolbar = new gpl.Toolbar(self);
+            managerSelf.toolbar = new gpl.Toolbar(managerSelf);
         }
     };
 
-    self.initManagers = function() {
-        gpl.blockManager = new gpl.BlockManager(self);
-        gpl.lineManager = new gpl.LineManager(self);
+    managerSelf.initManagers = function() {
+        gpl.blockManager = new gpl.BlockManager(managerSelf);
+        gpl.lineManager = new gpl.LineManager(managerSelf);
     };
 
-    self.initQualityCodes = function() {
+    managerSelf.initQualityCodes = function() {
         var codes = gpl._qualityCodes.Entries,
             c,
             code;
@@ -6710,13 +7354,13 @@ gpl.Manager = function() {
         }
     };
 
-    self.initShapes = function() {
+    managerSelf.initShapes = function() {
         var sequence = gpl.json,
             lines = sequence.line || [],
             blocks = sequence.block || [],
             dynamics = (sequence.dynamics && sequence.dynamics.dynamic) || [],
             found = false,
-            // ctx = self.canvas.getContext(),
+            // ctx = managerSelf.canvas.getContext(),
             block,
             blocktype,
             blockCfg,
@@ -6738,30 +7382,34 @@ gpl.Manager = function() {
 
         for(c=0; c<blocks.length; c++) {
             block = blocks[c];
-            blockCfg = self.blockTypes[block.blockType || block.type];
+            block._idx = c;
+            blockCfg = managerSelf.blockTypes[block.blockType || block.type];
 
             if(blockCfg) {
                 blocktype = blockCfg.blockType;
 
                 if(blocktype && gpl.blocks[blocktype]) {
                     found = true;
-                    config = $.extend(true, {}, block);
-                    config.iconType = block.blockType;
-                    config._idx = c;
 
-                    if(!gpl.isEdit) {
-                        config.selectable = false;
-                        config.draggable = false;
-                        config.lockMovementX = true;
-                        config.lockMovementY = true;
+                    if(gpl.blockManager.isActiveUPI(block, gpl.blocks[blocktype])) {
+                        config = $.extend(true, {}, block);
+                        config.iconType = block.blockType;
+                        config._idx = c;
+
+                        if(!gpl.isEdit) {
+                            config.selectable = false;
+                            config.draggable = false;
+                            config.lockMovementX = true;
+                            config.lockMovementY = true;
+                        }
+
+                        newBlock = gpl.blockManager.create({
+                            cls: gpl.blocks[blocktype],
+                            cfg: config
+                        });
+
+                        block.gplId = newBlock.gplId;
                     }
-
-                    newBlock = gpl.blockManager.create({
-                        cls: gpl.blocks[blocktype],
-                        cfg: config
-                    });
-
-                    block.gplId = newBlock.gplId;
                 }
             }
 
@@ -6784,8 +7432,8 @@ gpl.Manager = function() {
                 });
             }
 
-            newLine = new gpl.ConnectionLine(coords, self.canvas);
-            self.shapes.push(newLine);
+            newLine = new gpl.ConnectionLine(coords, managerSelf.canvas);
+            managerSelf.shapes.push(newLine);
         }
 
         for(c=0; c<dynamics.length; c++) {
@@ -6796,21 +7444,21 @@ gpl.Manager = function() {
         //     text.render(ctx);
         // });
 
-        self.renderAll();
+        managerSelf.renderAll();
     };
 
-    self.initKnockout = function() {
-        ko.applyBindings(self.bindings);
+    managerSelf.initKnockout = function() {
+        ko.applyBindings(managerSelf.bindings);
     };
 
-    self.initSocket = function() {
+    managerSelf.initSocket = function() {
         if(!gpl.noSocket) {
             var socket = io.connect('http://' + window.location.hostname + ':8085');
 
 
-            self.socket = socket;
+            managerSelf.socket = socket;
 
-            self.pauseRender();
+            managerSelf.pauseRender();
 
             socket.on('connect', function() {
                 var sess = {};
@@ -6825,7 +7473,7 @@ gpl.Manager = function() {
                 }
             });
 
-            self.keepAliveInterval = setInterval(function() {
+            managerSelf.keepAliveInterval = setInterval(function() {
                 $.ajax({
                     url: '/home'
                 }).done(function(data) {
@@ -6842,7 +7490,6 @@ gpl.Manager = function() {
 
             socket.on('sequenceUpdateMessage', function(message) {
                 gpl.showMessage('Sequence Saved');
-                offsetPositions(false);
             });
 
             socket.on('sequencePointsUpdated', function(data) {
@@ -6850,7 +7497,7 @@ gpl.Manager = function() {
                 // gpl.showMessage(JSON.stringify(data, null, 3));
             });
 
-            self.registerHandler({
+            managerSelf.registerHandler({
                 event: 'unload',
                 handler: function() {
                     socket.disconnect();
@@ -6859,7 +7506,7 @@ gpl.Manager = function() {
                 window: true
             });
 
-            self.keepAliveInterval = (function() {
+            managerSelf.keepAliveInterval = (function() {
                 var ret,
                     fn = function() {
                         socket.emit('doRefreshSequence', {
@@ -6876,11 +7523,12 @@ gpl.Manager = function() {
         }
     };
 
-    self.initEvents = function() {
-        window.onbeforeunload = self.handleNavigateAway;
-        self.registerHandlers([{
-            event: 'mousedown',
+    managerSelf.initEvents = function() {
+        window.onbeforeunload = managerSelf.handleNavigateAway;
+        managerSelf.registerHandlers([{
+            event: 'mouseup',
             type: 'DOM',
+            window: true,
             handler: function(event) {
                 var scrollTop = $(window).scrollTop(),
                     scrollLeft = $(window).scrollLeft(),
@@ -6888,27 +7536,76 @@ gpl.Manager = function() {
                     top = parseInt(event.clientY, 10) + 5 + scrollTop;
 
                 if(event.which === 3) {
-                    self.openContextMenu(left, top, event);
-                    return false;
+                    managerSelf.openContextMenu(left, top, event);
+                    event.preventDefault();
                 }
             }
         }, {
-            event: 'mouse:move',
+            event: 'mousemove',
+            type: 'DOM',
             handler: function(event) {
-                var pointer = self.canvas.getPointer(event.e),
-                    x = pointer.x,
-                    y = pointer.y,
-                    obj = gpl.manager.getObject({
-                        left: x,
-                        top: y,
-                        gplType: 'block'
-                    });
+                var x = event.pageX,
+                    y = event.pageY,
+                    dx = event.originalEvent.movementX,
+                    dy = event.originalEvent.movementY,
+                    zoomStep = -0.01,
+                    movementStep = 1,
+                    newZoom,
+                    text,
+                    obj = managerSelf.canvas.findTarget(event),
+                    gplObj = obj?gpl.blockManager.getBlock((obj || {}).gplId):null;
+                    // obj = gpl.manager.getObject({
+                    //     left: Math.round(x/gpl.scaleValue),
+                    //     top: Math.round(y/gpl.scaleValue),
+                    //     gplType: 'block'
+                    // }),
+                    // gplObj = gpl.blockManager.getBlock((obj || {}).gplId);
 
-                if(obj) {
-                    self.updateTooltip(obj._pointData.Name, x, y);
+                if(managerSelf.middleMouseDown) {
+                    newZoom = gpl.scaleValue + zoomStep * dy;
+                    if(newZoom > gpl.MAXZOOM) {
+                        newZoom = gpl.MAXZOOM;
+                    } else if(newZoom < gpl.MINZOOM) {
+                        newZoom = gpl.MINZOOM;
+                    }
+
+                    managerSelf.scale(newZoom);
+                } else if(managerSelf.rightClickDown) {
+                    managerSelf.pan(dx, dy);
                 } else {
-                    self.clearTooltip();
+                    if(gplObj && !gplObj.isToolbar && gplObj.blockType !== 'Constant') {
+                        text = (gpl.pointUpiMap[gplObj.upi] || {}).Name;
+                        managerSelf.updateTooltip(text, x, y);
+                    } else {
+                        managerSelf.clearTooltip();
+                    }
                 }
+            }
+        }, {
+            event: 'mousedown',
+            type: 'DOM',
+            handler: function(event) {
+                var which = event.which;
+
+                switch(which) {
+                    case 2: managerSelf.middleMouseDown = true;
+                            event.preventDefault();
+                            break;
+                    case 3: managerSelf.rightClickDown = true;
+                            event.preventDefault();
+                            break;
+                }
+            }
+        }, {
+            event: 'mouseup',
+            type: 'DOM',
+            handler: function(event) {
+                managerSelf.middleMouseDown = false;
+                managerSelf.rightClickDown = false;
+                // if(managerSelf.hasPanned) {
+                //     managerSelf.canvas.calcOffset();
+                // }
+                managerSelf.hasPanned = false;
             }
         }, {
             event: 'object:moving',
@@ -6928,8 +7625,6 @@ gpl.Manager = function() {
                     top: Math.round(e.target.top / gpl.gridSize) * gpl.gridSize
                 });
 
-                // log('moving object', e, gpl.manager.state);
-
                 if(e.target instanceof fabric.Group) {
                     objects = e.target._objects;
                     for(c=0; c<objects.length; c++) {
@@ -6948,25 +7643,19 @@ gpl.Manager = function() {
                     }
                 }
 
-                self.movedObjects = gplObjects;
+                managerSelf.movedObjects = gplObjects;
 
                 for(object in gplObjects) {
                     if(gplObjects.hasOwnProperty(object)) {
-                        // gplObjects[object].gplObject.syncObjects(gplObjects[object].object);
                         gplObjects[object].gplObject.setOffset(offset);
                     }
                 }
             }
         }, {
-        //     event: 'object:selected',
-        //     handler: function(event) {
-        //         log('selected', event);
-        //     }
-        // }, {
             event: 'selection:cleared',
             handler: function(event) {
                 var object,
-                    gplObjects = self.movedObjects;
+                    gplObjects = managerSelf.movedObjects;
 
                 if(gplObjects) {
                     for(object in gplObjects) {
@@ -6976,71 +7665,19 @@ gpl.Manager = function() {
                     }
                 }
 
-                self.gplObjects = null;
+                managerSelf.gplObjects = null;
             }
         }, {
             event: 'selection:created',
             handler: function(event) {
-                // var group = event.target,//remove non-blocks, but add blocks you only have anchor selection of
-                //     // newGroup,
-                //     idsToAdd = [],
-                    // blocks = [],
-                // var start = new Date();
-                    // id,
-                    // obj,
-                    // c;
-
-                self.canvas.deactivateAll();
-
-                // group.forEachObject(function(obj) {
-                //     // if(obj.gplId && idsToAdd.indexOf(obj.gplId) === -1) {
-                //     //     idsToAdd.push(obj.gplId);
-                //     // }
-                //     if(obj.gplType !== 'block') {
-                //         // log('removing', obj.gplId, obj.gplType);
-                //         group.removeWithUpdate(obj);
-                //     }
-                //     // else {
-                //         if(obj.gplId && idsToAdd.indexOf(obj.gplId) === -1 && obj.gplType && obj.gplType !== 'line') {
-                //             // log('adding', obj.gplId);
-                //             idsToAdd.push(obj.gplId);
-                //         }
-                //     // }
-                // });
-
-                // // self.canvas.deactivateAll();
-
-                // log('created in', new Date() - start);
-
-                // for(c=0; c<idsToAdd.length; c++) {
-                //     id = idsToAdd[c];
-                //     obj = gpl.blockManager.blocks[id];
-                //     if(obj) {
-                //         obj = obj._shapes[0];
-                //         // log('added', obj.gplType, obj.left, obj.top);
-                //         // group.addWithUpdate(obj);
-                //         // log('after', obj.left, obj.top);
-                //         // blocks.push(obj);
-                //     }
-                // }
-
-                // // group.addMultipleWithUpdate(blocks);
-
-                // // newGroup = new fabric.Group(blocks);
-
-                // // self.canvas.add(newGroup);
-                // self.renderAll();
-                // // group._originalLeft = group.left;
-                // // group._originalTop = group.top;
-
-                // log('created in', new Date() - start);
+                managerSelf.canvas.deactivateAll();
             }
         }, {
             event: 'mouse:up',
             handler:  function(event) {
-                self.mouseDown = true;
+                managerSelf.mouseDown = true;
 
-                var pointer = self.canvas.getPointer(event.e),
+                var pointer = managerSelf.canvas.getPointer(event.e),
                     x = pointer.x,
                     y = pointer.y,
                     obj = gpl.manager.getObject({
@@ -7049,16 +7686,16 @@ gpl.Manager = function() {
                         gplType: 'anchor'
                     });
 
-                if(gpl.isEdit && gpl.manager.state === null && !self.isEditingLine && obj && event.e.which === 1) {
+                if(gpl.isEdit && gpl.manager.state === null && !managerSelf.isEditingLine && obj && event.e.which === 1) {
                     x = obj.left + obj.width/2;
                     y = obj.top + obj.height/2;
-                    self.shapes.push(new gpl.SchematicLine(x, y, obj, self, obj.isVertical));
+                    managerSelf.shapes.push(new gpl.SchematicLine(x, y, obj, managerSelf, obj.isVertical));
                 }
             }
         }, {
             event: 'mouse:up',
             handler: function(event) {
-                var pointer = self.canvas.getPointer(event.e),
+                var pointer = managerSelf.canvas.getPointer(event.e),
                     x = pointer.x,
                     y = pointer.y,
                     obj;
@@ -7068,50 +7705,25 @@ gpl.Manager = function() {
                 if(event.e.which === 3) {
                     obj = gpl.manager.getObject({
                         left: x,
-                        top: y//,
-                        // multiple: true,
-                        // gplType: 'block'
+                        top: y
                     });
 
                     if(obj) {
                         obj = gpl.blockManager.getBlock(obj.gplId);
-                        // gpl.blockManager.openBlockEditor(obj);
                         if(obj) {
                             log(obj);
                         }
-                        // log('adding object');
-                        // gpl._rightClickTargets.push(obj);
-
-                        // if(gpl._rightClickTargets.length === 2) {
-                        //     gpl.validate.connection(gpl._rightClickTargets[0], gpl._rightClickTargets[1]);
-                        //     gpl._rightClickTargets = [];
-                        // }
                     }
                 }
             }
         }, {
-        //     event: 'unload',
-        //     handler: function(event) {
-        //         // if(gpl.isEdit) {
-        //         //     self.canvas.removeListeners();
-        //         // }
-        //         // $(document).off();
-        //         // $(window).off();
-        //         // self.canvas.dispose();
-        //         // // self.canvas.clear();
-        //         // $(self.canvas.wrapperEl).remove();
-        //         // gpl = {};
-        //         // $('body').html('');
-        //         return 'blah';
-        //     },
+        //     event: 'resize',
         //     type: 'DOM',
-        //     window: true
+        //     window: true,
+        //     handler: function() {
+        //         managerSelf.resizeCanvas(window.innerWidth, window.innerHeight);
+        //     }
         // }, {
-            event: 'resize',
-            type: 'DOM',
-            window: true,
-            handler: self.resizeCanvas
-        }, {
             event: 'keydown',
             handler: function(event) {
                 var objects,
@@ -7123,15 +7735,15 @@ gpl.Manager = function() {
 
                 if(gpl.isEdit) {
                     if(event.which === gpl.DELETEKEY) {
-                        objects = self.canvas.getActiveGroup();
-                        object = self.canvas.getActiveObject();
+                        objects = managerSelf.canvas.getActiveGroup();
+                        object = managerSelf.canvas.getActiveObject();
 
                         if(objects) {
                             objects = objects._objects;
                             for(c=0; c<objects.length; c++) {
                                 object = objects[c];
                                 gplId = object.gplId;
-                                self.canvas.remove(object);
+                                managerSelf.canvas.remove(object);
                                 gplObject = gpl.lineManager.lines[gplId] || gpl.blockManager.blocks[gplId];
                                 if(gplObject) {
                                     if(gplObject instanceof gpl.ConnectionLine) {
@@ -7147,7 +7759,6 @@ gpl.Manager = function() {
                         if(object) {
                             if(object.gplType === 'block') {
                                 gplObject = gpl.blockManager.blocks[object.gplId];
-                                // self.canvas.remove(object);
                                 evt = 'deleteblock';
                             } else if(object instanceof fabric.Line) {
                                 gplObject = gpl.lineManager.lines[object.gplId];
@@ -7160,23 +7771,43 @@ gpl.Manager = function() {
                             }
                         }
 
-                        self.canvas.discardActiveObject();
-                        self.canvas.discardActiveGroup();
-                        // self.renderAll();
+                        managerSelf.canvas.discardActiveObject();
+                        managerSelf.canvas.discardActiveGroup();
 
                         if(gplObject) {
                             gpl.fire(evt, gplObject);
                         }
-                        self.renderAll();
+                        managerSelf.renderAll();
                     }
                 }
             },
             type: 'DOM'
         }]);
 
-        gpl.on('newblock', function(block) {
-            self.addToBoundingRect(block);
+        $('body').on('hide.bs.modal', '.modal', function() {
+            managerSelf.modalOpen = false;
         });
+
+        $('body').on('show.bs.modal', '.modal', function() {
+            managerSelf.modalOpen = true;
+        });
+
+        gpl.on('newblock', function(block) {
+            managerSelf.addToBoundingRect(block);
+        });
+
+        gpl.on('openwindow', function() {
+            managerSelf.clearTooltip();
+            managerSelf.contextMenu.jqxMenu('close');
+        });
+
+        managerSelf.handleColorChange = function(newColor) {
+            managerSelf.bindings.deviceBackgroundColor(newColor);
+        };
+
+        managerSelf.bgColorPicker = new CustomColorsPicker(gpl.$bgColorPicker, managerSelf.handleColorChange, managerSelf.backgroundColor);
+        managerSelf.bgColorPicker.render();
+
     };
 
     init();

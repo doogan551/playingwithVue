@@ -654,8 +654,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         };
 
         if (["Analog Input", "Analog Output"].indexOf(self.data["Point Type"].Value()) === -1) {
-            self.selectedIODevice(self.data["Sensor I/O Device"].eValue());
-            self.selectedSensorIOType(self.data["Sensor I/O Type"].eValue());
+            self.selectedIODevice(self.data["Sensor IO Device"].eValue());
+            self.selectedSensorIOType(self.data["Sensor IO Type"].eValue());
             self.selectedSensorRTDType((self.data["Sensor RTD Type"].eValue() === 0) ? 1 : self.data["Sensor RTD Type"].eValue());
             self.selectedVelocityType(self.data["Velocity Type"].eValue());
             self.minSensorValue(self.data["Minimum Sensor Value"].Value());
@@ -784,10 +784,10 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 self.data["Maximum Value"].Value(self.maxValue());
                 self.data["Velocity Flow"].Value(self.velocityFlow());
                 self.data["Velocity Pressure"].Value(self.velocityPressure());
-                self.data["Sensor I/O Device"].eValue(self.selectedIODevice());
-                self.data["Sensor I/O Device"].Value(self.sensorMatrix["Sensor IO Devices"][self.selectedIODevice()].option);
-                self.data["Sensor I/O Type"].eValue(self.selectedSensorIOType());
-                self.data["Sensor I/O Type"].Value(self.sensorMatrix["Sensor IO Types"][self.selectedSensorIOType()].option);
+                self.data["Sensor IO Device"].eValue(self.selectedIODevice());
+                self.data["Sensor IO Device"].Value(self.sensorMatrix["Sensor IO Devices"][self.selectedIODevice()].option);
+                self.data["Sensor IO Type"].eValue(self.selectedSensorIOType());
+                self.data["Sensor IO Type"].Value(self.sensorMatrix["Sensor IO Types"][self.selectedSensorIOType()].option);
                 self.data["Sensor RTD Type"].eValue(self.selectedSensorRTDType());
                 self.data["Sensor RTD Type"].Value(self.sensorMatrix["Sensor RTD Types"][self.selectedSensorRTDType()].option);
                 self.data["Velocity Type"].eValue(self.selectedVelocityType());

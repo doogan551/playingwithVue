@@ -249,7 +249,7 @@ body {
 	background-position:0 0,8px 8px,0 1px,8px 9px;
 	/*background-color:#2f3031;*/
     background-color:#b6b6b6;
-	background-size:16px 16px;
+	background-size:auto;
 }
 #displayGrid1,
 #zoverlay,
@@ -530,4 +530,16 @@ a.autoZoom {
 }
 .hide {
     display: none !important;
+}
+
+.strikethrough-line {
+    display:inline-block;
+    border: 2px solid #FF0000;
+    margin: 1px;
+    padding: 1px;
+    position: relative;
+	text-decoration: line-through;
+	color: red;
+    /*background:url("/img/displays/strikethroughline.png");*/
+    background-size:100% 100%;
 }

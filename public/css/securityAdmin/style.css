@@ -284,6 +284,22 @@ ul.list {
     padding: 5px;
     text-align: center;
     vertical-align: middle;
+    z-index: -100;
+}
+.profilePhotoEdit {
+    text-align: center;
+    vertical-align: middle;
+    z-index: 100;
+    position: absolute;
+    top: 25px;
+    left: 100px;
+    display: none;
+}
+.profilePhoto:hover .profilePhotoEdit{
+    display: block;
+}
+.uploadPhoto{
+    display: none;
 }
 #DT_Security_groups .profilePhoto {
     margin: 0 10px 0 0;

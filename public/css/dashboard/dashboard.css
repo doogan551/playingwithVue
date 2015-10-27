@@ -1,0 +1,1572 @@
+/*
+light green: 33B171;
+white: ffffff;
+dark green: 2B8453;
+dark green lighter: 339e63;
+dark grey: #696969;
+light white/grey: adadad;
+*/
+
+/* Override jquery clockpicker */
+.btn-success:hover, .btn-success:focus, .btn-primary:hover, .btn-primary:focus {
+    color: #FFF !important;
+}
+/* override jquery clockpicker */
+/* Main Dashboard --------------------------- */
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    overflow: hidden;
+}
+
+.rm10px {
+    margin-right: 10px;
+}
+
+.rm20px {
+    margin-right: 20px;
+}
+
+.bm15px {
+    margin-bottom: 15px;
+}
+.caret.lm10px {
+    margin-left: 10px;
+}
+.editMode .hideInEdit {
+    display: none;
+}
+.viewMode .showInEdit {
+    display: none;
+}
+.showInPrint {
+    display: none;
+}
+.bold {
+    font-weight: bold;
+}
+
+.loading .showInEdit,
+.viewMode .showInEdit,
+.loading .page,
+.loading .utility,
+.loading .hideLoading {
+    display: none !important;
+}
+
+
+.editMode .editPointer {
+    cursor: pointer;
+}
+
+.flexrow,
+.flexcolumn {
+    display: flex !important;
+}
+
+.flexrow {
+    flex-direction: row;
+}
+
+.flexcolumn {
+    flex-direction: column;
+}
+
+.flexFill {
+    flex: 2;
+}
+
+.flexaround {
+    justify-content: space-around;
+}
+
+.flexcenter {
+    justify-content: center;
+}
+
+.flexcenteritem {
+    align-self: center;
+}
+
+.input-sm {
+    width: auto;
+}
+
+.input-full {
+    width: 100%;
+}
+
+.input-tiny {
+    width: 50px;
+    display: inline-block;
+}
+
+.selectSm {
+    width: auto;
+}
+
+.modal-lg {
+    width: 900px;
+}
+
+.table-fixed {
+    table-layout: fixed;
+}
+
+.bgImage {
+    background-size: cover;
+    background-repeat: no-repeat;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -2;
+}
+
+.bgRepeat {
+    background-size: auto;
+    background-repeat: repeat;
+}
+
+.topBar .title {
+    font-size: 2em;
+    float: left;
+}
+.topBar .dropdown {
+    width: auto;
+    float: left;
+    margin-right: 35px;
+}
+
+.topBar .dropdown .dropdownHeader {
+    margin-left: 20px;
+    color: #adadad;
+}
+
+.topBar .dropdown .btn {
+    background-color: #FFF;
+    border-color: #DECCAA;
+}
+.topBar .dropdown .btn:focus {
+    outline: 5px auto #DECCAA;
+}
+.topBar .dropdown .btn:active {
+    webkit-box-shadow: inset 0 3px 5px rgba(185, 128, 42, 0.1);
+    box-shadow: inset 0 3px 5px rgba(185, 128, 42, 0.1);
+}
+.topBar .buttonBar .btn:not(.btn-success) {
+    margin-left: 15px;
+}
+
+.clockpicker-popover {
+    z-index: 5000;
+}
+
+.modal {
+    overflow-y: auto;
+}
+
+.modal-content {
+    border-radius: 16px;
+}
+
+.modal:not(.modal-plain) .modal-header {
+    background-color: #33B171;
+    color: #ffffff;
+    border-radius: 16px 16px 0 0;
+}
+
+.modal .modal-content .modal-header-white {
+    background-color: #ffffff;
+    color: #333333;
+}
+
+.modal-body-scroll {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.modal-plain .modal-footer {
+    margin-top: 0;
+    border-top: none;
+}
+
+.modal-header .panel-title {
+    /* JDR - i think this looks better without bold */
+    /*font-weight: bold;*/
+    font-size: 1.4em;
+}
+
+.modal-content .title {
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    padding-left: 1.2em;
+    text-indent: -1.2em;
+}
+
+.dashboardContent {
+    z-index: 5;
+    position: relative;
+    margin-left: 100px;
+}
+
+.leftBar {
+    z-index: 5;
+    position: absolute;
+    top: 0;
+    bottom: 25px;
+    left: 0;
+    padding-bottom: 10px;
+    width: 100px;
+    text-align: center;
+    color: #ffffff;
+    background-color: #33B171;
+    border-right: 2px solid #696969;
+    overflow: hidden;
+    overflow-y: auto;
+}
+.leftBar .icon {
+    width: 30px;
+    height: 30px;
+    margin-top: 20px;
+    border-radius: 25px;
+    background-color: #FFF;
+    margin-left: auto;
+    margin-right: auto;
+}
+.leftBar .addUtility {
+    margin: 20px 0 10px;
+}
+.leftBar .addUtility a {
+    color: #FFF;
+}
+.leftBar .addUtility a:hover {
+    color: #FFF;
+}
+
+.leftBar .icon {
+    cursor: pointer;
+}
+
+.leftBar .icon img {
+    height: 25px;
+}
+
+.leftBar .icon-lg {
+    width: 50px;
+    height: 50px;
+    background-color: #ffffff;
+    color: #2B8453;
+    padding-top: 3px;
+    display: block;
+}
+
+.leftBar .icon.active {
+    background-color: #ffffff;
+}
+
+.leftBar .icon img {
+    display: inline-block;
+    margin-top: 2px;
+    color: #2B8453;
+}
+
+.leftBar .title {
+    padding: 5px;
+    cursor: pointer;
+}
+
+.leftBar .editUtility {
+    cursor: pointer;
+    margin-top: -5px;
+}
+
+.leftBar .editUtility i {
+    position: relative;
+    margin-right: 5px;
+    top: -2px;
+    font-size: 0.8em;
+}
+
+.leftBar .title:hover,
+.leftBar .editUtility:hover  {
+    text-decoration: underline;
+}
+
+.arrow_box {
+    margin-top: 5px;
+    padding: 0 5px;
+    position: relative;
+    background: #2B8453;
+}
+
+.arrow_box:after {
+    bottom: 100%;
+    left: 50%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+    border-bottom-color: #2B8453;
+    border-width: 8px;
+    margin-left: -8px;
+}
+
+.arrow_box ul {
+    list-style-type: none;
+    padding: 1px 0;
+    text-align: left;
+}
+
+.arrow_box li {
+    margin: 10px 2px;
+}
+
+.arrow_box li .selected {
+    text-decoration: underline;
+}
+
+
+.arrow_box li a {
+    color: #ffffff;
+    font-size: .9em;
+    display: inline-block;
+}
+
+/*.leftBar a {
+    color: #2B8453;
+}*/
+
+.pop {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 25px;
+    width: 100px;
+    font-size: 0.9em;
+    z-index: 5;
+    background-color: #33B171;
+    border-top: 2px solid #2B8453;
+    border-right: 2px solid #696969;
+    text-align: center;
+    padding-top: 3px;
+}
+
+.pop a {
+    color: #ffffff;
+}
+
+.pop .fa-arrow-circle-up,
+.pop .fa-arrow-circle-down {
+    margin-right: 3px;
+    -ms-transform: rotate(45deg); /* IE 9 */
+    -webkit-transform: rotate(45deg); /* Chrome,
+Safari,
+Opera */
+    -moz-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+.infoMessage {
+    background-color: #FFF;
+    border-radius: 5px;
+    padding: 20px;
+    border: 1px solid #888;
+}
+.infoMessage-small {
+    padding: 10px;
+}
+.infoMessage i {
+    font-size: larger;
+    margin-right: 10px;
+}
+
+.noUtilityAccess {
+    padding: 10px;
+}
+
+.placeholderHelp {
+    margin: 20px 0 20px;
+    padding: 10px;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    background-color: #EEE;
+    font-family: monospace;
+    color: coral;
+}
+.dropdown-menu.availablePeriods .month {
+    margin-left: 10px;
+}
+.dropdown-menu.availablePeriods .year {
+    font-weight: bold;
+}
+/* End Main Dashboard ----------------------- */
+
+.thinScroll::-webkit-scrollbar {
+    width: 7px;
+}
+.thinScroll::-webkit-scrollbar-track {
+    background-color: #FFF;
+}
+.thinScroll::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    background-color: #CCC;
+}
+
+/* Electricity Dashboard -------------------- */
+
+.bgOverlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: #000000;
+    z-index: -1;
+}
+
+.topBar {
+    height: 78px;
+    width: 100%;
+    border-bottom: 2px solid #696969;
+    background-color: rgba(255, 255, 255, 0.5);
+    padding: 20px;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-direction: row;
+    -ms-flex-direction: row;
+    flex-direction: row;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center
+}
+.topBarDashboard {
+    background-color: rgba(255,255,255,0.9);
+}
+
+.addStatistic {
+    width: 65px;
+    text-align: center;
+    margin-left: 15px;
+    border: 2px dashed #2B8453;
+    padding: 5px;
+    border-radius: 5px;
+    color: #333333;
+}
+
+.addStatistic:hover {
+    color: #333333;
+}
+
+.statistic {
+    float: left;
+    font-size: .9em;
+    margin: 4px 10px;
+}
+
+.statistic .blockMsg {
+    display: none !important;
+}
+
+.viewMode .statistic .config {
+    display: none;
+}
+
+.statistic .config {
+    float: left;
+    margin-right: 5px;
+    margin-top: 1px;
+    color: #696969;
+}
+
+.statistic .statTitle {
+    border-bottom: 1px solid #adadad;
+}
+
+.statistic .statTitle a {
+    color: #696969;
+    cursor: default;
+}
+
+.editMode .statistic .statTitle a {
+    cursor: pointer;
+}
+
+.viewMode .statistic .statTitle a:hover {
+    color: #696969;
+    text-decoration: none;
+}
+
+.statistic .body .value {
+    font-size: 2.2em;
+    float: left;
+}
+
+.statistic .body .units {
+    color: #adadad;
+    float: left;
+    margin-left: 5px;
+    margin-top: 1.1em;
+}
+
+.topBar .buttonBar {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+}
+
+.topBar .errormessage {
+    position: absolute;
+    right: 4px;
+    top: 50px;
+    color: red;
+}
+
+.poppedIn .topBar .buttonBar {
+    right: 55px;
+}
+
+.loading .buttonBar,
+.loading .page {
+    display: none;
+}
+
+.page {
+    position: relative;
+}
+
+.mainContent {
+    padding: 20px 20px 0 20px;
+    overflow: auto;
+    width: 100%;
+}
+
+.handle {
+    float: left;
+    width: 10px;
+    background-image: url(/img/handle.png);
+    background-size: contain;
+    margin-right: 5px;
+    height: 25px;
+    cursor: move;
+}
+
+.dashboardGear {
+    color: #333333;
+}
+
+.dashboardGear i {
+    margin-right: 5px;
+}
+
+.portlet {
+    width: 33%;
+    background-color: #ffffff;
+    opacity: 0.9;
+    border-radius: 10px;
+    position: relative;
+    min-height: 130px;
+    display: inline-block;
+}
+
+.portlet .blockOverlay {
+    border-radius: 10px;
+}
+
+.portlet .title {
+    text-align: center;
+    font-size: 1.3em;
+}
+
+.editMode .portlet .dragHandle {
+    cursor: move;
+    background-color: #d4d4d4;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.portlet .highcharts-container {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+.portlet .content {
+    text-align: center;
+}
+
+.portlet .itemBackground {
+    align-self: center;
+}
+
+.portlet .content .value {
+    font-size: 4vw;
+    display: inline-block;
+}
+
+.portlet .content .units {
+    font-size: 2vw;
+    color: #adadad;
+    margin-left: 10px;
+    display: inline-block;
+}
+
+.portlet .lowerBar {
+    text-align: center;
+    font-size: 0.9em;
+    width: 100%;
+    align-self: flex-end;
+    z-index: 1;
+}
+
+.portlet .lowerBar .actions i {
+    margin: 0 5px;
+    color: #adadad;
+}
+
+.dashboardPeriod .radio {
+    margin-right: 1em;
+}
+
+.addItemBar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-color: #ffffff;
+    height: 80px;
+    border-top: 1px solid #adadad;
+}
+
+.addItemBar > div {
+    text-align: center;
+    min-width: 150px;
+    padding: 0 25px;
+    border-right: 1px solid #adadad;
+    background-color: #ffffff;
+}
+
+.addItemBar > div > img {
+    width: 90px;
+}
+
+.addItemBar .stat > img {
+    margin-top: 15px;
+}
+
+.addItemBar > .background {
+    border-right: none;
+    position: absolute;
+    right: 0;
+    height: 100%;
+    padding-right: 0px;
+}
+
+.addItemBar .backgroundPreview {
+    width: 70px;
+    height: 50px;
+    background-size: cover;
+    border: 1px solid #333333;
+}
+
+.addItemBar .sliders {
+    align-self: center;
+}
+
+.addItemBar .bgSlider {
+    margin-right: 10px;
+}
+
+.addItemBar .bgSlider i {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.addItemBar .slider.slider-vertical {
+    height: 45px;
+}
+
+.addItemBar .slider-track-high {
+    background: #C8E7F7;
+}
+
+/* modals */
+
+.scaleBar {
+    padding-top: 3px;
+}
+
+.scaleBar .btn {
+    line-height: 1;
+    font-size: 0.8em;
+    float: right;
+    margin-right: 5px;
+}
+
+.configText {
+    font-size: 1.3em;
+    font-style: italic;
+}
+
+.spacedRadioList .radio {
+    margin-right: 15px;
+}
+
+.colorPickerInline {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.sizeGrid {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    text-align: left;
+}
+
+.sizeGrid > div {
+    margin-bottom: 15px;
+}
+
+.dashboardHeader {
+}
+
+.dashboardHeader .dropdown {
+    float: left;
+}
+
+.dashboardBody .btn:hover {
+    color: #ffffff;
+}
+
+.backgroundImages {
+    max-height: 500px
+}
+
+.backgroundImages > div {
+    padding: 5px;
+    margin: 0;
+}
+
+.backgroundImages img {
+    /*max-width: 250px;*/
+    max-height: 156px;
+    /*margin: 5px;*/
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.backgroundImages .selected {
+    border: 5px solid green;
+}
+
+.backgroundPreview {
+    width: 2em;
+    height: 2em;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 5px;
+    border-radius: 5px;
+    border: 1px solid #333333;
+}
+
+.thresholdRow {
+    margin-bottom: 5px;
+}
+
+.thresholdRow input {
+    width: 80px;
+}
+
+.addThreshold {
+    color: #33B171;
+}
+
+/* End Electricity Dashboard ----------------- */
+
+
+/* Electricity Rate Table -------------------- */
+.rateTableSection {
+    background-color: #ffffff;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.rateTableSection .table {
+    margin-bottom: 0;
+}
+
+.rateTablePortlet table > tbody > tr > td {
+    border-top: none;
+}
+
+.rateTablePortlet input::-webkit-outer-spin-button,
+.rateTablePortlet input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.rateTable td:not(:first-child) {
+    text-align: center;
+}
+
+.rateTableSection .dateRange {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.rateTableSection .periodRow {
+    float: right;
+}
+
+.rateTableSection .period {
+    float: left;
+    text-align: center;
+    font-size: 0.9em;
+    margin: auto 15px;
+    padding: 0 15px;
+}
+
+.rateTableSection .winter > div:first-child {
+    border-top: 6px solid #41c9fd;
+}
+
+.rateTableSection .summer > div:first-child {
+    border-top: 6px solid #FCD02D;
+}
+
+.rateTableSection .transition > div:first-child {
+    border-top: 6px solid #cccccc;
+}
+
+.rateTableSection input.showInEdit {
+    width: 70px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.holidays table {
+    width: auto;
+}
+
+.holidays td {
+    width: auto;
+}
+
+.holidayRow {
+    height: 26px;
+}
+
+.rateDate {
+    float: left;
+    margin-right: 15px;
+}
+
+.rateTablePortlet {
+    margin-bottom: 25px;
+}
+
+.rateTablePortlet.dashed {
+    border: 2px dashed #cccccc;
+}
+
+.rateTablePortlet .addCollection {
+    font-size: 1.2em;
+    color: #cccccc;
+}
+
+.rateTablePortlet .calendar {
+    float: left;
+    margin-right: 15px;
+    background-image: url(/img/calendar.png);
+    width: 20px;
+    height: 20px;
+    background-size: contain;
+}
+
+.rateTablePortlet .tableTitle {
+    font-size: 1.3em;
+    margin-bottom: 5px;
+}
+
+.editLink {
+    color: #333333;
+    cursor: default;
+}
+
+.viewMode .editLink:hover {
+    text-decoration: none;
+    color: #333333;
+}
+
+.editMode .editLink:hover {
+    cursor: pointer;
+}
+
+.rateTablePortlet .addPeriod {
+    vertical-align: bottom;
+}
+
+.rateTablePortlet .addPeriod a,
+.rateTablePortlet .addRateElement a,
+.holidays a {
+    color: #33B171;
+}
+
+.electricityRatePeriodModal .radio,
+.electricityRatePeriodModal .checkbox {
+    margin-top: 0;
+}
+
+.electricityRatePeriodModal .modal-body > .row:not(:last-child) {
+    margin-bottom: 15px;
+}
+
+.electricityRatePeriodModal .form-inline .row {
+    margin-bottom: 10px;
+}
+
+.electricityRatePeriodModal .day {
+    width: 10%;
+    float: left;
+    text-align: center;
+}
+
+.electricityRatePeriodModal .day .checkbox {
+    display: block;
+}
+
+.electricityRatePeriodModal .seasonName {
+    width: auto;
+}
+.rateTableContent.currentFiscalYear {
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+@media print {
+    .rateTablePortlet {
+        page-break-inside: avoid;
+    }
+    .rateTablePortlet table, .rateTablePortlet table tr, .rateTablePortlet table td {
+        border: 1px solid #888;
+    }
+    .rateTablePortlet:not(.holidays) table td:last-child {
+        display: none;
+    }
+}
+/* End Electricity Rate Table ---------------- */
+
+/* Electricity Reports ----------------------- */
+.reportingmode.dropdown-menu li a, .reportingmode.dropdown-menu li a {
+    cursor: pointer;
+}
+
+.reportsGettingData {
+    display: none;
+}
+.reportsGettingData i {
+    margin-right: 5px;
+}
+
+.reportsContent {
+    padding: 10px;
+}
+
+.reportsContent .section {
+    page-break-inside: avoid;
+}
+
+.reportsContent .title {
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-size: 1.4em;
+    color: #333333;
+}
+
+.reportsContent .sectionTitle {
+    font-size: 1.3em;
+    color: #333333;
+}
+
+.reportsContent .section {
+    margin-bottom: 20px;
+}
+
+.reportsContent .sectionBody {
+    background-color: #ffffff;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.reportsContent .demandandusage table th,
+.reportsContent .demandandusage table td {
+    padding: 2px 20px;
+    text-align: right;
+}
+.reportsContent .demandandusage table th:first-child,
+.reportsContent .demandandusage table td:first-child {
+    text-align: left;
+    min-width: 200px;
+}
+
+.reportsContent .metertotals table th,
+.reportsContent .metertotals table td {
+    text-align: right;
+}
+.reportsContent .metertotals table th:first-child,
+.reportsContent .metertotals table td:first-child {
+    text-align: left;
+}
+.reportsContent .metertotals table tr:last-child td:first-child {
+    font-weight: bold;
+}
+.reportsContent .metertotals table th,
+.reportsContent .metertotals table td,
+.reportsContent .missingData table th,
+.reportsContent .missingData table td,
+.reportsContent .inactiveMeters table th,
+.reportsContent .inactiveMeters table td,
+.reportsContent .reportsgrid table th,
+.reportsContent .reportsgrid table td {
+    padding: 2px 20px;
+}
+.reportsContent .reportsgrid table th:not(:first-child),
+.reportsContent .reportsgrid table td:not(:first-child) {
+    text-align: right;
+}
+.reportsContent .reportsgrid table th:first-child,
+.reportsContent .reportsgrid table td:first-child {
+    padding: 2px 5px;
+    width: 140px;
+}
+@media print {
+    .reportsContent .reportsgrid table th,
+    .reportsContent .reportsgrid table td {
+        padding: 2px 10px;
+    }
+    .reportsContent .reportsgrid table th:first-child,
+    .reportsContent .reportsgrid table td:first-child {
+        padding: 2px 5px;
+        width: 150px;
+    }
+}
+
+/* End Electricity Reports ------------------- */
+
+/* Electricity Billing ----------------------- */
+.billingHeader {
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.billingContent {
+    padding-bottom: 20px;
+}
+
+.billTitle {
+    font-size: 1.3em;
+}
+
+.billingBar {
+    height: 10px;
+    display: inline-block;
+    margin-left: 20px;
+}
+
+.billingBar .progress {
+    display: inline-block;
+    width: 175px;
+    height: 8px;
+    margin-bottom: 0;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+}
+
+.billingPortlet {
+    margin-top: 20px;
+}
+
+.billingPortlet .title {
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.billTable {
+    border: 2px solid #696969;
+    background-color: #ffffff;
+    padding: 6px 20px 10px 20px;
+}
+
+.billTable table {
+    width: 100%;
+}
+
+.billTable table td {
+    vertical-align: top;
+}
+.billTable table th:not(:first-child) {
+    text-align: right;
+    width: 125px;
+}
+
+.billTable table th:last-child {
+    text-align: right;
+}
+
+.billTable table td:not(:first-child) {
+    text-align: right;
+    width: 125px;
+}
+
+.billTable table td:last-child {
+    text-align: right;
+}
+
+.billTable table tr:last-child td {
+    padding-top: 15px;
+}
+
+.billTable table tr:last-child td:last-child {
+    font-weight: bold;
+}
+
+.billTable .total {
+    font-weight: bold;
+}
+
+.billing.gettingData div {
+    display: inline;
+    padding-left: 5px;
+}
+.billing.committed {
+    max-width: 300px;
+}
+.billing.committed i {
+    float: left;
+    padding: 4px 10px 0 0;
+    font-size: 30px;
+    color: #5BC377;
+}
+.billing .commitInfo:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+.billTitle {
+    display: inline-block;
+}
+.billTitle i {
+    padding-right: 5px;
+    cursor: pointer;
+}
+.editMode .billTitle {
+    cursor: pointer;
+}
+.editMode .billTitle span:hover {
+    text-decoration: underline;
+}
+.billingTopBar button i {
+    display: none;
+    margin-right: 10px;
+}
+.billingTopBar .dropdown-menu.availablePeriods i {
+    color: #5BC377;
+    margin-right: 10px;
+}
+li.billingFiscalYear a {
+    font-weight: bold;
+    margin-top: 10px;
+}
+/* Billing modal styles */
+/* Watch out here - the left-side green navigation column appears
+   to be really sensitive to any changes here down...idk why
+*/
+.billing.titleHelp i {
+    display: block;
+    float: left;
+    padding: 5px 10px;
+    font-size: 30px;
+}
+.billingModal .warning {
+    color: red;
+    margin-top: 20px;
+}
+.billingModal .info {
+    margin-top: 20px;
+}
+.billingModal .warning i, .billingModal .info i {
+    padding-right: 10px;
+}
+.modal .commitControls i, .modal .uncommitControls i {
+    display: none;
+    margin-right: 10px;
+}
+@media print {
+    .billTable table td:not(:first-child), .billTable table th:not(:first-child) {
+        width: 8em;
+    }
+    .billingPortlet {
+        page-break-inside: avoid;
+    }
+    .billingBar {
+        display: none;
+    }
+}
+/* End Electricity Billing ----------------------- */
+
+/* Start Data Store ---------------- */
+.datatype.dropdown-menu li a {
+    cursor: pointer;
+}
+.dataStoreGettingData {
+    display: none;
+}
+.dataStoreGettingData i {
+    margin-right: 5px;
+}
+.datastoreMonthDay {
+    color: #767676;
+    font-weight: lighter;
+    font-size: .8em;
+}
+.datastoreTable {
+    text-align: center;
+}
+.datastoreTable .blankRow {
+    visibility: hidden;
+}
+.datastoreTable .validRow {
+    background: #FFFFFF;
+}
+.datastoreTable div {
+    text-align: center;
+}
+.datastoreTable tbody {
+    overflow-y: auto;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+.datastoreTable.dataTable tbody td {
+    padding: 3px 10px;
+}
+.datastoreTable input {
+    width: 190px;
+    height: 25px;
+    padding: 3px 10px;
+    text-align: right;
+    float: right;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    border-radius: 2px;
+}
+.datastoreTable input.error {
+    border: solid 1px red;
+}
+.datastoreTable input::-webkit-outer-spin-button,
+.datastoreTable input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.datastoreTable tbody td.missingdata {
+    color: red;
+}
+
+.datastoreTable tbody td.useredited {
+    color: red;
+}
+.datastore .dropdown .chosen-container {
+    width: 150px;
+
+}
+/* End Data Store ---------------- */
+
+/* Start Meters ---------------- */
+.topBar .metersHeader .meterCount {
+    font-size: small;
+    float: left;
+    padding: 12px;
+}
+.meters {
+    width: 100%;
+}
+.meters .nameerror {
+    border: thin solid red;
+}
+.meters .handle {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGElEQVQIW2NkYGBIA+JZQMzACCJgAIUDACENAQR6zKpeAAAAAElFTkSuQmCC) repeat;
+    width: 7px;
+    height: 28px;
+    display: inline-block;
+    vertical-align: middle;
+    cursor: move;
+    margin-right: 5px;
+}
+.meters .meterActiveCheckbox:hover {
+    cursor: default;
+}
+.meters input[type="checkbox"] {
+    margin-left: 10px;
+}
+.meters table {
+    width: 100%;
+    border-collapse: collapse;
+    line-height: 1.0;
+    padding: 1px;
+}
+.meters table tbody {
+    background: #FFFFFF;
+}
+.meters table tbody tr td{
+    line-height: 1.0;
+    border: none;
+}
+/* style for meter rows in drag process */
+.meters table tbody tr.ui-sortable-helper {
+    border: 2px solid #33B171 !important;
+}
+.meters table tbody tr.ui-sortable-helper input[type="text"] {
+    width: 150px;
+}
+.meters table tbody tr.ui-sortable-helper .removemeter a {
+    display: none;
+}
+/* end */
+.meters table tr {
+    cursor: default;
+    border: none;
+}
+.meters .rowtemplate {
+    display: none;
+}
+.meters table thead {
+    background: transparent;
+    padding: 3px;
+}
+.meters table .meterActive {
+    width: 75px;
+    min-width: 75px;
+}
+.meters table .meterDisplayName {
+    width: 190px;
+    min-width: 190px;
+}
+.meters table .meterDisplayName i {
+    margin-left: 5px;
+}
+.meters .viewMode table th.meterDisplayName div:hover {
+    cursor: pointer;
+}
+.meters table .meterDisplayName div {
+    display: inline-block
+}
+.meters table .meterPoints {
+    min-width: 400px;
+}
+.meters table .meterPoints label {
+    width: 100px;
+    font-weight: normal;
+    font-size: small;
+}
+.meters table .meterPoints span {
+    width: 100px;
+    font-weight: normal;
+    font-size: small;
+}
+.meters table .removemeter {
+    width: 100px;
+    min-width: 100px;
+    text-align: right;
+}
+.meters table .removemeter a {
+    color: red;
+    cursor: pointer;
+}
+.meters table .meterPointColumn button {
+    margin-right: 5px;
+}
+.meterPointColumn div > span:hover {
+    cursor: pointer;
+}
+.meters table tbody tr:nth-child(even) {
+    background: #F2F2F2;
+    border-style: none;
+}
+.meters table tbody tr:nth-child(odd) {
+    background: #FFFFFF;
+    border-style: none;
+}
+/*.meters table tbody tr.ui-sortable-helper {
+    background: #CEF6CE;
+    border-style: solid;
+    border-color: #72F66B;
+}
+*/
+/* End Meters ---------------- */
+
+/* Start Import & Export ------------------------ */
+.availablePeriods.dropdown-menu, .availableMeters.dropdown-menu {
+    max-height: 400px;
+    min-width: 200px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+.availablePeriods.dropdown-menu li a, .availableMeters.dropdown-menu li a {
+    cursor: pointer;
+}
+.availablePeriods.dropdown-menu input, .availableMeters.dropdown-menu input {
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    padding: 5px;
+    margin: 10px 30px 15px 15px;
+    width: 80%;
+}
+.exportTitle {
+    font-weight: bold;
+    font-size: larger;
+    margin-left: 10px;
+}
+.exportTitle:not(:first-child) {
+    padding-top: 30px;
+}
+.exportBody {
+    background-color: #FFF;
+    border: 1px solid #888;
+    border-radius: 5px;
+    padding: 20px;
+}
+.exportContainer:not(:last-child) {
+    padding-bottom: 20px;
+}
+.exportContainer.info {
+    border-top: 1px solid #CCC;
+    padding-top: 10px;
+}
+.exportContainer.info i {
+    font-size: 20px;
+    padding-right: 10px;
+    position: relative;
+    top: 3px;
+}
+.exportDropDown {
+    display: inline-block;
+}
+.exportStep {
+    display: inline-block;
+    padding-right: 10px;
+}
+.optionsWarning{
+    color:red;
+}
+.optionsArea{
+    margin-bottom: 1em;
+}
+/* End Import & Export ------------------------ */
+/* Start Security ------------------------ */
+.securitySection table {
+    width: 100%;
+    min-width: 400px;
+    max-width: 900px;
+}
+.securitySection table th, .securitySection table td {
+    background-color: #FFF;
+    padding: 10px;
+    border-bottom: 1px solid #F3E6C9;
+    border-right: 1px solid #F3E6C9;
+}
+.securitySection tbody td:last-child {
+    border-right: none;
+}
+.securitySection tbody td.header.deep {
+    background-color: transparent;
+    height: 50px;
+    vertical-align: bottom;
+}
+.securitySection table th:not(.group) {
+    width: 60px;
+    text-align: center;
+}
+.securitySection table th:first-child {
+    width: 35px;
+}
+.securitySection table th.group {
+    cursor: pointer;
+}
+.securitySection table td {
+    text-align: center;
+}
+.securitySection table td.group {
+    text-align: left;
+    cursor: pointer;
+}
+.securitySection table td.user, table td.header {
+    text-align: left;
+}
+.securitySection .groupTitle {
+    margin-left: 8px;
+}
+.securitySection .cursorPointer {
+    cursor: pointer;
+}
+.securitySection .userIcon {
+    padding-right: 10px;
+}
+.securitySection .userList {
+    padding: 5px 0 0 25px;
+    color: #888;
+    display: none;
+}
+.securitySection .systemAdmin {
+    color: brown;
+    padding-left: 10px;
+    font-size: smaller;
+}
+.securitySection .removeGroup {
+    font-size: 15px;
+    color: #FF0000;
+    cursor: pointer;
+}
+.securitySection .addGroup {
+    font-size: 15px;
+    color: #009900;
+    cursor: pointer;
+}
+.securitySection .noAccess {
+    background-color: #FFF;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 5px;
+}
+.securitySection .noAccess i {
+    font-size: 75px;
+    color: #A9724B;
+    margin-right: 20px;
+}
+.securitySection .noAccess > div {
+    display: inline-block;
+    vertical-align: top;
+    padding: 5px 0;;
+}
+.securitySection .noAccess h3 {
+    margin: 0 0 10px;
+}
+/* End Security ------------------------ */
+
+@media print {
+    body, table {
+        font-size: 1.0em;
+    }
+    .showInPrint {
+        display: block;
+    }
+}

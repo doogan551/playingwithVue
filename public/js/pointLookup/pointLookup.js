@@ -69,7 +69,7 @@ window.pointLookup = (function(module, ko, $) {
             segment,
             dataSource,
             $browseList;
-
+        
         if (response.err) {
             error = ['An error occurred when trying to ', cmdPointName, ': ', response.err].join('');
         } else if (response.warning) {
@@ -399,7 +399,7 @@ window.pointLookup = (function(module, ko, $) {
                     showInactive = self.showInactive(),
                     firstCall = ko.computedContext.isInitial();
 
-                // Showing deleted and inactive points at the same time is disallowed. We have computeds monitoring these observables which will
+                // Showing deleted and inactive points at the same time is disallowed. We have computeds monitoring these observables which will 
                 // clear one or the other, after which this routine will be called again
                 if (showDeleted && showInactive)
                     return false;
@@ -492,7 +492,7 @@ window.pointLookup = (function(module, ko, $) {
                 showInactive = self.showInactive(),
                 firstCall = ko.computedContext.isInitial();
 
-            // Showing deleted and inactive points at the same time is disallowed. We have computeds monitoring these observables which will
+            // Showing deleted and inactive points at the same time is disallowed. We have computeds monitoring these observables which will 
             // clear one or the other, after which this routine will be called again
             if (showDeleted && showInactive)
                 return false;
@@ -670,7 +670,7 @@ window.pointLookup = (function(module, ko, $) {
             return browseRequest;
         }
         return $.ajax({
-            url: '/api/points/toggleGroup',
+            url: '/pointLookup/toggleGroup',
             dataType: 'json',
             type: 'post',
             data: {
@@ -723,7 +723,7 @@ window.pointLookup = (function(module, ko, $) {
 
         if (pointTypes[0] !== 'all') {
             $pointTypesListBox.jqxListBox('uncheckAll');
-
+            
             for (var i = 0, lastItem = availablePointTypes.length; i < lastItem; i++) {
                 item = availablePointTypes[i];
                 for (var j = 0, lastPointType = pointTypes.length; j < lastPointType; j++) {
@@ -906,6 +906,7 @@ window.pointLookup = (function(module, ko, $) {
 
         function getMenuItems(item) {
             var _array = [],
+                ofTypeDisplay = item.pointType === "Display",
                 hasWritePermission = userPermissions.systemAdmin || userHasPermission(rowdata.Security, permissionLevels.WRITE);
 
             // Active
@@ -921,7 +922,9 @@ window.pointLookup = (function(module, ko, $) {
             }
             // Soft deleted
             else if (item._pStatus == 2) {
-                _array.push({label: 'Open'});
+                if (!ofTypeDisplay) {
+                    _array.push({label: 'Open'});
+                }
                 if (hasWritePermission)
                     _array.push.apply(_array, [{label: 'Restore'}, {label: 'Destroy'}]);
             }
@@ -940,7 +943,7 @@ window.pointLookup = (function(module, ko, $) {
 
             if (item.pointType == 'Slide Show') {
                 item.menuItems.push({
-                    label: 'Configure'
+                    label: 'Edit'
                 });
             }
             return '<span class="edit fa fa-gear"></span>';
@@ -995,7 +998,8 @@ window.pointLookup = (function(module, ko, $) {
                     return item
                 }).join('_'),
                 pointType = rowData.pointType,
-                endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, rowData._id);
+                endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, rowData._id),
+                deletedDisplay = (rowData.pointType === "Display" && rowData._pStatus === 2);
 
             rowData.Name = fullName;
 
@@ -1021,7 +1025,7 @@ window.pointLookup = (function(module, ko, $) {
                 return;
             }
 
-            setTimeout(function() {
+            setTimeout(function () {
                 $searchGrid.jqxGrid({
                     selectedrowindex: -1
                 })
@@ -1038,10 +1042,12 @@ window.pointLookup = (function(module, ko, $) {
                 externalCallback(rowData._id, fullName, pointType, externalFilterObj);
                 window.close();
             } else {
-                workspaceManager.openWindowPositioned(endPoint.review.url, fullName, pointType, endPoint.review.target, rowData._id, {
-                    width: 820,
-                    height: 542
-                });
+                if (!deletedDisplay) {
+                    workspaceManager.openWindowPositioned(endPoint.review.url, fullName, pointType, endPoint.review.target, rowData._id, {
+                        width: 820,
+                        height: 542
+                    });
+                }
             }
         });
 
@@ -1079,7 +1085,7 @@ window.pointLookup = (function(module, ko, $) {
 
                     if (item.pointType == 'Slide Show') {
                         item.menuItems.push({
-                            label: 'Configure'
+                            label: 'Edit'
                         });
                     }
                 } else {
@@ -1159,12 +1165,12 @@ window.pointLookup = (function(module, ko, $) {
                     });
                     break;
                 case 'clone':
-                    workspaceManager.openWindowPositioned('/api/points/newPoint/' + id, 'New Point', '', '', 'newPoint', {
+                    workspaceManager.openWindowPositioned('/pointLookup/newPoint/' + id, 'New Point', '', '', 'newPoint', {
                         width: 960,
                         height: 280
                     });
                     break;
-                case 'configure':
+                case 'edit':
                     workspaceManager.openWindowPositioned(endPoint.edit.url, fullName, pointType, endPoint.edit.target, id, {
                         width: 820,
                         height: 542
@@ -1304,7 +1310,7 @@ window.pointLookup = (function(module, ko, $) {
                 selectedPointType = window.encodeURI(selectedpointTypes[0].originalItem.key);
             }
 
-            win = workspaceManager.openWindowPositioned('/api/points/newPoint/?selectedPointType=' + selectedPointType, 'New Point', '', '', 'newPoint', {
+            win = workspaceManager.openWindowPositioned('/pointLookup/newPoint/?selectedPointType=' + selectedPointType, 'New Point', '', '', 'newPoint', {
                 width: 960,
                 height: 280
             });

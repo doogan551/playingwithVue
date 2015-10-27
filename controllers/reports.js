@@ -158,14 +158,18 @@ router.get('/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Reports.reportMain(data, reportMainCallback);
+  Reports.reportMain(data, function(err, locals, result) {
+    reportMainCallback(res, err, locals, result);
+  });
 });
 
 router.get('/view/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Reports.reportMain(data, reportMainCallback);
+  Reports.reportMain(data, function(err, locals, result) {
+    reportMainCallback(res, err, locals, result);
+  });
 });
 
 router.get('/cr/pointInvolvement', function(req, res, next) {
@@ -186,7 +190,7 @@ router.get('/cr/pointInvolvement', function(req, res, next) {
   });
 });
 
-var reportMainCallback = function(err, locals) {
+var reportMainCallback = function(res, err, locals, result) {
   if (err) {
     return utils.sendResponse(res, {
       err: err

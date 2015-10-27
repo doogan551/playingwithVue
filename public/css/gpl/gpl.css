@@ -2,6 +2,41 @@ body {
     overflow: hidden;
 }
 
+.canvas-container {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    display: inline-block;
+    vertical-align: top;
+}
+
+#gplCanvas {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 77px;
+}
+.mask {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.gplTooltip {
+    position: absolute;
+    background-color: #333;
+    z-index: 9999;
+    color: #ffffff;
+    padding: 4px 3px;
+    border-radius: 3px;
+}
+
+.displayBlock {
+    display: block !important;
+}
+
 .hideLoading {
     display: none;
 }
@@ -38,6 +73,14 @@ body {
     margin-left: auto;
 }
 
+.spacedControls > .form-group {
+    margin-bottom: 10px;
+}
+
+.noBoldControls label {
+    font-weight: normal;
+}
+
 .dataField > label {
     margin-top: 0;
     white-space: nowrap;
@@ -45,8 +88,8 @@ body {
     overflow: hidden;
     /*text-transform: uppercase;*/
     font-size: 14px;
-    font-weight: bold;
-    color: #e4e4e4;
+    font-weight: normal;
+    /*color: #e4e4e4;*/
     display: block;
     margin-bottom: 4px;
     /*border-bottom: 1px solid #CECECE;*/
@@ -60,6 +103,20 @@ body {
     width: 30px;
     padding: 0;
     text-align: center;
+}
+
+.prettyInput {
+    width: 42px;
+    border-radius: 3px;
+}
+
+.mr5 {
+    margin-right: 5px;
+}
+
+.zoomSection {
+    margin-right: 15px;
+    margin-top: 4px;
 }
 
 .subtitle {
@@ -95,6 +152,10 @@ body {
     margin-right: 10px;
 }
 
+.pointName span {
+    cursor: default;
+}
+
 .bottomBar {
     position: absolute;
     width: 100%;
@@ -116,7 +177,7 @@ body {
     font-size: 0.9em;
 }
 
-.bottomBar .pop a {
+.bottomBar a {
     color: #ffffff;
 }
 
@@ -143,14 +204,13 @@ body {
     margin-bottom: 5px;
 }
 
-
-
 .contextMenu {
     font-size: 0.8em;
     background-color: #333333;
     color: #cccccc;
     box-shadow: 3px 3px 2px #333333;
     width: auto;
+    border-radius: 3px;
 }
 
 .contextMenu .head {
@@ -166,8 +226,13 @@ body {
     padding: 2px 0;
 }
 
+.contextMenu .nonPoint .nonPoint {
+    display: none !important;
+}
+
 .contextMenu .block .block,
 .contextMenu .line .line,
+.contextMenu .text .text,
 .contextMenu .default .default,
 .contextMenu ul .all {
     display: list-item;
@@ -200,4 +265,12 @@ body {
 .modal-header,
 .modal-footer {
     padding: 10px;
+}
+
+.jqx-color-picker-preview {
+    margin-left: 10px;
+}
+
+.blockMsg {
+    font-size: 19px;
 }

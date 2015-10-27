@@ -2984,6 +2984,12 @@ var AlarmManager = function (conf) {
         }
     }, self);
 
+    self.printAlarms = function() {
+        $('.alarms').css('overflow', 'visible');
+        $('.alarms').printArea({mode:'iframe'});
+        $('.alarms').css('overflow', 'auto');
+    };
+
     //------ Final Inits -------------------------------
     // This routine just initializes shortcuts to the views that each alarm table initially references, & sets the refresh flag if needed
     initAlarmTables();

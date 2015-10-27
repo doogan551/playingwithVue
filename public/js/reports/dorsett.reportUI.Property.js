@@ -14,11 +14,11 @@ dorsett.reportUI.Property = dorsett.reportUI.extend({
             this._super(workspace, point);
 
             var enumProps = workspace.config.Enums.Properties;
-                for (var p in enumProps) {
-                    if (enumProps[p].reportEnable) {
-                        base.props.push({name: p, value: enumProps[p]});
-                    }
+            for (var p in enumProps) {
+                if (enumProps[p].reportEnable) {
+                    base.props.push({name: p, value: enumProps[p]});
                 }
+            }
 
             //COLUMNS
             base.columnGrid = $("#columnGrid").kendoGrid({
@@ -286,6 +286,10 @@ dorsett.reportUI.Property = dorsett.reportUI.extend({
                 if (cgData.length > 0){
                     base.columnGrid.dataSource.data(cgData);
                 }
+
+                //Get Report title
+                $("#reportTitle").val(point["Report Config"].reportTitle);
+                
             }
 
 
@@ -319,7 +323,9 @@ dorsett.reportUI.Property = dorsett.reportUI.extend({
 
         //Responsible for getting all data in Configuration tab. This is what gets passed onto Report Preview page and beyond.
         getReportOption: function (collectDataOnly, callback) {
-            var self = this;
+            //var self = this;
+            var self = dorsett.reportUI[dorsett.reportUI.alias];
+            
             self.columnsInfo = [];
             self.filtersInfo = {};
 
@@ -344,9 +350,10 @@ dorsett.reportUI.Property = dorsett.reportUI.extend({
             dataSources.Property.filters = {};
 
             var filters = self.filterGrid.dataSource.view();
-
+            //console.log(filters, typeof filters);
             for (var f in filters) {
-                if (filters[f].name === "[Filter Column Not Set]") {
+                
+                if (!filters[f].name || _.isEmpty(filters[f]) || filters[f].name === "[Filter Column Not Set]") {
                     continue;
                 }
                 //console.log(filters[f]);
@@ -356,7 +363,8 @@ dorsett.reportUI.Property = dorsett.reportUI.extend({
                     self.hideDivBlock("Error", "One of the filters is missing value");
                     return;
                 }
-                //console.log(filters[f]);
+                //console.log(val);
+                //console.log('filter', filters[f]);
                 filters[f] = self.ensureCorrectValueTypeForFilter(filters[f]);
                 filters[f] = self.ensureCorrectValueTypeForFilterBasedOnOperator(filters[f]);
 
@@ -365,10 +373,10 @@ dorsett.reportUI.Property = dorsett.reportUI.extend({
                     column: filters[f].name.replace(/\s+/gi, "_"),
                     condition: filters[f].operator,
                     dataType: filters[f].valueType,
-                    value1: val,
+                    value1: filters[f].internalValue === "" ? filters[f].value : filters[f].internalValue,
                     value2: f ===0 ? "" : filters[f].condition,
                     fieldIs: "Value",
-                    expression: "",
+                    expression: filters[f].expression,
                     valueList: "",
                     value3: val
 
@@ -377,7 +385,7 @@ dorsett.reportUI.Property = dorsett.reportUI.extend({
             }
 
             for (var c in cols) {
-                if (cols[c].name === "[Column Not Set]") {
+                if (!cols[c].name || _.isEmpty(cols[c]) || cols[c].name === "[Column Not Set]") {
                     continue;
                 }
 
@@ -524,16 +532,29 @@ dorsett.reportUI.Property = dorsett.reportUI.extend({
                 case "HourMinSec":
                     $('<input data-text-field="' + options.field + '" data-value-field="' + options.field + '" data-bind="value:' + options.field + '"/>')
                         .appendTo(container)
-                        .kendoTimePicker({format: "h:mm tt"});
+                        .kendoTimePicker({format: "H:m:s"});
                     break;
                 case "MinSec":
-                    $('<input style="width:60px" data-text-field="' + options.field + '" data-value-field="' + options.field + '" data-bind="value:' + options.field + '"/>')
-                        .appendTo(container)
-                        .kendoNumericTextBox({format: "n0", min: 1});
-                    $("<span>Secs</span>").appendTo(container);
-                    //$('<input data-text-field="' + options.field + '" data-value-field="' + options.field + '" data-bind="value:' + options.field + '"/>')
+                    //$('<input style="width:60px" data-text-field="' + options.field + '" data-value-field="' + options.field + '" data-bind="value:' + options.field + '"/>')
                     //    .appendTo(container)
-                    //    .kendoTimePicker({format: "mm:ss", interval:10});
+                    //    .kendoNumericTextBox({format: "n0", min: 1});
+                    //$("<span>Secs</span>").appendTo(container);
+                    //console.log(options.model);
+                    $('<input style="width:90px" data-text-field="' + options.field + '" data-value-field="' + options.field + '" data-bind="value:' + options.field + '"/>')
+                        .appendTo(container)
+                        .kendoTimePicker({format: "m:s", interval:1});
+                    $("<span> (Min Sec Format)</span>").appendTo(container);
+                    break;
+                case "HourMin":
+                    //$('<input style="width:60px" data-text-field="' + options.field + '" data-value-field="' + options.field + '" data-bind="value:' + options.field + '"/>')
+                    //    .appendTo(container)
+                    //    .kendoNumericTextBox({format: "n0", min: 1});
+                    //$("<span>Secs</span>").appendTo(container);
+                    //console.log(options.model);
+                    $('<input style="width:90px" data-text-field="' + options.field + '" data-value-field="' + options.field + '" data-bind="value:' + options.field + '"/>')
+                        .appendTo(container)
+                        .kendoTimePicker({format: "H:m"});
+                    $("<span> (Hour Min Format)</span>").appendTo(container);
                     break;
                 case "Bool":
                     $('<input data-text-field="text" data-value-field="value" data-bind="value:' + options.field + '"/>')
@@ -623,7 +644,7 @@ dorsett.reportUI.Property = dorsett.reportUI.extend({
 
         //Save Report Config
         saveReportConfig:function(){
-            var self = this;
+            var self = dorsett.reportUI.Property;
             self.getReportOption(false, function (jj) {
                 point["Report Config"] = jj;
                 var fg = self.filterGrid.dataSource.view();
@@ -636,6 +657,10 @@ dorsett.reportUI.Property = dorsett.reportUI.extend({
                 //if (!point["Point Refs"]) point["Point Refs"] = [];
 
                 for (var c in cg) {
+                    if (!cg[c].name || _.isEmpty(cg[c]) || cg[c].name === "[Column Not Set]") {
+                        continue;
+                    }
+
                     point["Column Data"].push({
                         name: cg[c].name,
                         precision: cg[c].precision,
@@ -643,7 +668,10 @@ dorsett.reportUI.Property = dorsett.reportUI.extend({
                     });
                 }
                 for (var f in fg) {
-                    //console.log(fg[f]);
+                    if (!fg[f].name || _.isEmpty(fg[f]) || fg[f].name === "[Filter Column Not Set]") {
+                        continue;
+                    }
+                
                     var appIndex = point["Point Refs"].length;
                     point["Filter Data"].push({
                         condition: fg[f].condition,
@@ -652,7 +680,7 @@ dorsett.reportUI.Property = dorsett.reportUI.extend({
                         filterName: fg[f].name,
                         operator: fg[f].operator,
                         value: fg[f].value,
-                        valueType: fg[f].valueType,
+                        valueType: self.workspace.config.Enums.Properties[fg[f].name].valueType,
                         index:appIndex + 1
                     });
                     //console.log(workspace.config.Enums.Properties[fg[f].name], fg[f].name);

@@ -428,7 +428,7 @@ module.exports = {
         var criteria = {
             collection: 'points',
             query: {
-                _id: rpt.utils.converters.convertType(data.id)
+                _id: utils.converters.convertType(data.id)
             },
             updateObj: {
                 $set: {
@@ -442,7 +442,7 @@ module.exports = {
             if (!err) {
                 return cb(null, {
                     _idd: null,
-                    id: rpt.utils.converters.convertType(data.id),
+                    id: utils.converters.convertType(data.id),
                     data: "Data has been saved successfully!!!"
                 });
             } else
@@ -453,7 +453,7 @@ module.exports = {
         var criteria = {
             collection: 'points',
             query: {
-                _id: rpt.utils.converters.convertType(data.id)
+                _id: utils.converters.convertType(data.id)
             },
             updateObj: {
                 $set: {
@@ -477,7 +477,7 @@ module.exports = {
         var criteria = {
             collection: 'points',
             query: {
-                _id: rpt.utils.converters.convertType(data.id)
+                _id: utils.converters.convertType(data.id)
             },
             updateObj: {
                 $set: {
@@ -951,7 +951,7 @@ module.exports = {
     reportMain: function(data, cb) {
         var criteria = {
             query: {
-                _id: rpt.utils.converters.convertType(data.id)
+                _id: utils.converters.convertType(data.id)
             },
             collection: 'points'
         };
@@ -968,7 +968,7 @@ module.exports = {
                         isOld: result["Report Config"] !== undefined,
                         point: JSON.stringify(result),
                         title: result.Name
-                    });
+                    }, result);
                 }
             }
         });
@@ -987,10 +987,10 @@ module.exports = {
             } else {
 
                 return cb(null, {
-                    id: rpt._id,
+                    id: result._id,
                     isOld: true,
-                    point: JSON.stringify(rpt),
-                    title: rpt.Name
+                    point: JSON.stringify(result),
+                    title: result.Name
                 });
 
             }

@@ -644,6 +644,12 @@ var ActivityLogsManager = function (conf) {
         return usernamesToFilterOn;
     };
 
+    self.printLogs = function() {
+        $('.activityLogs').css('overflow', 'visible');
+        $('.activityLogs').printArea({mode:'iframe'});
+        $('.activityLogs').css('overflow', 'auto');
+    };
+
     self.dtFilterPlaceholder = {
         dateFrom: '',
         timeFrom: '',

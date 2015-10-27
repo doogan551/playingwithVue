@@ -1053,7 +1053,7 @@ hr {
         padding: 2px 4px;
         border-radius: 4px;
     }
-    .viewTrend .modal-body {
+    .viewTrend .modal-body, .historyDataTable {
         overflow-y: auto;
     }
 
@@ -1375,3 +1375,16 @@ div.scheduleBox {
 
 
 /* end schedule entries */
+
+/*@media print {
+  body{
+    visibility: hidden;
+  }
+  .historyDataTable {
+    visibility: visible;
+    overflow: scroll;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+}*/

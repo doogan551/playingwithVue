@@ -10,11 +10,11 @@ router.post('/getutility', function(req, res, next) {
 
 	Utilities.getUtility(data, function(err, result) {
 		if (err) {
-			return Utils.sendResponse(res, {
+			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return Utils.sendResponse(res, {
+			return utils.sendResponse(res, {
 				utility: utility
 			});
 		}
@@ -27,11 +27,11 @@ router.post('/saveutility', function(req, res, next) {
 
 	Utilities.saveUtility(data, function(err, result) {
 		if (err) {
-			return Utils.sendResponse(res, {
+			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return Utils.sendResponse(res, {
+			return utils.sendResponse(res, {
 				message: 'success'
 			});
 		}
@@ -46,11 +46,11 @@ router.post('/uploadBackground', function(req, res, next) {
 
 	Utilities.uploadBackground(data, function(err, result) {
 		if (err) {
-			return Utils.sendResponse(res, {
+			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return Utils.sendResponse(res, {
+			return utils.sendResponse(res, {
 				message: 'success'
 			});
 		}

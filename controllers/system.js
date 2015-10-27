@@ -11,13 +11,16 @@ router.get('/controlpriorities', function(req, res, next) {
         err: err
       });
     } else {
-      return utils.sendResponse(res, priorities);
+      return utils.sendResponse(res, priorities.Entries);
     }
   });
 });
 
 router.get('/qualitycodes', function(req, res, next) {
-  System.getSystemInfoByName('Quality Codes', function(err, codes) {
+  var data = _.merge(req.params, req.body);
+  data.user = req.user;
+
+  System.getQualityCodes(data, function(err, codes) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
@@ -35,7 +38,7 @@ router.get('/controllers', function(req, res, next) {
         err: err
       });
     } else {
-      return utils.sendResponse(res, controllers);
+      return utils.sendResponse(res, controllers.Entries);
     }
   });
 });

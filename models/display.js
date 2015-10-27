@@ -1,14 +1,11 @@
-/*var Config = require('../public/js/lib/config.js');
-var async = require('async');
 var path = require('path');
-var sys = require('sys');
 var fs = require('fs');
 var ce = require('cloneextend');
 var gm = require('gm');
 var glob = require('glob');
 var pointsCollection = "points";
 var versionsCollection = "versions";
-var BSON = require('mongodb').BSONPure;*/
+var BSON = require('mongodb').BSONPure;
 
 var Utility = require('../models/utility');
 
@@ -75,7 +72,7 @@ module.exports = {
         });
     },
 
-    displaygif: function(data, cb) {
+    displayGif: function(data, cb) {
         var filename = data.fname + '.gif';
         var frame = parseInt(data.frame, 10);
         var dirname = __dirname.replace(/\\/g, '/');
@@ -95,7 +92,7 @@ module.exports = {
         var sendFullImage = function() {
             fs.readFile(filepath, function(err, result) {
                 if (err) {
-                    console.log('Displays: Error sending full gif file: ', err);
+                    console.log('Displays: Error sending full gif file: ', err.code);
                     return cb(err);
                 } else {
                     return cb(null, result);

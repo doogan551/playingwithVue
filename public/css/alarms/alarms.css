@@ -629,3 +629,17 @@
         padding: 20px;
         border-radius: 3px;
     }
+
+/*@media print {
+  body{
+    visibility: hidden;
+  }
+  .alarms table {
+    visibility: visible;
+  }
+  .alarms table {
+    position: static;
+    left: 0;
+    top: 0;
+  }
+}*/

@@ -78,7 +78,6 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
                 displayId;
             for (var i = 0; i < pointRefsModel.length; i++) {
                 pointRefsModel[i].AppIndex = i+1;
-                //pointRefsModel[i].AppIndex(i + 1);
                 displayId = pointRefsModel[i].Value;
                 slide = self.getSlideById(displayId);
                 if (slide) {
@@ -167,7 +166,7 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
                                 slides = vm.data.Slides(),
                                 displayCount = pointRefs.length;
                             vm.data['Point Refs'].push({
-                                AppIndex: ko.observable(displayCount + 2),
+                                AppIndex: ko.observable(displayCount + 1),
                                 DevInst: ko.observable(0),
                                 PointInst: ko.observable(data._id),
                                 PointName: ko.observable(data.Name),

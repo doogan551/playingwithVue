@@ -21,7 +21,7 @@ module.exports = {
             query: {
                 Name: "Preferences"
             },
-            collection: 'System Info',
+            collection: 'SystemInfo',
             limit: 1,
             fields: {
                 _id: 0,
@@ -42,7 +42,7 @@ module.exports = {
                         "Current Season": season
                     }
                 },
-                collection: 'System Info',
+                collection: 'SystemInfo',
                 fields: {
                     _id: 0,
                     "Current Season": 1

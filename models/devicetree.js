@@ -232,7 +232,7 @@ var makeTree = function(next) {
 
 };
 
-var buildNodes = function(db, next) {
+var buildNodes = function( next) {
     var addToBranch = function(upSegment, downSegment, upType) {
 
         for (var j = 0; j < unknownBranches.length; j++) {
@@ -351,7 +351,7 @@ var buildNodes = function(db, next) {
     });
 };
 
-var sortTree = function(db, next) {
+var sortTree = function(next) {
     Utility.getOne({collection:'SystemInfo', query:{
         'Name': 'Preferences'
     }}, function(err, syspref) {

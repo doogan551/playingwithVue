@@ -139,7 +139,7 @@ router.post('/users/removeuser', function(req, res, next) {
 router.post('/users/getallusers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
-  console.log('test');
+
   Security.Users.getAllUsers(data, function(err, users) {
     if (err) {
       return utils.sendResponse(res, {

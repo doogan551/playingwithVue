@@ -27,7 +27,7 @@ var slideShowViewModel = function () {
             frame.height("100%");
             frame.parent().addClass(initClass)
             frame.load(function () {
-                console.log("   " + frame.parent().attr('class') + " LOADED....");
+                //console.log("   " + frame.parent().attr('class') + " LOADED....");
                 hideFooter(frame);
             });
         },
@@ -46,6 +46,7 @@ var slideShowViewModel = function () {
         parseSlides = function (data) {
             var i,
                 upi,
+                currentSlide,
                 endPoint,
                 lenSlides = data.Slides.length;
 
@@ -55,23 +56,51 @@ var slideShowViewModel = function () {
                 if (a.order > b.order)
                     return 1;
                 return 0;
-            }
+            };
 
-            self.numberOfSlides = lenSlides;
+            function upiIsActive(upi) {
+                var answer = false,
+                    i,
+                    pointRef,
+                    lenPointRefs = data["Point Refs"].length;
+
+                for (i = 0; i < lenPointRefs; i++) {
+                    pointRef = data["Point Refs"][i];
+                    if (pointRef.Value === upi) {
+                        answer = true;
+                        if (pointRef.PointInst === 0) {
+                            answer = false;
+                        }
+                        break;
+                    }
+                }
+
+                return answer;
+            };
+
             loadAsFullscreen = data["Maximize Displays"].Value;
             closeOnComplete = data["Close On Complete"].Value;
             repeatCount = data["Repeat Count"].Value;
             continuousShow = data["Continuous Show"].Value;
 
             for (i = 0; i < lenSlides; i++) {
-                upi = data.Slides[i].display;
-                endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint("Display", upi);
-                data.Slides[i].displayURL = endPoint.review.url;
-                if (data.Slides[i].duration < minDuration) {
-                    data.Slides[i].duration = minDuration;
+                currentSlide = data.Slides[i];
+                if (currentSlide) {
+                    upi = currentSlide.display;
+                    if (upiIsActive(upi)) {
+                        endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint("Display", upi);
+                        currentSlide.displayURL = endPoint.review.url;
+                        if (currentSlide.duration < minDuration) {
+                            currentSlide.duration = minDuration;
+                        }
+                    } else {
+                        data.Slides.splice(i, 1);  // Slide not in ["Point Refs"]
+                        i--;
+                    }
                 }
             };
 
+            self.numberOfSlides = data.Slides.length;
             self.listOfSlides.push.apply(self.listOfSlides, data.Slides);
             self.listOfSlides.sort(compareOrder);  // get list in order they need to play
             if (loadAsFullscreen) {
@@ -107,16 +136,16 @@ var slideShowViewModel = function () {
             return (((self.slideIndex < self.slideLastIndex) && !(self.slideIndex === 0 && self.slideLastIndex === (self.numberOfSlides - 1))) || (self.slideIndex === (self.numberOfSlides - 1) && self.slideLastIndex === 0));
         },
         getFrameASource = function (theFrame) {
-            console.log("............... self.slideIndex = " + self.slideIndex + "   self.slideLastIndex = " + self.slideLastIndex);
+            //console.log("............... self.slideIndex = " + self.slideIndex + "   self.slideLastIndex = " + self.slideLastIndex);
 
             if (notMoving()) {
                 //console.log("hey, index did NOT move ...............", currentFrameSrc);
             } else if (movingForward()) {  // index is moving right
-                console.log("  -> -> -> MOVING FORWARD -> -> -> ");
+                //console.log("  -> -> -> MOVING FORWARD -> -> -> ");
                 theFrame.parentElement.classList.add("nextframe")
                 theFrame.setAttribute('src', self.nextSlide().displayURL);
             } else if (movingBackward()) { // index is moving left
-                console.log("  <- <- <- MOVING BACKWARD <- <- <- ");
+                //console.log("  <- <- <- MOVING BACKWARD <- <- <- ");
                 theFrame.parentElement.classList.add("previousframe")
                 theFrame.setAttribute('src', self.previousSlide().displayURL);
             }
@@ -134,7 +163,7 @@ var slideShowViewModel = function () {
                 bufferWaitTime = 0;
                 $("iframe").each(function (index, frame) {
                     var frameSrc = frame.getAttribute('src');
-                    console.log("  - - - - -  iframe frameSrc = " + frameSrc + " from " + frame.parentElement.classList);
+                    //console.log("  - - - - -  iframe frameSrc = " + frameSrc + " from " + frame.parentElement.classList);
                     frame.parentElement.classList.remove("previousframe", "currentframe", "nextframe");
                     switch (frameSrc) {
                         case self.previousSlide().displayURL:
@@ -259,7 +288,7 @@ var slideShowViewModel = function () {
         }
     };
     self.play = function () {
-        console.log("---------------------------- play() ----------------------------");
+        //console.log("---------------------------- play() ----------------------------");
         if (self.numberOfSlides > 0) {
             if (!continuousShow && (repeatCounter >= repeatCount)) {
                 if (closeOnComplete) {
@@ -275,7 +304,7 @@ var slideShowViewModel = function () {
                 } else {
                     currentDuration = cycleToNextSlide();
                 }
-                console.log("waiting ", currentDuration);
+                //console.log("waiting ", currentDuration);
                 playerTimer = setTimeout(function () {
                     self.slideLastIndex = self.slideIndex;
                     self.slideIndex = nextSlideIndex();

@@ -10,11 +10,11 @@ router.get('/get/:model', function(req, res, next) {
 	data.user = req.user;
 
 	Firmware.getModelFiles(data, function(err, files) {
-		if (err) return Utils.sendResponse(res, {
+		if (err) return utils.sendResponse(res, {
 			err: err
 		});
 
-		return Utils.sendResponse(res, {
+		return utils.sendResponse(res, {
 			files: files
 		});
 	});
@@ -26,11 +26,11 @@ router.get('/getRemoteUnits', function(req, res, next) {
 	data.user = req.user;
 
 	Firmware.getRemoteUnits(data, function(err, remoteUnits) {
-		if (err) return Utils.sendResponse(res, {
+		if (err) return utils.sendResponse(res, {
 			err: err
 		});
 
-		return Utils.sendResponse(res, {
+		return utils.sendResponse(res, {
 			remoteUnits: remoteUnits
 		});
 	});

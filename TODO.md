@@ -8,10 +8,11 @@
 - change module.exports ={fxname:function(){}} to exports.fxname = function(){}
 * name anonymous functions
 - read up on 'process#' functions
+- setup config for non-app.js scripts
 
-- get node-inspector module
-- get terminal-kit module
-- review need for validator module
+- get node-inspector module - error during installation
+- get terminal-kit module - useful for self contained scripts' ui
+- review need for validator module - 
 - helmet module for security
 - formidable module for files in req
 - compression module
@@ -31,13 +32,4 @@
 - cluster/reverse proxy - loc 6114 - ZERO DOWNTIME RESTART
 
 - teamviewer or vnc
-
-
-
--activitylogs - 2015/6/5
--points (added) - 2015/6/4
--security (added) - 2015/6/5
--system - 2015/6/4
--user - 2015/6/5
--usergroups - 2015/6/3
--utility - 2015/6/1
+- grunt/gulp

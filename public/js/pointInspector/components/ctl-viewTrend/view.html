@@ -13,6 +13,7 @@
                     <!-- ko if: reqType() == 'history' && minDate() > -1 -->
                     <div class="btn btn-default btn-xs btnSetTime" data-bind="click:showTime">Set time</div>
                     <!-- /ko -->
+                    <div class="btn btn-default btn-xs btnPrint pull-right" data-bind="click:printHistory">Print</div>
                     <div class="modalScene modalTime">
                         <div class="container-fluid">
                             <div class="row">
@@ -60,7 +61,7 @@
                         <p>Close this dialog or <a href="javascript://" data-bind="click: refreshData">try again</a></p>
                     </div>
                     <!-- Trend Data -->
-                    <div class="modalScene modalValue">
+                    <div class="modalScene modalValue historyDataTable">
                         <table class="grid table table-condensed">
                             <thead>
                             <tr>

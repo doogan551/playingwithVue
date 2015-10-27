@@ -62,7 +62,7 @@ router.get('/getReferences/:upoint', function(req, res, next) {
 		} else {
 			ret = result;
 		}
-		Utils.sendResponse(res, ret);
+		utils.sendResponse(res, ret);
 	});
 });
 

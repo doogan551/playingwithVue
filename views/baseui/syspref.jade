@@ -114,7 +114,6 @@ html
 							img(src='/img/icon_calendarAdd.png')
 						span.italics &nbsp; Click the calendar to add a holiday.&nbsp;
 
-
 			// ------ Controllers -----------------------------------------------------------------------------------
 			div#controllers(data-bind="visible: section() == 'Controllers'")
 				.title Manage Controllers
@@ -244,7 +243,6 @@ html
 									div
 										div(data-usedropdown="true", data-insertpalette="true", data-bind="diColorpicker: $data['Quality Code Font HTML Color']")
 
-
 			// ------ Telemetry -------------------------------------------------------------------------------------
 			div#telemetry(data-bind="visible: section() == 'Telemetry'")
 				.title Telemetry
@@ -294,6 +292,24 @@ html
 					button(id='backup', type='button', class='btn btn-primary btn-sm', data-bind='click: startBackup') Backup Now
 					br
 					div#backupMessage(data-bind="text: backupMsg, visible: showBackupMsg")
+
+			// ------ Weather ---------------------------------------------------------------------------------------
+			div#weather(data-bind="visible: section() == 'Weather'")
+				div(data-bind="with: weatherViewModel")
+					.title Weather
+					div.weatherPoints(data-bind="foreach: weatherPoints")
+						.weatherTitle(data-bind="text: $data.title")
+						.well.well-sm
+							.btn.btn-danger.btn-xs(data-bind="click: $parent.removePointRef, visible: $data.point() !== null")
+								i.fa.fa-fw.fa-times
+							.btn.btn-info.btn-xs(data-bind="click: $parent.editPointRef")
+								i.fa.fa-fw.fa-pencil(data-bind="visible: $data.point() !== null")
+								i.fa.fa-fw.fa-plus(data-bind="visible: $data.point() === null")
+							// ko if: $data.point() !== null
+							a(data-bind="text: $data.point().Name, click: $parent.openPointRef")
+							// /ko
+
+
 
 			// ------ About -----------------------------------------------------------------------------------------
 			//div#about(data-bind="visible: section() == 'About InfoScan'")

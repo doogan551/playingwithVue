@@ -9,8 +9,12 @@ script#conditionTemplate(type="text/x-kendo-template")
     #=data.condition#
     # } #
 script#valueViewTemplate(type="text/x-kendo-template")
-    # if (data.value != "" && (data.valueType == "HourMinSec")) { #
-    #= kendo.toString(new Date(data.value), "h:mm tt") #
+    # if (data.value != "" && (data.valueType == "HourMinSec"  || data.expression == "HourMinSec")) { #
+    #= kendo.toString(new Date(data.value), "H 'hr' m 'min' s 'sec'") #
+    #}else if (data.value != "" && (data.valueType == "HourMin"  || data.expression == "HourMin")) { #
+    #= kendo.toString(new Date(data.value), "H 'hr' m 'min'") #
+    #}else if (data.valueType == "MinSec" || data.expression == "MinSec"){ #
+    #= kendo.toString(new Date(data.value), "m 'min' s 'sec'") #
     #}else if (data.valueType == "Float"){ #
     #= kendo.toString(data.value, "{0:n2}") #
     # }else if (data.value != "" && (data.valueType == "DateTime" || data.valueType == "Timet")){ #

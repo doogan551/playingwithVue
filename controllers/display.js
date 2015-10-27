@@ -10,11 +10,11 @@ router.post('/getDisplayInfo', function(req, res, next) {
 
 	Display.getDisplayInfo(data, function(err, utility) {
 		if (err) {
-			return Utils.sendResponse(res, {
+			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return Utils.sendResponse(res, {
+			return utils.sendResponse(res, {
 				utility: utility
 			});
 		}
@@ -26,7 +26,7 @@ router.get('/edit/:upoint', function(req, res, next) {
 
 	Display.editDisplay(data, function(err, result) {
 		if (err) {
-			return Utils.sendResponse(res, {
+			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
@@ -44,7 +44,11 @@ router.get('/gifs/:fname', function(req, res, next) {
 	data.user = req.user;
 
 	Display.displayGif(data, function(err, result) {
-
+		if (err) {
+			res.status(404).end();
+		} else {
+			res.end(result, 'binary');
+		}
 	});
 });
 router.get('/gifs/:fname/:frame', function(req, res, next) {
@@ -150,11 +154,11 @@ router.get('/listassets', function(req, res, next) {
 
 	Display.listassets(data, function(err, result) {
 		if (err) {
-			return Utils.sendResponse(res, {
+			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return Utils.sendResponse(res, result);
+			return utils.sendResponse(res, result);
 		}
 	});
 });

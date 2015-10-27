@@ -183,6 +183,75 @@ displays = $.extend(displays, {
     sizing: false,
     foc: false,
     popUpWindowActive: false,
+    resolveDisplayObjectPropertyName: function (screenObject) {
+        var propertyName;
+        switch (screenObject) {
+            case 0:
+                propertyName = "Display Dynamic";
+                break;
+            case 1:
+                propertyName = "Display Button";
+                break;
+            case 2:
+                propertyName = "Text Label";
+                break;
+            case 3:
+                propertyName = "Display Animation";
+                break;
+            case 7:
+                propertyName = "Display Trend";
+                break;
+        }
+
+        return propertyName;
+    },
+    upiInPointRefs: function (upi) {
+        var answer = false,
+            i,
+            pointRef,
+            lenPointRefs = displayJson["Point Refs"].length;
+
+        for (i = 0; i < lenPointRefs; i++) {
+            pointRef = displayJson["Point Refs"][i];
+            if (pointRef.Value === upi) {
+                answer = true;
+                break;
+            }
+        }
+
+        return answer;
+    },
+    pointReferenceSoftDeleted: function (upi) {
+        var answer = false,
+            i,
+            pointRef,
+            lenPointRefs = displayJson["Point Refs"].length;
+
+        for (i = 0; i < lenPointRefs; i++) {
+            pointRef = displayJson["Point Refs"][i];
+            if (pointRef.Value === upi) {
+                if (pointRef.PointInst === 0) {
+                    answer = true;
+                }
+                break;
+            }
+        }
+
+        return answer;
+    },
+    pointReferenceHardDeleted: function (localUPI) {
+        var answer = false;
+        if (localUPI !== null && localUPI > 0) {
+            if (displays.upiInPointRefs(localUPI)) {
+                if (displays.pointReferenceSoftDeleted(localUPI)) {
+                    answer = false;
+                }
+            } else {
+                answer = true;
+            }
+        }
+        return answer;
+    },
     onRender: function(fn) {
         if(displays.rendered) {
             fn();
@@ -454,7 +523,7 @@ displays = $.extend(displays, {
 
         for (c = 0; c < displayJson['Point Refs'].length; c++) {
             row = displayJson['Point Refs'][c];
-            displays.upiNames[row.PointInst] = row.PointName;
+            displays.upiNames[row.Value] = (row.Value !== 0 && row.PointInst === 0) ? (row.PointName + " - Deleted") : row.PointName;
         }
 
         if (maxWidth > display.Width) {
@@ -1042,6 +1111,9 @@ displays = $.extend(displays, {
 
                     return ret;
                 };
+                $scope.displayDeleted = function () {
+                   return (displayJson._pStatus === 2);
+                };
                 $scope.bgSrcURL = filterwmf(displayJson["Background Picture"]);
                 $scope.getDisplayStyle = function(display) {
                     var ret = {
@@ -1086,6 +1158,7 @@ displays = $.extend(displays, {
                         workspaceManager = window.opener.workspaceManager,
                         pointType,
                         isDisplayObject = item['Point Type'] === 151,
+                        localUPI = item.upi,
                         target = (window.name === 'mainWindow' && isDisplayObject) ? window.name : 'pid_' + item.upi,
 
                         openWin = function() {
@@ -1097,13 +1170,15 @@ displays = $.extend(displays, {
                             });
                         };
 
-                    if (item.upi && typeof item.upi !== 'string') { //upi is string for static text
-                        $.ajax({
-                            url: '/api/points/' + item.upi
-                        }).done(function(response) {
-                            pointType = response['Point Type'].Value;
-                            openWin();
-                        });
+                    if (localUPI && !(displays.pointReferenceSoftDeleted(localUPI) && isDisplayObject)) {  // don't get softdeleted display references
+                        if (typeof localUPI !== 'string') { //upi is string for static text
+                            $.ajax({
+                                url: '/api/points/' + localUPI
+                            }).done(function(response) {
+                                pointType = response['Point Type'].Value;
+                                openWin();
+                            });
+                        }
                     }
                 };
                 $scope.zoomDec = function(input) {
@@ -1213,8 +1288,8 @@ displays = $.extend(displays, {
             };
         });
 
-        displayApp.filter('renderObject', function() {
-            return function(input) {
+        displayApp.filter('renderObject', function () {
+            return function (input) {
                 var out = '???',
                     i,
                     pts,
@@ -1228,112 +1303,135 @@ displays = $.extend(displays, {
                     cls = ' sc_ob sc_ob_' + upi,
                     text,
                     dataUpi = ' data-upi="' + upi + '"',
-                    // onMouseOver = ' onMouseOver="displays.showTip(' + upi + ')"',
-                    // onMouseOut = ' onMouseOut="displays.hideTip()"',
                     animString = 'screen_anim_' + input._idx,
                     animId = 'id="' + animString + '"',
                     screenIdx = ' data-scr-idx="' + input._idx + '"',
                     noAjax = ' data-ajax="false"',
+                    pointHardDeleted = displays.pointReferenceHardDeleted(upi),
+                    pointSoftDeleted = displays.pointReferenceSoftDeleted(upi),
                     isEdit = displays.editMode || false; //globals need to change....temporary fix
-                //dynamic
-                if (screenObject === 0) {
-                    if (isEdit) {
-                        precision = ' data-precision="' + parseInt(input.uiPrecision) + '"';
-                        text = ((input.uiPrecision > 0) ? "###." +  Array(parseInt(input.uiPrecision)+1).join("#") : "###");
-                    } else {
-                        text = input.Text || resolvePrecisionPlaceholder(input.Precision);
-                    }
-                    out = '<div ' + screenIdx + 'data-orig-color="' + input['Foreground Color'] + '"' + precision + dataUpi + ' class="' + cls + '"' + '>' + text + '</div>';
-                }
-                //button
-                if (screenObject === 1) {
-                    out = '';
-                    if (+input['Background Color'] !== 0) {
-                        style += 'background-image:none;border:none;';
-                    }
-                    //style += underline;
-                    style += 'line-height:' + input['Height'] + 'px;' + '"';
-                    out = '<a' + screenIdx + style + ' class="displayBtn' + cls + '"' + noAjax;
-                    if (input.Text) {
-                        text = input.Text.split("\n").join("<br/>");
-                        out += dataUpi + '>' + text + '</a>';
-                    } else {
-                        text = '&nbsp;';
-                        out += dataUpi + '>' + text + '</a>';
-                    }
-                }
-                //text
-                if (screenObject === 2) {
-                    out = (input.Text || '').split("\n").join("<br/>");
-                }
-                //animation
-                if (screenObject === 3) {
-                    if (displays.editMode === true) { //pause animations
-                        if(displays.filesToUpload[input._idx]) {
-                            if(input._animType === 2) {
-                                imgSrc = displays.filesToUpload[input._idx]['On'];
-                                imgSrc = (imgSrc || {}).data;
-                            } else {
-                                imgSrc = displays.filesToUpload[input._idx].data;
-                            }
-                            // imgSrc = displays.filesToUpload[input._idx].data;//input.imgsrc;
-                        } else {
-                            if(input._animType === 2) {//multifile
-                                imgSrc = '/displays/gifs/' + ((input['OnState']) ? input['OnState'] : input['Animation File']);
-                            } else {
-                                imgSrc = '/displays/gifs/' + input['Animation File'];
-                            }
-                            imgSrc = imgSrc.replace('.gif', '') + '/0';
-                        }
-                    } else {
-                        if(input._animType === 2) {//multifile
-                            imgSrc = '/displays/gifs/' + ((input['OnState']) ? input['OnState'] : input['Animation File']);
-                        } else {
-                            imgSrc = '/displays/gifs/' + input['Animation File'];
-                        }
 
-                        imgSrc = imgSrc.replace('.gif', '') + '/';
+                if (!pointHardDeleted) {
+                    if (pointSoftDeleted) {
+                        cls += " strikethrough-line";
                     }
-                    displays.animationConfigs.push({
-                        id: animString,
-                        screenObject: input
-                    });
-                    out = '<img ' + animId + screenIdx + dataUpi + precision + ' class="' + cls + '" src="' + imgSrc + '" />';
-                }
-                //history report
-                if (screenObject === 5) {
-                    out = 'history report';
-                }
-                //history log
-                if (screenObject === 6) {
-                    out = 'history log';
-                }
-                //trend plot
-                if (screenObject === 7) {
-                    if (input.points.length < 1) {
-                        out = '<div><img src="/img/displays/plot.png" /></div>';
-                    } else {
-                        pts = [];
-                        for (i = 0; i < input.points.length; i++) {
-                            pts.push(input.points[i].upi);
-                        }
-                        ploturl = '?title=' + input.Title + '&height=' + input.Height + '&width=' + input.Width + '&yaxis=' + input.Yaxis + '&points=' + pts.join();
-                        out = '<div style="width:100%;height:100%;background-color:white;background-position:center center;background-repeat:no-repeat;background-image:url(/img/displays/spin.gif)">';
-                        if (isEdit) {
-                            out += '<img draggable="false" src="/displays/plot' + ploturl + '" /></div>';
-                        } else {
-                            out += '<iframe frameborder="0" width="100%" height="100%" src="/displays/trend' + ploturl + '"></iframe></div>';
+
+                    if (Number.isInteger(screenObject)) {
+                        switch (screenObject) {
+                            case 0:  // Dynamic
+                            {
+                                if (isEdit) {
+                                    precision = ' data-precision="' + parseInt(input.uiPrecision) + '"';
+                                    text = ((input.uiPrecision > 0) ? "###." + Array(parseInt(input.uiPrecision) + 1).join("#") : "###");
+                                } else {
+                                    text = (input.Text || resolvePrecisionPlaceholder(input.Precision));
+                                }
+                                out = '<div ' + screenIdx + 'data-orig-color="' + input['Foreground Color'] + '"' + precision + dataUpi + ' class="' + cls + '"' + '>' + text + '</div>';
+                            }
+                                break;
+                            case 1:  // button
+                            {
+                                out = '';
+                                if (+input['Background Color'] !== 0) {
+                                    style += 'background-image:none;border:none;';
+                                }
+                                //style += underline;
+                                style += 'line-height:' + input['Height'] + 'px;' + '"';
+                                text = ((input.Text) ? input.Text.split("\n").join("<br/>") : '&nbsp;');
+
+                                if (pointSoftDeleted) {
+                                    out = '<p' + screenIdx + style + ' class="displayBtn' + cls + '"' + noAjax + dataUpi + '>' + text + '</p>';
+                                } else {
+                                    out = '<a' + screenIdx + style + ' class="displayBtn' + cls + '"' + noAjax + dataUpi + '>' + text + '</a>';
+                                }
+                            }
+                                break;
+                            case 2:  // text
+                            {
+                                out = (input.Text || '').split("\n").join("<br/>");
+                            }
+                                break;
+                            case 3:  // animation
+                            {
+                                if (displays.editMode === true) { //pause animations
+                                    if (displays.filesToUpload[input._idx]) {
+                                        if (input._animType === 2) {
+                                            imgSrc = displays.filesToUpload[input._idx]['On'];
+                                            imgSrc = (imgSrc || {}).data;
+                                        } else {
+                                            imgSrc = displays.filesToUpload[input._idx].data;
+                                        }
+                                        // imgSrc = displays.filesToUpload[input._idx].data;//input.imgsrc;
+                                    } else {
+                                        if (input._animType === 2) {//multifile
+                                            imgSrc = '/displays/gifs/' + ((input['OnState']) ? input['OnState'] : input['Animation File']);
+                                        } else {
+                                            imgSrc = '/displays/gifs/' + input['Animation File'];
+                                        }
+                                        imgSrc = imgSrc.replace('.gif', '') + '/0';
+                                    }
+                                } else {
+                                    if (input._animType === 2) {//multifile
+                                        imgSrc = '/displays/gifs/' + ((input['OnState']) ? input['OnState'] : input['Animation File']);
+                                    } else {
+                                        imgSrc = '/displays/gifs/' + input['Animation File'];
+                                    }
+
+                                    imgSrc = imgSrc.replace('.gif', '') + '/';
+                                }
+                                displays.animationConfigs.push({
+                                    id: animString,
+                                    screenObject: input
+                                });
+
+                                out = '<img ' + animId + screenIdx + dataUpi + precision + ' class="' + cls + '" src="' + imgSrc + '" />';
+                            }
+                                break;
+                            case 5:  // history report
+                            {
+                                out = 'history report';
+                            }
+                                break;
+                            case 6:  // history log
+                            {
+                                out = 'history log';
+                            }
+                                break;
+                            case 7:  // Display Trend
+                            {
+                                if (input.points.length < 1) {
+                                    out = '<div><img src="/img/displays/plot.png" /></div>';
+                                } else {
+                                    pts = [];
+                                    for (i = 0; i < input.points.length; i++) {
+                                        pts.push(input.points[i].upi);
+                                    }
+                                    ploturl = '?title=' + input.Title + '&height=' + input.Height + '&width=' + input.Width + '&yaxis=' + input.Yaxis + '&points=' + pts.join();
+                                    out = '<div style="width:100%;height:100%;background-color:white;background-position:center center;background-repeat:no-repeat;background-image:url(/img/displays/spin.gif)">';
+                                    if (isEdit) {
+                                        out += '<img draggable="false" src="/displays/plot' + ploturl + '" /></div>';
+                                    } else {
+                                        out += '<iframe frameborder="0" width="100%" height="100%" src="/displays/trend' + ploturl + '"></iframe></div>';
+                                    }
+                                }
+                            }
+                                break;
+                            default:
+                                console.log("who broke what...  screenObject = ", screenObject);
+                                break;
                         }
                     }
-                }
-                if (out === '???') {
+
+                    if (out === '???') {
+                        return '';
+                    }
+
+                    out += '<div id="screen_object_highlight_' + input._idx + '" class="highlight"><div onmousedown="startSize()" onmouseup="endSize()" class="sH nE" /><div onmousedown="startSize()" onmouseup="endSize()" class="sH nW" /><div onmousedown="startSize()" onmouseup="endSize()" class="sH sE" /><div onmousedown="startSize()" onmouseup="endSize()" class="sH sW" /></div>';
+
+                    return out;
+                } else {
                     return '';
                 }
-                // if(renderCount % 100 === 0) {
-                //   console.log('render: ', renderCount);
-                // }
-                // renderCount++;
-                return out + '<div id="screen_object_highlight_' + input._idx + '" class="highlight"><div onmousedown="startSize()" onmouseup="endSize()" class="sH nE" /><div onmousedown="startSize()" onmouseup="endSize()" class="sH nW" /><div onmousedown="startSize()" onmouseup="endSize()" class="sH sE" /><div onmousedown="startSize()" onmouseup="endSize()" class="sH sW" /></div>';
             };
         });
 

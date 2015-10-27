@@ -8,21 +8,22 @@
             <span data-bind="text: propertyName"></span>
         </label>
         <!-- ko if: isInEditMode -->
-        <!-- ko if: typeof button == 'object' -->
-        <div class="input-group">
-            <input type="text" data-bind="propertyName: propertyName, numeric: data.Value, valueType: data.ValueType, min: min, max: max, disable: data.isReadOnly, doValidate:data.doValidate" class="form-control input-sm">
-            <span class="input-group-btn">
-                <button class="btn btn-info btn-sm" type="button" data-bind="text: button.text, click: button.action"></button>
-            </span>
-        </div>
-        <!-- /ko -->
-        <!-- ko ifnot: typeof button == 'object' -->
-        <input type="text" data-bind="propertyName: propertyName, numeric: data.Value, valueType: data.ValueType, min: min, max: max, disable: data.isReadOnly, doValidate:$data.doValidate" class="form-control input-sm">
-        <!-- /ko -->
+            <!-- ko if: typeof button == 'object' -->
+            <div class="input-group">
+                <input type="text" data-bind="propertyName: propertyName, numeric: data.Value, valueType: data.ValueType, min: min, max: max, disable: data.isReadOnly, doValidate:data.doValidate, noComma: noComma" class="form-control input-sm">
+                <span class="input-group-btn">
+                    <button class="btn btn-info btn-sm" type="button" data-bind="text: button.text, click: button.action"></button>
+                </span>
+            </div>
+            <!-- /ko -->
+            <!-- ko ifnot: typeof button == 'object' -->
+            <input type="text" data-bind="propertyName: propertyName, numeric: data.Value, valueType: data.ValueType, min: min, max: max, disable: data.isReadOnly, doValidate:$data.doValidate, noComma: noComma" class="form-control input-sm">
+            <!-- /ko -->
         <!-- /ko -->
         <!-- ko ifnot: isInEditMode -->
         <div class="lh30">
-            <span data-bind="propertyName: propertyName, numeric: data.Value, valueType: data.ValueType, noTruncate: noTruncate"></span>
+            <!-- ko if: console.log(noComma) --> <!-- /ko -->
+            <span data-bind="propertyName: propertyName, numeric: data.Value, valueType: data.ValueType, noTruncate: noTruncate, noComma: noComma"></span>
         </div>
         <!-- /ko -->
     </div>

@@ -100,14 +100,14 @@ displays = $.extend(displays, {
     stageDisplay: {},
     sizing: false,
     animUploads: ['On', 'Off', 'OnAlarm', 'OffAlarm', 'Fault'],
-    initAnimationUploaders: function() {
+    initAnimationUploaders: function () {
         var c,
             len = displays.animUploads.length,
             key;
 
         displays.animationUploaders = {};
 
-        for(c=0; c<len; c++) {
+        for (c = 0; c < len; c++) {
             key = displays.animUploads[c];
             displays.animationUploaders[key] = new FileUploader(key);
         }
@@ -147,11 +147,87 @@ displays = $.extend(displays, {
             delete localDisplay["Screen Objects"][i].uiPrecision;
         }
     },
+    upiInScreenOjbects: function (upi) {
+        var answer = false,
+            i,
+            screenObj,
+            lenScreenObjs = displayJson["Screen Objects"].length;
+
+        for (i = 0; i < lenScreenObjs; i++) {
+            screenObj = displayJson["Screen Objects"][i];
+            if (screenObj.upi === upi) {
+                answer = true;
+                break;
+            }
+        }
+
+        return answer;
+    },
+    pushPointRef: function (pid, name, pointType, propertyName) {
+        var i,
+            len = displayJson["Point Refs"].length,
+            alreadyExists = false,
+            propertyObj,
+            pointRef = {};
+
+        for (i = 0; i < len; i++) {
+            pointRef = displayJson["Point Refs"][i];
+            if (pointRef.Value === pid) {
+                alreadyExists = true;
+                break;
+            } else {
+                pointRef = {};
+            }
+        }
+
+        propertyObj = displays.workspaceManager.config.Utility.getPropertyObject("Device Point", displays.getEditItem());
+        pointRef.PropertyEnum = displays.workspaceManager.config.Enums.Properties[propertyName].enum;
+        pointRef.PropertyName = propertyName;
+        pointRef.Value = pid;
+        pointRef.AppIndex = displayJson["Point Refs"].length;
+        pointRef.isDisplayable = true;
+        pointRef.isReadOnly = false;
+        pointRef.PointName = name;
+        pointRef.PointType = displays.workspaceManager.config.Enums["Point Types"][pointType].enum;
+        pointRef.PointInst = pid;
+        pointRef.DevInst = (propertyObj !== null) ? propertyObj.Value : 0;
+
+        if (!alreadyExists) {
+            displayJson["Point Refs"].push(pointRef);
+        }
+    },
+    verifyPointReferences: function (localDisplay) {
+        var i,
+            lenPointRefs = localDisplay["Point Refs"].length,
+            pointRef = {};
+
+        for (i = 0; i < lenPointRefs; i++) {
+            pointRef = localDisplay["Point Refs"][i];
+            if (pointRef && !displays.upiInScreenOjbects(pointRef.Value)) {
+                localDisplay["Point Refs"].splice(i, 1);  // Point Ref that's not being used
+                i--;
+            }
+        }
+    },
+    verifyScreenObjects: function (localDisplay) {
+        var i,
+            lenScreenObjs = localDisplay["Screen Objects"].length,
+            screenObj = {};
+
+        for (i = 0; i < lenScreenObjs; i++) {
+            screenObj = localDisplay["Screen Objects"][i];
+            if (screenObj && displays.pointReferenceHardDeleted(screenObj.upi)) {
+                //console.log("    localDisplay[Screen Objects][i] = " + localDisplay["Screen Objects"][i]);
+                localDisplay["Screen Objects"].splice(i, 1);  // Point Ref that's not being used
+                i--;
+            }
+        }
+    },
     syncRightPanel: function (obj) {
 
         var screenObject = obj['Screen Object'],
-                fgColorPicker,
-                $foregroundCustomColorPicker = $("#foregroundCustomColorPicker");
+            fgColorPicker,
+            $foregroundCustomColorPicker = $("#foregroundCustomColorPicker");
 
         if (screenObject === 1 || screenObject === 2) {
             // delay = 500;
@@ -424,11 +500,13 @@ displays = $.extend(displays, {
             var pointTypes = displays.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes('Dynamic'),
                 editItem = displays.EditItemCtrl.editItem,
                 screenObject = editItem['Screen Object'],
+                propertyName = displays.resolveDisplayObjectPropertyName(screenObject),
                 pointSelectedCallback = function(pid, name, pointType) {
                     if (!!pid) {
                         //here you can apply the selected point's pid and/or name
 
                         editItem.upi = pid;
+                        displays.pushPointRef(pid, name, pointType, propertyName);
                         editItem["Point Type"] = displays.workspaceManager.config.Enums['Point Types'][pointType].enum
                         displays.upiNames[pid] = displays.upiNames[pid] || name;
                         displays.updateEditItem(editItem);
@@ -1031,6 +1109,14 @@ displays = $.extend(displays, {
                 displays.popUpWindowActive = false;
             };
 
+            $scope.captureThumbnail = function (id, name) {
+                displays.workspaceManager.captureThumbnail({
+                    upi: id,
+                    name: name,
+                    type: 'display'
+                });
+            };
+
             $scope.cancelServerImageSelection = function () {
                 displays.popUpWindowActive = false;
             };
@@ -1387,9 +1473,12 @@ displays = $.extend(displays, {
 
                 delete saveObj.version;
                 displays.setDisplayPrecision(saveObj);
+                displays.verifyPointReferences(saveObj);
+                displays.verifyScreenObjects(saveObj);
 
                 data.append('display', JSON.stringify(saveObj));
 
+                $scope.captureThumbnail(saveObj._id, saveObj.Name);
                 $scope.blur();
 
                 $.ajax({

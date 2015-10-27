@@ -468,3 +468,27 @@ tr:hover .showOnHover {
     width: 30px;
 }
 /* control codes */
+
+/* weather info */
+.weatherTitle {
+    font-size: 14px;
+    font-weight: bold;
+    color: #777;
+    display: block;
+    margin-bottom: 4px;
+}
+#weather .btn-danger {
+    -webkit-box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.32), inset 0px 1px 0px rgba(255,255,255, 0.32);
+    -moz-box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.32), inset 0px 1px 0px rgba(255,255,255, 0.32);
+    -ms-box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.32), inset 0px 1px 0px rgba(255,255,255, 0.32);
+    -o-box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.32), inset 0px 1px 0px rgba(255,255,255, 0.32);
+    box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.32), inset 0px 1px 0px rgba(255,255,255, 0.32);
+}
+.weatherPoints {
+    margin-top: 20px;
+}
+.weatherPoints a {
+    margin-left: 10px;
+    cursor: pointer;
+}
+/* end weather info */

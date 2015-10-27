@@ -29,8 +29,7 @@ html
             .navbar.navbar-default.topNav
                 .container-fluid
                     .navbar-header.logo
-                        a(href='javascript://', data-bind='click: function() { openWindow("/splash", "splash", "splash", "mainWindow") }')
-                            img(src='/img/workspace/infoscanLogoNew.png', width='252', height='47', alt='InfoScan')
+                       img(src='/img/workspace/infoscanLogoNew.png', width='252', height='47', alt='InfoScan')
                     ul.nav.navbar-nav
                         li
                             a(href='javascript://', data-bind='click: toggleWorkspace')
@@ -44,13 +43,13 @@ html
                                     a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
                         li.dropdown
                             a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("Display") }', title='Open Display')
-                                span.fa.fa-sitemap.fa-2x
+                                span.fa.fa-laptop.fa-2x
                             ul.dropdown-menu(data-bind='setMaxHeight: appHeight, reduceBy: 100, css: {"hasItems": workspace.filteredWindowsByType.display().length > 2}')
                                 li
                                     ul.sysMenu
                                         li
                                             a(href='javascript://', data-bind='click: showDisplays')
-                                                span.sysIcon.fa.fa-sitemap
+                                                span.sysIcon.fa.fa-laptop
                                                 = 'Show open displays'
                                     ul.list
                                         // ko foreach: workspace.filteredWindowsByType.display
@@ -117,6 +116,21 @@ html
                                         li
                                             a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
                                         // /ko
+                         li
+                            a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("Dashboard") }', title='Open Dashboard')
+                                span.fa.fa-tachometer.fa-2x
+                            ul.dropdown-menu(data-bind='setMaxHeight: appHeight, reduceBy: 100, css: {"hasItems": workspace.filteredWindowsByType.dashboard().length > 2}')
+                                li
+                                    ul.sysMenu
+                                        li
+                                            a(href='javascript://', data-bind='click: showDashboard')
+                                                span.sysIcon.fa.fa-tachometer
+                                                = 'Show open Dashboards'
+                                    ul.list
+                                        // ko foreach: workspace.filteredWindowsByType.dashboard
+                                        li
+                                            a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
+                                        // /ko
                         li
                             a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("Report") }', title="Open Report")
                               span.fa.fa-file-text-o.fa-2x
@@ -136,6 +150,21 @@ html
                                           li
                                               a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
                                           // /ko
+                        li
+                            a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("Device Tree") }', title='Open Device Tree')
+                                span.fa.fa-sitemap.fa-2x
+                            ul.dropdown-menu(data-bind='setMaxHeight: appHeight, reduceBy: 100, css: {"hasItems": workspace.filteredWindowsByType.devicetree().length > 2}')
+                                li
+                                    ul.sysMenu
+                                        li
+                                            a(href='javascript://', data-bind='click: showDeviceTree')
+                                                span.sysIcon.fa.fa-sitemap
+                                                = 'Show open Device Trees'
+                                    ul.list
+                                        // ko foreach: workspace.filteredWindowsByType.devicetree
+                                        li
+                                            a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
+                                        // /ko
                     ul.nav.navbar-nav.navbar-right
                         // ko if: workspaceManager.user()['System Admin'].Value
                         li
@@ -149,8 +178,10 @@ html
                         // /ko
                         li.dropdown
                             a.dropdown-toggle(href='javascript://', data-toggle='dropdown')
-                                img(data-bind='attr: { src: "/img/users/" + (user().Photo.Value.length > 0 ? user().Photo.Value : "userLarge.png")}', style='width: 24px;margin-right: 8px;float: left;position: relative;top: -6px;')
-                                span(data-bind='text: user()["First Name"].Value + " " + user()["Last Name"].Value')
+                                // ko if:console.log(user())
+                                // /ko
+                                img(data-bind='attr: { src: "/img/users/" + (user().photo.length > 0 ? user().photo : "userLarge.png")}', style='width: 24px;margin-right: 8px;float: left;position: relative;top: -6px;')
+                                span(data-bind='text: user().firstName + " " + user().lastName')
                                 // b class="caret"></b
                             ul.dropdown-menu
                                 li
@@ -188,7 +219,7 @@ html
                             span.fa
                             | All
                         li(data-bind='click: function() { workspace.showSet("display") }, css: { active: workspace.isActiveSet("display") }')
-                            span.fa.fa-fw.fa-sitemap
+                            span.fa.fa-fw.fa-laptop
                             | Displays
                         li(data-bind='click: function() { workspace.showSet("report") }, css: { active: workspace.isActiveSet("report") }')
                             span.fa.fa-fw.fa-file-text-o
@@ -202,6 +233,9 @@ html
                         li(data-bind='click: function() { workspace.showSet("activitylog") }, css: { active: workspace.isActiveSet("activitylog") }')
                             span.fa.fa-fw.fa-comments-o
                             | Logs
+                        li(data-bind='click: function() { workspace.showSet("devicetree") }, css: { active: workspace.isActiveSet("devicetree") }')
+                            span.fa.fa-fw.fa-sitemap
+                            | Device Tree
                         .footer
 
                 ul.thumbs

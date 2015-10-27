@@ -9,11 +9,11 @@ router.post('/get/:id', function(req, res, next) {
 	data.user = req.user;
 
 	Slideshow.get(data, function(err, ss) {
-		if (err) return Utils.sendResponse(res, {
+		if (err) return utils.sendResponse(res, {
 			err: err
 		});
 
-		return Utils.sendResponse(res, {
+		return utils.sendResponse(res, {
 			slideshow: ss
 		});
 	});

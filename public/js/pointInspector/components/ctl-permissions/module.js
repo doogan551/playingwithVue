@@ -147,7 +147,7 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
                         if (user) {
                             usersOnPoint.push(user);
                         } else {
-                            usersOnPont.push({
+                            usersOnPoint.push({
                                 "_id": userId,
                                 "name": userId,
                                 "canRead": false,

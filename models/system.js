@@ -1,3 +1,5 @@
+var async = require('async');
+
 var db = require('../helpers/db');
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config');
@@ -8,11 +10,10 @@ module.exports = {
       query: {
         Name: name
       },
-      collection: 'SystemInfo',
-      limit: 1
+      collection: 'SystemInfo'
     };
 
-    Utility.get(criteria, cb);
+    Utility.getOne(criteria, cb);
   },
   getCounts: function(type, cb) {
     var query = {};
@@ -55,6 +56,42 @@ module.exports = {
     };
 
     Utility.update(criteria, cb);
+  },
+  getQualityCodes: function(data, cb) {
+    var criteria = {
+      query: {
+        Name: {
+          $in: ["Quality Codes", "Preferences"]
+        }
+      },
+      collection: 'SystemInfo'
+    };
+
+    Utility.get(criteria, function(err, result) {
+      if(err){
+        return cb(err);
+      }
+
+      var returnObj = {
+        Entries: [],
+        "Quality Code Enable": {}
+      };
+
+      for (var i = 0; i < result.length; i++) {
+        if (result[i].Name === "Preferences") {
+          returnObj["Quality Code Enable"] = {
+            Override: result[i]["Quality Code Default Mask"] & Config.Enums["Quality Code Enable Bits"].Override["enum"],
+            "COV Enable": result[i]["Quality Code Default Mask"] & Config.Enums["Quality Code Enable Bits"]["COV Enable"]["enum"],
+            "Alarms Off": result[i]["Quality Code Default Mask"] & Config.Enums["Quality Code Enable Bits"]["Alarms Off"]["enum"],
+            "Command Pending": result[i]["Quality Code Default Mask"] & Config.Enums["Quality Code Enable Bits"]["Command Pending"]["enum"]
+          };
+        } else if (result[i].Name === "Quality Codes") {
+          returnObj.Entries = result[i].Entries;
+        }
+      }
+
+      return cb(null, returnObj);
+    });
   },
   updateQualityCodes: function(data, cb) {
     var codesSearch = {

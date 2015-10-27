@@ -7,8 +7,8 @@ block content
     //- var displayJson=!{JSON.stringify(displayJson)};
   script(src='/js/lib/angular.js')
   script(src='/js/displays/sortable.js')
-  script(src='/js/displays/spectrum.js')
-  link(rel='stylesheet', href='/css/displays/spectrum.css')
+  script(src='/js/lib/spectrum.js')
+  link(rel='stylesheet', href='/css/lib/spectrum.css')
   link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.base.css')
   link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
   link(rel='stylesheet', href='/css/util/diFileBrowser.css')
@@ -39,7 +39,6 @@ block content
     .highlight-false
   #animationTemplate(class='object', draggable='true', style='color: black; font-size: 0px; font-family: ;font-weight:normal; text-decoration: none; font-style: normal; left: 437px; top: 212px; width: auto; height: auto;')
     img(src='/display_assets/assets/placeholder.gif')
-      .highlight-false
   #plotTemplate(class='object', draggable='true', style='color: black; font-size: 0px; font-family: ;font-weight:normal; text-decoration: none; font-style: normal; left: 437px; top: 212px; width: auto; height: auto;')
     img(src="/img/displays/plot.png")
   #backDrop(style='background-image: radial-gradient(#aaa 2px, rgba(11, 11, 12, 0) 2px), radial-gradient(#aaa 2px, rgba(11, 11, 12, 0) 2px), radial-gradient(rgba(255, 255, 255, 0.1) 2px, rgba(255, 255, 255, 0) 2px), radial-gradient(rgba(255, 255, 255, 0.1) 2px, rgba(255, 255, 255, 0) 2px);')
@@ -108,7 +107,7 @@ block panels
         | Are you sure you want to delete this object?
       a(ng-click="deleteObject()", href='#', data-role='button', data-inline='true', data-rel='back', data-transition='flow', data-theme='b') Delete
       a(href='#', ng-click="hideMenu()", data-role='button', data-inline='true', data-rel='back', data-theme='c') Cancel
-  #diFileBrowserPopup(data-role='popup', data-dismissible="false", data-dismissible='false', data-theme="b", data-overlay-theme="b", data-rel="popup", data-position-to="window", data-transition="pop")
+  #diFileBrowserPopup(data-role='popup', data-dismissible="false", data-theme="b", data-overlay-theme="b", data-rel="popup", data-position-to="window", data-transition="pop")
     a(style="float:right; right:130px; position:relative; top:495px; border:1px solid #AAAAAA; color:#FFFFFF; background:#396b9e; font-weight:100; z-index:1;", id="filebrowserok", ng-click="serverImageSelected()", href='#', data-role="button", data-rel='back') OK
     a(style="float:right; right:-45px; position:relative; top:495px; border:1px solid #AAAAAA; color:#FFFFFF; background:#396b9e; font-weight:100; z-index:1;", id="filebrowsercancel", ng-click="cancelServerImageSelection()", href='#', data-role="button", data-rel='back') Cancel
 
@@ -210,11 +209,11 @@ block panels
           div(id="foregroundCustomColorPicker", ng-model="editItem['Foreground Color']", data-dropdown="true", data-sm-palette="true", data-vertical="true", data-insertpalette="true")
 
     input#transparent(ng-model='editItem["Background Color"]', ng-true-value="1", ng-false-value="0", type='checkbox', data-mini="true", name='checkbox-v-6c')
-      label(for='transparent') Transparent Background
-      input(style='display:none;', ng-model='editItem["Font Bold"]', type="text")
-      input(style='display:none;', ng-model='editItem["Font Name"]', type="text")
-      input(style='display:none;', ng-model='editItem["Font Size"]', type="text")
-      input(style='display:none;', ng-model='editItem["Foreground Color"]', type="text")
+    label(for='transparent') Transparent Background
+    input(style='display:none;', ng-model='editItem["Font Bold"]', type="text")
+    input(style='display:none;', ng-model='editItem["Font Name"]', type="text")
+    input(style='display:none;', ng-model='editItem["Font Size"]', type="text")
+    input(style='display:none;', ng-model='editItem["Foreground Color"]', type="text")
 
     div#trendProps(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
       h4 Trend Points
@@ -349,15 +348,15 @@ block panels
                 a(style="border-radius:8px;float:left;position: absolute;top:24px;left:-3px;", href="#", id="browseBg", data-icon="plus", data-role="button", data-mini="true", data-inline="true", data-iconpos="notext", data-theme="b") New Image
                 input(style='display:none', id="bgPicFile", type="file", accept="image/*")
                 a(style="border-radius:8px;float:right;position: absolute;top:27px;left:233px;", href="#", ng-click="delBg()", id="delBg", data-icon="delete", data-role="button", data-mini="true", data-inline="true", data-iconpos="notext", data-theme="b") Delete
-                a(style="border-radius:8px;position:absolute;left:25px;top:25px;", href="#diFileBrowserPopup", data-icon="edit", data-modelobject="display", data-modelfield="Background Picture", data-imagetype="*",  class="browseserverimages", data-imagetype="*", data-theme="b", data-mini="true", data-transition="pop", data-inline="true", data-iconpos="notext", data-role="button", data-position-to="window", data-rel="popup", data-corners="true", data-shadow="true", data-iconshadow="true", data-wrapperels="span", aria-haspopup="true") Existing Image
+                a(style="border-radius:8px;position:absolute;left:25px;top:25px;", href="#diFileBrowserPopup", data-icon="edit", data-modelobject="display", data-modelfield="Background Picture", data-imagetype="*",  class="browseserverimages", data-theme="b", data-mini="true", data-transition="pop", data-inline="true", data-iconpos="notext", data-role="button", data-position-to="window", data-rel="popup", data-corners="true", data-shadow="true", data-iconshadow="true", data-wrapperels="span", aria-haspopup="true") Existing Image
 
         #dClip.leftPanels
           div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
             h4 Current Items
             .objectBox(style='padding:0px;')
-              ul#layers(ui-sortable='sortableOptions', ng-model="objs", id="clipboardItems")
+              ul#layers(ui-sortable='sortableOptions', ng-model="objs")
                 li(ng-repeat='obj in clipBoard')
-                  div(ng-click="action(obj)", draggable='true', data-drag-delay="100", ng-bind-html-unsafe="obj|screenType2", class='clipboardItem', id ='clipboardItem-{{$index}}') item
+                  div(ng-click="action(obj)", draggable='true', data-drag-delay="100", ng-bind-html-unsafe="obj|screenType2", class='clipboardItem', id='clipboardItem-{{$index}}') item
         #dVersion.leftPanels
           div(data-role='collapsible', data-mini='true', data-theme='c', data-content-theme='c', data-inset='false', data-collapsed='false')
             h4 Version History

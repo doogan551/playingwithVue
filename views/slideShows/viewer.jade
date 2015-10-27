@@ -24,8 +24,8 @@ block content
 							span
 						button.btn.glyphicon(data-bind='if:currentSlide')
 							span#left(data-bind='text: (currentSlide().order + 1) + " of " + numberOfSlides')
-						span.btn.glyphicon(data-bind='')
-							span#seconds.badge(data-bind='text: timeRemaining')
+						button.btn.glyphicon(data-bind='')
+							span#seconds(data-bind='text: timeRemaining')
 	.slidescontainer
 		div.frame1container(style='height: 100%; width: 100%;')
 			iframe.frame1(id='frame1', webkitAllowFullScreen mozAllowFullScreen allowFullScreen)

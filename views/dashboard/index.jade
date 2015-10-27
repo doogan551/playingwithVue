@@ -1,0 +1,115 @@
+doctype html
+html
+    head
+        title= title
+        link(rel='stylesheet', href='/css/lib/bootstrap3.min.css')
+        link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
+        link(rel='stylesheet', href='/css/lib/bootstrap-datepicker.css')
+        link(rel='stylesheet', href='/css/lib/jquery.timepicker.css')
+        link(rel='stylesheet', href='/css/lib/jquery-clockpicker.css')
+        link(rel='stylesheet', href='/css/lib/jquery.dataTables.css')
+        link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.base.css')
+        link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
+        link(rel='stylesheet', href='/css/lib/bootstrap-slider.css')
+        link(rel='stylesheet', href='/css/lib/jquery.jscrollpane.css')
+        link(rel='stylesheet', href='/css/dashboard/dashboard.css')
+    body.loading
+        .bgImage.bgRepeat(data-bind="visible: showMainBackground, style: { backgroundImage: 'url(' + backgroundImage() + ')' }")
+        .leftBar
+            .utilities.hideLoading(data-bind="foreach: utilities, visible: loaded && viewableUtilities() > 0")
+                // ko if:$parent.canRead(tou.rawUtilities[$index()].Security)
+                //will be observable array of utilities
+                .icon(data-bind="css: { active: active }, click: activate")
+                    img(data-bind="attr: { src: '/img/dashboard/utilityicon_' + type + '.png'}")
+                .title(data-bind="text: obName, click: activate")
+                .editUtility(data-bind="if: tou.isSystemAdmin(), visible: active, click: $root.editUtility")
+                    i.editIcon.fa.fa-pencil
+                    span Edit
+                .arrow_box(data-bind="visible: active, css: shortName")
+                    //list sections, nospace lowercase for section class for content
+                    ul.pages(data-bind="foreach: pages")
+                        li(data-bind="if: shouldShow, visible: shouldShow")
+                            a(href="javascript://", data-bind="click: $root.pageClick, text: title, css: typeof shortTitle !== 'undefined'?shortTitle:title.replace(/ /g, '_')")
+                // /ko
+            .addUtility.hideLoading
+                a(href="javascript://", data-bind="click: addUtility, if: tou.isSystemAdmin()") [Add Utility]
+
+        .pop
+            a(href="", data-bind="click: popInOut")
+                .fa.fa-lg(data-bind="css: popInOutClass()")
+                // ko text: popInOutText()
+                // /ko
+        .dashboardContent.hideLoading
+            each utility, i in rawUtilities
+                div(data-bind="visible: tou.bindings.canRead('" + utility.Security + "')")
+                    div(class='utility ' + utility.utilityName.replace(/ /g, '_'), data-bind="with: utility_" + utility.utilityName.replace(/ /g, '_')) !{content}
+            .noUtilityAccess(data-bind="visible: loaded && (viewableUtilities() === 0 || utilities().length === 0)")
+                .infoMessage
+                    i.fa.fa-info-circle
+                    span(data-bind="visible: viewableUtilities() === 0 && utilities().length > 0") You don't have access to any utilities.
+                    span(data-bind="visible: utilities().length === 0") No utilities have been created.
+
+        //so that all modals are at root level and show properly
+        include modals.jade
+
+    script#trendPlotTemplate(type="text/html")
+        div.dashboardItem__IDX__(data-bind="stopBindings: true")
+            .portlet.flexcolumn(data-bind="css: classNames")
+                .title.dragHandle
+                    span.flexrow.flexcenter
+                        a.dashboardGear.showInEdit(href="javascript://", data-bind="click: editDashboardItem")
+                            i.fa.fa-cog.config
+                            span(data-bind="text: title")
+                        span.hideInEdit(data-bind="text: title")
+                .scaleBar(data-bind="foreach: periodList, visible: type() === 'Trend'")
+                    button.btn(data-bind="click: function () {$parent.changePeriod($data); }, css: { 'btn-primary': $parent.period() === $data, 'btn-xs': $parent.width().match('single'), 'btn-sm': !$parent.width().match('single')}, text: $data.capFirst()")
+                .content.flexFill.flexcolumn.flexcenter
+                    .configRequired(data-bind="visible: !loaded()")
+                        .configText Not Configured
+                        img.itemBackground(data-bind="attr: { src: '/img/dashboard_' + type() + '.png' }")
+                    span(data-bind="visible: loaded")
+                        span(data-bind="if: type() === 'Statistic'")
+                            .value(data-bind="text: value")
+                            .units(data-bind="html: units")
+                .lowerBar
+                    .actions
+                        a(href="javascript://", data-bind="click: rewind, visible: type() !== 'Gauge'")
+                            i.fa.fa-backward
+                        span(data-bind="text: prettyDate")
+                        a(href="javascript://", data-bind="click: forward, visible: type() !== 'Gauge' && showForward()")
+                            i.fa.fa-forward
+
+    script(src='/js/lib/jquery-1.9.1.min.js')
+    script(src='/js/lib/jquery-ui.js')
+    script(src='/js/lib/jquery.mousewheel.js')
+    script(src='/js/lib/jquery.jscrollpane.min.js')
+    script(src='/js/lib/jquery.shapeshift.js')
+    script(src='/js/lib/draggabilly.pkgd.js')
+    script(src='/js/lib/socket.io.js')
+    script(src='/js/lib/packery.pkgd.js')
+    script(src='/js/lib/bootstrap3.min.js')
+    script(src='/js/lib/knockout-3.2.0.debug.js')
+    script(src='/js/lib/knockout.mapping-2.3.5.js')
+    script(src='/js/lib/ko.validation.js')
+    script(src='/js/lib/bootstrap-datepicker.js')
+    script(src='/js/lib/jquery-clockpicker.min.js')
+    script(src='/js/lib/moment.js')
+    script(src='/js/lib/jquery.blockUI.js')
+    script(src='/js/lib/jquery.dataTables.js')
+    script(src='/js/lib/jqwidgets/jqxcore.js')
+    script(src='/js/lib/jqwidgets/jqxcolorpicker.js')
+    script(src='/js/lib/jqwidgets/jqxdropdownbutton.js')
+    script(src='/js/util/components/colorpicker/diColorPicker.js')
+    script(src='/js/lib/bootstrap-slider.js')
+    script(src='/js/lib/highcharts.src.js')
+    script(src='/js/lib/jspdf.debug.js')
+    script(src='/js/lib/html2canvas.js')
+    script(src='/js/lib/canvg.js')
+    script(src='/js/lib/rgbcolor.js')
+    script(src='/js/trendPlots/trendplot.js')
+    script(src='/js/lib/jquery.printarea.js')
+    script(src='/js/dashboard/dashboard.js')
+
+    script.
+        tou.rawUtilities = !{utilities};
+        tou._weatherPoints = !{weatherPoints};

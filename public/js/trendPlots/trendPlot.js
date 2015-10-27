@@ -1,505 +1,914 @@
-var myChart;
-var currIndex = 1;
-var numRows = null;
-var numDays = 60;
-var upis = [643767, 643899, 643901, 729780, 730050, 643769, 643771, 643773, 643775, 643893, 643895, 643897, 2929, 2930, 2932, 2933, 2934, 2935];
-var startTimestamp = 1421699334;
-var endTimestamp = new Date().getTime()/1000;
-//var startTimestamp = 1421699334;
-//var endTimestamp = 1421879400;
-var colors = Highcharts.theme.colors;
-var $container = $('#container');
-var $outerContainer = $('#outerContainer');
-var $configureChartModal = $('#configureChartModal');
-var renderedChart = false;
-var minX = 9999999999999;
-var maxX = 0;
-var openConfigureWindow = function() {
-    $configureChartModal.modal('show');
-};
-var hideChart = function() {
-    $outerContainer.css('visibility', 'hidden');
-};
-var showChart = function() {
-    $outerContainer.css('visibility', 'visible');
-};
-var TrendPoint = function(cfg) {
-    var self = this,
-        rows = cfg.seriesRows,
-        yAxis = cfg.yAxis,
-        index = cfg.seriesUPI,
-        axisConfig = {
-            labels: {
-                // enabled: false,
-                formatter: function() {
-                    return this.value.toFixed(5);
-                },
-                format: cfg.format,
-                style: {
-                    color: cfg.labelStyle
-                }
-            },
-            prevTitle: cfg.titleText,
-            title: {
-                text: cfg.titleText,
-                style: {
-                    color: cfg.labelStyle
-                }
-            },
-            offset: 0,
-            type: 'linear',
-            opposite: !!cfg.opposite
+var trendPlots = {
+        logLinePrefix: true,
+        numberWithCommas: function (theNumber) {
+            if (theNumber !== null && theNumber !== undefined) {
+                return theNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            } else {
+                return "";
+            }
         },
-        seriesConfig = {
-            name: cfg.seriesName,
-            type: cfg.seriesType,//'arearange'
-            yAxis: yAxis,
-            data: [],
-            animation: false,
-            color: cfg.labelStyle,
-            tooltip: {
-                valueSuffix: cfg.seriesSuffix
-            }
-        };
-
-    self.getData = function(cb) {
-        $.ajax({
-            url: '/api/trendPlots/',
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                id: index,
-                rows: numRows,
-                numDays: window.bindings.numDays(),
-                start: startTimestamp,
-                end: endTimestamp
-            }
-        }).done(function(response) {
-            var data = response.data || [],
-                newData = [],
-                c,
-                row,
-                ts,
-                // ts1,
-                minY = Number.MAX_VALUE,
-                maxY = Number.MIN_VALUE,
-                len = data.length;
-
-            console.log('Returned data (' + index + '):', data.length);
-
-            for(c=0; c<len; c++) {
-                row = data[c];
-                row.timestamp *= 1000;
-                // ts = parseFloat(row.Value);
-                ts = parseFloat(row.high);
-                // ts = parseFloat(row.Value.toFixed(3));
-
-                if(ts > maxY) {
-                    maxY = ts;
-                }
-                if(ts < minY) {
-                    minY = ts;
-                }
-
-                if(row.timestamp > maxX) {
-                    maxX = row.timestamp;
-                }
-                if(row.timestamp < minX) {
-                    minX = row.timestamp;
-                }
-
-                newData.push([row.timestamp, ts]);
-            }
-
-            if(maxY === Number.MIN_VALUE) {
-                maxY = 1;
-            }
-
-            newData.sort(function(a, b) {
-                return (a[0] > b[0])?1:-1;
-            });
-
-            // axisConfig.min = (index === upis[0])?minY:undefined;
-            // axisConfig.max = (index === upis[0])?maxY:undefined;
-            // axisConfig.min = cfg.seriesMinY;
-            // axisConfig.max = cfg.seriesMaxY;
-
-            seriesConfig.data = newData;
-            cb();
-        });
-    };
-
-    return {
-        axisConfig: axisConfig,
-        seriesConfig: seriesConfig,
-        getData: self.getData,
-        index: self.index
-    };
-};
-
-var Chart = function(cfg) {
-    var self = this,
-        pointCount = 0,
-        chartConfig = {
-            animation: false,
-            exporting: {
-                buttons: {
-                    contextButton: {
-                        enabled: false
-                    },
-                    customButton: {
-                        align: 'left',
-                        text: 'Configure',
-                        _titleKey: 'configureChart',
-                        onclick: function () {
-                            openConfigureWindow();
-                        }
-                    }
-                }
+        typeConfigs: {//store these in the DB, dynamically add new types?
+            "line": {},
+            "arearange": {
+                requiresMore: true
             },
-            chart: {
-                zoomType: 'xy',
-                renderTo: 'container',
-                type: 'spline',
-                // type: 'areaspline',
-                events: {
-                    selection: function(event) {
-                        var currAxis = self.visibleAxis;
+            "areaspline": {
 
-                        console.log('selection');
-
-                        hideChart();
-
-                        self.showAxis();
-
-                        setTimeout(function() {
-                            self.showAxis(currAxis);
-                            showChart();
-                        }, 1);
-                    }
-                //     click: function(event) {
-                //         console.log(event);
-                //     }
-                }
             },
-            plotOptions: {
-                line: {
-                    marker: {
-                        enabled: false
-                    }
-                },
-                spline: {
-                    marker: {
-                        enabled: false
-                    }
-                },
-                series: {
-                    events: {
-                        legendItemClick: function() {
-                            var idx = this._i;
-                            self.showAxis(idx);
-                            return false;
-                        }
-                    }
-                }
-            },
-            title: {
-                text: cfg.title
-            },
-            yAxis: [],
-            tooltip: {
-                crosshairs: [true],
-                animation: false,
-                hideDelay: 100,
-                shared: true,
-                valueDecimals: 5,
-                positioner: function(labelWidth, labelHeight, point) {
-                    var x = point.plotX,
-                        y = point.plotY;
-
+            "bar": {},
+            "column": {
+                cfg: function (cfg) {
                     return {
-                        y: 30,
-                        x: x
+                        plotOptions: {
+                            column: {
+                                // pointWidth: cfg.width && cfg.data && cfg.data.data && cfg.data.data.length > 0?cfg.width/cfg.data.data[0].data.length * 0.4:15
+                            }
+                        },
+                        series: [{
+                            connectNulls: true
+
+                        }],
+                        tooltip: {
+                            shared: true,
+                            useHTML: true
+                        }
                     };
                 }
             },
-            legend: {//configurable or no?
-                // verticalAlign: 'top',
-                // floating: true,
-                backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+            "columnrange": {
+                requiresMore: true
             },
-            series: []
-        };
+            "gauge": {
+                requiresMore: true,
+                cfg: function (cfg) {
+                    var ret,
+                        minMeasurement,
+                        size = cfg.size || 1,
+                        getDefaultPlotBands = function () {
+                            return [{
+                                from: 0,
+                                to: Math.round(cfg.max * 0.6),
+                                color: '#55BF3B' // green
+                            }, {
+                                from: Math.round(cfg.max * 0.6),
+                                to: Math.round(cfg.max * 0.8),
+                                color: '#DDDF0D' // yellow
+                            }, {
+                                from: Math.round(cfg.max * 0.8),
+                                to: cfg.max,
+                                color: '#DF5353' // red
+                            }];
+                        },
+                        plotBands = cfg.colorStops?$.extend(true, [], cfg.colorStops):null,
+                        plotBandType = cfg.colorStopsType,
+                        convertToStatic = function (band) {
+                            var tmpBand = {
+                               from: Math.round(band.from/100 * cfg.max),
+                               to: Math.round(band.to/100 * cfg.max),
+                               color: (band.color.match('#')?'':'#') + band.color
+                            };
 
-    minX = 9999999999999;
-    maxX = 0;
+                            return tmpBand;
+                        },
+                        validatePlotBands = function () {
+                            var valid = true;
+                            trendPlots.forEachArray(plotBands, function (band) {
+                                if(isNaN(parseFloat(band.from)) || isNaN(parseFloat(band.to))) {
+                                    valid = false;
+                                } else {
+                                    band.from = parseFloat(band.from);
+                                    band.to = parseFloat(band.to);
+                                    band.color = (band.color.match('#')?'':'#') + band.color;
+                                }
 
-    self.getChartCfg = function() {
-        return chartConfig;
-    };
+                                return valid;
+                            });
 
-    self.render = function(cfg) {
-        hideChart();
+                            return valid;
+                        };
 
-        // if(renderedChart && self.chart) {
-        //     self.chart.destroy();
-        // }
+                    cfg.max = Math.round(cfg.max);
 
-        renderedChart = true;
+                    minMeasurement = Math.min(cfg.width, cfg.height);
 
-        self.chart = new Highcharts.Chart(cfg);//$container.highcharts(cfg);
+                    if(plotBands && validatePlotBands()) {
+                        if(plotBandType === 'percent') {
+                            trendPlots.forEachArray(plotBands, function (band, idx) {
+                                plotBands[idx] = convertToStatic(band);
+                            });
+                        }
+                    } else {
+                        plotBands = getDefaultPlotBands();
+                    }
 
-        self.showAxis(0);
+                    ret = {
+                        chart: {
+                            type: 'gauge',
+                            plotBackgroundColor: null,
+                            plotBackgroundImage: null,
+                            plotBorderWidth: 0,
+                            plotShadow: false
+                        },
 
-        showChart();
-    };
+                        title: {
+                            text: 'Speedometer'
+                        },
 
-    self.showAxis = function(idx) {
-        var c,
-            list = self.chart.yAxis,
-            len = list.length;
+                        pane: {
+                            size: Math.round(size * 100) + '%',
+                            startAngle: -150,
+                            endAngle: 150,
+                            background: []
+                        },
 
-        if(idx !== undefined) {
-            self.visibleAxis = idx;
-        } else {
-            self.visibleAxis = -1;
-        }
+                        tooltip: {
+                            enabled: false
+                        },
 
-        // console.time('showaxis' + idx);
+                        // the value axis
+                        yAxis: {
+                            min: 0,
+                            max: cfg.max,
 
-        for(c=0; c<len; c++) {
-            if(c === idx || idx === undefined) {
-                list[c].show();
-            } else {
-                list[c].hide();
+                            minorTickInterval: null,
+                            // minorTickWidth: 1,
+                            // minorTickLength: Math.round(cfg.max / 10),
+                            // minorTickPosition: 'inside',
+                            // minorTickColor: '#666',
+
+                            tickInterval: cfg.max,
+                            // tickWidth: 2,
+                            // tickPosition: 'inside',
+                            // tickLength: 10,
+                            // tickColor: '#666',
+                            labels: {
+                                step: 1,
+                                distance: Math.round(size * 10),
+                                rotation: 'none'
+                            },
+                            title: {
+                                text: cfg.units
+                            },
+                            plotBands: plotBands
+                        },
+
+                        series: [{
+                            dataLabels: {
+                                format: '<div style="text-align:center"><span style="font-size:' + (minMeasurement/120 * (cfg.size || 1)) + 'em;color:' +
+                                    'black' + '">{y:,.1f}</span><br/>' +
+                                       '<span style="font-size:' + (minMeasurement/120 * (cfg.size || 1)) + 'em;color:silver">' + (cfg.units || '') + '</span></div>'
+                            }
+                        }],
+                        plotOptions: {
+                            gauge: {
+                                dataLabels: {
+                                    borderWidth: 0,
+                                    y: 0,
+                                    useHTML: true
+                                }
+                            }
+                        }
+
+                    };
+                    return ret;
+                }
+            },
+            "heatmap": {},
+            "pie": {},
+            "solidgauge": {
+                cfg: function (cfg) {
+                    var minMeasurement,
+                        size = (cfg.size || 1) * 1.6,
+                        getDefaultStops = function () {
+                            return [
+                                [0.1, '#55BF3B'], // green
+                                [0.5, '#DDDF0D'], // yellow
+                                [0.9, '#DF5353'] // red
+                            ];
+                        },
+                        stops = cfg.colorStops?$.extend(true, [], cfg.colorStops):null,
+                        plotBandType = cfg.colorStopsType,
+                        convertStops = function () {
+                            var ret = [];
+
+                            trendPlots.forEachArray(stops, function (stop, idx) {
+                                var val = stop.to/100,//(idx === stops.length - 1)?stop.from:stop.to,
+                                    tmpBand = [val, (stop.color.match('#')?'':'#') + stop.color];
+
+                                ret.push(tmpBand);
+                            });
+
+                            return ret;
+                        },
+                        validateStops = function () {
+                            var valid = true;
+                            trendPlots.forEachArray(stops, function (stop) {
+                                if(isNaN(parseFloat(stop.from)) || isNaN(parseFloat(stop.to))) {
+                                    valid = false;
+                                } else {
+                                    stop.from = parseFloat(stop.from);
+                                    stop.to = parseFloat(stop.to);
+                                    stop.color = (stop.color.match('#')?'':'#') + stop.color;
+                                }
+
+                                return valid;
+                            });
+
+                            return valid;
+                        };
+
+                    cfg.max = Math.round(cfg.max);
+
+                    minMeasurement = Math.min(cfg.width, cfg.height);
+
+                    if(stops && validateStops()) {
+                        stops = convertStops();
+                        // if(plotBandType === 'percent') {
+                        //     trendPlots.forEachArray(stops, function (band, idx) {
+                        //         stops[idx] = convertToStatic(band);
+                        //     });
+                        // } else {
+                        //     stops[]
+                        // }
+                    } else {
+                        stops = getDefaultStops();
+                    }
+
+                    return {
+                        pane: {
+                            center: ['50%', '85%'],
+                            size: Math.round(size * 100) + '%',
+                            startAngle: -90,
+                            endAngle: 90,
+                            background: {
+                                backgroundColor: '#EEEEEE',
+                                innerRadius: '60%',
+                                outerRadius: '100%',
+                                shape: 'arc'
+                            }
+                        },
+
+                        tooltip: {
+                            enabled: false
+                        },
+
+                        // the value axis
+                        yAxis: {
+                            min: 0,
+                            max: cfg.max,
+                            stops: stops,
+                            // minColor: '#55BF3B',
+                            // maxColor: '#55BF3B',
+                            lineWidth: 0,
+                            minorTickInterval: null,
+                            tickInterval: cfg.max,
+                            // tickWidth: 0,
+                            title: {
+                                y: -70//needs to be calculated
+                            },
+                            labels: {
+                                step: 1,
+                                y: 16
+                            }
+                        },
+
+                        plotOptions: {
+                            solidgauge: {
+                                dataLabels: {
+                                    y: 5,
+                                    borderWidth: 0,
+                                    useHTML: true
+                                }
+                            }
+                        },
+
+                        series: [{
+                            dataLabels: {
+                                format: '<div style="text-align:center"><span style="font-size:' + (minMeasurement/120 * (cfg.size || 1)) + 'em;color:' +
+                                    'black' + '">{y:,.1f}</span><br/>' +
+                                       '<span style="font-size:' + (minMeasurement/120 * (cfg.size || 1)) + 'em;color:silver">' + cfg.units + '</span></div>'
+                            }
+                        }]
+                    };
+                },
+                requiresMore: true
+            },
+            "spline": {},
+        },
+        init: function () {
+            var scriptList = ['highcharts', 'highcharts-more', '/modules/solid-gauge', '/modules/no-data-to-display'],//should be per type
+                ext = '.js',
+                base = '/js/lib/',
+                completed = 0,
+                getScr,
+                cb = function () {
+                    completed++;
+                    if(completed === scriptList.length) {
+                        Highcharts.setOptions({
+                            global: {
+                                useUTC: false
+                            },
+                            lang: {
+                                decimalPoint: '.',
+                                thousandsSep: ','
+                            }
+                        });
+                        trendPlots.highchartsLoaded = true;
+                        while(trendPlots.onReadyFns.length) {
+                            trendPlots.onReadyFns.pop()();
+                        }
+                    } else {
+                        getScr();
+                    }
+                },
+                err = function () {
+                    trendPlots.log('error with getscript', arguments);
+                };
+
+            getScr = function () {
+                var scr = scriptList[completed];
+
+                $.getScript(base + scr + ext).done(cb).fail(err);
+            };
+
+            if(Highcharts) {
+                scriptList.shift();
             }
-        }
 
-        self.chart.redraw();
+            getScr();
+        },
+        emptyFn: function (){ return; },
+        onReadyFns: [],
+        onReady: function (fn) {
+            if(!trendPlots.highchartsLoaded) {
+                trendPlots.onReadyFns.push(fn);
+            } else {
+                fn();
+            }
+        },
+        formatDate: function (date, addSuffix) {
+            var functions = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'],
+                lengths = [2,2,2,3],
+                separators = [':',':',':',''],
+                suffix = ' --',
+                fn,
+                out = '';
 
-        // console.timeEnd('showaxis' + idx);
-    };
+            if(addSuffix) {
+                separators.push(suffix);
+            }
 
-    self.points = [];
+            if(typeof date === 'number') {
+                date = new Date(date);
+            }
 
-    self.title = cfg.title;
+            for(fn in functions) {
+                if(functions.hasOwnProperty(fn)) {
+                    out += ('000' + date['get' + functions[fn]]()).slice(-1 * lengths[fn]) + separators[fn];
+                }
+            }
 
-    self.addPoint = function(pCfg, cb) {
-        var idx = pointCount++,
-            trendPoint;
+            return out;
+        },
+        log: function () {
+            var stack,
+                steps,
+                lineNumber,
+                err,
+                now = new Date(),
+                args = [].splice.call(arguments, 0),
+                pad = function (num) {
+                    return ('    ' + num).slice(-4);
+                },
+                formattedTime = trendPlots.formatDate(new Date(), true);
 
-        pCfg.yAxis = idx;
+            if(trendPlots.logLinePrefix === true) {
+                err = new Error();
+                if(Error.captureStackTrace) {
+                    Error.captureStackTrace(err);
 
-        trendPoint = new TrendPoint(pCfg);
+                    stack = err.stack.split('\n')[2];
 
-        self.points.push(trendPoint);
+                    steps = stack.split(':');
 
-        trendPoint.getData(function() {
-            // if(chartConfig.yAxis.length === 0) {
-                chartConfig.yAxis.push(trendPoint.axisConfig);
-            // }
+                    lineNumber = steps[2];
 
-            chartConfig.series.push(trendPoint.seriesConfig);
+                    args.unshift('line:' + pad(lineNumber), formattedTime);
+                }
+            }
+            // args.unshift(formattedTime);
+            if(!trendPlots.noLog) {
+                console.log.apply(console, args);
+            }
+        },
+        forEach: function (obj, fn) {
+            var keys = Object.keys(obj),
+                c,
+                len = keys.length,
+                errorFree = true;
 
-            cb();
-        });
-    };
-};
-var init = function(config) {
-    var tp = new Chart({
-            title: config.chartTitle
-        }),
-        count = 0,
-        list = config.chartSeries,
-        len = list.length,
-        row,
-        c = 0,
-        getNext = function() {
-            row = list[c];
-            tp.addPoint({
-                seriesUPI: parseInt(row.seriesUPI, 10),
-                seriesName: row.seriesName,
-                seriesType: row.seriesType,
-                seriesMinY: row.seriesMinY,
-                seriesMaxY: row.seriesMaxY,
-                format: row.format,
-                labelStyle: colors[count % colors.length],// row.labelStyle || '#f4f4f4',
-                titleText: row.titleText,
-                seriesSuffix: row.seriesSuffix,
-                seriesRows: row.seriesRows
-            }, function() {
-                var cfg = tp.getChartCfg();
-                count++;
-                c++;
-                if(c=== len) {
-                    cfg.xAxis = [{
-                        min: minX,
-                        max: maxX,
-                        type: 'datetime',
-                        reversed: config.chartReversed
-                    }];
-                    myChart = tp;
-                    myChart.cfg = cfg;
-                    // console.log('final cfg', cfg);
+            for(c=0; c<len && errorFree; c++) {
+                errorFree = fn(obj[keys[c]], keys[c], c);
+                if(errorFree === undefined) {
+                    errorFree = true;
+                }
+            }
 
-                    myChart.render(cfg);
+            return errorFree;
+        },
+        forEachArray: function (arr, fn) {
+            var c,
+                list = arr || [],
+                len = list.length,
+                errorFree = true;
+
+            for(c=0; c<len && errorFree; c++) {
+                errorFree = fn(list[c], c);
+                if(errorFree === undefined) {
+                    errorFree = true;
+                }
+            }
+
+            return errorFree;
+        },
+        defaults: {
+            highChartDefaults: {
+                // chart: {
+                //     zoomType: 'x'
+                // },
+                credits: {
+                    enabled: false
+                }
+            }
+        },
+        createNamespace: function (obj, path, val) {
+            var levels = path.split('.'),
+                currObj = obj;
+
+            trendPlots.forEachArray(levels, function (level, idx) {
+                currObj[level] = currObj[level] || {};
+
+                if(idx === levels.length - 1 && val !== undefined) {
+                    if(typeof currObj[level] === 'object' && typeof val === 'object') {
+                        $.extend(true, currObj[level], val);
+                    } else {
+                        currObj[level] = val;
+                    }
                 } else {
-                    getNext();
+                    currObj = currObj[level];
                 }
             });
+
+            return obj;
+        },
+        complicateObject: function (map, simple, complex) {
+            var ns = trendPlots.createNamespace;
+
+            trendPlots.forEach(map, function (dst, prop) {
+                var src = simple[prop];
+
+                if(src !== undefined) {
+                    complex = ns(complex, dst, src);
+                }
+
+            });
+
+            return complex;
+        },
+    },
+    emptyFn = trendPlots.emptyFn,
+    TrendPlot = function (config) {
+        var trendSelf = this,
+            log = trendPlots.log,
+            $renderTo = $(config.target),
+            instance,
+            updateData = function (data) {
+                var config = trendSelf.initialConfig,
+                    newData;
+
+                config.data = data;
+
+                instance.destroy();
+                trendSelf.drawChart(config);
+            },
+            updateConfig = function (cfg) {
+                if(cfg.data) {
+                    updateData(cfg.data);
+                }
+                log(cfg);
+            },
+            destroy = function () {
+                instance.destroy();
+            };
+
+        trendSelf.getParsedData = function (cfg, series) {
+            var c,
+                x,
+                y,
+                newData = series.data,
+                maxY = -99999999,
+                maxIdx = -1,
+                rawData = newData || cfg.data || [],
+                xProp = cfg.x,
+                yProp = cfg.y,
+                xValueFormatter = cfg.xValueFormatter,
+                len = rawData.length,
+                data = [],
+                row,
+                highlight = function (pt) {
+                    var red = '#ff2222',
+                        matrix = {
+                            column: {
+                                color: red
+                            },
+                            line: {
+                                marker: {
+                                    fillColor: red
+                                }
+                            }
+                        };
+
+                    pt = $.extend(pt, matrix[series.type || cfg.type]);
+
+                    return pt;
+                },
+                makePoint = function (xx, yy) {
+                    var pt = {};
+                    pt.x = xx;
+                    pt.y = yy;
+
+                    return pt;
+                };
+
+            for(c=0; c<len; c++) {
+                row = rawData[c];
+                x = row[xProp];
+                if(xValueFormatter) {
+                    x = xValueFormatter(x);
+                }
+                y = row[yProp];
+                if(y > maxY) {
+                    maxY = y;
+                    maxIdx = c;
+                }
+                if(x !== undefined) {
+                    // data.push([x, y]);
+                    data.push({
+                        x: x,
+                        y: y
+                    });
+                } else {
+                    data.push(y);
+                }
+            }
+
+            if(cfg.highlightMax) {
+                data[maxIdx] = highlight(data[maxIdx]);
+            }
+
+            return data;
         };
 
-    getNext();
-};
-var firstSeries = {
-    seriesUPI: ko.observable(643738),
-    seriesName: ko.observable('Point1'),
-    seriesType: ko.observable('line'),
-    seriesMinY: ko.observable(0),
-    seriesMaxY: ko.observable(1),
-    format: ko.observable('{value}'),
-    labelStyle: ko.observable('#ff4400'),
-    titleText: ko.observable('Value1'),
-    seriesSuffix: ko.observable(),
-    seriesRows: ko.observable(100)
-};
-var getSeriesTemplate = function(upi) {
-    var obj,
-        idx = currIndex;
+        trendSelf.parseConfig = function (cfg) {//get type, apply defaults for that type (and morph data?)
+            var yTitle = cfg.yAxisTitle || '',
+                xAxisReversed = cfg.xAxisReversed || false,
+                legend = cfg.legend || false,
+                type = cfg.type || 'line',
+                width = cfg.width || 600,
+                ret = {
+                    chart: {
+                        renderTo: $renderTo[0]
+                    },
+                    xAxis: {
+                        type: 'datetime',
+                        dateTimeLabelFormats: {
+                            hour: '%I:%M %p'
+                        }
+                    },
+                    legend: {
+                        enabled: false
+                    // },
+                    // plotOptions: {
+                    //     series: {
+                    //         animation: false
+                    //     }
+                    },
+                    series: []
+                },
+                data = [],
+                row,
+                x,
+                y,
+                tmpAxis,
+                tmpSeries,
+                counter = 0,
+                addedAxis = {},
+                configMap = {
+                    legend: 'legend.enabled',
+                    yAxisTitle: 'yAxis.title.text',
+                    width: 'chart.width',
+                    height: 'chart.height',
+                    type: 'chart.type',
+                    title: 'title.text',
+                    xLabelFormat: 'xAxis.dateTimeLabelFormats',
+                    minY: 'yAxis.min',
+                    maxY: 'yAxis.max',
+                    animation: 'plotOptions.series.animation'
+                },
+                defaultCfg = ((trendPlots.typeConfigs[type] || {}).cfg || trendPlots.emptyFn)(cfg);
 
-    currIndex++;
-
-    obj = {
-        seriesUPI: ko.observable(upi),
-        seriesName: ko.observable('Point' + idx),
-        seriesType: ko.observable('line'),
-        format: ko.observable('{value}'),
-        seriesMinY: ko.observable(0),
-        seriesMaxY: ko.observable(1),
-        labelStyle: ko.observable(),
-        titleText: ko.observable('Value' + idx),
-        seriesSuffix: ko.observable(),
-        seriesRows: ko.observable(100)
-    };
-
-    return obj;
-};
-var bindings = {
-    chartTitle: ko.observable('Chart Title'),
-    chartReversed: ko.observable(false),
-    chartSeries: ko.observableArray([]),
-    numDays: ko.observable(numDays),
-    buildChart: function() {
-        var config = ko.toJS(bindings);
-        init(config);
-    },
-    addSeries: function(upi) {
-        bindings.chartSeries.push(getSeriesTemplate(upi));
-    }
-};
-
-$(function() {
-    var c,
-        len = upis.length;
-
-    (function (HC) {
-        HC.wrap(HC.Axis.prototype, 'render', function (p) {
-            if (this.visible === undefined) {
-                this.visible = true;
-            }
-            if(this.visible) {
-                this.min = this.prevMin || this.min;
-                this.max = this.prevMax || this.max;
-                this.title = this.prevtitle || this.title;
-            } else {
-                this.prevMin = this.min;
-                this.prevMax = this.max;
-                this.prevtitle = this.title;
-                this.min = undefined;
-                this.max = undefined;
-                this.title = undefined;
+            if(cfg.title === undefined) {
+                cfg.title = ' ';//no title, blank
             }
 
-            this.hasData = this.visible;
+            if (!cfg.units && cfg.yAxisTitle) {
+                cfg.units = cfg.yAxisTitle;
+            }
 
-            p.call(this);
+            if(cfg.hideLegendXLabel) {
+                ret.tooltip = {
+                    formatter: function () {
+                        var ret = '',
+                            self = this;
+
+                        $.each(this.points, function (idx) {
+                            ret += '<span style="color:' + this.point.color + '">●</span> ' + this.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + ' ' + (this.series.userOptions.units || '') + '</b>';
+                            if (idx < self.points.length - 1) {
+                                ret += '<br/>';
+                            }
+                        });
+
+                        return ret;
+                    }
+                };
+            }
+
+            ret = trendPlots.complicateObject(configMap, cfg, $.extend(true, {}, defaultCfg, ret));
+
+            if(cfg.plotOptions) {
+                trendPlots.createNamespace(ret, 'plotOptions.' + type, cfg.plotOptions);
+            }
+
+            if(!Array.isArray(cfg.data)) {
+                cfg.data = [cfg.data];
+            }
+
+            tmpSeries = $.extend(true, {}, ret.series[0]);
+            ret.series = [];
+            if(!cfg.sameAxis) {
+                tmpAxis = $.extend(true, {}, ret.yAxis);
+                ret.yAxis = [];
+            }
+
+            trendPlots.forEachArray(cfg.data, function (series) {
+                var data = trendSelf.getParsedData(cfg, series),
+                    type = series.type || cfg.type,
+                    newSeries = $.extend(true, {}, {
+                        type: type,
+                        data: data,
+                        name: series.name,
+                        color: series.color
+                    }, tmpSeries);
+
+                if(series.yAxis !== undefined) {
+                    newSeries.yAxis = series.yAxis;
+                    if (!addedAxis[series.yAxis]) {
+                        tmpAxis.opposite = counter % 2 === 1;
+                        ret.yAxis.push($.extend(true, {}, tmpAxis));
+                    }
+                    addedAxis[series.yAxis] = true;
+                } else {
+                    newSeries.yAxis = counter;
+                    tmpAxis.opposite = counter % 2 === 1;
+                    ret.yAxis.push($.extend(true, {}, tmpAxis));
+                    counter++;
+                }
+
+                if(series.units || cfg.units) {
+                    newSeries = $.extend(true, newSeries, {
+                        tooltip: {
+                            pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y:,.1f} ' + (series.units || cfg.units) + '</b><br/>'
+                            // valueSuffix: ' ' + series.units
+                        },
+                        units: series.units
+                    });
+                }
+
+                ret.series.push(newSeries);
+            });
+
+            trendSelf.currParsedConfig = ret;
+
+            return ret;
+        };
+
+        trendSelf.drawChart = function (newConfig) {
+            var highChartConfig = trendSelf.parseConfig(newConfig || config);
+
+            highChartConfig = $.extend(true, {}, trendPlots.defaults.highChartDefaults, highChartConfig);
+
+            trendSelf.lastConfig = $.extend(true, {}, highChartConfig);
+
+            // if(trendPlots.logconfig) {
+                // trendPlots.log('Trendplot Config:', highChartConfig);
+            // }
+
+            instance = new Highcharts.Chart(highChartConfig);
+        };
+
+        trendPlots.onReady(function () {
+            trendSelf.drawChart();
         });
 
-        HC.Axis.prototype.hide = function() {
-            if(this.visible) {
-                //find better way
-                this.labelGroup.element.style.display = 'none';
-                this.axisGroup.element.style.display = 'none';
+        trendSelf.initialConfig = $.extend(true, {}, config);
 
-                // this.prevTitle = this.options.title.text;
-
-                // this.update({
-                //     labels: {
-                //         enabled: false
-                //     },
-                //     title: {
-                //         text: null
-                //     }
-                // });
-                this.visible = false;
-            // } else {
-            //     console.log('already hidden');
-            }
-            // this.prevTitle = this.options.title;
-            // this.prevMin = this.min;
-            // this.prevMax = this.max;
-
-            // this.setTitle(null);
-            // this.min = null;
-            // this.max = null;
-
-            // this.visible = false;
-
-            // this.render();
-
-            // HC.each(this.plotLinesAndBands, function (plotLine) {
-            //     plotLine.render();
-            // });
+        return {
+            updateData: updateData,
+            updateConfig: updateConfig,
+            _getInstance: function () {
+                return instance;
+            },
+            destroy: destroy,
+            _trendSelf: trendSelf
         };
+    };
 
-        HC.Axis.prototype.show = function() {
-            if(this.visible === false) {
-                this.labelGroup.element.style.display = 'inline';
-                this.axisGroup.element.style.display = 'inline';
-                // this.labelGroup.element.style.display = 'none';
+trendPlots.init();
 
-                // this.update({
-                //     labels: {
-                //         enabled: true
-                //     },
-                //     title: {
-                //         text: this.prevTitle || this.options.title.text
-                //     }
-                // });
+// trendPlots.config = {
+//     title: 'Test Title',
+//     charts: {
+//         'Chart1Title': {
+//             series: ['Series1Title'],
+//             config: {}
+//         }
+//     },
+//     series: {
+//         'Series1Title': {
+//             type: 'line'//line, arearange, bar, column, columnRange, gauge, heatmap, pie, solidGauge, spline
+//         }
+//     }
+// };
 
-                this.visible = true;
 
-            }
-            // this.setTitle(this.prevTitle || this.options.title);
-            // this.min = this.prevMin || this.min;
-            // this.max = this.prevMax || this.max;
 
-            // this.visible = true;
+// trendPlots.bindings = {
+//     chartTypes: ko.observableArray(['Line', 'Bar', 'Column']),
+//     chartType: ko.observable('Line')
+// };
 
-            // this.render();
+// trendPlots.bindings.chartType.subscribe(function (newChartType) {
+//     $('.hides:not(.' + newChartType.toLowerCase() + ')').hide();
+//     $('.hides.' + newChartType.toLowerCase()).show();
+// });
 
-            // HC.each(this.plotLinesAndBands, function (plotLine) {
-            //     plotLine.render();
-            // });
-        };
+// ko.applyBindings(trendPlots.bindings);
 
-    }(Highcharts));
+// trendPlots.myChart = new TrendPlot({
+//     el: 'tabbody',
+//     data: []
+// });
 
-    ko.applyBindings(bindings);
+/*
 
-    for(c=0; c<5; c++) {
-        bindings.addSeries(upis[c]);
-    }
+Treat trend plots like display screen object with ability to pop out
+    win = openWindow;
+    win.init(config);//plot config
 
-    init(ko.toJS(bindings));
-});
+
+    Modal configuration window when added to display or when clicking on a gear
+    tabbed like point editor
+        General
+        Display
+        Pens?
+        X Axis
+        Y Axis
+
+    Time 'jump' bar below chart
+
+    Some configuration directly accessible via chart
+        Clicking on legend
+            Show one point's Y axis
+            Hide/Show points
+
+        Right-clicking brings up context menu?
+    n series (on chart)
+                Hide Series
+                Show Scale
+                Configure Series(color, etc)
+                Scale to this series
+    n Chart
+                Configure Chart (pulls up configurator on general)
+                Add Series
+                Load "pens"
+    n Legend
+                Add Series
+
+    */
+
+// trendPlots.template = {
+//     title: 'My Chart',
+//     reversed: false,
+
+//     xAxisCfg: {
+//         range: '12HR', //if enum
+
+//         unit: 'HR',
+//         amount: 12 //if not enum
+//     },
+
+//     showGridLines: true,
+
+//     //scaling: individual, singlePen, scaledToPen, percentage
+//     yAxisCfg: {
+//         precision: 2,//decimal points
+//         type: 'pen',//preset/auto
+//         penID: 1234,//upi,
+//         min: 0,//if preset
+//         max: 100
+//     },
+
+//     points: [{
+//         upi: 1234,
+//         color: '#fff',
+//         lowY: 0,
+//         highY: 10,
+//         units: undefined,
+//         lineWidth: 1,
+//         visible: true
+//     }]
+// };
+
+// trendPlots.FormGenerator = function (config) {
+//     var fgSelf = this;
+
+//     fgSelf.onSave = function () {
+//         var obj = {};
+//         //return entire object or only changed values?
+//         //if only changed, then api is new fm(config), onsave(gimmeconfig)
+//     };
+// };
+
+// trendPlots.formGenerator = new trendPlots.FormGenerator({
+//     el: $('#formDiv'),
+//     fields: [[
+//             chartType: {
+//                 label: 'Chart Type',
+//                 type: 'select',
+//                 options: [],
+//                 visibleIf:
+//             },
+//             chartTitle: {
+//                 label: 'Chart Title',
+//                 type: 'text'
+//             }
+//         ], [{
+
+//         }]
+//     ]
+// });
+
+/*
+
+DONE
+Each plot has its own Y axis
+
+Clicking a plot line changes Y axis to that point
+
+Zoom feature
+
+Vertical cursor(s) show plot value at their current position
+
+
+REMAINING
+Pen lists.  Save groups of points, merge with current list.  If already existing, overwrite existing point with imported one
+    Stored on user object?
+
+Multiple Trend plot objects on displays
+
+Trend Plot object is preset for points and time range
+    series::point type
+        defaultTimeRange?
+
+Y Axis scaled for point’s Min/Max Pres Value
+    on data, get min/max, but allow setting
+
+Scale options for Y
+    chart::setScale
+        all the same
+        each plot/series
+        scaled to one series
+
+Operator can add / remove plots on the fly w/o saving the setup
+    chart::configurator view
+
+Trend objects look like they probably “dock” to an area of a display (e.g., tank level plot to bottom of display and takes up entire width)
+    level above chart::panel/grid functionality
+
+Point grouping (Flows, Temps, etc.)
+    in point data not chart?
+
+Toggle plot visibility w/o removing it from the setup
+    chart::configurator view
+
+*/

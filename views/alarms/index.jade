@@ -14,7 +14,7 @@ html
                 span.dropdown-toggle(data-toggle="dropdown")
                     span(data-bind="text: viewTitle")
                     span  ALARMS
-                    |  
+                    | 
                     i.fa.fa-caret-down
                 .nav(class="dropdown-menu")
                     // div.header Alarm Views
@@ -100,6 +100,9 @@ html
                         a(data-bind="click: $root.toggleOption, event: { contextmenu: $root.toggleOption }")
                             span.fa(data-bind="css: {'fa-ban': !isActive(), 'fa-check-circle': isActive}")
                             span.filterText(data-bind="text: text")
+
+                // PRINT BUTTON
+                button.btn.btn-default.btn-sm.btnPrint.pull-right(type="button" data-bind="click:printAlarms") Print
 
             // ALARMS
             #alarmContainer
@@ -281,4 +284,5 @@ html
         script(type='text/javascript', src='/js/lib/jquery.timepicker.min.js')
         script(type='text/javascript', src='/js/lib/bootstrap-datepicker.js')
         script(type='text/javascript', src='/js/lib/jstween-1.1.min.js')
+        script(type='text/javascript', src='/js/lib/jquery.printarea.js')
         script(type='text/javascript', src='/js/alarms/alarms.js')

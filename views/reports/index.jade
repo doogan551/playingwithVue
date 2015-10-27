@@ -3,7 +3,7 @@ block content
     include templates
     #window
         .container-fluid(style="display:none")
-            .col-xs-2
+            #sideMenu.col-xs-2
                 include ./tabLinks
             .col-xs-10
                 .tab-content
@@ -20,7 +20,7 @@ block content
                                         input#pointName4.form-control.input-md(type="text", disabled="disabled", placeholder="Point4", style="width:20%")
                                         |&nbsp;&nbsp;&nbsp;&nbsp;
                                         i.iconLink#editPoint.fa.fa-3x.fa-pencil-square
-                                        i.iconLink#updatePoint.fa.fa-3x.fa-check-square(style="display:none")
+                                        i.iconLink#updatePoint.fa.fa-3x.fa-check-square(data-loading-text="<i class='fa fa-spinner fa-spin'>",style="display:none")
                                         i.iconLink#cancelUpdate.fa.fa-3x.fa-times-circle(style="display:none")
                         .row.form-horizontal
                             .form-group.clearfix
@@ -106,5 +106,5 @@ block content
                     include ./tabCommons
     include footer
     include models/dialogScreens
-    script(src='/js/reports/build/property/lib-70f1e327.js')
-    script(src='/js/reports/build/property/app-00ea224b.js')
+    script(src='/js/reports/build/property/lib-92d4c7f1.js')
+    script(src='/js/reports/build/property/app-c7044d6b.js')

@@ -14,6 +14,7 @@ var CustomColorsPicker = function ($colorPickerDiv, callback, currentColor, call
         useDropdown,
         useSmallPalette,
         verticalPalette,
+        $colorPickerNode,
         handlerClass = "colorPickerHandlerDiv",
         colorToHex = function (color) {
             var digits, red, blue, green, hexColor;
@@ -78,6 +79,17 @@ var CustomColorsPicker = function ($colorPickerDiv, callback, currentColor, call
                     dropDown.jqxDropDownButton('setContent', getTextElementByColor(event.args.color));
                 }
             });
+
+            if (useDropdown) {
+                $picker.on('keyup', function (event) {
+                    var keycode = (event.keyCode ? event.keyCode : event.which);
+                    if (keycode === 13) {
+                        if (dropDown) {
+                            dropDown.jqxDropDownButton('close');
+                        }
+                    }
+                });
+            }
         },
         drawSwatchDiv = function (theDiv, theColor) {
             theDiv.css("background-image", "");
@@ -159,8 +171,7 @@ var CustomColorsPicker = function ($colorPickerDiv, callback, currentColor, call
         drawColorPickerDiv = function () {
             var $parent = $colorPickerDiv.parent(),
                 pickerWidth,
-                pickerHeight,
-                $colorPickerNode;
+                pickerHeight;
 
             $colorPickerDiv.empty();  // clear any previous colorpickers from div
             insertPalette = $colorPickerDiv.data('insertpalette') || false;
@@ -191,6 +202,10 @@ var CustomColorsPicker = function ($colorPickerDiv, callback, currentColor, call
             buildAndSeedDropdown(dropDown);
             initEventHandlers($colorPickerNode);
         };
+    if(currentColor.match('#')) {
+        currentColor = currentColor.substring(1);
+    }
+
     self.render = function () {
         if (listOfCustomColorCodes.length > 0) {
             drawColorPickerDiv();
@@ -199,6 +214,22 @@ var CustomColorsPicker = function ($colorPickerDiv, callback, currentColor, call
                 drawColorPickerDiv();
             }, 100);
         }
-    }
-    return self;
+    };
+    self.updateColor = function(color) {
+        $colorPickerNode.jqxColorPicker('setColor', '#' + color);
+    };
 };
+
+
+if(typeof ko !== 'undefined' && ko.bindingHandlers) {
+    ko.bindingHandlers.diColorpicker = {
+        init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+            var functionColor = valueAccessor(),
+                hexColor = ko.unwrap(functionColor),
+                $colorPickerDiv = $(element),
+                customColorsPicker = new CustomColorsPicker($colorPickerDiv, functionColor, hexColor);
+
+            customColorsPicker.render();
+        }
+    };
+}

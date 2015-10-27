@@ -7,6 +7,7 @@ define(['knockout', 'big', 'text!./view.html'], function(ko, Big, view) {
         this.button = params.button;
         this.propertyName = params.propertyName;
         this.noTruncate = params.noTruncate;
+        this.noComma = (!!params.noComma) ? params.noComma : true;
         this.data = params.data[this.propertyName];
         this.utility = params.rootContext.utility;
         this.min = typeof params.min == 'number' ? params.min :

@@ -31,6 +31,7 @@ require(['knockout'], function (ko) {
     ko.components.register('ctl-viewTrend',     { require: 'components/ctl-viewTrend/module' });
     ko.components.register('ctl-staticText',    { require: 'components/ctl-staticText/module' });
     ko.components.register('ctl-firmwareLoader',    { require: 'components/ctl-firmwareLoader/module' });
+    ko.components.register('ctl-firmwareVersion',    { require: 'components/ctl-firmwareVersion/module' });
     ko.components.register('ctl-conversionWizard',  { require: 'components/ctl-conversionWizard/module' });
     ko.components.register('ctl-scheduleEntries',   { require: 'components/ctl-scheduleEntries/module'});
     // Point Reviews
@@ -800,6 +801,47 @@ define([
                 emitString = 'addPoint';
                 emitData   = { point: newPointData };
             }
+
+            if (data.baseComponent === "pt-slideshow") {  // clean up any removed slides
+                var i,
+                    pointRefs = emitData.newPoint["Point Refs"],
+                    len = pointRefs.length,
+                    currentPointRef,
+                    slides = emitData.newPoint["Slides"],
+                    slide,
+                    displayId,
+                    getSlideIndexById = function (id) {
+                        for (var j = 0; j < slides.length; j++) {
+                            if (slides[j].display === id) {
+                                return j;
+                            }
+                        }
+                        return null;
+                    },
+                    reorderDataSets = function () {
+                        for (var i = 0; i < pointRefs.length; i++) {
+                            pointRefs[i].AppIndex = i + 1;
+                            displayId = pointRefs[i].Value;
+                            slide = slides[getSlideIndexById(pointRefs[i].PointInst)];
+                            if (slide) {
+                                slide.order = i;
+                            }
+                        }
+                    };
+
+                for (i = (len-1); i >= 0; i--) {
+                    currentPointRef = pointRefs[i];
+                    if (currentPointRef) {
+                        if (currentPointRef.PointName === ""  && currentPointRef.Value === 0) {
+                            slides.splice(getSlideIndexById(currentPointRef.PointInst), 1);
+                            pointRefs.splice(i, 1);
+                        }
+                    }
+                }
+
+                reorderDataSets();
+            }
+
             ko.utils.extend(emitData, data.extendData);
 
             self.status('saving');

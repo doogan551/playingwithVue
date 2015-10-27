@@ -22,7 +22,8 @@ dorsett.models.groupModel = function(_data) {
             'User Group Name':'',
             Description:'',
             Users:[],
-            _pAccess: 0
+            _pAccess: 0,
+            Photo: ''
         },
         mappedModel;
 
@@ -53,7 +54,7 @@ dorsett.models.mappings.Group = {
                 required : { message: ' *required field' },
                 validation: {
                     validator: function (val) {
-                        return !!!ko.utils.arrayFirst(dorsett.groupData.allData(), function(item) {;
+                        return !!!ko.utils.arrayFirst(dorsett.groupData.allData(), function(item) {
                             if (item._id == options.parent._id) return false;
                             return item['User Group Name'].toLowerCase() == val.toLowerCase();
                         });

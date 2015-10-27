@@ -3,107 +3,13 @@ html
   head
     title= title
     link(rel='stylesheet', href='/css/lib/bootstrap.darkly.css')
-    link(rel="stylesheet", href="/css/lib/jqwidgets/jqx.base.css", type="text/css")
-    link(rel="stylesheet", href="/css/lib/jqwidgets/jqx.customArctic.css", type="text/css")
     link(rel="stylesheet", href="/css/trendPlots/trendPlots.css")
-    script.
-        var trendPlotData = !{pointData};
+
   body
     #chartContainer
-        #container(style="height: 600px; border: 1px solid #151515; margin: 10px auto")
+        #container
 
-    .container.form-inline
-        .row
-            //- .col-sm-1
-            //-     button.btn.btn-xs.btn-primary(type="button", data-bind="click: addSeries") Add Series
-            .col-sm-12
-                button.btn.btn-xs.btn-success(type="button", data-bind="click: buildChart") Build Chart
-            .col-sm-12
-                label(for="numDays") # of Days
-                input.form-control.input-sm#numDays(type="text", data-bind="textInput: numDays")
-    .config(style="display:none")
-        .chart.container.form-inline
-            .row
-                .col-sm-12
-                    label(for="chartTitle") Chart Title
-                    input.form-control#chartTitle(type="text", placeholder="Enter Chart Title", data-bind="textInput: chartTitle")
-            .row
-                .col-sm-2
-                    .checkbox
-                        label(for="chartReversed")
-                            input#chartReversed(type="checkbox", data-bind="checked: chartReversed")
-                            | Reverse X Axis
-
-        .series.container(data-bind="foreach: chartSeries, visible: chartSeries().length > 0")
-            .row
-                .col-sm-2
-                    label UPI
-                    input.form-control(type="text", placeholder="Enter UPI", data-bind="textInput: seriesUPI")
-                .col-sm-3
-                    label Point Name
-                    input.form-control(type="text", placeholder="Enter Series Name", data-bind="textInput: seriesName")
-                .col-sm-2
-                    label Min Y
-                    input.form-control(type="number", data-bind="textInput: seriesMinY")
-                .col-sm-2
-                    label Max Y
-                    input.form-control(type="number", data-bind="textInput: seriesMaxY")
-                //- .col-sm-2
-                //-     label Type
-                //-     select.form-control(data-bind="value: seriesType")
-                //-         option column
-                //-         option spline
-                //-         option area
-                //-         option areaspline
-                //-         option bar
-                //-         option line
-                //-         option pie
-                //-         option scatter
-                //- .col-sm-3
-                //-     label Format
-                //-     input.form-control(type="text", placeholder="{value}", data-bind="textInput: format")
-            .row
-                .col-sm-2
-                    label Y-Axis Label Color
-                    input.form-control(type="text", placeholder="Enter Label Color", data-bind="textInput: labelStyle")
-                .col-sm-3
-                    label Y-Axis Title
-                    input.form-control(type="text", placeholder="Enter Series Title", data-bind="textInput: titleText")
-                .col-sm-2
-                    label Suffix
-                    input.form-control(type="text", placeholder="Suffix", data-bind="textInput: seriesSuffix")
-                .col-sm-2
-                    label # Rows
-                    input.form-control(type="number", placeholder="# of rows", data-bind="textInput: seriesRows")
-
-    #configureChartModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
-        .modal-dialog
-            .modal-content
-                .panel.panel-default
-                    .panel-heading
-                        h3.panel-title Configure Chart
-                    .panel-body
-                        .container.form-inline
-                            .row
-                                .col-sm-2
-                                    label(for="chartTitle") Chart Title
-                                .col-sm-10
-                                    input.form-control.input-sm#chartTitle(type="text", placeholder="Enter Chart Title", data-bind="textInput: chartTitle")
-                            .row
-                                .col-sm-2
-                                    .checkbox
-                                        label(for="chartReversed")
-                                            input#chartReversed(type="checkbox", data-bind="checked: chartReversed")
-                                            | Reverse X Axis
-                            //- .container(data-bind="foreach: chartSeries, visible: chartSeries().length > 0")
-                                .row
-                                    .col-sm-3
-                                        label UPI
-                                        input.input-sm.short-input.form-control(type="text", placeholder="Enter UPI", data-bind="textInput: seriesUPI")
-                                    .col-sm-3
-                                        label Color
-                                        input.input-sm.short-input.form-control(type="text", placeholder="Enter Series Name", data-bind="textInput: seriesName")
-                                hr
+    include chartConfig.jade
 
 
     script(src="/js/lib/jquery.min.js")
@@ -113,6 +19,4 @@ html
     script(src="/js/lib/themes/dark-unica.js")
     script(src='/js/lib/bootstrap3.min.js')
     script(src='/js/lib/knockout-3.2.0.js')
-    script(src="/js/lib/jqwidgets/jqxcore.js")
-    script(src="/js/lib/jqwidgets/jqxmenu.js")
-    script(src="/js/trendPlots/trendPlot.js")
+    script(src="/js/trendPlots/trendPlotNew.js")
