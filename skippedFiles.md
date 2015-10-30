@@ -13,7 +13,7 @@ controllers/pointSelector.js
 controllers/reporting.js
 controllers/thumbnailGenerator.js
 
-controllers/settings.js - where is this being used? needs to be model
+*controllers/settings.js - where is this being used? needs to be model
 *controllers/userManager.js - make a model - not implemented
 
 /pointlookup/toggleGroup - figure out how this route is used

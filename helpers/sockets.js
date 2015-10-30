@@ -1,3 +1,5 @@
+var logger = require('./logger')(module);
+
 var state = {
     io: null,
     tcp: null,
@@ -14,11 +16,11 @@ exports.connect = function(config, sessionStore, cookieParser, done) {
     // if (!!state.socket) return done();
     var passportSocketIo = require('passport.socketio');
     state.io = require('socket.io').listen(socketConfig.ioPort);
-    console.log('socket listening on port', socketConfig.ioPort);
+    logger.info('socket listening on port', socketConfig.ioPort);
     state.tcp = require('net').createServer().listen(socketConfig.tcpPort, socketConfig.tcpAddress);
-    console.log('tcp server listening on ', socketConfig.tcpAddress + ":" + socketConfig.tcpPort);
+    logger.info('tcp server listening on ', socketConfig.tcpAddress + ":" + socketConfig.tcpPort);
     state.oplog = require('mongo-oplog')(oplogString, 'oplog.rs').tail();
-    console.log('oplog connected to', oplogString);
+    logger.info('oplog connected to', oplogString);
     state.io.use(passportSocketIo.authorize({
         cookieParser: cookieParser,
         key: 'express.sid',
@@ -33,7 +35,7 @@ exports.connect = function(config, sessionStore, cookieParser, done) {
     }
 
     function onAuthorizeFail(data, message, error, accept) {
-        console.log('failed connection to socket.io:', data, message);
+        logger.error('failed connection to socket.io:', data, message);
         if (error)
             accept(new Error(message));
     }

@@ -16,6 +16,10 @@ var defaults = {
             'tcpPort': 5002,
             'tcpAddress': '127.0.0.1',
             'oplogDb': 'local'
+        },
+        'files': {
+            'driveLetter': 'D',
+            'archiveLocation': '/InfoScan/Archive/History/'
         }
     }
 };

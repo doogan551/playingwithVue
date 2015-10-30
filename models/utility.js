@@ -1,5 +1,5 @@
 var db = require('../helpers/db');
-var winston = require('winston');
+var logger = require("../helpers/logger")(module);
 
 exports.get = function(criteria, cb) {
   var query = (!!criteria.query) ? criteria.query : {};
@@ -150,17 +150,17 @@ exports.findAndCount = function(criteria, cb) {
 };
 
 exports.insert = function(criteria, cb) {
-  var query = criteria.query;
+  var insertObj = criteria.insertObj;
   var coll = criteria.collection;
   var options = criteria.options;
 
   var collection = db.get().collection(coll);
 
-  collection.insert(query, options, cb);
+  collection.insert(insertObj, options, cb);
 };
 
 exports.remove = function(criteria, cb) {
-  var insertObj = criteria.insertObj;
+  var query = criteria.query;
   var coll = criteria.collection;
   var options = criteria.options;
 

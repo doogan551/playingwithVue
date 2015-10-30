@@ -34,7 +34,8 @@ router.get('/home', function(req, res, next) {
 });
 
 router.get('/login', function(req, res) {
-  res.render('login');
+  req.logout();
+  res.render('baseui/login');
 });
 
 router.post('/authenticate', function(req, res, next) {

@@ -1,9 +1,70 @@
 var fs = require('fs');
 var jade = require('jade');
 
-var Utility = require('../models/utility');
+var Utility = require('./utility');
+var System = require('./system');
+
+var getRates = function(cb) {
+    var criteria = {
+        collection: 'Utilities',
+        query: {
+            "Point Type.Value": "Utility"
+        },
+        fields: {
+            "Point Type": 0,
+            _id: 0
+        },
+        sort: {
+            _id: 1
+        }
+    };
+
+    Utility.get(criteria, cb);
+};
 
 module.exports = {
+
+    index: function(data, cb) {
+        var utilities;
+        var html;
+        var weatherPoints;
+        var completed = 0;
+        var complete = function() {
+            completed++;
+            if (completed === fns.length) {
+                return cb(null, {
+                    utilities: JSON.stringify(utilities),
+                    rawUtilities: utilities,
+                    content: html,
+                    weatherPoints: JSON.stringify(weatherPoints)
+                });
+            }
+        };
+        var getWeatherPoints = function() {
+            System.weather(function(err, data) {
+                weatherPoints = err || data;
+                complete();
+            });
+        };
+        var getRates = function() {
+            getRates(function(err, rawUtilities) {
+                utilities = err || rawUtilities;
+                complete();
+            });
+        };
+        var getUtilityMarkup = function() {
+            module.exports.getUtilityMarkup('Electricity', function(markup) {
+                html = markup;
+                complete();
+            });
+        };
+
+        var fns = [getWeatherPoints, getRates, getUtilityMarkup];
+
+        fns.forEach(function(fn) {
+            fn();
+        });
+    },
 
     getUtility: function(data, cb) {
         var criteria = {
@@ -70,8 +131,7 @@ module.exports = {
         module.exports.getUtilityMarkup(type, cb);
     },
 
-    getUtilityMarkup: function(data, cb) {
-        var type = data.type;
+    getUtilityMarkup: function(type, cb) {
         var filename = __dirname + '/../views/dashboard/utility_' + type + '.jade';
         fs.readFile(filename, 'utf8', function(err, data) {
             var fn,
@@ -85,6 +145,16 @@ module.exports = {
 
             cb(html);
         });
+    },
+
+    removeUtility: function(data, cb) {
+        var criteria = {
+            collection: 'Utilities',
+            query: {
+                utilityName: data.utilityName
+            }
+        };
+        Utility.remove(criteria, cb);
     }
 
 };

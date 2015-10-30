@@ -1,0 +1,71 @@
+{"level":"error","message":"error","timestamp":"2015-10-30T14:14:43.447Z"}
+{"level":"warn","message":"warn","timestamp":"2015-10-30T14:14:43.451Z"}
+{"level":"info","message":"info","timestamp":"2015-10-30T14:14:43.452Z"}
+{"level":"info","message":"2015-10-30T14:26:01.718Z 127.0.0.1 GET / 304 - 270.284\n","timestamp":"2015-10-30T14:26:01.719Z"}
+{"level":"info","message":"127.0.0.1 GET / 304 - 231.809\n","timestamp":"2015-10-30T14:26:43.697Z"}
+{"level":"info","message":"127.0.0.1 GET / 304 - 268.363\n","timestamp":"2015-10-30T14:28:59.227Z"}
+{"level":"info","message":"127.0.0.1 GET / 304 - 276.315\n","timestamp":"2015-10-30T14:29:12.009Z"}
+{"level":"info","message":"127.0.0.1 GET / 304 - 156.465\n","timestamp":"2015-10-30T14:29:15.551Z"}
+{"level":"info","message":"127.0.0.1 GET / 304 - 133.654\n","timestamp":"2015-10-30T14:29:16.337Z"}
+{"level":"info","message":"127.0.0.1 POST /authenticate 200 501 371.393\n","timestamp":"2015-10-30T14:29:26.463Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 200 943 9.490\n","timestamp":"2015-10-30T14:29:26.917Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 200 1379 5.046\n","timestamp":"2015-10-30T14:29:26.922Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controllers 200 1809 5.303\n","timestamp":"2015-10-30T14:29:26.932Z"}
+{"level":"info","message":"127.0.0.1 GET /pointlookup 200 10062 85.412\n","timestamp":"2015-10-30T14:29:27.046Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 375.604\n","timestamp":"2015-10-30T14:29:28.649Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 10187.656\n","timestamp":"2015-10-30T14:29:38.251Z"}
+{"level":"info","message":"127.0.0.1 GET / 200 19431 246.206\n","timestamp":"2015-10-30T14:32:12.649Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 304 - 6.612\n","timestamp":"2015-10-30T14:32:12.915Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 304 - 5.655\n","timestamp":"2015-10-30T14:32:12.916Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controllers 304 - 2.108\n","timestamp":"2015-10-30T14:32:12.919Z"}
+{"level":"info","message":"127.0.0.1 GET /pointlookup 304 - 87.155\n","timestamp":"2015-10-30T14:32:13.040Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 25.010\n","timestamp":"2015-10-30T14:32:13.512Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2343.248\n","timestamp":"2015-10-30T14:32:15.658Z"}
+{"level":"info","message":"127.0.0.1 GET / 304 - 242.864\n","timestamp":"2015-10-30T14:32:54.818Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 304 - 5.980\n","timestamp":"2015-10-30T14:32:55.092Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 304 - 6.404\n","timestamp":"2015-10-30T14:32:55.092Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controllers 304 - 2.309\n","timestamp":"2015-10-30T14:32:55.096Z"}
+{"level":"info","message":"127.0.0.1 GET /pointlookup 304 - 84.739\n","timestamp":"2015-10-30T14:32:55.210Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 10.993\n","timestamp":"2015-10-30T14:32:55.684Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2315.390\n","timestamp":"2015-10-30T14:32:57.829Z"}
+{"level":"info","message":"127.0.0.1 GET / 304 - 241.899\n","timestamp":"2015-10-30T14:33:31.652Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 304 - 6.426\n","timestamp":"2015-10-30T14:33:31.921Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 304 - 5.650\n","timestamp":"2015-10-30T14:33:31.922Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controllers 304 - 2.075\n","timestamp":"2015-10-30T14:33:31.925Z"}
+{"level":"info","message":"127.0.0.1 GET /pointlookup 304 - 90.255\n","timestamp":"2015-10-30T14:33:32.045Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 11.134\n","timestamp":"2015-10-30T14:33:32.526Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2271.193\n","timestamp":"2015-10-30T14:33:34.606Z"}
+{"date":"Fri Oct 30 2015 10:08:26 GMT-0500 (Central Daylight Time)","process":{"pid":40708,"uid":null,"gid":null,"cwd":"C:\\infoscan-test","execPath":"C:\\Program Files\\nodejs\\node.exe","version":"v0.10.26","argv":["node","C:\\infoscan-test\\app.js"],"memoryUsage":{"rss":78020608,"heapTotal":66479360,"heapUsed":33895496}},"os":{"loadavg":[0,0,0],"uptime":2417773.3600457},"trace":[{"column":3,"file":"C:\\infoscan-test\\models\\archiveutility.js","function":"buildAllSdb","line":58,"method":null,"native":false},{"column":3,"file":"C:\\infoscan-test\\models\\archiveutility.js","function":"","line":83,"method":null,"native":false},{"column":26,"file":"module.js","function":"Module._compile","line":456,"method":"_compile","native":false},{"column":10,"file":"module.js","function":"Object.Module._extensions..js","line":474,"method":"Module._extensions..js","native":false},{"column":32,"file":"module.js","function":"Module.load","line":356,"method":"load","native":false},{"column":12,"file":"module.js","function":"Function.Module._load","line":312,"method":"Module._load","native":false},{"column":17,"file":"module.js","function":"Module.require","line":364,"method":"require","native":false},{"column":17,"file":"module.js","function":"require","line":380,"method":null,"native":false},{"column":22,"file":"C:\\infoscan-test\\models\\history.js","function":"","line":10,"method":null,"native":false},{"column":26,"file":"module.js","function":"Module._compile","line":456,"method":"_compile","native":false}],"stack":["ReferenceError: fs is not defined","    at buildAllSdb (C:\\infoscan-test\\models\\archiveutility.js:58:3)","    at Object.<anonymous> (C:\\infoscan-test\\models\\archiveutility.js:83:3)","    at Module._compile (module.js:456:26)","    at Object.Module._extensions..js (module.js:474:10)","    at Module.load (module.js:356:32)","    at Function.Module._load (module.js:312:12)","    at Module.require (module.js:364:17)","    at require (module.js:380:17)","    at Object.<anonymous> (C:\\infoscan-test\\models\\history.js:10:22)","    at Module._compile (module.js:456:26)"],"level":"error","message":"uncaughtException: fs is not defined","timestamp":"2015-10-30T15:08:26.494Z"}
+{"date":"Fri Oct 30 2015 10:09:15 GMT-0500 (Central Daylight Time)","process":{"pid":36828,"uid":null,"gid":null,"cwd":"C:\\infoscan-test","execPath":"C:\\Program Files\\nodejs\\node.exe","version":"v0.10.26","argv":["node","C:\\infoscan-test\\app.js"],"memoryUsage":{"rss":92012544,"heapTotal":75742720,"heapUsed":46673480}},"os":{"loadavg":[0,0,0],"uptime":2417822.4590457},"trace":[{"column":22,"file":"C:\\infoscan-test\\models\\archiveutility.js","function":null,"line":81,"method":null,"native":false},{"column":16,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":null,"line":52,"method":null,"native":false},{"column":32,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":null,"line":272,"method":null,"native":false},{"column":16,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":null,"line":44,"method":null,"native":false},{"column":16,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":null,"line":52,"method":null,"native":false},{"column":32,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":"","line":272,"method":null,"native":false},{"column":16,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":"","line":44,"method":null,"native":false},{"column":17,"file":"C:\\infoscan-test\\models\\archiveutility.js","function":null,"line":19,"method":null,"native":false},{"column":20,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":null,"line":187,"method":null,"native":false},{"column":13,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":"iterate","line":265,"method":null,"native":false},{"column":29,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":"","line":277,"method":null,"native":false},{"column":16,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":"","line":44,"method":null,"native":false}],"stack":["ReferenceError: moment is not defined","    at C:\\infoscan-test\\models\\archiveutility.js:81:22","    at C:\\infoscan-test\\node_modules\\async\\lib\\async.js:52:16","    at C:\\infoscan-test\\node_modules\\async\\lib\\async.js:272:32","    at C:\\infoscan-test\\node_modules\\async\\lib\\async.js:44:16","    at C:\\infoscan-test\\node_modules\\async\\lib\\async.js:52:16","    at Statement.<anonymous> (C:\\infoscan-test\\node_modules\\async\\lib\\async.js:272:32)","    at Statement.<anonymous> (C:\\infoscan-test\\node_modules\\async\\lib\\async.js:44:16)","--> in Database#run('CREATE TABLE IF NOT EXISTS History_201612 (UPI INTEGER NOT NULL, TIMESTAMP INTEGER NOT NULL, VALUE REAL NOT NULL, VALUETYPE INTEGER NOT NULL, STATUSFLAGS INTEGER DEFAULT 0, USEREDITED INTEGER DEFAULT 0, PRIMARY KEY(UPI, TIMESTAMP) ON CONFLICT IGNORE)', [Function])","    at C:\\infoscan-test\\models\\archiveutility.js:19:17","    at C:\\infoscan-test\\node_modules\\async\\lib\\async.js:187:20","    at iterate (C:\\infoscan-test\\node_modules\\async\\lib\\async.js:265:13)","    at Statement.<anonymous> (C:\\infoscan-test\\node_modules\\async\\lib\\async.js:277:29)","    at Statement.<anonymous> (C:\\infoscan-test\\node_modules\\async\\lib\\async.js:44:16)"],"level":"error","message":"uncaughtException: moment is not defined","timestamp":"2015-10-30T15:09:15.588Z"}
+{"level":"error","message":"","timestamp":"2015-10-30T15:29:51.306Z"}
+{"level":"error","message":"","timestamp":"2015-10-30T15:30:05.649Z"}
+{"level":"error","message":"","timestamp":"2015-10-30T15:30:13.324Z"}
+{"level":"error","message":"","timestamp":"2015-10-30T15:30:28.096Z"}
+{"level":"error","message":"","timestamp":"2015-10-30T15:31:37.575Z"}
+{"level":"error","message":"","timestamp":"2015-10-30T15:42:58.874Z"}
+{"errno":21,"code":"SQLITE_MISUSE","level":"error","timestamp":"2015-10-30T15:43:27.261Z"}
+{"level":"error","message":"No statement supplied.","timestamp":"2015-10-30T15:44:15.717Z"}
+{"level":"error","message":"No statement supplied.","timestamp":"2015-10-30T15:44:33.866Z"}
+{"level":"error","message":"No statement supplied.","timestamp":"2015-10-30T17:32:14.974Z"}
+{"level":"error","message":"","timestamp":"2015-10-30T17:32:46.390Z"}
+{"level":"error","message":"","timestamp":"2015-10-30T17:33:14.349Z"}
+{"level":"error","message":"","timestamp":"2015-10-30T17:33:22.194Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T17:36:09.462Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T17:36:11.224Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T17:36:11.886Z"}
+{"level":"info","message":"server started in 2.487 seconds","timestamp":"2015-10-30T17:36:11.887Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T17:37:47.439Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T17:37:48.804Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T17:37:49.265Z"}
+{"level":"info","message":"server started in 1.893 seconds","timestamp":"2015-10-30T17:37:49.265Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T17:37:49.084Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T17:37:49.085Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T17:37:49.221Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T17:39:27.408Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T17:39:28.941Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T17:39:29.096Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T17:39:29.761Z"}
+{"level":"info","message":"server started in 2.455 seconds","timestamp":"2015-10-30T17:39:29.762Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T17:39:29.480Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T17:39:29.481Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T17:39:29.697Z"}

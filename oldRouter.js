@@ -268,17 +268,17 @@ module.exports = function(app, controllers) {
 
 	// ToU/meters
 	app.post('/api/meters/getMeters', auth.redirectAuthenticated, controllers.history.getMeters);
-	app.get('/api/meters/backup', auth.redirectAuthenticated, controllers.history.backup);
+	// app.get('/api/meters/backup', auth.redirectAuthenticated, controllers.history.backup);
 	app.post('/api/meters/getUsage', auth.redirectAuthenticated, controllers.history.getUsage);
-	app.post('/api/meters/getUsageNew', auth.redirectAuthenticated, controllers.newHistory.getUsage);
+	// app.post('/api/meters/getUsageNew', auth.redirectAuthenticated, controllers.newHistory.getUsage);
 	app.post('/api/meters/getMissingMeters', auth.redirectAuthenticated, controllers.history.getMissingMeters);
-	app.post('/api/meters/getBilling', auth.redirectAuthenticated, controllers.history.getBilling);
+	// app.post('/api/meters/getBilling', auth.redirectAuthenticated, controllers.history.getBilling);
 	app.post('/api/meters/editDatastore', auth.redirectAuthenticated, controllers.history.editDatastore);
 	app.post('/api/meters/importCSV', auth.redirectAuthenticated, controllers.history.importCSV);
 	app.post('/api/meters/exportCSV', auth.redirectAuthenticated, controllers.history.exportCSV);
 	app.get('/api/meters/downloadCSV', auth.redirectAuthenticated, controllers.history.downloadCSV);
 	app.post('/api/meters/uploadCSV', auth.redirectAuthenticated, controllers.history.uploadCSV);
-	app.post('/api/meters/uploadBGImage', auth.redirectAuthenticated, controllers.history.uploadBGImage);
+	// app.post('/api/meters/uploadBGImage', auth.redirectAuthenticated, controllers.history.uploadBGImage);
 
 	// Device Loader
 	// app.get('/api/firmwareLoader/get/:model', auth.redirectAuthenticated, controllers.firmwareLoader.get);
@@ -332,12 +332,12 @@ module.exports = function(app, controllers) {
 	//end- Trend Plots----------------------
 
   //Energy/Utility dashboard
-  app.get('/dashboard', auth.redirectAuthenticated, controllers.dashboard.index);
+  // app.get('/dashboard', auth.redirectAuthenticated, controllers.dashboard.index);
   // app.post('/dashboard/uploadBackground', auth.redirectAuthenticated, controllers.dashboard.uploadBackground);
   // app.post('/dashboard/getutility', auth.redirectAuthenticated, controllers.dashboard.getUtility);
   // app.post('/dashboard/saveutility', auth.redirectAuthenticated, controllers.dashboard.saveUtility);
-  app.post('/dashboard/removeUtility', auth.redirectAuthenticated, controllers.dashboard.removeUtility);
-  app.get('/dashboard/getMarkup', auth.redirectAuthenticated, controllers.dashboard.getMarkup);
+  // app.post('/dashboard/removeUtility', auth.redirectAuthenticated, controllers.dashboard.removeUtility);
+  // app.get('/dashboard/getMarkup', auth.redirectAuthenticated, controllers.dashboard.getMarkup);
 
 	// app.post('/api/trenddata/viewTrend', auth.redirectAuthenticated, controllers.trendData.viewTrend);
 	// app.post('/api/trenddata/getTrendLimits', auth.redirectAuthenticated, controllers.trendData.getTrendLimits);

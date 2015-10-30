@@ -9,6 +9,7 @@
 * name anonymous functions
 - read up on 'process#' functions
 - setup config for non-app.js scripts
+- web.config options
 
 - get node-inspector module - error during installation
 - get terminal-kit module - useful for self contained scripts' ui
@@ -23,6 +24,7 @@
 - try to seperate iis and node - need autorestart functionality on crash
 - iis to refresh all processes on restart automatically
 - JSON Web Token for link between main app and reports
+- turn off logging in iis
 
 -- node.js design patterns
 - setup logger that knows filename/function of log
@@ -33,3 +35,9 @@
 
 - teamviewer or vnc
 - grunt/gulp
+
+- needs work
+- history model/controller
+- system model/controller
+- check for 'db.' in models.
+- check for async.forEach[Series]

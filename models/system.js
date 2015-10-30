@@ -102,14 +102,14 @@ module.exports = {
       "Name": "Preferences"
     };
 
-    var entries = (req.body.Entries) ? req.body.Entries : [];
+    var entries = (data.Entries) ? data.Entries : [];
     var codesUpdate = {
       $set: {
         Entries: entries
       }
     };
 
-    var qualityMask = req.body["Quality Code Enable"];
+    var qualityMask = data["Quality Code Enable"];
 
     var maskUpdate = 0;
 
@@ -151,7 +151,7 @@ module.exports = {
       "Name": "Controllers"
     };
 
-    var entries = (req.body.Entries) ? req.body.Entries : [];
+    var entries = (data.Entries) ? data.Entries : [];
     var row;
     var c;
 
@@ -180,9 +180,9 @@ module.exports = {
     Utility.update(criteria, cb);
   },
   updateTelemetry: function(data, cb) {
-    var ipSegment = parseInt(req.body["IP Network Segment"], 10);
-    var ipPort = parseInt(req.body["IP Port"], 10);
-    var ipPortChanged = (typeof req.body.ipPortChanged === 'string') ? ((req.body.ipPortChanged === 'true') ? true : false) : req.body.ipPortChanged;
+    var ipSegment = parseInt(data["IP Network Segment"], 10);
+    var ipPort = parseInt(data["IP Port"], 10);
+    var ipPortChanged = (typeof data.ipPortChanged === 'string') ? ((data.ipPortChanged === 'true') ? true : false) : data.ipPortChanged;
 
     var searchCriteria = {
       "Name": "Preferences"
@@ -191,11 +191,11 @@ module.exports = {
     var updateCriteria = {
       $set: {
         "IP Network Segment": ipSegment,
-        "APDU Timeout": parseInt(req.body["APDU Timeout"], 10),
-        "APDU Retries": parseInt(req.body["APDU Retries"], 10),
-        "Public IP": req.body["Public IP"],
+        "APDU Timeout": parseInt(data["APDU Timeout"], 10),
+        "APDU Retries": parseInt(data["APDU Retries"], 10),
+        "Public IP": data["Public IP"],
         "IP Port": ipPort,
-        "Time Zone": parseInt(req.body["Time Zone"], 10),
+        "Time Zone": parseInt(data["Time Zone"], 10),
       }
     };
 
@@ -305,7 +305,7 @@ module.exports = {
 
     var colorsUpdate = {
       $set: {
-        "HTML Colors": req.body.colorsArray
+        "HTML Colors": data.colorsArray
       }
     };
 
@@ -317,7 +317,7 @@ module.exports = {
 
     Utility.update(criteria, cb);
   },
-  weather: function(data, cb) {
+  weather: function(cb) {
     var returnData;
     var upiMatrix = {};
     var weatherPointData = {};
@@ -337,7 +337,7 @@ module.exports = {
         collection: 'SystemInfo'
       };
 
-      Utility.getOne(criteria, function(err, data) {
+      Utility.getOne(criteria, function(err, _data) {
         var upi;
         var key;
         // Our data structure is like this:
@@ -346,8 +346,8 @@ module.exports = {
         //    HDD: upi #,
         //    CDD: upi #
         // }
-        for (key in data) {
-          upi = data[key];
+        for (key in _data) {
+          upi = _data[key];
           // Save the upi and data object
           weatherPointUpis.push(upi);
           // Init our weather point
@@ -376,9 +376,9 @@ module.exports = {
         collection: 'points'
       };
 
-      Utility.get(criteria, function(err, data) {
-        for (var i = 0, len = data.length, point; i < len; i++) {
-          point = data[i];
+      Utility.get(criteria, function(err, _data) {
+        for (var i = 0, len = _data.length, point; i < len; i++) {
+          point = _data[i];
           weatherPointData[upiMatrix[point._id]] = point;
         }
         returnData = weatherPointData;

@@ -1,5 +1,6 @@
 var startTime = new Date();
-console.log(process.env.NODE_ENV);
+var logger = require('./helpers/logger')(module);
+logger.info('NODE_ENV:'+process.env.NODE_ENV);
 var express = require('express');
 var app = express();
 var db = require('./helpers/db');
@@ -7,6 +8,7 @@ var sockets = require('./helpers/sockets');
 var config = require('config');
 var passport = require('passport');
 var morgan = require('morgan');
+var loggerStream = require("./helpers/loggerStream");
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var multer = require('multer');
@@ -18,14 +20,16 @@ var redis = require('redis');
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 var port = config.get('Infoscan.siteConfig').port;
-var _controllers = require('./config/controllers')(app, {});
+var _controllers = require('./helpers/controllers')(app, {});
 
 var sessionStore = new RedisStore(config.get('redisConfig'));
 
-require('./config/passport')(passport); // pass passport for configuration
+require('./helpers/passport')(passport); // pass passport for configuration
 
 app.use(express.static(__dirname + '/public'));
-app.use(morgan(':date[iso] :remote-addr :method :url :status :res[content-length] :response-time'));
+app.use(morgan(':remote-addr :method :url :status :res[content-length] :response-time', {
+  'stream': logger.stream
+}));
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -58,24 +62,19 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 //app.use(require('./middlewares/users'));
-app.use('/', require('./config/router')(router, _controllers));
+app.use('/', require('./helpers/router')(router, _controllers));
 
-process.on('uncaughtException', function (err) {
-  console.log('Threw exception', err, err.stack);
-});
-
-
-db.connect(connectionString.join(''), function (err) {
+db.connect(connectionString.join(''), function(err) {
   if (err) {
-    console.log('unable to connect');
+    logger.error('unable to connect');
     process.exit(1);
   } else {
-    console.log('mongo connected to', connectionString.join(''));
-    sockets.connect(config, sessionStore, cookieParser, function () {
+    logger.info('mongo connected to', connectionString.join(''));
+    sockets.connect(config, sessionStore, cookieParser, function() {
       require('./socket/common').socket();
-      app.listen(port, function () {
-        console.log('listening on port', port);
-        console.log('server started in', (new Date()-startTime)/1000, 'seconds');
+      app.listen(port, function() {
+        logger.info('listening on port', port);
+        logger.info('server started in', (new Date() - startTime) / 1000, 'seconds');
       });
     });
   }

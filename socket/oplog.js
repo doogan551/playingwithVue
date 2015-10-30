@@ -377,7 +377,7 @@ function addActiveAlarm(alarmId, callback) {
 
 function removeActiveAlarm(upi, callback) {
     Utility.remove({
-            criteria: {
+            query: {
                 upi: upi
             },
             collection: 'ActiveAlarms'
@@ -402,7 +402,7 @@ function updateFromTail(_id, value, reliability) {
     /*if (curAlarm !== undefined && curAlarm !== null)
         updateObj.$set._curAlmId = BSON.ObjectID(curAlarm);*/
     Utility.remove({
-            criteria: {
+            query: {
                 _id: _id
             },
             updateObj: updateObj,

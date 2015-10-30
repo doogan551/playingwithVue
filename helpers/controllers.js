@@ -1,5 +1,5 @@
 // Controllers setup
-var autoloader = require('../helpers/loader');
+var autoloader = require('./loader');
 
 exports = module.exports = function(app,controllers) {
     var dir,result;

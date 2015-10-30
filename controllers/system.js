@@ -61,7 +61,7 @@ router.post('/updatecontrolpriorities', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  System.updateControlPriorities('Control Priorities', function(err, priorities) {
+  System.updateControlPriorities(data, function(err, priorities) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
@@ -78,7 +78,7 @@ router.post('/updatequalitycodes', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  System.updateQualityCodes('Control Priorities', function(err, priorities) {
+  System.updateQualityCodes(data, function(err, priorities) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
@@ -95,7 +95,7 @@ router.post('/updatecontrollers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  System.updateControllers('Control Priorities', function(err, priorities) {
+  System.updateControllers(data, function(err, priorities) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
@@ -124,7 +124,7 @@ router.post('/updatetelemetry', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  System.updateTelemetry('Control Priorities', function(err, priorities) {
+  System.updateTelemetry(data, function(err, priorities) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
@@ -186,7 +186,7 @@ router.get('/weather', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  System.weather('Control Priorities', function(err, weather) {
+  System.weather(function(err, weather) {
     if (err) {
       return utils.sendResponse(res, {
         err: err

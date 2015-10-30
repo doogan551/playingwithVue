@@ -32,24 +32,26 @@ module.exports = function(router, controllers) {
   router.use('/api/activitylogs', controllers.activitylogs);
   router.use('/api/calendar', controllers.calendar);
   router.use('/api/curvefit', controllers.curvefit);
-  router.use('/dashboard', controllers.calendar);
   router.use('/api/devicetree', controllers.devicetree);
-  router.use('/displays', controllers.display);
   router.use('/api/firmwareloader', controllers.firmwareloader);
-  router.use('/gpl', controllers.gpl);
-  router.use('/pointlookup', controllers.pointlookup);
+  router.use('/api/meters', controllers.history);
   router.use('/api/points', controllers.points);
-  router.use('/reports1', controllers.reports);
-  router.use('/report', controllers.reports);
   router.use('/api/reporttemplates', controllers.reporttemplates);
   router.use('/api/security', controllers.security);
   router.use('/api/scripts', controllers.scripts);
   router.use('/api/slideshows', controllers.slideshow);
   router.use('/api/system', controllers.system);
-  router.use('/thumbnail', controllers.thumbnails);
-  router.use('/toolbag', controllers.toolbag);
   router.use('/api/trenddata', controllers.trenddata);
   router.use('/api/trendplots', controllers.trendplots);
+
+  router.use('/dashboard', controllers.calendar);
+  router.use('/displays', controllers.display);
+  router.use('/gpl', controllers.gpl);
+  router.use('/pointlookup', controllers.pointlookup);
+  router.use('/reports1', controllers.reports);
+  router.use('/report', controllers.reports);
+  router.use('/thumbnail', controllers.thumbnails);
+  router.use('/toolbag', controllers.toolbag);
 
   return router;
 };
