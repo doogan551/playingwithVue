@@ -5,73 +5,100 @@ var History = require('../models/history');
 var utils = require('../helpers/utils');
 
 router.post('/getMeters', function(req, res, next) {
-	History.getMeters('Control Priorities', function(err, priorities) {
+	var data = _.merge(req.params, req.body);
+	data.user = req.user;
+
+	History.getMeters(data, function(err, meters) {
 		if (err) {
 			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return utils.sendResponse(res, priorities.Entries);
+			return utils.sendResponse(res, {
+				meters: meters
+			});
 		}
 	});
 });
 
 router.post('/getUsage', function(req, res, next) {
-	History.getUsage('Control Priorities', function(err, priorities) {
+	var data = _.merge(req.params, req.body);
+	data.user = req.user;
+
+	History.getUsage(data, function(err, results) {
 		if (err) {
 			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return utils.sendResponse(res, priorities.Entries);
+			return utils.sendResponse(res, results);
 		}
 	});
 });
 
 router.post('/getMissingMeters', function(req, res, next) {
-	History.getMissingMeters('Control Priorities', function(err, priorities) {
+	var data = _.merge(req.params, req.body);
+	data.user = req.user;
+
+	History.getMissingMeters(data, function(err, results) {
 		if (err) {
 			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return utils.sendResponse(res, priorities.Entries);
+			return utils.sendResponse(res, results);
 		}
 	});
 });
 
 router.post('/editDatastore', function(req, res, next) {
-	History.editDatastore('Control Priorities', function(err, priorities) {
+	var data = _.merge(req.params, req.body);
+	data.user = req.user;
+
+	History.editDatastore(data, function(err, result) {
 		if (err) {
 			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return utils.sendResponse(res, priorities.Entries);
+			return utils.sendResponse(res, {
+				message: 'success'
+			});
 		}
 	});
 });
 
 router.post('/importCSV', function(req, res, next) {
-	History.importCSV('Control Priorities', function(err, priorities) {
+	var data = _.merge(req.params, req.body);
+	data.user = req.user;
+
+	History.importCSV(data, function(err, count) {
 		if (err) {
 			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return utils.sendResponse(res, priorities.Entries);
+			return utils.sendResponse(res, {
+				message: 'success',
+				updatedCount: count
+			});
 		}
 	});
 });
 
 router.post('/exportCSV', function(req, res, next) {
-	History.exportCSV('Control Priorities', function(err, priorities) {
+	var data = _.merge(req.params, req.body);
+	data.user = req.user;
+
+	History.exportCSV(data, function(err, path) {
 		if (err) {
 			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return utils.sendResponse(res, priorities.Entries);
+			return utils.sendResponse(res, {
+				path: path
+			});
 		}
 	});
 });
@@ -88,13 +115,15 @@ router.get('/downloadCSV', function(req, res, next) {
 });
 
 router.post('/uploadCSV', function(req, res, next) {
-	History.uploadCSV('Control Priorities', function(err, priorities) {
+	var files = req.files;
+
+	History.uploadCSV(files, function(err, path) {
 		if (err) {
-			return utils.sendResponse(res, {
-				err: err
-			});
+			return utils.sendResponse(res, err);
 		} else {
-			return utils.sendResponse(res, priorities.Entries);
+			return utils.sendResponse(res, {
+				path: path
+			});
 		}
 	});
 });

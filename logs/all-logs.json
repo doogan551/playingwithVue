@@ -1,71 +1,258 @@
-{"level":"error","message":"error","timestamp":"2015-10-30T14:14:43.447Z"}
-{"level":"warn","message":"warn","timestamp":"2015-10-30T14:14:43.451Z"}
-{"level":"info","message":"info","timestamp":"2015-10-30T14:14:43.452Z"}
-{"level":"info","message":"2015-10-30T14:26:01.718Z 127.0.0.1 GET / 304 - 270.284\n","timestamp":"2015-10-30T14:26:01.719Z"}
-{"level":"info","message":"127.0.0.1 GET / 304 - 231.809\n","timestamp":"2015-10-30T14:26:43.697Z"}
-{"level":"info","message":"127.0.0.1 GET / 304 - 268.363\n","timestamp":"2015-10-30T14:28:59.227Z"}
-{"level":"info","message":"127.0.0.1 GET / 304 - 276.315\n","timestamp":"2015-10-30T14:29:12.009Z"}
-{"level":"info","message":"127.0.0.1 GET / 304 - 156.465\n","timestamp":"2015-10-30T14:29:15.551Z"}
-{"level":"info","message":"127.0.0.1 GET / 304 - 133.654\n","timestamp":"2015-10-30T14:29:16.337Z"}
-{"level":"info","message":"127.0.0.1 POST /authenticate 200 501 371.393\n","timestamp":"2015-10-30T14:29:26.463Z"}
-{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 200 943 9.490\n","timestamp":"2015-10-30T14:29:26.917Z"}
-{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 200 1379 5.046\n","timestamp":"2015-10-30T14:29:26.922Z"}
-{"level":"info","message":"127.0.0.1 GET /api/system/controllers 200 1809 5.303\n","timestamp":"2015-10-30T14:29:26.932Z"}
-{"level":"info","message":"127.0.0.1 GET /pointlookup 200 10062 85.412\n","timestamp":"2015-10-30T14:29:27.046Z"}
-{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 375.604\n","timestamp":"2015-10-30T14:29:28.649Z"}
-{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 10187.656\n","timestamp":"2015-10-30T14:29:38.251Z"}
-{"level":"info","message":"127.0.0.1 GET / 200 19431 246.206\n","timestamp":"2015-10-30T14:32:12.649Z"}
-{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 304 - 6.612\n","timestamp":"2015-10-30T14:32:12.915Z"}
-{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 304 - 5.655\n","timestamp":"2015-10-30T14:32:12.916Z"}
-{"level":"info","message":"127.0.0.1 GET /api/system/controllers 304 - 2.108\n","timestamp":"2015-10-30T14:32:12.919Z"}
-{"level":"info","message":"127.0.0.1 GET /pointlookup 304 - 87.155\n","timestamp":"2015-10-30T14:32:13.040Z"}
-{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 25.010\n","timestamp":"2015-10-30T14:32:13.512Z"}
-{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2343.248\n","timestamp":"2015-10-30T14:32:15.658Z"}
-{"level":"info","message":"127.0.0.1 GET / 304 - 242.864\n","timestamp":"2015-10-30T14:32:54.818Z"}
-{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 304 - 5.980\n","timestamp":"2015-10-30T14:32:55.092Z"}
-{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 304 - 6.404\n","timestamp":"2015-10-30T14:32:55.092Z"}
-{"level":"info","message":"127.0.0.1 GET /api/system/controllers 304 - 2.309\n","timestamp":"2015-10-30T14:32:55.096Z"}
-{"level":"info","message":"127.0.0.1 GET /pointlookup 304 - 84.739\n","timestamp":"2015-10-30T14:32:55.210Z"}
-{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 10.993\n","timestamp":"2015-10-30T14:32:55.684Z"}
-{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2315.390\n","timestamp":"2015-10-30T14:32:57.829Z"}
-{"level":"info","message":"127.0.0.1 GET / 304 - 241.899\n","timestamp":"2015-10-30T14:33:31.652Z"}
-{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 304 - 6.426\n","timestamp":"2015-10-30T14:33:31.921Z"}
-{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 304 - 5.650\n","timestamp":"2015-10-30T14:33:31.922Z"}
-{"level":"info","message":"127.0.0.1 GET /api/system/controllers 304 - 2.075\n","timestamp":"2015-10-30T14:33:31.925Z"}
-{"level":"info","message":"127.0.0.1 GET /pointlookup 304 - 90.255\n","timestamp":"2015-10-30T14:33:32.045Z"}
-{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 11.134\n","timestamp":"2015-10-30T14:33:32.526Z"}
-{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2271.193\n","timestamp":"2015-10-30T14:33:34.606Z"}
-{"date":"Fri Oct 30 2015 10:08:26 GMT-0500 (Central Daylight Time)","process":{"pid":40708,"uid":null,"gid":null,"cwd":"C:\\infoscan-test","execPath":"C:\\Program Files\\nodejs\\node.exe","version":"v0.10.26","argv":["node","C:\\infoscan-test\\app.js"],"memoryUsage":{"rss":78020608,"heapTotal":66479360,"heapUsed":33895496}},"os":{"loadavg":[0,0,0],"uptime":2417773.3600457},"trace":[{"column":3,"file":"C:\\infoscan-test\\models\\archiveutility.js","function":"buildAllSdb","line":58,"method":null,"native":false},{"column":3,"file":"C:\\infoscan-test\\models\\archiveutility.js","function":"","line":83,"method":null,"native":false},{"column":26,"file":"module.js","function":"Module._compile","line":456,"method":"_compile","native":false},{"column":10,"file":"module.js","function":"Object.Module._extensions..js","line":474,"method":"Module._extensions..js","native":false},{"column":32,"file":"module.js","function":"Module.load","line":356,"method":"load","native":false},{"column":12,"file":"module.js","function":"Function.Module._load","line":312,"method":"Module._load","native":false},{"column":17,"file":"module.js","function":"Module.require","line":364,"method":"require","native":false},{"column":17,"file":"module.js","function":"require","line":380,"method":null,"native":false},{"column":22,"file":"C:\\infoscan-test\\models\\history.js","function":"","line":10,"method":null,"native":false},{"column":26,"file":"module.js","function":"Module._compile","line":456,"method":"_compile","native":false}],"stack":["ReferenceError: fs is not defined","    at buildAllSdb (C:\\infoscan-test\\models\\archiveutility.js:58:3)","    at Object.<anonymous> (C:\\infoscan-test\\models\\archiveutility.js:83:3)","    at Module._compile (module.js:456:26)","    at Object.Module._extensions..js (module.js:474:10)","    at Module.load (module.js:356:32)","    at Function.Module._load (module.js:312:12)","    at Module.require (module.js:364:17)","    at require (module.js:380:17)","    at Object.<anonymous> (C:\\infoscan-test\\models\\history.js:10:22)","    at Module._compile (module.js:456:26)"],"level":"error","message":"uncaughtException: fs is not defined","timestamp":"2015-10-30T15:08:26.494Z"}
-{"date":"Fri Oct 30 2015 10:09:15 GMT-0500 (Central Daylight Time)","process":{"pid":36828,"uid":null,"gid":null,"cwd":"C:\\infoscan-test","execPath":"C:\\Program Files\\nodejs\\node.exe","version":"v0.10.26","argv":["node","C:\\infoscan-test\\app.js"],"memoryUsage":{"rss":92012544,"heapTotal":75742720,"heapUsed":46673480}},"os":{"loadavg":[0,0,0],"uptime":2417822.4590457},"trace":[{"column":22,"file":"C:\\infoscan-test\\models\\archiveutility.js","function":null,"line":81,"method":null,"native":false},{"column":16,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":null,"line":52,"method":null,"native":false},{"column":32,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":null,"line":272,"method":null,"native":false},{"column":16,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":null,"line":44,"method":null,"native":false},{"column":16,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":null,"line":52,"method":null,"native":false},{"column":32,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":"","line":272,"method":null,"native":false},{"column":16,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":"","line":44,"method":null,"native":false},{"column":17,"file":"C:\\infoscan-test\\models\\archiveutility.js","function":null,"line":19,"method":null,"native":false},{"column":20,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":null,"line":187,"method":null,"native":false},{"column":13,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":"iterate","line":265,"method":null,"native":false},{"column":29,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":"","line":277,"method":null,"native":false},{"column":16,"file":"C:\\infoscan-test\\node_modules\\async\\lib\\async.js","function":"","line":44,"method":null,"native":false}],"stack":["ReferenceError: moment is not defined","    at C:\\infoscan-test\\models\\archiveutility.js:81:22","    at C:\\infoscan-test\\node_modules\\async\\lib\\async.js:52:16","    at C:\\infoscan-test\\node_modules\\async\\lib\\async.js:272:32","    at C:\\infoscan-test\\node_modules\\async\\lib\\async.js:44:16","    at C:\\infoscan-test\\node_modules\\async\\lib\\async.js:52:16","    at Statement.<anonymous> (C:\\infoscan-test\\node_modules\\async\\lib\\async.js:272:32)","    at Statement.<anonymous> (C:\\infoscan-test\\node_modules\\async\\lib\\async.js:44:16)","--> in Database#run('CREATE TABLE IF NOT EXISTS History_201612 (UPI INTEGER NOT NULL, TIMESTAMP INTEGER NOT NULL, VALUE REAL NOT NULL, VALUETYPE INTEGER NOT NULL, STATUSFLAGS INTEGER DEFAULT 0, USEREDITED INTEGER DEFAULT 0, PRIMARY KEY(UPI, TIMESTAMP) ON CONFLICT IGNORE)', [Function])","    at C:\\infoscan-test\\models\\archiveutility.js:19:17","    at C:\\infoscan-test\\node_modules\\async\\lib\\async.js:187:20","    at iterate (C:\\infoscan-test\\node_modules\\async\\lib\\async.js:265:13)","    at Statement.<anonymous> (C:\\infoscan-test\\node_modules\\async\\lib\\async.js:277:29)","    at Statement.<anonymous> (C:\\infoscan-test\\node_modules\\async\\lib\\async.js:44:16)"],"level":"error","message":"uncaughtException: moment is not defined","timestamp":"2015-10-30T15:09:15.588Z"}
-{"level":"error","message":"","timestamp":"2015-10-30T15:29:51.306Z"}
-{"level":"error","message":"","timestamp":"2015-10-30T15:30:05.649Z"}
-{"level":"error","message":"","timestamp":"2015-10-30T15:30:13.324Z"}
-{"level":"error","message":"","timestamp":"2015-10-30T15:30:28.096Z"}
-{"level":"error","message":"","timestamp":"2015-10-30T15:31:37.575Z"}
-{"level":"error","message":"","timestamp":"2015-10-30T15:42:58.874Z"}
-{"errno":21,"code":"SQLITE_MISUSE","level":"error","timestamp":"2015-10-30T15:43:27.261Z"}
-{"level":"error","message":"No statement supplied.","timestamp":"2015-10-30T15:44:15.717Z"}
-{"level":"error","message":"No statement supplied.","timestamp":"2015-10-30T15:44:33.866Z"}
-{"level":"error","message":"No statement supplied.","timestamp":"2015-10-30T17:32:14.974Z"}
-{"level":"error","message":"","timestamp":"2015-10-30T17:32:46.390Z"}
-{"level":"error","message":"","timestamp":"2015-10-30T17:33:14.349Z"}
-{"level":"error","message":"","timestamp":"2015-10-30T17:33:22.194Z"}
-{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T17:36:09.462Z"}
-{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T17:36:11.224Z"}
-{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T17:36:11.886Z"}
-{"level":"info","message":"server started in 2.487 seconds","timestamp":"2015-10-30T17:36:11.887Z"}
-{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T17:37:47.439Z"}
-{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T17:37:48.804Z"}
-{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T17:37:49.265Z"}
-{"level":"info","message":"server started in 1.893 seconds","timestamp":"2015-10-30T17:37:49.265Z"}
-{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T17:37:49.084Z"}
-{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T17:37:49.085Z"}
-{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T17:37:49.221Z"}
-{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T17:39:27.408Z"}
-{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T17:39:28.941Z"}
-{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T17:39:29.096Z"}
-{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T17:39:29.761Z"}
-{"level":"info","message":"server started in 2.455 seconds","timestamp":"2015-10-30T17:39:29.762Z"}
-{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T17:39:29.480Z"}
-{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T17:39:29.481Z"}
-{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T17:39:29.697Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:17:53.439Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:17:54.901Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:17:55.022Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:17:55.534Z"}
+{"level":"info","message":"server started in 2.183 seconds","timestamp":"2015-10-30T20:17:55.535Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:17:55.353Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:17:55.354Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:17:55.494Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 500 45 10.363\n","timestamp":"2015-10-30T20:17:59.627Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:18:26.147Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:18:27.646Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:18:27.773Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:18:28.282Z"}
+{"level":"info","message":"server started in 2.213 seconds","timestamp":"2015-10-30T20:18:28.283Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:18:28.100Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:18:28.101Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:18:28.242Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 500 45 623.613\n","timestamp":"2015-10-30T20:18:30.694Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:19:00.011Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:19:01.425Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:19:01.567Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:19:02.102Z"}
+{"level":"info","message":"server started in 2.159 seconds","timestamp":"2015-10-30T20:19:02.102Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:19:01.902Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:19:01.902Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:19:02.052Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 870.985\n","timestamp":"2015-10-30T20:19:04.954Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 5.079\n","timestamp":"2015-10-30T20:19:05.569Z"}
+{"level":"info","message":"127.0.0.1 GET / 200 19431 183.070\n","timestamp":"2015-10-30T20:19:22.747Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 200 943 5.384\n","timestamp":"2015-10-30T20:19:23.090Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 200 1379 7.453\n","timestamp":"2015-10-30T20:19:23.093Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controllers 200 1809 8.212\n","timestamp":"2015-10-30T20:19:23.094Z"}
+{"level":"info","message":"127.0.0.1 GET /img/thumbs/dashboard.txt 404 37 2.818\n","timestamp":"2015-10-30T20:19:23.157Z"}
+{"level":"info","message":"127.0.0.1 GET /pointlookup 200 10062 70.629\n","timestamp":"2015-10-30T20:19:23.246Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 626.153\n","timestamp":"2015-10-30T20:19:23.876Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/search - - -\n","timestamp":"2015-10-30T20:19:25.368Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 3.008\n","timestamp":"2015-10-30T20:19:25.851Z"}
+{"level":"info","message":"127.0.0.1 GET /img/thumbs/dashboard.txt 404 37 2.458\n","timestamp":"2015-10-30T20:19:26.929Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2648.761\n","timestamp":"2015-10-30T20:19:27.743Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 1538.474\n","timestamp":"2015-10-30T20:19:27.745Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 2377.235\n","timestamp":"2015-10-30T20:19:27.750Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 2.906\n","timestamp":"2015-10-30T20:19:27.765Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:19:41.152Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:19:42.603Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:19:42.735Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:19:43.312Z"}
+{"level":"info","message":"server started in 2.235 seconds","timestamp":"2015-10-30T20:19:43.313Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:19:43.102Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:19:43.103Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:19:43.267Z"}
+{"level":"info","message":"127.0.0.1 GET /img/thumbs/dashboard.txt 404 37 14.460\n","timestamp":"2015-10-30T20:19:46.118Z"}
+{"level":"info","message":"127.0.0.1 GET / 200 19431 253.594\n","timestamp":"2015-10-30T20:19:56.160Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 200 943 4.535\n","timestamp":"2015-10-30T20:19:56.501Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 200 1379 5.630\n","timestamp":"2015-10-30T20:19:56.502Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controllers 200 1809 2.766\n","timestamp":"2015-10-30T20:19:56.506Z"}
+{"level":"info","message":"127.0.0.1 GET /img/thumbs/dashboard.txt 404 37 1.821\n","timestamp":"2015-10-30T20:19:56.546Z"}
+{"level":"info","message":"127.0.0.1 GET /pointlookup 200 10062 121.875\n","timestamp":"2015-10-30T20:19:56.698Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 617.294\n","timestamp":"2015-10-30T20:19:57.327Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 13.409\n","timestamp":"2015-10-30T20:19:58.077Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 3.405\n","timestamp":"2015-10-30T20:19:58.906Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 4.813\n","timestamp":"2015-10-30T20:19:59.240Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2327.467\n","timestamp":"2015-10-30T20:20:00.154Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 1530.169\n","timestamp":"2015-10-30T20:20:00.156Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:20:47.499Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:20:49.082Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:20:49.223Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:20:49.814Z"}
+{"level":"info","message":"server started in 2.385 seconds","timestamp":"2015-10-30T20:20:49.814Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:20:49.578Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:20:49.579Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:20:49.761Z"}
+{"level":"info","message":"127.0.0.1 GET / 200 19431 246.978\n","timestamp":"2015-10-30T20:20:54.212Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 200 943 5.298\n","timestamp":"2015-10-30T20:20:54.567Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 200 1379 5.935\n","timestamp":"2015-10-30T20:20:54.568Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controllers 200 1809 3.000\n","timestamp":"2015-10-30T20:20:54.573Z"}
+{"level":"info","message":"127.0.0.1 GET /img/thumbs/dashboard.txt 404 37 2.409\n","timestamp":"2015-10-30T20:20:54.613Z"}
+{"level":"info","message":"127.0.0.1 GET /pointlookup 200 10062 111.731\n","timestamp":"2015-10-30T20:20:54.743Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 618.845\n","timestamp":"2015-10-30T20:20:55.374Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 12.047\n","timestamp":"2015-10-30T20:20:56.122Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 13.608\n","timestamp":"2015-10-30T20:20:56.936Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 3.608\n","timestamp":"2015-10-30T20:20:57.293Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2360.054\n","timestamp":"2015-10-30T20:20:58.236Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 1604.614\n","timestamp":"2015-10-30T20:20:58.237Z"}
+{"level":"info","message":"127.0.0.1 GET / 200 19431 175.967\n","timestamp":"2015-10-30T20:23:05.011Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 200 943 3.175\n","timestamp":"2015-10-30T20:23:05.358Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 200 1379 3.233\n","timestamp":"2015-10-30T20:23:05.359Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controllers 200 1809 2.128\n","timestamp":"2015-10-30T20:23:05.362Z"}
+{"level":"info","message":"127.0.0.1 GET /img/thumbs/dashboard.txt 404 37 2.107\n","timestamp":"2015-10-30T20:23:05.408Z"}
+{"level":"info","message":"127.0.0.1 GET /pointlookup 200 10062 70.795\n","timestamp":"2015-10-30T20:23:05.501Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 594.787\n","timestamp":"2015-10-30T20:23:06.102Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 8.506\n","timestamp":"2015-10-30T20:23:06.967Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 2.362\n","timestamp":"2015-10-30T20:23:07.775Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2381.700\n","timestamp":"2015-10-30T20:23:09.083Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 1691.097\n","timestamp":"2015-10-30T20:23:09.084Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 4.367\n","timestamp":"2015-10-30T20:24:11.893Z"}
+{"level":"info","message":"127.0.0.1 GET / 200 19431 189.714\n","timestamp":"2015-10-30T20:24:13.195Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 200 943 5.179\n","timestamp":"2015-10-30T20:24:13.584Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 200 1379 5.913\n","timestamp":"2015-10-30T20:24:13.585Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controllers 200 1809 9.349\n","timestamp":"2015-10-30T20:24:13.588Z"}
+{"level":"info","message":"127.0.0.1 GET /img/thumbs/dashboard.txt 404 37 2.653\n","timestamp":"2015-10-30T20:24:13.646Z"}
+{"level":"info","message":"127.0.0.1 GET /pointlookup 200 10062 85.918\n","timestamp":"2015-10-30T20:24:13.761Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 585.609\n","timestamp":"2015-10-30T20:24:14.354Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 9.422\n","timestamp":"2015-10-30T20:24:15.224Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 2.334\n","timestamp":"2015-10-30T20:24:16.083Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2359.054\n","timestamp":"2015-10-30T20:24:17.305Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 1601.866\n","timestamp":"2015-10-30T20:24:17.306Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 2.708\n","timestamp":"2015-10-30T20:24:23.643Z"}
+{"level":"info","message":"127.0.0.1 GET / 200 19431 132.905\n","timestamp":"2015-10-30T20:25:44.737Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 200 943 5.416\n","timestamp":"2015-10-30T20:25:45.106Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 200 1379 6.252\n","timestamp":"2015-10-30T20:25:45.106Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controllers 200 1809 6.323\n","timestamp":"2015-10-30T20:25:45.107Z"}
+{"level":"info","message":"127.0.0.1 GET /img/thumbs/dashboard.txt 404 37 2.402\n","timestamp":"2015-10-30T20:25:45.155Z"}
+{"level":"info","message":"127.0.0.1 GET /pointlookup 200 10062 62.893\n","timestamp":"2015-10-30T20:25:45.246Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 591.724\n","timestamp":"2015-10-30T20:25:45.845Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 9.644\n","timestamp":"2015-10-30T20:25:46.643Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 3.460\n","timestamp":"2015-10-30T20:25:47.439Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 13.458\n","timestamp":"2015-10-30T20:25:47.781Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2338.466\n","timestamp":"2015-10-30T20:25:48.724Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 1594.508\n","timestamp":"2015-10-30T20:25:48.726Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 500 1079 3.964\n","timestamp":"2015-10-30T20:25:48.794Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:28:01.865Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:28:03.367Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:28:03.510Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:28:04.150Z"}
+{"level":"info","message":"server started in 2.363 seconds","timestamp":"2015-10-30T20:28:04.152Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:28:03.918Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:28:03.918Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:28:04.101Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 736.089\n","timestamp":"2015-10-30T20:28:06.398Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 3.941\n","timestamp":"2015-10-30T20:28:06.795Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 16.327\n","timestamp":"2015-10-30T20:28:07.065Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 5.200\n","timestamp":"2015-10-30T20:28:07.467Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 500 1104 6.597\n","timestamp":"2015-10-30T20:28:07.517Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:30:02.571Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:30:04.133Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:30:04.273Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:30:04.932Z"}
+{"level":"info","message":"server started in 2.436 seconds","timestamp":"2015-10-30T20:30:04.934Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:30:04.710Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:30:04.711Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:30:04.884Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 736.849\n","timestamp":"2015-10-30T20:30:06.529Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage - - -\n","timestamp":"2015-10-30T20:30:06.531Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 3.072\n","timestamp":"2015-10-30T20:30:06.934Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 3.326\n","timestamp":"2015-10-30T20:30:07.182Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 6.410\n","timestamp":"2015-10-30T20:30:07.589Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 322 4.253\n","timestamp":"2015-10-30T20:30:07.643Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:31:49.224Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:31:50.707Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:31:50.829Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:31:51.344Z"}
+{"level":"info","message":"server started in 2.194 seconds","timestamp":"2015-10-30T20:31:51.345Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:31:51.145Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:31:51.146Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:31:51.301Z"}
+{"level":"info","message":"127.0.0.1 GET / 200 19431 239.730\n","timestamp":"2015-10-30T20:31:53.442Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage - - -\n","timestamp":"2015-10-30T20:31:53.464Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controlpriorities 200 943 4.341\n","timestamp":"2015-10-30T20:31:53.821Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/qualityCodes 200 1379 5.450\n","timestamp":"2015-10-30T20:31:53.822Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/controllers 200 1809 2.876\n","timestamp":"2015-10-30T20:31:53.827Z"}
+{"level":"info","message":"127.0.0.1 GET /img/thumbs/dashboard.txt 404 37 2.347\n","timestamp":"2015-10-30T20:31:53.867Z"}
+{"level":"info","message":"127.0.0.1 GET /pointlookup 200 10062 109.528\n","timestamp":"2015-10-30T20:31:54.007Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 648.455\n","timestamp":"2015-10-30T20:31:54.668Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/search 200 25621 11.755\n","timestamp":"2015-10-30T20:31:55.326Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 3.126\n","timestamp":"2015-10-30T20:31:56.100Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 3.526\n","timestamp":"2015-10-30T20:31:56.444Z"}
+{"level":"info","message":"127.0.0.1 POST /api/points/browse 200 207477 2330.582\n","timestamp":"2015-10-30T20:31:57.399Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 1673.745\n","timestamp":"2015-10-30T20:31:57.401Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 322 5.464\n","timestamp":"2015-10-30T20:31:57.453Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:33:53.537Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:33:55.205Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:33:55.354Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:33:55.999Z"}
+{"level":"info","message":"server started in 2.554 seconds","timestamp":"2015-10-30T20:33:56.000Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:33:55.773Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:33:55.774Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:33:55.954Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 724.750\n","timestamp":"2015-10-30T20:33:57.583Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage - - -\n","timestamp":"2015-10-30T20:33:57.589Z"}
+{"level":"error","message":"","timestamp":"2015-10-30T20:33:57.594Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 2.779\n","timestamp":"2015-10-30T20:33:58.009Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 3.389\n","timestamp":"2015-10-30T20:33:58.244Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 4.565\n","timestamp":"2015-10-30T20:33:58.650Z"}
+{"level":"error","message":"","timestamp":"2015-10-30T20:33:58.711Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 322 5.389\n","timestamp":"2015-10-30T20:33:58.713Z"}
+{"0":{"range":{"start":1425189600,"end":1412136000},"upis":[918918,918919,918920,918921,918922,918923,918924,918925,918926,918927,918928,918929,918930,918931,918932,918933,918934,918935,918936,918937,918938,918939,918940,918941,918942,918943,918944,918945,918947,918949,918950,918951,918952,918953],"touid":"tou_14","utilityName":"Electricity","fiscalYear":2015,"type":"demand","scale":"month","fx":"max","peak":"on","results":{"maxes":[]}},"level":"info","message":"","timestamp":"2015-10-30T20:44:35.935Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:46:09.354Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:46:10.733Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:46:10.864Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:46:11.429Z"}
+{"level":"info","message":"server started in 2.141 seconds","timestamp":"2015-10-30T20:46:11.430Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:46:11.221Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:46:11.222Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:46:11.385Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 718.254\n","timestamp":"2015-10-30T20:46:14.666Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 7.860\n","timestamp":"2015-10-30T20:46:15.071Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 21.008\n","timestamp":"2015-10-30T20:46:15.326Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 13.141\n","timestamp":"2015-10-30T20:46:16.343Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 322 38.605\n","timestamp":"2015-10-30T20:46:16.453Z"}
+{"level":"error","message":"","timestamp":"2015-10-30T20:46:16.448Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:47:10.367Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:47:11.944Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:47:12.068Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:47:12.567Z"}
+{"level":"info","message":"server started in 2.284 seconds","timestamp":"2015-10-30T20:47:12.568Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:47:12.381Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:47:12.382Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:47:12.526Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 716.494\n","timestamp":"2015-10-30T20:47:14.123Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage - - -\n","timestamp":"2015-10-30T20:47:14.133Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 2.752\n","timestamp":"2015-10-30T20:47:14.468Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 3.092\n","timestamp":"2015-10-30T20:47:14.700Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 3.898\n","timestamp":"2015-10-30T20:47:15.102Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 322 4.825\n","timestamp":"2015-10-30T20:47:15.167Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:48:13.489Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:48:15.083Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:48:15.211Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:48:15.738Z"}
+{"level":"info","message":"server started in 2.342 seconds","timestamp":"2015-10-30T20:48:15.739Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:48:15.551Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:48:15.552Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:48:15.697Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 322 30.524\n","timestamp":"2015-10-30T20:48:16.583Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 740.645\n","timestamp":"2015-10-30T20:48:21.379Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 4.719\n","timestamp":"2015-10-30T20:48:21.728Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 3.825\n","timestamp":"2015-10-30T20:48:21.956Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 4.642\n","timestamp":"2015-10-30T20:48:22.336Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 322 9.579\n","timestamp":"2015-10-30T20:48:22.398Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:49:54.421Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:49:55.970Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:49:56.129Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:49:56.753Z"}
+{"level":"info","message":"server started in 2.408 seconds","timestamp":"2015-10-30T20:49:56.754Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:49:56.505Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:49:56.506Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:49:56.696Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 314 45.748\n","timestamp":"2015-10-30T20:49:57.682Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 2514 7.472\n","timestamp":"2015-10-30T20:50:02.449Z"}
+{"level":"info","message":"127.0.0.1 GET /dashboard 200 458622 740.964\n","timestamp":"2015-10-30T20:50:17.527Z"}
+{"level":"info","message":"127.0.0.1 GET /api/system/getCustomColors 200 145 4.122\n","timestamp":"2015-10-30T20:50:17.874Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 3.592\n","timestamp":"2015-10-30T20:50:18.108Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 6.193\n","timestamp":"2015-10-30T20:50:18.509Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 314 7.000\n","timestamp":"2015-10-30T20:50:18.571Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/groups/getallgroups 200 615 2.806\n","timestamp":"2015-10-30T20:50:22.018Z"}
+{"level":"info","message":"127.0.0.1 POST /api/security/users/getallusers 200 4386 4.811\n","timestamp":"2015-10-30T20:50:22.043Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 4381 1720.736\n","timestamp":"2015-10-30T20:50:27.048Z"}
+{"level":"info","message":"NODE_ENV:localhost","timestamp":"2015-10-30T20:51:08.116Z"}
+{"level":"info","message":"auto loaded 24 modules in: C:\\infoscan-test\\helpers/../controllers/","timestamp":"2015-10-30T20:51:09.595Z"}
+{"level":"info","message":"mongo connected to mongodb://localhost:27017/infoscan","timestamp":"2015-10-30T20:51:09.715Z"}
+{"level":"info","message":"listening on port 3030","timestamp":"2015-10-30T20:51:10.213Z"}
+{"level":"info","message":"server started in 2.17 seconds","timestamp":"2015-10-30T20:51:10.214Z"}
+{"level":"info","message":"socket listening on port 8085","timestamp":"2015-10-30T20:51:10.022Z"}
+{"level":"info","message":"tcp server listening on  127.0.0.1:5002","timestamp":"2015-10-30T20:51:10.023Z"}
+{"level":"info","message":"oplog connected to mongodb://localhost/local","timestamp":"2015-10-30T20:51:10.172Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 314 27.568\n","timestamp":"2015-10-30T20:51:11.063Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 31235 3679.246\n","timestamp":"2015-10-30T20:51:17.914Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 31329 3923.767\n","timestamp":"2015-10-30T20:51:29.558Z"}
+{"level":"info","message":"127.0.0.1 POST /api/meters/getUsage 200 510618 611.372\n","timestamp":"2015-10-30T20:51:43.723Z"}

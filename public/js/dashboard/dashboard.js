@@ -2061,7 +2061,7 @@ var tou = {
 
         socket.on('connect', function() {
             tou.socket = socket;
-            tou.socketid = socket.socket.sessionid;
+            tou.socketid = socket.id; 
 
             cb();
         });

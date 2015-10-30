@@ -28,7 +28,7 @@ require('./helpers/passport')(passport); // pass passport for configuration
 
 app.use(express.static(__dirname + '/public'));
 app.use(morgan(':remote-addr :method :url :status :res[content-length] :response-time', {
-  'stream': logger.stream
+  'stream': loggerStream.stream
 }));
 app.use(cookieParser());
 app.use(bodyParser.json());

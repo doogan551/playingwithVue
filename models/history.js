@@ -5,7 +5,7 @@ var _ = require('lodash');
 var fs = require('fs');
 var tmp = require('tmp');
 
-var db = require('../helpers/db');
+var logger = require('../helpers/logger')(module);
 var Utility = require('../models/utility');
 var ArchiveUtility = require('../models/archiveutility');
 var Config = require('../public/js/lib/config');
@@ -123,7 +123,7 @@ var unbuildOps = function(options) {
 };
 
 var editHistoryData = function(values, updateOptions, callback) {
-	//options:
+	// updateOptions:
 	// 1: insert missing data only
 	// 2: overwrite user-supplied data only
 	// 4: overwrite meter reported data only
@@ -145,97 +145,122 @@ var editHistoryData = function(values, updateOptions, callback) {
 		if (isNaN(value.upi) || isNaN(value.timestamp)) {
 			return callback('bad timestamp or upi');
 		}
-		getSdb(moment.unix(value.timestamp).year(), function(_sdb) {
-			criteria = {
-				collection: 'historydata',
-				query: query
-			};
-			Utility.getOne(criteria, function(err, point) {
 
-				if (!!point) {
-					if (point.userEdited) {
-						var updateObj = {
-							$set: {
-								Value: value.Value,
-								userEdited: true
-							}
-						};
-						count++;
-						updatedCount++;
+		criteria = {
+			collection: 'historydata',
+			query: query
+		};
+		Utility.getOne(criteria, function(err, point) {
+
+			if (!!point) {
+				if (point.userEdited) {
+					var updateObj = {
+						$set: {
+							Value: value.Value,
+							userEdited: true
+						}
+					};
+					count++;
+					updatedCount++;
+					criteria = {
+						collection: 'historydata',
+						query: query,
+						updateObj: updateObj
+					};
+					Utility.update(criteria, callback);
+				} else {
+					//ignored
+					return callback();
+				}
+			} else {
+				var month = moment.unix(value.timestamp).format('MM');
+				var year = moment.unix(value.timestamp).format('YYYY');
+				var table = "History_" + year + month;
+				var selectStatement = 'Select UPI, TIMESTAMP, USEREDITED FROM ' + table + ' WHERE UPI=(?) AND TIMESTAMP=(?)';
+				//run select
+				criteria = {
+					year: moment.unix(value.timestamp).year(),
+					statement: selectStatement,
+					parameters: [value.upi, value.timestamp]
+				};
+				ArchiveUtility.get(criteria, function(err, sPoint) {
+					var bindings = {
+						$upi: value.upi,
+						$timestamp: value.timestamp,
+						$Value: value.Value
+					};
+
+					if ((updateOptions & 1 !== 0) && !sPoint) {
+						// only inserting new data
+						updateDashboard = true;
+						var insertStatement = 'INSERT INTO ' + table + ' (UPI, TIMESTAMP, VALUE, VALUETYPE, STATUSFLAGS, USEREDITED)';
+						insertStatement += 'VALUES ($upi, $timestamp, $Value, $ValueType, $statusflags, 1)';
+						bindings['$ValueType'] = (!!value.ValueType) ? value.ValueType : 1;
+						bindings['$statusflags'] = (!!value.statusflags) ? value.statusflags : 0;
+
 						criteria = {
-							collection: 'historydata',
-							query: query,
-							updateObj: updateObj
+							year: moment.unix(value.timestamp).year(),
+							statement: insertStatement
 						};
-						Utility.update(criteria, callback);
+						ArchiveUtility.prepare(criteria, function(stmt) {
+
+							criteria = {
+								year: moment.unix(value.timestamp).year(),
+								statement: stmt,
+								parameters: bindings
+							};
+							ArchiveUtility.runStatement(criteria, function() {
+								ArchiveUtility.finalizeStatement(criteria, function() {
+									if (err) {
+										return callback(err);
+									} else {
+										updatedCount++;
+										callback();
+									}
+								});
+							});
+						});
+					} else if (((updateOptions & 2) !== 0 && sPoint.USEREDITED === 1) || ((updateOptions & 4) !== 0 && sPoint.USEREDITED === 0 && sPoint.VALUE !== value.Value)) {
+						// updating only existing user edited data
+						var updateStatement = 'UPDATE ' + table;
+						updateStatement += ' SET VALUE=$Value';
+						if (!!value.statusflags) {
+							bindings['$statusflags'] = value.statusflags;
+							updateStatement += ', STATUSFLAGS=$statusflags';
+						}
+
+						updateStatement += ', USEREDITED=1 WHERE';
+						updateStatement += ' UPI=$upi AND TIMESTAMP=$timestamp AND USEREDITED=' + sPoint.USEREDITED;
+
+						criteria = {
+							year: moment.unix(value.timestamp).year(),
+							statement: updateStatement
+						};
+						ArchiveUtility.prepare(criteria, function(stmt) {
+
+							criteria = {
+								year: moment.unix(value.timestamp).year(),
+								statement: stmt,
+								parameters: bindings
+							};
+							ArchiveUtility.runStatement(criteria, function() {
+								ArchiveUtility.finalizeStatement(criteria, function() {
+									if (err) {
+										return callback(err);
+									} else {
+										updatedCount++;
+										callback();
+									}
+								});
+							});
+						});
 					} else {
 						//ignored
 						return callback();
 					}
-				} else {
-					var month = moment.unix(value.timestamp).format('MM');
-					var year = moment.unix(value.timestamp).format('YYYY');
-					var table = "History_" + year + month;
-					var selectStatement = 'Select UPI, TIMESTAMP, USEREDITED FROM ' + table + ' WHERE UPI=(?) AND TIMESTAMP=(?)';
-					//run select
-					_sdb.get(selectStatement, [value.upi, value.timestamp], function(err, sPoint) {
-						var bindings = {
-							$upi: value.upi,
-							$timestamp: value.timestamp,
-							$Value: value.Value
-						};
+				});
+			}
 
-						if ((updateOptions & 1 !== 0) && !sPoint) {
-							// only inserting new data
-							updateDashboard = true;
-							var insertStatement = 'INSERT INTO ' + table + ' (UPI, TIMESTAMP, VALUE, VALUETYPE, STATUSFLAGS, USEREDITED)';
-							insertStatement += 'VALUES ($upi, $timestamp, $Value, $ValueType, $statusflags, 1)';
-							bindings['$ValueType'] = (!!value.ValueType) ? value.ValueType : 1;
-							bindings['$statusflags'] = (!!value.statusflags) ? value.statusflags : 0;
-							stmt = _sdb.prepare(insertStatement);
-							stmt.run(bindings);
-							// console.log('%%%%', bindings);
-							stmt.finalize(function() {
-								if (err) {
-									return callback(err);
-								} else {
-									// socket.updateDashboard(value, callback);
-									updatedCount++;
-									callback();
-								}
-							});
-						} else if (((updateOptions & 2) !== 0 && sPoint.USEREDITED === 1) || ((updateOptions & 4) !== 0 && sPoint.USEREDITED === 0 && sPoint.VALUE !== value.Value)) {
-							// updating only existing user edited data
-							var updateStatement = 'UPDATE ' + table;
-							updateStatement += ' SET VALUE=$Value';
-							if (!!value.statusflags) {
-								bindings['$statusflags'] = value.statusflags;
-								updateStatement += ', STATUSFLAGS=$statusflags';
-							}
-
-							updateStatement += ', USEREDITED=1 WHERE';
-							updateStatement += ' UPI=$upi AND TIMESTAMP=$timestamp AND USEREDITED=' + sPoint.USEREDITED;
-
-							stmt = _sdb.prepare(updateStatement);
-							// console.log('updateStatement', updateStatement);
-							stmt.run(bindings);
-							stmt.finalize(function() {
-								if (err) {
-									return callback(err);
-								} else {
-									// socket.updateDashboard(value, callback);
-									updatedCount++;
-									callback();
-								}
-							});
-						} else {
-							//ignored
-							return callback();
-						}
-					});
-				}
-
-			});
 		});
 	}, function(err) {
 		return callback(err, updatedCount);
@@ -1123,12 +1148,14 @@ var findInSql = function(options, tables, callback) {
 		}
 
 		statement = statement.join(' ');
-		getSdb(parseInt(year, 10), function(_sdb) {
-			// console.log('!!!statement', statement, year, _sdb);
-			_sdb.all(statement, function(err, rows) {
-				results = results.concat(rows);
-				cb(err);
-			});
+		// console.log('!!!statement', statement, year, _sdb);
+		criteria = {
+			year: parseInt(year, 10),
+			statement: statement
+		};
+		ArchiveUtility.all(criteria, function(err, rows) {
+			results = results.concat(rows);
+			cb(err);
 		});
 	}, function(err) {
 		return callback(err, results);
@@ -1231,11 +1258,13 @@ var countInSql = function(options, tables, callback) {
 		}
 		statement = statement.join(' ');
 		// console.log('???count', statement);
-		getSdb(parseInt(year, 10), function(_sdb) {
-			_sdb.all(statement, function(err, rows) {
-				results = results.concat(rows);
-				cb(err);
-			});
+		criteria = {
+			year: parseInt(year, 10),
+			statement: statement
+		};
+		ArchiveUtility.all(criteria, function(err, rows) {
+			results = results.concat(rows);
+			cb(err);
 		});
 	}, function(err) {
 		return callback(err, results);
@@ -1433,56 +1462,84 @@ var getUsage = function(options, callback) {
 };
 
 var addToSQLite = function(ranges, cb) {
-
+	var criteria = {};
 	var doMonth = function(range, cb2) {
-		getSdb(range.year, function(_sdb) {
-			_sdb.serialize(function() {
-				_sdb.exec('PRAGMA synchronous = OFF');
-
+		ArchiveUtility.serialize(function() {
+			criteria = {
+				year: range.year,
+				statement: 'PRAGMA synchronous = OFF'
+			};
+			ArchiveUtility.exec(criteria, function() {
 				var tableName = 'History_' + range.year.toString() + range.month.toString();
-				_sdb.run('BEGIN TRANSACTION');
-				var batchSize = 100;
-				var count = 0;
-				var parameterPlaceholder = '?,?,?,?,?,?';
-				var additionalParameter = ',(' + parameterPlaceholder + ')';
-				var params = [];
 
-				var startInsert = new Date();
-				var processPoint = function(_cb) {
-					var stmt = _sdb.prepare('INSERT INTO ' + tableName + ' (UPI, TIMESTAMP, VALUE, VALUETYPE, STATUSFLAGS, USEREDITED) VALUES  (' + parameterPlaceholder + ')' + additionalParameter.repeat(params.length / 6 - 1));
-
-					stmt.run(params);
-					stmt.finalize(function() {
-						params = [];
-						return _cb();
-					});
+				criteria = {
+					year: range.year,
+					statement: 'BEGIN TRANSACTION'
 				};
+				ArchiveUtility.run(criteria, function() {
+					var batchSize = 100;
+					var count = 0;
+					var parameterPlaceholder = '?,?,?,?,?,?';
+					var additionalParameter = ',(' + parameterPlaceholder + ')';
+					var params = [];
 
-				async.eachSeries(range.points, function(point, callback) {
+					var startInsert = new Date();
+					var processPoint = function(_cb) {
+						var statement = 'INSERT INTO ' + tableName + ' (UPI, TIMESTAMP, VALUE, VALUETYPE, STATUSFLAGS, USEREDITED) VALUES  (' + parameterPlaceholder + ')' + additionalParameter.repeat(params.length / 6 - 1);
 
-					var userEdited = (point.hasOwnProperty('userEdited')) ? point.userEdited : false;
+						criteria = {
+							year: range.year,
+							statement: statement
+						};
+						ArchiveUtility.prepare(criteria, function(stmt) {
 
-					params.push(point.upi, point.timestamp, point.Value, point.ValueType, point.statusflags, userEdited);
-					if (++count % batchSize === 0) {
-						processPoint(function() {
+							criteria = {
+								year: range.year,
+								statement: stmt,
+								parameters: params
+							};
+							ArchiveUtility.runStatement(criteria, function() {
+								ArchiveUtility.finalizeStatement(criteria, function() {
+									params = [];
+									return _cb();
+								});
+							});
+						});
+					};
+
+					async.eachSeries(range.points, function(point, callback) {
+
+						var userEdited = (point.hasOwnProperty('userEdited')) ? point.userEdited : false;
+
+						params.push(point.upi, point.timestamp, point.Value, point.ValueType, point.statusflags, userEdited);
+						if (++count % batchSize === 0) {
+							processPoint(function() {
+								callback();
+							});
+						} else {
 							callback();
-						});
-					} else {
-						callback();
-					}
-				}, function(err) {
-					if (!!params.length) {
-						processPoint(function() {
-							_sdb.run('END TRANSACTION');
-							cb2(null);
-						});
-					} else {
-						_sdb.run('END TRANSACTION');
-						cb2(null);
-					}
-				});
+						}
+					}, function(err) {
+						if (!!params.length) {
+							processPoint(function() {
+								criteria = {
+									year: range.year,
+									statement: 'END TRANSACTION'
+								};
+								ArchiveUtility.runDB(criteria, cb2);
+							});
+						} else {
+							criteria = {
+								year: range.year,
+								statement: 'END TRANSACTION'
+							};
+							ArchiveUtility.runDB(criteria, cb2);
+						}
+					});
 
+				});
 			});
+
 		});
 	};
 
@@ -1526,14 +1583,31 @@ module.exports = {
 		Utility.get(criteria, cb);
 	},
 	getUsage: function(data, cb) {
-		var criteria = {
-			query: {
-				Name: name
-			},
-			collection: 'SystemInfo'
+		var callback = function(err, results) {
+			results = unbuildOps(results);
+
+			updateDashboards(results, function(_err) {
+				if (!!err || !!_err) {
+					return cb(err || _err);
+				} else {
+					return cb(null, results);
+				}
+			});
 		};
 
-		Utility.getOne(criteria, cb);
+		var reqOptions = data.options;
+
+		reqOptions.forEach(function(options) {
+			if (typeof options.ranges === 'string') {
+				options.ranges = JSON.parse(options.ranges);
+			}
+			if (!(options.upis instanceof Array)) {
+				options.upis = JSON.parse(options.upis);
+			}
+			return;
+		});
+		reqOptions = buildOps(reqOptions);
+		getUsage(reqOptions, callback);
 	},
 	getMissingMeters: function(data, cb) {
 		var options = data.options;
@@ -1549,39 +1623,51 @@ module.exports = {
 				return parseInt(upi, 10);
 			});
 
-			getSdb(moment.unix(start).year(), function(_sdb) {
-				var table = 'History_' + moment.unix(start).format('YYYY') + moment.unix(start).format('MM');
-				var neededCount = Math.ceil((endOfPeriod - start) / (30 * 60)) * meter.upis.length;
-				var statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
+			var table = 'History_' + moment.unix(start).format('YYYY') + moment.unix(start).format('MM');
+			var neededCount = Math.ceil((endOfPeriod - start) / (30 * 60)) * meter.upis.length;
+			var statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
 
-				_sdb.get(statement, function(err, row) {
-					table = 'History_' + moment.unix(end).format('YYYY') + moment.unix(end).format('MM');
-					statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
+			criteria = {
+				year: moment.unix(start).year(),
+				statement: statement
+			};
+			ArchiveUtility.get(criteria, function(err, row) {
+				table = 'History_' + moment.unix(end).format('YYYY') + moment.unix(end).format('MM');
+				statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
 
-					getSdb(moment.unix(end).year(), function(_sdb) {
-						_sdb.get(statement, function(err, row2) {
-							if ((row.COUNT + row2.COUNT) < neededCount) {
-								missingMeters.push(meter);
-								return callback(err);
-							} else {
-								statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND USEREDITED=1 AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
-								_sdb.get(statement, function(err, _row2) {
-									table = 'History_' + moment.unix(start).format('YYYY') + moment.unix(start).format('MM');
-									statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND USEREDITED=1 AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
-									getSdb(moment.unix(start).year(), function(_sdb) {
-										_sdb.get(statement, function(err, _row) {
-											if ((_row2.COUNT + _row.COUNT) > 0) {
-												missingMeters.push(meter);
-												return callback(err);
-											} else {
-												return callback(err);
-											}
-										});
-									});
-								});
-							}
+				criteria = {
+					year: moment.unix(end).year(),
+					statement: statement
+				};
+				ArchiveUtility.get(criteria, function(err, row2) {
+					if ((row.COUNT + row2.COUNT) < neededCount) {
+						missingMeters.push(meter);
+						return callback(err);
+					} else {
+						statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND USEREDITED=1 AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
+
+						criteria = {
+							year: moment.unix(end).year(),
+							statement: statement
+						};
+						ArchiveUtility.get(criteria, function(err, _row2) {
+							table = 'History_' + moment.unix(start).format('YYYY') + moment.unix(start).format('MM');
+							statement = 'SELECT COUNT(*) AS COUNT FROM ' + table + ' WHERE UPI IN (' + meter.upis.toString() + ') AND USEREDITED=1 AND TIMESTAMP >' + start + ' AND TIMESTAMP <= ' + end;
+
+							criteria = {
+								year: moment.unix(start).year(),
+								statement: statement
+							};
+							ArchiveUtility.get(criteria, function(err, _row) {
+								if ((_row2.COUNT + _row.COUNT) > 0) {
+									missingMeters.push(meter);
+									return callback(err);
+								} else {
+									return callback(err);
+								}
+							});
 						});
-					});
+					}
 				});
 			});
 		}, function(err) {
@@ -1720,5 +1806,8 @@ module.exports = {
 			});
 		}
 	},
-	doBackUp: runBackUp
+	doBackUp: runBackUp,
+	buildOps: buildOps,
+	unbuildOps: unbuildOps,
+	getUsageCall: getUsage
 };

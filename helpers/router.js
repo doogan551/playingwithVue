@@ -44,7 +44,7 @@ module.exports = function(router, controllers) {
   router.use('/api/trenddata', controllers.trenddata);
   router.use('/api/trendplots', controllers.trendplots);
 
-  router.use('/dashboard', controllers.calendar);
+  router.use('/dashboard', controllers.dashboard);
   router.use('/displays', controllers.display);
   router.use('/gpl', controllers.gpl);
   router.use('/pointlookup', controllers.pointlookup);

@@ -46,7 +46,7 @@ module.exports = {
                 complete();
             });
         };
-        var getRates = function() {
+        var callGetRates = function() {
             getRates(function(err, rawUtilities) {
                 utilities = err || rawUtilities;
                 complete();
@@ -59,7 +59,7 @@ module.exports = {
             });
         };
 
-        var fns = [getWeatherPoints, getRates, getUtilityMarkup];
+        var fns = [getWeatherPoints, callGetRates, getUtilityMarkup];
 
         fns.forEach(function(fn) {
             fn();

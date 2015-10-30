@@ -4,7 +4,7 @@ var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Utilities = require('../models/utilities');
 
-router.post('/', function(req, res, next) {
+router.get('/', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
 

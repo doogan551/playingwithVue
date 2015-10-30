@@ -124,7 +124,7 @@ exports.prepare = function(criteria, cb) {
     cb('No statement supplied.', []);
   } else {
     getSdb(year, function(_sdb) {
-      _sdb.prepare(statement, cb);
+      return cb(_sdb.prepare(statement));
     });
   }
 };
@@ -165,6 +165,17 @@ exports.runStatement = function(criteria, cb) {
     cb('No statement supplied.', []);
   } else {
     statement.run(parameters, cb);
+  }
+};
+
+exports.finalizeStatement = function(criteria, cb) {
+  var statement = criteria.statement;
+  var parameters = criteria.parameters || [];
+
+  if (!statement) {
+    cb('No statement supplied.', []);
+  } else {
+    statement.finalize(parameters, cb);
   }
 };
 
