@@ -25,6 +25,7 @@
 - iis to refresh all processes on restart automatically
 - JSON Web Token for link between main app and reports
 - turn off logging in iis
+- override console.log
 
 -- node.js design patterns
 - setup logger that knows filename/function of log
@@ -37,7 +38,5 @@
 - grunt/gulp
 
 - needs work
-- history model/controller
 - system model/controller
 - check for 'db.' in models.
-- check for async.forEach[Series]

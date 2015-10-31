@@ -1101,7 +1101,7 @@ var findInSql = function(options, tables, callback) {
 		}
 	}
 
-	async.forEachSeries(years, function(year, cb) {
+	async.eachSeries(years, function(year, cb) {
 		var columns;
 		if (testFunctions()) {
 			columns = ['SUM(VALUE) as VALUE', 'TIMESTAMP', 'COUNT(UPI) as UPIS'];
@@ -1544,7 +1544,7 @@ var addToSQLite = function(ranges, cb) {
 	};
 
 
-	async.forEachSeries(ranges, function(range, callback) {
+	async.eachSeries(ranges, function(range, callback) {
 		doMonth(range, callback);
 	}, function(err) {
 		removeFromHistorydata(mdb, ranges, cb);
@@ -1618,7 +1618,7 @@ module.exports = {
 
 		var endOfPeriod = (end > moment().unix()) ? moment().unix() : end;
 
-		async.forEach(meters, function(meter, callback) {
+		async.each(meters, function(meter, callback) {
 			meter.upis = meter.upis.map(function(upi) {
 				return parseInt(upi, 10);
 			});

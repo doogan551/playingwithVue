@@ -1669,7 +1669,7 @@ module.exports = {
 
       var count = 0;
 
-      async.forEachSeries(points, function(upi, callback) {
+      async.eachSeries(points, function(upi, callback) {
 
         if (upi.length < 12) {
           id = parseInt(upi, 10);
@@ -1767,7 +1767,7 @@ module.exports = {
           });
         });
       } else {
-        async.forEachSeries(points, function(upi, callback) {
+        async.eachSeries(points, function(upi, callback) {
 
             if (upi.length < 12) {
               id = parseInt(upi, 10);
@@ -1797,7 +1797,7 @@ module.exports = {
 
               db.collection(pointsCollection).update(searchCriteria, updateCriteria, function(err, result) {
                 if (updateUsers.length > 0) {
-                  async.forEachSeries(updateUsers, function(user, cb) {
+                  async.eachSeries(updateUsers, function(user, cb) {
                     permSearch = {
                       _id: id,
                       "Security.userId": user.userId
@@ -1860,7 +1860,7 @@ module.exports = {
       count = 0;
 
 
-      async.forEach(points, function(upi, callback) {
+      async.each(points, function(upi, callback) {
 
         if (upi.length < 12) {
           id = parseInt(upi, 10);

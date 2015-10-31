@@ -1,7 +1,7 @@
 var Utility = require('../models/utility');
 var config = require('../public/js/lib/config.js');
 
-exports.maintainAlarmViews = function (socketid, view, data, common) {
+exports.maintainAlarmViews = function(socketid, view, data, common) {
   var openAlarms = common.openAlarms;
 
   if (typeof data === "string")
@@ -21,7 +21,7 @@ exports.maintainAlarmViews = function (socketid, view, data, common) {
   });
 };
 
-exports.getRecentAlarms = function (data, cb) {
+exports.getRecentAlarms = function(data, cb) {
   if (typeof data === "string")
     data = JSON.parse(data);
   var currentPage = parseInt(data.currentPage, 10);
@@ -101,7 +101,7 @@ exports.getRecentAlarms = function (data, cb) {
     };
   }
 
-  groups = user.groups.map(function (group) {
+  groups = user.groups.map(function(group) {
     return group._id.toString();
   });
 
@@ -121,11 +121,10 @@ exports.getRecentAlarms = function (data, cb) {
     sort: sort
   };
 
-  Utility.get(criteria, function (err, alarms) {
-    if (err) return cb(err);
-    mydb.collection(alarmsCollection).count(query, function (err, count) {
-      if (err) return cb(err);
-      return cb(err, alarms, count);
-    });
+  Utility.findAndCount(criteria, function(err, alarms, count) {
+    if (err) {
+      return cb(err);
+    }
+    return cb(err, alarms, count);
   });
 };

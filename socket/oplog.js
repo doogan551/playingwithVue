@@ -318,7 +318,7 @@ module.exports.updateDashboard = function(doc, callback) {
     var history = require('../controllers/history.js');
     var startTime = new Date();
 
-    async.forEach(openDashboards, function(dashboard, cb) {
+    async.each(openDashboards, function(dashboard, cb) {
         dashboard.upis = dashboard.upis.map(function(upi) {
             return parseInt(upi, 10);
         });

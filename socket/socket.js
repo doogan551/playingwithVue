@@ -68,7 +68,7 @@ module.exports = function(opts) {
 			}
 		}
 
-		async.forEach(updateArray, function(upi, callback) {
+		async.each(updateArray, function(upi, callback) {
 
 			getChangedVals(upi, function(point) {
 				if (point) {
