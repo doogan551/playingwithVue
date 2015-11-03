@@ -3,6 +3,7 @@ var jade = require('jade');
 
 var Utility = require('./utility');
 var System = require('./system');
+var logger = require('../helpers/logger')(module);
 
 var getRates = function(cb) {
     var criteria = {

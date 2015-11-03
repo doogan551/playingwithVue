@@ -4,6 +4,7 @@ var _ = require('lodash');
 var passport = require('passport');
 var utils = require('../helpers/utils');
 var Workspace = require('../models/workspace');
+var logger = require('../helpers/logger')(module);
 
 router.get('/', function(req, res, next) {
   var _user = req.user;

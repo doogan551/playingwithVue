@@ -141,7 +141,7 @@ router.get('/getStatus', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  System.getStatus('Control Priorities', function(err, status) {
+  System.getStatus(data, function(err, status) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
@@ -156,7 +156,7 @@ router.get('/getCustomColors', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  System.getCustomColors('Control Priorities', function(err, colors) {
+  System.getCustomColors(data, function(err, colors) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
@@ -171,7 +171,7 @@ router.post('/updateCustomColors', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  System.updateCustomColors('Control Priorities', function(err, priorities) {
+  System.updateCustomColors(data, function(err, result) {
     if (err) {
       return utils.sendResponse(res, {
         err: err
@@ -201,7 +201,7 @@ router.post('/updateWeather', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  System.updateWeather('Control Priorities', function(err, priorities) {
+  System.updateWeather(data, function(err, result) {
     if (err) {
       return utils.sendResponse(res, {
         err: err.message

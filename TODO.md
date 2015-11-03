@@ -1,5 +1,3 @@
-- Make sure router has all controllers listed
-- All controllers call model of same name or functionally named. Do not call Utility from controllers. Call Utility from models.
 - pull out 'business logic' to own files and look to share functionality
 - strings surrouned by ''
 - tabs/indentions = 2 spaces
@@ -28,7 +26,6 @@
 - override console.log
 
 -- node.js design patterns
-- setup logger that knows filename/function of log
 - 'Exporting a Constructor' loc 1100
 - breaking async functions out to clean up code
 - when setting up a logger, use factory method - loc 3392
@@ -38,5 +35,3 @@
 - grunt/gulp
 
 - needs work
-- system model/controller
-- check for 'db.' in models.

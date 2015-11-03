@@ -2,6 +2,7 @@ var async = require('async');
 var _ = require('lodash');
 
 var Utility = require('../models/utility');
+var logger = require('../helpers/logger')(module);
 
 var validDeviceModels = [18, 19, 20, 13, 16, 17];
 var validPortProtocols = [1, 4];

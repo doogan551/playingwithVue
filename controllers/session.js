@@ -1,14 +1,16 @@
 var express = require('express');
-var	router = express.Router();
+var router = express.Router();
 var _ = require('lodash');
-var	passport = require('passport');
+var passport = require('passport');
+var logger = require('../helpers/logger')(module);
 
 router.get('/login', function(req, res) {
-	res.render('login');
+	req.logout();
+	res.render('baseui/login');
 });
 
-router.post('/authenticate', function(req, res, next){
-	passport.authenticate('local', function(err, user, info){
+router.post('/authenticate', function(req, res, next) {
+	passport.authenticate('local', function(err, user, info) {
 		if (err) {
 			return next(err);
 		} else if (info) {

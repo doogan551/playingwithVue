@@ -1,6 +1,7 @@
 var db = require('../helpers/db');
 var Utility = require('../models/utility');
 var config = require('../public/js/lib/config.js');
+var logger = require('../helpers/logger')(module);
 
 module.exports = {
   get: function (data, cb) {

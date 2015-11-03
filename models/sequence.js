@@ -1,5 +1,6 @@
 var Utility = require('../models/utility');
 var config = require('../public/js/lib/config.js');
+var logger = require('../helpers/logger')(module);
 
 exports.getBlockTypes = function (cb) {
   var criteria = {
@@ -68,7 +69,7 @@ exports.doUpdateSequence = function (data, cb) {
         'SequenceDate': sequenceData
       }
     }
-  }
+  };
 
   Utility.update(criteria, function (err, results) {
     if (updateErr) {

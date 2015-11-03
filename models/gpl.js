@@ -1,4 +1,5 @@
 var Utility = require('../models/utility');
+var logger = require('../helpers/logger')(module);
 
 module.exports = {
 	getGplInfo: function(upi, cb) {

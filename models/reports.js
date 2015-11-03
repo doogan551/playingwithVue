@@ -1,6 +1,7 @@
 var Utility = require('../models/utility');
 var utils = require('../helpers/utils.js');
 var Config = require('../public/js/lib/config');
+var logger = require('../helpers/logger')(module);
 
 module.exports = {
 
@@ -750,80 +751,88 @@ module.exports = {
                     histPoints[x] = utils.convertHistoryObject.convertHistory(histPoints[x], null);
                 }
                 async.achSeries(timestamps.reverse(), function(ts, callback1) {
-                    //convert id to ts and upi
-                    returnObj = {
-                        timestamp: ts,
-                        HistoryResults: []
-                    };
-                    async.eachSeries(upis, function(upi, callback2) {
-                        if (noOlderTimes.indexOf(upi) !== -1) {
-                            for (var x = 0; x < points.length; x++) {
-                                if (points[x]._id === upi)
-                                    returnObj.HistoryResults.push({
-                                        upi: upi,
-                                        Name: points[x].Name
-                                    });
-                            }
-                            //setTimeout(function() {
-                            callback2(null);
-                            //}, 1);
-                        } else {
-                            getNextOldest = true;
-                            for (var w = 0; w < histPoints.length; w++) {
-                                if (histPoints[w].timestamp === ts && histPoints[w].upi === upi) {
-                                    for (var y = 0; y < points.length; y++) {
-                                        if (points[y]._id === histPoints[w].upi)
-                                            returnObj.HistoryResults.push(buildHistoryValue(points[y], histPoints[w]));
-                                    }
-                                    getNextOldest = false;
-                                }
-                            }
-
-                            if (getNextOldest) {
-                                db.collection(historyCollection).find({
-                                    upi: upi,
-                                    timestamp: {
-                                        $lt: ts //use id
-                                    }
-                                }).limit(1).sort({
-                                    timestamp: -1
-                                }).toArray(function(err, nextOldest) {
+                        //convert id to ts and upi
+                        returnObj = {
+                            timestamp: ts,
+                            HistoryResults: []
+                        };
+                        async.eachSeries(upis, function(upi, callback2) {
+                                if (noOlderTimes.indexOf(upi) !== -1) {
                                     for (var x = 0; x < points.length; x++) {
-                                        if (nextOldest.length > 0) {
-                                            if (points[x]._id === nextOldest[0].upi)
-                                                returnObj.HistoryResults.push(buildHistoryValue(points[x], nextOldest[0]));
-                                        } else {
+                                        if (points[x]._id === upi)
                                             returnObj.HistoryResults.push({
                                                 upi: upi,
-                                                Name: points[x].Name,
-                                                Value: "No Older Value"
+                                                Name: points[x].Name
                                             });
-                                            noOlderTimes.push(upi);
+                                    }
+                                    //setTimeout(function() {
+                                    callback2(null);
+                                    //}, 1);
+                                } else {
+                                    getNextOldest = true;
+                                    for (var w = 0; w < histPoints.length; w++) {
+                                        if (histPoints[w].timestamp === ts && histPoints[w].upi === upi) {
+                                            for (var y = 0; y < points.length; y++) {
+                                                if (points[y]._id === histPoints[w].upi)
+                                                    returnObj.HistoryResults.push(buildHistoryValue(points[y], histPoints[w]));
+                                            }
+                                            getNextOldest = false;
                                         }
                                     }
-                                    callback2(err);
-                                });
-                            } else {
 
-                                callback2(null);
-                            }
-                        }
-                    }, function(err) {
-                        returnPoints.push(returnObj);
-                        if (returnPoints.length % 500 === 0) {
-                            setTimeout(function() {
-                                callback1(err);
-                            }, 0);
-                        } else {
-                            callback1(err);
-                        }
+                                    if (getNextOldest) {
+                                        criteria = {
+                                            query: {
+                                                upi: upi,
+                                                timestamp: {
+                                                    $lt: ts //use id
+                                                }
+                                            },
+                                            collection: historyCollection,
+                                            sort: {
+                                                timestamp: 1
+                                            },
+                                            limit: 1
+                                        };
+                                        Utility.get(criteria, function(err, nextOldest) {
+                                            for (var x = 0; x < points.length; x++) {
+                                                if (nextOldest.length > 0) {
+                                                    if (points[x]._id === nextOldest[0].upi)
+                                                        returnObj.HistoryResults.push(buildHistoryValue(points[x], nextOldest[0]));
+                                                } else {
+                                                    returnObj.HistoryResults.push({
+                                                        upi: upi,
+                                                        Name: points[x].Name,
+                                                        Value: "No Older Value"
+                                                    });
+                                                    noOlderTimes.push(upi);
+                                                }
+                                            }
+                                            callback2(err);
+                                        });
+                                    } else {
+
+                                        callback2(null);
+                                    }
+                                }
+                            },
+                            function(err) {
+                                returnPoints.push(returnObj);
+                                if (returnPoints.length % 500 === 0) {
+                                    setTimeout(function() {
+                                        callback1(err);
+                                    }, 0);
+                                } else {
+                                    callback1(err);
+                                }
+                            });
+                    },
+                    function(err) {
+                        return cb(err, {
+                            truncated: tooManyFlag,
+                            historyData: returnPoints.reverse()
+                        });
                     });
-                }, function(err) {
-                    return cb(err, {
-                        truncated: tooManyFlag,
-                        historyData: returnPoints.reverse()
-                    });
-                });
 
             });
         });

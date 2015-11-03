@@ -22,7 +22,7 @@ module.exports = function(router, controllers) {
       return next();
     }
 
-    res.redirect('/session/login');
+    res.redirect('/login');
   });
 
   router.use('/', controllers.loadviews);

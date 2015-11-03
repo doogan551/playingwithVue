@@ -8,6 +8,7 @@ var versionsCollection = "versions";
 var BSON = require('mongodb').BSONPure;
 
 var Utility = require('../models/utility');
+var logger = require('../helpers/logger')(module);
 
 module.exports = {
 

@@ -14,6 +14,7 @@ var logger = function(moduleName) {
         json: true,
         maxsize: 5242880, //5MB
         maxFiles: 5,
+        label: label,
         colorize: false
       }),
       new winston.transports.Console({
@@ -32,6 +33,7 @@ var logger = function(moduleName) {
         json: true,
         maxsize: 5242880, //5MB
         maxFiles: 5,
+        label: label,
         colorize: false
       })
     ],

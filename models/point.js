@@ -1,13 +1,16 @@
 var db = require('../helpers/db');
 var Utility = require('../models/utility');
 var config = require('../public/js/lib/config.js');
+var logger = require('../helpers/logger')(module);
 var async = require('async');
 
 module.exports = {
   getPointsByQuery: function(data, cb) {
-    var collection = db.get().collection('points');
-    var query = {};
-    collection.find(query).limit(200).toArray(cb);
+    Utility.get({
+      collection: 'points',
+      query: query,
+      limit: 200
+    }, cb);
   },
   getPointById: function(data, cb) {
     var searchCriteria = {};
@@ -888,7 +891,7 @@ module.exports = {
 
     var criteria = {
       collection: 'points',
-      query: searchQuery,
+      query: searchCriteria,
       fields: filterProps
     };
 
@@ -982,7 +985,7 @@ module.exports = {
           });
         } else {
           doSecondSearch(targetPoint, function(err) {
-              return cb(err, displays);
+            return cb(err, displays);
           });
         }
       } else {

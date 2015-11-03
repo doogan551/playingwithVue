@@ -3,6 +3,7 @@ var fs = require('fs');
 
 var Utility = require('../models/utility');
 var compiler = require('../helpers/scriptCompiler.js');
+var logger = require('../helpers/logger')(module);
 
 module.exports = {
 

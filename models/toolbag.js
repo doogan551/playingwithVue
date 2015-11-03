@@ -2,6 +2,7 @@ var fs = require('fs');
 var Utility = require('../models/utility');
 var utils = require('../helpers/utils.js');
 var Config = require(utils.FileLocationsForControllers("Config"));
+var logger = require('../helpers/logger')(module);
 
 module.exports = {
 	getPoints: function(data, cb) {

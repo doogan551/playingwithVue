@@ -4,6 +4,7 @@ var config = require('../public/js/lib/config.js');
 var utils = require('../helpers/utils.js');
 var mongodb = require('mongodb');
 var fs = require('fs');
+var logger = require('../helpers/logger')(module);
 
 var pointsCollection = utils.CONSTANTS("pointsCollection");
 var usersCollection = utils.CONSTANTS("usersCollection");

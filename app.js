@@ -1,4 +1,6 @@
 var startTime = new Date();
+process.setMaxListeners(0);
+
 var logger = require('./helpers/logger')(module);
 logger.info('NODE_ENV:'+process.env.NODE_ENV);
 var express = require('express');
@@ -15,11 +17,14 @@ var multer = require('multer');
 var session = require('express-session');
 var router = express.Router();
 var errorHandler = require('errorhandler');
+var favicon = require('serve-favicon');
 var RedisStore = require('connect-redis')(session);
 var redis = require('redis');
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 var port = config.get('Infoscan.siteConfig').port;
+app.use(favicon(__dirname + '/public/favicon.ico'));
+
 var _controllers = require('./helpers/controllers')(app, {});
 
 var sessionStore = new RedisStore(config.get('redisConfig'));
@@ -61,7 +66,6 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-//app.use(require('./middlewares/users'));
 app.use('/', require('./helpers/router')(router, _controllers));
 
 db.connect(connectionString.join(''), function(err) {

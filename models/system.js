@@ -3,6 +3,7 @@ var async = require('async');
 var db = require('../helpers/db');
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config');
+var logger = require('../helpers/logger')(module);
 
 module.exports = {
   getSystemInfoByName: function(name, cb) {

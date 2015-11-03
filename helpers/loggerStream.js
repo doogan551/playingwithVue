@@ -27,6 +27,7 @@ var logger = new winston.Logger({
 module.exports = logger;
 module.exports.stream = {
   write: function(message, encoding) {
+    message = message.substr(0, message.length-1);
     logger.info(message);
   }
 };

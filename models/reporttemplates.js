@@ -1,5 +1,6 @@
 var Utility = require('../models/utility');
 var utils = require('../helpers/utils.js');
+var logger = require('../helpers/logger')(module);
 var BSON = require('mongodb').BSONPure;
 
 module.exports = {

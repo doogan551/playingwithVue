@@ -1,5 +1,6 @@
 var Utility = require('../models/utility');
 var rtdTables = require('../lib/rtdTables');
+var logger = require('../helpers/logger')(module);
 
 module.exports = {
 
