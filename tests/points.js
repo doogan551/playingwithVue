@@ -1,4 +1,4 @@
-var expect = require('chai').expect,
+/*var expect = require('chai').expect,
     Point = require('../models/point.js'),
     db = require('../helpers/db'),
     async = require('async'),
@@ -60,3 +60,4 @@ async.waterfall([function(cb) {
 }], function(err) {
     console.log('done');
 });
+*/

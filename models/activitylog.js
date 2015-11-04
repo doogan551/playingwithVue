@@ -93,7 +93,7 @@ module.exports = {
       };
     }
 
-    if (usernames.length > 0) {
+    if (!!usernames && usernames.length > 0) {
       query.username = {
         $in: usernames
       };

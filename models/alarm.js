@@ -23,8 +23,9 @@ exports.maintainAlarmViews = function(socketid, view, data, common) {
 };
 
 exports.getRecentAlarms = function(data, cb) {
-  if (typeof data === "string")
+  if (typeof data === "string") {
     data = JSON.parse(data);
+  }
   var currentPage = parseInt(data.currentPage, 10);
   var itemsPerPage = parseInt(data.itemsPerPage, 10);
   var startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;

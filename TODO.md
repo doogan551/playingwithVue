@@ -19,7 +19,7 @@
 - nginx vs iis vs apache
 - multi-core support
 - get build procedure working
-- try to seperate iis and node - need autorestart functionality on crash
+- try to seperate iis and node - need autorestart functionality on crash(forever module?)
 - iis to refresh all processes on restart automatically
 - JSON Web Token for link between main app and reports
 - turn off logging in iis
@@ -32,6 +32,9 @@
 - cluster/reverse proxy - loc 6114 - ZERO DOWNTIME RESTART
 
 - teamviewer or vnc
-- grunt/gulp
+- gulp
+- sinon in tests
+- test models and controllers and socket
 
 - needs work
+- alarm model

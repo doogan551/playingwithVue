@@ -44,12 +44,6 @@ app.use(multer({
   inMemory: true
 }));
 
-if (process.env.NODE_ENV !== 'rob') {
-  app.use(errorHandler({
-    log: true
-  }));
-}
-
 app.engine('jade', require('jade').__express);
 app.set('view engine', 'jade');
 
