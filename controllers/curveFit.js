@@ -4,7 +4,7 @@ var _ = require('lodash');
 var CurveFit = require('../models/curvefit');
 var rtdTables = require('../lib/rtdTables.js');
 var utils = require('../helpers/utils.js');
-
+// Checked
 router.post('/getRTDRange', function(req, res, next) {
   var ranges = {};
   for (var prop in rtdTables) {
@@ -15,7 +15,7 @@ router.post('/getRTDRange', function(req, res, next) {
   }
   return utils.sendResponse(res, ranges);
 });
-
+// checked
 router.post('/dofit', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;

@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Utilities = require('../models/utilities');
-
+// Checked
 router.get('/', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -18,7 +18,7 @@ router.get('/', function(req, res, next) {
 		}
 	});
 });
-
+// NOT CHECKED
 router.post('/getutility', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -35,7 +35,7 @@ router.post('/getutility', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.post('/saveutility', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -52,7 +52,7 @@ router.post('/saveutility', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.post('/uploadBackground', function(req, res, next) {
 	var data = {
 		files: req.files,
@@ -71,7 +71,7 @@ router.post('/uploadBackground', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.post('/removeutility', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -88,7 +88,7 @@ router.post('/removeutility', function(req, res, next) {
 		}
 	});
 });
-
+// NOT CHECKED
 router.post('/getmarkup', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;

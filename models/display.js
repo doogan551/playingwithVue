@@ -177,7 +177,7 @@ module.exports = {
 
         });
     },
-    editdisplay: function(data, cb) {
+    editDisplay: function(data, cb) {
         Utility.get({
                 collection: versionsCollection,
                 query: {
@@ -220,17 +220,17 @@ module.exports = {
                             saveObj: disp
                         }, function(err, result) {
                             console.log('save version error', err);
-                            renderDisplay(versions.slice(-1)[0], versions, cb);
+                            renderDisplay(data, versions.slice(-1)[0], versions, cb);
                         });
 
                     } else {
                         versions.unshift(production[0]);
-                        renderDisplay(versions[1], versions, cb);
+                        renderDisplay(data, versions[1], versions, cb);
                     }
                 });
             });
     },
-    previewdisplay: function(data, cb) {
+    previewDisplay: function(data, cb) {
         Utility.get({
             collection: pointsCollection,
             query: {
@@ -272,7 +272,7 @@ module.exports = {
             }
         });
     },
-    getname: function(data, cb) {
+    getName: function(data, cb) {
         Utility.get({
             collection: pointsCollection,
             query: {
@@ -459,7 +459,7 @@ module.exports = {
         });
 
     },
-    listassets: function(data, cb) {
+    listAssets: function(data, cb) {
         console.log(' - - - -  listassets()  called  - - - - - ');
         var filetype = data.imagetype,
             ext,
@@ -490,7 +490,7 @@ module.exports = {
     }
 };
 
-var renderDisplay = function(currDisp, versions, cb) {
+var renderDisplay = function(data, currDisp, versions, cb) {
     var c, len,
         upiList = [],
         getUpiNames = function(callback) {
@@ -514,7 +514,7 @@ var renderDisplay = function(currDisp, versions, cb) {
                     ret[docs[cc]._id] = docs[cc].Name;
                 }
 
-                callback(ret);
+                callback(err, ret);
             });
         };
 
@@ -523,11 +523,11 @@ var renderDisplay = function(currDisp, versions, cb) {
         upiList.push(currDisp['Screen Objects'][c].upi);
     }
 
-    getUpiNames(function(upiNames) {
+    getUpiNames(function(err, upiNames) {
         // currDisp.upiNames = upiNames;
         currDisp._id = data.upoint;
 
-        return cb({
+        return cb(err, {
             upi: data.upoint,
             displayJson: currDisp,
             upiNames: upiNames,

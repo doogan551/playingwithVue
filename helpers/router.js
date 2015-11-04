@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var passport = require('passport');
 
-module.exports = function(router, controllers) {
+module.exports = function(controllers) {
   router.all('*', function(req, res, next) {
     /*for (var prop in req.body) {
         req.body[prop] = (typeof req.body[prop] === 'object') ? JSON.stringify(req.body[prop]) : req.body[prop];

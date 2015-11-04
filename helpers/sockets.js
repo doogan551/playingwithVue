@@ -16,7 +16,7 @@ exports.connect = function(config, sessionStore, cookieParser, done) {
     // if (!!state.socket) return done();
     var passportSocketIo = require('passport.socketio');
     state.io = require('socket.io').listen(socketConfig.ioPort);
-    logger.info('socket listening on port', socketConfig.ioPort);
+    logger.info('socket.io listening on port', socketConfig.ioPort);
     state.tcp = require('net').createServer().listen(socketConfig.tcpPort, socketConfig.tcpAddress);
     logger.info('tcp server listening on ', socketConfig.tcpAddress + ":" + socketConfig.tcpPort);
     state.oplog = require('mongo-oplog')(oplogString, 'oplog.rs').tail();

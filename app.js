@@ -60,7 +60,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use('/', require('./helpers/router')(router, _controllers));
+app.use('/', require('./helpers/router')(_controllers));
 
 db.connect(connectionString.join(''), function(err) {
   if (err) {

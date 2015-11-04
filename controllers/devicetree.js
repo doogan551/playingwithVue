@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Devicetree = require('../models/devicetree');
-
+// Checked
 router.get('/gettree', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;

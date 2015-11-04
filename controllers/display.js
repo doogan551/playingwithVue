@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Display = require('../models/display');
-
+// Checked
 router.post('/getDisplayInfo', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -20,6 +20,7 @@ router.post('/getDisplayInfo', function(req, res, next) {
 		}
 	});
 });
+// Checked
 router.get('/edit/:upoint', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -30,15 +31,11 @@ router.get('/edit/:upoint', function(req, res, next) {
 				err: err
 			});
 		} else {
-			res.render('displays/edit.jade', {
-				upi: req.params.upoint,
-				displayJson: currDisp,
-				upiNames: upiNames,
-				versions: versions
-			});
+			res.render('displays/edit.jade', result);
 		}
 	});
 });
+
 router.get('/gifs/:fname', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -51,6 +48,7 @@ router.get('/gifs/:fname', function(req, res, next) {
 		}
 	});
 });
+
 router.get('/gifs/:fname/:frame', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -63,11 +61,13 @@ router.get('/gifs/:fname/:frame', function(req, res, next) {
 		}
 	});
 });
+
 router.get('/view/:upoint', function(req, res, next) {
 	res.render('displays/view.jade', {
 		upi: req.params.upoint
 	});
 });
+
 router.get('/preview/:upoint', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -80,6 +80,7 @@ router.get('/preview/:upoint', function(req, res, next) {
 		}
 	});
 });
+
 router.get('/view/:upoint/:dispId', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -88,6 +89,7 @@ router.get('/view/:upoint/:dispId', function(req, res, next) {
 
 	});
 });
+
 router.get('/upiname/:upi', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -100,6 +102,7 @@ router.get('/upiname/:upi', function(req, res, next) {
 		}
 	});
 });
+
 router.post('/later', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -112,6 +115,7 @@ router.post('/later', function(req, res, next) {
 		}
 	});
 });
+
 router.post('/publish', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -124,6 +128,7 @@ router.post('/publish', function(req, res, next) {
 		}
 	});
 });
+
 router.get('/browse', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -136,6 +141,7 @@ router.get('/browse', function(req, res, next) {
 		}
 	});
 });
+
 router.get('/browse2', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -148,11 +154,12 @@ router.get('/browse2', function(req, res, next) {
 		}
 	});
 });
+
 router.get('/listassets', function(req, res, next) {
 	var data = _.merge(req.params, req.body, req.query);
 	data.user = req.user;
 
-	Display.listassets(data, function(err, result) {
+	Display.listAssets(data, function(err, result) {
 		if (err) {
 			return utils.sendResponse(res, {
 				err: err
@@ -166,6 +173,7 @@ router.get('/listassets', function(req, res, next) {
 //router.get('/test', controllers.import.start);
 //router.get('/test2', controllers.import.test2);
 //router.post('/import', controllers.import.start);
+
 router.get('/trend', function(req, res, next) {
 	var pars = req.query;
 	res.render('displays/plot.jade',

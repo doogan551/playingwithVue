@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Calendar = require('../models/calendar');
-
+// Checked
 router.post('/getyear', function (req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -18,7 +18,7 @@ router.post('/getyear', function (req, res, next) {
     return utils.sendResponse(res, years[0]);
   });
 });
-
+// Checked
 router.post('/getseason', function (req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -33,7 +33,7 @@ router.post('/getseason', function (req, res, next) {
     return utils.sendResponse(res, seasons[0]);
   });
 });
-
+// Checked
 router.post('/updateseason', function (req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -50,7 +50,7 @@ router.post('/updateseason', function (req, res, next) {
     });
   });
 });
-
+// Checked - Shouldn't be called if season changes in year that doesn't have dates
 router.post('/newdate', function (req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;

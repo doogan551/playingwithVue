@@ -1,3 +1,5 @@
+var reg = require('regression');
+
 var Utility = require('../models/utility');
 var rtdTables = require('../lib/rtdTables');
 var logger = require('../helpers/logger')(module);
@@ -9,15 +11,15 @@ module.exports = {
         var data = _data.data;
 
         if (type === "Cubic") {
-            polyFit(data, callback);
+            polyFit(data, cb);
             //CubicFit(data, callback);
         } else if (type === "Linear") {
 
-            LinearFit(data, callback);
+            LinearFit(data, cb);
         } else if (type === "Flow") {
-            FlowFit(data, callback);
+            FlowFit(data, cb);
         } else {
-            callback({
+            cb({
                 err: "bad type"
             });
         }

@@ -225,7 +225,7 @@ var makeTree = function(next) {
             acb();
         });
     }, function(err) {
-        console.log(badNumbers);
+        logger.debug('badNumbers: '+badNumbers);
 
         next();
     });
