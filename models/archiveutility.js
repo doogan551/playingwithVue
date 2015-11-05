@@ -175,7 +175,7 @@ exports.finalizeStatement = function(criteria, cb) {
   if (!statement) {
     cb('No statement supplied.', []);
   } else {
-    statement.finalize(parameters, cb);
+    statement.finalize(cb);
   }
 };
 

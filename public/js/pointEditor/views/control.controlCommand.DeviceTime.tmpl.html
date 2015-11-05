@@ -1,9 +1,0 @@
-<div class="input-group">
-      <span class="input-group-btn">
-        <button data-bind="click: issueCommand.bind(undefined, 'Device Time', $data)" class="btn btn-primary" type="button">Get Device Time</button>
-      </span>
-    <input type="text" data-bind="value: $data.controls['Device Time'].commandRX.value" class="form-control">
-</div>
-<!-- ko  if: $data.controls['Device Time'].commandRX.error -->
-<h4><span data-bind="text: $data.controls['Device Time'].commandRX.error" class="label label-danger"></span></h4>
-<!-- /ko -->

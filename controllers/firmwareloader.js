@@ -4,7 +4,7 @@ var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Firmware = require('../models/firmware');
 
-
+// NOT CHECKED
 router.get('/get/:model', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -20,7 +20,7 @@ router.get('/get/:model', function(req, res, next) {
 	});
 
 });
-
+// NOT CHECKED
 router.get('/getRemoteUnits', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;

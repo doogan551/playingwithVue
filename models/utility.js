@@ -165,7 +165,6 @@ exports.remove = function(criteria, cb) {
   var options = criteria.options;
 
   var collection = db.get().collection(coll);
-
   collection.remove(query, options, cb);
 };
 

@@ -1,4 +1,5 @@
 var fs = require('fs');
+var config = require('config');
 
 var Utility = require('../models/utility');
 var logger = require('../helpers/logger')(module);
@@ -6,8 +7,8 @@ var logger = require('../helpers/logger')(module);
 module.exports = {
 
 	getModelFiles: function(data, cb) {
-		var model = data.model,
-			firmwareFolder = process.env.driveLetter + ":/InfoScan/Firmware/" + model + "/";
+		var model = data.model;
+		var firmwareFolder = config.get('Infoscan.files').driveLetter + ":/InfoScan/Firmware/" + model + "/";
 
 		fs.readdir(firmwareFolder, cb);
 	},

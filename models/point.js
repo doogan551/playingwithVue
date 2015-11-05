@@ -1,8 +1,9 @@
 var db = require('../helpers/db');
 var Utility = require('../models/utility');
-var config = require('../public/js/lib/config.js');
+var Config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
 var async = require('async');
+var ObjectID = require('mongodb').ObjectID;
 
 module.exports = {
   getPointsByQuery: function(data, cb) {
@@ -73,7 +74,7 @@ module.exports = {
       name: JSON.stringify(''),
       pointType: pointType,
       selectedPointType: data.selectedPointType,
-      pointTypes: JSON.stringify(config.Utility.pointTypes.getAllowedPointTypes()),
+      pointTypes: JSON.stringify(Config.Utility.pointTypes.getAllowedPointTypes()),
       subType: -1
     };
     var query = {
@@ -120,7 +121,7 @@ module.exports = {
   pointLookup: function(data, cb) {
     var property = data.property && decodeURI(data.property);
     var pointType = (data.pointType && data.pointType !== 'null' && decodeURI(data.pointType)) || null;
-    var pointTypes = config.Utility.pointTypes.getAllowedPointTypes(property, pointType);
+    var pointTypes = Config.Utility.pointTypes.getAllowedPointTypes(property, pointType);
     var deviceId = data.deviceId || null;
     var remoteUnitId = data.remoteUnitId || null;
     var locals = {
@@ -162,7 +163,7 @@ module.exports = {
     var isSysAdmin = data.user["System Admin"].Value;
     var searchQuery;
     // If no point type array passed in, use default
-    var pointTypes = data.pointTypes || config.Utility.pointTypes.getAllowedPointTypes().map(function(type) {
+    var pointTypes = data.pointTypes || Config.Utility.pointTypes.getAllowedPointTypes().map(function(type) {
       return type.key;
     });
     // Name segments, sort names and values
@@ -690,7 +691,7 @@ module.exports = {
               fixPoint(upiObj, targetPoint, true, callback);
             });
           } else {
-            fixPoint(upiObj, Config.Templates.getTemplate(pointType), callback);
+            fixPoint(upiObj, Config.Templates.getTemplate(pointType), false, callback);
           }
         });
       });
@@ -778,7 +779,7 @@ module.exports = {
 
       template._id = upiObj._id;
 
-      template._actvAlmId = BSON.ObjectID("000000000000000000000000");
+      template._actvAlmId = ObjectID("000000000000000000000000");
 
       template._cfgRequired = true;
 
@@ -1036,7 +1037,7 @@ var browse = function(data, cb) {
     var isSysAdmin = data.user["System Admin"].Value;
     var searchQuery;
     // If no point type array passed in, use default
-    var pointTypes = data.pointTypes || config.Utility.pointTypes.getAllPointTypes().map(function(type) {
+    var pointTypes = data.pointTypes || Config.Utility.pointTypes.getAllPointTypes().map(function(type) {
       return type.key;
     });
     // Name segments, sort names and values
@@ -1275,7 +1276,7 @@ var browse = function(data, cb) {
   },
 
   toggleGroup = function(data, next, cb) {
-    var pointTypes = data.pointTypes || config.Utility.pointTypes.getAllowedPointTypes().map(function(type) {
+    var pointTypes = data.pointTypes || Config.Utility.pointTypes.getAllowedPointTypes().map(function(type) {
       return type.key;
     });
     var permissions = data.permissions;

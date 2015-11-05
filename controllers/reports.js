@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Reports = require('../models/reports');
-
+// NOT CHECKED
 router.get('/getMRT/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -18,7 +18,7 @@ router.get('/getMRT/:id', function(req, res, next) {
     return utils.sendResponse(res, trends);
   });
 });
-
+// NOT CHECKED
 router.get('/reportSearch', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -33,7 +33,7 @@ router.get('/reportSearch', function(req, res, next) {
     return utils.sendResponse(res, trends);
   });
 });
-
+// NOT CHECKED
 router.post('/saveMRT', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -48,7 +48,7 @@ router.post('/saveMRT', function(req, res, next) {
     return utils.sendResponse(res, trends);
   });
 });
-
+// NOT CHECKED
 router.post('/saveSVG', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -63,7 +63,7 @@ router.post('/saveSVG', function(req, res, next) {
     return utils.sendResponse(res, trends);
   });
 });
-
+// NOT CHECKED
 router.post('/saveReport', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -78,7 +78,7 @@ router.post('/saveReport', function(req, res, next) {
     return utils.sendResponse(res, trends);
   });
 });
-
+// NOT CHECKED
 router.get('/getSVG/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -93,7 +93,7 @@ router.get('/getSVG/:id', function(req, res, next) {
     return utils.sendResponse(res, trends);
   });
 });
-
+// NOT CHECKED
 router.post('/reportSearch', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -108,7 +108,7 @@ router.post('/reportSearch', function(req, res, next) {
     return utils.sendResponse(res, trends);
   });
 });
-
+// NOT CHECKED
 router.get('/getHistoryPoints', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -123,7 +123,7 @@ router.get('/getHistoryPoints', function(req, res, next) {
     return utils.sendResponse(res, trends);
   });
 });
-
+// NOT CHECKED
 router.post('/historyDataSearch', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -138,7 +138,7 @@ router.post('/historyDataSearch', function(req, res, next) {
     return utils.sendResponse(res, results);
   });
 });
-
+// NOT CHECKED
 router.post('/historySearch', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -153,7 +153,7 @@ router.post('/historySearch', function(req, res, next) {
     return utils.sendResponse(res, trends);
   });
 });
-
+// NOT CHECKED
 router.get('/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -162,7 +162,7 @@ router.get('/:id', function(req, res, next) {
     reportMainCallback(res, err, locals, result);
   });
 });
-
+// NOT CHECKED
 router.get('/view/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -171,7 +171,7 @@ router.get('/view/:id', function(req, res, next) {
     reportMainCallback(res, err, locals, result);
   });
 });
-
+// NOT CHECKED
 router.get('/cr/pointInvolvement', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;

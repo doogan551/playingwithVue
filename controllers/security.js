@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Security = require('../models/security');
-
+// Checked
 router.post('/groups/savegroup', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -17,7 +17,7 @@ router.post('/groups/savegroup', function(req, res, next) {
     return utils.sendResponse(res, newGroup);
   });
 });
-
+// NOT CHECKED
 router.post('/groups/getusers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -33,7 +33,7 @@ router.post('/groups/getusers', function(req, res, next) {
     });
   });
 });
-
+// NOT CHECKED
 router.post('/groups/addusers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -47,7 +47,7 @@ router.post('/groups/addusers', function(req, res, next) {
     return utils.sendResponse(res, result);
   });
 });
-
+// NOT CHECKED
 router.post('/groups/removeusers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -61,7 +61,7 @@ router.post('/groups/removeusers', function(req, res, next) {
     return utils.sendResponse(res, result);
   });
 });
-
+// Checked
 router.post('/groups/removegroup', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -77,7 +77,7 @@ router.post('/groups/removegroup', function(req, res, next) {
     });
   });
 });
-
+// Checked
 router.post('/groups/getallgroups', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -91,7 +91,7 @@ router.post('/groups/getallgroups', function(req, res, next) {
     return utils.sendResponse(res, groups);
   });
 });
-
+// NOT CHECKED
 router.post('/groups/getpoints', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -105,7 +105,7 @@ router.post('/groups/getpoints', function(req, res, next) {
     return utils.sendResponse(res, points);
   });
 });
-
+// NOT CHECKED
 router.post('/users/getgroups', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -119,7 +119,7 @@ router.post('/users/getgroups', function(req, res, next) {
     return utils.sendResponse(res, groups);
   });
 });
-
+// Checked
 router.post('/users/removeuser', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -135,7 +135,7 @@ router.post('/users/removeuser', function(req, res, next) {
     });
   });
 });
-
+// Checked
 router.post('/users/getallusers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -149,8 +149,8 @@ router.post('/users/getallusers', function(req, res, next) {
     return utils.sendResponse(res, users);
   });
 });
-
-router.post('/security/users/:id', function(req, res, next) {
+// NOT CHECKED
+router.post('/users/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
@@ -163,7 +163,7 @@ router.post('/security/users/:id', function(req, res, next) {
     return utils.sendResponse(res, user);
   });
 });
-
+// NOT CHECKED
 router.post('/points/addgroups', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -179,7 +179,7 @@ router.post('/points/addgroups', function(req, res, next) {
     });
   });
 });
-
+// NOT CHECKED
 router.post('/points/removegroups', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -195,7 +195,7 @@ router.post('/points/removegroups', function(req, res, next) {
     });
   });
 });
-
+// NOT CHECKED
 router.post('/points/addusers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -209,7 +209,7 @@ router.post('/points/addusers', function(req, res, next) {
     return utils.sendResponse(res, {});
   });
 });
-
+// NOT CHECKED
 router.post('/points/removeusers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -223,7 +223,7 @@ router.post('/points/removeusers', function(req, res, next) {
     return utils.sendResponse(res, {});
   });
 });
-
+// NOT CHECKED
 router.post('/users/createpassword', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;

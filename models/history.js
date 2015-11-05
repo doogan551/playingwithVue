@@ -1577,7 +1577,7 @@ module.exports = {
 			fields: {
 				Name: 1
 			},
-			collection: 'SystemInfo'
+			collection: 'points'
 		};
 
 		Utility.get(criteria, cb);
@@ -1724,7 +1724,10 @@ module.exports = {
 
 				}
 			}).on('end', function() {
-				editHistoryData(ranges, methods, cb);
+				editHistoryData(ranges, methods, function(err, result){
+					fs.unlinkSync(path);
+					cb(err, result);
+				});
 			});
 	},
 	exportCSV: function(data, cb) {
@@ -1759,7 +1762,7 @@ module.exports = {
 
 		fillInData(options, rows, function(err, rows) {
 			if (err) {
-				return callback(err);
+				return cb(err);
 			}
 			var csvStream = csv.createWriteStream();
 			tmp.file({
@@ -1767,10 +1770,11 @@ module.exports = {
 				postfix: '.csv',
 				prefix: startDate.format('YYYYMM-') + options.meterName + '-'
 			}, function(err, path, fd, _cleanupCallback) {
+				console.log(err, path);
 				var writableStream = fs.createWriteStream(path);
 
 				writableStream.on('finish', function(err, data) {
-					callback(err, path);
+					cb(err, path);
 				});
 
 				csvStream.pipe(writableStream);

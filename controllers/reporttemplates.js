@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var ReportTemplate = require('../models/reporttemplates');
-
+// NOT CHECKED
 router.post('/get', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -18,7 +18,7 @@ router.post('/get', function(req, res, next) {
     return utils.sendResponse(res, result);
   });
 });
-
+// NOT CHECKED
 router.post('/add', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -33,7 +33,7 @@ router.post('/add', function(req, res, next) {
     return utils.sendResponse(res, result[0]._id + "~" + name);
   });
 });
-
+// NOT CHECKED
 router.post('/rename', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -50,7 +50,7 @@ router.post('/rename', function(req, res, next) {
     });
   });
 });
-
+// NOT CHECKED
 router.post('/delete', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -67,7 +67,7 @@ router.post('/delete', function(req, res, next) {
     });
   });
 });
-
+// NOT CHECKED
 router.get('/getAll', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -82,7 +82,7 @@ router.get('/getAll', function(req, res, next) {
     return utils.sendResponse(res, results);
   });
 });
-
+// NOT CHECKED
 router.post('/getSelected', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -97,7 +97,7 @@ router.post('/getSelected', function(req, res, next) {
     return utils.sendResponse(res, results);
   });
 });
-
+// NOT CHECKED
 router.post('/updateTemplate', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;

@@ -5,7 +5,7 @@ var gm = require('gm');
 var glob = require('glob');
 var pointsCollection = "points";
 var versionsCollection = "versions";
-var BSON = require('mongodb').BSONPure;
+var ObjectID = require('mongodb').ObjectID;
 
 var Utility = require('../models/utility');
 var logger = require('../helpers/logger')(module);
@@ -253,7 +253,7 @@ module.exports = {
                     Utility.get({
                         collection: versionsCollection,
                         query: {
-                            "_id": new BSON.ObjectID(data.upoint)
+                            "_id": new ObjectID(data.upoint)
                         }
                     }, function(err, docs) {
 
@@ -318,7 +318,7 @@ module.exports = {
         dId = +displayObject._id;
         displayObject._id = +displayObject._id;
         displayObject.vid = +displayObject.vid;
-        displayObject._actvAlmId = BSON.ObjectID(displayObject._actvAlmId);
+        displayObject._actvAlmId = ObjectID(displayObject._actvAlmId);
         delete displayObject.version;
 
         console.log('displays: finding display-', displayObject._id);
@@ -363,7 +363,6 @@ module.exports = {
                     }, function(saveOldErr, saveOldRes) {
 
                         console.log('displays saveOld err:', saveOldErr);
-                        console.log('displays saveOld res:', saveOldRes);
                         if (saveOldErr) {
                             return cb(saveOldErr);
                         } else {
@@ -400,7 +399,7 @@ module.exports = {
         delete displayObject._id;
         displayObject.version = 'Staging';
 
-        console.log('displays savelater', displayObject);
+        // console.log('displays savelater', displayObject);
 
         Utility.update({
                 collection: versionsCollection,
@@ -411,7 +410,7 @@ module.exports = {
                 updateObj: displayObject
             },
             function(err, docs) {
-                console.log('displays savelater docs', docs);
+                // console.log('displays savelater docs', docs);
                 if (err) {
                     return cb(err);
                 } else {

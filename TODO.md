@@ -38,3 +38,4 @@
 
 - needs work
 - alarm model
+- socket connections in front end

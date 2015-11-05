@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var GPL = require('../models/gpl');
-
+// Checked
 router.get('/view/:upoint', function(req, res, next) {
 	var upi = parseInt(req.params.upoint, 10),
 		cbCount = 0,
@@ -28,7 +28,7 @@ router.get('/view/:upoint', function(req, res, next) {
 
 	GPL.getGplInfo(upi, processGpl);
 });
-
+// Checked
 router.get('/edit/:upoint', function(req, res, next) {
 	var upi = parseInt(req.params.upoint, 10),
 		cbCount = 0,
@@ -51,7 +51,7 @@ router.get('/edit/:upoint', function(req, res, next) {
 
 	GPL.getGplInfo(upi, processGpl);
 });
-
+// NOT CHECKED
 router.get('/getReferences/:upoint', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;

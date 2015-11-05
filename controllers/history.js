@@ -1,9 +1,10 @@
+var fs = require('fs');
 var express = require('express');
 var router = express.Router();
 var _ = require('lodash');
 var History = require('../models/history');
 var utils = require('../helpers/utils');
-
+// NOT CHECKED
 router.post('/getMeters', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -20,7 +21,7 @@ router.post('/getMeters', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.post('/getUsage', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -35,7 +36,7 @@ router.post('/getUsage', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.post('/getMissingMeters', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -50,7 +51,7 @@ router.post('/getMissingMeters', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.post('/editDatastore', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -67,7 +68,7 @@ router.post('/editDatastore', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.post('/importCSV', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -85,7 +86,7 @@ router.post('/importCSV', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.post('/exportCSV', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -102,7 +103,7 @@ router.post('/exportCSV', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.get('/downloadCSV', function(req, res, next) {
 	var path = req.query.path;
 	var filename = path.split('\\');
@@ -113,7 +114,7 @@ router.get('/downloadCSV', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.post('/uploadCSV', function(req, res, next) {
 	var files = req.files;
 

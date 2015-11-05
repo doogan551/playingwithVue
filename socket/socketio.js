@@ -8,6 +8,7 @@ var _ = require('lodash');
 var async = require('async');
 var tmp = require('tmp');
 var rimraf = require('rimraf');
+var config = require('config');
 
 // OTHERS
 var utils = require('../helpers/utils.js');
@@ -16,6 +17,7 @@ var Config = require('../public/js/lib/config.js');
 // var monitorSender = new(require('MonitorSender').Tasks)();
 var compiler = require('../helpers/scriptCompiler.js');
 var Utility = require('../models/utility.js');
+var logger = require('../helpers/logger')(module);
 
 var pointsCollection = utils.CONSTANTS("pointsCollection");
 var historyCollection = utils.CONSTANTS("historyCollection");
@@ -28,11 +30,13 @@ var eventEmitter = new events.EventEmitter();
 
 var openDisplays = [];
 var openAlarms = [];
+var common = {};
 
-module.exports = function socketio(common) {
-  var io = common.sockets.get().io;
-  openDisplays = common.openDisplays;
-  openAlarms = common.openAlarms;
+module.exports = function socketio(_common) {
+  common = _common;
+  var io = _common.sockets.get().io;
+  openDisplays = _common.openDisplays;
+  openAlarms = _common.openAlarms;
 
   io.sockets.on('connection', function(sock) {
     var sockId, socket, user;
@@ -96,7 +100,7 @@ module.exports = function socketio(common) {
       if (typeof data === "string")
         data = JSON.parse(data);
 
-      maintainAlarmViews(sock.id, "Recent", data, common);
+      maintainAlarmViews(sock.id, "Recent", data);
 
       getRecentAlarms(data, function(err, alarms, count) {
         sock.emit('recentAlarms', {
@@ -111,7 +115,7 @@ module.exports = function socketio(common) {
       if (typeof data === "string")
         data = JSON.parse(data);
 
-      maintainAlarmViews(sock.id, "Unacknowledged", data, common);
+      maintainAlarmViews(sock.id, "Unacknowledged", data);
 
       getUnacknowledged(data, function(err, alarms, count) {
         sock.emit('unacknowledged', {
@@ -126,7 +130,7 @@ module.exports = function socketio(common) {
       if (typeof data === "string")
         data = JSON.parse(data);
 
-      maintainAlarmViews(sock.id, "Active", data, common);
+      maintainAlarmViews(sock.id, "Active", data);
 
       getActiveAlarmsNew(data, function(err, alarms, count) {
         sock.emit('activeAlarms', {
@@ -292,7 +296,7 @@ module.exports = function socketio(common) {
         };
 
       if (data.uploadFile !== undefined) {
-        filePath = process.env.driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
+        filePath = config.get('Infoscan.dbConfig').driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
         logMessage(logData);
         fs.writeFile(filePath, data.uploadFile, function(err) {
           sendCommand(filePath);
@@ -303,7 +307,7 @@ module.exports = function socketio(common) {
           }
         });
       } else {
-        filePath = process.env.driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
+        filePath = config.get('Infoscan.dbConfig').driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
         logMessage(logData);
         sendCommand(filePath);
       }
@@ -351,7 +355,7 @@ module.exports = function socketio(common) {
     sock.on('updatePoint', function(data) {
       if (typeof data === 'string')
         data = JSON.parse(data);
-      common.newUpdate(data.oldPoint, data.newPoint, {
+      _common.newUpdate(data.oldPoint, data.newPoint, {
         method: "update",
         from: "ui",
         path: (data.hasOwnProperty('path')) ? data.path : null
@@ -393,7 +397,7 @@ module.exports = function socketio(common) {
 
           function(returnPoints, callback) {
             async.mapSeries(data.updates, function(point, callback) {
-              common.newUpdate(point.oldPoint, point.newPoint, {
+              _common.newUpdate(point.oldPoint, point.newPoint, {
                 method: "update",
                 from: "ui"
               }, user, function(response, updatedPoint) {
@@ -406,7 +410,7 @@ module.exports = function socketio(common) {
 
           function(returnPoints, callback) {
             async.mapSeries(data.deletes, function(upi, callback) {
-              common.deletePoint(upi, "hard", user, null, function(response) {
+              _common.deletePoint(upi, "hard", user, null, function(response) {
                 callback(response.err);
               });
             }, function(err, newPoints) {
@@ -448,7 +452,7 @@ module.exports = function socketio(common) {
         data = JSON.parse(data);
       }
 
-      common.deletePoint(data.upi, data.method, user, null, function(msg) {
+      _common.deletePoint(data.upi, data.method, user, null, function(msg) {
         msg.reqID = data.reqID;
         sock.emit('pointUpdated', JSON.stringify(msg));
       });
@@ -491,74 +495,6 @@ module.exports = function socketio(common) {
     });
   });
 };
-//needs socket
-function sendUpdate(dynamic) {
-  io.sockets.socket(dynamic.sock).emit('recieveUpdate', {
-    sock: dynamic.sock,
-    upi: dynamic.upi,
-    dynamic: dynamic.dyn
-  });
-}
-//needs socket or cb all dynamics. probably needs a rework to only update the recently opened displays
-function getVals(common, cb) {
-
-  var updateArray = [];
-
-  for (var i = 0; i < openDisplays.length; i++) {
-    if (openDisplays[i].display["Screen Objects"]) {
-      for (var j = 0; j < openDisplays[i].display["Screen Objects"].length; j++) {
-        if ((parseInt(openDisplays[i].display["Screen Objects"][j].upi, 10) !== 0 && openDisplays[i].display["Screen Objects"][j].upi !== "0") && updateArray.indexOf(openDisplays[i].display["Screen Objects"][j].upi) === -1) {
-          updateArray.push(openDisplays[i].display["Screen Objects"][j].upi);
-        }
-      }
-    }
-  }
-
-  updateArray.forEach(function(upi) {
-
-    getInitialVals(upi, function(point) {
-      if (point) {
-        if (point.Value && point.Value.eValue !== undefined && point.Value.eValue !== null) {
-
-          var pv = point.Value;
-
-          for (var prop in pv.ValueOptions) {
-
-            if (pv.ValueOptions[prop] === point.Value.eValue)
-              point.Value.Value = prop;
-          }
-        }
-        for (var i = 0; i < openDisplays.length; i++) {
-          for (var j = 0; j < openDisplays[i].display["Screen Objects"].length; j++) {
-
-            if (openDisplays[i].display["Screen Objects"][j].upi === point._id) {
-              var dyn = {};
-              if (point.Value) {
-
-                dyn.Value = point.Value.Value;
-                dyn.eValue = point.Value.eValue;
-                openDisplays[i].display["Screen Objects"][j].Value = point.Value.Value;
-                openDisplays[i].display["Screen Objects"][j].eValue = point.Value.eValue;
-                openDisplays[i].display["Screen Objects"][j]["Quality Label"] = point["Quality Label"];
-              }
-
-              dyn["Quality Label"] = point["Quality Label"];
-              dyn.Name = point.Name;
-              sendUpdate({
-                sock: openDisplays[i].sockId,
-                upi: point._id,
-                dyn: dyn
-              });
-              break;
-            }
-          }
-        }
-
-      }
-    });
-
-  });
-}
 
 function getInitialVals(id, callback) {
   var fields = {
@@ -712,106 +648,6 @@ function maintainAlarmViews(socketid, view, data) {
   });
 }
 
-function getUnacknowledged(data, callback) {
-  var currentPage, itemsPerPage, numberItems, user, groups, query, count, alarmIds, sort;
-
-  if (typeof data === "string")
-    data = JSON.parse(data);
-
-  currentPage = parseInt(data.currentPage, 10);
-  itemsPerPage = parseInt(data.itemsPerPage, 10);
-  user = data.user;
-  sort = {};
-
-  if (!itemsPerPage) {
-    itemsPerPage = 200;
-  }
-  if (!currentPage || currentPage < 1) {
-    currentPage = 1;
-  }
-
-  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-  user = data.user;
-
-  query = {
-    ackStatus: 1
-  };
-
-  if (data.name1 !== undefined) {
-    if (data.name1 !== null) {
-      query.Name1 = new RegExp("^" + data.name1, 'i');
-    } else {
-      query.Name1 = "";
-    }
-  }
-  if (data.name2 !== undefined) {
-    if (data.name2 !== null) {
-      query.Name2 = new RegExp("^" + data.name2, 'i');
-    } else {
-      query.Name2 = "";
-    }
-  }
-  if (data.name3 !== undefined) {
-    if (data.name3 !== null) {
-      query.Name3 = new RegExp("^" + data.name3, 'i');
-    } else {
-      query.Name3 = "";
-    }
-  }
-  if (data.name4 !== undefined) {
-    if (data.name4 !== null) {
-      query.Name4 = new RegExp("^" + data.name4, 'i');
-    } else {
-      query.Name4 = "";
-    }
-  }
-  if (data.msgCat) {
-    query.msgCat = {
-      $in: data.msgCat
-    };
-  }
-  if (data.almClass) {
-    query.almClass = {
-      $in: data.almClass
-    };
-  }
-
-  if (data.pointTypes) {
-    query.PointType = {
-      $in: data.pointTypes
-    };
-  }
-
-  groups = user.groups.map(function(group) {
-    return group._id.toString();
-  });
-
-  if (!user["System Admin"].Value) {
-    query.Security = {
-      $in: groups
-    };
-  }
-
-  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
-  var start = new Date();
-  Utility.get({
-    collection: alarmsCollection,
-    query: query,
-    sort: sort,
-    skip: (currentPage - 1) * itemsPerPage,
-    limit: numberItems
-  }, function(err, alarms) {
-    Utility.count({
-      collection: alarmsCollection,
-      query: query
-    }, function(err, count) {
-      if (err) callback(err, null, null);
-      callback(err, alarms, count);
-    });
-  });
-}
-
 function sendUpdate(dynamic) {
   io.sockets.socket(dynamic.sock).emit('recieveUpdate', {
     sock: dynamic.sock,
@@ -877,283 +713,6 @@ function getVals() {
       }
     });
 
-  });
-}
-
-function getActiveAlarms(data, callback) {
-  var currentPage, itemsPerPage, numberItems, user, groups, query, sort, alarmIds;
-
-  if (typeof data === "string")
-    data = JSON.parse(data);
-
-  currentPage = parseInt(data.currentPage, 10);
-  itemsPerPage = parseInt(data.itemsPerPage, 10);
-  user = data.user;
-
-  if (!itemsPerPage) {
-    itemsPerPage = 200;
-  }
-  if (!currentPage || currentPage < 1) {
-    currentPage = 1;
-  }
-
-  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-  sort = {};
-  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
-
-  query = {
-    _pStatus: 0,
-    _actvAlmId: {
-      $ne: BSON.ObjectID("000000000000000000000000")
-    },
-    $or: [{
-      "Point Type.Value": "Device"
-    }, {
-      "Point Type.Value": "Remote Unit",
-      "_relDevice": 0
-    }, {
-      "_relDevice": 0,
-      "_relRMU": 0
-    }]
-  };
-
-  groups = user.groups.map(function(group) {
-    return group._id.toString();
-  });
-
-  if (!user["System Admin"].Value) {
-    query.Security = {
-      $in: groups
-    };
-  }
-
-  if (data.pointTypes) {
-    query["Point Type.eValue"] = {
-      $in: data.pointTypes
-    };
-  }
-  Utility.get({
-    collection: pointsCollection,
-    query: query,
-    fields: {
-      _actvAlmId: 1,
-      _id: 1
-    }
-  }, function(err, alarms) {
-
-    if (err) callback(err, null, null);
-
-    alarmIds = [];
-    for (var i = 0; i < alarms.length; i++) {
-      if (alarms[i]._actvAlmId !== 0)
-        alarmIds.push(alarms[i]._actvAlmId);
-    }
-    var alarmsQuery = {
-      _id: {
-        $in: alarmIds
-      }
-    };
-
-    if (data.name1 !== undefined) {
-      if (data.name1 !== null) {
-        alarmsQuery.Name1 = new RegExp("^" + data.name1, 'i');
-      } else {
-        alarmsQuery.Name1 = "";
-      }
-    }
-    if (data.name2 !== undefined) {
-      if (data.name2 !== null) {
-        alarmsQuery.Name2 = new RegExp("^" + data.name2, 'i');
-      } else {
-        alarmsQuery.Name2 = "";
-      }
-    }
-    if (data.name3 !== undefined) {
-      if (data.name3 !== null) {
-        alarmsQuery.Name3 = new RegExp("^" + data.name3, 'i');
-      } else {
-        alarmsQuery.Name3 = "";
-      }
-    }
-    if (data.name4 !== undefined) {
-      if (data.name4 !== null) {
-        alarmsQuery.Name4 = new RegExp("^" + data.name4, 'i');
-      } else {
-        alarmsQuery.Name4 = "";
-      }
-    }
-
-    if (data.msgCat) {
-      alarmsQuery.msgCat = {
-        $in: data.msgCat
-      };
-    }
-    if (data.almClass) {
-      alarmsQuery.almClass = {
-        $in: data.almClass
-      };
-    }
-    var start = new Date();
-    Utility.get({
-      collection: alarmsCollection,
-      query: alarmsQuery,
-      sort: sort,
-      skip: (currentPage - 1) * itemsPerPage,
-      limit: numberItems
-    }, function(err, recents) {
-      Utility.count({
-        collection: alarmsCollection,
-        query: alarmsQuery
-      }, function(err, count) {
-        callback(err, recents, count);
-      });
-    });
-  });
-}
-
-function getActiveAlarmsNew(data, callback) {
-  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, user, query, sort, groups = [];
-
-  if (typeof data === "string")
-    data = JSON.parse(data);
-  currentPage = parseInt(data.currentPage, 10);
-  itemsPerPage = parseInt(data.itemsPerPage, 10);
-  startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
-  endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
-
-  sort = {};
-
-  if (!itemsPerPage) {
-    itemsPerPage = 200;
-  }
-  if (!currentPage || currentPage < 1) {
-    currentPage = 1;
-  }
-
-  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-  user = data.user;
-
-  query = {
-    $and: [{
-      msgTime: {
-        $gte: startDate
-      }
-    }, {
-      msgTime: {
-        $lte: endDate
-      }
-    }]
-  };
-
-  if (data.name1 !== undefined) {
-    if (data.name1 !== null) {
-      query.Name1 = new RegExp("^" + data.name1, 'i');
-    } else {
-      query.Name1 = "";
-    }
-
-  }
-  if (data.name2 !== undefined) {
-    if (data.name2 !== null) {
-      query.Name2 = new RegExp("^" + data.name2, 'i');
-    } else {
-      query.Name2 = "";
-    }
-  }
-  if (data.name3 !== undefined) {
-    if (data.name3 !== null) {
-      query.Name3 = new RegExp("^" + data.name3, 'i');
-    } else {
-      query.Name3 = "";
-    }
-  }
-  if (data.name4 !== undefined) {
-    if (data.name4 !== null) {
-      query.Name4 = new RegExp("^" + data.name4, 'i');
-    } else {
-      query.Name4 = "";
-    }
-  }
-  if (data.msgCat) {
-    query.msgCat = {
-      $in: data.msgCat
-    };
-  }
-  if (data.almClass) {
-    query.almClass = {
-      $in: data.almClass
-    };
-  }
-
-  if (data.pointTypes) {
-    query.PointType = {
-      $in: data.pointTypes
-    };
-  }
-
-  groups = user.groups.map(function(group) {
-    return group._id.toString();
-  });
-
-  if (!user["System Admin"].Value) {
-    query.Security = {
-      $in: groups
-    };
-  }
-
-  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
-
-  var start = new Date();
-  Utility.get({
-    collection: "ActiveAlarms",
-    query: query,
-    sort: sort,
-    skip: (currentPage - 1) * itemsPerPage,
-    limit: numberItems
-  }, function(err, alarms) {
-    Utility.count({
-      collection: "ActiveAlarms",
-      query: query
-    }, function(err, count) {
-
-      callback(err, alarms, count);
-    });
-  });
-}
-
-function sendAcknowledge(data, callback) {
-  var ids, username, time;
-
-  ids = data.ids;
-  username = data.username;
-  time = Math.floor(new Date().getTime() / 1000);
-
-  for (var j = 0; j < ids.length; j++) {
-    ids[j] = BSON.ObjectID(ids[j]);
-  }
-
-  Utility.update({
-    collection: alarmsCollection,
-    query: {
-      _id: {
-        $in: ids
-      },
-      ackStatus: 1
-    },
-    updateObj: {
-      $set: {
-        ackStatus: 2,
-        ackUser: username,
-        ackTime: time
-      }
-    },
-    options: {
-      multi: true
-    }
-  }, function(err, result) {
-    callback(err, result);
   });
 }
 
@@ -1663,7 +1222,8 @@ function compileScript(data, callback) {
       compiler.compile(filepath, path + '/' + fileName, function(err) {
 
         fs.readFile(path + '/' + fileName + '.err', function(err, data) {
-          if (data.length > 0)
+          logger.debug(err);
+          if (!!data && data.length > 0)
             return callback({
               err: data.toString().replace(re, '')
             });

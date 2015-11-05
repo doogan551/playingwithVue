@@ -5,7 +5,7 @@ var options = {
   modes: ['nav', 'select', 'filter', 'perm']
 
 };
-
+// Checked
 router.get('/', function (req, res) {
   var mode = options.modes.getMode(req.query.mode);
   res.locals = {
@@ -21,7 +21,7 @@ router.get('/', function (req, res) {
 
   res.render('pointlookup/default');
 });
-
+// NOT CHECKED
 router.get('/security/:groupid', function (req, res) {
   var mode = options.modes.getMode('perm');
 
@@ -36,7 +36,7 @@ router.get('/security/:groupid', function (req, res) {
   };
   res.render('pointlookup/default');
 });
-
+// Checked
 router.get('/:pointType/:property', function (req, res) {
   var controllers = req.controllers,
     mode = options.modes.getMode(req.query.mode),
@@ -58,7 +58,7 @@ router.get('/:pointType/:property', function (req, res) {
   };
   res.render('pointlookup/default');
 });
-
+// Checked
 router.get('/:pointType/:property/:deviceId', function (req, res) {
   var controllers = req.controllers,
     mode = options.modes.getMode(req.query.mode),
@@ -80,7 +80,7 @@ router.get('/:pointType/:property/:deviceId', function (req, res) {
   };
   res.render('pointlookup/default');
 });
-
+// NOT CHECKED
 router.get('/:pointType/:property/:deviceId/:remoteUnitId', function (req, res) {
   var controllers = req.controllers,
     mode = options.modes.getMode(req.query.mode),

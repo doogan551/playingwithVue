@@ -35,7 +35,7 @@ router.get('/edit/:upoint', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.get('/gifs/:fname', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -48,7 +48,7 @@ router.get('/gifs/:fname', function(req, res, next) {
 		}
 	});
 });
-
+// NOT CHECKED
 router.get('/gifs/:fname/:frame', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -61,13 +61,13 @@ router.get('/gifs/:fname/:frame', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.get('/view/:upoint', function(req, res, next) {
 	res.render('displays/view.jade', {
 		upi: req.params.upoint
 	});
 });
-
+// NOT CHECKED
 router.get('/preview/:upoint', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -80,7 +80,7 @@ router.get('/preview/:upoint', function(req, res, next) {
 		}
 	});
 });
-
+// NOT CHECKED
 router.get('/view/:upoint/:dispId', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -89,7 +89,7 @@ router.get('/view/:upoint/:dispId', function(req, res, next) {
 
 	});
 });
-
+// NOT CHECKED
 router.get('/upiname/:upi', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -102,7 +102,7 @@ router.get('/upiname/:upi', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.post('/later', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -115,10 +115,11 @@ router.post('/later', function(req, res, next) {
 		}
 	});
 });
-
+// Checked
 router.post('/publish', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
+	data.files = req.files;
 
 	Display.publish(data, function(err, result) {
 		if (err) {
@@ -128,7 +129,7 @@ router.post('/publish', function(req, res, next) {
 		}
 	});
 });
-
+// NOT CHECKED
 router.get('/browse', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -141,7 +142,7 @@ router.get('/browse', function(req, res, next) {
 		}
 	});
 });
-
+// NOT CHECKED
 router.get('/browse2', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -154,7 +155,7 @@ router.get('/browse2', function(req, res, next) {
 		}
 	});
 });
-
+// NOT CHECKED
 router.get('/listassets', function(req, res, next) {
 	var data = _.merge(req.params, req.body, req.query);
 	data.user = req.user;
@@ -173,7 +174,7 @@ router.get('/listassets', function(req, res, next) {
 //router.get('/test', controllers.import.start);
 //router.get('/test2', controllers.import.test2);
 //router.post('/import', controllers.import.start);
-
+// NOT CHECKED
 router.get('/trend', function(req, res, next) {
 	var pars = req.query;
 	res.render('displays/plot.jade',

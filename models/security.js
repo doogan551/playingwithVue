@@ -1,3 +1,5 @@
+var async = require('async');
+
 var Utility = require('../models/utility');
 var User = require('../models/user');
 var config = require('../public/js/lib/config.js');
@@ -893,14 +895,13 @@ module.exports = {
 
       var criteria = {
         collection: usersCollection,
-        criteria: searchCriteria,
+        query: searchCriteria,
         fields: {
           _id: 0,
           username: 1
         }
       };
       Utility.getOne(criteria, function(err, username) {
-
         Utility.remove(criteria, function(err, result) {
           if (err) {
             return cb(err);

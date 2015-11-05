@@ -1,10 +1,16 @@
 // NODE MODULES
+var fs = require('fs');
+
+// NPM MODULES
 var async = require('async');
+var ObjectID = require('mongodb').ObjectID;
 
 // OTHERS
 var Utility = require('../models/utility');
 var utils = require('../helpers/utils');
 var constants = utils.CONSTANTS;
+var Config = require('../public/js/lib/config.js');
+var actLogsEnums = Config.Enums["Activity Logs"];
 
 var openDisplays = [];
 var openAlarms = [];
@@ -171,31 +177,31 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
         generateActivityLog = true;
       } else if (oldPoint._pStatus === Config.Enums["Point Statuses"].Inactive.enum && newPoint._pStatus === Config.Enums["Point Statuses"].Active.enum) {
         if (flags.method === "restore") {
-          activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+          activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
             log: "Point restored",
             activity: actLogsEnums["Point Restore"].enum
           })));
         } else {
-          activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+          activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
             log: "Point added",
             activity: actLogsEnums["Point Add"].enum
           })));
         }
       } else if (oldPoint._pStatus === Config.Enums["Point Statuses"].Active.enum && newPoint._pStatus === Config.Enums["Point Statuses"].Inactive.enum) {
         if (flags.method === "hard") {
-          activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+          activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
             log: "Point destroyed",
             activity: actLogsEnums["Point Hard Delete"].enum
           })));
         } else if (flags.method === "soft") {
-          activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+          activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
             log: "Point deleted",
             activity: actLogsEnums["Point Soft Delete"].enum
           })));
         }
       }
       /*else if (newPoint.Name !== oldPoint.Name && flags.method === "rename") {
-        activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {log:"Point renamed from " + oldPoint.Name + " to " + newPoint.Name, activity: actLogsEnums["Point Restore"].enum})));
+        activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {log:"Point renamed from " + oldPoint.Name + " to " + newPoint.Name, activity: actLogsEnums["Point Restore"].enum})));
       }*/
     }
 
@@ -656,7 +662,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               if (updateObject[prop] !== undefined && ((updateObject[prop].ValueType === 5 && updateObject[prop].eValue !== oldPoint[prop].eValue) || (updateObject[prop].ValueType !== 5 && updateObject[prop].Value !== oldPoint[prop].Value))) {
                 if (prop === "Point Refs") {
                   if (newPoint["Point Type"].Value === "Slide Show") {
-                    activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                       log: "Slide Show edited",
                       activity: actLogsEnums["Slide Show Edit"].enum
                     })));
@@ -664,34 +670,34 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                     compareArrays(newPoint[prop], oldPoint[prop], activityLogObjects);
                   }
                 } else if (prop === "Configure Device") {
-                  activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                  activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                     log: "Device configuration requested",
                     activity: actLogsEnums["Device Configuration"].enum
                   })));
                 } else if (newPoint[prop].ValueType === Config.Enums["Value Types"].Bool.enum) {
                   if (newPoint[prop].Value === true)
-                    activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                       log: prop + " set",
                       activity: actLogsEnums["Point Property Edit"].enum
                     })));
                   else
-                    activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                       log: prop + " cleared",
                       activity: actLogsEnums["Point Property Edit"].enum
                     })));
                 } else if (newPoint[prop].ValueType === Config.Enums["Value Types"].UniquePID.enum) {
                   if (oldPoint[prop].PointInst !== null && newPoint[prop].PointInst === null)
-                    activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                       log: newPoint[prop].Name + " removed from " + prop,
                       activity: actLogsEnums["Point Property Edit"].enum
                     })));
                   else if (oldPoint[prop].PointInst === null && newPoint[prop].PointInst !== null)
-                    activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                       log: newPoint[prop].Name + " added to " + prop,
                       activity: actLogsEnums["Point Property Edit"].enum
                     })));
                   else
-                    activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                       log: prop + " changed from " + oldPoint[prop].Name + " to " + newPoint[prop].Name,
                       activity: actLogsEnums["Point Property Edit"].enum
                     })));
@@ -749,39 +755,39 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                       timeMessage += hour + ":" + min;
                       break;
                   }
-                  activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                  activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                     log: timeMessage,
                     activity: actLogsEnums["Point Property Edit"].enum
                   })));
                 } else {
-                  activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                  activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                     log: prop + " changed from " + oldVal + " to " + newVal,
                     activity: actLogsEnums["Point Property Edit"].enum
                   })));
                 }
               } else if (prop === "Alarm Messages" || prop === "Occupancy Schedule" || prop === "Sequence Details" || prop === "Security" || prop === "Script Source File") {
-                activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                   log: prop + " updated",
                   activity: actLogsEnums["Point Property Edit"].enum
 
                 })));
               } else if (prop === "Name") {
                 if (newPoint[prop] !== oldPoint[prop]) {
-                  activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                  activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                     log: prop + " changed from " + oldPoint[prop] + " to " + newPoint[prop],
                     activity: actLogsEnums["Point Property Edit"].enum
                   })));
                 }
                 /*} else if (prop === "Value") {
                   if (newPoint[prop].Value !== oldPoint[prop].Value) {
-                    activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                       log: prop + " changed from " + oldVal + " to " + newVal,
                       activity: actLogsEnums["Point Property Edit"].enum
                     })));
                   }*/
               } else if (prop === "States") {
                 if (!_.isEqual(newPoint[prop], oldPoint[prop])) {
-                  activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+                  activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                     log: prop + " updated",
                     activity: actLogsEnums["Point Property Edit"].enum
                   })));
@@ -902,17 +908,17 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
       if (newArray[i].Value !== oldArray[i].Value) {
         logData.prop = newArray[i].PropertyName;
         if (newArray[i].Value === 0 && oldArray[i].Value !== 0) {
-          activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+          activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
             log: "Property deleted",
             activity: actLogsEnums["Point Property Edit"].enum
           })));
         } else if (newArray[i].Value !== 0 && oldArray[i].Value === 0) {
-          activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+          activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
             log: "Property added",
             activity: actLogsEnums["Point Property Edit"].enum
           })));
         } else {
-          activityLogObjects.push(Utils.buildActivityLog(_.merge(logData, {
+          activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
             log: "Property changed",
             activity: actLogsEnums["Point Property Edit"].enum
           })));
@@ -1141,7 +1147,6 @@ function updateDependencies(refPoint, flags, user, callback) {
     },
     devices = [],
     signalTOD = false,
-    ObjectID = mongo.ObjectID,
     deepClone = function(o) {
       // Return the value if it's not an object; shallow copy mongo ObjectID objects
       if ((o === null) || (typeof(o) !== 'object') || (o instanceof ObjectID))
@@ -1409,9 +1414,9 @@ function deletePoint(upi, method, user, options, callback) {
         _logData.log = "Point deleted";
       }
       _logData.point = _point;
-      Utility.isnert({
+      Utility.insert({
         collection: constants('activityLogCollection'),
-        insertObj: Utils.buildActivityLog(_logData)
+        insertObj: utils.buildActivityLog(_logData)
       }, function(err, result) {
         if (err) {
           _buildWarning('could not create activity log');
@@ -1492,7 +1497,7 @@ function deleteScheduleEntries(method, pointType, upi, user, callback) {
     };
   }
 
-  Utility.find({
+  Utility.get({
     collection: constants('pointsCollection'),
     query: query
   }, function(err, points) {

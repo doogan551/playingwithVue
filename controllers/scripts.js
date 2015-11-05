@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Scripts = require('../models/scripts');
-
+// NOT CHECKED - moved to socket?
 router.post('/api/scripts/updatescript', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -18,7 +18,7 @@ router.post('/api/scripts/updatescript', function(req, res, next) {
 		});
 	});
 });
-
+// NOT CHECKED - moved to socket?
 router.post('/api/scripts/commitscript', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -35,7 +35,7 @@ router.post('/api/scripts/commitscript', function(req, res, next) {
 		}
 	});
 });
-
+// NOT CHECKED - moved to socket?
 router.post('/api/scripts/readscript', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;

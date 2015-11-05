@@ -11,3 +11,8 @@
 
       cb();
   });
+
+- delete /public/js/pointSelector
+- delete /public/js/pointEditor
+
+- change /pointlookup/newpoint in public\js\pointLookup\pointLookup.js to /api/points/newpoint

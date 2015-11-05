@@ -4,7 +4,7 @@ var _ = require('lodash');
 var Point = require('../models/point');
 var config = require('../public/js/lib/config.js');
 var utils = require('../helpers/utils.js');
-
+// Checked - slow?
 router.post('/browse', function(req, res) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -16,7 +16,7 @@ router.post('/browse', function(req, res) {
     return utils.sendResponse(res, points);
   });
 });
-
+// NOT CHECKED
 router.post('/togglegroup', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
@@ -28,7 +28,7 @@ router.post('/togglegroup', function(req, res) {
     return utils.sendResponse(res, points);
   });
 });
-
+// Checked
 router.get('/newpoint', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
@@ -41,7 +41,7 @@ router.get('/newpoint', function(req, res) {
       res.render('pointlookup/newPoint', locals);
   });
 });
-
+// NOT CHECKED - couldn't get context menu for clone to stay open
 router.get('/newpoint/:id', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
@@ -54,7 +54,7 @@ router.get('/newpoint/:id', function(req, res) {
       res.render('pointlookup/newPoint', locals);
   });
 });
-
+// NOT CHECKED
 router.get('/newpoint/restrictTo/:pointType', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
@@ -67,7 +67,7 @@ router.get('/newpoint/restrictTo/:pointType', function(req, res) {
       res.render('pointlookup/newPoint', locals);
   });
 });
-
+// Checked
 router.post('/search', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
@@ -79,7 +79,8 @@ router.post('/search', function(req, res) {
     return utils.sendResponse(res, points);
   });
 });
-
+// Checked
+// TODO - change routes to remove '2'
 router.get('/searchdependencies2/:upi', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
@@ -93,7 +94,7 @@ router.get('/searchdependencies2/:upi', function(req, res) {
     });
   });
 });
-
+// NOT CHECKED
 router.post('/getnames', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
@@ -105,7 +106,7 @@ router.post('/getnames', function(req, res) {
     return utils.sendResponse(res, results);
   });
 });
-
+// NOT CHECKED
 router.post('/getpoint', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
@@ -117,7 +118,7 @@ router.post('/getpoint', function(req, res) {
     return utils.sendResponse(res, point);
   });
 });
-
+// Checked
 router.post('/initpoint', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
@@ -129,7 +130,7 @@ router.post('/initpoint', function(req, res) {
     return utils.sendResponse(res, point);
   });
 });
-
+// Checked
 router.get('/getpointref/small/:upi', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
@@ -148,7 +149,7 @@ router.get('/getpointref/small/:upi', function(req, res) {
     return utils.sendResponse(res, point);
   });
 });
-
+// NOT CHECKED
 router.post('/findalarmdisplays', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
@@ -166,7 +167,7 @@ router.post('/findalarmdisplays', function(req, res) {
     });
   });
 });
-
+// Checked
 router.get('/:id', function(req, res) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
