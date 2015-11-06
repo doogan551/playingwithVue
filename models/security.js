@@ -4,7 +4,7 @@ var Utility = require('../models/utility');
 var User = require('../models/user');
 var config = require('../public/js/lib/config.js');
 var utils = require('../helpers/utils.js');
-var mongodb = require('mongodb');
+var ObjectID = require('mongodb').ObjectID;
 var fs = require('fs');
 var logger = require('../helpers/logger')(module);
 
@@ -12,6 +12,10 @@ var pointsCollection = utils.CONSTANTS("pointsCollection");
 var usersCollection = utils.CONSTANTS("usersCollection");
 var userGroupsCollection = utils.CONSTANTS("userGroupsCollection");
 var systemInfoCollection = utils.CONSTANTS("systemInfoProperties");
+var READ = utils.CONSTANTS("READ");
+var ACKNOWLEDGE = utils.CONSTANTS("ACKNOWLEDGE");
+var CONTROL = utils.CONSTANTS("CONTROL");
+var WRITE = utils.CONSTANTS("WRITE");
 
 var Users = {
   saveUser: function(data, cb) {
@@ -142,16 +146,18 @@ var Users = {
         } else {
           criteria = {
             collection: usersCollection,
-            query: userTemplate
+            insertObj: userTemplate
           };
+          
           Utility.insert(criteria, function(err, userArray) {
+
             if (err) {
               return cb(err);
             } else {
               // TODO Add function
               updateControllers("add", userTemplate.username, function(err) {
                 if (userArray) {
-                  user = userArray[0];
+                  user = userArray.ops[0];
                 }
 
                 if (groups.length > 0) {
@@ -161,7 +167,7 @@ var Users = {
                     if (group.groupid.length < 12) {
                       group.groupid = parseInt(group.groupid, 10);
                     } else {
-                      group.groupid = new mongodb.ObjectID(group.groupid);
+                      group.groupid = new ObjectID(group.groupid);
                     }
 
                     async.waterfall([
@@ -262,7 +268,7 @@ var Users = {
                           }
                         };
 
-                        Utility.getOne(criteria, callback);
+                        Utility.getOne(criteria, cb);
                       }
                     });
 
@@ -275,7 +281,7 @@ var Users = {
                     }
                   };
 
-                  Utility.getOne(criteria, callback);
+                  Utility.getOne(criteria, cb);
                 }
               });
 
@@ -295,7 +301,7 @@ var Users = {
     if (userid.length < 12) {
       userid = parseInt(userid, 10);
     } else {
-      userid = new mongodb.ObjectID(userid);
+      userid = new ObjectID(userid);
     }
 
     var searchCriteria = {
@@ -450,7 +456,7 @@ var Users = {
             if (group.groupid.length < 12) {
               group.groupid = parseInt(group.groupid, 10);
             } else {
-              group.groupid = new mongodb.ObjectID(group.groupid);
+              group.groupid = new ObjectID(group.groupid);
             }
 
             async.waterfall([
@@ -639,7 +645,7 @@ var Groups = {
               query: searchCriteria
             };
 
-            Utility.insert(criteria, cb);
+            Utility.getOne(criteria, cb);
           }
         });
       } else {
@@ -662,7 +668,7 @@ var Groups = {
         groupId = parseInt(groupUpi, 10);
       } else {
 
-        groupId = new mongodb.ObjectID(groupUpi);
+        groupId = new ObjectID(groupUpi);
       }
       searchCriteria = {
         _id: groupId
@@ -883,7 +889,7 @@ module.exports = {
       if (userid.length < 12) {
         userid = parseInt(userid, 10);
       } else {
-        userid = new mongodb.ObjectID(userid);
+        userid = new ObjectID(userid);
       }
 
       var searchCriteria = {
@@ -999,12 +1005,12 @@ module.exports = {
       });
     },
     getUser: function(data, cb) {
-      var id = req.params.id;
+      var id = data.id;
 
       if (id.length < 12) {
         upi = parseInt(id, 10);
       } else {
-        upi = new mongodb.ObjectID(id);
+        upi = new ObjectID(id);
       }
 
       var searchCriteria = {
@@ -1028,7 +1034,8 @@ module.exports = {
       return cb(null, text);
     },
     editPhoto: function(data, cb) {
-      var userid = mongodb.ObjectID(data.user);
+      console.log(data.user);
+      var userid = ObjectID(data.user);
       var image = data.image;
       var filename = data.name;
       var imgData = image.replace(/^data:image\/\w+;base64,/, "");
@@ -1066,7 +1073,7 @@ module.exports = {
     getUsers: function(data, cb) {
       var groupUpi = data["User Group Upi"];
 
-      var id = new mongodb.ObjectID(groupUpi);
+      var id = new ObjectID(groupUpi);
 
       var searchCriteria = {};
       if (id) {
@@ -1098,7 +1105,7 @@ module.exports = {
           if (groupUpis[a].length < 12) {
             groupIds.push(parseInt(groupUpis[a], 10));
           } else {
-            groupIds.push(new mongodb.ObjectID(groupUpis[a]));
+            groupIds.push(new ObjectID(groupUpis[a]));
           }
         }
         var groupCount = 0;
@@ -1208,7 +1215,7 @@ module.exports = {
           if (groupUpis[a].length < 12) {
             groupIds.push(parseInt(groupUpis[a], 10));
           } else {
-            groupIds.push(new mongodb.ObjectID(groupUpis[a]));
+            groupIds.push(new ObjectID(groupUpis[a]));
           }
         }
         var groupCount = 0;
@@ -1317,7 +1324,7 @@ module.exports = {
         if (groupUpi.length < 12) {
           groupId = parseInt(groupUpi, 10);
         } else {
-          groupId = new mongodb.ObjectID(groupUpi);
+          groupId = new ObjectID(groupUpi);
         }
 
         removeCriteria = {
@@ -1407,7 +1414,7 @@ module.exports = {
       if (group.length < 12) {
         group = parseInt(group, 10);
       } else {
-        group = new mongodb.ObjectID(group);
+        group = new ObjectID(group);
       }
 
       var searchCriteria = {
@@ -1469,7 +1476,7 @@ module.exports = {
       if (id.length < 12) {
         upi = parseInt(id, 10);
       } else {
-        upi = new mongodb.ObjectID(id);
+        upi = new ObjectID(id);
       }
 
       searchCriteria = {
@@ -1483,7 +1490,7 @@ module.exports = {
       Utility.getOne(criteria, cb);
     },
     editPhoto: function(data, cb) {
-      var userid = mongodb.ObjectID(data.user);
+      var userid = ObjectID(data.user);
       var image = data.image;
       var filename = data.name;
       var imgData = image.replace(/^data:image\/\w+;base64,/, "");
@@ -1537,7 +1544,7 @@ module.exports = {
       };
 
       for (m = 0; m < newGroups.length; m++) {
-        newGroups[m].groupId = new mongodb.ObjectID(newGroups[m].groupId);
+        newGroups[m].groupId = new ObjectID(newGroups[m].groupId);
 
         newGroups[m].Permissions = parseInt(newGroups[m].Permissions, 10);
         if ((newGroups[m].Permissions & WRITE) !== 0) // If write, get read, ack and control
@@ -1572,7 +1579,7 @@ module.exports = {
               if (upi.length < 12) {
                 id = parseInt(upi, 10);
               } else {
-                id = new mongodb.ObjectID(upi);
+                id = new ObjectID(upi);
               }
               var searchCriteria = {};
               searchCriteria.name1 = {
@@ -1590,7 +1597,7 @@ module.exports = {
 
               for (var user in users) {
                 updateCriteria.$addToSet.Security.$each.push({
-                  userId: new mongodb.ObjectID(user),
+                  userId: new ObjectID(user),
                   groupId: newGroup.groupId
                 });
               }
@@ -1610,7 +1617,7 @@ module.exports = {
                 if (upi.length < 12) {
                   id = parseInt(upi, 10);
                 } else {
-                  id = new mongodb.ObjectID(upi);
+                  id = new ObjectID(upi);
                 }
                 var searchCriteria = {
                   "_id": id
@@ -1618,7 +1625,7 @@ module.exports = {
 
                 for (var user in users) {
                   updateCriteria.$addToSet.Security.$each.push({
-                    userId: new mongodb.ObjectID(user),
+                    userId: new ObjectID(user),
                     groupId: newGroup.groupId
                   });
                 }
@@ -1665,7 +1672,7 @@ module.exports = {
 
       for (i = 0; i < groupUpis.length; i++) {
         updateCriteria.$pull.Security.$and.push({
-          groupId: new mongodb.ObjectID(groupUpis[i])
+          groupId: new ObjectID(groupUpis[i])
         });
       }
 
@@ -1676,7 +1683,7 @@ module.exports = {
         if (upi.length < 12) {
           id = parseInt(upi, 10);
         } else {
-          id = new mongodb.ObjectID(upi);
+          id = new ObjectID(upi);
         }
 
         searchCriteria = {
@@ -1721,7 +1728,7 @@ module.exports = {
 
       for (i = 0; i < newUsers.length; i++) {
         if (typeof newUsers[i].userId !== "object")
-          newUsers[i].userId = new mongodb.ObjectID(newUsers[i].userId);
+          newUsers[i].userId = new ObjectID(newUsers[i].userId);
 
         newUsers[i].Permissions = parseInt(newUsers[i].Permissions, 10);
 
@@ -1774,7 +1781,7 @@ module.exports = {
             if (upi.length < 12) {
               id = parseInt(upi, 10);
             } else {
-              id = new mongodb.ObjectID(upi);
+              id = new ObjectID(upi);
             }
 
             var searchCriteria = {
@@ -1855,7 +1862,7 @@ module.exports = {
 
       for (i = 0; i < users.length; i++) {
         updateCriteria.$pull.Security.userId.$in.push(
-          new mongodb.ObjectID(users[i])
+          new ObjectID(users[i])
         );
       }
 
@@ -1867,7 +1874,7 @@ module.exports = {
         if (upi.length < 12) {
           id = parseInt(upi, 10);
         } else {
-          id = new mongodb.ObjectID(upi);
+          id = new ObjectID(upi);
         }
 
         var searchCriteria = {

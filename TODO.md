@@ -8,6 +8,7 @@
 - read up on 'process#' functions
 - setup config for non-app.js scripts
 - web.config options
+- move site specific files out of directory (display_assets, public/img)
 
 - get node-inspector module - error during installation
 - get terminal-kit module - useful for self contained scripts' ui
@@ -39,3 +40,4 @@
 - needs work
 - alarm model
 - socket connections in front end
+- GET /trendtest/trendTest2.js 404

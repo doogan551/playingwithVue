@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var System = require('../models/system');
 var utils = require('../helpers/utils');
-
+// Checked
 router.get('/controlpriorities', function(req, res, next) {
   System.getSystemInfoByName('Control Priorities', function(err, priorities) {
     if (err) {
@@ -15,7 +15,7 @@ router.get('/controlpriorities', function(req, res, next) {
     }
   });
 });
-
+// Checked
 router.get('/qualitycodes', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -30,7 +30,7 @@ router.get('/qualitycodes', function(req, res, next) {
     }
   });
 });
-
+// Checked
 router.get('/controllers', function(req, res, next) {
   System.getSystemInfoByName('Controllers', function(err, controllers) {
     if (err) {
@@ -42,7 +42,7 @@ router.get('/controllers', function(req, res, next) {
     }
   });
 });
-
+// NOT CHECKED
 router.get('/getcounts/:type', function(req, res, next) {
   var type = req.params.type;
 
@@ -107,7 +107,7 @@ router.post('/updatecontrollers', function(req, res, next) {
     }
   });
 });
-
+// Checked
 router.get('/telemetry', function(req, res, next) {
   System.getSystemInfoByName('Preferences', function(err, telemetry) {
     if (err) {
@@ -136,7 +136,7 @@ router.post('/updatetelemetry', function(req, res, next) {
     }
   });
 });
-
+// NOT CHECKED
 router.get('/getStatus', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -151,7 +151,7 @@ router.get('/getStatus', function(req, res, next) {
     }
   });
 });
-
+// Checked
 router.get('/getCustomColors', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -181,7 +181,7 @@ router.post('/updateCustomColors', function(req, res, next) {
     }
   });
 });
-
+// Checked
 router.get('/weather', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;

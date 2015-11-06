@@ -150,20 +150,6 @@ router.post('/users/getallusers', function(req, res, next) {
   });
 });
 // NOT CHECKED
-router.post('/users/:id', function(req, res, next) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Security.Users.getUser(data, function(err, user) {
-    if (err) {
-      return utils.sendResponse(res, {
-        err: err
-      });
-    }
-    return utils.sendResponse(res, user);
-  });
-});
-// NOT CHECKED
 router.post('/points/addgroups', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -239,7 +225,7 @@ router.post('/users/createpassword', function(req, res, next) {
     });
   });
 });
-
+// Checked
 router.post('/users/saveuser', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -253,10 +239,10 @@ router.post('/users/saveuser', function(req, res, next) {
     return utils.sendResponse(res, result);
   });
 });
-
+// Checked
 router.post('/users/editPhoto', function(req, res, next) {
   var data = _.merge(req.params, req.body);
-  data.user = req.user;
+  data._user = req.user;
 
   Security.Users.editPhoto(data, function(err, filename) {
     if (err) {
@@ -269,10 +255,10 @@ router.post('/users/editPhoto', function(req, res, next) {
     });
   });
 });
-
+// Checked
 router.post('/groups/editPhoto', function(req, res, next) {
   var data = _.merge(req.params, req.body);
-  data.user = req.user;
+  data._user = req.user;
 
   Security.Groups.editPhoto(data, function(err, filename) {
     if (err) {
@@ -285,7 +271,7 @@ router.post('/groups/editPhoto', function(req, res, next) {
     });
   });
 });
-
+// NOT CHECKED
 router.post('/users/newuser', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -299,7 +285,7 @@ router.post('/users/newuser', function(req, res, next) {
     return utils.sendResponse(res, newUser);
   });
 });
-
+// NOT CHECKED
 router.post('/users/updateuser', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -313,7 +299,7 @@ router.post('/users/updateuser', function(req, res, next) {
     return utils.sendResponse(res, newUser);
   });
 });
-
+// NOT CHECKED
 router.post('/groups/updategroup', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -327,7 +313,7 @@ router.post('/groups/updategroup', function(req, res, next) {
     return utils.sendResponse(res, newGroup);
   });
 });
-
+// NOT CHECKED
 router.post('/groups/newgroup', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -341,7 +327,7 @@ router.post('/groups/newgroup', function(req, res, next) {
     return utils.sendResponse(res, newGroup);
   });
 });
-
+// NOT CHECKED
 router.post('/groups/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -353,6 +339,20 @@ router.post('/groups/:id', function(req, res, next) {
       });
     }
     return utils.sendResponse(res, group);
+  });
+});
+// NOT CHECKED
+router.post('/users/:id', function(req, res, next) {
+  var data = _.merge(req.params, req.body);
+  data.user = req.user;
+
+  Security.Users.getUser(data, function(err, user) {
+    if (err) {
+      return utils.sendResponse(res, {
+        err: err
+      });
+    }
+    return utils.sendResponse(res, user);
   });
 });
 

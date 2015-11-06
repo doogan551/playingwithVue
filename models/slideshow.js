@@ -3,7 +3,7 @@ var logger = require('../helpers/logger')(module);
 
 module.exports = {
 
-    getYear: function(data, cb) {
+    get: function(data, cb) {
         upi = parseInt(data.id, 10);
 
         Utility.getOne({

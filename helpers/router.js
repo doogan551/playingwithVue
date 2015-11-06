@@ -14,7 +14,6 @@ module.exports = function(controllers) {
   });
 
   router.use('/', controllers.workspace);
-  router.use('/session', controllers.session);
 
   // ALL ROUTES BELOW THIS WILL REQUIRE AUTHENTICATION
   router.use(function(req, res, next) {
@@ -26,7 +25,6 @@ module.exports = function(controllers) {
   });
 
   router.use('/', controllers.loadviews);
-  router.use('/', controllers.session);
   router.use('/', controllers.workspace);
 
   router.use('/api/activitylogs', controllers.activitylogs);

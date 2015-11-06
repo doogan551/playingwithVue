@@ -5,7 +5,7 @@ var passport = require('passport');
 var utils = require('../helpers/utils');
 var Workspace = require('../models/workspace');
 var logger = require('../helpers/logger')(module);
-
+// Checked
 router.get('/', function(req, res, next) {
   var _user = req.user;
 
@@ -19,7 +19,7 @@ router.get('/', function(req, res, next) {
     isAuthenticated: req.isAuthenticated()
   });
 });
-
+// NOT CHECKED
 router.get('/home', function(req, res, next) {
   var _user = req.user;
 
@@ -33,12 +33,12 @@ router.get('/home', function(req, res, next) {
     isAuthenticated: req.isAuthenticated()
   });
 });
-
+// NOT CHECKED
 router.get('/login', function(req, res) {
   req.logout();
   res.render('baseui/login');
 });
-
+// Checked
 router.post('/authenticate', function(req, res, next) {
   passport.authenticate('local', function(err, user, info) {
     if (err) {
@@ -56,7 +56,7 @@ router.post('/authenticate', function(req, res, next) {
     });
   })(req, res, next);
 });
-
+// NOT CHECKED
 router.post('/saveworkspace', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -73,7 +73,7 @@ router.post('/saveworkspace', function(req, res, next) {
     }
   });
 });
-
+// NOT CHECKED
 router.post('/lost-password', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -82,7 +82,7 @@ router.post('/lost-password', function(req, res, next) {
     err: 'Route not implemented.'
   });
 });
-
+// NOT CHECKED
 router.get('/reset-password', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -91,7 +91,7 @@ router.get('/reset-password', function(req, res, next) {
     err: 'Route not implemented.'
   });
 });
-
+// NOT CHECKED
 router.post('/lost-password', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -108,7 +108,7 @@ router.post('/lost-password', function(req, res, next) {
     }
   });
 });
-
+// Checked
 router.get('/logout', function(req, res) {
   req.logout();
   res.redirect('/');
