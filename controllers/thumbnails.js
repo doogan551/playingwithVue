@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Thumbnail = require('../models/thumbnails');
-
+// NOT CHECKED
 router.get('/thumbnail/batch', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -12,7 +12,7 @@ router.get('/thumbnail/batch', function(req, res, next) {
 		res.render("thumbnailGenerator/batch", localVars);
 	});
 });
-
+// NOT CHECKED
 router.get('/thumbnail/:id', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
@@ -21,7 +21,7 @@ router.get('/thumbnail/:id', function(req, res, next) {
 		res.render("thumbnailGenerator/batch", localVars);
 	});
 });
-
+// NOT CHECKED
 router.post('/thumbnail/save', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;

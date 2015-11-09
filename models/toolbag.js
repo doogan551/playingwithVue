@@ -9,7 +9,7 @@ module.exports = {
 		var criteria = {
 			collection: 'points',
 			query: data,
-			limit: 0 // g_limit
+			limit: 25 // g_limit
 		};
 
 		Utility.get(criteria, cb);

@@ -3,7 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var TrendData = require('../models/trenddata');
-
+// NOT CHECKED
 router.post('/viewTrend', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -18,7 +18,7 @@ router.post('/viewTrend', function(req, res, next) {
     return utils.sendResponse(res, trends);
   });
 });
-
+// NOT CHECKED
 router.post('/getTrendLimits', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;

@@ -5,7 +5,7 @@ socket.on('connect', function () {
     if (GPLViewModel.isViewer()){
 
         var sess = {};
-        sess.socketid = socket.socket.sessionid;
+        sess.socketid = socket.id;
         sess.display = {};
         sess.display["Screen Objects"] = window.app.view.socketObj.gplObjects;
         socket.emit('displayOpen', {

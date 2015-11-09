@@ -116,7 +116,7 @@ $(document).ready(function () {
   socket.on('connect', function () {
 
   sess = {};
-  sess.socketid = socket.socket.sessionid;
+  sess.socketid = socket.id;
   sess.displayid = $('#display').attr('data-did');
   sess.label = $('#display').attr('data-label');
 

@@ -56,7 +56,7 @@ router.get('/getcounts/:type', function(req, res, next) {
     }
   });
 });
-
+// Checked
 router.post('/updatecontrolpriorities', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -73,7 +73,7 @@ router.post('/updatecontrolpriorities', function(req, res, next) {
     }
   });
 });
-
+// Checked
 router.post('/updatequalitycodes', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -90,7 +90,7 @@ router.post('/updatequalitycodes', function(req, res, next) {
     }
   });
 });
-
+// Checked
 router.post('/updatecontrollers', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -119,7 +119,7 @@ router.get('/telemetry', function(req, res, next) {
     }
   });
 });
-
+// Checked
 router.post('/updatetelemetry', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
@@ -196,10 +196,9 @@ router.get('/weather', function(req, res, next) {
     }
   });
 });
-
+// Checked
 router.post('/updateWeather', function(req, res, next) {
   var data = _.merge(req.params, req.body);
-  data.user = req.user;
 
   System.updateWeather(data, function(err, result) {
     if (err) {

@@ -376,7 +376,7 @@ dorsettGPL.View = draw2d.Canvas.extend({
 
             if (GPLViewModel.isViewer()){
                 var sess = {};
-                sess.socketid = socket.socket.sessionid;
+                sess.socketid = socket.id;
                 sess.display = {};
                 sess.display["Screen Objects"] = socketObj.gplObjects;
                 socket.emit('displayOpen', {
