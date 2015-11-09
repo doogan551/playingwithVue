@@ -1,3 +1,4 @@
+require('./helpers/checkDirectories');
 var startTime = new Date();
 process.setMaxListeners(0);
 
@@ -31,6 +32,7 @@ var sessionStore = new RedisStore(config.get('redisConfig'));
 
 require('./helpers/passport')(passport); // pass passport for configuration
 
+app.use(express.static(__dirname + '/dist'));
 app.use(express.static(__dirname + '/public'));
 app.use(morgan(':remote-addr :method :url :status :res[content-length] :response-time', {
   'stream': loggerStream.stream

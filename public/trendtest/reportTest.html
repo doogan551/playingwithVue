@@ -1,0 +1,48 @@
+<html>
+
+
+<head>
+    <script src='http://code.jquery.com/jquery-1.9.1.min.js'></script>
+</head>
+
+
+
+<body style="background-color: #454545">
+
+
+
+
+<script>
+	$(document).ready(function(){
+        $.ajax({
+            url: '/api/reporting/run/',
+            type: 'post',
+            dataType: 'json',
+            data: {
+                "Params": {
+                    //"Qualifiers": {
+                        //"Point Name": { comparator: "Containing", value: "42" },
+                        //"Value": { comparator: "EqualTo", value: "Normal" },
+                        //"Alarm Class": { comparator: "Containing", value: "Normal" }
+                        //"COV Period": { comparator: "Between", value: { left: 2, right: 9 } }
+                        //"Alarm Class": { comparator: "NotContaining", value: "it" }
+                        //"test2": { comparator: "Between", value: { left: "a", right: "b" } }
+
+                    //},
+                    //"Properties": ["Active Text", "Alarms Off", "Broadcast Enabled", "Alarm Class", "Active Text"],
+                    "Sort": { "COV Period": "ASC", "test1": "DESC" }
+					//"Mode": "test"
+                }
+            }
+			}).done(function(returnData){
+				console.log('we are done with: ' + JSON.stringify(returnData));
+			}).error(function(e){
+				console.log('we had an error: ' + JSON.stringify(e));
+			})
+	})
+	function setPoint(e) {
+	}
+</script>
+
+</body>
+</html>

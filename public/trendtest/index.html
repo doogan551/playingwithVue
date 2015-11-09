@@ -1,0 +1,45 @@
+<html>
+
+
+<head>
+    <script src='http://code.jquery.com/jquery-1.9.1.min.js'></script>
+    <script src="/js/lib/highstock.js"></script>
+    <script src="/js/lib/highcharts-more.js"></script>
+    <script src="trendTest.js"></script>
+</head>
+
+
+
+<body style="background-color: #454545">
+    <!--#include file="../base"-->
+
+    <div id="psFrame" class="navFrame" style="display: none; position:absolute; z-index: 10"><iframe src="../pointselector?app=trendtest" width="600" height="800"></iframe></div>
+    <input type="button" id="btnPointSel" value="Show Point Selector" />
+    <div id="trendButtons" style="float:right; padding: 15px">
+        <input type="button" id="btnSize" value="Resize 400" /><input type="button" id="btnReset" value="Full Width" />
+        <input type="button" id="22765" class="btnAdd" value="Add 22765" /><input type="button" id="22520" class="btnAdd" value="Add 22520" /></div>
+    <div id='trendTest1' class='trendPlot' style="float:left; width: 100%">
+    </div>
+    <div id='trendTest2' class='trendPlot' style="width: 100%">
+    </div>
+    <div id='trendTest3' class='trendPlot' width=600 height=400>
+    </div>
+
+        TrendTest done
+
+
+
+<script>
+	$(document).ready(function(){
+	    $('#trendTest1').trendPlot2({points: ['22528', '22537']});
+	    $('#trendTest2').trendPlot2({ width: 800, height: 800 , points: ['22528', '22537'] });
+	    $('#trendTest3').stockPlot2({ points: ['22528'] });
+
+	})
+	function setPoint(e) {
+	    alert(e);
+	}
+</script>
+
+</body>
+</html>
