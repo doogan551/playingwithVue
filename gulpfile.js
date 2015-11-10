@@ -28,7 +28,7 @@ gulp.task('clean', function() {
     .pipe(gulpRimraf());
 });
 
-gulp.task('compress', ['clean'], function() {
+gulp.task('compress', ['clean', 'copy'], function() {
   return gulp.src(paths.js, {
       base: "."
     })
@@ -36,7 +36,7 @@ gulp.task('compress', ['clean'], function() {
     .pipe(gulp.dest(bases.dist));
 });
 
-gulp.task('minify-css', ['clean'], function() {
+gulp.task('minify-css', ['clean', 'copy'], function() {
   return gulp.src(paths.styles, {
       base: "."
     })

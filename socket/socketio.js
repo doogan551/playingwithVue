@@ -31,20 +31,22 @@ var eventEmitter = new events.EventEmitter();
 var openDisplays = [];
 var openAlarms = [];
 var common = {};
+var io = {};
 
 module.exports = function socketio(_common) {
   common = _common;
-  var io = _common.sockets.get().io;
+  io = _common.sockets.get().io;
   openDisplays = _common.openDisplays;
   openAlarms = _common.openAlarms;
 
   io.sockets.on('connection', function(sock) {
+    logger.info('socket connected');
     var sockId, socket, user;
     socket = sock;
     sockId = sock.id;
     sock.emit('test', 'test');
     user = sock.request.user;
-
+    // Checked
     sock.on('getStatus', function() {
       // sock.emit('statusUpdate', systemStatus);
       console.log('system  status not gotten');
@@ -52,7 +54,7 @@ module.exports = function socketio(_common) {
 
     //socket function called from client to let server know a new display is open
     sock.on('displayOpen', function(data) {
-
+      logger.debug('displayOpen');
       if (data.data.display.message === undefined) {
         //pop on displays array
         openDisplays.push({
@@ -520,7 +522,7 @@ function getInitialVals(id, callback) {
     fields: fields
   }, function(err, point) {
     if (point)
-      point = setQualityLabel(point);
+      point = common.setQualityLabel(point);
 
     callback(point);
   });
@@ -649,7 +651,7 @@ function maintainAlarmViews(socketid, view, data) {
 }
 
 function sendUpdate(dynamic) {
-  io.sockets.socket(dynamic.sock).emit('recieveUpdate', {
+  io.sockets.connected[dynamic.sock].emit('recieveUpdate', {
     sock: dynamic.sock,
     upi: dynamic.upi,
     dynamic: dynamic.dyn
