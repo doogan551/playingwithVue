@@ -3,7 +3,7 @@ var startTime = new Date();
 process.setMaxListeners(0);
 
 var logger = require('./helpers/logger')(module);
-logger.info('NODE_ENV:'+process.env.NODE_ENV);
+logger.info('NODE_ENV:' + process.env.NODE_ENV);
 var express = require('express');
 var app = express();
 var db = require('./helpers/db');

@@ -21,7 +21,7 @@ module.exports = function(controllers) {
       return next();
     }
 
-    res.redirect('/login');
+    res.redirect('/');
   });
 
   router.use('/', controllers.loadviews);
