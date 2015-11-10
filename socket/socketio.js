@@ -73,6 +73,7 @@ module.exports = function socketio(_common) {
 
     //removes display from active list when closed
     sock.on('disconnect', function() {
+      logger.debug('disconnect');
       //checks to see if closed socket was an active display, and removes it from the list.
       var splicenum = -1;
 
