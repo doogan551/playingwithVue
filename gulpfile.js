@@ -65,7 +65,7 @@ gulp.task('copy', ['clean'], function() {
 gulp.task('zip', function() {
   return gulp.src('dist/**/*')
     .pipe(zip('archive.zip'))
-    .pipe(gulp.dest('.'));
+    .pipe(gulp.dest('./build'));
 });
 
 // A development task to run anytime a file changes
