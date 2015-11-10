@@ -7,5 +7,5 @@ scripts/
 dist/
 build/
 
-!node_modules/Cpp_API.node
-!node_modules/MonitorSender.node
+!Cpp_API.node
+!MonitorSender.node
