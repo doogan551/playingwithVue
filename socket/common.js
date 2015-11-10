@@ -12,6 +12,11 @@ var constants = utils.CONSTANTS;
 var Config = require('../public/js/lib/config.js');
 var actLogsEnums = Config.Enums["Activity Logs"];
 
+var pointsCollection = utils.CONSTANTS("pointsCollection");
+var historyCollection = utils.CONSTANTS("historyCollection");
+var alarmsCollection = utils.CONSTANTS("alarmsCollection");
+var activityLogCollection = utils.CONSTANTS("activityLogCollection");
+
 var openDisplays = [];
 var openAlarms = [];
 var common = {
@@ -19,6 +24,8 @@ var common = {
   openDisplays: openDisplays,
   openAlarms: openAlarms
 };
+
+var io = common.sockets.get().io;
 
 var socket = function() {
   Utility.getOne({
@@ -95,6 +102,9 @@ common.updateDeviceToDs = updateDeviceToDs;
 common.signalHostTOD = signalHostTOD;
 common.addToDevices = addToDevices;
 common.updateCfgRequired = updateCfgRequired;
+common.getActiveAlarmsNew = getActiveAlarmsNew;
+common.getRecentAlarms = getRecentAlarms;
+common.getUnacknowledged = getUnacknowledged;
 
 module.exports = {
   socket: socket
@@ -1629,6 +1639,328 @@ function updateCfgRequired(point, callback) {
   }
 }
 
+function getRecentAlarms(data, callback) {
+  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, user, query, sort, groups = [];
+
+  if (typeof data === "string")
+    data = JSON.parse(data);
+  currentPage = parseInt(data.currentPage, 10);
+  itemsPerPage = parseInt(data.itemsPerPage, 10);
+  startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
+  endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
+
+  sort = {};
+
+  if (!itemsPerPage) {
+    itemsPerPage = 200;
+  }
+  if (!currentPage || currentPage < 1) {
+    currentPage = 1;
+  }
+
+  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
+
+  user = data.user;
+
+  query = {
+    $and: [{
+      msgTime: {
+        $gte: startDate
+      }
+    }, {
+      msgTime: {
+        $lte: endDate
+      }
+    }]
+  };
+
+  if (data.name1 !== undefined) {
+    if (data.name1 !== null) {
+      query.Name1 = new RegExp("^" + data.name1, 'i');
+    } else {
+      query.Name1 = "";
+    }
+
+  }
+  if (data.name2 !== undefined) {
+    if (data.name2 !== null) {
+      query.Name2 = new RegExp("^" + data.name2, 'i');
+    } else {
+      query.Name2 = "";
+    }
+  }
+  if (data.name3 !== undefined) {
+    if (data.name3 !== null) {
+      query.Name3 = new RegExp("^" + data.name3, 'i');
+    } else {
+      query.Name3 = "";
+    }
+  }
+  if (data.name4 !== undefined) {
+    if (data.name4 !== null) {
+      query.Name4 = new RegExp("^" + data.name4, 'i');
+    } else {
+      query.Name4 = "";
+    }
+  }
+  if (data.msgCat) {
+    query.msgCat = {
+      $in: data.msgCat
+    };
+  }
+  if (data.almClass) {
+    query.almClass = {
+      $in: data.almClass
+    };
+  }
+
+  if (data.pointTypes) {
+    query.PointType = {
+      $in: data.pointTypes
+    };
+  }
+
+  groups = user.groups.map(function(group) {
+    return group._id.toString();
+  });
+
+  if (!user["System Admin"].Value) {
+    query.Security = {
+      $in: groups
+    };
+  }
+
+  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
+
+  var start = new Date();
+  Utility.get({
+    collection: alarmsCollection,
+    query: query,
+    sort: sort,
+    skip: (currentPage - 1) * itemsPerPage,
+    limit: numberItems
+  }, function(err, alarms) {
+    Utility.count({
+      collection: alarmsCollection,
+      query: query
+    }, function(err, count) {
+
+      callback(err, alarms, count);
+    });
+  });
+}
+
+function getUnacknowledged(data, callback) {
+  var currentPage, itemsPerPage, numberItems, user, groups, query, count, alarmIds, sort;
+
+  if (typeof data === "string")
+    data = JSON.parse(data);
+
+  currentPage = parseInt(data.currentPage, 10);
+  itemsPerPage = parseInt(data.itemsPerPage, 10);
+  user = data.user;
+  sort = {};
+
+  if (!itemsPerPage) {
+    itemsPerPage = 200;
+  }
+  if (!currentPage || currentPage < 1) {
+    currentPage = 1;
+  }
+
+  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
+
+  user = data.user;
+
+  query = {
+    ackStatus: 1
+  };
+
+  if (data.name1 !== undefined) {
+    if (data.name1 !== null) {
+      query.Name1 = new RegExp("^" + data.name1, 'i');
+    } else {
+      query.Name1 = "";
+    }
+  }
+  if (data.name2 !== undefined) {
+    if (data.name2 !== null) {
+      query.Name2 = new RegExp("^" + data.name2, 'i');
+    } else {
+      query.Name2 = "";
+    }
+  }
+  if (data.name3 !== undefined) {
+    if (data.name3 !== null) {
+      query.Name3 = new RegExp("^" + data.name3, 'i');
+    } else {
+      query.Name3 = "";
+    }
+  }
+  if (data.name4 !== undefined) {
+    if (data.name4 !== null) {
+      query.Name4 = new RegExp("^" + data.name4, 'i');
+    } else {
+      query.Name4 = "";
+    }
+  }
+  if (data.msgCat) {
+    query.msgCat = {
+      $in: data.msgCat
+    };
+  }
+  if (data.almClass) {
+    query.almClass = {
+      $in: data.almClass
+    };
+  }
+
+  if (data.pointTypes) {
+    query.PointType = {
+      $in: data.pointTypes
+    };
+  }
+
+  groups = user.groups.map(function(group) {
+    return group._id.toString();
+  });
+
+  if (!user["System Admin"].Value) {
+    query.Security = {
+      $in: groups
+    };
+  }
+
+  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
+  var start = new Date();
+  Utility.get({
+    collection: alarmsCollection,
+    query: query,
+    sort: sort,
+    skip: (currentPage - 1) * itemsPerPage,
+    limit: numberItems
+  }, function(err, alarms) {
+    Utility.count({
+      collection: alarmsCollection,
+      query: query
+    }, function(err, count) {
+      if (err) callback(err, null, null);
+      callback(err, alarms, count);
+    });
+  });
+}
+
+function getActiveAlarmsNew(data, callback) {
+  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, user, query, sort, groups = [];
+
+  if (typeof data === "string")
+    data = JSON.parse(data);
+  currentPage = parseInt(data.currentPage, 10);
+  itemsPerPage = parseInt(data.itemsPerPage, 10);
+  startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
+  endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
+
+  sort = {};
+
+  if (!itemsPerPage) {
+    itemsPerPage = 200;
+  }
+  if (!currentPage || currentPage < 1) {
+    currentPage = 1;
+  }
+
+  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
+
+  user = data.user;
+
+  query = {
+    $and: [{
+      msgTime: {
+        $gte: startDate
+      }
+    }, {
+      msgTime: {
+        $lte: endDate
+      }
+    }]
+  };
+
+  if (data.name1 !== undefined) {
+    if (data.name1 !== null) {
+      query.Name1 = new RegExp("^" + data.name1, 'i');
+    } else {
+      query.Name1 = "";
+    }
+
+  }
+  if (data.name2 !== undefined) {
+    if (data.name2 !== null) {
+      query.Name2 = new RegExp("^" + data.name2, 'i');
+    } else {
+      query.Name2 = "";
+    }
+  }
+  if (data.name3 !== undefined) {
+    if (data.name3 !== null) {
+      query.Name3 = new RegExp("^" + data.name3, 'i');
+    } else {
+      query.Name3 = "";
+    }
+  }
+  if (data.name4 !== undefined) {
+    if (data.name4 !== null) {
+      query.Name4 = new RegExp("^" + data.name4, 'i');
+    } else {
+      query.Name4 = "";
+    }
+  }
+  if (data.msgCat) {
+    query.msgCat = {
+      $in: data.msgCat
+    };
+  }
+  if (data.almClass) {
+    query.almClass = {
+      $in: data.almClass
+    };
+  }
+
+  if (data.pointTypes) {
+    query.PointType = {
+      $in: data.pointTypes
+    };
+  }
+
+  groups = user.groups.map(function(group) {
+    return group._id.toString();
+  });
+
+  if (!user["System Admin"].Value) {
+    query.Security = {
+      $in: groups
+    };
+  }
+
+  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
+
+  var start = new Date();
+  Utility.get({
+    collection: "ActiveAlarms",
+    query: query,
+    sort: sort,
+    skip: (currentPage - 1) * itemsPerPage,
+    limit: numberItems
+  }, function(err, recents) {
+    Utility.count({
+      collection: "ActiveAlarms",
+      query: query
+    }, function(err, alarms) {
+
+      callback(err, alarms, count);
+    });
+  });
+}
+
 //loop
 function updateAlarms(finalCB) {
   var alarmsStart = new Date();
@@ -1637,7 +1969,7 @@ function updateAlarms(finalCB) {
       if (openAlarm.alarmView === "Recent") {
 
         getRecentAlarms(openAlarm.data, function(err, recents, count) {
-          io.sockets.socket(openAlarm.sockId).emit('recentAlarms', {
+          io.sockets.connected[openAlarm.sockId].emit('recentAlarms', {
             alarms: recents,
             count: count
           });
@@ -1646,9 +1978,9 @@ function updateAlarms(finalCB) {
         });
       }
       if (openAlarm.alarmView === "Active") {
-        getActiveAlarms(openAlarm.data, function(err, recents, count) {
+        getActiveAlarmsNew(openAlarm.data, function(err, recents, count) {
 
-          io.sockets.socket(openAlarm.sockId).emit('activeAlarms', {
+          io.sockets.connected[openAlarm.sockId].emit('activeAlarms', {
             alarms: recents,
             count: count
           });
@@ -1658,7 +1990,7 @@ function updateAlarms(finalCB) {
       if (openAlarm.alarmView === "Unacknowledged") {
         getUnacknowledged(openAlarm.data, function(err, recents, count) {
 
-          io.sockets.socket(openAlarm.sockId).emit('unacknowledged', {
+          io.sockets.connected[openAlarm.sockId].emit('unacknowledged', {
             alarms: recents,
             count: count
           });

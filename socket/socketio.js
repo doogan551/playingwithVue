@@ -18,6 +18,7 @@ var Config = require('../public/js/lib/config.js');
 var compiler = require('../helpers/scriptCompiler.js');
 var Utility = require('../models/utility.js');
 var logger = require('../helpers/logger')(module);
+var ObjectID = require('mongodb').ObjectID;
 
 var pointsCollection = utils.CONSTANTS("pointsCollection");
 var historyCollection = utils.CONSTANTS("historyCollection");
@@ -73,7 +74,6 @@ module.exports = function socketio(_common) {
 
     //removes display from active list when closed
     sock.on('disconnect', function() {
-      logger.debug('disconnect');
       //checks to see if closed socket was an active display, and removes it from the list.
       var splicenum = -1;
 
@@ -98,14 +98,16 @@ module.exports = function socketio(_common) {
         });
       }
     });
-
+    // Checked
     sock.on('getRecentAlarms', function(data) {
+
+      logger.debug('getRecentAlarms');
       if (typeof data === "string")
         data = JSON.parse(data);
 
       maintainAlarmViews(sock.id, "Recent", data);
 
-      getRecentAlarms(data, function(err, alarms, count) {
+      common.getRecentAlarms(data, function(err, alarms, count) {
         sock.emit('recentAlarms', {
           alarms: alarms,
           count: count,
@@ -113,14 +115,16 @@ module.exports = function socketio(_common) {
         });
       });
     });
-
+    // Checked
     sock.on('getUnacknowledged', function(data) {
+
+      logger.debug('getUnacknowledged');
       if (typeof data === "string")
         data = JSON.parse(data);
 
       maintainAlarmViews(sock.id, "Unacknowledged", data);
 
-      getUnacknowledged(data, function(err, alarms, count) {
+      common.getUnacknowledged(data, function(err, alarms, count) {
         sock.emit('unacknowledged', {
           alarms: alarms,
           count: count,
@@ -128,14 +132,16 @@ module.exports = function socketio(_common) {
         });
       });
     });
-
+    // Checked
     sock.on('getActiveAlarms', function(data) {
+
+      logger.debug('getActiveAlarms');
       if (typeof data === "string")
         data = JSON.parse(data);
 
       maintainAlarmViews(sock.id, "Active", data);
 
-      getActiveAlarmsNew(data, function(err, alarms, count) {
+      common.getActiveAlarmsNew(data, function(err, alarms, count) {
         sock.emit('activeAlarms', {
           alarms: alarms,
           count: count,
@@ -143,20 +149,25 @@ module.exports = function socketio(_common) {
         });
       });
     });
-
+    // Broken front?
     sock.on('sendAcknowledge', function(data) {
+
+      logger.debug('sendAcknowledge');
       if (typeof data === "string")
         data = JSON.parse(data);
 
       sendAcknowledge(data, function(err, result) {
+        console.log(err, result, data.reqID);
         sock.emit('acknowledgeResponse', {
-          result: result,
+          result: result.result.nModified,
           reqID: data.reqID
         });
       });
     });
-
+    // NOT CHECKED - will check on 88
     sock.on('fieldCommand', function(data) {
+
+      logger.debug('fieldCommand');
       jsonData = JSON.parse(data);
       var error, logData, i;
       //data = JSON.stringify(data);
@@ -214,7 +225,7 @@ module.exports = function socketio(_common) {
       data = JSON.stringify(jsonData);
 
       if ([2, 7].indexOf(jsonData["Command Type"]) > -1) {
-        logData = Utils.buildActivityLog(logData);
+        logData = utils.buildActivityLog(logData);
         Utility.insert({
           collection: activityLogCollection,
           insertObj: logData
@@ -234,8 +245,10 @@ module.exports = function socketio(_common) {
         }
       });
     });
-
+    // NOT CHECKED - will check on 88
     sock.on('firmwareLoader', function(data) {
+
+      logger.debug('firmwareLoader');
 
       var error, filePath, dataJSON = JSON.stringify(data),
         logData = {
@@ -291,7 +304,7 @@ module.exports = function socketio(_common) {
 					testProgress(0);*/
         },
         logMessage = function(logData) {
-          logData = Utils.buildActivityLog(logData);
+          logData = utils.buildActivityLog(logData);
           Utility.insert({
             collection: activityLogCollection,
             insertObj: logData
@@ -316,46 +329,61 @@ module.exports = function socketio(_common) {
       }
 
     });
-
+    // NOT CHECKED - will check on 88
     sock.on('startbackup', function(data) {
+
+      logger.debug('startbackup');
       sock.emit('returnfrombackup', {
         message: 'done'
       });
     });
-
+    // Checked
     sock.on('checkPropertiesForOne', function(data) {
+
+      logger.debug('checkPropertiesForOne');
       checkProperties(data, function(data) {
         sock.emit('returnProperties', data); // Handle the received results
       });
     });
-
+    // NOT CHECKED
     sock.on('getBlockTypes', function() {
+      logger.debug('getBlockTypes');
       getBlockTypes(function(result) {
         sock.emit('gplTypes', result);
       });
     });
-
+    // NOT CHECKED
     sock.on('doGplImport', function(data) {
+
+      logger.debug('doGplImport');
       doGplImport(data, sock);
     });
-
+    // Checked
     sock.on('doRefreshSequence', function(data) {
+
+      logger.debug('doRefreshSequence');
       doRefreshSequence(data, sock);
     });
-
+    // Checked
     sock.on('updateSequence', function(data) {
+
+      logger.debug('updateSequence');
       doUpdateSequence(data, function(result) {
         socket.emit('sequenceUpdateMessage', result);
       });
     });
-
+    // NOT CHECKED - will check on 88
     sock.on('compileScript', function(data) {
+
+      logger.debug('compileScript');
       compileScript(data, function(response) {
         sock.emit('compiledScript', response);
       });
     });
-
+    // NOT CHECKED - will check on 88
     sock.on('updatePoint', function(data) {
+
+      logger.debug('updatePoint');
       if (typeof data === 'string')
         data = JSON.parse(data);
       _common.newUpdate(data.oldPoint, data.newPoint, {
@@ -383,8 +411,10 @@ module.exports = function socketio(_common) {
         }
       });
     });
-
+    // Checked
     sock.on('updateSequencePoints', function(data) {
+
+      logger.debug('updateSequencePoints');
       var returnPoints = [];
 
       async.waterfall([
@@ -434,8 +464,10 @@ module.exports = function socketio(_common) {
           }
         });
     });
-
+    // Checked
     sock.on('addPoint', function(data) {
+
+      logger.debug('addPoint');
       addPoint(data.point, user, null, function(response, point) {
         if (response.err) {
           sock.emit('pointUpdated', {
@@ -449,8 +481,10 @@ module.exports = function socketio(_common) {
         }
       });
     });
-
+    // Checked
     sock.on('deletePoint', function(data) {
+
+      logger.debug('deletePoint');
       if (typeof data === "string") {
         data = JSON.parse(data);
       }
@@ -460,8 +494,10 @@ module.exports = function socketio(_common) {
         sock.emit('pointUpdated', JSON.stringify(msg));
       });
     });
-
+    // NOT CHECKED - can't get context window to stay open
     sock.on('restorePoint', function(data) {
+
+      logger.debug('restorePoint');
       if (typeof data === "string") {
         data = JSON.parse(data);
       }
@@ -471,8 +507,10 @@ module.exports = function socketio(_common) {
         sock.emit('pointUpdated', JSON.stringify(msg));
       });
     });
-
+    // NOT CHECKED - check on 88
     sock.on('updateSchedules', function(data) {
+
+      logger.debug('updateSchedules');
       data.user = user;
       updateSchedules(data, function(err) {
         if (err) {
@@ -487,8 +525,10 @@ module.exports = function socketio(_common) {
 
       });
     });
-
+    // Checked
     sock.on('getScheduleEntries', function(data) {
+
+      logger.debug('getScheduleEntries');
       getScheduleEntries(data, function(err, entries) {
         sock.emit('returnEntries', {
           err: err,
@@ -581,7 +621,7 @@ function doRefreshSequence(data, socket) {
   });
 }
 
-function doUpdateSequence(data, socket) {
+function doUpdateSequence(data, cb) {
   var name = data.sequenceName,
     sequenceData = data.sequenceData;
 
@@ -608,9 +648,9 @@ function doUpdateSequence(data, socket) {
     }
   }, function(updateErr, updateRecords) {
     if (updateErr) {
-      socket.emit('sequenceUpdateMessage', 'Error: ' + updateErr.err);
+      cb('Error: ' + updateErr.err);
     } else {
-      socket.emit('sequenceUpdateMessage', 'success');
+      cb('success');
     }
   });
   //         } else {
@@ -719,217 +759,6 @@ function getVals() {
   });
 }
 
-function getRecentAlarms(data, callback) {
-  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, user, query, sort, groups = [];
-
-  if (typeof data === "string")
-    data = JSON.parse(data);
-  currentPage = parseInt(data.currentPage, 10);
-  itemsPerPage = parseInt(data.itemsPerPage, 10);
-  startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
-  endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
-
-  sort = {};
-
-  if (!itemsPerPage) {
-    itemsPerPage = 200;
-  }
-  if (!currentPage || currentPage < 1) {
-    currentPage = 1;
-  }
-
-  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-  user = data.user;
-
-  query = {
-    $and: [{
-      msgTime: {
-        $gte: startDate
-      }
-    }, {
-      msgTime: {
-        $lte: endDate
-      }
-    }]
-  };
-
-  if (data.name1 !== undefined) {
-    if (data.name1 !== null) {
-      query.Name1 = new RegExp("^" + data.name1, 'i');
-    } else {
-      query.Name1 = "";
-    }
-
-  }
-  if (data.name2 !== undefined) {
-    if (data.name2 !== null) {
-      query.Name2 = new RegExp("^" + data.name2, 'i');
-    } else {
-      query.Name2 = "";
-    }
-  }
-  if (data.name3 !== undefined) {
-    if (data.name3 !== null) {
-      query.Name3 = new RegExp("^" + data.name3, 'i');
-    } else {
-      query.Name3 = "";
-    }
-  }
-  if (data.name4 !== undefined) {
-    if (data.name4 !== null) {
-      query.Name4 = new RegExp("^" + data.name4, 'i');
-    } else {
-      query.Name4 = "";
-    }
-  }
-  if (data.msgCat) {
-    query.msgCat = {
-      $in: data.msgCat
-    };
-  }
-  if (data.almClass) {
-    query.almClass = {
-      $in: data.almClass
-    };
-  }
-
-  if (data.pointTypes) {
-    query.PointType = {
-      $in: data.pointTypes
-    };
-  }
-
-  groups = user.groups.map(function(group) {
-    return group._id.toString();
-  });
-
-  if (!user["System Admin"].Value) {
-    query.Security = {
-      $in: groups
-    };
-  }
-
-  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
-
-  var start = new Date();
-  Utility.get({
-    collection: alarmsCollection,
-    query: query,
-    sort: sort,
-    skip: (currentPage - 1) * itemsPerPage,
-    limit: numberItems
-  }, function(err, alarms) {
-    Utility.count({
-      collection: alarmsCollection,
-      query: query
-    }, function(err, count) {
-
-      callback(err, alarms, count);
-    });
-  });
-}
-
-function getUnacknowledged(data, callback) {
-  var currentPage, itemsPerPage, numberItems, user, groups, query, count, alarmIds, sort;
-
-  if (typeof data === "string")
-    data = JSON.parse(data);
-
-  currentPage = parseInt(data.currentPage, 10);
-  itemsPerPage = parseInt(data.itemsPerPage, 10);
-  user = data.user;
-  sort = {};
-
-  if (!itemsPerPage) {
-    itemsPerPage = 200;
-  }
-  if (!currentPage || currentPage < 1) {
-    currentPage = 1;
-  }
-
-  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-  user = data.user;
-
-  query = {
-    ackStatus: 1
-  };
-
-  if (data.name1 !== undefined) {
-    if (data.name1 !== null) {
-      query.Name1 = new RegExp("^" + data.name1, 'i');
-    } else {
-      query.Name1 = "";
-    }
-  }
-  if (data.name2 !== undefined) {
-    if (data.name2 !== null) {
-      query.Name2 = new RegExp("^" + data.name2, 'i');
-    } else {
-      query.Name2 = "";
-    }
-  }
-  if (data.name3 !== undefined) {
-    if (data.name3 !== null) {
-      query.Name3 = new RegExp("^" + data.name3, 'i');
-    } else {
-      query.Name3 = "";
-    }
-  }
-  if (data.name4 !== undefined) {
-    if (data.name4 !== null) {
-      query.Name4 = new RegExp("^" + data.name4, 'i');
-    } else {
-      query.Name4 = "";
-    }
-  }
-  if (data.msgCat) {
-    query.msgCat = {
-      $in: data.msgCat
-    };
-  }
-  if (data.almClass) {
-    query.almClass = {
-      $in: data.almClass
-    };
-  }
-
-  if (data.pointTypes) {
-    query.PointType = {
-      $in: data.pointTypes
-    };
-  }
-
-  groups = user.groups.map(function(group) {
-    return group._id.toString();
-  });
-
-  if (!user["System Admin"].Value) {
-    query.Security = {
-      $in: groups
-    };
-  }
-
-  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
-  var start = new Date();
-  Utility.get({
-    collection: alarmsCollection,
-    query: query,
-    sort: sort,
-    skip: (currentPage - 1) * itemsPerPage,
-    limit: numberItems
-  }, function(err, alarms) {
-    Utility.count({
-      collection: alarmsCollection,
-      query: query
-    }, function(err, count) {
-      if (err) callback(err, null, null);
-      callback(err, alarms, count);
-    });
-  });
-}
-
 function getActiveAlarms(data, callback) {
   var currentPage, itemsPerPage, numberItems, user, groups, query, sort, alarmIds;
 
@@ -955,7 +784,7 @@ function getActiveAlarms(data, callback) {
   query = {
     _pStatus: 0,
     _actvAlmId: {
-      $ne: BSON.ObjectID("000000000000000000000000")
+      $ne: ObjectID("000000000000000000000000")
     },
     $or: [{
       "Point Type.Value": "Device"
@@ -1062,117 +891,6 @@ function getActiveAlarms(data, callback) {
   });
 }
 
-function getActiveAlarmsNew(data, callback) {
-  var currentPage, itemsPerPage, numberItems, startDate, endDate, count, user, query, sort, groups = [];
-
-  if (typeof data === "string")
-    data = JSON.parse(data);
-  currentPage = parseInt(data.currentPage, 10);
-  itemsPerPage = parseInt(data.itemsPerPage, 10);
-  startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
-  endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime() / 1000) : data.endDate;
-
-  sort = {};
-
-  if (!itemsPerPage) {
-    itemsPerPage = 200;
-  }
-  if (!currentPage || currentPage < 1) {
-    currentPage = 1;
-  }
-
-  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-  user = data.user;
-
-  query = {
-    $and: [{
-      msgTime: {
-        $gte: startDate
-      }
-    }, {
-      msgTime: {
-        $lte: endDate
-      }
-    }]
-  };
-
-  if (data.name1 !== undefined) {
-    if (data.name1 !== null) {
-      query.Name1 = new RegExp("^" + data.name1, 'i');
-    } else {
-      query.Name1 = "";
-    }
-
-  }
-  if (data.name2 !== undefined) {
-    if (data.name2 !== null) {
-      query.Name2 = new RegExp("^" + data.name2, 'i');
-    } else {
-      query.Name2 = "";
-    }
-  }
-  if (data.name3 !== undefined) {
-    if (data.name3 !== null) {
-      query.Name3 = new RegExp("^" + data.name3, 'i');
-    } else {
-      query.Name3 = "";
-    }
-  }
-  if (data.name4 !== undefined) {
-    if (data.name4 !== null) {
-      query.Name4 = new RegExp("^" + data.name4, 'i');
-    } else {
-      query.Name4 = "";
-    }
-  }
-  if (data.msgCat) {
-    query.msgCat = {
-      $in: data.msgCat
-    };
-  }
-  if (data.almClass) {
-    query.almClass = {
-      $in: data.almClass
-    };
-  }
-
-  if (data.pointTypes) {
-    query.PointType = {
-      $in: data.pointTypes
-    };
-  }
-
-  groups = user.groups.map(function(group) {
-    return group._id.toString();
-  });
-
-  if (!user["System Admin"].Value) {
-    query.Security = {
-      $in: groups
-    };
-  }
-
-  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
-
-  var start = new Date();
-  Utility.get({
-    collection: "ActiveAlarms",
-    query: query,
-    sort: sort,
-    skip: (currentPage - 1) * itemsPerPage,
-    limit: numberItems
-  }, function(err, recents) {
-    Utility.count({
-      collection: "ActiveAlarms",
-      query: query
-    }, function(err, alarms) {
-
-      callback(err, alarms, count);
-    });
-  });
-}
-
 function sendAcknowledge(data, callback) {
   var ids, username, time;
 
@@ -1181,10 +899,10 @@ function sendAcknowledge(data, callback) {
   time = Math.floor(new Date().getTime() / 1000);
 
   for (var j = 0; j < ids.length; j++) {
-    ids[j] = BSON.ObjectID(ids[j]);
+    ids[j] = ObjectID(ids[j]);
   }
 
-  Utility.update({
+  var criteria = {
     collection: alarmsCollection,
     query: {
       _id: {
@@ -1202,7 +920,11 @@ function sendAcknowledge(data, callback) {
     options: {
       multi: true
     }
-  }, function(err, result) {
+  };
+
+  console.log(criteria);
+
+  Utility.update(criteria, function(err, result) {
     callback(err, result);
   });
 }
@@ -1267,8 +989,8 @@ function addPoint(point, user, options, callback) {
     searchQuery._id = point._id;
     delete point._id;
     updateObj = point;
-    updateObj._actvAlmId = BSON.ObjectID(updateObj._actvAlmId);
-    updateObj._curAlmId = BSON.ObjectID(updateObj._curAlmId);
+    updateObj._actvAlmId = ObjectID(updateObj._actvAlmId);
+    updateObj._curAlmId = ObjectID(updateObj._curAlmId);
 
 
     Utility.update({
@@ -1415,7 +1137,7 @@ function updateSchedules(data, callback) {
               logData.Security = point.Security;
               logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Edit"].enum;
               logData.log = "Schedule entry edited";
-              logData = Utils.buildActivityLog(logData);
+              logData = utils.buildActivityLog(logData);
               Utility.insert({
                 collection: activityLogCollection,
                 insertObj: logData
@@ -1465,7 +1187,7 @@ function updateSchedules(data, callback) {
             logData.Security = point.Security;
             logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Add"].enum;
             logData.log = "Schedule entry added";
-            logData = Utils.buildActivityLog(logData);
+            logData = utils.buildActivityLog(logData);
             Utility.insert({
               collection: activityLogCollection,
               insertObj: logData
@@ -1501,7 +1223,7 @@ function updateSchedules(data, callback) {
             logData.Security = point.Security;
             logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Delete"].enum;
             logData.log = "Schedule entry deleted";
-            logData = Utils.buildActivityLog(logData);
+            logData = utils.buildActivityLog(logData);
             Utility.insert({
               collection: activityLogCollection,
               insertObj: logData
@@ -1547,7 +1269,7 @@ function updateSchedules(data, callback) {
             logData.Security = point.Security;
             logData.activity = Config.Enums["Activity Logs"]["Schedule Entry Delete"].enum;
             logData.log = "Schedule entry deleted";
-            logData = Utils.buildActivityLog(logData);
+            logData = utils.buildActivityLog(logData);
             Utility.insert({
               collection: activityLogCollection,
               insertObj: logData

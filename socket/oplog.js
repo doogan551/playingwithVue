@@ -15,6 +15,7 @@ module.exports = function(common) {
     openDisplays = common.openDisplays;
 
     oplog.on('insert', function(doc) {
+
         var startDate, endDate;
         if (doc.ns === 'infoscan.Alarms' || doc.ns === 'infoscan.ActiveAlarms') {
             var userHasAccess = false;
@@ -387,7 +388,6 @@ function removeActiveAlarm(upi, callback) {
         });
 }
 
-
 function updateFromTail(_id, value, reliability) {
     var updateObj = {
         $set: {}
@@ -429,7 +429,6 @@ function compareOplogNames(queryNameSegment, alarmName) {
         return true;
     return false;
 }
-
 
 function checkForPointTail(upi, point, callback) {
     if (!point) {
@@ -512,7 +511,6 @@ function getChangedVals(id, callback) {
     }, function(err, point) {
         callback(point);
     });
-
 }
 
 function checkUserAccess(user, pointSecurity) {

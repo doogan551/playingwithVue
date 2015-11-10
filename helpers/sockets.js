@@ -11,7 +11,7 @@ var _app = null;
 exports.connect = function(config, sessionStore, cookieParser, done) {
     var socketConfig = config.get('Infoscan.socketConfig');
     var dbConfig = config.get('Infoscan.dbConfig');
-    var oplogString = dbConfig.driver + '://' + dbConfig.host + '/' + socketConfig.oplogDb;
+    var oplogString = dbConfig.driver + '://' + dbConfig.host + ':' + dbConfig.port + '/' + socketConfig.oplogDb;
 
     // if (!!state.socket) return done();
     var passportSocketIo = require('passport.socketio');
@@ -19,7 +19,7 @@ exports.connect = function(config, sessionStore, cookieParser, done) {
     logger.info('socket.io listening on port', socketConfig.ioPort);
     state.tcp = require('net').createServer().listen(socketConfig.tcpPort, socketConfig.tcpAddress);
     logger.info('tcp server listening on ', socketConfig.tcpAddress + ":" + socketConfig.tcpPort);
-    state.oplog = require('mongo-oplog')(oplogString, 'oplog.rs').tail();
+    state.oplog = require('mongo-oplog')(oplogString, {ns:'oplog.rs'}).tail();
     logger.info('oplog connected to', oplogString);
     state.io.use(passportSocketIo.authorize({
         cookieParser: cookieParser,
