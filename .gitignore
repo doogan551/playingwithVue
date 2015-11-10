@@ -6,6 +6,3 @@ tmp/
 scripts/
 dist/
 build/
-
-!Cpp_API.node
-!MonitorSender.node
