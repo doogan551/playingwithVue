@@ -1,9 +1,13 @@
 var tester = {
-	'Infoscan': {
-		'files': {
-			'driveLetter': 'C'
-		}
-	}
+  'Infoscan': {
+    'dbConfig': {
+      'host': 'localhost',
+      'dbName': 'tester'
+    },
+    'files': {
+      'driveLetter': 'C'
+    }
+  }
 };
 
 module.exports = tester;

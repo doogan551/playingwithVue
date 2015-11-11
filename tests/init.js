@@ -1,3 +1,7 @@
+/* global global, process, chai */
+
+process.env.NODE_ENV = 'tester';
+
 global.chai = require('chai');
 global.expect = chai.expect;
 
@@ -18,5 +22,6 @@ global.adminUser = {
 
 
 before(function(done) {
+  console.log('running before mocha init', connectionString.join(''));
   db.connect(connectionString.join(''), done);
 });

@@ -27,14 +27,14 @@ module.exports = {
 
     var query = {
       $and: [{
-        timestamp: {
-          $gte: startDate
-        }
-      }, {
-        timestamp: {
-          $lte: endDate
-        }
-      }]
+          timestamp: {
+            $gte: startDate
+          }
+        }, {
+          timestamp: {
+            $lte: endDate
+          }
+        }]
     };
 
     if (data.name1 !== undefined) {
