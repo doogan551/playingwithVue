@@ -19,7 +19,7 @@ var logger = function(moduleName) {
       }),
       new winston.transports.Console({
         level: 'debug',
-        handleExceptions: true,
+        handleExceptions: false,
         json: false,
         colorize: true,
         label: label,

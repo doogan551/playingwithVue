@@ -149,7 +149,7 @@ router.get('/getpointref/small/:upi', function(req, res) {
     return utils.sendResponse(res, point);
   });
 });
-// NOT CHECKED
+// Checked
 router.post('/findalarmdisplays', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;

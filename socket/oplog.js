@@ -1,9 +1,12 @@
 // NODE MODULES
 var async = require('async');
+var ObjectID = require('mongodb').ObjectID;
+var _ = require('lodash');
 
 // OTHERS
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config.js');
+var logger = require('../helpers/logger')(module);
 var openAlarms = [];
 var openDisplays = [];
 var io;
@@ -55,7 +58,7 @@ module.exports = function(common) {
 
                     // unack
                     if (doc.o.ackStatus === 1 && openAlarms[k].alarmView === "Unacknowledged" && doc.ns === 'infoscan.Alarms') {
-                        io.sockets.socket(openAlarms[k].sockId).emit('newUnackAlarm', {
+                        io.sockets.connected[openAlarms[k].sockId].emit('newUnackAlarm', {
                             newAlarm: doc.o,
                             reqID: openAlarms[k].data.reqID
                         });
@@ -65,7 +68,7 @@ module.exports = function(common) {
                     startDate = (typeof parseInt(openAlarms[k].data.startDate, 10) === "number") ? openAlarms[k].data.startDate : 0;
                     endDate = (parseInt(openAlarms[k].data.endDate, 10) === 0) ? Math.ceil(new Date().getTime() / 1000) + 10000 : openAlarms[k].data.endDate;
                     if (openAlarms[k].alarmView === "Recent" && doc.ns === 'infoscan.Alarms' && doc.o.msgTime >= startDate && doc.o.msgTime <= endDate) {
-                        io.sockets.socket(openAlarms[k].sockId).emit('newRecentAlarm', {
+                        io.sockets.connected[openAlarms[k].sockId].emit('newRecentAlarm', {
                             newAlarm: doc.o,
                             reqID: openAlarms[k].data.reqID
                         });
@@ -74,7 +77,7 @@ module.exports = function(common) {
                     // active
                     if (openAlarms[k].alarmView === "Active" && doc.ns === 'infoscan.ActiveAlarms') {
 
-                        io.sockets.socket(openAlarms[k].sockId).emit('addingActiveAlarm', {
+                        io.sockets.connected[openAlarms[k].sockId].emit('addingActiveAlarm', {
                             newAlarm: doc.o,
                             reqID: openAlarms[k].data.reqID
                         });
@@ -83,11 +86,9 @@ module.exports = function(common) {
             }
 
         } else if (doc.ns === 'infoscan.historydata') {
-            // console.log('history update', doc);
-            module.exports.updateDashboard(doc.o);
+            // module.exports.updateDashboard(doc.o);
         }
         /* else if (doc.ns === 'infoscan.ActiveAlarms') {
-                    console.log('insert active', doc);
                     var alarm = doc.o;
                     for (var m = 0; m < openAlarms.length; m++) {
                         if (openAlarms[m].alarmView === "Active" && ((openAlarms[m].pointTypes !== undefined) ? openAlarms[m].pointTypes.indexOf(alarm.PointType) > -1 : true) && checkUserAccess(openAlarms[m].data.user, alarm.Security)) {
@@ -123,7 +124,7 @@ module.exports = function(common) {
                     "Control Pending": 1,
                     "Quality Code Enable": 1,
                     Reliability: 1,
-                    _curAlmId: 1,
+                    // _curAlmId: 1,
                     "Point Type": 1,
                     _actvAlmId: 1
                 };
@@ -132,7 +133,7 @@ module.exports = function(common) {
             async.waterfall([
                     function(wfcb) {
                         Utility.getOne({
-                            criteria: {
+                            query: {
                                 _id: doc.o2._id
                             },
                             collection: 'points',
@@ -143,10 +144,10 @@ module.exports = function(common) {
                     },
 
                     function(point, wfcb) {
+                        // logger.info(point._id + " " + doc.o2._id);
                         if (doc.o.$set !== undefined && (doc.o.$set.Value !== undefined || doc.o.$set["Value.Value"] !== undefined || doc.o.$set["Value.ValueOptions"] !== undefined || doc.o.$set["Value.eValue"] !== undefined)) {
+                            var tempVal = _.cloneDeep(point.Value);
 
-
-                            var tempVal = _.clone(point.Value, true);
                             if (point.Value && point.Value.eValue !== undefined && point.Value.eValue !== null) {
                                 var pv = point.Value;
                                 for (var prop in pv.ValueOptions) {
@@ -154,6 +155,7 @@ module.exports = function(common) {
                                         point.Value.Value = prop;
                                 }
                             }
+
                             if (point.Value.Value !== tempVal.Value) {
                                 updateValueFlag = true;
                                 newValue = point.Value;
@@ -219,7 +221,7 @@ module.exports = function(common) {
             if (doc.o.$set !== undefined && doc.o.$set.ackStatus === 2) {
                 for (var k = 0; k < openAlarms.length; k++) {
                     if (openAlarms[k].alarmView === "Unacknowledged") {
-                        io.sockets.socket(openAlarms[k].sockId).emit('removingUnackAlarm', {
+                        io.sockets.connected[openAlarms[k].sockId].emit('removingUnackAlarm', {
                             _id: doc.o2._id,
                             ackStatus: doc.o.$set.ackStatus,
                             ackUser: doc.o.$set.ackUser,
@@ -259,7 +261,7 @@ module.exports = function(common) {
 
         function updateReliability(point, callback) {
             if (point.Reliability !== undefined) {
-                var tempRel = _.clone(point.Reliability, true);
+                var tempRel = _.cloneDeep(point.Reliability);
                 point = Config.EditChanges.applyReliability({
                     point: point
                 });
@@ -279,8 +281,8 @@ module.exports = function(common) {
         }
 
         function doCurAlarm(point, callback) {
-            if ((!BSON.ObjectID("000000000000000000000000").equals(point._actvAlmId)) && (point["Point Type"].Value === "Device" || (point["Point Type"].Value === "Remote Unit" && point._relDevice === 0) || (point._relDevice === 0 && point._relRMU === 0))) {
-                addActiveAlarm(BSON.ObjectID(point._actvAlmId), callback);
+            if ((!ObjectID("000000000000000000000000").equals(point._actvAlmId)) && (point["Point Type"].Value === "Device" || (point["Point Type"].Value === "Remote Unit" && point._relDevice === 0) || (point._relDevice === 0 && point._relRMU === 0))) {
+                addActiveAlarm(ObjectID(point._actvAlmId), callback);
             } else {
                 removeActiveAlarm(point._id, callback);
             }
@@ -292,11 +294,10 @@ module.exports = function(common) {
     });
 
     oplog.on('delete', function(doc) {
-        console.log('delete', doc);
         if (doc.ns === 'infoscan.ActiveAlarms') {
             for (var n = 0; n < openAlarms.length; n++) {
                 if (openAlarms[n].alarmView === "Active") {
-                    io.sockets.socket(openAlarms[n].sockId).emit('removingActiveAlarm', {
+                    io.sockets.connected[openAlarms[n].sockId].emit('removingActiveAlarm', {
                         _id: doc.o._id,
                         reqID: openAlarms[n].data.reqID
                     });
@@ -339,7 +340,7 @@ module.exports.updateDashboard = function(doc, callback) {
                 var dashboards = history.buildOps([dashboard]);
                 history.getUsageCall(dashboards, function(err, results) {
                     results = history.unbuildOps(results);
-                    io.sockets.socket(dashboard.socketid).emit('updateDashboard', results);
+                    io.sockets.connected[dashboard.socketid].emit('updateDashboard', results);
                     return cb();
                 });
             }
@@ -369,7 +370,6 @@ function addActiveAlarm(alarmId, callback) {
                     collection: 'ActiveAlarms',
                     insertObj: alarm
                 }, function(err2, result) {
-                    console.log('inserted', alarm.upi);
                     callback(err1 /*|| err2*/ );
                 });
             }
@@ -400,8 +400,8 @@ function updateFromTail(_id, value, reliability) {
         updateObj.$set["Reliability.eValue"] = reliability.eValue;
     }
     /*if (curAlarm !== undefined && curAlarm !== null)
-        updateObj.$set._curAlmId = BSON.ObjectID(curAlarm);*/
-    Utility.remove({
+        updateObj.$set._curAlmId = ObjectID(curAlarm);*/
+    Utility.update({
             query: {
                 _id: _id
             },

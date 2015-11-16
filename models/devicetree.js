@@ -225,7 +225,7 @@ var makeTree = function(next) {
             acb();
         });
     }, function(err) {
-        logger.debug('badNumbers: '+badNumbers);
+        // logger.debug('badNumbers: '+badNumbers);
 
         next();
     });
@@ -372,7 +372,7 @@ var sortTree = function(next) {
 
 var labelBadNetworks = function(next) {
     var findNetwork = function(network, branch) {
-        console.log(network, branch);
+        // console.log(network, branch);
         if (branch.networks.indexOf(network) > -1) {
 
         }

@@ -35,7 +35,7 @@ exports.connect = function(config, sessionStore, cookieParser, done) {
     }
 
     function onAuthorizeFail(data, message, error, accept) {
-        logger.error('failed connection to socket.io:', data, message);
+        logger.error('failed authorization to socket.io:', message);
         if (error)
             accept(new Error(message));
     }

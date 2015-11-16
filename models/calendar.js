@@ -3,7 +3,7 @@ var logger = require('../helpers/logger')(module);
 
 module.exports = {
 
-    getYear: function (data, cb) {
+    getYear: function(data, cb) {
         var criteria = {
             query: {
                 year: parseInt(data.year, 10)
@@ -17,7 +17,7 @@ module.exports = {
 
         Utility.get(criteria, cb);
     },
-    getSeason: function (data, cb) {
+    getSeason: function(data, cb) {
         var criteria = {
             query: {
                 Name: "Preferences"
@@ -32,35 +32,35 @@ module.exports = {
 
         Utility.get(criteria, cb);
     },
-    updateSeason: function (data, cb) {
-        var season = data["Current Season"],
-            criteria = {
-                query: {
-                    Name: "Preferences"
-                },
-                updateObj: {
-                    $set: {
-                        "Current Season": season
-                    }
-                },
-                collection: 'SystemInfo',
-                fields: {
-                    _id: 0,
-                    "Current Season": 1
+    updateSeason: function(data, cb) {
+        var season = data["Current Season"];
+        var criteria = {
+            query: {
+                Name: "Preferences"
+            },
+            updateObj: {
+                $set: {
+                    "Current Season": season
                 }
-            };
+            },
+            collection: 'SystemInfo',
+            fields: {
+                _id: 0,
+                "Current Season": 1
+            }
+        };
 
-        Utility.update(criteria, function (err, result) {
+        Utility.update(criteria, function(err, result) {
             return cb(err, 'success');
         });
 
     },
-    newDate: function (data, cb) {
+    newDate: function(data, cb) {
 
         var year = parseInt(data.year, 10);
         var dates = data.dates;
 
-        dates.forEach(function (date) {
+        dates.forEach(function(date) {
             date.month = parseInt(date.month, 10);
             date.date = parseInt(date.date, 10);
         });
@@ -87,7 +87,7 @@ module.exports = {
             }
         };
 
-        Utility.findAndModify(criteria, function (err, yearResult) {
+        Utility.findAndModify(criteria, function(err, yearResult) {
             if (err) return cb(err);
 
             if (new Date().getFullYear() === year) {
@@ -107,7 +107,7 @@ module.exports = {
                     }
                 };
 
-                Utility.update(criteria, function (err, result) {
+                Utility.update(criteria, function(err, result) {
                     if (err) {
                         return cb(err);
                     } else {

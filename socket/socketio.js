@@ -13,7 +13,7 @@ var config = require('config');
 // OTHERS
 var utils = require('../helpers/utils.js');
 var Config = require('../public/js/lib/config.js');
-// var cppApi = new(require('Cpp_API').Tasks)();
+var cppApi = new(require('Cpp_API').Tasks)();
 // var monitorSender = new(require('MonitorSender').Tasks)();
 var compiler = require('../helpers/scriptCompiler.js');
 var Utility = require('../models/utility.js');
@@ -149,22 +149,22 @@ module.exports = function socketio(_common) {
         });
       });
     });
-    // Broken front?
+    // NOT CHECKED - Broken front?
     sock.on('sendAcknowledge', function(data) {
 
       logger.debug('sendAcknowledge');
-      if (typeof data === "string")
+      if (typeof data === "string") {
         data = JSON.parse(data);
+      }
 
       sendAcknowledge(data, function(err, result) {
-        console.log(err, result, data.reqID);
         sock.emit('acknowledgeResponse', {
           result: result.result.nModified,
           reqID: data.reqID
         });
       });
     });
-    // NOT CHECKED - will check on 88
+    // Checked
     sock.on('fieldCommand', function(data) {
 
       logger.debug('fieldCommand');
@@ -245,9 +245,8 @@ module.exports = function socketio(_common) {
         }
       });
     });
-    // NOT CHECKED - will check on 88
+    // Checked
     sock.on('firmwareLoader', function(data) {
-
       logger.debug('firmwareLoader');
 
       var error, filePath, dataJSON = JSON.stringify(data),
@@ -270,6 +269,7 @@ module.exports = function socketio(_common) {
           command = JSON.stringify(command);
           cppApi.command(command, function(data) {
             data = JSON.parse(data);
+
             if (data.err !== undefined) {
               sock.emit('returnFromLoader', {
                 percent: 100
@@ -312,7 +312,7 @@ module.exports = function socketio(_common) {
         };
 
       if (data.uploadFile !== undefined) {
-        filePath = config.get('Infoscan.dbConfig').driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
+        filePath = config.get('Infoscan.files').driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
         logMessage(logData);
         fs.writeFile(filePath, data.uploadFile, function(err) {
           sendCommand(filePath);
@@ -323,11 +323,10 @@ module.exports = function socketio(_common) {
           }
         });
       } else {
-        filePath = config.get('Infoscan.dbConfig').driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
+        filePath = config.get('Infoscan.files').driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
         logMessage(logData);
         sendCommand(filePath);
       }
-
     });
     // NOT CHECKED - will check on 88
     sock.on('startbackup', function(data) {
@@ -380,7 +379,7 @@ module.exports = function socketio(_common) {
         sock.emit('compiledScript', response);
       });
     });
-    // NOT CHECKED - will check on 88
+    // Checked
     sock.on('updatePoint', function(data) {
 
       logger.debug('updatePoint');
@@ -922,7 +921,6 @@ function sendAcknowledge(data, callback) {
     }
   };
 
-  console.log(criteria);
 
   Utility.update(criteria, function(err, result) {
     callback(err, result);
@@ -990,7 +988,7 @@ function addPoint(point, user, options, callback) {
     delete point._id;
     updateObj = point;
     updateObj._actvAlmId = ObjectID(updateObj._actvAlmId);
-    updateObj._curAlmId = ObjectID(updateObj._curAlmId);
+    // updateObj._curAlmId = ObjectID(updateObj._curAlmId);
 
 
     Utility.update({
@@ -1283,11 +1281,10 @@ function updateSchedules(data, callback) {
       });
     }
   ], function(err) {
-    if (err)
-      console.log("updateScheds err:", err);
     common.signalHostTOD(signalTOD, function(err) {
-      if (err)
+      if (err) {
         return callback(err);
+      }
       common.updateDeviceToDs(devices, function(err) {
         return callback((err !== null) ? err : "success");
       });

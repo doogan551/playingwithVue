@@ -11,6 +11,7 @@ var utils = require('../helpers/utils');
 var constants = utils.CONSTANTS;
 var Config = require('../public/js/lib/config.js');
 var actLogsEnums = Config.Enums["Activity Logs"];
+var cppApi = new(require('Cpp_API').Tasks)();
 
 var pointsCollection = utils.CONSTANTS("pointsCollection");
 var historyCollection = utils.CONSTANTS("historyCollection");

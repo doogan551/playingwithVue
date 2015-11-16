@@ -19,7 +19,7 @@ exports.get = function(criteria, cb) {
   // console.log(query, coll);
   collection = db.get().collection(coll);
 
-  collection.find(query, fields).limit(limit).toArray(cb);
+  collection.find(query, fields).limit(limit).sort(sort).skip(skip).toArray(cb);
 };
 
 exports.getOne = function(criteria, cb) {
@@ -34,7 +34,6 @@ exports.getOne = function(criteria, cb) {
     });
   }
 
-  // console.log(query, coll);
   collection = db.get().collection(coll);
 
   collection.findOne(query, fields, cb);
@@ -165,6 +164,7 @@ exports.remove = function(criteria, cb) {
   var options = criteria.options;
 
   var collection = db.get().collection(coll);
+
   collection.remove(query, options, cb);
 };
 

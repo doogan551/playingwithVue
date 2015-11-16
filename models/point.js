@@ -39,8 +39,9 @@ module.exports = {
       limit: 1
     }, function(err, points) {
 
-      if (err)
+      if (err) {
         return cb(err, null, null);
+      }
 
       var point = points[0];
 

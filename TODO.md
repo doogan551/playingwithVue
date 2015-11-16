@@ -16,11 +16,15 @@
 - helmet module for security
 - formidable module for files in req
 - compression module
+_ agenda
+_ agenda-ui
+_ fs-extra
+
 
 - nginx vs iis vs apache
 - multi-core support
 - get build procedure working
-- try to seperate iis and node - need autorestart functionality on crash(forever module?)
+- try to seperate iis and node - need autorestart functionality on crash(pm2 module?)
 - iis to refresh all processes on restart automatically
 - JSON Web Token for link between main app and reports
 - turn off logging in iis
