@@ -1,3 +1,5 @@
+- importapp and importconfig
+
 - pull out 'business logic' to own files and look to share functionality
 - strings surrouned by ''
 - tabs/indentions = 2 spaces
