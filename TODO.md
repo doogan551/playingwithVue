@@ -1,4 +1,4 @@
-- importapp and importconfig
+- importapp and importconfig 
 
 - pull out 'business logic' to own files and look to share functionality
 - strings surrouned by ''
@@ -26,7 +26,7 @@ _ fs-extra
 - nginx vs iis vs apache
 - multi-core support
 - get build procedure working
-- try to seperate iis and node - need autorestart functionality on crash(pm2 module?)
+- try to seperate iis and node - need autorestart functionality on crash(pm2 module? forever/naught)
 - iis to refresh all processes on restart automatically
 - JSON Web Token for link between main app and reports
 - turn off logging in iis

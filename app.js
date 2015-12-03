@@ -63,18 +63,20 @@ app.use(passport.session());
 
 app.use('/', require('./helpers/router')(_controllers));
 
-db.connect(connectionString.join(''), function(err) {
-  if (err) {
-    logger.error('unable to connect');
-    process.exit(1);
-  } else {
-    logger.info('mongo connected to', connectionString.join(''));
-    sockets.connect(config, sessionStore, cookieParser, function() {
-      require('./socket/common').socket();
-      app.listen(port, function() {
-        logger.info('listening on port', port);
-        logger.info('server started in', (new Date() - startTime) / 1000, 'seconds');
+require('./helpers/mongooseconn.js')(function() {
+  db.connect(connectionString.join(''), function(err) {
+    if (err) {
+      logger.error('unable to connect');
+      process.exit(1);
+    } else {
+      logger.info('mongo connected to', connectionString.join(''));
+      sockets.connect(config, sessionStore, cookieParser, function() {
+        require('./socket/common').socket();
+        app.listen(port, function() {
+          logger.info('listening on port', port);
+          logger.info('server started in', (new Date() - startTime) / 1000, 'seconds');
+        });
       });
-    });
-  }
+    }
+  });
 });
