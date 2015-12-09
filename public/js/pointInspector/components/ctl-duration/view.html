@@ -3,7 +3,7 @@
 <div data-bind="attr: { class: columnClasses }">
     <div class="dataField">
         <label data-bind="text: propertyName, visible: showLabel"></label>
-        <!-- ko if: isInEditMode -->
+        <!-- ko if: isInEditMode() || forceEdit-->
         <div class="durationCtrl" data-bind="duration: data.Value, min: min, max: max, noValidation: noValidation, css: { disabled: data.isReadOnly }">
             <input class="hr" type="text" maxlength="2" data-bind="disable: data.isReadOnly">
             <span class="timeSeg">hr</span>
@@ -13,7 +13,7 @@
             <span class="timeSeg">sec</span>
         </div>
         <!-- /ko -->
-        <!-- ko ifnot: isInEditMode -->
+        <!-- ko if: !isInEditMode() && !forceEdit-->
         <div data-bind="css: readOnlyText, duration: data.Value">
             <span class="hr"></span>
             <span class="min"></span>

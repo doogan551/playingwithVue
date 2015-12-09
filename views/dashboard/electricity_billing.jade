@@ -59,7 +59,7 @@
             .billingHeader(data-bind="if: billData().collections.length > 0")
                 // ko with: billData()
                 .pull-right Load Factor:&nbsp;
-                    span(data-bind="text: loadFactor.value")
+                    span(data-bind="text: loadFactor.displayValue")
 
                 .billTitle(data-bind="click: $parent.showDefaultTitleModal.bind($parent)")
                     i.fa.fa-gear.showInEdit
@@ -107,18 +107,18 @@
                         // ko foreach: rows
                         tr
                             td
-                                span(data-bind="text: name.value, visible: name.visible")
+                                span(data-bind="text: name.displayValue, visible: name.visible")
                             td
-                                span(data-bind="text: usage.value, visible: usage.visible")
+                                span(data-bind="text: usage.displayValue, visible: usage.visible")
                                 span(data-bind="visible: usage.units.visible")
                                     |&nbsp;
-                                    span(data-bind="text: usage.units.value")
+                                    span(data-bind="text: usage.units.displayValue")
                             td
-                                span(data-bind="text: rate.value, visible: rate.visible")
+                                span(data-bind="text: rate.displayValue, visible: rate.visible")
                             td
-                                span(data-bind="text: modifiedRate.value, visible: modifiedRate.visible")
+                                span(data-bind="text: modifiedRate.displayValue, visible: modifiedRate.visible")
                             td
-                                span(data-bind="text: amount.value, visible: amount.visible")
+                                span(data-bind="text: amount.displayValue, visible: amount.visible")
                         // /ko
             // /ko
     .innerContent(data-bind="visible: gettingData")

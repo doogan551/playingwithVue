@@ -1007,6 +1007,7 @@ Opera */
     background-color: #ffffff;
     padding: 10px;
     border-radius: 5px;
+    min-width: 1000px;
 }
 
 .reportsContent .demandandusage table th,
@@ -1137,7 +1138,7 @@ Opera */
     padding-top: 15px;
 }
 
-.billTable table tr:last-child td:last-child {
+.billTable table tr:last-child td:not(:first-child) {
     font-weight: bold;
 }
 
@@ -1453,10 +1454,8 @@ li.billingFiscalYear a {
     padding-top: 10px;
 }
 .exportContainer.info i {
-    font-size: 20px;
+    font-size: larger;
     padding-right: 10px;
-    position: relative;
-    top: 3px;
 }
 .exportDropDown {
     display: inline-block;

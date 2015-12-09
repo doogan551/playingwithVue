@@ -270,12 +270,17 @@ html
 								td.clickToEdit(data-bind="clickEdit: $data['APDU Retries']")
 									span(data-bind="text: $data['APDU Retries']")
 									input#telemetryAPDURetries.hide.form-control(type="text", data-bind="value: $data['APDU Retries']")
+							tr
+								td Time Zone
+								td.clickToEdit(data-bind="clickEdit: $data['Time Zone']")
+									span(data-bind="text: selectedTimeZoneText")
+									select#telemetryTimeZone.hide.form-control(type="text", data-bind="event:{blur:changeTimezone},options: timeZones(), optionsText: 'name', optionsValue: 'value', value:selectedTimeZone")
 							//-Hiding Public IP Address per LMH. This property is expected to be completely removed in the near future
 							//-tr
 								td Public IP Address
 								td.clickToEdit(data-bind="clickEdit: $data['Public IP']")
 									span(data-bind="text: $data['Public IP']")
-									input#telemetryPublicIP.hide.form-control(type="text", data-bind="value: $data['Public IP']")
+									input#telemetryPublicIP.hide.form-control.input-sm(type="text", data-bind="value: $data['Public IP']")
 
 			// ------ Alarm Message Definitions -------------------------------------------------------------------------------------
 			#alarmMessageDefinitionContainer(data-bind="visible: section() == 'Alarm Messages'")

@@ -1,39 +1,41 @@
-<!-- ko if: isInEditMode -->
-<div class="col col-xs-12">
-    <div class="dataField">
-        <label>States</label>
-        <div class="row" data-bind="foreach: states">
-            <div class="col col-xs-3">
-                <input type="text" data-bind="numeric: value, valueType: 4, min: 0, max: 65535, noValidation: true, disable: $parent.data.isReadOnly, event: { focusout: $parent.triggerHandler }" class="form-control input-sm">
+<!-- ko if: data.isDisplayable -->
+    <!-- ko if: isInEditMode -->
+    <div class="col col-xs-12">
+        <div class="dataField">
+            <label>States</label>
+            <div class="row" data-bind="foreach: states">
+                <div class="col col-xs-3">
+                    <input type="text" data-bind="numeric: value, valueType: 4, min: 0, max: 65535, noValidation: true, disable: $parent.data.isReadOnly, event: { focusout: $parent.triggerHandler }" class="form-control input-sm">
+                </div>
+                <div class="col col-xs-8">
+                    <input type="text" data-bind="value: name, disable: $parent.data.isReadOnly, event: { focusout: $parent.triggerHandler }" class="_stateName form-control input-sm">
+                </div>
+                <div class="col col-xs-1">
+                    <span data-bind="click: function() { $parent.remove($data) }" class="lh30 removeRow"><i class="fa fa-times"></i></span>
+                </div>
             </div>
-            <div class="col col-xs-8">
-                <input type="text" data-bind="value: name, disable: $parent.data.isReadOnly, event: { focusout: $parent.triggerHandler }" class="_stateName form-control input-sm">
-            </div>
-            <div class="col col-xs-1">
-                <span data-bind="click: function() { $parent.remove($data) }" class="lh30 removeRow"><i class="fa fa-times"></i></span>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col col-xs-1">
-                <button data-bind="click: addNew" class="btn btn-sm btn-info"><i class="fa fa-plus"></i> Add New State</button>
+            <div class="row">
+                <div class="col col-xs-1">
+                    <button data-bind="click: addNew" class="btn btn-sm btn-info"><i class="fa fa-plus"></i> Add New State</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<!-- /ko -->
+    <!-- /ko -->
 
-<!-- ko ifnot: isInEditMode -->
-<div class="col col-xs-12">
-    <div class="dataField">
-        <label>States</label>
-        <div class="row" data-bind="foreach: states">
-            <div class="col col-xs-3">
-                <span class="lh30" data-bind="text: value"></span>
-            </div>
-            <div class="col col-xs-8">
-                <span class="lh30" data-bind="text: name"></span>
+    <!-- ko ifnot: isInEditMode -->
+    <div class="col col-xs-12">
+        <div class="dataField">
+            <label>States</label>
+            <div class="row" data-bind="foreach: states">
+                <div class="col col-xs-3">
+                    <span class="lh30" data-bind="text: value"></span>
+                </div>
+                <div class="col col-xs-8">
+                    <span class="lh30" data-bind="text: name"></span>
+                </div>
             </div>
         </div>
     </div>
-</div>
+    <!-- /ko -->
 <!-- /ko -->

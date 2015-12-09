@@ -34,10 +34,8 @@
             <div class="row">
                 <div class="col col-sm-6 col-xs-12">
                     <div class="dataField">
-                        <label>Value</label>
-                        <div class="valueHolder">
-                            <span class="val" data-bind="text: data.Value.Value"></span>
-                        </div>
+                        <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Value', data: data, labelClasses: 'valueHolder', rootContext: $root } } -->
+                        <!-- /ko -->
                         <div class="actions">
                             <!-- ko component: { name: 'ctl-readValue', params: { rootContext: $root } } -->
                             <!-- /ko -->
@@ -141,6 +139,10 @@
             <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Shutdown Release', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Shutdown State', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-switch', params: { propertyName: 'Shutdown Control', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
         </div>
         <hr>

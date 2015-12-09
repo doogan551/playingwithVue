@@ -190,7 +190,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 //since this is part of the pointRefs array, and we can have multiple
                 //entries with the same property name, we send the array index instead
                 property: self.arrayIndex,
-                refPoint: point
+                refPoint: self.refPoint
             });
         }
     };

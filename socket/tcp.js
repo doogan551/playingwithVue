@@ -91,7 +91,8 @@ function runScheduleEntry(scheduleEntry, callback) {
                     "upi": point._id,
                     "Controller": scheduleEntry.Controller.eValue,
                     "Priority": scheduleEntry["Control Priority"].eValue,
-                    "Relinquish": (scheduleEntry["Active Release"].Value === true) ? 1 : 0
+                    "Relinquish": (scheduleEntry["Active Release"].Value === true) ? 1 : 0,
+                    "OvrTime": 0
                 };
 
                 control.Value = (scheduleEntry["Control Value"].ValueType === 5) ? scheduleEntry["Control Value"].eValue : scheduleEntry["Control Value"].Value;

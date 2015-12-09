@@ -152,17 +152,23 @@ ko.bindingHandlers.clickEdit = {
         var el = $(element),
             span = el.children('span'),
             inputEl = el.children('input'),
+            selectEl = el.children('select'),
             originalValue = ko.unwrap(valueAccessor());
 
         el.addClass('clickToEdit');
         el.on('click', function(event) {
             span.addClass('hide');
             inputEl.removeClass('hide').focus();
-            originalValue = inputEl.val();
+            selectEl.removeClass('hide').focus();
+            originalValue = inputEl.val() || selectEl.val();
         });
 
         inputEl.on('blur', function(event) {
             inputEl.addClass('hide');
+            span.removeClass('hide');
+        });
+        selectEl.on('blur', function(event) {
+            selectEl.addClass('hide');
             span.removeClass('hide');
         });
 
@@ -588,6 +594,7 @@ var calendarViewModel = function() {
     return viewModel;
 };
 
+
 // Controllers Screen ---------------------------------------------------------
 var controllerViewModel = function() {
     var self = this,
@@ -879,6 +886,7 @@ var controllerViewModel = function() {
     };
 };
 
+
 // Control Priority Text Screen ----------------------------------------------
 var controlPriorityTextViewModel = function() {
     var self = this,
@@ -949,6 +957,7 @@ var controlPriorityTextViewModel = function() {
         self.dirty(false);
     };
 };
+
 
 // Quality Codes Screen -------------------------------------------------------
 var qualityCodesViewModel = function() {
@@ -1049,6 +1058,7 @@ var qualityCodesViewModel = function() {
     };
 };
 
+
 // Custom Color Codes Screen -------------------------------------------------------
 var customColorCodesViewModel = function () {
     var self = this,
@@ -1111,6 +1121,7 @@ var customColorCodesViewModel = function () {
     self.customColorCodes = ko.observableArray();
 };
 
+
 // Telemetry Screen -----------------------------------------------------------
 var telemetryViewModel = function() {
     var self = this,
@@ -1119,6 +1130,7 @@ var telemetryViewModel = function() {
         originalValues = {},
         dataUrl = '/api/system/telemetry',
         saveUrl = '/api/system/updateTelemetry',
+        tzEnums = window.opener.workspaceManager.config.Enums["Time Zones"],
         fieldList = [{
             name: 'Public IP',
             validation: {
@@ -1149,6 +1161,11 @@ var telemetryViewModel = function() {
             validation: {
                 required: true,
                 number: true
+            }
+        }, {
+            name: 'Time Zone',
+            validation: {
+                required: true
             }
         }],
         makeDirty = function() {
@@ -1206,7 +1223,9 @@ var telemetryViewModel = function() {
                 value = fullData[name];
 
                 self[name](value);
-
+                if(name === 'Time Zone'){
+                    self.selectedTimeZoneText(getZoneFromEnum(value));
+                }
                 // Original values saved as a string because that's how they're formatted after they are changed in the UI
                 originalValues[name] = self[name]().toString();
 
@@ -1230,12 +1249,22 @@ var telemetryViewModel = function() {
                 self.dirty(false);
             }
             console.log("updatedata originalValues", originalValues);
+        },
+        getZoneFromEnum = function(eval) {
+            for (var prop in tzEnums) {
+                if (tzEnums[prop].enum === eval) {
+                    return prop;
+                }
+            }
+            return '';
         };
 
     self.displayName = 'Telemetry';
 
     self.dirty = ko.observable(false);
     self.hasError = ko.observable(false);
+    self.selectedTimeZone = ko.observable('');
+    self.selectedTimeZoneText = ko.observable('');
 
     initObservables();
 
@@ -1250,6 +1279,20 @@ var telemetryViewModel = function() {
             fullData = data;
             setData();
         });
+    };
+
+    self.getTZText = function() {
+        return 'Central';
+    };
+
+    self.timeZones = function() {
+        var timezones = [];
+
+        for(var prop in tzEnums){
+            timezones.push({name:prop, value:tzEnums[prop].enum});
+        }
+
+        return timezones;
     };
 
     self.save = function() {
@@ -1279,6 +1322,15 @@ var telemetryViewModel = function() {
     self.cancel = function() {
         setData();
     };
+    self.changeTimezone = function(e){
+        for(var prop in tzEnums){
+            if(tzEnums[prop].enum === self.selectedTimeZone()){
+                self['Time Zone'](self.selectedTimeZone());
+                self.selectedTimeZoneText(prop);
+                self.dirty(true);
+            }
+        }
+    }
 };
 
 // Backup Screen --------------------------------------------------------------

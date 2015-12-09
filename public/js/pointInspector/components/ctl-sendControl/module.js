@@ -1,20 +1,20 @@
 /*jslint white: true */
-define(['knockout', 'text!./view.html', 'bannerJS'], function (ko, view, bannerJS) {
-    function ViewModel (params) {
-        var self            = this;
-        self.root           = params.rootContext;
-        self.config         = self.root.utility.config;
-        self.point          = self.root.point;
-        self.data           = self.point.data;
-        self.utility        = self.root.utility;
-        self.isEnumValueType= self.data.Value.ValueType() === self.config.Enums["Value Types"].Enum.enum;
-        self.controllerId   = self.utility.workspace.user().controllerId;
+define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(ko, view, bannerJS, datetimepicker) {
+    function ViewModel(params) {
+        var self = this;
+        self.root = params.rootContext;
+        self.config = self.root.utility.config;
+        self.point = self.root.point;
+        self.data = self.point.data;
+        self.utility = self.root.utility;
+        self.isEnumValueType = self.data.Value.ValueType() === self.config.Enums["Value Types"].Enum.enum;
+        self.controllerId = self.utility.workspace.user().controllerId;
         self.disableControl = self.controllerId ? false : true; // Disable controls if user has invalid controller id
-        self.revValueOptions= {};
+        self.revValueOptions = {};
 
-        self.showModal      = ko.observable(false);
-        self.controlValue   = ko.observable();
-        self.controlPriority= ko.observable(self.data['Control Priority'] && self.data['Control Priority'].eValue());
+        self.showModal = ko.observable(false);
+        self.controlValue = ko.observable();
+        self.controlPriority = ko.observable(self.data['Control Priority'] && self.data['Control Priority'].eValue());
 
         // Initializations
         // Default control value is the current value
@@ -30,9 +30,65 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function (ko, view, bannerJ
         }
         if (self.controlPriority() === 0) // We can't issue controls @ level 0
             self.controlPriority(16); // Select a good default
+
+        self.checkReleaseModel = function() {
+            switch (self.data._devModel()) {
+                case self.config.Enums["Device Model Types"]["MicroScan 5 xTalk"].enum:
+                case self.config.Enums["Device Model Types"]["MicroScan 5 UNV"].enum:
+                case self.config.Enums["Device Model Types"]["SCADA Vio"].enum:
+                    return true;
+            }
+            return false;
+        }
+        self.override = {
+            'Time to Override': {
+                Value: ko.observable(0),
+                ValueType: ko.observable(12),
+                isReadOnly: ko.observable(false),
+                isDisplayable: ko.observable(true)
+            }
+        };
+        self.override['Time to Override'].Value.subscribe(function(newValue) {
+            var now = new Date();
+            now.setSeconds(now.getSeconds() + newValue);
+            $('#datetimepicker').data("DateTimePicker").date(now);
+        });
+        $(function() {
+            $('#datetimepicker').datetimepicker({
+                showClear: true,
+                showClose: true
+            });
+            $('#datetimepicker').data("DateTimePicker").defaultDate(new Date());
+            $('#datetimepicker').focusout(function() {
+                var newTime = $('#datetimepicker').data("DateTimePicker").date().unix() - Math.floor(Date.now() / 1000);
+                if (newTime > 0) {
+                    self.override['Time to Override'].Value(newTime);
+                } else {
+                    self.override['Time to Override'].Value(0);
+                }
+                $('#rtBtn').click();
+            });
+            $('.ttoInput').focusout(function() {
+                $('#ttoBtn').click();
+            });
+            // $('#ttoBtn').click();
+        });
     }
 
-    function issueCommand (self, relinquish) {
+    function getOverrideTime(self) {
+        var activeId = $('#timeControl').find('.active').attr('id');
+        var time = self.override["Time to Override"].Value();;
+        var ret = 0;
+
+        if(activeId === 'ttoLabel' && time !== 0){
+            ret = Math.floor(Date.now() /1000) + time;
+        }else if(activeId === 'rtLabel'){
+            ret = $('#datetimepicker').data("DateTimePicker").date().unix();
+        }
+        return ret;
+    }
+
+    function issueCommand(self, relinquish) {
         if (!self.root.authorize(self.data, self.root.permissionLevels.CONTROL))
             return;
         var $btn = $('.btnSendControl'),
@@ -44,6 +100,7 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function (ko, view, bannerJ
                 upi: self.data._id(),
                 Relinquish: relinquish,
                 Priority: self.controlPriority(),
+                OvrTime: getOverrideTime(self),
                 Wait: 1,
                 Value: self.controlValue(),
                 Controller: self.controllerId,
@@ -66,7 +123,7 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function (ko, view, bannerJ
                     }
                 }
             },
-            styleBtn = function (error) {
+            styleBtn = function(error) {
                 // If our modal is not open
                 if (!self.showModal()) {
                     // Style the 'Send Control' button to provide the feedback result
@@ -82,7 +139,7 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function (ko, view, bannerJ
                     $btnIcon.addClass('fa-bullseye');
                 }
             },
-            callback = function (commandRX) {
+            callback = function(commandRX) {
                 $btnSubmit.prop('disabled', false);
                 $btnSubmitIcon.removeClass('fa-refresh fa-spin');
                 $btn.removeClass('btn-warning');
@@ -99,11 +156,11 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function (ko, view, bannerJ
         $btn.removeClass('btn-danger btn-success').addClass('btn-warning');
         $btnIcon.removeClass('fa-bullseye fa-check fa-warning').addClass('fa-refresh fa-spin');
         $btnSubmitIcon.addClass('fa-refresh fa-spin');
-        
+
         if (self.isEnumValueType) {
             controlObject.logData.newValue = {
                 eValue: controlObject.Value,
-                Value:  self.revValueOptions[controlObject.Value]
+                Value: self.revValueOptions[controlObject.Value]
             };
         }
         self.showModal(false);
@@ -111,23 +168,23 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function (ko, view, bannerJ
     }
 
     // Use prototype to declare any public methods
-    ViewModel.prototype.toggleModal = function () {
+    ViewModel.prototype.toggleModal = function() {
         var self = this,
             $modal = $('.modal.sendControl');
 
         self.showModal(true);
 
-        $modal.one('shown.bs.modal', function (e) {
+        $modal.one('shown.bs.modal', function(e) {
             var $valueField = $modal.find('.val:first');
             $valueField.focus().select();
         });
     };
 
-    ViewModel.prototype.sendControl = function () {
+    ViewModel.prototype.sendControl = function() {
         issueCommand(this, 0);
     };
 
-    ViewModel.prototype.relinquish = function () {
+    ViewModel.prototype.relinquish = function() {
         issueCommand(this, 1);
     };
 

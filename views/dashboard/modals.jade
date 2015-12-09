@@ -93,7 +93,7 @@
                             .col-xs-12(data-bind="if: type() === 'Trend'")
                                 select.selectSm.form-control.input-sm.input-full(data-bind="value: dataSource")
                                     option Consumption
-                                    option Demand
+                                    option Highest Demand
                                     // ko if: showOAT
                                     option Outside Air Temperature
                                     // /ko
@@ -136,6 +136,10 @@
                                 .radio
                                     label Day
                                         input(type="radio", name="statisticPeriod", value="day", data-bind="checked: period")
+                            .col-xs-12(data-bind="visible: period() === 'year'")
+                                .checkbox
+                                    input#useFiscalYear(type="checkbox", data-bind="checked: useFiscalYear")
+                                    label(for="useFiscalYear") Use Fiscal Year
 
                         .title 3. Choose Widget Title
                         .row
@@ -487,7 +491,7 @@
                     .col-xs-12
                         .title 3. Choose Qualifier (optional)
                     .col-xs-12
-                        input.input-sm.form-control(type="text", data-bind="value: rateQualifier")
+                        input.input-sm.rateQualifier.form-control(type="text", data-bind="value: rateQualifier")
                         select.selectSm.form-control
                             option hrs
                     .col-xs-5.flexrow.flexaround

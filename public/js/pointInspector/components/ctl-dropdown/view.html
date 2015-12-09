@@ -12,7 +12,7 @@
                            disable: data.isReadOnly" class="form-control input-sm"></select>
         <!-- /ko -->
         <!-- ko ifnot: isInEditMode -->
-        <div class="lh30">
+        <div data-bind="attr: {class: labelClasses }">
             <span data-bind="text: data.Value"></span>
         </div>
         <!-- /ko -->

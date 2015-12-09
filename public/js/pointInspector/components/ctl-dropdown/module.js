@@ -2,7 +2,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     var valueSubscription;
 
     ko.bindingHandlers.enumTextValue = {
-        init: function (element, valueAccessor, allBindingsAccessor) {
+        init: function(element, valueAccessor, allBindingsAccessor) {
             var $element = $(element),
                 context = ko.contextFor(element),
                 allBindings = allBindingsAccessor(),
@@ -10,12 +10,14 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 eValue = allBindings.value,
                 value = valueAccessor();
 
-            valueSubscription = allBindings.value.subscribe(function (newValue) {
-                var match = ko.utils.arrayFirst(options, function (item, index) {
-                    if (item.badProperty) {
-                        options.splice(index, 1);
-                        return false;
+            valueSubscription = allBindings.value.subscribe(function(newValue) {
+                for (var o = 0; o < options.length; o++) {
+                    if (options[o].badProperty) {
+                        options.splice(o, 1);
+                        o--;
                     }
+                }
+                var match = ko.utils.arrayFirst(options, function(item, index) {
                     return ko.unwrap(item.value) == newValue;
                 });
                 !!match && value(ko.unwrap(match.name));
@@ -33,11 +35,12 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     function ViewModel(params) {
         this.root = params.rootContext;
         this.columnClasses = params.columnClasses;
+        this.labelClasses = (params.hasOwnProperty('labelClasses')) ? params.labelClasses : "lh30";
         this.propertyName = params.propertyName;
         this.showLabel = (params.hasOwnProperty('showLabel')) ? params.showLabel : true;
         this.data = params.data[this.propertyName];
         this.enumSetName = params.enumSetName;
-        this.utility    = params.rootContext.utility;
+        this.utility = params.rootContext.utility;
         this.isInEditMode = params.rootContext.isInEditMode;
     }
 
@@ -46,7 +49,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         var options,
             data = this.data,
             valueIsInOptions;
-        if (typeof data.ValueOptions== 'function') {
+        if (typeof data.ValueOptions == 'function') {
             options = data.ValueOptions();
         } else {
             options = this.utility.config.Utility.pointTypes.getEnums(this.enumSetName, this.propertyName);
@@ -60,7 +63,11 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             return ko.unwrap(option.value) == data.eValue();
         });
         if (!valueIsInOptions) {
-            options.unshift({name: data.Value(), value: data.eValue(), badProperty: true});
+            options.unshift({
+                name: data.Value(),
+                value: data.eValue(),
+                badProperty: true
+            });
         }
         return options;
     };
@@ -72,5 +79,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     };
 
     // Return component definition
-    return { viewModel: ViewModel, template: view };
+    return {
+        viewModel: ViewModel,
+        template: view
+    };
 });

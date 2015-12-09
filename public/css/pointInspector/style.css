@@ -1073,6 +1073,13 @@ hr {
     }
 /* end sendControl component */
 
+/* viewControl component */
+    .controlsButtons {
+        float:right;
+        padding-bottom: 10px;
+    }
+/* end viewControl component */
+
 /* script point */
     .productionEditor, .developmentEditor {
         position: absolute; top: 0; right: 0;bottom: 0;left: 0;

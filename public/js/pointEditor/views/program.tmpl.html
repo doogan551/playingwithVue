@@ -1,0 +1,177 @@
+<div class="form-group">
+    <div class="floatingHeader">
+        <h3 data-bind="text: data.Name"></h3>
+        <div class="actionGroup">
+            <div data-bind="text: data._id" class="pointId"></div>
+            <input type="button" data-bind="click: save" class="btn btn-sm btn-success" value="Save point">
+        </div>
+    </div>
+
+    <table class="pointGrid table table-condensed">
+        <thead>
+            <tr>
+                <th width="200"></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        <!-- ko with: data['Point Type'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Point Type</th>
+            <td><span data-bind="text: Value" class="form-control-static"></span></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Program State'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Program State</th>
+            <td><span data-bind="text: Value" class="form-control-static"></span></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Program Error'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Program Error</th>
+            <td><span data-bind="text: Value" class="form-control-static"></span></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Control Priority'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Control Priority</th>
+            <td><span data-bind="text: Value" class="form-control-static"></span></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Controller'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Controller</th>
+            <td><span data-bind="text: Value" class="form-control-static"></span></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Reset State'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Reset State</th> 
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Reset State', enumOptions: pointEditor.utility.config.Utility.pointTypes.getEnums('Program Change Request', 'Program') } }"></td>
+        </tr> 
+        <!-- /ko --> 
+
+        <!-- ko with: data['Program Change Request'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Program Change Request</th> 
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Program Change Request', enumOptions: pointEditor.utility.config.Utility.pointTypes.getEnums('Program Change Request', 'Program') } }"></td>
+        </tr> 
+        <!-- /ko -->
+
+        <!-- ko foreach: data['Point Refs'] -->
+        <!-- ko if: AppIndex() == 0 -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row" data-bind="text: PropertyName"></th>
+            <td data-bind="template: { name: 'control8.point' }"></td>
+        </tr>
+        <!-- /ko -->
+        <!-- /ko -->
+        </tbody>
+    </table>
+
+    <!-- Point Registers -->
+    <table class="pointGrid table table-condensed">
+        <thead>
+            <tr>
+                <th colspan="3">Point Registers</th>
+            </tr>
+            <tr>
+                <th>Register</th>
+                <th>Script Symbol</th>
+                <th>Point Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ko foreach: data['Point Refs'] -->
+            <!-- ko if: PropertyName() == 'Point Register' -->
+            <tr>
+                <td><span data-bind="text: $index() - 1"></span></td>
+                <td><span data-bind="text: $root.data['Point Register Names']()[$index() - 2]"></span></td>
+                <td>
+                    <span data-bind="template: { name: 'control8.point' }"></span>
+                </td>
+            </tr>
+            <!-- /ko -->
+            <!-- /ko -->
+
+
+
+        </tbody>
+    </table>
+
+    <!-- Integer Registers -->
+    <table class="pointGrid table table-condensed">
+        <thead>
+            <tr>
+                <th colspan="3">Integer Registers</th>
+            </tr>
+            <tr>
+                <th>Register #</th>
+                <th>Script Symbol</th>
+                <th>Initial Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ko foreach: data['Integer Register Names'] -->
+            <tr>
+                <td><span data-bind="text: $index() + 1"></span></td>
+                <td><span data-bind="text: $data"></span></td>
+                <td><span data-bind="text: $root.data['Integer Registers']()[$index()]"></span></td>
+            </tr>
+            <!-- /ko -->
+        </tbody>
+    </table>
+
+    <!-- Boolean Registers -->
+    <table class="pointGrid table table-condensed">
+        <thead>
+            <tr>
+                <th colspan="3">Boolean Registers</th>
+            </tr>
+            <tr>
+                <th>Register #</th>
+                <th>Script Symbol</th>
+                <th>Initial Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ko foreach: data['Boolean Register Names'] -->
+            <tr>
+                <td><span data-bind="text: $index() + 1"></span></td>
+                <td><span data-bind="text: $data"></span></td>
+                <td><span data-bind="text: $root.data['Boolean Registers']()[$index()]"></span></td>
+            </tr>
+            <!-- /ko -->
+        </tbody>
+    </table>
+
+    <!-- Real Registers -->
+    <table class="pointGrid table table-condensed">
+        <thead>
+            <tr>
+                <th colspan="3">Real Registers</th>
+            </tr>
+            <tr>
+                <th>Register #</th>
+                <th>Script Symbol</th>
+                <th>Initial Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ko foreach: data['Real Register Names'] -->
+            <tr>
+                <td><span data-bind="text: $index() + 1"></span></td>
+                <td><span data-bind="text: $data"></span></td>
+                <td><span data-bind="text: $root.data['Real Registers']()[$index()]"></span></td>
+            </tr>
+            <!-- /ko -->
+        </tbody>
+    </table>
+
+</div>

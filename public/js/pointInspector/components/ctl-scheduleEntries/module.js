@@ -32,7 +32,8 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
         buildMonthStr,
         buildDateArray,
         config,
-        enumToArray;
+        enumToArray,
+        valueSubscription;
 
     function ViewModel(params) {
         var self = this;
@@ -1169,7 +1170,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
         this.isTabLoaded.dispose();
     };
 
-    ko.bindingHandlers.enumTextValue = {
+    ko.bindingHandlers.setEnumTextValue = {
         init: function(element, valueAccessor, allBindingsAccessor) {
             var $element = $(element),
                 context = ko.contextFor(element),
@@ -1177,6 +1178,8 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
                 options = ko.utils.unwrapObservable(allBindings.options),
                 eValue = allBindings.value,
                 value = valueAccessor();
+                
+
             valueSubscription = allBindings.value.subscribe(function(newValue) {
 
                 var match = ko.utils.arrayFirst(options, function(item, index) {

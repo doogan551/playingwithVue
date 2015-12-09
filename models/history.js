@@ -9,7 +9,7 @@ var logger = require('../helpers/logger')(module);
 var Utility = require('../models/utility');
 var ArchiveUtility = require('../models/archiveutility');
 var Config = require('../public/js/lib/config');
-var dateFormat = 'ddd, MMM DD, YYYY HH:mm:ss';
+var dateFormat = 'ddd, MMM DD, YYYY HH:mm:ss ZZ';
 
 String.prototype.repeat = function(num) {
 	return new Array(num + 1).join(this);
@@ -354,9 +354,9 @@ var runBackUp = function(upis, limitRange, cb) {
 
 		if (!limitRange) {
 			query = {
-				upi: {
+				/*upi: {
 					$in: upis
-				}
+				}*/
 			};
 		} else {
 			query = {
@@ -366,7 +366,7 @@ var runBackUp = function(upis, limitRange, cb) {
 					}
 				}, {
 					timestamp: {
-						$lte: date.end.unix()
+						$lt: date.end.unix()
 					}
 				}]
 			};
@@ -624,7 +624,7 @@ var buildPeakPeriods = function(option, callback) {
 	};
 
 	Utility.getOne(criteria, function(_err, util) {
-		var holidays = util.RateTables['Additional Off Peak Days'];
+		var holidays = {};
 		var thisYear = moment().year();
 		var fiscalYear = parseInt(option.fiscalYear, 10) || thisYear;
 		var rateCollectionName = option.rateCollectionName;
@@ -635,6 +635,15 @@ var buildPeakPeriods = function(option, callback) {
 		if (type !== undefined) {
 			type = type.toLowerCase();
 		}
+
+		if (util.RateTables['Fiscal Year'] === fiscalYear) {
+			holidays = util.RateTables['Additional Off Peak Days'];
+		} else if (util.PreviousRateTables.hasOwnProperty(fiscalYear)) {
+			holidays = util.PreviousRateTables[fiscalYear]['Additional Off Peak Days'];
+		} else {
+			holidays = [];
+		}
+
 		if (!option.rateCollectionName) {
 			if (util.RateTables['Fiscal Year'] === fiscalYear) {
 				groups = util.RateTables;
@@ -666,8 +675,10 @@ var buildPeakPeriods = function(option, callback) {
 
 		} else if (util.RateTables['Fiscal Year'] === fiscalYear) {
 			periods = util.RateTables[rateCollectionName].periods;
-		} else {
+		} else if (util.PreviousRateTables.hasOwnProperty(fiscalYear)) {
 			periods = util.PreviousRateTables[fiscalYear][rateCollectionName].periods;
+		} else {
+			periods = [];
 		}
 
 		callback(null, periods, holidays);
@@ -849,10 +860,18 @@ var getSums = function(operation, option, values, range, callback) {
 				var periodRange = ranges[r];
 				for (var v = 0; v < values.length; v++) {
 					var value = values[v];
-					if (value.timestamp > scaleRange.start && value.timestamp <= scaleRange.end && value.timestamp > periodRange.start && value.timestamp <= periodRange.end) {
-						newResult.sum += value.value;
-						values.splice(v, 1);
-						v--;
+					if (option.fx === 'weather') {
+						if (value.timestamp >= scaleRange.start && value.timestamp < scaleRange.end && value.timestamp >= periodRange.start && value.timestamp < periodRange.end) {
+							newResult.sum += value.Value;
+							values.splice(v, 1);
+							v--;
+						}
+					} else {
+						if (value.timestamp > scaleRange.start && value.timestamp <= scaleRange.end && value.timestamp > periodRange.start && value.timestamp <= periodRange.end) {
+							newResult.sum += value.value;
+							values.splice(v, 1);
+							v--;
+						}
 					}
 				}
 			}
@@ -1137,14 +1156,26 @@ var findInSql = function(options, tables, callback) {
 
 				}
 
-				statement.push('AND TIMESTAMP >');
+				if (['weather', 'history', 'latest history'].indexOf(options.ops[0].fx) >= 0) {
+					statement.push('AND TIMESTAMP >=');
+				} else {
+					statement.push('AND TIMESTAMP >');
+				}
 				statement.push(options.range.start);
 				statement.push('AND TIMESTAMP <=');
 				statement.push(options.range.end);
+				if (['history'].indexOf(options.ops[0].fx) >= 0) {
+					statement.push('AND TIMESTAMP IN (');
+					statement.push(options.timestamps);
+					statement.push(')');
+				}
 				if (testFunctions()) {
 					statement.push('GROUP BY timestamp');
 				}
 			}
+		}
+		if (['latest history'].indexOf(options.ops[0].fx) >= 0) {
+			statement.push('ORDER BY TIMESTAMP DESC LIMIT 1');
 		}
 
 		statement = statement.join(' ');
@@ -1225,15 +1256,19 @@ var countInSql = function(options, tables, callback) {
 		var UNION = 'UNION';
 		var statement = [];
 
+		var buildStart = function(tableName) {
+			return 'Select count(*) as count, "' + tableName + '" as TableName FROM';
+		};
+
 		for (var i = 0; i < tables.length; i++) {
 			if (tables[i].substring(8, 12) === year) {
 
 				if (!statement.length) {
-					statement.push('Select count(*) as count, "' + tables[i] + '" as TableName FROM');
+					statement.push(buildStart(tables[i]));
 				}
 				if (statement.length > 1) {
 					statement.push(UNION);
-					statement.push('Select count(*) as count, "' + tables[i] + '" as TableName FROM');
+					statement.push(buildStart(tables[i]));
 				}
 
 				statement.push(tables[i]);
@@ -1406,14 +1441,14 @@ var getUsage = function(options, callback) {
 							// var _values = _.cloneDeep(values);
 							// var values = values;
 
-							if (op.fx === 'sum') {
+
+							if (['sum', 'weather'].indexOf(op.fx) >= 0) {
 								getSums(op, option, values, option.range, waterfallCB);
 							} else if (op.fx === 'max') {
 								getMax(op, values, option.range, waterfallCB);
 							} else if (op.fx === 'datastore') {
 								getDatastoreData(values, op, option, waterfallCB);
 							} else if (op.fx === 'reactiveCharge') {
-
 								getMax(op, values, option.range, function(err, demand) {
 									op.results = [];
 									async.eachSeries(demand.maxes, function(demandMax, demandCB) {
@@ -1724,7 +1759,7 @@ module.exports = {
 
 				}
 			}).on('end', function() {
-				editHistoryData(ranges, methods, function(err, result){
+				editHistoryData(ranges, methods, function(err, result) {
 					fs.unlinkSync(path);
 					cb(err, result);
 				});
@@ -1809,6 +1844,45 @@ module.exports = {
 				message: 'The uploaded file is not in the correct format. Only CSV files are supported.'
 			});
 		}
+	},
+	findHistory: function(options, callback) {
+		// find history based on upis and exact timestamps
+		options.ops = [{
+			fx: 'history'
+		}];
+		getTables(options, function(err, tables) {
+			findInSql(options, tables, function(err, sResults) {
+				// console.log(err, sResults);
+				fixResults(sResults || [], [], function(err, results) {
+					callback(err, results);
+				});
+			});
+		});
+	},
+	findLatest: function(options, callback) {
+		// find most recent value based on upi and ts, build all months into one statement per year
+		var range = options.range;
+
+		options.ops = [{
+			fx: 'latest history'
+		}];
+		range.start = moment.unix(range.end).startOf('year').unix();
+
+		getTables(options, function(err, tables) {
+			findInSql(options, tables, function(err, sResults) {
+				// console.log(err);
+				fixResults(sResults || [], [], function(err, results) {
+					if (!results.length && moment.unix(range.start).year() > 2000) {
+						range.end = range.start - 1;
+						formatRange(range);
+						exports.findLatest(options, callback);
+					} else {
+						// console.log(options.upis, moment.unix(range.end).format(), moment.unix(results[0].timestamp).format());
+						return callback(err, results);
+					}
+				});
+			});
+		});
 	},
 	doBackUp: runBackUp,
 	buildOps: buildOps,

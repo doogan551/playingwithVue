@@ -3,11 +3,24 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
     function ViewModel(params) {
         var self = this;
         this.root = params;
+        this.config = params.utility.config;
         this.point = params.point;
         this.data = params.point.data;
         this.utility = params.utility;
+        this.Enums = this.config.Enums;
         this.apiEndpoint = params.apiEndpoint;
         this.isInEditMode = params.isInEditMode;
+        this.systemEnumObject = params.utility.workspace.systemEnumObjects;
+
+        var devMTEnumSet = this.Enums["Device Model Types"]
+        if([devMTEnumSet["MicroScan 5 UNV"].enum, devMTEnumSet["MicroScan 5 xTalk"].enum, devMTEnumSet["SCADA Vio"].enum].indexOf(this.data['Model Type'].eValue()) < 0){
+            for(var prop in this.Enums['Time Zones']){
+                if(this.Enums['Time Zones'][prop].enum === this.systemEnumObject.telemetry['Time Zone']){
+                    this.data['Time Zone'].eValue(this.systemEnumObject.telemetry['Time Zone']);
+                    this.data['Time Zone'].Value(prop);
+                }
+            }
+        }
 
         //Modal stuff
         this.deviceTime = ko.observable('');

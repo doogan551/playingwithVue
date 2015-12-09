@@ -151,9 +151,9 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
       point: newPoint
     };
 
-  readOnlyProps = ["_id", "_relDevice", "_relRMU", "_cfgDevice", "_updPoint", "_updTOD", "_pollTime",
-    "_forceAllCOV", "_actvAlmId", "_curAlmId", "Alarm State", "Control Pending", "Device Status",
-    "Last Report Time", "Point Instance", "Point Type", "Reliability", "Trend Last Status", "Trend Last Value"
+  readOnlyProps = ["_id", "_relDevice", "_relRMU", "_cfgDevice", "_updTOD", "_pollTime",
+    "_forceAllCOV", "_actvAlmId", "Alarm State", "Control Pending", "Device Status",
+    "Last Report Time", "Point Instance", "Point Type", "Reliability"
   ];
   // JDR - Removed "Authorized Value" from readOnlyProps because it changes when ValueOptions change. Keep this note.
 
@@ -241,7 +241,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               err: "A read only property has been changed: " + prop
             }, null);
           } else {
-            console.log(prop);
+            console.log(newPoint._id, prop);
             if (prop === "Broadcast Enable" && user["System Admin"].Value !== true) {
               continue;
             }
@@ -283,21 +283,23 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                   updateObject[propName] = newPoint[prop].isReadOnly;
                 }
                 if (newPoint[prop].Value !== oldPoint[prop].Value) {
+                  propName = "Value.Value";
+                  updateObject[propName] = newPoint[prop].Value;
+
+                  if (newPoint[prop].eValue !== undefined) {
+                    propName = "Value.eValue";
+                    updateObject[propName] = newPoint[prop].eValue;
+                  }
+
                   if (newPoint["Out of Service"].Value === true) {
-                    downloadPoint = true;
 
-                    propName = "Value.Value";
-                    updateObject[propName] = newPoint[prop].Value;
-
-                    if (newPoint[prop].eValue !== undefined) {
-                      propName = "Value.eValue";
-                      updateObject[propName] = newPoint[prop].eValue;
-
-                      if (newPoint.Value.oosValue !== undefined)
+                    if (newPoint.Value.oosValue !== undefined) {
+                      downloadPoint = true;
+                      if (newPoint[prop].eValue !== undefined) {
                         updateObject["Value.oosValue"] = newPoint[prop].eValue;
-
-                    } else if (newPoint.Value.oosValue !== undefined) {
-                      updateObject["Value.oosValue"] = newPoint[prop].Value;
+                      } else {
+                        updateObject["Value.oosValue"] = newPoint[prop].Value;
+                      }
                     }
 
                   }
@@ -1148,32 +1150,29 @@ function updateDependencies(refPoint, flags, user, callback) {
   // schedule entries collection - find the control point properties and
   // run this against those properties that match the upi
   // create a new function for this and call from within this.
-  var error = null,
-    data = {
-      point: null,
-      refPoint: refPoint,
-      oldPoint: null,
-      property: null,
-      propertyObject: null
-    },
-    devices = [],
-    signalTOD = false,
-    deepClone = function(o) {
-      // Return the value if it's not an object; shallow copy mongo ObjectID objects
-      if ((o === null) || (typeof(o) !== 'object') || (o instanceof ObjectID))
-        return o;
+  var error = null;
+  var data = {
+    point: null,
+    refPoint: refPoint,
+    oldPoint: null,
+    property: null,
+    propertyObject: null
+  };
+  var devices = [];
+  var signalTOD = false;
+  var deepClone = function(o) {
+    // Return the value if it's not an object; shallow copy mongo ObjectID objects
+    if ((o === null) || (typeof(o) !== 'object') || (o instanceof ObjectID))
+      return o;
 
-      var temp = o.constructor();
+    var temp = o.constructor();
 
-      for (var key in o) {
-        temp[key] = deepClone(o[key]);
-      }
-      return temp;
+    for (var key in o) {
+      temp[key] = deepClone(o[key]);
     }
-    /*,
-          //updateDependency = ,
-          updateDependencyProperty = */
-  ;
+    return temp;
+  };
+
 
   Utility.get({
     collection: constants('pointsCollection'),
@@ -1223,19 +1222,27 @@ function updateDependencies(refPoint, flags, user, callback) {
               if (dependency["Point Type"].Value === "Schedule Entry" && flags.method === "soft")
                 dependency._pStatus = 1; // was _pAccess
 
-              dependency._cfgRequired = false;
-              dependency._updPoint = false;
+              // dependency._cfgRequired = false;
+              // dependency._updPoint = false;
 
               for (var i = 0; i < dependency["Point Refs"].length; i++) {
                 if (dependency["Point Refs"][i].Value === refPoint._id) {
                   data.property = dependency["Point Refs"][i].PropertyName;
                   data.propertyObject = dependency["Point Refs"][i];
 
-                  if (flags.method === "hard")
-                    data.propertyObject.Value = 0;
-
-                  if (flags.method === "hard" || flags.method === "soft")
-                    data.refPoint = null;
+                  switch (flags.method) {
+                    case "hard":
+                      data.propertyObject.Value = 0;
+                      data.refPoint = null;
+                      break;
+                    case "soft":
+                      data.propertyObject.PointInst = 0;
+                      data.refPoint = null;
+                      break;
+                    case "restore":
+                      data.propertyObject.PointInst = data.propertyObject.Value;
+                      break;
+                  }
 
                   /*if (dependency["Point Refs"][i]["Point Type"].Value === "Script")
                     data.newPoint._cfgRequired = true;*/

@@ -1,0 +1,175 @@
+//
+   Created by Soven on 7/9/2014.
+doctype html
+html
+    head
+        title #{title}
+        meta(charset="utf-8")
+        link(href="/kendo/styles/kendo.common.min.css", rel="stylesheet")
+        link(href="/kendo/styles/kendo.moonlight.min.css", rel="stylesheet")
+        link(rel="stylesheet", href="/css/lib/bootstrap-3.0.3.min.css")
+        link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
+        link(type='text/css', rel='stylesheet', href='/css/lib/iToast.css')
+        script(src="/kendo/js/jquery.min.js")
+        script(src='/js/lib/jquery.blockUI.js')
+        script(src="/js/lib/itoast.min.js")
+        script(src="/kendo/js/kendo.all.min.js")
+        script(src="/js/lib/bootstrap-3.0.3.min.js")
+        script(src="/js/lib/config.js")
+        style.
+            /*.k-grid tbody tr {*/
+            /*cursor: move;*/
+            /*}*/
+            .hint {
+                border: 2px solid #2db245;
+                border-radius: 6px;
+            }
+            .k-grid-header{
+                display:none;
+            }
+            .k-widget{
+                border-color: #c5c5c5;
+                border:none;
+            }
+            .k-grid-content{
+                overflow-y: hidden;
+            }
+            .placeholder {
+                background-color: #dceffd;
+                color: #52aef7;
+                text-align: right;
+            }
+
+            .well {
+                padding: 9px;
+                padding-left: 25px;
+                padding-right: 25px;
+                margin-bottom: 5px;
+                /*background-color: #7BA1B5;*/
+                border: 1px solid #e3e3e3;
+            }
+
+            .well-sm {
+                padding: 1px;
+            }
+
+            .nav-pills > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus {
+                color: #fff;
+                background-color: #041523;
+            }
+
+            a {
+                color: #041523;
+                text-decoration: none;
+            }
+
+            .nav > li > a {
+                padding: 3px 14px;
+            }
+
+            html,body{background-color:#6b9355;}
+            body{
+                padding:5px;
+            }
+
+            .k-widget > .k-tooltip > .k-tooltip-validation > .k-invalid-msg{
+                margin:-1em;
+
+            }
+            .k-grid td{
+                padding:0;
+
+            }
+    body
+        script#edit-template(type="text/x-kendo-template")
+            # if (data.valueType === "Float" || data.name=== "Value" ) { #
+            #=data.precision#
+            # } #
+        script#conditionTemplate(type="text/x-kendo-template")
+            # if (!data.firstRow) { #
+            #=data.condition#
+            # } #
+        script#valueViewTemplate(type="text/x-kendo-template")
+            # if (data.value != "" && (data.valueType == "HourMinSec")) { #
+            #= kendo.toString(new Date(data.value), "h:mm tt" ) #
+            #}else if (data.valueType == "Float"){ #
+            #= kendo.toString(data.value, "{0:n2}") #
+            # }else{ #
+            #=data.value #
+            # } #
+        #window
+            .container
+                ul#tabs.well.well-sm.nav.navbar-danger.nav-pills
+                    li.active
+                        a.btn.btn-md(href="#tabConfiguration",data-toggle="tab", role="tab")
+                            i.fa.fa-cogs
+                            | &nbsp;Configuration
+                    li
+                        a.btn.btn-md(href="#tabPreview",data-toggle="tab", role="tab")
+                            i.fa.fa-file
+                            | &nbsp;Report Preview
+                    li
+                        a.btn.btn-md(href="#tabDesign", data-toggle="tab", role="tab")
+                            i.fa.fa-wrench
+                            | &nbsp;Design Report
+                .tab-content
+                    #tabConfiguration.well.tab-pane.active
+                        br
+                        //br
+                        .row.form-horizontal
+                            .form-group.clearfix
+                                label.col-sm-1.control-label(for="reportTitle") Title
+                                .col-sm-11
+                                    input#reportTitle.form-control(required, type="text", placeholder="Specify Report Title", style="width:100%")
+                        .row.clearfix
+                            .col-xs-5
+                                label Columns
+                                .row
+                                    #columnGrid
+                            .col-xs-1(style="margin-left:-80px")
+                            .col-xs-6(style="width:56%")
+                                label Filters
+                                .row
+                                    #filterGrid
+                        br
+                        br
+                        .row.clearfix
+                            label Options
+                            .checkbox
+                                label
+                                    input#includeFilter(type="checkbox")
+                                    | Include filter criteria at the end of the Report
+                            .checkbox
+                                label
+                                    input#includeReportName(type="checkbox")
+                                    | Include report name at the end of the Report
+                        .row.clearfix
+                            .col-xs-3
+                            .col-xs-9
+                                button#getData Undo
+                                button#saveReport Save
+                                button#scheduleReport Schedule Report
+                                button#runReport Run Report
+                        .row
+                            br
+                            br
+                        .row
+                            #message.alert(role="alert")
+                        .row
+                            #gridData
+                            #gridData2
+                        form#runReportForm(method="post", target="reportPreview")
+                            input#params(type="hidden", name="params", value="Soven")
+                        include ./models/scheduleReport
+                    #tabPreview.well.well-sm.tab-pane
+                        iframe#reportPreview(name="reportPreview", frameborder="", scrolling="no")
+                    #tabDesign.well.well-sm.tab-pane
+                        iframe#reportDesign(name="reportDesign", frameborder="", scrolling="no")
+    script(src="/js/report/main.js")
+    script.
+        var iddd, isOld, point,isViewer;
+        iddd = '!{id}';
+        isOld = '!{isOld}';
+        point = JSON.parse('!{point}');
+        isViewer = false;
+        title = '!{title}';

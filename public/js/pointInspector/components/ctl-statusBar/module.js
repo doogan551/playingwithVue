@@ -10,13 +10,15 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.cfgRequired = pointData._cfgRequired;
         this.updatePending = pointData._updPoint;
         this.programError = !!pointData['Program Error'] && pointData['Program Error'].Value;
+        this.controlPending = !!pointData['Control Pending'] && pointData['Control Pending'].Value;
 
         this.isVisible = ko.pureComputed(function() {
             var _visible = (self.showReliability() ||
                     self.showAlarmState() ||
                     self.showCfgRequired() ||
                     self.showUpdateRequired() ||
-                    self.showProgramError()) &&
+                    self.showProgramError() ||
+                    self.showControlPending()) &&
                     (['Display', 'Report', 'Schedule', 'Schedule Entry', 'Script', 'Sensor', 'Sequence', 'Slide Show'].indexOf(pointData["Point Type"].Value()) === -1);
 
             if (_visible) {
@@ -45,6 +47,10 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     ViewModel.prototype.showProgramError = function() {
         return typeof this.programError == 'function' && this.programError() != 'None';
     };
+    ViewModel.prototype.showControlPending = function(){
+        return typeof this.controlPending  == 'function' && this.controlPending();
+    };
+
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code

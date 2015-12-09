@@ -236,7 +236,7 @@ define([
             return val.toString().replace(/,/g, '');
         },
         formatNumber: function(val, valueType, noTruncate, noComma) {
-            if ($.trim(val) === '' || isNaN(val))
+            if ($.trim(val) === '' || isNaN(parseFloat(val)))
                 return '';
             val = new Big(pointInspector.utility.normalizeNumber(val));
             noTruncate = noTruncate || pointInspector.isInEditMode();
@@ -1102,7 +1102,7 @@ define([
                         underlyingObservable.valueHasMutated();
                     }
                 }).extend({ notify: 'always' });
-            
+
             if ($element.is('input')) {
                 ko.applyBindingsToNode(element, { value: interceptor });
             } else {

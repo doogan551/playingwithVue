@@ -966,47 +966,26 @@
             }
         },
         "Time Zones": {
-            "tzEST": {
-                "enum": 5,
-                "name": "Eastern Time Zone",
-                "utc offset": 18000,
-                "dst used": true
+            "Eastern Time Zone": {
+                "enum": 5
             },
-            "tzCST": {
-                "enum": 6,
-                "name": "Central Time Zone",
-                "utc offset": 21600,
-                "dst used": true
+            "Central Time Zone": {
+                "enum": 6
             },
-            "tzMST": {
-                "enum": 7,
-                "name": "Mountain Time Zone",
-                "utc offset": 25200,
-                "dst used": true
+            "Mountain Time Zone": {
+                "enum": 7
             },
-            "tzPST": {
-                "enum": 8,
-                "name": "Pacific Time Zone",
-                "utc offset": 28800,
-                "dst used": true
+            "Pacific Time Zone": {
+                "enum": 8
             },
-            "tzAKST": {
-                "enum": 9,
-                "name": "Alaska Time Zone",
-                "utc offset": 32400,
-                "dst used": true
+            "Alaska Time Zone": {
+                "enum": 9
             },
-            "tzAZ": {
-                "enum": 107,
-                "name": "Arizona Time Zone, No DST",
-                "utc offset": 25200,
-                "dst used": false
+            "Arizona Time Zone, No DST": {
+                "enum": 107
             },
-            "tzHI": {
-                "enum": 109,
-                "name": "Hawaii Time Zone, No DST",
-                "utc offset": 32400,
-                "dst used": false
+            "Hawaii Time Zone, No DST": {
+                "enum": 109
             }
         },
         "endPoints": {
@@ -3920,7 +3899,8 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": 6
+                    "Value": "Central Time Zone",
+                    "eValue": 6
                 },
                 "Uplink Port": {
                     "isDisplayable": true,
@@ -5060,12 +5040,7 @@
                     "Max": 8,
                     "Min": 1
                 },
-                "Control Array": [{
-                    "Value": 0,
-                    "Level": 1,
-                    "Controller": 0,
-                    "Release Time": 0
-                }],
+                "Control Array": [],
                 "Control Data Type": {
                     "isDisplayable": false,
                     "isReadOnly": false,
@@ -5515,12 +5490,7 @@
                     "ValueType": 13,
                     "Value": 15
                 },
-                "Control Array": [{
-                    "Value": 0,
-                    "Level": 1,
-                    "Controller": 0,
-                    "Release Time": 0
-                }],
+                "Control Array": [],
                 "Control Pending": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -6320,12 +6290,7 @@
                     "Value": "Normal",
                     "eValue": 0
                 },
-                "Control Array": [{
-                    "Value": 0,
-                    "Level": 1,
-                    "Controller": 0,
-                    "Release Time": 0
-                }],
+                "Control Array": [],
                 "Control Pending": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -6858,12 +6823,7 @@
                     "ValueType": 13,
                     "Value": 15
                 },
-                "Control Array": [{
-                    "Value": 0,
-                    "Level": 1,
-                    "Controller": 0,
-                    "Release Time": 0
-                }],
+                "Control Array": [],
                 "Control Pending": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -11422,7 +11382,7 @@
                     "Value": ""
                 },
                 "Input Rate": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "Minutes",
@@ -11786,7 +11746,7 @@
                     "Value": 0.0
                 },
                 "Input Deadband": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 1.0
@@ -12474,7 +12434,7 @@
                     "eValue": 0
                 },
                 "Input Deadband": {
-                    "isDisplayable": true,
+                    "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 1.0

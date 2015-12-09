@@ -253,14 +253,14 @@ displays = $.extend(displays, {
         return answer;
     },
     onRender: function(fn) {
-        if(displays.rendered) {
+        if(displays.isRendered) {
             fn();
         } else {
             displays.onRenderFn = fn;
         }
     },
     rendered: function() {
-        displays.rendered = true;
+        displays.isRendered = true;
         displays.onRenderFn();
     },
     onRenderFn: function() {return;},
@@ -428,7 +428,7 @@ displays = $.extend(displays, {
 
             socket.on('connect', function() {
                 var sess = {};
-                sess.socketid = socket.id;
+                sess.socketid = socket.socket.sessionid;
                 sess.display = angular.copy(window.displayJson);
                 socket.emit('displayOpen', {
                     data: sess
@@ -1316,7 +1316,7 @@ displays = $.extend(displays, {
                         cls += " strikethrough-line";
                     }
 
-                    if (Number.isInteger(screenObject)) {
+                    if (typeof screenObject === 'number') {
                         switch (screenObject) {
                             case 0:  // Dynamic
                             {

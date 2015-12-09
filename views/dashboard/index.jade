@@ -73,7 +73,7 @@ html
                             .units(data-bind="html: units")
                 .lowerBar
                     .actions
-                        a(href="javascript://", data-bind="click: rewind, visible: type() !== 'Gauge'")
+                        a(href="javascript://", data-bind="click: rewind, visible: type() !== 'Gauge' && showBackward()")
                             i.fa.fa-backward
                         span(data-bind="text: prettyDate")
                         a(href="javascript://", data-bind="click: forward, visible: type() !== 'Gauge' && showForward()")

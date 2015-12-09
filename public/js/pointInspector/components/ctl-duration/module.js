@@ -298,6 +298,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.max = params.max;
         this.noValidation = params.noValidation;
         this.isInEditMode = params.rootContext.isInEditMode;
+        this.forceEdit = params.forceEdit || false;
 
         if (typeof this.min != 'undefined') {
             segments = this.min.split(':');

@@ -1,0 +1,77 @@
+<div class="form-group">
+    <div class="floatingHeader">
+        <h3 data-bind="text: data.Name"></h3>
+        <div class="actionGroup">
+            <div data-bind="text: data._id" class="pointId"></div>
+            <input type="button" data-bind="click: save" class="btn btn-sm btn-success" value="Save point">
+        </div>
+    </div>
+
+    <table class="pointGrid table table-condensed">
+        <thead>
+            <tr>
+                <th width="200"></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        <!-- ko with: data['Point Type'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Point Type</th>
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Point Type', enumOptions: pointEditor.utility.config.Utility.pointTypes.getEnums('Point Types', 'Sensor') } }"></td>
+        </tr>
+        <!-- /ko -->
+        <!-- ko with: data['Conversion Coefficient 1'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Conversion Coefficient 1</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, id: 'ConversionCoefficient1', propName: 'Conversion Coefficient 1' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Conversion Coefficient 2'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Conversion Coefficient 2</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, id: 'ConversionCoefficient2', propName: 'Conversion Coefficient 2' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Conversion Coefficient 3'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Conversion Coefficient 3</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, id: 'ConversionCoefficient3', propName: 'Conversion Coefficient 3' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Conversion Coefficient 4'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Conversion Coefficient 4</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, id: 'ConversionCoefficient4', propName: 'Conversion Coefficient 4' } }"></td> 
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Conversion Type'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Conversion Type</th> 
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Conversion Type', enumOptions: pointEditor.utility.config.Utility.pointTypes.getEnums('Conversion Types', 'Sensor') } }"></td>
+        </tr> 
+        <!-- /ko --> 
+        <!-- ko with: data['Description'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Description</th> 
+            <td data-bind="template: { name: 'control2.text', data: { prop: $data, propName: 'Description' } }"></td> 
+        </tr> 
+        <!-- /ko -->
+        <!-- ko with: data['Point Instance'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Point Instance</th> 
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Point Instance' } }"></td> 
+        </tr> 
+        <!-- /ko -->
+        <!-- ko with: data['Sensor Type'] --> 
+        <tr data-bind="css: { active: !isDisplayable() }"> 
+            <th scope="row">Sensor Type</th> 
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Sensor Type', enumOptions: pointEditor.utility.config.Utility.pointTypes.getEnums('Sensor Types', 'Sensor') } }"></td>
+        </tr> 
+        <!-- /ko --> 
+
+
+
+        </tbody>
+    </table>
+</div>

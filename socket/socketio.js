@@ -17,6 +17,7 @@ var cppApi = new(require('Cpp_API').Tasks)();
 // var monitorSender = new(require('MonitorSender').Tasks)();
 var compiler = require('../helpers/scriptCompiler.js');
 var Utility = require('../models/utility.js');
+var History = require('../models/history');
 var logger = require('../helpers/logger')(module);
 var ObjectID = require('mongodb').ObjectID;
 
@@ -532,6 +533,30 @@ module.exports = function socketio(_common) {
         sock.emit('returnEntries', {
           err: err,
           entries: entries
+        });
+      });
+    });
+    // NOT CHECKED - just added
+    sock.on('getUsage', function(data) {
+      var reqOptions = data.options;
+
+      reqOptions.forEach(function(options) {
+        if (typeof options.ranges === 'string') {
+          options.ranges = JSON.parse(options.ranges);
+        }
+        if (!(options.upis instanceof Array)) {
+          options.upis = JSON.parse(options.upis);
+        }
+        return;
+      });
+
+      reqOptions = History.buildOps(reqOptions);
+
+      History.getUsageCall(reqOptions, function(err, results) {
+        results = History.unbuildOps(results);
+        sock.emit('returnUsage', {
+          err: err,
+          results: results
         });
       });
     });

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript" src="/js/lib/jquery-1.9.1.min.js"></script>
+    <script>
+        window.pointSelector = (function(window, undefined) {
+            var _pointSelector = {};
+            _pointSelector.init = function(callback) {
+                _pointSelector.setPoint = callback;
+            };
+            _pointSelector.setPoint = function(){};
+            return _pointSelector;
+        }(window));
+
+        $(function(){
+            $('body').on('click', '#btnChoosePoint', function() {
+                pointSelector.setPoint('12345', 'Smooth_Talk_1234');
+                window.close();
+            });
+        });
+    </script>
+</head>
+<body>
+<input type="button" id="btnChoosePoint" value="Choose Point">
+</body>
+</html>

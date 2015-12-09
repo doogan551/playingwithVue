@@ -1,17 +1,13 @@
 <!-- ko if: isInEditMode -->
-<div class="col col-xs-12">
     <div class="dataField">
         <label>Firmware Version</label>
         <input type="text" data-bind="value: firmwareVersion, validateOnBlur: 'Firmware Version'" class="firmwareVersion form-control">
     </div>
-</div>
 <!-- /ko -->
 
 <!-- ko ifnot: isInEditMode -->
-<div class="col col-xs-12">
     <div class="dataField">
-        <label>Description</label>
+        <label>Firmware Version</label>
         <span class="lh30" data-bind="text: firmwareVersion"></span>
     </div>
-</div>
 <!-- /ko -->

@@ -49,6 +49,39 @@
                         </div>
                         <!-- /ko -->
                     </div>
+                    <!-- ko if: data['Point Type'].Value() !== 'MultiState Value' && checkReleaseModel() -->
+                    <!-- MultiState Value points do not support TtO -->
+                    <div class="row">
+                        <div class="col col-xs-12 col-sm-12">
+                            <div id="timeControl" class="btn-group btn-group-justified" role="group" data-toggle="buttons">
+                                <label id="ttoLabel" class="btn btn-default">
+                                    <input type="radio" name="Time to Override" value="tto" id="ttoBtn"/> Time to Override
+                                </label>
+                                <label id="rtLabel" class="btn btn-default">
+                                    <input type="radio" name="Release Time" value="rt" id="rtBtn"/> Release Time
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="ttoInput">
+                            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Time to Override', forceEdit: true, data: override, noValidation:true, showLabel:false, columnClasses: 'col col-sm-6 col-xs-12', min: '0:0:0', rootContext: $root } } -->
+                            <!-- /ko -->
+                        </div>
+                        <div class="col col-xs-12 col-sm-6">
+                            <div class="dataField">
+                                <div class="form-group">
+                                    <div class='input-group date' id='datetimepicker'>
+                                        <input type='text' class="form-control" />
+                                        <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-calendar"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /ko -->
                     <!-- ko if: data['Point Type'].Value() !== 'MultiState Value' -->
                     <!-- MultiState Value points do not support Relinquish -->
                     <div class="row">

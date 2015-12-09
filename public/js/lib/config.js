@@ -107,7 +107,7 @@ var Config = (function(obj) {
                 _val,
                 tmp,
                 commetize = function(integerValue) {
-                    if(data.noComma)
+                    if (data.noComma)
                         return integerValue;
                     else
                         return integerValue.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1,');
@@ -331,13 +331,12 @@ var Config = (function(obj) {
                                 case 'Comparator':
                                 case 'Logic':
                                 case 'Select Value':
+                                case 'Multiplexer':
                                     return filterPointTypes('value');
                                 case 'Math':
                                     return filterPointTypes('math');
                                 case 'Digital Logic':
                                     return filterPointTypes('enum');
-                                case 'Multiplexer':
-                                    return filterPointTypes('float');
                                 case 'Report':
                                     return filterPointTypes('default');
                                 default:
@@ -353,11 +352,11 @@ var Config = (function(obj) {
                                 case 'Comparator':
                                 case 'Logic':
                                 case 'Select Value':
+                                case 'Multiplexer':
                                     return filterPointTypes('value');
                                 case 'Digital Logic':
                                     return filterPointTypes('enum');
                                 case 'Math':
-                                case 'Multiplexer':
                                     return filterPointTypes('float');
                                 case 'Report':
                                     return filterPointTypes('default');
@@ -776,7 +775,7 @@ var Config = (function(obj) {
                 if ((data.point.hasOwnProperty('Value')) && (data.point.Value.hasOwnProperty('ValueOptions'))) {
                     // If Value.ValueOptions changed
                     if (_.isEqual(data.oldPoint.Value.ValueOptions, data.point.Value.ValueOptions) === false) {
-                        var enumProps = ["Active Value", "Alarm Value", "Authorized Value", "Default Value", "Inactive Value", "Shutdown Value", "Value"];
+                        var enumProps = ["Value", "Alarm Value", "Authorized Value", "Default Value", "Inactive Value", "Shutdown Value", "Active Value"];
 
                         len = enumProps.length;
                         // Update the properties that are affected by a change in Value.ValueOptions
@@ -938,7 +937,7 @@ var Config = (function(obj) {
             } else if (len > maxLength) {
                 data.truncate = true;
                 data.maxLength = maxLength;
-                data.result = data.property + " cannot be more than " +maxLength+ " characters.";
+                data.result = data.property + " cannot be more than " + maxLength + " characters.";
             } else if (val.toLowerCase() === point["Inactive Text"].Value.toLowerCase()) {
                 data.result = data.property + " must be different from the Inactive Text.";
             } else {
@@ -1210,7 +1209,7 @@ var Config = (function(obj) {
                 data.ok = false;
                 data.truncate = true;
                 data.maxLength = maxLength;
-                data.result = data.property + " cannot be more than " +maxLength+ " characters.";
+                data.result = data.property + " cannot be more than " + maxLength + " characters.";
             }
             return data;
         },
@@ -1364,7 +1363,7 @@ var Config = (function(obj) {
             } else if (len > maxLength) {
                 data.truncate = true;
                 data.maxLength = maxLength;
-                data.result = data.property + " cannot be more than " +maxLength+ " characters.";
+                data.result = data.property + " cannot be more than " + maxLength + " characters.";
             } else if (val.toLowerCase() === point["Active Text"].Value.toLowerCase()) {
                 data.result = data.property + " must be different from the Active Text.";
             } else {
@@ -1496,9 +1495,9 @@ var Config = (function(obj) {
             var point = data.point, // Shortcut
                 val = data.propertyObject.Value; // Property Value
 
-            if (val >= point["Maximum Value"].Value) {
+            if (val > point["Maximum Value"].Value) {
                 data.ok = false;
-                data.result = data.property + " must be less than the Maximum Value.";
+                data.result = data.property + " must be less than or equal to the Maximum Value.";
             }
             return data;
         },
@@ -1738,7 +1737,7 @@ var Config = (function(obj) {
                 data.ok = false;
                 data.truncate = true;
                 data.maxLength = maxLength;
-                data.result = data.property + " cannot be more than " +maxLength+ " characters.";
+                data.result = data.property + " cannot be more than " + maxLength + " characters.";
             }
             return data;
         },
@@ -3055,7 +3054,7 @@ var Config = (function(obj) {
 
             if (point.hasOwnProperty(property) === true) {
 
-                point[property].Value = "??????"; // Assume we can't find a match
+                point[property].Value = undefined; // Assume we can't find a match
 
                 for (key in enumSet) {
                     // JDR - If the enumSet is from enumsTemplates.json file, it will have an 'enum' key
@@ -3071,6 +3070,10 @@ var Config = (function(obj) {
                         point[property].Value = key;
                         break;
                     }
+                }
+                if (!point[property].Value) {
+                    point[property].Value = key;
+                    point[property].eValue = enumSet[key];
                 }
             }
             return point;
@@ -3174,11 +3177,11 @@ var Config = (function(obj) {
 
                     for (var prop in point.Value.ValueOptions) {
                         tempOption = {
-                            eValue: prop,
-                            Value: point.Value.ValueOptions[prop]
+                            Value: prop,
+                            eValue: point.Value.ValueOptions[prop]
                         };
-                        if (prop === point.Value.eValue) {
-                            point.Value.Value = point.Value.ValueOptions[prop];
+                        if (point.Value.ValueOptions[prop] === point.Value.eValue) {
+                            point.Value.Value = prop;
                             hasEValue = true;
                         }
                     }
@@ -3558,7 +3561,13 @@ var Config = (function(obj) {
             point["Port 3 Network"].Max = 65534;
             point["Port 4 Network"].Max = 65534;
 
+            point["Time Zone"].isReadOnly = true;
+
             if (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "Unknown" || point["Model Type"].Value == "MicroScan 5 xTalk" || point["Model Type"].Value == "SCADA Vio") {
+
+                if (point["Model Type"].Value !== "Unknown") {
+                    point["Time Zone"].isReadOnly = false;
+                }
 
                 point["Uplink Port"].isDisplayable = true;
                 point["Uplink Port"].isReadOnly = false;
@@ -4136,7 +4145,7 @@ var Config = (function(obj) {
                 "Port 4": enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"]
             };
 
-            if(!point.hasOwnProperty('Modbus Order'))
+            if (!point.hasOwnProperty('Modbus Order'))
                 point["Modbus Order"] = Config.Templates.getTemplate("Remote Unit")["Modbus Order"];
 
             point["Poll Function"].isDisplayable = false;

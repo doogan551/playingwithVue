@@ -54,30 +54,29 @@
                 .sectionTitle(data-bind="text: 'On-Peak Demand Per ' + selectedMonthYear().childPeriod + ' - ' + selectedMonthYear().fullDate")
                 .sectionBody
                     .highestOnPeakDemandPeriodChart.content
-                    .entry(data-bind="text: 'This ' + selectedMonthYear().period + 's highest On-Peak Demand occurred ' + highestOnPeakDemandNow() + '.'")
-                    .entry(data-bind="text: 'Last Years highest On-Peak Demand occurred ' + highestOnPeakDemandLastYear() + '.'")
+                    .entry This #[span(data-bind="text: selectedMonthYear().period")]'s highest On-Peak Demand occurred #[span(data-bind="text: highestOnPeakDemandNow()")].
+                    .entry Last Year's highest On-Peak Demand occurred #[span(data-bind="text: highestOnPeakDemandLastYear()")].
             // /ko
 
             .section.highestDemand
                 .sectionTitle(data-bind="text: 'Highest Demand Per ' + selectedMonthYear().childPeriod + ' - ' + selectedMonthYear().fullDate")
                 .sectionBody
                     .highestDemandPeriodChart.content
-                    .entry(data-bind="text: 'This ' + selectedMonthYear().period + 's highest recorded Demand occurred ' + highestDemandNow() + '.'")
-                    .entry(data-bind="text: 'Last Years highest recorded Demand occurred ' + highestDemandLastYear() + '.'")
+                    .entry This #[span(data-bind="text: selectedMonthYear().period")]'s highest recorded Demand occurred #[span(data-bind="text: highestDemandNow()")].
+                    .entry Last Year's highest recorded Demand occurred #[span(data-bind="text: highestDemandLastYear()")].
 
             .section.highestConsumption
                 .sectionTitle(data-bind="text: 'Consumption Per ' + selectedMonthYear().childPeriod + ' - ' + selectedMonthYear().fullDate")
                 .sectionBody
                     .highestConsumptionPeriodChart.content
-                    .entry(data-bind="text: 'This ' + selectedMonthYear().period + 's highest consumption occurred ' + highestConsumptionNow() + '.'")
-                    .entry(data-bind="text: 'Last Years highest consumption occurred ' + highestConsumptionLastYear() + '.'")
+                    .entry This #[span(data-bind="text: selectedMonthYear().period")]'s highest consumption occurred #[span(data-bind="text: highestConsumptionNow()")].
+                    .entry Last Year's highest consumption occurred #[span(data-bind="text: highestConsumptionLastYear()")].
 
             .section.highlowTemperatures
                 .sectionTitle(data-bind="text: temperatureTitle")
                 .sectionBody
                     .highlowTemperaturesPeriodChart.content
-                    .entry This #[span(data-bind="text: selectedMonthYear().period")]'s - #[span(data-bind="text: temperatureVerbiage")]
-                    .entry(data-bind="text: temperatureVerbiageHDDCDD")
+                    .entry(data-bind="text: temperatureVerbiage() + temperatureVerbiageHDDCDD()")
 
             //- .section
             //-     .entry This month's highest On-Peak Demand occurred on #[span Tuesday July 9th at 13:30] and was 20.52 MW
@@ -102,7 +101,7 @@
                         thead
                             tr
                                 th Meter
-                                th % Missing
+                                th(data-bind="style: {'text-align': 'right'}") % Missing
                         tbody(data-bind="foreach: missingDataCollection")
                             tr
                                 td
@@ -111,7 +110,7 @@
                                     //- span .&nbsp;
                                     span(data-bind="text: displayedMeterName")
                                 td
-                                    span(data-bind="text: missingPercentage + '%'")
+                                    .pull-right.span(data-bind="text: missingPercentage + '%'")
                     // /ko
 
             .largeGap
@@ -172,7 +171,7 @@
                                 //- Peak usage is not applicable in transition months
                                 // ko if: selectedMonthYear().season !== 'Transition'
                                 tr
-                                    td.bold(colspan="4", data-bind="text: selectedMonthYear().season + ' Peak'")
+                                    td.bold(colspan="4", data-bind="text: (selectedMonthYear().period === 'Year' ? 'On ' : selectedMonthYear().season) + ' Peak'")
                                 tr
                                     td(data-bind="text: moment(duOnPeakMW().timeStamp).format('HH:00 MM/DD/YY')")
                                     td(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")

@@ -7462,7 +7462,7 @@ gpl.Manager = function() {
 
             socket.on('connect', function() {
                 var sess = {};
-                sess.socketid = socket.id;
+                sess.socketid = socket.socket.sessionid;
                 sess.display = {};
                 sess.display['Screen Objects'] = gpl.blockManager.screenObjects;
 

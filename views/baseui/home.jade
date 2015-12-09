@@ -178,8 +178,6 @@ html
                         // /ko
                         li.dropdown
                             a.dropdown-toggle(href='javascript://', data-toggle='dropdown')
-                                // ko if:console.log(user())
-                                // /ko
                                 img(data-bind='attr: { src: "/img/users/" + (user().photo.length > 0 ? user().photo : "userLarge.png")}', style='width: 24px;margin-right: 8px;float: left;position: relative;top: -6px;')
                                 span(data-bind='text: user().firstName + " " + user().lastName')
                                 // b class="caret"></b

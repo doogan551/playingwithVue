@@ -7,6 +7,134 @@ var trendPlots = {
                 return "";
             }
         },
+        emptyFn: function (){ return; },
+        onReadyFns: [],
+        onReady: function (fn) {
+            if(!trendPlots.highchartsLoaded) {
+                trendPlots.onReadyFns.push(fn);
+            } else {
+                fn();
+            }
+        },
+        formatDate: function (date, addSuffix) {
+            var functions = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'],
+                lengths = [2,2,2,3],
+                separators = [':',':',':',''],
+                suffix = ' --',
+                fn,
+                out = '';
+
+            if(addSuffix) {
+                separators.push(suffix);
+            }
+
+            if(typeof date === 'number') {
+                date = new Date(date);
+            }
+
+            for(fn in functions) {
+                if(functions.hasOwnProperty(fn)) {
+                    out += ('000' + date['get' + functions[fn]]()).slice(-1 * lengths[fn]) + separators[fn];
+                }
+            }
+
+            return out;
+        },
+        log: function () {
+            var stack,
+                steps,
+                lineNumber,
+                err,
+                now = new Date(),
+                args = [].splice.call(arguments, 0),
+                pad = function (num) {
+                    return ('    ' + num).slice(-4);
+                },
+                formattedTime = trendPlots.formatDate(new Date(), true);
+
+            if(trendPlots.logLinePrefix === true) {
+                err = new Error();
+                if(Error.captureStackTrace) {
+                    Error.captureStackTrace(err);
+
+                    stack = err.stack.split('\n')[2];
+
+                    steps = stack.split(':');
+
+                    lineNumber = steps[2];
+
+                    args.unshift('line:' + pad(lineNumber), formattedTime);
+                }
+            }
+            // args.unshift(formattedTime);
+            if(!trendPlots.noLog) {
+                console.log.apply(console, args);
+            }
+        },
+        forEach: function (obj, fn) {
+            var keys = Object.keys(obj),
+                c,
+                len = keys.length,
+                errorFree = true;
+
+            for(c=0; c<len && errorFree; c++) {
+                errorFree = fn(obj[keys[c]], keys[c], c);
+                if(errorFree === undefined) {
+                    errorFree = true;
+                }
+            }
+
+            return errorFree;
+        },
+        forEachArray: function (arr, fn) {
+            var c,
+                list = arr || [],
+                len = list.length,
+                errorFree = true;
+
+            for(c=0; c<len && errorFree; c++) {
+                errorFree = fn(list[c], c);
+                if(errorFree === undefined) {
+                    errorFree = true;
+                }
+            }
+
+            return errorFree;
+        },
+        createNamespace: function (obj, path, val) {
+            var levels = path.split('.'),
+                currObj = obj;
+
+            trendPlots.forEachArray(levels, function (level, idx) {
+                currObj[level] = currObj[level] || {};
+
+                if(idx === levels.length - 1 && val !== undefined) {
+                    if(typeof currObj[level] === 'object' && typeof val === 'object') {
+                        $.extend(true, currObj[level], val);
+                    } else {
+                        currObj[level] = val;
+                    }
+                } else {
+                    currObj = currObj[level];
+                }
+            });
+
+            return obj;
+        },
+        complicateObject: function (map, simple, complex) {
+            var ns = trendPlots.createNamespace;
+
+            trendPlots.forEach(map, function (dst, prop) {
+                var src = simple[prop];
+
+                if(src !== undefined) {
+                    complex = ns(complex, dst, src);
+                }
+
+            });
+
+            return complex;
+        },
         typeConfigs: {//store these in the DB, dynamically add new types?
             "line": {},
             "arearange": {
@@ -295,6 +423,16 @@ var trendPlots = {
             },
             "spline": {},
         },
+        defaults: {
+            highChartDefaults: {
+                // chart: {
+                //     zoomType: 'x'
+                // },
+                credits: {
+                    enabled: false
+                }
+            }
+        },
         init: function () {
             var scriptList = ['highcharts', 'highcharts-more', '/modules/solid-gauge', '/modules/no-data-to-display'],//should be per type
                 ext = '.js',
@@ -336,145 +474,7 @@ var trendPlots = {
             }
 
             getScr();
-        },
-        emptyFn: function (){ return; },
-        onReadyFns: [],
-        onReady: function (fn) {
-            if(!trendPlots.highchartsLoaded) {
-                trendPlots.onReadyFns.push(fn);
-            } else {
-                fn();
-            }
-        },
-        formatDate: function (date, addSuffix) {
-            var functions = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'],
-                lengths = [2,2,2,3],
-                separators = [':',':',':',''],
-                suffix = ' --',
-                fn,
-                out = '';
-
-            if(addSuffix) {
-                separators.push(suffix);
-            }
-
-            if(typeof date === 'number') {
-                date = new Date(date);
-            }
-
-            for(fn in functions) {
-                if(functions.hasOwnProperty(fn)) {
-                    out += ('000' + date['get' + functions[fn]]()).slice(-1 * lengths[fn]) + separators[fn];
-                }
-            }
-
-            return out;
-        },
-        log: function () {
-            var stack,
-                steps,
-                lineNumber,
-                err,
-                now = new Date(),
-                args = [].splice.call(arguments, 0),
-                pad = function (num) {
-                    return ('    ' + num).slice(-4);
-                },
-                formattedTime = trendPlots.formatDate(new Date(), true);
-
-            if(trendPlots.logLinePrefix === true) {
-                err = new Error();
-                if(Error.captureStackTrace) {
-                    Error.captureStackTrace(err);
-
-                    stack = err.stack.split('\n')[2];
-
-                    steps = stack.split(':');
-
-                    lineNumber = steps[2];
-
-                    args.unshift('line:' + pad(lineNumber), formattedTime);
-                }
-            }
-            // args.unshift(formattedTime);
-            if(!trendPlots.noLog) {
-                console.log.apply(console, args);
-            }
-        },
-        forEach: function (obj, fn) {
-            var keys = Object.keys(obj),
-                c,
-                len = keys.length,
-                errorFree = true;
-
-            for(c=0; c<len && errorFree; c++) {
-                errorFree = fn(obj[keys[c]], keys[c], c);
-                if(errorFree === undefined) {
-                    errorFree = true;
-                }
-            }
-
-            return errorFree;
-        },
-        forEachArray: function (arr, fn) {
-            var c,
-                list = arr || [],
-                len = list.length,
-                errorFree = true;
-
-            for(c=0; c<len && errorFree; c++) {
-                errorFree = fn(list[c], c);
-                if(errorFree === undefined) {
-                    errorFree = true;
-                }
-            }
-
-            return errorFree;
-        },
-        defaults: {
-            highChartDefaults: {
-                // chart: {
-                //     zoomType: 'x'
-                // },
-                credits: {
-                    enabled: false
-                }
-            }
-        },
-        createNamespace: function (obj, path, val) {
-            var levels = path.split('.'),
-                currObj = obj;
-
-            trendPlots.forEachArray(levels, function (level, idx) {
-                currObj[level] = currObj[level] || {};
-
-                if(idx === levels.length - 1 && val !== undefined) {
-                    if(typeof currObj[level] === 'object' && typeof val === 'object') {
-                        $.extend(true, currObj[level], val);
-                    } else {
-                        currObj[level] = val;
-                    }
-                } else {
-                    currObj = currObj[level];
-                }
-            });
-
-            return obj;
-        },
-        complicateObject: function (map, simple, complex) {
-            var ns = trendPlots.createNamespace;
-
-            trendPlots.forEach(map, function (dst, prop) {
-                var src = simple[prop];
-
-                if(src !== undefined) {
-                    complex = ns(complex, dst, src);
-                }
-
-            });
-
-            return complex;
-        },
+        }
     },
     emptyFn = trendPlots.emptyFn,
     TrendPlot = function (config) {
@@ -498,7 +498,9 @@ var trendPlots = {
                 log(cfg);
             },
             destroy = function () {
-                instance.destroy();
+                if (instance.container !== undefined) {
+                    instance.destroy();
+                }
             };
 
         trendSelf.getParsedData = function (cfg, series) {
@@ -587,11 +589,6 @@ var trendPlots = {
                     },
                     legend: {
                         enabled: false
-                    // },
-                    // plotOptions: {
-                    //     series: {
-                    //         animation: false
-                    //     }
                     },
                     series: []
                 },

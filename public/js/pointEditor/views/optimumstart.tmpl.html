@@ -1,0 +1,212 @@
+<div class="form-group">
+<div class="floatingHeader">
+    <h3 data-bind="text: data.Name"></h3>
+    <div class="actionGroup">
+        <div data-bind="text: data._id" class="pointId"></div>
+        <input type="button" data-bind="click: save" class="btn btn-sm btn-success" value="Save point">
+    </div>
+</div>
+
+    <table class="pointGrid table table-condensed">
+        <thead>
+            <tr>
+                <th width="200"></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+
+        <!-- ko with: data['Point Type'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Point Type</th>
+            <td><span data-bind="text: Value" class="form-control-static"></span></td>
+        </tr>
+        <!-- /ko -->
+        
+        <!-- ko with: data['Reliability'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Reliability</th>
+            <td><span data-bind="text: Value" class="form-control-static"></span></td>
+        </tr>
+        <!-- /ko -->
+        
+        <!-- ko with: data['Alarm State'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Alarm State</th>
+            <td><span data-bind="text: Value" class="form-control-static"></span></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Last Report Time'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Last Report Time</th>
+            <td data-bind="template: { name: 'control11.timeT', data: { prop: $data, propName: 'Last Report Time' } }"></td>
+        </tr>
+        <!-- /ko -->
+        
+        <!-- ko with: data['Out of Service'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Out of Service</th>
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Out of Service' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['COV Enable'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">COV Enable</th>
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'COV Enable' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Value'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Value</th>
+            <td data-bind="template: { name: 'control5.enumSelect', data: { prop: $data, propName: 'Value', enumOptions: $data.ValueOptions } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Control Priority'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Control Priority</th>
+            <td><span data-bind="text: Value" class="form-control-static"></span></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Controller'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Controller</th>
+            <td><span data-bind="text: Value" class="form-control-static"></span></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Lead Time'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Lead Time</th>
+            <td data-bind="template: { name: 'control17.hrMin', data: { prop: $data, propName: 'Lead Time' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <tr>
+            <th scope="row">Occupancy Schedule</th>
+            <td>
+                <!-- ko foreach: data['Occupancy Schedule'] -->
+                <span data-bind="template: { name: 'control100.occupancyschedule', data: { prop: $data, propName: 'day'+$index(), day: pointEditor.ossDayOfWeek[$index()] } }"></span>
+                <!-- /ko -->
+            </td>
+        </tr>
+
+        <!-- ko with: data['Heating Equipment'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Heating Equipment</th>
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Heating Equipment' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Cooling Equipment'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Cooling Equipment</th>
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Cooling Equipment' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Active Release'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Active Release</th>
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Active Release' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Inactive Release'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Inactive Release</th>
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Inactive Release' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Heating Gain'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Heating Gain</th>
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Heating Gain' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Cooling Gain'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Cooling Gain</th>
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Cooling Gain' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Outside Air Gain'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Outside Air Gain</th>
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Outside Air Gain' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Stop Gain'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Stop Gain</th>
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Stop Gain' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Input Deadband'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Input Deadband</th>
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Input Deadband' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Setback Enable'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Setback Enable</th>
+            <td data-bind="template: { name: 'control7.bool', data: { prop: $data, propName: 'Setback Enable' } }"></td>
+        </tr>
+        <!-- /ko -->        
+
+        <!-- ko with: data['Cooling Setpoint'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Cooling Setpoint</th>
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Cooling Setpoint' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Heating Setpoint'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Heating Setpoint</th>
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Heating Setpoint' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Setback Deadband'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Setback Deadband</th>
+            <td data-bind="template: { name: 'control.number', data: { prop: $data, propName: 'Setback Deadband' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko foreach: data['Point Refs'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row" data-bind="text: PropertyName"></th>
+            <td data-bind="template: { name: 'control8.point' }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Description'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Description</th>
+            <td data-bind="template: { name: 'control2.text', data: { prop: $data, propName: 'Description' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        <!-- ko with: data['Remarks'] -->
+        <tr data-bind="css: { active: !isDisplayable() }">
+            <th scope="row">Remarks</th>
+            <td data-bind="template: { name: 'control2.text', data: { prop: $data, propName: 'Remarks' } }"></td>
+        </tr>
+        <!-- /ko -->
+
+        </tbody>
+    </table>
+</div>

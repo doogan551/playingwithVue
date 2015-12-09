@@ -11,6 +11,7 @@ var validEthProtocols = [1];
 var deviceTree = [];
 var server = {};
 var networkNumbers = [];
+var startNetworks = [];
 var badNumbers = [];
 var deviceUpis = [];
 var topLevels = [];
@@ -190,7 +191,8 @@ var makeTree = function(next) {
                 }
 
                 async.eachSeries(deviceBranch.networks, function(branchNetwork, callback2) {
-                    if (branchNetwork !== 0) {
+                    if (branchNetwork !== 0 && startNetworks.indexOf(branchNetwork) < 0) {
+                        startNetworks.push(branchNetwork);
                         buildTree(branchNetwork, function(err, _branches) {
                             if (!!_branches.length) {
                                 deviceBranch.branches = deviceBranch.branches.concat(_branches);
@@ -213,6 +215,7 @@ var makeTree = function(next) {
     };
 
     async.eachSeries(topLevels, function(top, acb) {
+        startNetworks = [top];
         networkNumbers.push(top);
         topNode = {
             branches: []
@@ -233,7 +236,7 @@ var makeTree = function(next) {
 
 };
 
-var buildNodes = function( next) {
+var buildNodes = function(next) {
     var addToBranch = function(upSegment, downSegment, upType) {
 
         for (var j = 0; j < unknownBranches.length; j++) {
@@ -253,6 +256,7 @@ var buildNodes = function( next) {
     };
 
     var removeBranches = function() {
+        // TODO: find way to avoid deleting circular tree dependencies. 100 > 219 > 100
         for (var i = 0; i < unknownBranches.length; i++) {
             for (var j = 0; j < newBranches.length; j++) {
                 if (unknownBranches[i].ethernets.indexOf(newBranches[j].upNetwork) > -1 || unknownBranches[i].serials.indexOf(newBranches[j].upNetwork) > -1) {
@@ -286,9 +290,9 @@ var buildNodes = function( next) {
     };
 
     var buildTree = function() {
-        for (var i = 0; i < unknownBranches.length; i++) {
+        /*for (var i = 0; i < unknownBranches.length; i++) {
 
-        }
+        }*/
     };
 
     var buildBranches = function(devices) {
@@ -353,9 +357,12 @@ var buildNodes = function( next) {
 };
 
 var sortTree = function(next) {
-    Utility.getOne({collection:'SystemInfo', query:{
-        'Name': 'Preferences'
-    }}, function(err, syspref) {
+    Utility.getOne({
+        collection: 'SystemInfo',
+        query: {
+            'Name': 'Preferences'
+        }
+    }, function(err, syspref) {
         var serverNetwork = syspref['IP Network Segment'];
         deviceTree.sort(compare);
         for (var i = 0; i < deviceTree.length; i++) {
@@ -378,7 +385,7 @@ var labelBadNetworks = function(next) {
         }
 
     };
-    badNumbers.push(666);
+    // badNumbers.push(666);
     for (var i = 0; i < badNumbers.length; i++) {
         for (var j = 0; j < deviceTree.length; j++) {
             for (var k = 0; k < deviceTree[j].branches.length; k++) {

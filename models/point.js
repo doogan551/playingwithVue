@@ -859,6 +859,7 @@ module.exports = {
           }
           addTemplateToDB(template, callback);
         }
+        template['Control Array'] = [];
       }
 
     }

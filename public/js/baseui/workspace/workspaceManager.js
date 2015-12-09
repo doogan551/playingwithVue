@@ -395,8 +395,11 @@ window.workspaceManager = (function ($) {
             }
         };
         _local.socket.on('updatedSystemInfo', function(data) {
+            console.log(data);
             if (data.name === 'controllers') {
                 _local.getSystemEnum('controllers', _local.refreshUserCtlr);
+            } else if(data.name === 'Preferences'){
+                _local.getSystemEnum('telemetry');
             } else {
                 _local.getSystemEnum(data.name);
             }
@@ -405,6 +408,7 @@ window.workspaceManager = (function ($) {
         //load system enums
         _local.getSystemEnum('controlpriorities');
         _local.getSystemEnum('qualityCodes');
+        _local.getSystemEnum('telemetry');
         _local.getSystemEnum('controllers', _local.refreshUserCtlr);
 
         //load point navigator
@@ -1399,6 +1403,13 @@ window.workspaceManager = (function ($) {
                         _array.push(_setQCData(row));
                         _setQCData(row, _object);//_object[row[QCL]] = _getQCData(row);
                     }
+                } else if (enumType === 'telemetry') {
+                    _array = [];//.length = 0; // Clear the default contents
+
+                    for(var prop in data){
+                        _array.push({name:prop, value:data[prop]});
+                    }
+                    _object = data;
                 }
 
                 _local.systemEnums[enumType] = _array;

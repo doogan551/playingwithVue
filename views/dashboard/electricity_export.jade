@@ -67,7 +67,7 @@
                     input.btn.btn-primary.btn-file.uploadBtn(type='file', accept='.csv', data-bind='event:{change:uploadCsv($element.files)}, enable:(uploadMethods().length > 0) && !inAjax()')
     // /ko
     //ko if:$root.canWrite($parent.securityBindings.security()) === false
-    .exportBody
+    .infoMessage
         i.fa.fa-info-circle
         span You do not have sufficient permissions to import data.
     // /ko

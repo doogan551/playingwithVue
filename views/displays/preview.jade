@@ -12,9 +12,6 @@ block content
   link(rel='stylesheet', href='/css/displays/main.css')
   link(rel='stylesheet', href='/css/displays/display.css')
 
-  script(src="/js/lib/highstock.js")
-  script(src="/js/lib/highcharts-more.js")
-  script(src='/trendtest/trendTest2.js')
   script(src='/js/displays/view.js')
   #backDrop(ng-style="{'background-color' : convertColor(display['Background Color'])}")
     #display(ng-style="{'margin-left' : dLeft + 'px','margin-top' : dTop + 'px', 'box-shadow' : 'none', 'background-color' : convertColor(display['Background Color']),'transform' : 'scale(' + zoomDec(zoom) + ')','-webkit-transform' : 'scale(' + zoomDec(zoom) + ')', 'height': display.Height + 'px', 'width': display.Width + 'px'}")

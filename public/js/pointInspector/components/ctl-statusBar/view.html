@@ -1,4 +1,9 @@
 <!-- ko if: isVisible -->
+<!-- ko if: showControlPending() -->
+<span class="statusItem">
+    <span class="label-color warning">Control Pending</span>
+</span>
+<!-- /ko -->
 <!-- ko if: showReliability() -->
 <span class="statusItem">
     <span data-bind="text: 'Reliability: ' + reliability()" class="label-color warning"></span>
