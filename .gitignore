@@ -7,4 +7,5 @@ scripts/
 dist/
 build/
 nbproject/
-public/**/saws.scc
+iisnode/
+*.scc
