@@ -1,4 +1,5 @@
 - \infoscan-test\public\js\pointLookup\pointLookup.js:
+- change /pointlookup/newpoint in public\js\pointLookup\pointLookup.js to /api/points/newpoint
 	/pointlookup/ -> /api/points/
 
 - front-end client socket.io.js source to v1.3.5
@@ -15,5 +16,3 @@
 
 - delete /public/js/pointSelector
 - delete /public/js/pointEditor
-
-- change /pointlookup/newpoint in public\js\pointLookup\pointLookup.js to /api/points/newpoint

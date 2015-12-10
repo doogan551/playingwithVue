@@ -2214,11 +2214,10 @@ var tou = {
 
     initSocket: function(cb) {
         var socket = io.connect('http://' + window.location.hostname + ':8085');
-
         socket.on('connect', function() {
             tou.socket = socket;
-            tou.socketid = socket.socket.sessionid;
-            tou.log('SOCKETID:', tou.socketid);
+            tou.socketid = socket.id;
+
             cb();
         });
 

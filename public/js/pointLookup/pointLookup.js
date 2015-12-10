@@ -588,7 +588,7 @@ window.pointLookup = (function(module, ko, $) {
             params.pointType = module.POINTTYPE;
         }
         return $.ajax({
-            url: '/pointLookup/browse',
+            url: '/api/points/browse',
             dataType: 'json',
             type: 'post',
             data: params
@@ -624,7 +624,7 @@ window.pointLookup = (function(module, ko, $) {
             params.pointType = module.POINTTYPE;
         }
         return $.ajax({
-            url: '/pointLookup/search',
+            url: '/api/points/search',
             dataType: 'json',
             type: 'post',
             data: params
@@ -670,7 +670,7 @@ window.pointLookup = (function(module, ko, $) {
             return browseRequest;
         }
         return $.ajax({
-            url: '/pointLookup/toggleGroup',
+            url: '/api/points/toggleGroup',
             dataType: 'json',
             type: 'post',
             data: {
@@ -1165,7 +1165,7 @@ window.pointLookup = (function(module, ko, $) {
                     });
                     break;
                 case 'clone':
-                    workspaceManager.openWindowPositioned('/pointLookup/newPoint/' + id, 'New Point', '', '', 'newPoint', {
+                    workspaceManager.openWindowPositioned('/api/points/newPoint/' + id, 'New Point', '', '', 'newPoint', {
                         width: 960,
                         height: 280
                     });
@@ -1310,7 +1310,7 @@ window.pointLookup = (function(module, ko, $) {
                 selectedPointType = window.encodeURI(selectedpointTypes[0].originalItem.key);
             }
 
-            win = workspaceManager.openWindowPositioned('/pointLookup/newPoint/?selectedPointType=' + selectedPointType, 'New Point', '', '', 'newPoint', {
+            win = workspaceManager.openWindowPositioned('/api/points/newPoint/?selectedPointType=' + selectedPointType, 'New Point', '', '', 'newPoint', {
                 width: 960,
                 height: 280
             });
