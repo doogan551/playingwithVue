@@ -2772,10 +2772,10 @@ var Config = (function(obj) {
                 isDisplayable = false;
                 // Nope, a reference point IS defined
             } else {
-                if (data.propertyObject.ValueType !== point[prop.ifValueN].ValueType) {
+                if (refPoint.Value.ValueType !== point[prop.ifValueN].ValueType) {
                     point[prop.ifValueN] = refPoint.Value;
                     delete point[prop.ifValueN].oosValue;
-                } else if (data.propertyObject.ValueType === 5) {
+                } else if (refPoint.Value.ValueType === 5) {
                     point[prop.ifValueN].ValueOptions = refPoint.Value.ValueOptions;
 
                     for (var property in point[prop.ifValueN].ValueOptions) {
@@ -2831,10 +2831,10 @@ var Config = (function(obj) {
             // If property is Input Point 1
             if (data.property === "Input Point 1") {
                 if (data.propertyObject.PointInst !== 0) {
-                    if (point["Input Point 1"].ValueType !== point["Input 2 Constant"].ValueType) {
+                    if (refPoint.Value.ValueType !== point["Input 2 Constant"].ValueType) {
                         point["Input 2 Constant"] = refPoint.Value;
                         delete point["Input 2 Constant"].oosValue;
-                    } else if (point["Input Point 1"].ValueType === 5) {
+                    } else if (refPoint.Value.ValueType === 5) {
                         point["Input 2 Constant"].ValueOptions = refPoint.Value.ValueOptions;
 
                         for (var prop in point["Input 2 Constant"].ValueOptions) {

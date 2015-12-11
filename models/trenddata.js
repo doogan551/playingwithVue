@@ -35,7 +35,7 @@ module.exports = {
             query: query,
             collection: 'historydata',
             limit: limit,
-            sort: sort,
+            sort: {timestamp:sort},
             skip: skip
         };
 

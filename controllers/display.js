@@ -8,15 +8,13 @@ router.post('/getDisplayInfo', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
 
-	Display.getDisplayInfo(data, function(err, utility) {
+	Display.getDisplayInfo(data, function(err, info) {
 		if (err) {
 			return utils.sendResponse(res, {
 				err: err
 			});
 		} else {
-			return utils.sendResponse(res, {
-				utility: utility
-			});
+			return utils.sendResponse(res, info);
 		}
 	});
 });

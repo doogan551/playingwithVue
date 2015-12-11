@@ -37,6 +37,7 @@ process.argv.forEach(function(val, index, array) {
 		}
 	}
 });
+
 if (processFlag === "gpl") {
 	mongo.connect(conn, function(err, db) {
 		if (err) console.log(err);

@@ -66,7 +66,7 @@ module.exports = {
             var callback = function(ret) {
                 returnObj.upiNames = ret.names;
                 returnObj.pointTypes = ret.pointTypes;
-                return cb(returnObj);
+                return cb(null, returnObj);
             };
             returnObj.versions = versions;
             getUpiNames(callback);

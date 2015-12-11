@@ -237,6 +237,7 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
             $modalError = $modal.find('.modalError'),
             $btnSubmit = $modal.find('.btnSubmit'),
             callback = function(data) {
+                console.log(data);
                 self.loadView(data, 'upload');
             };
 
@@ -299,8 +300,8 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
             } else {
                 data.error = ko.observable('');
                 data.value = ko.observable(data);
-            }
             self.loadView(data, 'history');
+            }
         });
     };
 

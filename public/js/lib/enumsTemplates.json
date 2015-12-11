@@ -1183,7 +1183,7 @@
             },
             "Optimum Start": {
                 "enum": 143,
-                "lists": ["default", "schedEntry"],
+                "lists": ["default", "schedEntry", "dynamic"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value"]
             },
@@ -8918,6 +8918,37 @@
                     "ValueType": 18,
                     "Value": 4
                 },
+                "Trend Enable": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
+                "Trend Interval": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 13,
+                    "Value": 60
+                },
+                "Trend Last Status": {
+                    "isDisplayable": false,
+                    "isReadOnly": true,
+                    "ValueType": 18,
+                    "Value": 0
+                },
+                "Trend Last Value": {
+                    "isDisplayable": false,
+                    "isReadOnly": true,
+                    "ValueType": 5,
+                    "Value": "Off",
+                    "eValue": 0
+                },
+                "Trend Samples": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 4,
+                    "Value": 0
+                },
                 "Value": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -12869,7 +12900,7 @@
                 "If Value 1": {
                     "isDisplayable": false,
                     "isReadOnly": false,
-                    "ValueType": 0,
+                    "ValueType": 5,
                     "Value": "Off",
                     "eValue": 0,
                     "ValueOptions": {
@@ -12880,7 +12911,7 @@
                 "If Value 2": {
                     "isDisplayable": false,
                     "isReadOnly": false,
-                    "ValueType": 0,
+                    "ValueType": 5,
                     "Value": "Off",
                     "eValue": 0,
                     "ValueOptions": {
@@ -12891,7 +12922,7 @@
                 "If Value 3": {
                     "isDisplayable": false,
                     "isReadOnly": false,
-                    "ValueType": 0,
+                    "ValueType": 5,
                     "Value": "Off",
                     "eValue": 0,
                     "ValueOptions": {
@@ -12902,7 +12933,7 @@
                 "If Value 4": {
                     "isDisplayable": false,
                     "isReadOnly": false,
-                    "ValueType": 0,
+                    "ValueType": 5,
                     "Value": "Off",
                     "eValue": 0,
                     "ValueOptions": {
@@ -12913,7 +12944,7 @@
                 "If Value 5": {
                     "isDisplayable": false,
                     "isReadOnly": false,
-                    "ValueType": 0,
+                    "ValueType": 5,
                     "Value": "Off",
                     "eValue": 0,
                     "ValueOptions": {
@@ -13622,7 +13653,7 @@
                 "Input 2 Constant": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 0,
+                    "ValueType": 1,
                     "Value": 0.0
                 },
                 "Last Report Time": {

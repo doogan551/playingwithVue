@@ -447,7 +447,7 @@ function checkForPointTail(upi, point, callback) {
 function updateValsTail(point, finalCB) {
 
     if (point) {
-        point = setQualityLabel(point);
+        point = common.setQualityLabel(point);
         if (point.Value && point.Value.eValue !== undefined && point.Value.eValue !== null) {
             var pv = point.Value;
             for (var prop in pv.ValueOptions) {

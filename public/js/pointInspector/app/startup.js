@@ -428,6 +428,7 @@ define([
                 } else {
                     pointInspector.modelUpdate(true);
                     updatedPoint = JSON.parse(JSON.stringify(updatedPoint));
+                    pointInspector.point.updatedPoint = updatedPoint;
                     ko.viewmodel.updateFromModel(pointInspector.point.data, updatedPoint);
                     pointInspector.modelUpdate(false);
                 }
@@ -1122,7 +1123,7 @@ define([
                                 return !/^[\+-]/g.test(currentValue);
                             } else {
                                 // Allow if previous character is 'e' or 'E' and next character is NOT '+' or '-'
-                                return /^[eE]$|^[eE][^\+-]/g.test(currentValue.substring(cursorPosition-1, cursorPosition+1));
+                                return (/^[eE]$|^[eE][^\+-]/g).test(currentValue.substring(cursorPosition-1, cursorPosition+1));
                             }
                         };
                     method = 'key';

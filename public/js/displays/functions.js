@@ -428,7 +428,7 @@ displays = $.extend(displays, {
 
             socket.on('connect', function() {
                 var sess = {};
-                sess.socketid = socket.socket.sessionid;
+                sess.socketid = socket.id;
                 sess.display = angular.copy(window.displayJson);
                 socket.emit('displayOpen', {
                     data: sess
