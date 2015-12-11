@@ -48,7 +48,10 @@
     "gm": "^1.21.1",
     "glob": "^5.0.15",
     "chai-http": "^1.0.0",
-    "xhr-request": "^1.0.1"
+    "xhr-request": "^1.0.1",
+    "mongoose": "^4.3.1",
+    "cloneextend": "0.0.3",
+    "acorn": "^2.6.4"
   },
   "devDependencies": {},
   "scripts": {
