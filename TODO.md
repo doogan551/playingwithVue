@@ -18,7 +18,7 @@
 - helmet module for security
 - formidable module for files in req
 - compression module
-_ agenda
+_ agenda - scheduled tasks
 _ agenda-ui
 _ fs-extra
 
@@ -44,7 +44,5 @@ _ fs-extra
 - test models and controllers and socket
 
 - needs work
-- alarm model
-- socket connections in front end
 - GET /trendtest/trendTest2.js 404
 - setup server logs page view
