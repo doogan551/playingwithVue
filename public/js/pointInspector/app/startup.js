@@ -343,7 +343,34 @@ define([
                 config = pointInspector.utility.config,
                 updatedPoint,
                 originalProp,
-                pointProp;
+                pointProp,
+                updateObjectStructure = function(_koPoint, _configPoint) {
+                    var addProps = function(koPoint, configPoint) {
+                        for (var prop in configPoint) {
+                            if(configPoint[prop].hasOwnProperty('ValueOptions') && !koPoint[prop].hasOwnProperty('ValueOptions')){
+                                koPoint[prop].ValueOptions = ko.observableArray(pointInspector.utility.enumToArray(configPoint[prop].ValueOptions));
+                            }
+                            if(configPoint[prop].hasOwnProperty('eValue') && !koPoint[prop].hasOwnProperty('eValue')){
+                                koPoint[prop].eValue = ko.observable(configPoint[prop].eValue);
+                            }
+                        }
+                    };
+                    var removeProps = function(koPoint, configPoint) {
+                    for (var koProp in koPoint) {
+                        if (configPoint.hasOwnProperty[koProp]) {
+                            if (!configPoint[koProp].hasOwnProperty('ValueOptions') && koPoint[koProp].hasOwnProperty('ValueOptions')) {
+                                delete koPoint[koProp].ValueOptions;
+                            }
+                            if (!configPoint[koProp].hasOwnProperty('eValue') && koPoint[koProp].hasOwnProperty('eValue')) {
+                                delete koPoint[koProp].eValue;
+                            }
+                        }
+                    }
+                    };
+                    addProps(_koPoint, _configPoint);
+                    removeProps(_koPoint, _configPoint);
+                };
+
             if (e.hasOwnProperty('oldPoint') && e.oldPoint !== null) {
                 point = {
                     point: ko.viewmodel.toModel(e.point),
@@ -429,6 +456,8 @@ define([
                     pointInspector.modelUpdate(true);
                     updatedPoint = JSON.parse(JSON.stringify(updatedPoint));
                     pointInspector.point.updatedPoint = updatedPoint;
+                    ko.viewmodel.updateFromModel(pointInspector.point.data, updatedPoint);
+                    updateObjectStructure(pointInspector.point.data, updatedPoint);
                     ko.viewmodel.updateFromModel(pointInspector.point.data, updatedPoint);
                     pointInspector.modelUpdate(false);
                 }
@@ -587,17 +616,16 @@ define([
     //point viewmodel
     function Point(data) {
         var self = this,
-            //observable mapping
             options = {
                 extend: {
                     "{root}": {
-                        map  : function (point) {
+                        map: function(point) {
                             for (var i in point) {
                                 options.shared.mapValueType(point[i]);
                             }
                             return point;
                         },
-                        unmap: function (point) {
+                        unmap: function(point) {
                             for (var i in point) {
                                 options.shared.unmapValueType(point[i]);
                             }
@@ -606,14 +634,14 @@ define([
                     }
                 },
                 shared: {
-                    mapValueType  : function (item) {
+                    mapValueType: function(item) {
                         return item;
                     },
-                    unmapValueType: function (item) {
+                    unmapValueType: function(item) {
                         return item;
                     },
                     extendArrayValue: {
-                        map : function(value) {
+                        map: function(value) {
                             return ko.observable(value);
                         },
                         unmap: function(value) {
@@ -623,17 +651,17 @@ define([
                 },
                 custom: {
                     "ValueOptions": {
-                        map  : function (options) {
+                        map: function(options) {
                             var mapped = ko.observableArray(pointInspector.utility.enumToArray(options));
                             return mapped;
                         },
-                        unmap: function (options) {
+                        unmap: function(options) {
                             var unmapped = pointInspector.utility.arrayToValueOptions(options());
                             return unmapped;
                         }
                     },
                     "{root}.Occupancy Schedule[i]": {
-                        map : function(schedule) {
+                        map: function(schedule) {
                             var _schedule = ko.viewmodel.toModel(schedule);
                             _schedule.Enable = ko.observable(_schedule.Enable);
                             _schedule['Occupancy Begin Time'] = {
@@ -661,8 +689,8 @@ define([
                         }
                     },
                     "{root}.Boolean Registers[i]": "extendArrayValue",
-                    "{root}.Integer Registers[i]":  "extendArrayValue",
-                    "{root}.Real Registers[i]":  "extendArrayValue"
+                    "{root}.Integer Registers[i]": "extendArrayValue",
+                    "{root}.Real Registers[i]": "extendArrayValue"
                 }
             };
 
@@ -801,6 +829,12 @@ define([
             if (newPointData._pStatus === pointInspector.utility.config.Enums["Point Statuses"].Inactive.enum) {
                 emitString = 'addPoint';
                 emitData   = { point: newPointData };
+            } else if(newPointData._pStatus == pointInspector.utility.config.Enums["Point Statuses"].Active.enum){
+                for (var prop in newPointData) {
+                    if (newPointData[prop].hasOwnProperty('ValueOptions') && Array.isArray(newPointData[prop].ValueOptions)) {
+                        newPointData[prop].ValueOptions = pointInspector.utility.arrayToValueOptions(newPointData[prop].ValueOptions);
+                    }
+                }
             }
 
             if (data.baseComponent === "pt-slideshow") {  // clean up any removed slides

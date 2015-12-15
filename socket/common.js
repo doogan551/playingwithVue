@@ -106,6 +106,7 @@ common.updateCfgRequired = updateCfgRequired;
 common.getActiveAlarmsNew = getActiveAlarmsNew;
 common.getRecentAlarms = getRecentAlarms;
 common.getUnacknowledged = getUnacknowledged;
+common.sendUpdate = sendUpdate;
 
 module.exports = {
   socket: socket
@@ -2035,5 +2036,13 @@ function autoAcknowledgeAlarms(callback) {
     }
   }, function(err, result) {
     callback(result);
+  });
+}
+
+function sendUpdate(dynamic) {
+  io.sockets.connected[dynamic.sock].emit('recieveUpdate', {
+    sock: dynamic.sock,
+    upi: dynamic.upi,
+    dynamic: dynamic.dyn
   });
 }

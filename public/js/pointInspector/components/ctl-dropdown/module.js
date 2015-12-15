@@ -29,12 +29,6 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     refPoint: null
                 });
             });
-        },
-        update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
-            var $element = $(element),
-                value = ko.utils.unwrapObservable(valueAccessor()),
-                allBindings = allBindingsAccessor();
-            console.log(allBindings);
         }
     };
 
@@ -55,18 +49,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         var options,
             data = this.data,
             valueIsInOptions;
-        
-        var propertyName = this.propertyName;
-        var enumToArray = this.utility.enumToArray;
-
-        if (data.ValueType() === 5 && data.eValue === undefined) {
-            var updatedPoint = this.root.point.updatedPoint;
-
-            data.Value = ko.observable(updatedPoint[propertyName].Value);
-            data.eValue = ko.observable(updatedPoint[propertyName].eValue);
-            data.ValueOptions = ko.observable(enumToArray(updatedPoint[propertyName].ValueOptions));
-        }
-
+            console.log('get options', this.propertyName);
         if (typeof data.ValueOptions == 'function') {
             options = data.ValueOptions();
         } else {
@@ -76,6 +59,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         if (!options) {
             options = this.root.point.data.Value.ValueOptions();
         }
+
         valueIsInOptions = ko.utils.arrayFirst(options, function(option) {
             return ko.unwrap(option.value) == data.eValue();
         });

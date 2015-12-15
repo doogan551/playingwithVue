@@ -10,8 +10,10 @@ var logger = require('../helpers/logger')(module);
 var openAlarms = [];
 var openDisplays = [];
 var io;
+var common;
 
-module.exports = function(common) {
+module.exports = function(_common) {
+    common = _common;
     var oplog = common.sockets.get().oplog;
     io = common.sockets.get().io;
     openAlarms = common.openAlarms;
@@ -463,7 +465,7 @@ function updateValsTail(point, finalCB) {
                         openDisplays[i].display["Screen Objects"][j].Value = point.Value.Value;
                         openDisplays[i].display["Screen Objects"][j].eValue = point.Value.eValue;
                         openDisplays[i].display["Screen Objects"][j]["Quality Label"] = point["Quality Label"];
-                        sendUpdate({
+                        common.sendUpdate({
                             sock: openDisplays[i].sockId,
                             upi: point._id,
                             dyn: {
