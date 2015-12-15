@@ -5,7 +5,10 @@ var Config = require('../public/js/lib/config');
 var Utility = require('../models/utility');
 var cppApi = new(require('Cpp_API').Tasks)();
 
-module.exports = function(common) {
+var common;
+
+module.exports = function(_common) {
+    var common = _common;
     var tcp = common.sockets.get().tcp;
 
     tcp.on('connection', function(socket) {
