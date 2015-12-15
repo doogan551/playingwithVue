@@ -1,0 +1,97 @@
+include ../base
+
+link(rel='stylesheet',href='/css/securityAdmin/securityAdmin.css')
+
+body
+    
+    //- BEGIN RIGHT-SIDE HIDDEN PANEL
+
+    div(data-role="panel", id="mypanel", data-position="right", data-display="overlay", data-theme="a", data-dismissible='false')
+        a(style="position: absolute; right: 5px;", href='#', data-rel="close", data-role='button', data-icon='delete', data-iconpos='notext', data-theme='a') Close
+        br
+        .circle
+        br
+        h4 Bob Foaple
+        .clear
+
+        hr
+        p   First: 
+            span.field Bob
+            input#edit(value="Bob")
+        
+        p   Last: 
+            span.field Foaple
+            input#edit(value="Foaple")
+
+        p   Phone: 
+            span.field 991-567-5309
+            input#edit(value="991-567-5309")
+
+        p   Email: 
+            span.field bobfoaple@gmail.com
+            input#edit(value="bobfoaple@gmail.com")
+        
+        br
+        h5 Memberships
+        hr
+            
+        div(style="border:3px dotted gray; padding:5px;")
+            p Administrators
+            p Managers
+
+        //- FOLLOWING IS ANOTHER OPTION FOR DISPLAYING THE USER'S GROUP MEMEBERSHIPS
+
+        //div(style="border:3px dotted gray; padding:5px;")
+        //    ul(data-role="listview")
+        //        li Administrators
+        //        li Managers
+
+        br
+        br
+        br
+
+        a(href="#", data-role="button", data-theme="b") View Point Access
+        br
+        br
+        a(href="#", data-role="button", data-theme="a") Clone User
+        a#editButton(href="#", data-role="button", data-theme="a") Edit User
+
+        //- FOLLOWING IS ANOTHER OPTION FOR DISPLAYING THE VIEW/CLONE/EDIT BUTTONS
+
+        //div(data-role="controlgroup")
+        //    a(href="#", data-role="button") View Point Access
+        //    a(href="#", data-role="button") Clone User
+        //    a#(href="#", data-role="button") Edit User
+
+
+    //- BEGIN CONTENT
+
+    div(data-role="content")
+    
+        //- LIST ALL USERS
+
+        div(style="position:relative")
+            img(src="/img/jdr/UserIcon-Large.png", style="position:absolute; left: 5px")
+            h3(style="padding-left:75px; padding-top:3px") Users
+            ul(data-role="listview", data-inset="true")
+                li(style="background-image: linear-gradient(white, #F1F1F1); padding-top:20px; padding-bottom:20px")
+                    .circle
+                        a(href="#mypanel") Bob Foaple
+                    .circle User2
+                    .circleDash
+                        a(href="#mypanel") Add User
+                    .clear
+
+        br
+        br
+
+        //- LIST ALL USER GROUPS
+
+        div(style="position:relative")
+            img(src="/img/jdr/GroupIcon-Large.png", style="position:absolute; left:5px")
+            h3(style="padding-left:100px; padding-top:10px;") User Groups
+            ul(data-role="listview", data-inset="true")
+                li <a href="#")>Administrators, 1 user, all points</a>
+                li <a href="#">Managers, 2 users, 125 points</a>
+    
+script(src='/js/securityAdmin/securityAdmin.js')

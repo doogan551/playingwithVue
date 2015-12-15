@@ -156,37 +156,41 @@ function importUpdate() {
 							/*updateProgramPoints(point, db, function(err) {
 									if (err)
 										console.log("updateProgramPoints", err);*/
-							updateGPLBlocks(point, function(err) {
+							updateMultiplexer(point, function(err) {
 								if (err)
-									console.log("updateGPLBlocks", err);
-								/*updateSensorPoints(db, point, function(err) {
+									console.log("updateMultiplexer", err);
+								updateGPLBlocks(point, function(err) {
 									if (err)
-										console.log("updateSensorPoints", err);*/
-								updateReferences(db, point, function(err) {
-									if (err)
-										console.log("updateReferences", err);
-									updatePointInstances(point, function(err) {
+										console.log("updateGPLBlocks", err);
+									/*updateSensorPoints(db, point, function(err) {
 										if (err)
-											console.log("updatePointInstances", err);
-										updateModels(db, point, function(err) {
+											console.log("updateSensorPoints", err);*/
+									updateReferences(db, point, function(err) {
+										if (err)
+											console.log("updateReferences", err);
+										updatePointInstances(point, function(err) {
 											if (err)
-												console.log("updateModels", err);
-											updateDevices(point, function(err) {
+												console.log("updatePointInstances", err);
+											updateModels(db, point, function(err) {
 												if (err)
-													console.log("updateDevices", err);
-												updateAlarmMessages(point, function(err) {
+													console.log("updateModels", err);
+												updateDevices(point, function(err) {
 													if (err)
-														console.log("updateAlarmMessages", err);
-													addBroadcastPeriod(point, function(err) {
+														console.log("updateDevices", err);
+													updateAlarmMessages(point, function(err) {
 														if (err)
-															console.log("addBroadcastPeriod", err);
-														updateTrend(point, function(err) {
+															console.log("updateAlarmMessages", err);
+														addBroadcastPeriod(point, function(err) {
 															if (err)
-																console.log("updateTrend", err);
-															updatePoint(db, point, function(err) {
+																console.log("addBroadcastPeriod", err);
+															updateTrend(point, function(err) {
 																if (err)
-																	console.log("updatePoint", err);
-																cb(null);
+																	console.log("updateTrend", err);
+																updatePoint(db, point, function(err) {
+																	if (err)
+																		console.log("updatePoint", err);
+																	cb(null);
+																});
 															});
 														});
 													});
@@ -397,7 +401,7 @@ function setupReportsCollections(db, callback) {
 	});
 }
 
-function setupSystemInfo(db, callback){
+function setupSystemInfo(db, callback) {
 	var timezones = importconfig.timeZones;
 
 	db.collection(systemInfoCollection).insert(timezones, callback);
@@ -1021,9 +1025,17 @@ function devModelLogic(point, db, callback) {
 	});
 }
 
+function updateMultiplexer(point, callback) {
+	if (point['Point Type'].Value === 'Multiplexer') {
+		point['Select State'].eValue = 1;
+		point['Select State'].Value = 'On';
+	}
+	return callback(null);
+}
+
 function updateGPLBlocks(point, callback) {
 
-	var pointTypes = ["Alarm Status", "Analog Selector", "Average", "Binary Selector", "Comparator", "Delay", "Digital Logic", "Economizer", "Enthalpy", "Logic", "Math", "Multiplexer", "Ramp", "Select Value", "Setpoint Adjust", "Totalizer"];
+	var pointTypes = ["Alarm Status", "Analog Selector", "Average", "Binary Selector", "Comparator", "Delay", "Digital Logic", "Economizer", "Enthalpy", "Logic", "Math", "Multiplexer", "Proportional", "Ramp", "Select Value", "Setpoint Adjust", "Totalizer"];
 	if (pointTypes.indexOf(point["Point Type"].Value) !== -1) {
 
 		for (var prop in point) {
@@ -1869,7 +1881,11 @@ function updateDevices(point, callback) {
 		}
 
 		point["Ethernet IP Port"].Value = 47808;
+		point["Ethernet IP Port"].isReadOnly = true;
+		point["Ethernet IP Port"].isDisplayable = false;
 		point["Downlink IP Port"].Value = 47808;
+		point["Downlink IP Port"].isReadOnly = true;
+		point["Downlink IP Port"].isDisplayable = false;
 		point["Downlink Broadcast Delay"].Value = 0;
 
 		delete point["Device Address"].Min;

@@ -1,4 +1,5 @@
 var winston = require('winston');
+var moment = require('moment');
 winston.emitErrs = true;
 
 var logger = new winston.Logger({
@@ -18,7 +19,9 @@ var logger = new winston.Logger({
       json: false,
       prettyPrint: true,
       colorize: true,
-        timestamp: true
+      timestamp: function() {
+        return moment().format();
+      }
     })
   ],
   exitOnError: false
@@ -27,7 +30,7 @@ var logger = new winston.Logger({
 module.exports = logger;
 module.exports.stream = {
   write: function(message, encoding) {
-    message = message.substr(0, message.length-1);
+    message = message.substr(0, message.length - 1);
     logger.info(message);
   }
 };

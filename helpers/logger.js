@@ -1,4 +1,6 @@
 var winston = require('winston');
+var moment = require('moment');
+
 winston.emitErrs = true;
 
 var logger = function(moduleName) {
@@ -23,7 +25,9 @@ var logger = function(moduleName) {
         json: false,
         colorize: true,
         label: label,
-        timestamp: true
+        timestamp: function(){
+          return moment().format();
+        }
       })
     ],
     exceptionHandlers:[

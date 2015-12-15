@@ -560,6 +560,23 @@ module.exports = function socketio(_common) {
         });
       });
     });
+    sock.on('getLogs', function(data) {
+      logger.query({
+        from: new Date() - 24 * 60 * 60 * 1000,
+        limit: 10,
+        start: -1,
+        order: 'desc',
+        fields:['label', 'timestamp', 'message']
+      }, function(err, results){
+        sock.emit('newLog', results);
+      });
+      logger.stream({
+        from: new Date(),
+        fields:['label', 'timestamp', 'message']
+      }).on('log', function(log) {
+        sock.emit('newLog', log);
+      });
+    });
   });
 };
 

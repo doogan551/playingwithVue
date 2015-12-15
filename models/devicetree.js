@@ -35,6 +35,17 @@ var compare = function(a, b) {
 module.exports = {
 
     getTree: function(data, cb) {
+
+        deviceTree = [];
+        server = {};
+        networkNumbers = [];
+        badNumbers = [];
+        deviceUpis = [];
+        topLevels = [];
+        unknownBranches = [];
+        tree = [];
+        newBranches = [];
+
         buildNodes(function(err) {
             makeTree(function(err) {
                 sortTree(function(err) {
@@ -228,7 +239,7 @@ var makeTree = function(next) {
             acb();
         });
     }, function(err) {
-        // logger.debug('badNumbers: '+badNumbers);
+        logger.info('badNumbers: '+badNumbers);
 
         next();
     });

@@ -47,3 +47,4 @@ _ fs-extra
 - alarm model
 - socket connections in front end
 - GET /trendtest/trendTest2.js 404
+- setup server logs page view

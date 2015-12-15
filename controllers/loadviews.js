@@ -87,5 +87,9 @@ router.get('/trendplots', function(req, res) {
   });
 });
 
+router.get('/logs', function(req, res) {
+  res.render("logs/index.jade");
+});
+
 
 module.exports = router;

@@ -1,8 +1,10 @@
 var fs = require('fs');
+var async = require('async');
 var moment = require('moment');
-var db = require('./helpers/db');
+var db = require('../helpers/db');
+// var Utility = require('../models/utility');
 var config = require('config');
-var logger = require('./helpers/logger')(module);
+var logger = require('../helpers/logger')(module);
 
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
@@ -68,4 +70,45 @@ function newHistory() {
     });
   });
 }
-newHistory();
+// newHistory();
+
+function fixDbDoubles() {
+  db.connect(connectionString.join(''), function(err) {
+    var criteria = {
+      collection: 'points',
+      query: {'Point Type.Value':'MultiState Value'}
+    };
+    console.log(criteria);
+    Utility.get(criteria, function(err, points) {
+      console.log(err, points.length);
+      async.eachSeries(points, function(point, cb) {
+        for (var prop in point) {
+          if (point[prop].hasOwnProperty('ValueType')) {
+            point[prop].ValueType = parseInt(point[prop].ValueType, 10);
+            if (point[prop].hasOwnProperty('eValue')) {
+              point[prop].eValue = parseInt(point[prop].eValue, 10);
+              for (var option in point[prop].ValueOptions) {
+                point[prop].ValueOptions[option] = parseInt(point[prop].ValueOptions[option], 10);
+              }
+            }
+            if (point[prop].ValueType !== 1) {
+              point[prop].Value = parseInt(point[prop].Value, 10);
+            }else{
+              point[prop].Value = parseFloat(point[prop].Value);
+            }
+          } else {
+            // point[prop] = parseInt(point[prop], 10);
+          }
+        }
+        criteria.query = {_id: point._id};
+        criteria.updateObj = point;
+        Utility.update(criteria, function(err, result) {
+          cb(err);
+        });
+      }, function(err) {
+        console.log('done', err);
+      });
+    });
+  });
+}
+// fixDbDoubles();
