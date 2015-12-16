@@ -764,6 +764,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
         item.intervalAdjust = ko.observable(clonedEntry && clonedEntry.intervalAdjust() || 0);
         item.url = ko.observable(null);
         item.scheduleName = ko.observable('');
+        item.lastValueType = ko.observable(0);
         if (self.pointType !== 'Schedule' && indiv._parentUpi() !== 0) {
             getRefData(indiv._parentUpi()).done(function(data) {
                 if (data.hasOwnProperty('message')) {
@@ -801,7 +802,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
         });
 
         item.allowHostEdit = ko.computed(function() {
-            switch (indiv["Control Property"].Value()) {
+            /*switch (indiv["Control Property"].Value()) {
                 case "Alarm Value":
                 case "Out of Service":
                 case "Execute Now":
@@ -812,7 +813,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
                     return false;
                 default:
                     return true;
-            }
+            }*/
         });
 
         item.visibleController = ko.computed(function() {
@@ -880,8 +881,8 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
         });
         indiv["Control Property"].Value.subscribe(function(property) {
             if (item.refPoint !== null) {
-                var pointtypePropertyTemplate = config.Templates.getTemplate(item.refPoint["Point Type"].Value)[property],
-                    valueTypeInt = pointtypePropertyTemplate.ValueType;
+                var pointtypePropertyTemplate = config.Templates.getTemplate(item.refPoint["Point Type"].Value)[property];
+                var valueTypeInt = pointtypePropertyTemplate.ValueType;
 
 
                 indiv["Control Value"].ValueType(valueTypeInt);
@@ -891,7 +892,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
                 //indiv["Active Release"].Value(false); If this is added back, go through all entries after load and set to db value
             }
         });
-        indiv["Control Value"].Value.subscribe(function(value) {
+        indiv["Control Value"].ValueType.subscribe(function(value) {
             var valueTypeInt = indiv["Control Value"].ValueType(),
                 property = indiv["Control Property"].Value();
 
@@ -912,11 +913,15 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
                 }
             } else {
                 if (valueTypeInt === 1) {
-                    if (item.oldPoint["Control Value"].ValueType !== 1)
+                    if (item.lastValueType() !== 1) {
+                        item.lastValueType(valueTypeInt);
                         indiv["Control Value"].Value(0);
+                    }
                 } else if (valueTypeInt === 7) {
-                    if (item.oldPoint["Control Value"].ValueType !== 7)
+                    if (item.lastValueType() !== 7) {
+                        item.lastValueType(valueTypeInt);
                         indiv["Control Value"].Value(false);
+                    }
                 }
             }
         });
@@ -1085,29 +1090,6 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
 
             };
         self.gettingData(true);
-        /*getData(this.id).done(function(data) {
-            var pointRefs = data.Involvement['Point Refs'],
-                dependencies = data.Involvement.Dependencies,
-                cleanProperties = function(item) {
-                    item['Device Name'] = item.Device ? item.Device.Name : '';
-                    item['Point Type'] = item['Point Type'] ? item['Point Type'] : '';
-                    item.Property = item.Property ? item.Property : '';
-                    item.Name = item.Name ? item.Name : '';
-                };
-            pointRefs.forEach(cleanProperties);
-            dependencies.forEach(cleanProperties);
-
-            self.pointRefs = pointRefs;
-            self.dependencies = dependencies;
-
-            self.networkError(false);
-            self.searchTerm.valueHasMutated(); // Force our computed to run & populate DOM
-        }).fail(function(jqXHR, textStatus) {
-            console.log('Ajax requst failed.', textStatus, jqXHR);
-            self.networkError(true);
-        }).always(function() {
-            self.gettingData(false);
-        });*/
 
         socket.emit('getScheduleEntries', {
             isSchedule: (this.pointType === "Schedule"),
@@ -1178,7 +1160,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
                 options = ko.utils.unwrapObservable(allBindings.options),
                 eValue = allBindings.value,
                 value = valueAccessor();
-                
+
 
             valueSubscription = allBindings.value.subscribe(function(newValue) {
 

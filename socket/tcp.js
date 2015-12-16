@@ -8,7 +8,7 @@ var cppApi = new(require('Cpp_API').Tasks)();
 var common;
 
 module.exports = function(_common) {
-    var common = _common;
+    common = _common;
     var tcp = common.sockets.get().tcp;
 
     tcp.on('connection', function(socket) {
