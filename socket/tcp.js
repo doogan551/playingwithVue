@@ -113,6 +113,7 @@ function runScheduleEntry(scheduleEntry, callback) {
             } else {
                 var oldPoint = _.cloneDeep(point);
                 point[controlProperty].Value = scheduleEntry["Control Value"].Value;
+                point._actvAlmId = oldPoint._actvAlmId;
                 var result = Config.Update.formatPoint({
                     oldPoint: oldPoint,
                     point: point,
