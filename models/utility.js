@@ -178,3 +178,50 @@ exports.distinct = function(criteria, cb) {
 
   collection.distinct(field, query, options, cb);
 };
+
+exports.getCursor = function(criteria, cb) {
+  var query = (!!criteria.query) ? criteria.query : {};
+  var coll = criteria.collection;
+  var limit = (!!criteria.limit) ? criteria.limit : 0;
+  var fields = (!!criteria.fields) ? criteria.fields : {};
+  var sort = (!!criteria.sort) ? criteria.sort : {};
+  var skip = (!!criteria.skip) ? criteria.skip : 0;
+  var collection;
+
+  if (!coll) {
+    return cb({
+      err: "Please provide a collection."
+    });
+  }
+
+  // console.log(query, coll);
+  collection = db.get().collection(coll);
+
+  var cursor = collection.find(query, fields).limit(limit).sort(sort).skip(skip);
+  cb(cursor);
+};
+
+/*Utility.iterateCursor({collection: 'points', query:{}, limit:10}, function(err, doc, cb){
+  // do something with doc
+  cb(null);
+}, function(err){
+  console.log('done', err);
+});*/
+exports.iterateCursor = function(criteria, fx, cb) {
+  exports.getCursor(criteria, function(cursor) {
+    var count = 0;
+
+    function processDoc(err, doc) {
+      if (!!err || doc === null) {
+        cb(err);
+      } else {
+        fx(err, doc, function(err) {
+          cursor.nextObject(processDoc);
+        });
+      }
+    }
+
+    cursor.nextObject(processDoc);
+
+  });
+};

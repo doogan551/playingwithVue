@@ -6,9 +6,6 @@
         "watch": ["socket", "controllers", "models", "helpers", "app.js"],
         "ignore_watch": ["logs", "apps", "build","nbproject", "scripts", "tests", "tmp"],
         "node_args": "--harmony",
-        "merge_logs": false,
-        "env": {
-            "NODE_ENV": "localhost"
-        }
+        "merge_logs": false
     }]
 }

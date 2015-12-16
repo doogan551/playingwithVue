@@ -2,7 +2,7 @@ var fs = require('fs');
 var async = require('async');
 var moment = require('moment');
 var db = require('../helpers/db');
-// var Utility = require('../models/utility');
+var Utility = require('../models/utility');
 var config = require('config');
 var logger = require('../helpers/logger')(module);
 
@@ -112,3 +112,15 @@ function fixDbDoubles() {
   });
 }
 // fixDbDoubles();
+
+function testDBCursor(){
+  db.connect(connectionString.join(''), function(err) {
+    Utility.iterateCursor({collection: 'points', query:{}, limit:10}, function(err, doc, cb){
+      console.log(err, doc._id);
+      cb(null);
+    }, function(err){
+      console.log('done', err);
+    });
+  });
+}
+testDBCursor();
