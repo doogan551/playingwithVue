@@ -8,3 +8,4 @@ build/
 nbproject/
 iisnode/
 *.scc
+Cpp_API*.log
