@@ -76,7 +76,9 @@ function fixDbDoubles() {
   db.connect(connectionString.join(''), function(err) {
     var criteria = {
       collection: 'points',
-      query: {'Point Type.Value':'MultiState Value'}
+      query: {
+        'Point Type.Value': 'MultiState Value'
+      }
     };
     console.log(criteria);
     Utility.get(criteria, function(err, points) {
@@ -91,16 +93,20 @@ function fixDbDoubles() {
                 point[prop].ValueOptions[option] = parseInt(point[prop].ValueOptions[option], 10);
               }
             }
-            if (point[prop].ValueType !== 1) {
-              point[prop].Value = parseInt(point[prop].Value, 10);
-            }else{
-              point[prop].Value = parseFloat(point[prop].Value);
+            if (!isNaN(parseInt(point[prop].Value, 10))) {
+              if (point[prop].ValueType !== 1) {
+                point[prop].Value = parseInt(point[prop].Value, 10);
+              } else {
+                point[prop].Value = parseFloat(point[prop].Value);
+              }
             }
           } else {
             // point[prop] = parseInt(point[prop], 10);
           }
         }
-        criteria.query = {_id: point._id};
+        criteria.query = {
+          _id: point._id
+        };
         criteria.updateObj = point;
         Utility.update(criteria, function(err, result) {
           cb(err);
@@ -111,16 +117,20 @@ function fixDbDoubles() {
     });
   });
 }
-// fixDbDoubles();
+fixDbDoubles();
 
-function testDBCursor(){
+function testDBCursor() {
   db.connect(connectionString.join(''), function(err) {
-    Utility.iterateCursor({collection: 'points', query:{}, limit:10}, function(err, doc, cb){
+    Utility.iterateCursor({
+      collection: 'points',
+      query: {},
+      limit: 10
+    }, function(err, doc, cb) {
       console.log(err, doc._id);
       cb(null);
-    }, function(err){
+    }, function(err) {
       console.log('done', err);
     });
   });
 }
-testDBCursor();
+// testDBCursor();

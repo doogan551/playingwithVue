@@ -4,6 +4,7 @@ var fs = require('fs');
 var Config = require('../public/js/lib/config');
 var Utility = require('../models/utility');
 var cppApi = new(require('Cpp_API').Tasks)();
+var logger = require('../helpers/logger')(module);
 
 var common;
 
@@ -12,7 +13,7 @@ module.exports = function(_common) {
     var tcp = common.sockets.get().tcp;
 
     tcp.on('connection', function(socket) {
-        console.log("connected tcpServer");
+        logger.info("connected tcpServer");
         socket.setEncoding('utf8');
 
         socket.on('data', function(buf) {
@@ -28,7 +29,7 @@ module.exports = function(_common) {
                 runScheduleEntry(jbuf.point, function(err) {
                     err = (err) ? err : "Success";
                     writeToLogs(dateString + ' -  ToD Schedule - ' + point._id + ' - ' + nameString + ' - ' + err + "\n", function(err) {
-                        console.log(err);
+                        logger.info(err);
                     });
                 });
             } else if (jbuf.msg === 'serverup' || jbuf.msg === 'serverdown') {
@@ -37,10 +38,10 @@ module.exports = function(_common) {
             }
         });
         socket.on('close', function(data) {
-            console.log("closing tcpServer", data);
+            logger.info("closing tcpServer", data);
         });
         socket.on('error', function(error) {
-            console.log("error on tcpServer", error);
+            logger.error("error on tcpServer", error);
         });
     });
 };

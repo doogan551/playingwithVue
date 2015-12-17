@@ -12,6 +12,7 @@ var constants = utils.CONSTANTS;
 var Config = require('../public/js/lib/config.js');
 var actLogsEnums = Config.Enums["Activity Logs"];
 var cppApi = new(require('Cpp_API').Tasks)();
+var logger = require('../helpers/logger')(module);
 
 var pointsCollection = utils.CONSTANTS("pointsCollection");
 var historyCollection = utils.CONSTANTS("historyCollection");
@@ -242,7 +243,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               err: "A read only property has been changed: " + prop
             }, null);
           } else {
-            console.log(newPoint._id, prop);
+            logger.info(newPoint._id, prop);
             if (prop === "Broadcast Enable" && user["System Admin"].Value !== true) {
               continue;
             }
@@ -1249,7 +1250,7 @@ function updateDependencies(refPoint, flags, user, callback) {
                     data.newPoint._cfgRequired = true;*/
                   Config.Update.formatPoint(data);
                   if (data.err !== undefined) {
-                    console.log('data.err: ', data.err);
+                    logger.error('data.err: ', data.err);
                     error = "ERROR!";
                     cb2(data.err);
                   }

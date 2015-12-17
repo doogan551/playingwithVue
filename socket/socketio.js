@@ -51,7 +51,7 @@ module.exports = function socketio(_common) {
     // Checked
     sock.on('getStatus', function() {
       // sock.emit('statusUpdate', systemStatus);
-      console.log('system  status not gotten');
+      logger.info('system  status not gotten');
     });
 
     //socket function called from client to let server know a new display is open

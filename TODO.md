@@ -42,6 +42,8 @@ _ fs-extra
 - gulp
 - sinon in tests
 - test models and controllers and socket
+- slack
+- 
 
 - needs work
 - GET /trendtest/trendTest2.js 404
