@@ -347,25 +347,25 @@ define([
                 updateObjectStructure = function(_koPoint, _configPoint) {
                     var addProps = function(koPoint, configPoint) {
                         for (var prop in configPoint) {
-                            if(configPoint[prop].hasOwnProperty('ValueOptions') && !koPoint[prop].hasOwnProperty('ValueOptions')){
+                            if (configPoint[prop].hasOwnProperty('ValueOptions') && !koPoint[prop].hasOwnProperty('ValueOptions')) {
                                 koPoint[prop].ValueOptions = ko.observableArray(pointInspector.utility.enumToArray(configPoint[prop].ValueOptions));
                             }
-                            if(configPoint[prop].hasOwnProperty('eValue') && !koPoint[prop].hasOwnProperty('eValue')){
+                            if (configPoint[prop].hasOwnProperty('eValue') && !koPoint[prop].hasOwnProperty('eValue')) {
                                 koPoint[prop].eValue = ko.observable(configPoint[prop].eValue);
                             }
                         }
                     };
                     var removeProps = function(koPoint, configPoint) {
-                    for (var koProp in koPoint) {
-                        if (configPoint.hasOwnProperty[koProp]) {
-                            if (!configPoint[koProp].hasOwnProperty('ValueOptions') && koPoint[koProp].hasOwnProperty('ValueOptions')) {
-                                delete koPoint[koProp].ValueOptions;
-                            }
-                            if (!configPoint[koProp].hasOwnProperty('eValue') && koPoint[koProp].hasOwnProperty('eValue')) {
-                                delete koPoint[koProp].eValue;
+                        for (var koProp in koPoint) {
+                            if (configPoint.hasOwnProperty(koProp)) {
+                                if (!configPoint[koProp].hasOwnProperty('ValueOptions') && koPoint[koProp].hasOwnProperty('ValueOptions')) {
+                                    delete koPoint[koProp].ValueOptions;
+                                }
+                                if (!configPoint[koProp].hasOwnProperty('eValue') && koPoint[koProp].hasOwnProperty('eValue')) {
+                                    delete koPoint[koProp].eValue;
+                                }
                             }
                         }
-                    }
                     };
                     addProps(_koPoint, _configPoint);
                     removeProps(_koPoint, _configPoint);
@@ -457,8 +457,8 @@ define([
                     updatedPoint = JSON.parse(JSON.stringify(updatedPoint));
                     pointInspector.point.updatedPoint = updatedPoint;
                     ko.viewmodel.updateFromModel(pointInspector.point.data, updatedPoint);
-                    updateObjectStructure(pointInspector.point.data, updatedPoint);
-                    ko.viewmodel.updateFromModel(pointInspector.point.data, updatedPoint);
+                    // updateObjectStructure(pointInspector.point.data, updatedPoint);
+                    // ko.viewmodel.updateFromModel(pointInspector.point.data, updatedPoint);
                     pointInspector.modelUpdate(false);
                 }
             }

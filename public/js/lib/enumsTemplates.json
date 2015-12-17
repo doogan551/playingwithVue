@@ -9870,7 +9870,12 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 1,
-                    "Value": 0.0
+                    "Value": 0.0,
+                    "eValue": 0,
+                    "ValueOptions": {
+                        "Off": 0,
+                        "On": 1
+                    }
                 },
                 "Last Report Time": {
                     "isDisplayable": true,
