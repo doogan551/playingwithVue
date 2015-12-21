@@ -34,6 +34,7 @@ var logger = function(moduleName) {
       new winston.transports.File({
         filename: './logs/exceptions.json',
         handleExceptions: true,
+        humanReadableUnhandledException: true,
         json: true,
         maxsize: 5242880, //5MB
         maxFiles: 5,

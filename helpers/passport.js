@@ -35,6 +35,9 @@ module.exports = function(passport) {
       }]
     };
     Utility.aggregate(criteria, function(err, users) {
+      if(!users.length){
+        return done(err, false);
+      }
       var user = users[0];
       UserGroup.getGroupsWithUser(user._id, function(err, groups) {
         user.groups = groups;

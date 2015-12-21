@@ -201,7 +201,7 @@ exports.getCursor = function(criteria, cb) {
   cb(cursor);
 };
 
-/*Utility.iterateCursor({collection: 'points', query:{}, limit:10}, function(err, doc, cb){
+/*Utility.iterateCursor(criteria, function(err, doc, cb){
   // do something with doc
   cb(null);
 }, function(err){
@@ -209,7 +209,6 @@ exports.getCursor = function(criteria, cb) {
 });*/
 exports.iterateCursor = function(criteria, fx, cb) {
   exports.getCursor(criteria, function(cursor) {
-    var count = 0;
 
     function processDoc(err, doc) {
       if (!!err || doc === null) {

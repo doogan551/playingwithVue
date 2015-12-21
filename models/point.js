@@ -330,7 +330,7 @@ module.exports = {
       });
     }
 
-    if (!!userGroupIDs.length) {
+    if (!!userGroupIDs.length || !!isSysAdmin) {
       Utility.aggregate({
         query: searchQuery,
         collection: 'points'

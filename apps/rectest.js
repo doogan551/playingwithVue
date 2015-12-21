@@ -3,6 +3,7 @@ var async = require('async');
 var moment = require('moment');
 var db = require('../helpers/db');
 var Utility = require('../models/utility');
+var Config = require('../public/js/lib/config.js');
 var config = require('config');
 var logger = require('../helpers/logger')(module);
 
@@ -17,7 +18,7 @@ var upis = {
 
 
 function newHistory() {
-  var history = require('./models/history.js');
+  var history = require('../models/history.js');
   var start = moment('10/01/15', 'MM/DD/YY').unix();
   var end = moment.unix(start).add(1, 'month').unix();
 
@@ -48,7 +49,7 @@ function newHistory() {
         console.log('doXne with csv', err);
       });*/
       result = history.unbuildOps(result);
-      console.log(result);
+      console.log(JSON.stringify(result));
       /*var peakSum = 0;
       var totalSum = 0;
       for (var r = 0; r < result.length; r++) {
@@ -70,7 +71,7 @@ function newHistory() {
     });
   });
 }
-// newHistory();
+newHistory();
 
 function fixDbDoubles() {
   db.connect(connectionString.join(''), function(err) {
@@ -117,7 +118,7 @@ function fixDbDoubles() {
     });
   });
 }
-fixDbDoubles();
+// fixDbDoubles();
 
 function testDBCursor() {
   db.connect(connectionString.join(''), function(err) {
@@ -134,3 +135,6 @@ function testDBCursor() {
   });
 }
 // testDBCursor();
+/*process.on('uncaughtException', function(err) {
+  throw Error(err);
+});*/

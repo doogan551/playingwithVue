@@ -5,8 +5,6 @@ var async = require('async');
 
 var ModelUtil;
 
-
-
 ModelUtil = (function() {
 	var obj = {};
 

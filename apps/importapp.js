@@ -1,11 +1,19 @@
 var mongo = require('mongodb');
 var async = require('async');
-var Config = require('./public/js/lib/config.js');
-var modelUtil = require('./public/js/modelUtil.js');
-var BSON = mongo.BSONPure;
+var Config = require('../public/js/lib/config.js');
+var modelUtil = require('../public/js/modelUtil.js');
+var ObjectID = mongo.ObjectID;
 var util = require('util');
 var lodash = require('lodash');
+var config = require('config');
+var logger = require('../helpers/logger')(module);
 var importconfig = require('./importconfig.js');
+var dbModel = require('../helpers/db');
+var Utility = require('../models/utility');
+
+var dbConfig = config.get('Infoscan.dbConfig');
+var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
+
 
 var conn = importconfig.conn;
 var xmlPath = importconfig.xmlPath;
@@ -25,26 +33,26 @@ process.argv.forEach(function(val, index, array) {
 			if (array[3] !== undefined) {
 				xmlPath = array[3].toString();
 			} else
-				console.log("No xml path given. Using", xmlPath);
+				logger.info("No xml path given. Using", xmlPath);
 		} else if (val === "default") {
-			console.log("Beginning default import process.");
+			logger.info("Beginning default import process.");
 		} else if (val === "innerloop") {
 			processFlag = "innerloop";
 		} else if (val === "updategpl") {
 			processFlag = "updategpl";
 		} else {
-			console.log("No args passed. Proceeding with default import process.");
+			logger.info("No args passed. Proceeding with default import process.");
 		}
 	}
 });
 
 if (processFlag === "gpl") {
 	mongo.connect(conn, function(err, db) {
-		if (err) console.log(err);
+		if (err) logger.info(err);
 		else doGplImport(db, xmlPath);
 	});
 } else if (processFlag === "innerloop") {
-	console.log("Beginning innerloop process.");
+	logger.info("Beginning innerloop process.");
 	mongo.connect(conn, function(err, db) {
 		importProcess.innerLoop(db, 2000, 0);
 	});
@@ -53,8 +61,8 @@ if (processFlag === "gpl") {
 		updateGPLRefs(db, function(err) {
 			// updateGPLReferences(db, function(err) {
 			if (err)
-				console.log("updateGPLReferences err:", err);
-			console.log("done", err, new Date());
+				logger.info("updateGPLReferences err:", err);
+			logger.info("done", err, new Date());
 		});
 	});
 } else {
@@ -68,21 +76,23 @@ function importUpdate() {
 	this.start = function() {
 		var self = this;
 		mongo.connect(conn, function(err, db) {
-			var start = new Date(),
-				limit = 2000,
-				skip = 0;
-			console.log("starting", new Date());
-			doGplImport(db, xmlPath, function(err) {
-				initImport(db, function(err) {
-					updateIndexes(db, function(err) {
-						fixUpisCollection(db, function(err) {
-							convertHistoryReports(db, function(err) {
-								convertScheduleEntries(db, function(err) {
-									updateAllProgramPoints(db, function(err) {
-										updateAllSensorPoints(db, function(err) {
+			dbModel.connect(connectionString.join(''), function(err) {
+				var start = new Date(),
+					limit = 2000,
+					skip = 0;
+				logger.info("starting", new Date());
+				doGplImport(db, xmlPath, function(err) {
+					initImport(db, function(err) {
+						updateIndexes(db, function(err) {
+							fixUpisCollection(db, function(err) {
+								convertHistoryReports(db, function(err) {
+									convertScheduleEntries(db, function(err) {
+										updateAllProgramPoints(db, function(err) {
+											updateAllSensorPoints(db, function(err) {
 
-											self.innerLoop(db, limit, skip);
-											// console.log('done');
+												self.innerLoop(db, limit, skip);
+												// logger.info('done');
+											});
 										});
 									});
 								});
@@ -96,43 +106,40 @@ function importUpdate() {
 
 
 	this.innerLoop = function(db, limit, skip) {
-		console.log("innerLoop", skip);
-
-		db.collection(pointsCollection).find({
-			_Name: {
-				$exists: 0
-			}
-
-		}, function(err, cursor) {
-			//console.log(points.length, "retrieved", err);
-			var count = 0;
-
-			function processPoint(err, point) {
-				if (point === null) {
-
-					updateGPLReferences(db, function(err) {
-						if (err)
-							console.log("updateGPLReferences err:", err);
-						console.log("!!Check Port 1-4 Timeouts on devices!!");
-						console.log("done", err, new Date());
-						process.exit();
-					});
-				} else {
-					importPoint(db, point, function(err) {
-						count++;
-						if (count % 10000 === 0) {
-							console.log(count);
-						} else if (count % 500 === 0) {
-							process.stdout.write('.');
-						}
-						cursor.nextObject(processPoint);
-					});
+		logger.info("innerLoop");
+		var count = 0;
+		var criteria = {
+			collection: pointsCollection,
+			query: {
+				_Name: {
+					$exists: 0
 				}
 			}
+		};
 
-			cursor.nextObject(processPoint);
-
+		Utility.iterateCursor(criteria, function(err, doc, cb) {
+			// logger.info("retrieved", err);
+			importPoint(db, doc, function(err) {
+				count++;
+				if (count % 10000 === 0) {
+					logger.info(count);
+				}
+				/*else if (count % 500 === 0) {
+					logger.info.write('.');
+				}*/
+				cb(err);
+			});
+		}, function(err) {
+			logger.info('innerLoop cursor done', err);
+			updateGPLReferences(db, function(err) {
+				if (err)
+					logger.info("updateGPLReferences err:", err);
+				logger.info("!!Check Port 1-4 Timeouts on devices!!");
+				logger.info("done", err, new Date());
+				process.exit(0);
+			});
 		});
+
 	};
 
 
@@ -140,56 +147,60 @@ function importUpdate() {
 
 		updateNameSegments(point, function(err) {
 			if (err)
-				console.log("updateNameSegments", err);
+				logger.info("updateNameSegments", err);
 			updateTaglist(point, function(err) {
 				if (err)
-					console.log('updateTaglist', err);
+					logger.info('updateTaglist', err);
 				updateCfgRequired(point, function(err) {
 					if (err)
-						console.log("updateCfgRequired", err);
+						logger.info("updateCfgRequired", err);
 					updateOOSValue(point, function(err) {
 						if (err)
-							console.log("updateOOSValue", err);
+							logger.info("updateOOSValue", err);
 						updateScriptPoint(point, function(err) {
 							if (err)
-								console.log("updateScriptPoint", err);
+								logger.info("updateScriptPoint", err);
 							/*updateProgramPoints(point, db, function(err) {
 									if (err)
-										console.log("updateProgramPoints", err);*/
+										logger.info("updateProgramPoints", err);*/
 							updateMultiplexer(point, function(err) {
 								if (err)
-									console.log("updateMultiplexer", err);
+									logger.info("updateMultiplexer", err);
 								updateGPLBlocks(point, function(err) {
 									if (err)
-										console.log("updateGPLBlocks", err);
+										logger.info("updateGPLBlocks", err);
 									/*updateSensorPoints(db, point, function(err) {
 										if (err)
-											console.log("updateSensorPoints", err);*/
+											logger.info("updateSensorPoints", err);*/
 									updateReferences(db, point, function(err) {
 										if (err)
-											console.log("updateReferences", err);
+											logger.info("updateReferences", err);
 										updatePointInstances(point, function(err) {
 											if (err)
-												console.log("updatePointInstances", err);
-											updateModels(db, point, function(err) {
+												logger.info("updatePointInstances", err);
+											updateTimeZones(point, function(err) {
 												if (err)
-													console.log("updateModels", err);
-												updateDevices(point, function(err) {
+													logger.info("updateTimeZones", err);
+												updateModels(db, point, function(err) {
 													if (err)
-														console.log("updateDevices", err);
-													updateAlarmMessages(point, function(err) {
+														logger.info("updateModels", err);
+													updateDevices(point, function(err) {
 														if (err)
-															console.log("updateAlarmMessages", err);
-														addBroadcastPeriod(point, function(err) {
+															logger.info("updateDevices", err);
+														updateAlarmMessages(point, function(err) {
 															if (err)
-																console.log("addBroadcastPeriod", err);
-															updateTrend(point, function(err) {
+																logger.info("updateAlarmMessages", err);
+															addBroadcastPeriod(point, function(err) {
 																if (err)
-																	console.log("updateTrend", err);
-																updatePoint(db, point, function(err) {
+																	logger.info("addBroadcastPeriod", err);
+																updateTrend(point, function(err) {
 																	if (err)
-																		console.log("updatePoint", err);
-																	cb(null);
+																		logger.info("updateTrend", err);
+																	updatePoint(db, point, function(err) {
+																		if (err)
+																			logger.info("updatePoint", err);
+																		cb(null);
+																	});
 																});
 															});
 														});
@@ -216,7 +227,7 @@ function doOOSValue(db, skip, limit) {
 		"Point Type": 1,
 		"Value": 1
 	}).skip(skip).limit(limit).toArray(function(err, points) {
-		console.log("points returned", points.length);
+		logger.info("points returned", points.length);
 		async.forEachSeries(points, function(point, callback) {
 			updateOOSValue(point, function(err) {
 				if (point.Value !== undefined && point.Value !== null) {
@@ -235,9 +246,9 @@ function doOOSValue(db, skip, limit) {
 			});
 		}, function(err) {
 			if (err)
-				console.log("points loop err:", err);
+				logger.info("points loop err:", err);
 			else if (points.length < limit)
-				console.log("done", err, new Date());
+				logger.info("done", err, new Date());
 			else {
 				setTimeout(function() {
 					doOOSValue(db, skip + limit, limit);
@@ -333,7 +344,7 @@ function addDefaultUser(db, callback) {
 }
 
 function setupCurAlmIds(db, callback) {
-	console.log("setupCurAlmIds");
+	logger.info("setupCurAlmIds");
 	db.collection(pointsCollection).update({
 		"Point Type.Value": {
 			$nin: ["Imux"]
@@ -343,7 +354,7 @@ function setupCurAlmIds(db, callback) {
 		}
 	}, {
 		$set: {
-			_curAlmId: new BSON.ObjectID("000000000000000000000000")
+			_curAlmId: new ObjectID("000000000000000000000000")
 		}
 	}, {
 		multi: true
@@ -353,7 +364,7 @@ function setupCurAlmIds(db, callback) {
 }
 
 function setupCfgRequired(db, callback) {
-	console.log("setupCfgRequired");
+	logger.info("setupCfgRequired");
 	db.collection(pointsCollection).update({
 		$or: [{
 			"Point Type.Value": "Device"
@@ -409,7 +420,7 @@ function setupSystemInfo(db, callback) {
 
 function setupPointRefsArray(db, callback) {
 
-	console.log("setupPointRefsArray");
+	logger.info("setupPointRefsArray");
 	db.collection(pointsCollection).update({
 		"Point Type.Value": {
 			$nin: ["Imux"]
@@ -429,7 +440,7 @@ function setupPointRefsArray(db, callback) {
 }
 
 function fixUpisCollection(db, callback) {
-	console.log("starting fixUpisCollection");
+	logger.info("starting fixUpisCollection");
 
 	var _count = 0,
 		indexes = [{
@@ -445,7 +456,7 @@ function fixUpisCollection(db, callback) {
 			options: {}
 		}],
 		setupUpis = function(fnCB) {
-			var upisCount = 918359, //4194302
+			var upisCount = 1918359, //4194302
 				upisArray = [];
 			db.collection('upis').count({}, function(err, count) {
 				if (count < upisCount) {
@@ -477,11 +488,11 @@ function fixUpisCollection(db, callback) {
 
 		async.forEachSeries(indexes, function(index, indexCB) {
 			db.ensureIndex('upis', index.index, index.options, function(err, IndexName) {
-				console.log(IndexName, "err:", err);
+				logger.info(IndexName, "err:", err);
 				indexCB(null);
 			});
 		}, function(err) {
-			console.log("done with indexing");
+			logger.info("done with indexing");
 		});
 
 		db.collection('upis').update({}, {
@@ -497,28 +508,35 @@ function fixUpisCollection(db, callback) {
 			}).toArray(function(err, points) {
 				if (err) callback(err);
 				async.forEach(points, function(point, callback) {
-					db.collection('upis').findAndModify({
-						_id: point._id
-					}, [
-						['_id', 'asc']
-					], {
-						$set: {
-							_pStatus: 0
+					var criteria = {
+						collection: 'upis',
+						query: {
+							_id: point._id
+						},
+						sort: [
+							['_id', 'asc']
+						],
+						updateObj: {
+							$set: {
+								_pStatus: 0
+							}
+						},
+						options: {
+							'new': true
 						}
-					}, {
-						'new': true
-					}, function(err, result) {
+					};
+					Utility.findAndModify(criteria, function(err, result) {
 						if (!!err)
-							console.log(err);
+							logger.info(err);
 						/*else if (!result)
-							console.log(point._id);
+							logger.info(point._id);
 						else if (result._pStatus !== 0)
-							console.log(result);*/
+							logger.info(result);*/
 						callback(err);
 					});
 				}, function(err) {
-					if (err) console.log("err", err);
-					console.log("finished fixUpisCollection");
+					if (err) logger.info("err", err);
+					logger.info("finished fixUpisCollection");
 					return callback(err);
 				});
 			});
@@ -527,10 +545,10 @@ function fixUpisCollection(db, callback) {
 }
 
 function testHistory() {
-	console.log('testing history');
+	logger.info('testing history');
 	mongo.connect(conn, function(err, db) {
 		convertHistoryReports(db, function(err) {
-			console.log("err", err);
+			logger.info("err", err);
 		});
 	});
 }
@@ -598,8 +616,8 @@ function convertHistoryReports(db, callback) {
 							point: report,
 							refPoint: ref
 						}, index);
-						report._actvAlmId = BSON.ObjectID("000000000000000000000000");
-						report._curAlmId = BSON.ObjectID("000000000000000000000000");
+						report._actvAlmId = ObjectID("000000000000000000000000");
+						report._curAlmId = ObjectID("000000000000000000000000");
 						index++;
 						cb(null);
 
@@ -620,13 +638,13 @@ function convertHistoryReports(db, callback) {
 function testSchedules() {
 	mongo.connect(conn, function(err, db) {
 		convertScheduleEntries(db, function(err) {
-			console.log("err", err);
+			logger.info("err", err);
 		});
 	});
 }
 
 function convertScheduleEntries(db, callback) {
-	console.log("convertScheduleEntries");
+	logger.info("convertScheduleEntries");
 	// get sched entry template & set pstatus to 0
 	// get all schedule entries from SE collection
 	// get _id from upi's collection
@@ -644,19 +662,26 @@ function convertScheduleEntries(db, callback) {
 	scheduleTemplate._cfgRequired = false;
 
 	db.collection("ScheduleEntries").find({}).toArray(function(err, oldScheduleEntries) {
-		console.log("results", oldScheduleEntries.length);
+		logger.info("results", oldScheduleEntries.length);
 		async.forEachSeries(oldScheduleEntries, function(oldScheduleEntry, forEachCallback) {
-			db.collection("upis").findAndModify({
-				_pStatus: 1
-			}, [
-				['_id', 'asc']
-			], {
-				$set: {
-					_pStatus: 0
+			var criteria = {
+				collection: 'upis',
+				query: {
+					_pStatus: 1
+				},
+				sort: [
+					['_id', 'asc']
+				],
+				updateObj: {
+					$set: {
+						_pStatus: 0
+					}
+				},
+				options: {
+					'new': true
 				}
-			}, {
-				'new': true
-			}, function(err, upiObj) {
+			};
+			Utility.findAndModify(criteria, function(err, upiObj) {
 				/*if (oldScheduleEntry["Control Value"].eValue !== undefined) {
 					scheduleEntryTemplate["Control Value"].ValueOptions = refPoint.Value.ValueOptions;
 				}*/
@@ -687,7 +712,7 @@ function convertScheduleEntries(db, callback) {
 				});
 			});
 		}, function(err) {
-			console.log('err', err);
+			logger.info('err', err);
 			return callback(err);
 		});
 	});
@@ -702,7 +727,7 @@ function insertScheduleEntry(db, scheduleEntry, callback) {
 }
 
 function updateGPLReferences(db, callback) {
-	console.log("starting updateGPLReferences");
+	logger.info("starting updateGPLReferences");
 	db.collection(pointsCollection).find({
 		"gplLabel": {
 			$exists: 1
@@ -720,7 +745,7 @@ function updateGPLReferences(db, callback) {
 				_id: gplBlock._id
 			}, gplBlock, function(err, result) {
 				if (err)
-					console.log('err', err);
+					logger.info('err', err);
 
 				db.collection(pointsCollection).find({
 					"Point Refs.Value": gplBlock._id
@@ -741,7 +766,7 @@ function updateGPLReferences(db, callback) {
 							}
 						}, function(err, result) {
 							if (err)
-								console.log('err', err);
+								logger.info('err', err);
 							cb2(null);
 						});
 					}, function(err) {
@@ -956,11 +981,11 @@ function updateIndexes(db, callback) {
 
 	async.forEachSeries(indexes, function(index, indexCB) {
 		db.createIndex(index.collection, index.index, index.options, function(err, IndexName) {
-			console.log(IndexName, "err:", err);
+			logger.info(IndexName, "err:", err);
 			indexCB(null);
 		});
 	}, function(err) {
-		console.log("done with indexes");
+		logger.info("done with indexes");
 		callback(err);
 	});
 }
@@ -975,7 +1000,7 @@ function updateIndexes(db, callback) {
  * @return {String} console messages. "inside 4" is the final message.
  */
 function devModelLogic(point, db, callback) {
-	console.log("starting devModelLogic");
+	logger.info("starting devModelLogic");
 	var currentModel = null;
 
 	models = [{
@@ -1012,14 +1037,14 @@ function devModelLogic(point, db, callback) {
 
 	async.forEachSeries(models, function(model, asyncNext) {
 		count = 0;
-		console.log("working on", model.value);
+		logger.info("working on", model.value);
 		updateModels(model.value, model.model, db, function(err, result) {
 			if (result)
 				asyncNext(err);
 		});
 	}, function(err) {
 		if (err)
-			console.log("err", err);
+			logger.info("err", err);
 
 		callback(null);
 	});
@@ -1064,6 +1089,13 @@ function updateGPLBlocks(point, callback) {
 	}
 }
 
+function updateTimeZones(point, cb) {
+	if (point['Point Type'].Value === 'Device') {
+		point['Time Zone'] = Config.Templates.getTemplate("Device")["Time Zone"];
+	}
+	cb(null);
+}
+
 /**
  * Subfunction ran by devModelLogic that updates the db.
  *
@@ -1076,12 +1108,11 @@ function updateGPLBlocks(point, callback) {
  * @return {String} console messages. "inside 4" is the final message.
  */
 function updateModels(db, point, cb) {
-	//console.log("updateModels", point["Point Type"].Value);
+	//logger.info("updateModels", point["Point Type"].Value);
 	var models = ["Device", "Remote Unit", "Analog Input", "Analog Output", "Analog Value", "Binary Input", "Binary Output", "Binary Value", "Accumulator", "MultiState Value"];
-	//console.log(point._id);
+	//logger.info(point._id);
 
 	if (models.indexOf(point["Point Type"].Value) !== -1) {
-		//console.log(point["Point Type"].Value);
 		modelUtil[point["Point Type"].Value].updateAll({ // change
 			point: point
 		}, db, function(err, point) {
@@ -1105,7 +1136,7 @@ function updateCfgRequired(point, callback) {
 }
 
 function updatePointInstances(point, callback) {
-	//console.log("updatePointInstances");
+	//logger.info("updatePointInstances");
 
 	point["Point Instance"].Value = point._id;
 	/*db.collection(pointsCollection).update({
@@ -1122,9 +1153,9 @@ function updatePointInstances(point, callback) {
 }
 
 function findRefs(db, callback) {
-	console.log("findRefs");
+	logger.info("findRefs");
 	db.collection(pointsCollection).find({}).toArray(function(err, points) {
-		console.log("Points returned", points.length);
+		logger.info("Points returned", points.length);
 		for (i = 0; i < points.length; i++) {
 			upi = points[i]._id;
 
@@ -1187,7 +1218,7 @@ function findRefs(db, callback) {
 				refCB(err);
 			});
 		}, function(err) {
-			console.log("done with db update");
+			logger.info("done with db update");
 			callback(err);
 		});
 	});
@@ -1195,7 +1226,7 @@ function findRefs(db, callback) {
 
 function updateOOSValue(point, callback) {
 	var pointTemplate = Config.Templates.getTemplate(point["Point Type"].Value);
-	//console.log(point["Point Type"].Value, pointTemplate["Point Type"].Value);
+	//logger.info(point["Point Type"].Value, pointTemplate["Point Type"].Value);
 	if (pointTemplate.Value !== undefined && pointTemplate.Value.oosValue !== undefined)
 		point.Value.oosValue = (point.Value.eValue !== undefined) ? point.Value.eValue : point.Value.Value;
 	callback(null);
@@ -1293,12 +1324,12 @@ function updateSensorPoints(db, point, callback) {
 }
 
 function updateRefPointInst(db, callback) {
-	//console.log("updateRefPointInst");
+	//logger.info("updateRefPointInst");
 
 	db.collection(pointsCollection).find({}, {
 		_id: 1
 	}).toArray(function(err, points) {
-		console.log("Points returned", points.length);
+		logger.info("Points returned", points.length);
 		async.forEachSeries(points, function(point, cb) {
 			upi = point._id;
 			refQuery = {
@@ -1373,7 +1404,7 @@ function updateRefPointInst(db, callback) {
 }
 
 function formatPoints(limit, skip, db, formatCB) {
-	console.log("formatPoints");
+	logger.info("formatPoints");
 	var properties = [];
 	count = 0;
 	db.collection(pointsCollection).findOne({}, {}, {
@@ -1834,7 +1865,7 @@ function updateReferences(db, point, mainCallback) {
 						PointType: point[prop].PointType
 					};
 
-					//console.log("pushing", pointRef);
+					//logger.info("pushing", pointRef);
 					point["Point Refs"].push(pointRef);
 					delete point[prop];
 					callback(null);
@@ -1909,7 +1940,7 @@ function updateDevices(point, callback) {
 }
 
 function updateAlarmMessages(point, callback) {
-	//console.log("updateAlarmMessages");
+	//logger.info("updateAlarmMessages");
 	var alarmClasses = ["Emergency", "Critical"];
 	if (point["Alarm Class"] !== undefined && alarmClasses.indexOf(point["Alarm Class"].Value) !== -1) {
 
@@ -2010,7 +2041,7 @@ function test(db) {
 }
 
 function updateNameSegments(point, callback) {
-	//console.log("updateNameSegments");
+	//logger.info("updateNameSegments");
 	//var updObj = {};
 
 	point._name1 = point.name1.toLowerCase();
@@ -2036,7 +2067,7 @@ function updateTaglist(point, callback) {
 }
 
 function setUpCollections(db, callback) {
-	console.log("setUpCollections");
+	logger.info("setUpCollections");
 	setupAlarms(db, function(err) {
 		setUserGroups(db, function(err) {
 			setupUsers(db, function(err) {
@@ -2082,7 +2113,7 @@ function updateAllProgramPoints(db, callback) {
 		async.forEachSeries(scripts, function(script, cb) {
 			updateProgramPoints(script, db, function(err) {
 				if (err)
-					console.log("updateProgramPoints", err);
+					logger.info("updateProgramPoints", err);
 				cb(err);
 			});
 		}, function(err) {
@@ -2093,14 +2124,14 @@ function updateAllProgramPoints(db, callback) {
 }
 
 function updateAllSensorPoints(db, callback) {
-	console.log("starting updateAllSensorPoints");
+	logger.info("starting updateAllSensorPoints");
 	db.collection(pointsCollection).find({
 		"Point Type.Value": "Sensor"
 	}).toArray(function(err, sensors) {
 		async.forEachSeries(sensors, function(sensor, cb) {
 			updateSensorPoints(db, sensor, function(err) {
 				if (err)
-					console.log("updateSensorPoints", err);
+					logger.info("updateSensorPoints", err);
 				cb(err);
 			});
 		}, function(err) {
@@ -2309,9 +2340,9 @@ function doGplImport(db, xmlPath, cb) {
 		},
 		complete = function(cb) {
 			count++;
-			// console.log('count:', count, 'max:', max);
+			// logger.info('count:', count, 'max:', max);
 			if (count === max) {
-				console.log('GPLIMPORT: complete');
+				logger.info('GPLIMPORT: complete');
 				// socket.emit('gplImportComplete', {});
 			}
 			cb();
@@ -2325,7 +2356,7 @@ function doGplImport(db, xmlPath, cb) {
 				c,
 				upi,
 				saveSequence = function() {
-					//console.log('GPLIMPORT: saving sequence', name);
+					//logger.info('GPLIMPORT: saving sequence', name);
 					db.collection(pointsCollection).findOne({
 							"Name": name
 						}, {
@@ -2465,7 +2496,7 @@ function doGplImport(db, xmlPath, cb) {
 					});
 					parser.parseString(filedata, handler(filename));
 				} else {
-					console.log('GPLIMPORT: finished xmls in', ((new Date() - start) / 1000), 'seconds');
+					logger.info('GPLIMPORT: finished xmls in', ((new Date() - start) / 1000), 'seconds');
 					if (cb) {
 						cb();
 					}
@@ -2484,7 +2515,7 @@ function doGplImport(db, xmlPath, cb) {
 					json = convertStrings(json);
 
 					// json = convertSequence(json);
-					// console.log('GPLIMPORT: sending', name, 'to update');
+					// logger.info('GPLIMPORT: sending', name, 'to update');
 					update(json, newName, function() {
 						c++;
 						doNext();
@@ -2500,7 +2531,7 @@ function doGplImport(db, xmlPath, cb) {
 		}
 
 		max = xmls.length;
-		console.log('Processing', xmls.length, 'XML files');
+		logger.info('Processing', xmls.length, 'XML files');
 
 		c = 0;
 
