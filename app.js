@@ -80,3 +80,12 @@ require('./helpers/mongooseconn.js')(function() {
     }
   });
 });
+
+process.on('uncaughtException', function(err) {
+
+  var mailer = require('./models/mailer');
+  mailer.sendError(err.stack);
+  setTimeout(function() {
+    process.exit(1);
+  }, 5000);
+});

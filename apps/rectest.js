@@ -71,7 +71,7 @@ function newHistory() {
     });
   });
 }
-newHistory();
+// newHistory();
 
 function fixDbDoubles() {
   db.connect(connectionString.join(''), function(err) {
@@ -138,3 +138,56 @@ function testDBCursor() {
 /*process.on('uncaughtException', function(err) {
   throw Error(err);
 });*/
+
+function addProperties() {
+  var criteria = {
+    collection: 'points',
+    query: {
+      'Point Type.Value': 'Optimum Start'
+    },
+    updateObj: {
+      $set: {
+        "Trend Enable": {
+          "isDisplayable": true,
+          "isReadOnly": false,
+          "ValueType": 7,
+          "Value": false
+        },
+        "Trend Interval": {
+          "isDisplayable": true,
+          "isReadOnly": false,
+          "ValueType": 13,
+          "Value": 60
+        },
+        "Trend Last Status": {
+          "isDisplayable": false,
+          "isReadOnly": true,
+          "ValueType": 18,
+          "Value": 0
+        },
+        "Trend Last Value": {
+          "isDisplayable": false,
+          "isReadOnly": true,
+          "ValueType": 5,
+          "Value": "Off",
+          "eValue": 0
+        },
+        "Trend Samples": {
+          "isDisplayable": true,
+          "isReadOnly": false,
+          "ValueType": 4,
+          "Value": 0
+        }
+      }
+    },
+    options: {
+      multi: true
+    }
+  };
+  db.connect(connectionString.join(''), function(err) {
+    Utility.update(criteria, function(err, result) {
+      console.log(err, result.result.nModified);
+    });
+  });
+}
+// addProperties();
