@@ -24,6 +24,7 @@ describe('Activity Logs Model', function () {
       done(err);
     });
   });
+  
   it('should return 1 log', function (done) {
     query.name1 = '4200';
     ActivityLog.get(query, function (err, logs) {
@@ -32,11 +33,30 @@ describe('Activity Logs Model', function () {
       done(err);
     });
   });
+  
   it('should return 0 logs', function (done) {
     query.name1 = 'X';
     ActivityLog.get(query, function (err, logs) {
       expect(err).to.not.be.ok;
       expect(logs.length).to.equal(0);
+      done(err);
+    });
+  });
+  
+  it('should return 1 log', function (done) {
+    query.itemsPerPage = 1;
+    ActivityLog.get(query, function (err, logs) {
+      expect(err).to.not.be.ok;
+      expect(logs.length).to.equal(1);
+      done(err);
+    });
+  });
+  
+  it('should return 10 logs', function (done) {
+    query.numberItems = 10;
+    ActivityLog.get(query, function (err, logs) {
+      expect(err).to.not.be.ok;
+      expect(logs.length).to.equal(10);
       done(err);
     });
   });

@@ -14,7 +14,6 @@ var config = require('config');
 var utils = require('../helpers/utils.js');
 var Config = require('../public/js/lib/config.js');
 var cppApi = new(require('Cpp_API').Tasks)();
-// var monitorSender = new(require('MonitorSender').Tasks)();
 var compiler = require('../helpers/scriptCompiler.js');
 var Utility = require('../models/utility.js');
 var History = require('../models/history');

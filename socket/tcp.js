@@ -7,9 +7,11 @@ var cppApi = new(require('Cpp_API').Tasks)();
 var logger = require('../helpers/logger')(module);
 
 var common;
+var io;
 
 module.exports = function(_common) {
     common = _common;
+    io = _common.sockets.get().io;
     var tcp = common.sockets.get().tcp;
 
     tcp.on('connection', function(socket) {

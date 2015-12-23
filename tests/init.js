@@ -1,5 +1,6 @@
 /* global global, process, chai */
-process.env.NODE_ENV = 'tester';
+// process.env.NODE_ENV = 'tester';
+console.log(process.env.NODE_ENV);
 var db = require('../helpers/db');
 var config = require('config');
 var dbConfig = config.get('Infoscan.dbConfig');

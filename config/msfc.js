@@ -5,6 +5,9 @@ var msfc = {
     },
     'files': {
       'driveLetter': 'D'
+    },
+    'location': {
+      'site': 'MSFC'
     }
   }
 };

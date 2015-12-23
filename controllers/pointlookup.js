@@ -29,6 +29,7 @@ router.get('/security/:groupid', function (req, res) {
     mode: JSON.stringify(mode),
     modes: JSON.stringify(options.modes),
     point: '{}',
+    pointType: JSON.stringify(null),
     pointtypes: JSON.stringify(config.Utility.pointTypes.getAllowedPointTypes()),
     groupId: JSON.stringify(req.params.groupid),
     deviceId: JSON.stringify(null),

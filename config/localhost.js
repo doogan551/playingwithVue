@@ -5,6 +5,9 @@ var localhost = {
     },
     'files': {
       'driveLetter': 'C'
+    },
+    'location': {
+      'site': 'Rob'
     }
   }
 };

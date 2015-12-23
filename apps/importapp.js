@@ -157,49 +157,53 @@ function importUpdate() {
 					updateOOSValue(point, function(err) {
 						if (err)
 							logger.info("updateOOSValue", err);
-						updateScriptPoint(point, function(err) {
+						addTrendProperties(point, function(err) {
 							if (err)
-								logger.info("updateScriptPoint", err);
-							/*updateProgramPoints(point, db, function(err) {
-									if (err)
-										logger.info("updateProgramPoints", err);*/
-							updateMultiplexer(point, function(err) {
+								logger.info("addTrendProperties", err);
+							updateScriptPoint(point, function(err) {
 								if (err)
-									logger.info("updateMultiplexer", err);
-								updateGPLBlocks(point, function(err) {
+									logger.info("updateScriptPoint", err);
+								/*updateProgramPoints(point, db, function(err) {
+										if (err)
+											logger.info("updateProgramPoints", err);*/
+								updateMultiplexer(point, function(err) {
 									if (err)
-										logger.info("updateGPLBlocks", err);
-									/*updateSensorPoints(db, point, function(err) {
+										logger.info("updateMultiplexer", err);
+									updateGPLBlocks(point, function(err) {
 										if (err)
-											logger.info("updateSensorPoints", err);*/
-									updateReferences(db, point, function(err) {
-										if (err)
-											logger.info("updateReferences", err);
-										updatePointInstances(point, function(err) {
+											logger.info("updateGPLBlocks", err);
+										/*updateSensorPoints(db, point, function(err) {
 											if (err)
-												logger.info("updatePointInstances", err);
-											updateTimeZones(point, function(err) {
+												logger.info("updateSensorPoints", err);*/
+										updateReferences(db, point, function(err) {
+											if (err)
+												logger.info("updateReferences", err);
+											updatePointInstances(point, function(err) {
 												if (err)
-													logger.info("updateTimeZones", err);
-												updateModels(db, point, function(err) {
+													logger.info("updatePointInstances", err);
+												updateTimeZones(point, function(err) {
 													if (err)
-														logger.info("updateModels", err);
-													updateDevices(point, function(err) {
+														logger.info("updateTimeZones", err);
+													updateModels(db, point, function(err) {
 														if (err)
-															logger.info("updateDevices", err);
-														updateAlarmMessages(point, function(err) {
+															logger.info("updateModels", err);
+														updateDevices(point, function(err) {
 															if (err)
-																logger.info("updateAlarmMessages", err);
-															addBroadcastPeriod(point, function(err) {
+																logger.info("updateDevices", err);
+															updateAlarmMessages(point, function(err) {
 																if (err)
-																	logger.info("addBroadcastPeriod", err);
-																updateTrend(point, function(err) {
+																	logger.info("updateAlarmMessages", err);
+																addBroadcastPeriod(point, function(err) {
 																	if (err)
-																		logger.info("updateTrend", err);
-																	updatePoint(db, point, function(err) {
+																		logger.info("addBroadcastPeriod", err);
+																	updateTrend(point, function(err) {
 																		if (err)
-																			logger.info("updatePoint", err);
-																		cb(null);
+																			logger.info("updateTrend", err);
+																		updatePoint(db, point, function(err) {
+																			if (err)
+																				logger.info("updatePoint", err);
+																			cb(null);
+																		});
 																	});
 																});
 															});
@@ -1230,6 +1234,17 @@ function updateOOSValue(point, callback) {
 	if (pointTemplate.Value !== undefined && pointTemplate.Value.oosValue !== undefined)
 		point.Value.oosValue = (point.Value.eValue !== undefined) ? point.Value.eValue : point.Value.Value;
 	callback(null);
+}
+
+function addTrendProperties(point, callback){
+	var pt = point['Point Type'].Value;
+	if(pt === 'Optimum Start'){
+		point['Trend Enable'] = Config.Templates.getTemplate(pt)['Trend Enable'];
+		point['Trend Interval'] = Config.Templates.getTemplate(pt)['Trend Interval'];
+		point['Trend Last Status'] = Config.Templates.getTemplate(pt)['Trend Last Status'];
+		point['Trend Last Value'] = Config.Templates.getTemplate(pt)['Trend Last Value'];
+		point['Trend Samples'] = Config.Templates.getTemplate(pt)['Trend Samples'];
+	}
 }
 
 function updateScriptPoint(point, callback) {

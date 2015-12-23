@@ -20,6 +20,9 @@ var defaults = {
         'files': {
             'driveLetter': 'D',
             'archiveLocation': '/InfoScan/Archive/History/'
+        },
+        'location': {
+            'site' : 'Dorsett'
         }
     }
 };
