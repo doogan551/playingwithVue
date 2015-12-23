@@ -239,7 +239,7 @@ var makeTree = function(next) {
             acb();
         });
     }, function(err) {
-        logger.info('badNumbers: '+badNumbers);
+        // logger.info('badNumbers: '+badNumbers);
 
         next();
     });

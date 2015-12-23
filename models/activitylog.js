@@ -13,7 +13,6 @@ module.exports = {
     var groups = [];
     var sort = {};
 
-
     if (!itemsPerPage) {
       itemsPerPage = 200;
     }
