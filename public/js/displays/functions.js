@@ -1141,7 +1141,7 @@ displays = $.extend(displays, {
                         // "height": filterwh(object.Height)
                     };
 
-                    if(object['Screen Object'] === 1) {// button
+                    if(object['Screen Object'] === 1 || object['Screen Object'] === 4) {// button
                         ret.width = filterwh(object.Width, object['Screen Object']);
                         ret.height = filterwh(object.Height, object['Screen Object']);
                     }
@@ -1155,7 +1155,7 @@ displays = $.extend(displays, {
                 };
                 $scope.showPoint = function(item, ev) {
                     var endPoint,
-                        workspaceManager = window.opener.workspaceManager,
+                        workspaceManager = displays.workspaceManager,
                         pointType,
                         isDisplayObject = item['Point Type'] === 151,
                         localUPI = item.upi,
@@ -1387,6 +1387,19 @@ displays = $.extend(displays, {
                                 out = '<img ' + animId + screenIdx + dataUpi + precision + ' class="' + cls + '" src="' + imgSrc + '" />';
                             }
                                 break;
+                            case 4:  // action button
+                            {
+                                out = '';
+                                if (+input['Background Color'] !== 0) {
+                                    style += 'background-image:none;border:none;';
+                                }
+                                //style += underline;
+                                style += 'line-height:' + input['Height'] + 'px;' + '"';
+                                text = ((input.Text) ? input.Text.split("\n").join("<br/>") : '&nbsp;');
+
+                                out = '<a' + screenIdx + style + ' class="displayBtn' + cls + '"' + noAjax + dataUpi + '>' + text + '</a>';
+                            }
+                                break;
                             case 5:  // history report
                             {
                                 out = 'history report';
@@ -1417,7 +1430,7 @@ displays = $.extend(displays, {
                             }
                                 break;
                             default:
-                                console.log("who broke what...  screenObject = ", screenObject);
+                                // console.log("who broke what...  screenObject = ", screenObject);
                                 break;
                         }
                     }

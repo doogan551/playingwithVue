@@ -229,7 +229,7 @@ displays = $.extend(displays, {
             fgColorPicker,
             $foregroundCustomColorPicker = $("#foregroundCustomColorPicker");
 
-        if (screenObject === 1 || screenObject === 2) {
+        if (screenObject === 1 || screenObject === 2 || screenObject === 4) {
             // delay = 500;
             // if ($('#rightPanel').hasClass('ui-panel-open')) {
             //     delay = 1;
@@ -433,6 +433,10 @@ displays = $.extend(displays, {
         btn = document.getElementById('btn');
         btn.addEventListener('dragstart', handleDragStart, false);
         btn.addEventListener('dragend', handleDragEnd, false);
+
+        actionbtn = document.getElementById('actionbtn');
+        actionbtn.addEventListener('dragstart', handleDragStart, false);
+        actionbtn.addEventListener('dragend', handleDragEnd, false);
 
         txt = document.getElementById('txt');
         txt.addEventListener('dragstart', handleDragStart, false);
@@ -1202,6 +1206,31 @@ displays = $.extend(displays, {
                 addNewScreenObject(obj);
             };
 
+            $scope.addNewActionButton = function() {
+                var obj = {
+                    "Animation File": "",
+                    "Animation ID": 0,
+                    "Background Color": 0,
+                    "Font Bold": 0,
+                    "Font Italic": 0,
+                    "Font Name": "fixedsys",
+                    "Font Size": 9,
+                    "Font Strikethru": 0,
+                    "Font Underline": 0,
+                    "Foreground Color": '000000',
+                    "Height": 15,
+                    "Left": displays.dropX,
+                    "Point Type": 151,
+                    "Precision": "0.0",
+                    "Screen Object": 4,
+                    "Text": 'Action Button',
+                    "Top": displays.dropY,
+                    "upi": 'none',
+                    "Width": 100
+                };
+                addNewScreenObject(obj);
+            };
+
             $scope.addNewTxt = function() {
                 var obj = {
                     "Animation File": "",
@@ -1797,7 +1826,7 @@ displays = $.extend(displays, {
                     // "height": filterwh(object.Height)
                 };
 
-                if(object['Screen Object'] === 1) {// button
+                if(object['Screen Object'] === 1 || object['Screen Object'] === 4) {// button or action button
                     ret.width = filterwh(object.Width, object['Screen Object']);
                     ret.height = filterwh(object.Height, object['Screen Object']);
                 }

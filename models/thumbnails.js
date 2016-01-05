@@ -1,5 +1,6 @@
 var Utility = require('../models/utility');
 var logger = require('../helpers/logger')(module);
+var fs = require('fs');
 
 module.exports = {
     batch: function(data, cb) {
@@ -52,7 +53,7 @@ module.exports = {
             // res.render("thumbnailGenerator/batch", localVars);
         });
     },
-    one: function(req, res) {
+    one: function(data, cb) {
         localVars = {};
 
         Utility.getOne({
@@ -112,10 +113,14 @@ module.exports = {
     },
     save: function(data, cb) {
 
-        var thumbDir = __dirname + '/../public/img/thumbs/' + req.body.id + '.txt',
+        var thumbDir = __dirname + '/../public/img/thumbs/' + data.id + '.txt',
             _data = data.bgColorHex + '||' + data.thumb;
 
-        fs.writeFile(thumbDir, _data, 'utf8', cb
+        fs.writeFile(thumbDir, _data, 'utf8', function () {
+            cb(null, {
+                thumbDir: thumbDir
+            });
+        });
             /*function(err) {
                        if (!err) {
                            res.json({
@@ -128,6 +133,5 @@ module.exports = {
                            });
                        }
                    }*/
-        );
     }
 };

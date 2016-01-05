@@ -30,7 +30,7 @@ router.post('/save', function(req, res, next) {
 		if (!err) {
 			return utils.sendResponse(res, {
 				"msg": "success",
-				"result": thumbDir
+				"result": localVars.thumbDir
 			});
 		} else {
 			return utils.sendResponse(res, {

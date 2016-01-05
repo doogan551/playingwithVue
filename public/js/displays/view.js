@@ -80,6 +80,15 @@ $(document).on('pageinit', function() {
         },
         userHasPermissionToEdit = function (security) {
             return userPermissions.systemAdmin || userHasPermission(security, permissionLevels.WRITE);
+        },
+        finish = function () {
+            displays.initAngularFilters();
+            displays.initSocket();
+            if (window.onLoaded) {
+                window.onLoaded();
+            } else {
+                window.loaded = true;
+            }
         };
 
     $('#editDisplay').hide();
@@ -158,12 +167,10 @@ $(document).on('pageinit', function() {
                     $('#editDisplay').show();
                 }
 
-                displays.initAngularFilters();
-                displays.initSocket();
+                finish();
             });
         });
     } else {
-        displays.initAngularFilters();
-        displays.initSocket();
+        finish();
     }
 });
