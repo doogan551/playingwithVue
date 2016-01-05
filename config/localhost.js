@@ -7,8 +7,7 @@ var localhost = {
       'driveLetter': 'C'
     },
     'location': {
-      'site': 'Rob',
-      'email': 'rkendall@dorsett-tech.com'
+      'site': 'Rob'
     }
   }
 };

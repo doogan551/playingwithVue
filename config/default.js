@@ -22,7 +22,8 @@ var defaults = {
             'archiveLocation': '/InfoScan/Archive/History/'
         },
         'location': {
-            'site' : 'Dorsett'
+            'site' : 'Dorsett',
+            'email': 'rkendall@dorsett-tech.com'
         }
     }
 };
