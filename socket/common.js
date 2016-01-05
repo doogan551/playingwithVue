@@ -238,6 +238,28 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
     function updateProperties() {
       for (var prop in newPoint) {
 
+        // sort enums first
+        if (newPoint[prop].hasOwnProperty('ValueOptions')) {
+          var options = newPoint[prop].ValueOptions;
+          var compare = function(a, b) {
+            return a * 1 > b * 1;
+          };
+          var newOptions = {};
+          var temp = [];
+          for (var stringVal in options) {
+            temp.push(options[stringVal]);
+          }
+          temp.sort(compare);
+          for (var key = 0; key < temp.length; key++) {
+            for (var property in options) {
+              if (options[property] === temp[key]) {
+                newOptions[property] = options[property];
+              }
+            }
+          }
+          newPoint[prop].ValueOptions = newOptions;
+        }
+
         // this will compare Slides and Point Refs arrays.
         if (!_.isEqual(newPoint[prop], oldPoint[prop])) {
           if (readOnlyProps.indexOf(prop) !== -1) {

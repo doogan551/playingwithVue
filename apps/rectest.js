@@ -297,4 +297,31 @@ function updateGPL() {
   });
 
 }
-updateGPL();
+// updateGPL();
+
+function sortEnums() {
+  var options = {
+    'three': 3,
+    'zero': 0,
+    'sixteen': 16
+  };
+  var compare = function(a,b){
+    return a*1 > b*1;
+  };
+  var newOptions = {};
+  var temp = [];
+  for (var stringVal in options) {
+    temp.push(options[stringVal]);
+  }
+  temp.sort(compare);
+  console.log(temp);
+  for (var key = 0; key < temp.length; key++) {
+    for (var property in options) {
+      if (options[property] === temp[key]) {
+        newOptions[property] = options[property];
+      }
+    }
+  }
+  console.log(newOptions);
+}
+sortEnums();

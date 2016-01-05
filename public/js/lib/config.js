@@ -1858,12 +1858,11 @@ var Config = (function(obj) {
         },
 
         "States": function(data) {
-            // check for duplicate enums and texts and blank enums/texts
+            // check for blank enums/texts
             // set data.ok during validation w/err then check before applyStates
-            // update enum order here, in applyStates or on front end
             var enums = [];
             var texts = [];
-            console.log(data.point.States.ValueOptions);
+
             for (var prop in data.point.States.ValueOptions) {
                 if (texts.indexOf(prop) < 0) {
                     texts.push(prop);
@@ -1881,9 +1880,8 @@ var Config = (function(obj) {
                     break;
                 }
             }
-            
+
             if (data.ok === true) {
-                console.log('applyStates');
                 data.point = obj.EditChanges.applyStates(data);
             }
 
