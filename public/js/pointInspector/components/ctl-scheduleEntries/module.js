@@ -764,7 +764,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
         item.intervalAdjust = ko.observable(clonedEntry && clonedEntry.intervalAdjust() || 0);
         item.url = ko.observable(null);
         item.scheduleName = ko.observable('');
-        item.lastValueType = ko.observable(0);
+        item.lastValueType = ko.observable(indiv['Control Value'].ValueType());
         if (self.pointType !== 'Schedule' && indiv._parentUpi() !== 0) {
             getRefData(indiv._parentUpi()).done(function(data) {
                 if (data.hasOwnProperty('message')) {
@@ -885,10 +885,10 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
                 var valueTypeInt = pointtypePropertyTemplate.ValueType;
 
 
-                indiv["Control Value"].ValueType(valueTypeInt);
-                indiv["Control Value"].Value.valueHasMutated();
-                indiv["Control Property"].eValue(config.Enums.Properties[property].enum);
                 item.valueTypeSelector(valueTypeInt);
+                indiv["Control Value"].ValueType(valueTypeInt);
+                indiv["Control Value"].ValueType.valueHasMutated();
+                indiv["Control Property"].eValue(config.Enums.Properties[property].enum);
                 //indiv["Active Release"].Value(false); If this is added back, go through all entries after load and set to db value
             }
         });
