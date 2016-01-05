@@ -8,7 +8,7 @@ module.exports = {
   sendError: function(msg) {
     nodemailer.mail({
       from: 'noreply@dorsett-tech.com',
-      to: 'rkendall@dorsett-tech.com',
+      to: config.get('Infoscan.location').email,
       subject: 'Error: ' + serverConfig,
       text: msg
     });
