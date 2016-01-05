@@ -442,7 +442,9 @@ define([
                             }
                             bannerJS.showBanner(updatedPoint.err + ' The ' + e.property + ' has been truncated.', 'Dismiss');
                         }else{
-                            if (pointProp.hasOwnProperty('Value')) { // We had to add this because now it is invoked for 'name[1-4]' changes (name[1-4] do not have a 'Value' key)
+                            if(e.property === 'States'){ // check for any property that could update ValueOptions instead of Value
+                                pointProp.ValueOptions(pointInspector.utility.enumToArray(originalProp.ValueOptions));
+                            } else if (pointProp.hasOwnProperty('Value')) { // We had to add this because now it is invoked for 'name[1-4]' changes (name[1-4] do not have a 'Value' key)
                                 pointProp.Value(originalProp.Value);
                             } else {
                                 pointProp(originalProp);

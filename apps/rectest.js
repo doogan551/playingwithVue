@@ -191,3 +191,110 @@ function addProperties() {
   });
 }
 // addProperties();
+
+function testTwilio() {
+  var client = require('twilio')('AC197afc3a1bff2117f0ce2b26becd96e7', 'e0a0537c16e912d59166f5777c2beef7');
+
+  var sendText = function() {
+    client.sendMessage({
+
+      to: '+13364694547', // Any number Twilio can deliver to
+      from: '+13367702400', // A number you bought from Twilio and can use for outbound communication
+      body: 'Today\'s date is ' + moment().format('MM/DD/YYYY') // body of the SMS message
+
+    }, function(err, responseData) { //this function is executed when a response is received from Twilio
+
+      if (!err) { // "err" is an error received during the request, if any
+        console.log(responseData.from); // outputs "+14506667788"
+        console.log(responseData.body); // outputs "word to your mother."
+
+      } else {
+        console.log(err);
+      }
+    });
+  };
+
+  var sendVoice = function() {
+    var msg = 'Johnny Roberts is a girl'.split(' ').join('+');
+    var url = 'http://twimlets.com/echo?Twiml=%3CResponse%3E%3CSay%3E' + msg + '%3C%2FSay%3E%3C%2FResponse%3E';
+    console.log(url);
+    client.makeCall({
+
+      to: '+13364694547', // Any number Twilio can call
+      from: '+13367702400', // A number you bought from Twilio and can use for outbound communication
+      url: url // A URL that produces an XML document (TwiML) which contains instructions for the call
+
+    }, function(err, responseData) {
+      console.log(err);
+      //executed when the call has been initiated.
+      console.log(responseData.from); // outputs "+14506667788"
+
+    });
+  };
+  sendText();
+
+}
+// testTwilio();
+
+function updateGPL() {
+  var count = 0;
+  var pointTypes = ["Alarm Status", "Analog Selector", "Average", "Binary Selector", "Comparator", "Delay", "Digital Logic", "Economizer", "Enthalpy", "Logic", "Math", "Multiplexer", "Proportional", "Ramp", "Select Value", "Setpoint Adjust", "Totalizer"];
+  var criteria = {
+    collection: 'points',
+    query: {
+      'Point Type.Value': {
+        $in: pointTypes
+      }
+    }
+  };
+  db.connect(connectionString.join(''), function(err) {
+    Utility.iterateCursor(criteria, function(err, point, cb) {
+      count++;
+      if (count % 1000 === 0) {
+        console.log(count);
+      }
+      var parentUpi = point._parentUpi;
+
+      for (var prop in point) {
+        if (point[prop].ValueType == 8) {
+          if (parentUpi !== 0)
+            point[prop].isReadOnly = true;
+          else
+            point[prop].isReadOnly = false;
+        }
+      }
+
+      switch (point["Point Type"].Value) {
+        case 'Proportional':
+        case 'Binary Selector':
+        case 'Analog Selector':
+          point['Setpoint Value'].isReadOnly = (parentUpi !== 0) ? true : false;
+          break;
+        case 'Math':
+        case 'Multiplexer':
+          point['Input 1 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+          point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+          break;
+        case 'Delay':
+          point['Trigger Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+          break;
+        case 'Comparator':
+          point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+          break;
+      }
+
+      var crit = {
+        collection: 'points',
+        query: {
+          _id: point._id
+        },
+        updateObj: point
+      };
+      Utility.update(crit, cb);
+    }, function(err) {
+      console.log('done', err);
+    });
+  });
+
+}
+updateGPL();

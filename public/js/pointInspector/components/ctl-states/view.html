@@ -8,7 +8,7 @@
                     <input type="text" data-bind="numeric: value, valueType: 4, min: 0, max: 65535, noValidation: true, disable: $parent.data.isReadOnly, event: { focusout: $parent.triggerHandler }" class="form-control input-sm">
                 </div>
                 <div class="col col-xs-8">
-                    <input type="text" data-bind="value: name, disable: $parent.data.isReadOnly, event: { focusout: $parent.triggerHandler }" class="_stateName form-control input-sm">
+                    <input type="text" data-bind="value: name, disable: $parent.data.isReadOnly, event: { focusout: $parent.triggerHandler, keyup: $parent.checkDuplicate, focusin:$parent.setOriginal }" class="_stateName form-control input-sm">
                 </div>
                 <div class="col col-xs-1">
                     <span data-bind="click: function() { $parent.remove($data) }" class="lh30 removeRow"><i class="fa fa-times"></i></span>

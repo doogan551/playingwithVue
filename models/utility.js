@@ -207,12 +207,12 @@ exports.getCursor = function(criteria, cb) {
 }, function(err){
   console.log('done', err);
 });*/
-exports.iterateCursor = function(criteria, fx, cb) {
+exports.iterateCursor = function(criteria, fx, done) {
   exports.getCursor(criteria, function(cursor) {
 
     function processDoc(err, doc) {
       if (!!err || doc === null) {
-        cb(err);
+        done(err);
       } else {
         fx(err, doc, function(err) {
           cursor.nextObject(processDoc);

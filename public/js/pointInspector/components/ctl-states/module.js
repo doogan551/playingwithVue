@@ -7,19 +7,51 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.data = params.data[this.propertyName];
         this.states = this.data.ValueOptions;
         this.isInEditMode = params.rootContext.isInEditMode;
+        this.originalText = '';
+
+        self.checkDuplicate = function(item, event) {
+            /*var allTexts = [];
+            for (var i = 0; i < self.states().length; i++) {
+                allTexts.push(self.states()[i].name());
+            }
+            var currentText = $(event.currentTarget).val();
+
+            if (currentText !== item.name() && allTexts.indexOf(currentText) >= 0) {
+
+            }*/
+        };
+        self.setOriginal = function(item, event) {
+            self.originalText = item.name();
+        };
+        self.triggerHandler = function(item, event) {
+            var allTexts = [];
+            for (var i = 0; i < self.states().length; i++) {
+                if (allTexts.indexOf(self.states()[i].name()) < 0) {
+                    allTexts.push(self.states()[i].name());
+                } else {
+                    item.name(self.originalText);
+                    bannerJS.showBanner('Cannot have duplicate States texts. The States has been set back to its original value.', 'Dismiss');
+                }
+            }
+
+            _triggerHandler($(event.target));
+        };
     }
 
     // Use prototype to declare any public methods
     ViewModel.prototype.addNew = function(data, event) {
         var states = data.states,
             value = getNextValue(states()),
-            name  = 'State_' + value + '_Text';
+            name = 'State_' + value + '_Text';
         // Prepopulate the state name with a unique string so we can add multiple
         // states, then go back and edit each one. The viewmodelChange handler in
         // startup.js calls ko.viewmodel.toModel which reformats the states array
         // into a states object, where the name is the key, and value is the key
         // value.
-        states.push({ name: ko.observable(name), value: ko.observable(value) });
+        states.push({
+            name: ko.observable(name),
+            value: ko.observable(value)
+        });
         // Select the state text. It will be validated when the input loses focus
         $('._stateName:last').get(0).select();
     };
@@ -29,9 +61,9 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         _triggerHandler(null);
     };
 
-    ViewModel.prototype.triggerHandler = function(item, event) {
-        _triggerHandler($(event.target));
-    };
+    /*    ViewModel.prototype.triggerHandler = function(item, event) {
+            _triggerHandler($(event.target));
+        };*/
 
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
@@ -41,7 +73,9 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     };
 
     function getNextValue(states) {
-        return Math.max.apply(Math, ko.utils.arrayMap(states, function(item){ return item.value(); })) + 1;
+        return Math.max.apply(Math, ko.utils.arrayMap(states, function(item) {
+            return item.value();
+        })) + 1;
     }
 
     function _triggerHandler($targetElement) {
@@ -54,5 +88,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     }
 
     // Return component definition
-    return { viewModel: ViewModel, template: view };
+    return {
+        viewModel: ViewModel,
+        template: view
+    };
 });

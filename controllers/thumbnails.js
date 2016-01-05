@@ -4,7 +4,7 @@ var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Thumbnail = require('../models/thumbnails');
 // NOT CHECKED
-router.get('/thumbnail/batch', function(req, res, next) {
+router.get('/batch', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
 
@@ -13,7 +13,7 @@ router.get('/thumbnail/batch', function(req, res, next) {
 	});
 });
 // NOT CHECKED
-router.get('/thumbnail/:id', function(req, res, next) {
+router.get('/:id', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
 
@@ -22,7 +22,7 @@ router.get('/thumbnail/:id', function(req, res, next) {
 	});
 });
 // NOT CHECKED
-router.post('/thumbnail/save', function(req, res, next) {
+router.post('/save', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
 

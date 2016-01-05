@@ -1063,17 +1063,36 @@ function updateMultiplexer(point, callback) {
 }
 
 function updateGPLBlocks(point, callback) {
-
+	var parentUpi = point._parentUpi;
 	var pointTypes = ["Alarm Status", "Analog Selector", "Average", "Binary Selector", "Comparator", "Delay", "Digital Logic", "Economizer", "Enthalpy", "Logic", "Math", "Multiplexer", "Proportional", "Ramp", "Select Value", "Setpoint Adjust", "Totalizer"];
 	if (pointTypes.indexOf(point["Point Type"].Value) !== -1) {
 
 		for (var prop in point) {
 			if (point[prop].ValueType == 8) {
-				if (point._parentUpi !== 0)
+				if (parentUpi !== 0)
 					point[prop].isReadOnly = true;
 				else
 					point[prop].isReadOnly = false;
 			}
+		}
+
+		switch (point["Point Type"].Value) {
+			case 'Proportional':
+			case 'Binary Selector':
+			case 'Analog Selector':
+				point['Setpoint Value'].isReadOnly = (parentUpi !== 0) ? true : false;
+				break;
+			case 'Math':
+			case 'Multiplexer':
+				point['Operand 1 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+				point['Operand 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+				break;
+			case 'Delay':
+				point['Trigger Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+				break;
+			case 'Comparator':
+				point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+				break;
 		}
 
 		/*point.name4 = point.gplNameSegment;
@@ -1236,9 +1255,9 @@ function updateOOSValue(point, callback) {
 	callback(null);
 }
 
-function addTrendProperties(point, callback){
+function addTrendProperties(point, callback) {
 	var pt = point['Point Type'].Value;
-	if(pt === 'Optimum Start'){
+	if (pt === 'Optimum Start') {
 		point['Trend Enable'] = Config.Templates.getTemplate(pt)['Trend Enable'];
 		point['Trend Interval'] = Config.Templates.getTemplate(pt)['Trend Interval'];
 		point['Trend Last Status'] = Config.Templates.getTemplate(pt)['Trend Last Status'];

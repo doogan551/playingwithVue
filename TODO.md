@@ -1,5 +1,3 @@
-- importapp and importconfig 
-
 - pull out 'business logic' to own files and look to share functionality
 - strings surrouned by ''
 - tabs/indentions = 2 spaces
@@ -10,7 +8,8 @@
 - read up on 'process#' functions
 - setup config for non-app.js scripts
 - web.config options
-- move site specific files out of directory (display_assets, public/img)
+- move job site specific (MSFC, ydkv, Ft Gordon, etc..) files out of directory (display_assets, public/img)
+- stateless models (i.e. opendisplays and alarms in socket)
 
 - get node-inspector module - error during installation
 - get terminal-kit module - useful for self contained scripts' ui

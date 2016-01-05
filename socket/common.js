@@ -58,7 +58,9 @@ var loader = function() {
 // io & oplog
 common.setQualityLabel = function(point) {
 
-  if (point._relDevice !== undefined && point._relDevice === Config.Enums.Reliabilities["Stop Scan"]["enum"])
+  if (point._cfgRequired !== undefined && point._cfgRequired === true)
+    point["Quality Label"] = "Fault";
+  else if (point._relDevice !== undefined && point._relDevice === Config.Enums.Reliabilities["Stop Scan"]["enum"])
     point["Quality Label"] = "Stop Scan";
   else if (point._relDevice !== undefined && point._relDevice !== Config.Enums.Reliabilities["No Fault"]["enum"])
     point["Quality Label"] = "Fault";

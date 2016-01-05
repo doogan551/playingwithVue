@@ -1858,7 +1858,35 @@ var Config = (function(obj) {
         },
 
         "States": function(data) {
-            data.point = obj.EditChanges.applyStates(data);
+            // check for duplicate enums and texts and blank enums/texts
+            // set data.ok during validation w/err then check before applyStates
+            // update enum order here, in applyStates or on front end
+            var enums = [];
+            var texts = [];
+            console.log(data.point.States.ValueOptions);
+            for (var prop in data.point.States.ValueOptions) {
+                if (texts.indexOf(prop) < 0) {
+                    texts.push(prop);
+                } else {
+                    data.ok = false;
+                    data.result = data.property + " must contain unique texts.";
+                    break;
+                }
+
+                if (enums.indexOf(data.point.States.ValueOptions[prop]) < 0) {
+                    enums.push(data.point.States.ValueOptions[prop]);
+                } else {
+                    data.ok = false;
+                    data.result = data.property + " must contain unique enums.";
+                    break;
+                }
+            }
+            
+            if (data.ok === true) {
+                console.log('applyStates');
+                data.point = obj.EditChanges.applyStates(data);
+            }
+
             return data;
         },
 
@@ -2866,7 +2894,11 @@ var Config = (function(obj) {
                             point["Input 2 Constant"].eValue = tempOption.eValue;
                         }
                     }
-                    point["Input 2 Constant"].isReadOnly = false;
+                    if (point._parentUpi !== 0) {
+                        point["Input 2 Constant"].isReadOnly = true;
+                    } else {
+                        point["Input 2 Constant"].isReadOnly = false;
+                    }
                 }
                 // Must be Input Point 2
             } else {
