@@ -53,7 +53,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         };
         self.updateEnumOrder = function() {
             var compare = function(a, b) {
-                return a.value() > b.value();
+                return a.value() - b.value();
             };
             self.states().sort(compare);
         };

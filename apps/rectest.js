@@ -301,27 +301,23 @@ function updateGPL() {
 
 function sortEnums() {
   var options = {
-    'three': 3,
-    'zero': 0,
-    'sixteen': 16
+    "a": 1,
+    "b": 3,
+    "c": 2
   };
-  var compare = function(a,b){
-    return a*1 > b*1;
+  var compare = function(a, b) {
+    return a[1] * 1 - b[1] * 1;
   };
   var newOptions = {};
   var temp = [];
   for (var stringVal in options) {
-    temp.push(options[stringVal]);
+    temp.push([stringVal, options[stringVal]]);
   }
   temp.sort(compare);
-  console.log(temp);
-  for (var key = 0; key < temp.length; key++) {
-    for (var property in options) {
-      if (options[property] === temp[key]) {
-        newOptions[property] = options[property];
-      }
-    }
+  for (var i = 0; i < temp.length; i++) {
+    console.log(temp[i]);
+    newOptions[temp[i][0]] = temp[i][1];
+    console.log(newOptions);
   }
-  console.log(newOptions);
 }
 sortEnums();

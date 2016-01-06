@@ -2811,7 +2811,7 @@ var Config = (function(obj) {
             } else {
                 if (refPoint.Value.ValueType !== point[prop.ifValueN].ValueType) {
                     point[prop.ifValueN] = refPoint.Value;
-                    addFakeValueOptions(point[prop.ifValueN]);
+                    this.addFakeValueOptions(point[prop.ifValueN]);
                     delete point[prop.ifValueN].oosValue;
                 } else if (refPoint.Value.ValueType === 5) {
                     point[prop.ifValueN].ValueOptions = refPoint.Value.ValueOptions;
@@ -2871,7 +2871,7 @@ var Config = (function(obj) {
                 if (data.propertyObject.PointInst !== 0) {
                     if (refPoint.Value.ValueType !== point["Input 2 Constant"].ValueType) {
                         point["Input 2 Constant"] = refPoint.Value;
-                        addFakeValueOptions(point['Input 2 Constant']);
+                        this.addFakeValueOptions(point['Input 2 Constant']);
                         delete point["Input 2 Constant"].oosValue;
                     } else if (refPoint.Value.ValueType === 5) {
                         point["Input 2 Constant"].ValueOptions = refPoint.Value.ValueOptions;

@@ -235,15 +235,17 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
       updateProperties();
     }
 
+    var compare = function(a, b) {
+      return a * 1 > b * 1;
+    };
+
     function updateProperties() {
       for (var prop in newPoint) {
 
         // sort enums first
         if (newPoint[prop].hasOwnProperty('ValueOptions')) {
           var options = newPoint[prop].ValueOptions;
-          var compare = function(a, b) {
-            return a * 1 > b * 1;
-          };
+
           var newOptions = {};
           var temp = [];
           for (var stringVal in options) {
