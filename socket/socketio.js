@@ -585,6 +585,7 @@ function getInitialVals(id, callback) {
     Name: 1,
     eValue: 1,
     "Alarm State": 1,
+    _cfgRequired: 1,
     _relDevice: 1,
     _relRMU: 1,
     _relPoint: 1,
