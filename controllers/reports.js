@@ -18,6 +18,8 @@ router.get('/getMRT/:id', function(req, res, next) {
     return utils.sendResponse(res, trends);
   });
 });
+
+
 // NOT CHECKED
 router.get('/reportSearch', function(req, res, next) {
   var data = _.merge(req.params, req.body);
@@ -209,7 +211,7 @@ var reportMainCallback = function(res, err, locals, result) {
             res.render('reports/index');
             break;
           case "History":
-            res.render('reports/history');
+            res.render('reports/index');
             break;
             //case "Point Involvement":
             //    res.render('reports/cannedReports/pointInvolvement');

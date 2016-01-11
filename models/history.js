@@ -1592,7 +1592,7 @@ var removeFromHistorydata = function(mdb, ranges, cb) {
 	cb();
 };
 
-module.exports = {
+module.exports = historyModel = {
 	getMeters: function(data, cb) {
 		var upis = data.upis;
 
@@ -1875,7 +1875,7 @@ module.exports = {
 					if (!results.length && moment.unix(range.start).year() > 2000) {
 						range.end = range.start - 1;
 						formatRange(range);
-						exports.findLatest(options, callback);
+						historyModel.findLatest(options, callback);
 					} else {
 						// console.log(options.upis, moment.unix(range.end).format(), moment.unix(results[0].timestamp).format());
 						return callback(err, results);

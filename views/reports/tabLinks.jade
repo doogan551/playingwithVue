@@ -1,19 +1,10 @@
-//
-   Created by Soven on 1/2/2015.
-ul#tabs.nav.nav-pills.nav-stacked
+// - - -   tablinks.jade
+ul.text-left.tabs.list-unstyled
    li.active
-      a.btn.btn-arrow-right(href="#tabConfiguration",data-toggle="tab", role="tab", data-loading-text="<i class='fa fa-spinner fa-spin'></i>&nbsp;Please Wait...")
-         i.insideButton.fa.fa-2x.fa-cogs
-         | Configuration
+      tab(data-bind="click: reportConfiguration.bind()") Configuration
    li
-      a.btn.btn-arrow-right(href="#tabPreview",data-toggle="tab", role="tab", data-loading-text="<i class='fa fa-spinner fa-spin'></i>&nbsp;Please Wait...")
-         i.insideButton.fa.fa-2x.fa-file
-         | Report Preview
+      tab(data-bind="click: reportPreview.bind()") Report Preview
    li
-      a.btn.btn-arrow-right(href="#tabDesign", data-toggle="tab", role="tab", data-loading-text="<i class='fa fa-spinner fa-spin'></i>&nbsp;Please Wait...")
-         i.insideButton.fa.fa-2x.fa-wrench
-         | Design Report
+      tab(data-bind="click: reportDesign.bind()") Design Report
    li
-      a.btn.btn-arrow-right(href="#tabReportNotes", data-toggle="tab", role="tab", data-loading-text="<i class='fa fa-spinner fa-spin'></i>&nbsp;Please Wait...")
-         i.insideButton.fa.fa-2x.fa-edit
-         | Report Articles
+      tab(data-bind="click: reportNotes.bind()") Report Articles
