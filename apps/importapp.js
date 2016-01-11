@@ -1093,6 +1093,9 @@ function updateGPLBlocks(point, callback) {
 			case 'Comparator':
 				point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
 				break;
+			case 'Totalizer':
+				point['Reset Time'].Value *= 60;
+				break;
 		}
 
 		/*point.name4 = point.gplNameSegment;
@@ -1264,6 +1267,7 @@ function addTrendProperties(point, callback) {
 		point['Trend Last Value'] = Config.Templates.getTemplate(pt)['Trend Last Value'];
 		point['Trend Samples'] = Config.Templates.getTemplate(pt)['Trend Samples'];
 	}
+	callback(null);
 }
 
 function updateScriptPoint(point, callback) {
@@ -1702,7 +1706,6 @@ function updateReferences(db, point, mainCallback) {
 			if (point["Screen Objects"] !== undefined) {
 				async.forEachSeries(point["Screen Objects"], function(screenObject, propCb) {
 						if (screenObject["Screen Object"] === 0 || screenObject["Screen Object"] === 1 || screenObject["Screen Object"] === 3 || screenObject["Screen Object"] === 7) {
-
 							var propertyEnum = 0;
 							var propertyName = "";
 							if (screenObject["Screen Object"] === 0) {

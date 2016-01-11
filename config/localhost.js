@@ -1,7 +1,7 @@
 var localhost = {
   'Infoscan': {
     'dbConfig': {
-      'host': '192.168.1.88'
+      'host': 'localhost'
     },
     'files': {
       'driveLetter': 'C'
