@@ -9,3 +9,6 @@ nbproject/
 iisnode/
 *.scc
 Cpp_API*.log
+.idea
+
+public/js/reports/deleteme.json
