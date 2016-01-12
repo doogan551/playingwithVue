@@ -636,26 +636,34 @@ var reportsViewModel = function () {
             self.designChanged(false);
         },
         renderHistoryReport = function (data) {
-            reportJsonData = pivotHistoryData(data.historyData);
-            self.truncatedData(data.truncated);
-            $previewReport.DataTable().rows.add(reportJsonData).draw();
-            //$previewReport.DataTable().fnAdjustColumnSizing();
-            if (currentTab === 2) {
+            if (data.err === undefined) {
+                reportJsonData = pivotHistoryData(data.historyData);
+                self.truncatedData(data.truncated);
+                $previewReport.DataTable().clear();
+                $previewReport.DataTable().rows.add(reportJsonData).draw();
+                if (currentTab === 2) {
+                    $previewReport.show();
+                    $tabPreview.show();
+                    $reportSpinner.hide();
+                }
+                self.refreshData(false);
+            }  else {
+                console.log(" - * - * - renderHistoryReport() ERROR = ", data.err);
+            }
+        },
+        renderPropertyReport = function (data) {
+            if (data.err === undefined) {
+                reportJsonData = data;
+                self.truncatedData(data.truncated);
+                $previewReport.DataTable().clear();
+                $previewReport.DataTable().rows.add(reportJsonData).draw();
                 $previewReport.show();
                 $tabPreview.show();
                 $reportSpinner.hide();
+                self.refreshData(false);
+            }  else {
+                console.log(" - * - * - renderPropertyReport() ERROR = ", data.err);
             }
-            self.refreshData(false);
-        },
-        renderPropertyReport = function (data) {
-            reportJsonData = data;
-            $previewReport.DataTable().clear();
-            $previewReport.DataTable().rows.add(reportJsonData).draw();
-            //$previewReport.DataTable().fnAdjustColumnSizing();
-            $previewReport.show();
-            $tabPreview.show();
-            $reportSpinner.hide();
-            self.refreshData(false);
         },
 
     //Function is responsible when Column Name is changed in dropdown

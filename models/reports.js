@@ -33,400 +33,6 @@ module.exports = Rpt = {
             }
         });
     },
-    reportSearchOld: function (data, cb) {
-        var params = data.Params;
-        var query = {};
-        var searchCriteria = {};
-        var fields = {};
-        var getPointRefs = false;
-        var uniquePIDs = [];
-        //numberComparators = [];
-        //stringComparators = [];
-        //orIndex = -1;
-
-        var qualifiers = params.Qualifiers;
-        var properties = params.Properties;
-        var sort = params.Sort;
-        var returnLimit = utils.converters.convertType(params.Limit);
-
-        searchCriteria.$and = [];
-
-        if (params.name1) {
-            if (params.name1SearchType == 'begin' || params.name1.searchType == 'begin') {
-                beginStr = '^';
-                endStr = '';
-            } else if (params.name1SearchType == 'contain' || params.name1.searchType == 'contain') {
-                beginStr = '.*';
-                endStr = '.*';
-            } else if (params.name1SearchType == 'end' || params.name1.searchType == 'end') {
-                beginStr = '';
-                endStr = '$';
-            }
-            if (params.name1.value !== null) {
-                name1str = params.name1.value;
-            } else {
-                name1str = params.name1;
-            }
-            searchCriteria.$and.push({
-                'name1': {
-                    '$regex': '(?i)' + beginStr + name1str + endStr
-                }
-            });
-
-        }
-
-        if (params.name2) {
-            if (params.name2SearchType == 'begin' || params.name2.searchType == 'begin') {
-                beginStr = '^';
-                endStr = '';
-            } else if (params.name2SearchType == 'contain' || params.name2.searchType == 'contain') {
-                beginStr = '.*';
-                endStr = '.*';
-            } else if (params.name2SearchType == 'end' || params.name2.searchType == 'end') {
-                beginStr = '';
-                endStr = '$';
-            }
-            if (params.name2.value !== null) {
-                name2str = params.name2.value;
-            } else {
-                name2str = params.name2;
-            }
-            searchCriteria.$and.push({
-                'name2': {
-                    '$regex': '(?i)' + beginStr + name2str + endStr
-                }
-            });
-            //    searchCriteria.name2 = { '$regex': '(?i)' + beginStr + name2str + endStr };
-        }
-
-        if (params.name3) {
-            if (params.name3SearchType == 'begin' || params.name3.searchType == 'begin') {
-                beginStr = '^';
-                endStr = '';
-            } else if (params.name3SearchType == 'contain' || params.name3.searchType == 'contain') {
-                beginStr = '.*';
-                endStr = '.*';
-            } else if (params.name3SearchType == 'end' || params.name3.searchType == 'end') {
-                beginStr = '';
-                endStr = '$';
-            }
-            if (params.name3.value !== null) {
-                name3str = params.name3.value;
-            } else {
-                name3str = params.name3;
-            }
-            //searchCriteria.name3 = { '$regex': '(?i)' + beginStr + name3str + endStr };
-            searchCriteria.$and.push({
-                'name3': {
-                    '$regex': '(?i)' + beginStr + name3str + endStr
-                }
-            });
-        }
-
-        if (params.name4) {
-            if (params.name4SearchType == 'begin' || params.name4.searchType == 'begin') {
-                beginStr = '^';
-                endStr = '';
-            } else if (params.name4SearchType == 'contain' || params.name4.searchType == 'contain') {
-                beginStr = '.*';
-                endStr = '.*';
-            } else if (params.name4SearchType == 'end' || params.name4.searchType == 'end') {
-                beginStr = '';
-                endStr = '$';
-            }
-            if (params.name4.value !== null) {
-                name4str = params.name4.value;
-            } else {
-                name4str = params.name4;
-            }
-            //searchCriteria.name4 = { '$regex': '(?i)' + beginStr + name4str + endStr };
-            searchCriteria.$and.push({
-                'name4': {
-                    '$regex': '(?i)' + beginStr + name4str + endStr
-                }
-            });
-        }
-
-        var hasValue = false,
-            tempSearchValue = {
-                $or: []
-            };
-
-        if (properties) {
-            for (var k = 0; k < properties.length; k++) {
-                var p = properties[k].replace(/_+/gi, " ");
-                if (Config.Utility.getUniquePIDprops().indexOf(p) !== -1) {
-                    if (getPointRefs === false) {
-                        fields["Point Refs"] = 1;
-                        uniquePIDs.push(p);
-                        getPointRefs = true;
-                    }
-                } else {
-                    fields[p] = 1;
-                }
-
-            }
-        }
-
-        if (qualifiers && qualifiers.length > 0) {
-            console.log("qualifiers", qualifiers);
-            var previousQualifiers = [],
-                tempOR = [];
-            for (var i = 0; i < qualifiers.length; i++) {
-                var searchValue = {};
-
-                for (var key in qualifiers[i]) {
-                    if (i === 0) {
-                        delete qualifiers[0][key].condition;
-                    }
-                    if (Config.Utility.getUniquePIDprops().indexOf(key) !== -1) {
-
-                        switch (qualifiers[i][key].comparator) {
-                            case "EqualTo":
-
-                                searchValue = {
-                                    "Point Refs": {
-                                        $elemMatch: {
-                                            "PropertyName": key,
-                                            "Value": utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType)
-                                        }
-                                    }
-                                };
-
-                                searchCriteria.$and.push(searchValue);
-                                break;
-                            case "NotEqualTo":
-
-                                searchValue[propertyCheckForValue(key)] = {
-                                    $ne: utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType)
-                                };
-                                searchValue = {
-                                    "Point Refs": {
-                                        $elemMatch: {
-                                            "PropertyName": key,
-                                            "Value": {
-                                                $ne: utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType)
-                                            }
-                                        }
-                                    }
-                                };
-                                searchCriteria.$and.push(searchValue);
-                                break;
-                        }
-                    } else {
-
-                        // this may not work with two different properties in the same or statement
-                        /*if (qualifiers[i][key].condition == "OR") {
-                         searchCriteria.$or = [];
-                         searchValue[key] = {
-                         $exists: true
-                         };
-                         searchCriteria.$or.push(searchValue);
-                         } else {
-
-                         }*/
-
-
-                        switch (qualifiers[i][key].comparator) {
-                            case "Containing":
-                                searchValue[propertyCheckForValue(key)] = {
-                                    $regex: '.*(?i)' + qualifiers[i][key].Value + '.*'
-                                };
-                                //searchCriteria.$and.push(searchValue);
-                                break;
-                            case "NotContaining":
-                                var re = new RegExp(qualifiers[i][key].Value, i);
-                                searchValue[propertyCheckForValue(key)] = {
-                                    $not: re
-                                };
-                                //searchCriteria.$and.push(searchValue);
-                                break;
-                            case "EqualTo":
-                                if (qualifiers[i][key].Value === "False") {
-                                    searchValue[propertyCheckForValue(key)] = false;
-                                    //searchCriteria.$and.push(searchValue);
-                                } else if (qualifiers[i][key].Value === "True") {
-                                    searchValue[propertyCheckForValue(key)] = true;
-                                    //searchCriteria.$and.push(searchValue);
-                                } else if (utils.converters.isNumber(qualifiers[i][key].Value)) {
-                                    searchValue[propertyCheckForValue(key)] = utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType);
-                                    //searchCriteria.$and.push(searchValue);
-                                } else if (qualifiers[i][key].Value.indexOf(",") > -1) {
-                                    var splitValues = qualifiers[i][key].Value.split(",");
-                                    //if (!searchCriteria.$or)
-                                    //    searchCriteria.$or = [];
-                                    var new$or = {};
-                                    new$or.$or = [];
-                                    for (var kk = 0; kk < splitValues.length; kk++) {
-                                        var ppp = {};
-                                        if (utils.converters.isNumber(splitValues[kk])) {
-                                            ppp[propertyCheckForValue(key)] = utils.converters.convertType(splitValues[kk]);
-                                        } else {
-                                            ppp[propertyCheckForValue(key)] = splitValues[kk];
-                                        }
-                                        new$or.$or.push(ppp);
-                                    }
-                                    searchCriteria.$and.push(new$or);
-                                } else {
-                                    searchValue[propertyCheckForValue(key)] = qualifiers[i][key].Value;
-                                    //if (utils.converters.isNumber(qualifiers[i][key].Value))
-                                    //    searchValue[propertyCheckForValue(key)] = utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType);
-                                    //else
-                                    searchValue[propertyCheckForValue(key)] = qualifiers[i][key].Value;
-                                    //searchCriteria.$and.push(searchValue);
-                                }
-                                break;
-                            case "NotEqualTo":
-                                searchValue[key] = {
-                                    $exists: true
-                                };
-                                searchValue[propertyCheckForValue(key)] = {
-                                    $ne: utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType)
-                                };
-                                //searchCriteria.$and.push(searchValue);
-                                break;
-                            case "LessThan":
-                                searchValue[propertyCheckForValue(key)] = {
-                                    $lt: utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType)
-                                };
-                                //searchCriteria.$and.push(searchValue);
-                                break;
-                            case "LessThanOrEqualTo":
-                                searchValue[propertyCheckForValue(key)] = {
-                                    $lte: utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType)
-                                };
-                                //searchCriteria.$and.push(searchValue);
-                                break;
-                            case "GreaterThan":
-                                searchValue[propertyCheckForValue(key)] = {
-                                    $gt: utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType)
-                                };
-                                //searchCriteria.$and.push(searchValue);
-                                break;
-                            case "GreaterThanOrEqualTo":
-                                searchValue[propertyCheckForValue(key)] = {
-                                    $gte: utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType)
-                                };
-                                //searchCriteria.$and.push(searchValue);
-                                break;
-                            case "BeginningWith":
-                                searchValue[propertyCheckForValue(key)] = {
-                                    $regex: '^(?i)' + qualifiers[i][key].Value + '.*'
-                                };
-                                //searchCriteria.$and.push(searchValue);
-                                break;
-                            case "EndingWith":
-                                searchValue[propertyCheckForValue(key)] = {
-                                    $regex: '(?i)' + qualifiers[i][key].Value + '*$'
-                                };
-                                //searchCriteria.$and.push(searchValue);
-                                break;
-                            case "Between":
-                                searchValue[key] = {
-                                    $exists: true
-                                };
-                                searchValue[propertyCheckForValue(key)] = {
-                                    $gte: utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType1),
-                                    $lte: utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType2)
-                                };
-                                //searchCriteria.$and.push(searchValue);
-                                break;
-                            case "NotBetween":
-                                searchValue[key] = {
-                                    $exists: true
-                                };
-                                //{$nin:{$gte:2,$lt:5}}
-                                searchValue[propertyCheckForValue(key)] = {
-                                    $nin: {
-                                        $gte: utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType1),
-                                        $lt: utils.converters.convertType(qualifiers[i][key].Value, qualifiers[i][key].ValueType2)
-                                    }
-                                };
-                                //searchCriteria.$and.push(searchValue);
-                                break;
-                        }
-
-                        if (qualifiers[i][key].condition === undefined || qualifiers[i][key].condition === '' || qualifiers[i][key].condition === "AND") {
-                            if (tempOR.length > 0) {
-                                searchCriteria.$and.push({
-                                    $or: tempOR
-                                });
-                                tempOR = [];
-                            }
-                            if (previousQualifiers.length > 0) {
-                                searchCriteria.$and.push(previousQualifiers[0]);
-                                previousQualifiers = [];
-                            }
-                            previousQualifiers.push(searchValue);
-                        } else {
-                            if (previousQualifiers.length > 0) {
-                                tempOR = tempOR.concat(previousQualifiers);
-                                previousQualifiers = [];
-                            }
-                            tempOR.push(searchValue);
-                        }
-
-
-                    }
-                }
-            }
-            if (previousQualifiers.length > 0) {
-                searchCriteria.$and.push(previousQualifiers[0]);
-            }
-            if (tempOR.length > 0) {
-                searchCriteria.$and.push({
-                    $or: tempOR
-                });
-            }
-
-        } else {
-            //searchCriteria.$and.push({});
-        }
-
-        if (hasValue) {
-            searchCriteria.$and.push({
-                "Value.Value": {
-                    $type: 1
-                }
-            });
-        }
-
-        var sortObject = {};
-
-        if (sort) {
-            for (var key2 in sort) {
-                sortObject[key2] = (sort[key2] == "ASC") ? 1 : -1;
-            }
-        }
-
-        console.log("Report Search Criteria", JSON.stringify(searchCriteria), fields, returnLimit);
-
-        var criteria = {
-            query: searchCriteria,
-            collection: 'points',
-            limit: returnLimit,
-            fields: fields
-        };
-
-        Utility.get(criteria, function (err, docs) {
-
-            if (err) {
-                return cb(err);
-            }
-            if (getPointRefs === true) {
-                for (var i = 0; i < docs.length; i++) {
-                    for (var m = 0; m < docs[i]["Point Refs"].length; m++) {
-                        if (uniquePIDs.indexOf(docs[i]["Point Refs"][m].PropertyName) > -1 && docs[i][docs[i]["Point Refs"][m].PropertyName] === undefined) {
-                            docs[i][docs[i]["Point Refs"][m].PropertyName] = docs[i]["Point Refs"][m];
-                        }
-                    }
-                    delete docs[i]["Point Refs"];
-                }
-            }
-
-            return cb(null, docs);
-        });
-    },
     saveMRT: function (data, cb) {
         var criteria = {
             collection: 'points',
@@ -687,10 +293,9 @@ module.exports = Rpt = {
             timestamps,
             tooManyFlag = false,
             upis = data.upis,
-            query = {},
             qualityCodes = data.qualityCodes; // wrong way to access this
 
-        console.log(" - historyDataSearch() data: " + JSON.stringify(data));
+        logger.info(" - historyDataSearch() data: " + JSON.stringify(data));
         for (var i = 0; i < upis.length; i++) {
             if (upis[i] === 0) {
                 upis.splice(i, 1);
@@ -943,16 +548,16 @@ module.exports = Rpt = {
                 case 5:     // year
                     break;
                 default:
-                    console.log(" - - - - - - - - interval is DEFAULT");
+                    logger.info(" - - - - - - - - interval is DEFAULT");
                     break;
             }
 
-            console.log(" - - - - - - - - interval = " + interval + "  timestampInterval = " + timestampInterval);
+            logger.info(" - - - - - - - - interval = " + interval + "  timestampInterval = " + timestampInterval);
 
             if (timestampInterval !== 0) {
-                //console.log(" - - - - - prevTime = " + prevTime + "   - - endTime = " + endTime);
+                //logger.info(" - - - - - prevTime = " + prevTime + "   - - endTime = " + endTime);
                 while (prevTime <= endTime && timestamps.length < timeSlotLimit) {
-                    //console.log(" - - - - - prevTime = " + prevTime + "   - - endTime = " + endTime);
+                    //logger.info(" - - - - - prevTime = " + prevTime + "   - - endTime = " + endTime);
                     timestamps.push(prevTime);
                     prevTime += timestampInterval;
                 }
@@ -1014,7 +619,7 @@ module.exports = Rpt = {
         });
     },
     reportSearch: function (data, cb) {
-        console.log("- - - reportSearch() called");
+        logger.info("- - - reportSearch() called");
         var filters = data.filters,
             searchCriteria = {},
             fields = {},
@@ -1030,10 +635,10 @@ module.exports = Rpt = {
                     beginStr,
                     endStr;
 
-                console.log(" - - - - -  parseNameField() called");
-                console.log(" - - paramsField = ", paramsField);
-                console.log(" - - searchType = ", searchType);
-                console.log(" - - fieldName = ", fieldName);
+                logger.info(" - - - - -  parseNameField() called");
+                logger.info(" - - paramsField = " + paramsField);
+                logger.info(" - - searchType = " + searchType);
+                logger.info(" - - fieldName = " + fieldName);
 
                 if (paramsField) {
                     if (searchType == 'begin' || paramsField.searchType == 'begin') {
@@ -1060,7 +665,7 @@ module.exports = Rpt = {
 
                 return parsedNameField;
             };
-        //console.log("Incoming request data: " + JSON.stringify(data));
+        //logger.info("Incoming request data: " + JSON.stringify(data));
         searchCriteria.$and = [];
 
         for (var i = 1; i < 5; i++) {
@@ -1097,7 +702,7 @@ module.exports = Rpt = {
                 sortObject[key2] = (sort[key2] == "ASC") ? 1 : -1;
             }
         }
-        console.log("Report Search Criteria", JSON.stringify(searchCriteria), JSON.stringify(fields));
+        logger.info("Report Search Criteria" + JSON.stringify(searchCriteria) + "  fields = " + JSON.stringify(fields));
 
         var criteria = {
             query: searchCriteria,
@@ -1170,9 +775,9 @@ module.exports = Rpt = {
                 }
             }
 
-            //console.log(" - - expressions = ", expressions);
-            //console.log(" - - andExpressions = ", andExpressions);
-            //console.log(" - - orExpressions = ", orExpressions);
+            //logger.info(" - - expressions = " + expressions);
+            //logger.info(" - - andExpressions = " + andExpressions);
+            //logger.info(" - - orExpressions = " + orExpressions);
         }
 
         if (expressions.length > 0) {
@@ -1191,7 +796,7 @@ module.exports = Rpt = {
             localSearchCriteria.$and = localSearchCriteria.$and.concat({"$or": orExpressions});
         }
 
-        //console.log(" - - collectFilter  localSearchCriteria = ", JSON.stringify(localSearchCriteria));
+        //logger.info(" - - collectFilter  localSearchCriteria = " + JSON.stringify(localSearchCriteria));
         return localSearchCriteria;
     },
     collectFilter: function (filter) {
