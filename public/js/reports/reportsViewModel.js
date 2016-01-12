@@ -28,6 +28,7 @@ var initKnockout = function () {
 
 var reportsViewModel = function () {
     var self = this,
+        $direports,
         $tabs,
         $tabConfiguration,
         $tabPreview,
@@ -50,6 +51,7 @@ var reportsViewModel = function () {
         $addPointbutton,
         $addFilterbutton,
         $saveReportButton,
+        $runReportButton,
         $filterOperator,
         $filterByPointPanel,
         $filterByPointPanelAnchor,
@@ -507,6 +509,13 @@ var reportsViewModel = function () {
                 e.stopPropagation();
             });
 
+            $runReportButton.on('click', function (e) {
+                //console.log('$runReportButton clicked');
+                self.reportPreview();
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
             $previewReport.on('click', '.pointInstance', function () {
                 var data = {
                     upi: $(this).attr('upi'),
@@ -731,31 +740,31 @@ var reportsViewModel = function () {
     self.init = function () {
         var datasources;
 
-        $tabs = $(".tabs");
-        $tabConfiguration = $(".tabConfiguration");
-        $tabPreview = $(".tabPreview");
-        $tabDesign = $(".tabDesign");
-        $tabReportNotes = $(".tabReportNotes");
-        $previewReport = $(".previewReport");
-        $runReportForm = $("#runReportForm");
-        $designReport = $(".designReport");
-        $runReport = $(".runReport");
-        $reportSpinner = $(".reportingGettingData");
-        $pointName1 = $("#pointName1");
-        $pointName2 = $("#pointName2");
-        $pointName3 = $("#pointName3");
-        $pointName4 = $("#pointName4");
-        $columnsGrid = $(".columnsGrid");
-        $filtersGrid = $(".filtersGrid");
-        $containerFluid = $(".container-fluid");
-        $addPointbutton = $(".addPointbutton");
-        $addFilterbutton = $(".addFilterbutton");
-        $saveReportButton = $(".saveReportButton");
-        $columnNames = $(".columnName");
-        $filterOperator = $(".filterOperator");
-        $filterByPointPanel = $("#filterByPointPanel");
-        $filterByPointPanelAnchor = $(".filterByPointPanelAnchor");
-        $pointSelectorIframe = $("#pointLookup");
+        $direports = $(".direports");
+        $tabs = $direports.find(".tabs");
+        $tabConfiguration = $direports.find(".tabConfiguration");
+        $tabPreview = $direports.find(".tabPreview");
+        $tabDesign = $direports.find(".tabDesign");
+        $tabReportNotes = $direports.find(".tabReportNotes");
+        $previewReport = $direports.find(".previewReport");
+        $designReport = $direports.find(".designReport");
+        $reportSpinner = $direports.find(".reportingGettingData");
+        $pointName1 = $direports.find(".pointName1");
+        $pointName2 = $direports.find(".pointName2");
+        $pointName3 = $direports.find(".pointName3");
+        $pointName4 = $direports.find(".pointName4");
+        $columnsGrid = $direports.find(".columnsGrid");
+        $filtersGrid = $direports.find(".filtersGrid");
+        $containerFluid = $direports.find(".container-fluid");
+        $addPointbutton = $direports.find(".addPointbutton");
+        $addFilterbutton = $direports.find(".addFilterbutton");
+        $saveReportButton = $direports.find(".saveReportButton");
+        $runReportButton = $direports.find(".runReportButton");
+        $columnNames = $direports.find(".columnName");
+        $filterOperator = $direports.find(".filterOperator");
+        $filterByPointPanel = $direports.find("#filterByPointPanel");
+        $filterByPointPanelAnchor = $direports.find(".filterByPointPanelAnchor");
+        $pointSelectorIframe = $direports.find(".pointLookupFrame");
         $listBoxContentpointTypes = $pointSelectorIframe.contents().find("#listBoxContentpointTypes");
         currentTab = 1;
         workspace = workspace;

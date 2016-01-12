@@ -41,17 +41,14 @@
     padding-top: 3px;
     display: block;
 }
-
-.leftBar .icon.active {
-    background-color: #ffffff;
+.leftBar li.active {
+    background-color: #6b9355;
 }
-
 .leftBar .icon img {
     display: inline-block;
     margin-top: 2px;
     color: #2B8453;
 }
-
 .leftBar .title {
     padding: 5px;
     cursor: pointer;
@@ -60,6 +57,10 @@
     text-decoration: underline;
 }
 
+.tab-content {
+    min-width: 1120px;
+    margin-left: 13px;
+}
 .leftBar .tabs li {
     padding: 6px 6px 6px 6px;
 }
@@ -115,6 +116,9 @@ ul.enumproperties.dropdown-menu li a:hover {
     background-color: #d5e1f2;
 }
 
+.btn-primary {
+    margin: 1px;
+}
 .btn-default.dropdown-toggle.operatorButton {
     border: none;
 }
