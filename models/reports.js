@@ -241,7 +241,7 @@ module.exports = Rpt = {
                         callback(null);
                     }
                 }, function (err) {
-                    console.log("historyDataSearch", new Date() - start);
+                    console.log("historySearch()", new Date() - start);
                     return cb(err, histPoints);
                 });
             });
@@ -327,7 +327,9 @@ module.exports = Rpt = {
         // find points in points collection to get name and valueoptions if needed
         criteria = {
             query: {
-                $in: upis
+                upi: {
+                    $in: upis
+                }
             },
             collection: 'points'
         };
