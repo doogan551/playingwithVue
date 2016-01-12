@@ -18,6 +18,7 @@ var compiler = require('../helpers/scriptCompiler.js');
 var Utility = require('../models/utility.js');
 var History = require('../models/history');
 var logger = require('../helpers/logger')(module);
+var zmq = require('../helpers/zmq');
 var ObjectID = require('mongodb').ObjectID;
 
 var pointsCollection = utils.CONSTANTS("pointsCollection");
@@ -232,7 +233,15 @@ module.exports = function socketio(_common) {
         }, function(err, result) {});
       }
 
-      cppApi.command(data, function(err, msg) {
+      zmq.sendMessage(data, function(err, msg) {
+        if (err) {
+          sock.emit('returnFromField', {err:err});
+        } else {
+          sock.emit('returnFromField', msg);
+        }
+      });
+
+      /*cppApi.command(data, function(err, msg) {
 
         if (err !== 0 && err !== null) {
           error = JSON.parse(err);
@@ -243,7 +252,7 @@ module.exports = function socketio(_common) {
         } else {
           sock.emit('returnFromField', msg);
         }
-      });
+      });*/
     });
     // Checked
     sock.on('firmwareLoader', function(data) {
@@ -565,13 +574,13 @@ module.exports = function socketio(_common) {
         limit: 10,
         start: -1,
         order: 'desc',
-        fields:['label', 'timestamp', 'message']
-      }, function(err, results){
+        fields: ['label', 'timestamp', 'message']
+      }, function(err, results) {
         sock.emit('newLog', results);
       });
       logger.stream({
         from: new Date(),
-        fields:['label', 'timestamp', 'message']
+        fields: ['label', 'timestamp', 'message']
       }).on('log', function(log) {
         sock.emit('newLog', log);
       });
