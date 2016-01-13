@@ -1,5 +1,5 @@
-#modal-scheduleReport.modal.fade(data-refresh='true')
-    form#scheduleReportForm(method='POST')
+.modal-scheduleReport.modal.fade(data-refresh='true')
+    form.scheduleReportForm(method='POST')
         .modal-dialog
             .modal-content
                 .modal-header
@@ -61,8 +61,4 @@
                 .modal-footer
                         button.btn.btn-default(type='button', data-dismiss='modal') Close
                         button.btn.btn-primary#submitScheduleReport(type='submit') Submit
-
-//script(src='/js/lib/jquery.validate.min.js')
-//script(src='/js/lib/jquery.blockUI.js')
-//script(src='/js/report/MultiSelectDropDownList.js')
 script(src='/js/reports/scheduleReport.js')
