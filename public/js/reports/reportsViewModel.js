@@ -56,6 +56,8 @@ var reportsViewModel = function () {
         $filterByPointPanel,
         $filterByPointPanelAnchor,
         $listBoxContentpointTypes,
+        $modalSaveReport,
+        $modalScheduleReport,
         $columnNames,
         pointSelectorRef,
         $pointSelectorIframe,
@@ -419,18 +421,6 @@ var reportsViewModel = function () {
                             'newPoint': newPoint,
                             'oldPoint': originalPoint
                         }));
-                        reportSocket.once('pointUpdated', function (data) {
-                            if (data.err) {
-                                // display error message data.err;
-                            } else {
-                                // display success message data.message;
-                                originalPoint = _.clone(newPoint, true);
-                                self.reportDisplayTitle(originalPoint.Name);
-                            }
-
-                            $("#cancelUpdate").trigger('click');
-                            $(me).button('reset');
-                        });
                     });
             });
 
@@ -741,6 +731,8 @@ var reportsViewModel = function () {
         var datasources;
 
         $direports = $(".direports");
+        $modalSaveReport = $(".modal-saveReport");
+        $modalScheduleReport = $(".modal-scheduleReport");
         $tabs = $direports.find(".tabs");
         $tabConfiguration = $direports.find(".tabConfiguration");
         $tabPreview = $direports.find(".tabPreview");
@@ -770,6 +762,8 @@ var reportsViewModel = function () {
         workspace = workspace;
 
         initKnockout();
+        $modalSaveReport.hide();
+        $modalScheduleReport.hide();
 
         if (point) {
             originalPoint = JSON.parse(JSON.stringify(point));
@@ -848,6 +842,7 @@ var reportsViewModel = function () {
                 point["Report Config"].dataSources[self.reportType].filters = [];
                 point["Report Config"].interval = 1;
                 point["Report Config"].offset = 6;
+                originalPoint = JSON.parse(JSON.stringify(point)); // reset original point ref since we've added attribs
             }
             $filtersTbody = $('.filtersGrid tbody');
             $columnsTbody = $('.columnsGrid .sortablecolums');
@@ -929,13 +924,13 @@ var reportsViewModel = function () {
 
             reportSocket.on('pointUpdated', function (data) {
                 if (data.err === null || data.err === undefined) {
-                    console.log(" - -  pointUpdated message = ", data.message);
-                    //console.log(" - - - - - - - - - -  data = ", JSON.stringify(data));
-                    //point = data.point;
+                    $modalSaveReport.find(".successMessage").text("Save request was " + data.message);
                 } else {
-                    console.log("Error while retrieving data");
-                    console.log(" - -  pointUpdated ERR = ", data.err);
+                    $modalSaveReport.find(".errorMessage").text(data.err);
+                    originalPoint = _.clone(newPoint, true);
+                    self.reportDisplayTitle(originalPoint.Name);
                 }
+                //$modalSaveReport.show();
             });
 
             setFiltersChildLogic();
