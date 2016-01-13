@@ -1,4 +1,4 @@
-var config = require('config');
+/*var config = require('config');
 var zmq = require('zmq');
 var uuid = require('node-uuid');
 
@@ -36,4 +36,4 @@ function makeZMQConn(sockType, idPrefix, addr, bindSyncOrConnect) {
   // call the function name in bindSyncOrConnect
   sock[bindSyncOrConnect](addr);
   return sock;
-}
+}*/
