@@ -10,3 +10,4 @@ iisnode/
 Cpp_API*.log
 .idea
 public/js/reports/deleteme.json
+npm-debug.log
