@@ -779,7 +779,7 @@ define([
             ko.utils.extend(command.commandTX, data);
             pointInspector.socket.emit('fieldCommand', ko.toJSON(command.commandTX));
             pointInspector.socket.once('returnFromField', function (data) {
-                // data = $.parseJSON(data);
+                data = $.parseJSON(data);
                 if (data.err) {
                     command.commandRX.value('');
                     command.commandRX.error(data.err);
