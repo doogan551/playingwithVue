@@ -1,6 +1,5 @@
 extends layout
 block content
-    include templates
     #window
         .container-fluid(style="display:none")
             .leftBar
@@ -17,10 +16,10 @@ block content
                                     strong.center-block Point Name
                                 .col-sm-10
                                     .form-inline
-                                        input#pointName1.form-control.input-md(required, disabled="disabled", type="text", placeholder="Point1", style="width:20%")
-                                        input#pointName2.form-control.input-md(required, disabled="disabled", type="text", placeholder="Point2", style="width:20%")
-                                        input#pointName3.form-control.input-md(type="text", disabled="disabled", placeholder="Point3", style="width:20%")
-                                        input#pointName4.form-control.input-md(type="text", disabled="disabled", placeholder="Point4", style="width:20%")
+                                        input.pointName1.form-control.input-md(required, disabled="disabled", type="text", placeholder="Point1", style="width:20%")
+                                        input.pointName2.form-control.input-md(required, disabled="disabled", type="text", placeholder="Point2", style="width:20%")
+                                        input.pointName3.form-control.input-md(type="text", disabled="disabled", placeholder="Point3", style="width:20%")
+                                        input.pointName4.form-control.input-md(type="text", disabled="disabled", placeholder="Point4", style="width:20%")
                                         |&nbsp;&nbsp;&nbsp;&nbsp;
                                         i.iconLink#editPoint.fa.fa-3x.fa-pencil-square
                                         i.iconLink#updatePoint.fa.fa-3x.fa-check-square(data-loading-text="<i class='fa fa-spinner fa-spin'>",style="display:none")
@@ -81,7 +80,7 @@ block content
                                             a.panel-anchor.filterByPointPanelAnchor(data-toggle="collapse" data-target="#filterByPointPanel" href="#filterByPointPanel") Filter By Point Types / Points
                                             .panel-collapse.collapse#filterByPointPanel.direportpanel
                                                 .panel-body
-                                                    iframe#pointLookup(name='pid_filter', min-height='800px', min-width='960px', width='100%', height='400px', frameborder='', scrolling='no')
+                                                    iframe.pointLookupFrame(name='pid_filter', min-height='800px', min-width='960px', width='100%', height='400px', frameborder='', scrolling='no')
                                 .panel.panel-default
                                     .panel-heading.direportpanelheader
                                         h4.panel-title
@@ -183,9 +182,6 @@ block content
                                                             label
                                                                 input(name="returnLimit" type="radio", value ="0", checked="checked")
                                                                 | Live Mode
-                                                    .col-xs-5
-                                                        h5 Select Template
-                                                        input#selectTemplate(style="width:400px")
                                         .row
                                             .col-xs-6(style='display:none')
                                                 h4 Run Report Button Option
@@ -196,10 +192,12 @@ block content
                         .row.clearfix(style="padding:10px")
                             .col-xs-4
                             .col-xs-8.pull-right
-                                button#getData(style="display:none") Undo
-                                button#scheduleReport(style="display:none") Schedule Report
+                                .scheduleReportButton.btn.btn-primary
+                                    | Schedule Report
                                 .saveReportButton.btn.btn-primary
                                     | Save Report
+                                .runReportButton.btn.btn-primary
+                                    | Run Report
                     .tabPreview.well.tab-pane
                         .row
                             h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
