@@ -1,4 +1,4 @@
-var jeff = {
+var rob = {
     'Infoscan': {
         'dbConfig': {
             'host': 'localhost'
@@ -7,14 +7,14 @@ var jeff = {
             'driveLetter': 'C'
         },
         'location': {
-            'site': 'Jeff',
-            'email': 'jshore@dorsett-tech.com'
+            'site': 'Rob',
+            'email': 'rkendall@dorsett-tech.com'
         }
     }
 };
 
-jeff.redisConfig = {
-    host: jeff.Infoscan.dbConfig.host
+rob.redisConfig = {
+    host: rob.Infoscan.dbConfig.host
 };
 
-module.exports = jeff;
+module.exports = rob;

@@ -28,7 +28,7 @@ var defaults = {
         },
         'location': {
             'site' : 'Dorsett',
-            'email': 'rkendall@dorsett-tech.com'
+            'email': null
         }
     }
 };
