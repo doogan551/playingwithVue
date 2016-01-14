@@ -1116,8 +1116,9 @@ window.pointLookup = (function(module, ko, $) {
             mode: 'popup',
             animationShowDuration: 0,
             animationHideDuration: 0,
-            autoCloseOnClick: true
+            autoCloseOnClick: false
         });
+
         $contextMenu.on('closed', function() {
             var listManager = $(this).data('listManager');
             if (!listManager) return;
@@ -1129,8 +1130,15 @@ window.pointLookup = (function(module, ko, $) {
                 });
             }
         });
-        $contextMenu.on('mouseleave', function() {
-            $contextMenu.jqxMenu('close');
+        $contextMenu.on('mouseleave', function(e, t) {
+            console.log('leave');
+
+            // $contextMenu.jqxMenu('close');
+        });
+        $contextMenu.on('mouseenter', function(e, t) {
+            console.log('enter');
+
+            // $contextMenu.jqxMenu('close');
         });
         $contextMenu.on('itemclick', function(event) {
             var listManager = $(this).data('listManager'),
