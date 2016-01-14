@@ -129,6 +129,7 @@ module.exports = {
 
 (function loop() {
   setTimeout(function() {
+    logger.debug('@@@@@@@ Server still active');
     autoAcknowledgeAlarms(function(result) {
       loop();
     });
