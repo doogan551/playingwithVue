@@ -928,6 +928,12 @@ window.pointLookup = (function(module, ko, $) {
                 if (hasWritePermission)
                     _array.push.apply(_array, [{label: 'Restore'}, {label: 'Destroy'}]);
             }
+
+            if (item.pointType == 'Slide Show') {
+                _array.push({label: 'Edit'});
+            }
+
+            _array.push({label: 'Close'});
             return _array;
         }
 
@@ -941,11 +947,6 @@ window.pointLookup = (function(module, ko, $) {
             }
             item.menuItems = getMenuItems(item);
 
-            if (item.pointType == 'Slide Show') {
-                item.menuItems.push({
-                    label: 'Edit'
-                });
-            }
             return '<span class="edit fa fa-gear"></span>';
         }
 
@@ -1082,12 +1083,6 @@ window.pointLookup = (function(module, ko, $) {
                         }
                     }
                     item.menuItems = getMenuItems(item);
-
-                    if (item.pointType == 'Slide Show') {
-                        item.menuItems.push({
-                            label: 'Edit'
-                        });
-                    }
                 } else {
                     row.push.apply(row, ['<i class="glyphicon glyphicon-folder-close"></i> ', name]);
                     if (module.MODE == 'perm' && userPermissions.systemAdmin) {
@@ -1131,13 +1126,6 @@ window.pointLookup = (function(module, ko, $) {
             }
         });
         $contextMenu.on('mouseleave', function(e, t) {
-            console.log('leave');
-
-            // $contextMenu.jqxMenu('close');
-        });
-        $contextMenu.on('mouseenter', function(e, t) {
-            console.log('enter');
-
             // $contextMenu.jqxMenu('close');
         });
         $contextMenu.on('itemclick', function(event) {
@@ -1305,6 +1293,8 @@ window.pointLookup = (function(module, ko, $) {
                         }
                     }
                     toggleGroup(permissions, listManager.item.index);
+                case 'close':
+                    $contextMenu.jqxMenu('close');
             }
             $contextMenu.jqxMenu('close');
         });
