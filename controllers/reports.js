@@ -3,6 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Reports = require('../models/reports');
+var logger = require('../helpers/logger')(module);
 // NOT CHECKED
 router.get('/getMRT/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
@@ -18,8 +19,6 @@ router.get('/getMRT/:id', function(req, res, next) {
     return utils.sendResponse(res, trends);
   });
 });
-
-
 // NOT CHECKED
 router.get('/reportSearch', function(req, res, next) {
   var data = _.merge(req.params, req.body);

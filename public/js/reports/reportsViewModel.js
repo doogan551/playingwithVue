@@ -38,6 +38,7 @@ var reportsViewModel = function () {
         $tabDesign,
         $designReport,
         $reportSpinner,
+        $spinnertext,
         $runReport,
         $pointName1,
         $pointName2,
@@ -50,18 +51,17 @@ var reportsViewModel = function () {
         $containerFluid,
         $addPointbutton,
         $addFilterbutton,
+        $scheduleReportButton,
         $saveReportButton,
         $runReportButton,
         $filterOperator,
         $filterByPointPanel,
         $filterByPointPanelAnchor,
         $listBoxContentpointTypes,
-        $modalSaveReport,
         $modalScheduleReport,
         $columnNames,
         pointSelectorRef,
         $pointSelectorIframe,
-        selectedPointTypes,
         currentTab,
         reportSocket,
         reportJsonData = {},
@@ -74,6 +74,38 @@ var reportsViewModel = function () {
         filterGrid = {},
         selectedColumnRow = {},
         templateId,
+        sortJsonObject = function (object) {
+            var sortedObj = {},
+                keys = Object.keys(object);
+
+            keys.sort(function (key1, key2) {
+                key1 = key1.toLowerCase(), key2 = key2.toLowerCase();
+                if (key1 < key2) return -1;
+                if (key1 > key2) return 1;
+                return 0;
+            });
+
+            for (var index in keys) {
+                var key = keys[index];
+                if (typeof object[key] == 'object' && !(object[key] instanceof Array)) {
+                    sortedObj[key] = sortJsonObject(object[key]);
+                } else {
+                    sortedObj[key] = object[key];
+                }
+            }
+
+            return sortedObj;
+        },
+        blockUI = function ($control, state, text) {
+            if (state === true) {
+                $reportSpinner.show();
+                $spinnertext.text(text);
+            } else {
+                $reportSpinner.hide();
+                $spinnertext.text("");
+            }
+            $control.attr('disabled', state);
+        },
         setFiltersChildLogic = function () {
             var localArray = self.listOfFilters(),
                 len = localArray.length,
@@ -146,7 +178,7 @@ var reportsViewModel = function () {
             updatedList = self.listOfColumns();
             tempObject = updatedList[selectObjectIndex];
 
-            windowRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'Select Dynamic Point', {
+            windowRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'Select Point Filter', {
                 callback: windowOpenedCallback,
                 width: 1000
             });
@@ -167,7 +199,13 @@ var reportsViewModel = function () {
                 },
                 windowOpenedCallback = function () {
                     pointSelectorRef.pointLookup.MODE = 'select';
-                    pointSelectorRef.pointLookup.init(pointSelectedCallback, {});
+                    pointSelectorRef.pointLookup.init(pointSelectedCallback, {
+                        name1: point["Report Config"].dataSources[self.reportType].name1Filter,
+                        name2: point["Report Config"].dataSources[self.reportType].name2Filter,
+                        name3: point["Report Config"].dataSources[self.reportType].name3Filter,
+                        name4: point["Report Config"].dataSources[self.reportType].name4Filter
+                    });
+                    setPointLookupFilterValues();
                 };
 
             pointSelectorRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'filter', {
@@ -194,20 +232,6 @@ var reportsViewModel = function () {
                     }
                 }
             }
-        },
-        getTemplateDataSource = function (callback) {
-            var reportType = workspace.config.Enums["Report Types"],
-                reportEnumType = reportType[this.alias].enum;
-            $.ajax({
-                url: "/api/reportTemplates/getAll",
-                dataType: "json",
-                contentType: "application/json; charset=utf-8",
-                cache: false,
-                data: {Type: reportEnumType},
-                success: function (result) {
-                    callback(result);
-                }
-            });
         },
         buildReportDataRequest = function () {
             var result,
@@ -249,6 +273,11 @@ var reportsViewModel = function () {
                     startTime: startDate,
                     endTime: endDate,
                     filters: filters,
+                    selectedPointTypes: getPointLookupFilterValues(),
+                    name1: getPointLookupFilterNameValues(1),
+                    name2: getPointLookupFilterNameValues(2),
+                    name3: getPointLookupFilterNameValues(3),
+                    name4: getPointLookupFilterNameValues(4),
                     limit: point["Report Config"].returnLimit,
                     interval: point["Report Config"].interval,
                     offset: point["Report Config"].offset,
@@ -258,21 +287,11 @@ var reportsViewModel = function () {
 
             return result;
         },
-        queryDataSource = function (dataSource, queryProperty, queryValue, callback) {
-            var index = -1;
-            for (var kv in dataSource._data) {
-                //console.log(dataSource._data[kv][queryProperty], queryValue);
-                if (dataSource._data[kv][queryProperty] === queryValue) {
-                    index = kv;
-                }
-            }
-            callback(index);
-        },
         tabSwitch = function (tabNumber) {
             //console.log("  - - -  tabSwitch() tabNumber = ", tabNumber);
             if ($.isNumeric(tabNumber) === true) {
                 $tabs.find("li").removeClass("active");
-                $tabs.find("li:eq(" + (tabNumber - 1) +")").addClass("active");
+                $tabs.find("li:eq(" + (tabNumber - 1) + ")").addClass("active");
             }
             switch (tabNumber) {
                 case 1:
@@ -318,7 +337,7 @@ var reportsViewModel = function () {
             }
             currentTab = tabNumber;
         },
-        initSocket = function(cb) {
+        initSocket = function (cb) {
             reportSocket = io.connect('http://' + window.location.hostname + ':8085');
 
             reportSocket.on('connect', function () {
@@ -328,15 +347,21 @@ var reportsViewModel = function () {
                 }
             });
         },
-        getFilterValues = function() {
-            var selectedTypes;
-            selectedPointTypes = [];
-            $listBoxContentpointTypes = $pointSelectorIframe.contents().find("#listBoxContentpointTypes");
-            selectedTypes = $listBoxContentpointTypes.find("div[aria-selected='true']").find(".jqx-item");
+        getPointLookupFilterNameValues = function (nameNumber) {
+            var $nameInputField,
+                searchPattern = "input[placeholder='Segment " + nameNumber + "']";
 
-            selectedTypes.each(function() {
-                selectedPointTypes.push(this.textContent);
-            });
+            $nameInputField = $pointSelectorIframe.contents().find(searchPattern);
+
+            return $nameInputField[0].value;
+        },
+        getPointLookupFilterValues = function () {
+            return pointSelectorRef.window.pointLookup.getCheckedPointTypes();
+        },
+        setPointLookupFilterValues = function () {
+            var selectedPointTypes = point["Report Config"].dataSources[self.reportType].selectedPointTypes;
+
+            pointSelectorRef.window.pointLookup.checkPointTypes(selectedPointTypes);
         },
         pivotHistoryData = function (historyData) {
             var pivotedData = [],
@@ -358,83 +383,29 @@ var reportsViewModel = function () {
             return pivotedData;
         },
         saveReportConfig = function () {
-            getFilterValues();
             point._pStatus = 0;  // activate report
             point["Report Config"].dataSources[self.reportType].columns = self.listOfColumns();
             point["Report Config"].dataSources[self.reportType].filters = self.listOfFilters();
+            point["Report Config"].dataSources[self.reportType].selectedPointTypes = getPointLookupFilterValues();
+            point["Report Config"].dataSources[self.reportType].name1Filter = getPointLookupFilterNameValues(1);
+            point["Report Config"].dataSources[self.reportType].name2Filter = getPointLookupFilterNameValues(2);
+            point["Report Config"].dataSources[self.reportType].name3Filter = getPointLookupFilterNameValues(3);
+            point["Report Config"].dataSources[self.reportType].name4Filter = getPointLookupFilterNameValues(4);
+            point.name1 = $pointName1.val();
+            point.name2 = $pointName2.val();
+            point.name3 = $pointName3.val();
+            point.name4 = $pointName4.val();
+
+            //if (JSON.stringify(originalPoint) === JSON.stringify(point)) {
+            //    return;
+            //}
+            //point = sortJsonObject(point);
             reportSocket.emit('updatePoint', JSON.stringify({
                 'newPoint': point,
                 'oldPoint': originalPoint
             }));
-            //reportSocket.emit('addPoint', point);
         },
         setReportEvents = function () {
-            $('#editPoint').click(function () {
-                //console.log('#editPoint clicked');
-                $("#pointName1").prop('disabled', false);
-                $("#pointName2").prop('disabled', false);
-                $("#pointName3").prop('disabled', false);
-                $("#pointName4").prop('disabled', false);
-                $(this).hide();
-                $("#updatePoint").show();
-                $("#cancelUpdate").show();
-            });
-
-            $("#updatePoint").click(function () {
-                //console.log('#updatePoint clicked');
-                var me = this,
-                    nameChangeOnblur = function (parent, obj, nam) {
-                    var newPoint = JSON.parse(JSON.stringify(point));
-                    newPoint[nam] = $(obj).val();
-                    var data = window.workspaceManager.config.Update.formatPoint({
-                        point: newPoint,
-                        oldPoint: point, property: nam,
-                        propertyObject: $(obj).val()
-                    });
-                    if (data.err) {
-                        parent.hideDivBlock(data.err);
-                        $(obj).button("reset");
-                    }
-                    else {
-                        point = _.clone(data, true);
-                        $(obj).button("reset");
-                    }
-                };
-                $(this).button('loading');
-                $.when(
-                    nameChangeOnblur(self, $pointName1, "name1"),
-                    nameChangeOnblur(self, $pointName2, "name2"),
-                    nameChangeOnblur(self, $pointName3, "name3"),
-                    nameChangeOnblur(self, $pointName4, "name4"))
-                    .done(function () {
-                        var newPoint = JSON.parse(JSON.stringify(point));
-                        newPoint.name1 = $pointName1.val();
-                        newPoint.name2 = $pointName2.val();
-                        newPoint.name3 = $pointName3.val();
-                        newPoint.name4 = $pointName4.val();
-
-                        if (JSON.stringify(originalPoint) === JSON.stringify(newPoint)) {
-                            return;
-                        }
-
-                        reportSocket.emit('updatePoint', JSON.stringify({
-                            'newPoint': newPoint,
-                            'oldPoint': originalPoint
-                        }));
-                    });
-            });
-
-            $("#cancelUpdate").click(function () {
-                //console.log('#cancelUpdate clicked');
-                $pointName1.val(point.name1).prop('disabled', true);
-                $pointName2.val(point.name2).prop('disabled', true);
-                $pointName3.val(point.name3).prop('disabled', true);
-                $pointName4.val(point.name4).prop('disabled', true);
-                $("#updatePoint").hide();
-                $("#cancelUpdate").hide();
-                $("#editPoint").show();
-            });
-
             $columnNames.on('click', function (e) {
                 //console.log('$columnNames clicked');
                 openPointSelector();
@@ -492,9 +463,21 @@ var reportsViewModel = function () {
                 //}, 700);
             });
 
+            $scheduleReportButton.on('click', function (e) {
+                console.log('$scheduleReportButton clicked');
+                $(this).blur();
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
             $saveReportButton.on('click', function (e) {
-                //console.log('$saveReportButton clicked');
+                console.log('$saveReportButton clicked');
+                var $screenMessages = $tabConfiguration.find(".screenMessages");
+                blockUI($tabConfiguration, true, " Saving Report...");
+                $screenMessages.find(".errorMessage").text(""); // clear messages
+                $screenMessages.find(".successMessage").text(""); // clear messages
                 saveReportConfig();
+                $(this).blur();
                 e.preventDefault();
                 e.stopPropagation();
             });
@@ -516,16 +499,16 @@ var reportsViewModel = function () {
                 self.showPointReview(data);
             });
 
-            $filterByPointPanelAnchor.on('click', function (e) {
-                //console.log('$filterByPointPanelAnchor clicked');
-                filterOpenPointSelector($filterByPointPanel);
-            });
+            //$filterByPointPanelAnchor.on('click', function (e) {
+            //    //console.log('$filterByPointPanelAnchor clicked');
+            //    filterOpenPointSelector($filterByPointPanel);
+            //});
 
             $('.panel-group').on('shown.bs.collapse', function (e) {
                 var offset = $(e.target).offset();
-                if(offset) {
+                if (offset) {
                     $('html,body').animate({
-                        scrollTop: $(e.target).parent().offset().top -20
+                        scrollTop: $(e.target).parent().offset().top - 20
                     }, 0);
                 }
             });
@@ -608,7 +591,7 @@ var reportsViewModel = function () {
                             data: null,
                             // data: getColumnField(item.colName),
                             // render: getColumnField(item.colName),
-                            render: function ( data, type, row, item ) {
+                            render: function (data, type, row, item) {
                                 return renderCell(data, columnsArray[item.col].colName);
                             },
                             className: "dt-head-center",
@@ -643,10 +626,10 @@ var reportsViewModel = function () {
                 if (currentTab === 2) {
                     $previewReport.show();
                     $tabPreview.show();
-                    $reportSpinner.hide();
+                    blockUI($tabPreview, false);
                 }
                 self.refreshData(false);
-            }  else {
+            } else {
                 console.log(" - * - * - renderHistoryReport() ERROR = ", data.err);
             }
         },
@@ -658,9 +641,9 @@ var reportsViewModel = function () {
                 $previewReport.DataTable().rows.add(reportJsonData).draw();
                 $previewReport.show();
                 $tabPreview.show();
-                $reportSpinner.hide();
+                blockUI($tabPreview, false);
                 self.refreshData(false);
-            }  else {
+            } else {
                 console.log(" - * - * - renderPropertyReport() ERROR = ", data.err);
             }
         },
@@ -701,11 +684,11 @@ var reportsViewModel = function () {
 
     self.reportType = "";
 
+    self.reportDisplayTitle = ko.observable("");
+
     self.listOfPropertiesLength = 0;
 
     self.propertiesFilter = ko.observable("");
-
-    self.reportDisplayTitle = ko.observable("");
 
     self.reportDisplayFooter = ko.observable("");
 
@@ -731,7 +714,6 @@ var reportsViewModel = function () {
         var datasources;
 
         $direports = $(".direports");
-        $modalSaveReport = $(".modal-saveReport");
         $modalScheduleReport = $(".modal-scheduleReport");
         $tabs = $direports.find(".tabs");
         $tabConfiguration = $direports.find(".tabConfiguration");
@@ -741,6 +723,7 @@ var reportsViewModel = function () {
         $previewReport = $direports.find(".previewReport");
         $designReport = $direports.find(".designReport");
         $reportSpinner = $direports.find(".reportingGettingData");
+        $spinnertext = $reportSpinner.find(".spinnertext");
         $pointName1 = $direports.find(".pointName1");
         $pointName2 = $direports.find(".pointName2");
         $pointName3 = $direports.find(".pointName3");
@@ -750,19 +733,20 @@ var reportsViewModel = function () {
         $containerFluid = $direports.find(".container-fluid");
         $addPointbutton = $direports.find(".addPointbutton");
         $addFilterbutton = $direports.find(".addFilterbutton");
+        $scheduleReportButton = $direports.find(".scheduleReportButton");
         $saveReportButton = $direports.find(".saveReportButton");
         $runReportButton = $direports.find(".runReportButton");
         $columnNames = $direports.find(".columnName");
         $filterOperator = $direports.find(".filterOperator");
         $filterByPointPanel = $direports.find("#filterByPointPanel");
-        $filterByPointPanelAnchor = $direports.find(".filterByPointPanelAnchor");
-        $pointSelectorIframe = $direports.find(".pointLookupFrame");
+        $filterByPointPanelAnchor = $filterByPointPanel.find(".filterByPointPanelAnchor");
+        $pointSelectorIframe = $filterByPointPanel.find(".pointLookupFrame");
         $listBoxContentpointTypes = $pointSelectorIframe.contents().find("#listBoxContentpointTypes");
         currentTab = 1;
         workspace = workspace;
 
         initKnockout();
-        $modalSaveReport.hide();
+        filterOpenPointSelector($filterByPointPanel);
         $modalScheduleReport.hide();
 
         if (point) {
@@ -803,7 +787,7 @@ var reportsViewModel = function () {
                         point["Report Config"].returnLimit = 200;
                         self.listOfColumns.push({
                             colName: "Date",
-                            valueType : "DateTime",
+                            valueType: "DateTime",
                             upi: 0
                         });
                         self.listOfFilters.push({
@@ -811,15 +795,15 @@ var reportsViewModel = function () {
                             condition: "$and",
                             childLogic: false,
                             operator: "EqualTo",
-                            valueType : "DateTime",
-                            value: moment().subtract(1,'days').unix()
+                            valueType: "DateTime",
+                            value: moment().subtract(1, 'days').unix()
                         });
                         self.listOfFilters.push({
                             column: "End_Date",
                             condition: "$and",
                             childLogic: false,
                             operator: "EqualTo",
-                            valueType : "DateTime",
+                            valueType: "DateTime",
                             value: moment().unix()
                         });
                         break;
@@ -828,7 +812,7 @@ var reportsViewModel = function () {
                         point["Report Config"].returnLimit = 4000;
                         self.listOfColumns.push({
                             colName: "Name",
-                            valueType : "String"
+                            valueType: "String"
                         });
                         break;
                     default:
@@ -840,6 +824,11 @@ var reportsViewModel = function () {
                 point["Report Config"].dataSources[self.reportType] = {};
                 point["Report Config"].dataSources[self.reportType].columns = [];
                 point["Report Config"].dataSources[self.reportType].filters = [];
+                point["Report Config"].dataSources[self.reportType].selectedPointTypes = [];
+                point["Report Config"].dataSources[self.reportType].name1Filter = "";
+                point["Report Config"].dataSources[self.reportType].name2Filter = "";
+                point["Report Config"].dataSources[self.reportType].name3Filter = "";
+                point["Report Config"].dataSources[self.reportType].name4Filter = "";
                 point["Report Config"].interval = 1;
                 point["Report Config"].offset = 6;
                 originalPoint = JSON.parse(JSON.stringify(point)); // reset original point ref since we've added attribs
@@ -905,13 +894,13 @@ var reportsViewModel = function () {
                 handle: '.handle'
             });
 
-            self.listOfColumns.subscribe(function(changes) { // watch for changes to Columns array
+            self.listOfColumns.subscribe(function (changes) { // watch for changes to Columns array
                 console.log(" - - - - listOfColumns() changed!   changes = ", changes);
                 self.designChanged(true);
                 self.refreshData(true);
             }, null, "arrayChange");
 
-            self.listOfFilters.subscribe(function(changes) { // watch for changes to filter array
+            self.listOfFilters.subscribe(function (changes) { // watch for changes to filter array
                 console.log(" - - - - listOfFilters() changed!   changes = ", changes);
                 setFiltersChildLogic();
                 self.designChanged(true);
@@ -923,14 +912,20 @@ var reportsViewModel = function () {
             tabSwitch(1);
 
             reportSocket.on('pointUpdated', function (data) {
+                var $currentmessageholder;
+                console.log(" -  -  - reportSocket() 'pointUpdated' returned");
                 if (data.err === null || data.err === undefined) {
-                    $modalSaveReport.find(".successMessage").text("Save request was " + data.message);
+                    $currentmessageholder = $tabConfiguration.find(".screenMessages").find(".successMessage");
+                    $currentmessageholder.text("Report Saved");
+                    setTimeout(function () {
+                        $currentmessageholder.text("");
+                    }, 3000);  // display success message
                 } else {
-                    $modalSaveReport.find(".errorMessage").text(data.err);
                     originalPoint = _.clone(newPoint, true);
                     self.reportDisplayTitle(originalPoint.Name);
+                    $tabConfiguration.find(".screenMessages").find(".errorMessage").text(data.err);
                 }
-                //$modalSaveReport.show();
+                blockUI($tabConfiguration, false);
             });
 
             setFiltersChildLogic();
@@ -998,10 +993,10 @@ var reportsViewModel = function () {
     self.conditions = function () {
         //console.log(" - - conditions() called");
         var array = [];
-            array.push(
-                {text: "and", value: "$and"},
-                {text: "or", value: "$or"}
-            );
+        array.push(
+            {text: "and", value: "$and"},
+            {text: "or", value: "$or"}
+        );
         return array;
     };
 
@@ -1061,22 +1056,22 @@ var reportsViewModel = function () {
     },
 
     self.showPointReview = function (data) {
-        var openWindow = window.workspaceManager.openWindowPositioned,
-            pointTypesUtility = window.workspaceManager.config.Utility.pointTypes,
-            pointType = data.pointType,
-            endPoint,
-            upi = parseInt(data.upi, 10),
-            options = {
-                width: 850,
-                height: 600
-            };
-        endPoint = pointTypesUtility.getUIEndpoint(pointType, upi);
-        if (endPoint) {
-            openWindow(endPoint.review.url, data.pointName, pointType, endPoint.review.target, upi, options);
-        } else {
-            //  handle a bad UPI reference
-        }
-    };
+            var openWindow = window.workspaceManager.openWindowPositioned,
+                pointTypesUtility = window.workspaceManager.config.Utility.pointTypes,
+                pointType = data.pointType,
+                endPoint,
+                upi = parseInt(data.upi, 10),
+                options = {
+                    width: 850,
+                    height: 600
+                };
+            endPoint = pointTypesUtility.getUIEndpoint(pointType, upi);
+            if (endPoint) {
+                openWindow(endPoint.review.url, data.pointName, pointType, endPoint.review.target, upi, options);
+            } else {
+                //  handle a bad UPI reference
+            }
+        };
 
     self.reportConfiguration = function () {
         console.log("report config");
@@ -1090,15 +1085,13 @@ var reportsViewModel = function () {
             propertyDataUrl = "/report/reportSearch";
 
         tabSwitch(2);
-        //if (self.refreshData()) {
+        $previewReport.hide();
+        $tabPreview.hide();
+        blockUI($tabPreview, true, " Getting Data..");
         if (self.designChanged()) {
             configureDataTable();
         }
         requestObj = buildReportDataRequest();
-        //$previewReport.DataTable().clear().draw();
-        $previewReport.hide();
-        $tabPreview.hide();
-        $reportSpinner.show();
         if (requestObj) {
             switch (self.reportType) {
                 case "History":
@@ -1112,16 +1105,10 @@ var reportsViewModel = function () {
                     break;
             }
         } else {
-            //$previewReport.html("Report not configured");
             $previewReport.show();
             $tabPreview.show();
-            $reportSpinner.hide();
+            blockUI($tabPreview, false);
         }
-        //} else {
-        //    $previewReport.show();
-        //    $tabPreview.show();
-        //    $reportSpinner.hide();
-        //}
     };
 
     self.reportDesign = function () {

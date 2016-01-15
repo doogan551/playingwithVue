@@ -626,56 +626,26 @@ module.exports = Rpt = {
             searchCriteria = {},
             fields = {},
             getPointRefs = false,
+            selectedPointTypes = data.selectedPointTypes,
             uniquePIDs = [],
             properties = data.columns,
             sort = data.Sort,
             sortObject = {},
+            nameQuery,
             returnLimit = utils.converters.convertType(data.limit),
-            parseNameField = function (paramsField, searchType, fieldName) {
-                var parsedNameField = [],
-                    name1str,
-                    beginStr,
-                    endStr;
-
-                logger.info(" - - - - -  parseNameField() called");
-                logger.info(" - - paramsField = " + paramsField);
-                logger.info(" - - searchType = " + searchType);
-                logger.info(" - - fieldName = " + fieldName);
-
-                if (paramsField) {
-                    if (searchType == 'begin' || paramsField.searchType == 'begin') {
-                        beginStr = '^';
-                        endStr = '';
-                    } else if (searchType == 'contain' || paramsField.searchType == 'contain') {
-                        beginStr = '.*';
-                        endStr = '.*';
-                    } else if (searchType == 'end' || paramsField.searchType == 'end') {
-                        beginStr = '';
-                        endStr = '$';
-                    }
-
-                    if (paramsField.value !== null) {
-                        name1str = paramsField.value;
-                    } else {
-                        name1str = paramsField;
-                    }
-
+            parseNameField = function (paramsField, fieldName) {
+                var parsedNameField = {};
+                //logger.info(" - -  paramsField = "  + paramsField + "   fieldName = " + fieldName);
+                if (paramsField !== null && paramsField !== undefined) {
                     parsedNameField[fieldName] = {
-                        '$regex': '(?i)' + beginStr + name1str + endStr
+                        '$regex': '(?i)^' + paramsField
                     };
                 }
-
+                //logger.info(" - -  parsedNameField = "  + JSON.stringify(parsedNameField));
                 return parsedNameField;
             };
-        //logger.info("Incoming request data: " + JSON.stringify(data));
-        searchCriteria.$and = [];
-
-        for (var i = 1; i < 5; i++) {
-            key = "name" + i;
-            if (data[key]) {
-                searchCriteria.$and.push(parseNameField(data[key], data[key + "SearchType"], key));
-            }
-        }
+        //logger.info(" - - -  reportSearch()  data = " + JSON.stringify(data));
+        searchCriteria.$or = [];
 
         if (properties) {
             for (var k = 0; k < properties.length; k++) {
@@ -699,12 +669,38 @@ module.exports = Rpt = {
             searchCriteria = Rpt.collectFilters(filters);
         }
 
+        logger.info("--------------");
+        logger.info(" ---------- searchCriteria 1 = " + JSON.stringify(searchCriteria));
+        logger.info("--------------");
+
+        for (var i = 1; i < 5; i++) {
+            key = "name" + i;
+            if (data[key]) {
+                nameQuery = parseNameField(data[key], key);
+                if (nameQuery) {
+                    searchCriteria.$or[0].$and.push(nameQuery);
+                }
+            }
+        }
+
+        //logger.info(" ---------- selectedPointTypes = " + JSON.stringify(selectedPointTypes));
+        if (selectedPointTypes && selectedPointTypes.length > 0) {
+            searchCriteria.$or[0].$and.push({
+                "Point Type.Value": {
+                    $in: selectedPointTypes
+                }
+            });
+        }
+        logger.info("--------------");
+        logger.info(" ---------- searchCriteria 2 = " + JSON.stringify(searchCriteria));
+        logger.info("--------------");
+
         if (sort) {
             for (var key2 in sort) {
                 sortObject[key2] = (sort[key2] == "ASC") ? 1 : -1;
             }
         }
-        logger.info("Report Search Criteria" + JSON.stringify(searchCriteria) + "  fields = " + JSON.stringify(fields));
+        logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
 
         var criteria = {
             query: searchCriteria,
@@ -759,7 +755,7 @@ module.exports = Rpt = {
                 return Rpt.groupOrExpression(group);
             };
 
-        localSearchCriteria.$and = [];
+        localSearchCriteria.$or = [];
         while (currentIndex < numberOfFilters) {
             currentFilter = theFilters[currentIndex++];
             if (currentFilter === undefined) {
@@ -791,11 +787,11 @@ module.exports = Rpt = {
         }
 
         if (andExpressions.length > 0) {
-            localSearchCriteria.$and = localSearchCriteria.$and.concat({"$and": andExpressions});
+            localSearchCriteria.$or = localSearchCriteria.$or.concat({$and : andExpressions});
         }
 
         if (orExpressions.length > 0) {
-            localSearchCriteria.$and = localSearchCriteria.$and.concat({"$or": orExpressions});
+            localSearchCriteria.$or = localSearchCriteria.$or.concat(orExpressions);
         }
 
         //logger.info(" - - collectFilter  localSearchCriteria = " + JSON.stringify(localSearchCriteria));

@@ -8,7 +8,7 @@ block content
                 .tab-content
                     .reportingGettingData
                         i.fa.fa-spinner.fa-spin.fa-3x
-                        span Getting data...
+                        span.spinnertext
                     .tabConfiguration.well.tab-pane.active
                         .row.form-horizontal
                             .form-group.clearfix.direportgroup
@@ -16,20 +16,16 @@ block content
                                     strong.center-block Point Name
                                 .col-sm-10
                                     .form-inline
-                                        input.pointName1.form-control.input-md(required, disabled="disabled", type="text", placeholder="Point1", style="width:20%")
-                                        input.pointName2.form-control.input-md(required, disabled="disabled", type="text", placeholder="Point2", style="width:20%")
-                                        input.pointName3.form-control.input-md(type="text", disabled="disabled", placeholder="Point3", style="width:20%")
-                                        input.pointName4.form-control.input-md(type="text", disabled="disabled", placeholder="Point4", style="width:20%")
-                                        |&nbsp;&nbsp;&nbsp;&nbsp;
-                                        i.iconLink#editPoint.fa.fa-3x.fa-pencil-square
-                                        i.iconLink#updatePoint.fa.fa-3x.fa-check-square(data-loading-text="<i class='fa fa-spinner fa-spin'>",style="display:none")
-                                        i.iconLink#cancelUpdate.fa.fa-3x.fa-times-circle(style="display:none")
+                                        input.pointName1.form-control.input-md(required, type="text", placeholder="Point1", style="width:20%")
+                                        input.pointName2.form-control.input-md(required, type="text", placeholder="Point2", style="width:20%")
+                                        input.pointName3.form-control.input-md(type="text", placeholder="Point3", style="width:20%")
+                                        input.pointName4.form-control.input-md(type="text", placeholder="Point4", style="width:20%")
                         .row.form-horizontal
                             .form-group.clearfix.direportgroup
                                 h5.col-sm-2.control-label
                                     strong Report Title
                                 .col-sm-10.reporttitle
-                                    medium(data-bind="text: reportDisplayTitle")
+                                    input.form-control.input-md(data-bind="value: reportDisplayTitle")
                         .row.form-horizontal
                             .form-group.clearfix.direportgroup
                                 h5.col-sm-2.control-label
@@ -198,7 +194,12 @@ block content
                                     | Save Report
                                 .runReportButton.btn.btn-primary
                                     | Run Report
-                    .tabPreview.well.tab-pane
+                        .screenMessages
+                            .row.well-sm
+                                .col-sm-6
+                                    .errorMessage.alert-danger
+                                    .successMessage.alert-success
+                .tabPreview.well.tab-pane
                         .row
                             h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
                             table.table.table-striped.table-hover.table-condensed.previewReport
@@ -211,4 +212,3 @@ block content
                             .reportNotes
     include footer
     include modals/dialogScreens
-    include modals/saveReport

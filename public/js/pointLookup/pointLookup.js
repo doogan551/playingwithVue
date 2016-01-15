@@ -715,6 +715,10 @@ window.pointLookup = (function(module, ko, $) {
     };
 
 
+    module.getCheckedPointTypes = function () {
+        return getSelectedPointTypes();
+    };
+
     module.checkPointTypes = function(pointTypes) {
         var availablePointTypes = $pointTypesListBox.jqxListBox('getItems'),
             item;

@@ -395,3 +395,8 @@ body.modal-open {
 .sorthandle {
     width: 12px;
 }
+
+.screenMessages {
+    margin-left: 20%;
+    width: 120%;
+}
