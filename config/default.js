@@ -6,6 +6,11 @@ var defaults = {
             'dbName': 'infoscan',
             'driver': 'mongodb'
         },
+        'zmqConfig':{
+            'protocol': 'tcp',
+            'server': '127.0.0.1',
+            'port': '5570'
+        },
         'siteConfig': {
             'port': 80,
             'siteTitle': 'Info Scan',
@@ -23,7 +28,7 @@ var defaults = {
         },
         'location': {
             'site' : 'Dorsett',
-            'email': 'rkendall@dorsett-tech.com'
+            'email': null
         }
     }
 };

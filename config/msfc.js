@@ -7,7 +7,9 @@ var msfc = {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'MSFC'
+      'site': 'MSFC',
+      'email': 'rkendall@dorsett-tech.com'
+
     }
   }
 };

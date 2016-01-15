@@ -1,4 +1,4 @@
-var localhost = {
+var jeff = {
     'Infoscan': {
         'dbConfig': {
             'host': 'localhost'
@@ -13,8 +13,8 @@ var localhost = {
     }
 };
 
-localhost.redisConfig = {
-    host: localhost.Infoscan.dbConfig.host
+jeff.redisConfig = {
+    host: jeff.Infoscan.dbConfig.host
 };
 
-module.exports = localhost;
+module.exports = jeff;

@@ -41,7 +41,25 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
             $modal = $('.modal'),
             $btnSubmit = $modal.find('.btnSubmit'),
             modal = this.modal,
-            modalValueListener;
+            modalValueListener,
+            logData = {
+                user: self.utility.workspace.user(),
+                point: {
+                    _id: self.data._id(),
+                    Security: self.data.Security(),
+                    Name: self.data.Name(),
+                    name1: self.data.name1(),
+                    name2: self.data.name2(),
+                    name3: self.data.name3(),
+                    name4: self.data.name4(),
+                    "Point Type": {
+                        eValue: self.data["Point Type"].eValue()
+                    }
+                },
+                newValue: {
+                    Value: 0
+                }
+            };
 
         function callback(commandRX) {
             $btn.removeClass('btn-warning');
@@ -56,17 +74,17 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
             $btnIcon.addClass('fa-check');
         }
 
-        $modal.one('hide.bs.modal', function (e) {
+        $modal.one('hide.bs.modal', function(e) {
             modalValueListener.dispose();
         });
-        $modal.one('shown.bs.modal', function (e) {
+        $modal.one('shown.bs.modal', function(e) {
             $valueField = $modal.find('.val:first');
             modal.value.valueHasMutated();
             $valueField.focus();
         });
 
         modalValueListener = modal.value.subscribe(function(newValue) {
-            if ($.trim(newValue) == '') {
+            if ($.trim(newValue) === '') {
                 $btnSubmit.prop('disabled', true);
             } else {
                 $btnSubmit.prop('disabled', false);
@@ -75,7 +93,13 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
 
         modal.value('');
         modal.submit = function() {
-            self.point.issueCommand('Command Point', {upi: self.data._id(), Value: modal.value()}, callback);
+            logData.newValue.Value = modal.value();
+
+            self.point.issueCommand('Command Point', {
+                upi: self.data._id(),
+                Value: modal.value(),
+                logData: logData
+            }, callback);
             modal.showModal(false);
             $btn.removeClass('btn-danger btn-success').addClass('btn-warning');
             $btnIcon.removeClass('fa-pencil-square-o fa-check fa-warning')
@@ -91,5 +115,8 @@ define(['knockout', 'text!./view.html', 'bannerJS'], function(ko, view, bannerJS
     };
 
     // Return component definition
-    return { viewModel: ViewModel, template: view };
+    return {
+        viewModel: ViewModel,
+        template: view
+    };
 });

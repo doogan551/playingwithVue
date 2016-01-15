@@ -18,6 +18,7 @@ var compiler = require('../helpers/scriptCompiler.js');
 var Utility = require('../models/utility.js');
 var History = require('../models/history');
 var logger = require('../helpers/logger')(module);
+var zmq = require('../helpers/zmq');
 var ObjectID = require('mongodb').ObjectID;
 
 var pointsCollection = utils.CONSTANTS("pointsCollection");
@@ -197,7 +198,12 @@ module.exports = function socketio(_common) {
             }
 
           }
-        } else {
+        } else if(logData.point['Point Type'].eValue == 128){
+          logData.newValue = {
+            Value: jsonData.logData.newValue.Value
+          };
+          logData.log = 'Value reset to ' + logData.newValue.Value;
+        }else {
           for (i = 0; i < controllerPriorities.length; i++) {
             if (controllerPriorities[i]["Priority Level"] === jsonData.Priority) {
               logData.log = "Control relinquished at priority " + controllerPriorities[i]["Priority Text"];
@@ -231,6 +237,14 @@ module.exports = function socketio(_common) {
           insertObj: logData
         }, function(err, result) {});
       }
+
+      /*zmq.sendMessage(data, function(err, msg) {
+        if (err) {
+          sock.emit('returnFromField', {err:err});
+        } else {
+          sock.emit('returnFromField', msg);
+        }
+      });*/
 
       cppApi.command(data, function(err, msg) {
 
@@ -565,13 +579,13 @@ module.exports = function socketio(_common) {
         limit: 10,
         start: -1,
         order: 'desc',
-        fields:['label', 'timestamp', 'message']
-      }, function(err, results){
+        fields: ['label', 'timestamp', 'message']
+      }, function(err, results) {
         sock.emit('newLog', results);
       });
       logger.stream({
         from: new Date(),
-        fields:['label', 'timestamp', 'message']
+        fields: ['label', 'timestamp', 'message']
       }).on('log', function(log) {
         sock.emit('newLog', log);
       });
