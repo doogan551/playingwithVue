@@ -812,7 +812,7 @@ module.exports = Rpt = {
             filterValueType = Config.Enums["Properties"][key].valueType;
 
         if (Config.Utility.getUniquePIDprops().indexOf(key) !== -1) {
-            switch (currentFilter.operator) {
+            switch (filter.operator) {
                 case "EqualTo":
                     searchQuery = {
                         "Point Refs": {
