@@ -333,7 +333,9 @@ module.exports = Rpt = {
             },
             collection: 'points'
         };
-
+        logger.info("---------");
+        logger.info(" - historyDataSearch() criteria = " + JSON.stringify(criteria));
+        logger.info("---------");
         Utility.get(criteria, function (err, points) {
             if (err)
                 return cb(err, null);
@@ -632,6 +634,7 @@ module.exports = Rpt = {
             sort = data.Sort,
             sortObject = {},
             nameQuery,
+            $or = [],
             returnLimit = utils.converters.convertType(data.limit),
             parseNameField = function (paramsField, fieldName) {
                 var parsedNameField = {};
@@ -645,7 +648,7 @@ module.exports = Rpt = {
                 return parsedNameField;
             };
         //logger.info(" - - -  reportSearch()  data = " + JSON.stringify(data));
-        searchCriteria.$or = [];
+        //searchCriteria.$or = [];
 
         if (properties) {
             for (var k = 0; k < properties.length; k++) {
@@ -666,11 +669,11 @@ module.exports = Rpt = {
 
         if (filters && filters.length > 0) {
             //console.log("filters", filters);
-            searchCriteria = Rpt.collectFilters(filters);
+            $or = Rpt.collectFilters(filters);
         }
 
         logger.info("--------------");
-        logger.info(" ---------- searchCriteria 1 = " + JSON.stringify(searchCriteria));
+        logger.info(" ---------- $or 1 = " + JSON.stringify($or));
         logger.info("--------------");
 
         for (var i = 1; i < 5; i++) {
@@ -678,27 +681,33 @@ module.exports = Rpt = {
             if (data[key]) {
                 nameQuery = parseNameField(data[key], key);
                 if (nameQuery) {
-                    searchCriteria.$or[0].$and.push(nameQuery);
+                    $or[0].$and.push(nameQuery);
                 }
             }
         }
 
         //logger.info(" ---------- selectedPointTypes = " + JSON.stringify(selectedPointTypes));
         if (selectedPointTypes && selectedPointTypes.length > 0) {
-            searchCriteria.$or[0].$and.push({
+            $or[0].$and.push({
                 "Point Type.Value": {
                     $in: selectedPointTypes
                 }
             });
         }
         logger.info("--------------");
-        logger.info(" ---------- searchCriteria 2 = " + JSON.stringify(searchCriteria));
+        logger.info(" ---------- $or 2 = " + JSON.stringify($or));
         logger.info("--------------");
 
         if (sort) {
             for (var key2 in sort) {
                 sortObject[key2] = (sort[key2] == "ASC") ? 1 : -1;
             }
+        }
+
+        if ($or.length > 0) {
+            searchCriteria.$or = $or;
+        } else {
+            searchCriteria.$and = [{}];
         }
         logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
 

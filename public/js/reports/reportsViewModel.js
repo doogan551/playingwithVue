@@ -57,8 +57,11 @@ var reportsViewModel = function () {
         $filterOperator,
         $filterByPointPanel,
         $filterByPointPanelAnchor,
+        $filtersPanel,
+        $filtersPanelAnchor,
         $listBoxContentpointTypes,
         $modalScheduleReport,
+        $reporttitleInput,
         $columnNames,
         pointSelectorRef,
         $pointSelectorIframe,
@@ -353,15 +356,27 @@ var reportsViewModel = function () {
 
             $nameInputField = $pointSelectorIframe.contents().find(searchPattern);
 
-            return $nameInputField[0].value;
+            return ($nameInputField[0] ? $nameInputField[0].value : "") ;
         },
         getPointLookupFilterValues = function () {
-            return pointSelectorRef.window.pointLookup.getCheckedPointTypes();
+            var answer = [],
+                selectedPointTypes,
+                numberOfAllPointTypes;
+            if (pointSelectorRef && pointSelectorRef.window.pointLookup) {
+                selectedPointTypes = pointSelectorRef.window.pointLookup.getCheckedPointTypes(),
+                    numberOfAllPointTypes = pointSelectorRef.window.pointLookup.POINTTYPES.length;
+                if (numberOfAllPointTypes !== selectedPointTypes.length) {
+                    answer = selectedPointTypes;
+                }
+            }
+            return answer;
         },
         setPointLookupFilterValues = function () {
             var selectedPointTypes = point["Report Config"].dataSources[self.reportType].selectedPointTypes;
 
-            pointSelectorRef.window.pointLookup.checkPointTypes(selectedPointTypes);
+            if (selectedPointTypes.length > 0) {
+                pointSelectorRef.window.pointLookup.checkPointTypes(selectedPointTypes);
+            }
         },
         pivotHistoryData = function (historyData) {
             var pivotedData = [],
@@ -499,10 +514,14 @@ var reportsViewModel = function () {
                 self.showPointReview(data);
             });
 
-            //$filterByPointPanelAnchor.on('click', function (e) {
-            //    //console.log('$filterByPointPanelAnchor clicked');
-            //    filterOpenPointSelector($filterByPointPanel);
-            //});
+            $filtersPanelAnchor.on('click', function (e) {
+                console.log('$filtersPanelAnchor clicked');
+                var $firstInputField = $filtersGrid.find(".filterValue:first").find("input");
+
+                setTimeout(function () {
+                    $firstInputField.focus();
+                }, 500);
+            });
 
             $('.panel-group').on('shown.bs.collapse', function (e) {
                 var offset = $(e.target).offset();
@@ -740,13 +759,14 @@ var reportsViewModel = function () {
         $filterOperator = $direports.find(".filterOperator");
         $filterByPointPanel = $direports.find("#filterByPointPanel");
         $filterByPointPanelAnchor = $filterByPointPanel.find(".filterByPointPanelAnchor");
+        $filtersPanelAnchor = $direports.find(".filtersPanelAnchor");
         $pointSelectorIframe = $filterByPointPanel.find(".pointLookupFrame");
+        $reporttitleInput = $direports.find(".reporttitle").find("input");
         $listBoxContentpointTypes = $pointSelectorIframe.contents().find("#listBoxContentpointTypes");
         currentTab = 1;
         workspace = workspace;
 
         initKnockout();
-        filterOpenPointSelector($filterByPointPanel);
         $modalScheduleReport.hide();
 
         if (point) {
@@ -775,6 +795,7 @@ var reportsViewModel = function () {
                     case "History":
                         break;
                     case "Property":
+                        filterOpenPointSelector($filterByPointPanel);
                         getEnumProperties();
                         break;
                     default:
@@ -929,6 +950,10 @@ var reportsViewModel = function () {
             });
 
             setFiltersChildLogic();
+
+            setTimeout(function () {
+                $reporttitleInput.focus();
+            }, 1500);  // display success message
         }
     };
 
