@@ -198,7 +198,12 @@ module.exports = function socketio(_common) {
             }
 
           }
-        } else {
+        } else if(logData.point['Point Type'].eValue == 128){
+          logData.newValue = {
+            Value: jsonData.logData.newValue.Value
+          };
+          logData.log = 'Value reset to ' + logData.newValue.Value;
+        }else {
           for (i = 0; i < controllerPriorities.length; i++) {
             if (controllerPriorities[i]["Priority Level"] === jsonData.Priority) {
               logData.log = "Control relinquished at priority " + controllerPriorities[i]["Priority Text"];
