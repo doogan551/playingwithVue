@@ -1,4 +1,5 @@
 var async = require('async');
+var moment = require('moment');
 var Utility = require('../models/utility');
 var History = require('../models/history');
 var utils = require('../helpers/utils.js');
@@ -995,6 +996,270 @@ module.exports = Rpt = {
 
             }
         });
+    },
+    totalizerReport: function(data, cb) {
+        var points = data.points;
+        var range = data.range;
+        var interval = data.interval;
+
+        var compare = function(a, b) {
+            return a.timestamp - b.timestamp;
+        };
+
+        var findStarts = function(initial, history) {
+            var totals = [];
+            var previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
+            intervals.forEach(function(interval, index) {
+
+                var starts = 0;
+                var start = interval.start;
+                var end = (moment().unix() < interval.end) ? moment().unix() : interval.end;
+
+                var matches = history.filter(function(data) {
+                    return data.timestamp > start && data.timestamp <= end;
+                });
+
+                for (var i = 0; i < matches.length; i++) {
+                    if (previousValue === 0 && matches[i].Value !== 0) {
+                        starts++;
+                    }
+                    previousValue = matches[i].Value;
+                }
+
+                var result = {
+                    total: starts,
+                    range: {
+                        start: start,
+                        end: end
+                    }
+                };
+
+                totals.push(result);
+            });
+
+            return totals;
+        };
+
+        var findRuntime = function(initial, history) {
+            var totals = [];
+            var previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
+
+            intervals.forEach(function(interval, index) {
+
+                var runtime = 0;
+                var now = moment().unix();
+                var intervalLonger =  now < interval.end;
+                var start = interval.start;
+                var end = (!!intervalLonger) ? now : interval.end;
+
+                var matches = history.filter(function(data) {
+                    return data.timestamp > start && data.timestamp <= end;
+                });
+
+                if (!!matches.length) {
+                    for (var i = 0; i < matches.length; i++) {
+                        if (previousValue !== 0 && matches[i].Value === 0) {
+                            runtime += matches[i].timestamp - start;
+                        } else if (i === (matches.length - 1) && matches[i].Value !== 0) {
+                            runtime += end - start;
+                        }
+                        if (previousValue === 0 && matches[i].Value !== 0) {
+                            start = matches[i].timestamp;
+                        }
+                        previousValue = matches[i].Value;
+                    }
+                } else if (previousValue !== 0) {
+                    if (start < now && now <= end) {
+                        runtime = end - start;
+                    } else {
+                        runtime = 0;
+                    }
+                }
+
+                var result = {
+                    total: runtime,
+                    range: interval
+                };
+
+                totals.push(result);
+            });
+
+            return totals;
+        };
+
+        var findTotal = function(initial, history) {
+            var totals = [];
+            var value = (initial.Value > history[0].Value) ? 0 : history[0].Value - initial.Value;
+
+            intervals.forEach(function(interval, index) {
+                var total = 0;
+                var start = interval.start;
+                var end = (moment().unix() < interval.end) ? moment().unix() : interval.end;
+
+                var matches = history.filter(function(data) {
+                    return data.timestamp > start && data.timestamp <= end;
+                });
+
+                for (var i = 0; i < matches.length; i++) {
+                    if (value <= matches[i].Value) {
+                        value = matches[i].Value;
+                    } else {
+                        total += value;
+                        value = matches[i].Value;
+                    }
+                    if (i === matches.length - 1) {
+                        total += value;
+                    }
+                }
+                var result = {
+                    total: total,
+                    range: {
+                        start: start,
+                        end: end
+                    }
+                };
+
+                totals.push(result);
+            });
+
+            return totals;
+        };
+
+        var buildIntervals = function(range, interval) {
+            var intervalRanges = [];
+            var intervalStart;
+            var intervalEnd;
+            var fixLongerInterval = function() {
+                if (intervalEnd > range.end && intervalStart < range.end) {
+                    intervalEnd = range.end;
+                }
+            };
+
+            intervalStart = moment.unix(range.start).unix();
+            intervalEnd = moment.unix(range.start).add(interval, 'minutes').unix();
+            fixLongerInterval();
+
+            while (intervalEnd <= range.end) {
+                intervalRanges.push({
+                    start: intervalStart,
+                    end: intervalEnd
+                });
+                intervalStart = moment.unix(intervalStart).add(interval, 'minutes').unix();
+                intervalEnd = moment.unix(intervalEnd).add(interval, 'minutes').unix();
+                fixLongerInterval();
+            }
+
+            return intervalRanges;
+        };
+
+
+        var intervals = buildIntervals(range, interval);
+
+        var getInitialDataMongo = function(point, callback) {
+            var history = [];
+            var criteria = { //find initial data per point
+                collection: 'historydata',
+                query: {
+                    timestamp: {
+                        $lte: range.start
+                    },
+                    upi: point.upi
+                },
+                sort: {
+                    timestamp: -1
+                },
+                limit: 1
+            };
+            Utility.get(criteria, function(err, initial) {
+                callback(err, point, initial[0]);
+            });
+        };
+        var getInitialDataSql = function(point, initial, callback) {
+            History.findLatest({
+                upis: [point.upi],
+                range: { // range object gets overwritten in function, pass new obj
+                    end: range.start
+                }
+            }, function(err, results) {
+                var latestSql = results[0];
+                if (!initial || (!!latestSql && latestSql.timestamp >= initial.timestamp)) {
+                    initial = latestSql;
+                }
+                callback(null, point, initial || {});
+            });
+        };
+        var getRangeDataMongo = function(point, initial, callback) {
+            var criteria = {
+                collection: 'historydata',
+                query: {
+                    upi: point.upi,
+                    $and: [{
+                        timestamp: {
+                            $gt: range.start
+                        }
+                    }, {
+                        timestamp: {
+                            $lte: range.end
+                        }
+                    }]
+                }
+            };
+
+            Utility.get(criteria, function(err, history) {
+                callback(null, point, initial, history);
+            });
+        };
+        var getRangeDataSql = function(point, initial, history, callback) {
+            var exists = false;
+
+            History.findHistory({
+                upis: [point.upi],
+                range: {
+                    start: range.start,
+                    end: range.end
+                },
+                fx: 'history'
+            }, function(err, results) {
+                for (var h = 0; h < history.length; h++) {
+                    exists = false;
+                    for (var r = 0; r < results.length; r++) {
+                        if (results[r].timestamp === history[h].timestamp) {
+                            exists = true;
+                        }
+                    }
+                    if (!exists) {
+                        results.push(history[h]);
+                    }
+                }
+
+                callback(null, point, initial, results);
+            });
+        };
+
+        var buildTotal = function(point, initial, history, callback) {
+            history.sort(compare);
+
+            switch (point.op) {
+                case 'starts':
+                    point.totals = findStarts(initial, history);
+                    break;
+                case 'runtime':
+                    point.totals = findRuntime(initial, history);
+                    break;
+                case 'total':
+                    point.totals = findTotal(initial, history);
+                    break;
+            }
+
+            return callback(null);
+        };
+
+        async.eachSeries(points, function(point, seriesCb) {
+            async.waterfall([async.apply(getInitialDataMongo, point), getInitialDataSql, getRangeDataMongo, getRangeDataSql, buildTotal], seriesCb);
+        }, function(err) {
+            return cb(err, points);
+        });
+
     }
 };
 
