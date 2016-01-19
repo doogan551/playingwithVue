@@ -27,7 +27,6 @@ var port = config.get('Infoscan.siteConfig').port;
 app.use(favicon(__dirname + '/public/favicon.ico'));
 
 var _controllers = require('./helpers/controllers')(app, {});
-
 var sessionStore = new RedisStore(config.get('redisConfig'));
 
 require('./helpers/passport')(passport); // pass passport for configuration
