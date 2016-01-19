@@ -57,7 +57,7 @@
     text-decoration: underline;
 }
 
-.tab-content {
+.workingPane {
     min-width: 1120px;
     margin-left: 13px;
 }
@@ -394,4 +394,9 @@ body.modal-open {
 }
 .sorthandle {
     width: 12px;
+}
+
+.screenMessages {
+    margin-left: 20%;
+    width: 120%;
 }

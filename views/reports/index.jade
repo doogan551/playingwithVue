@@ -5,210 +5,211 @@ block content
             .leftBar
                 include ./tabLinks
             .rightPanel
-                .tab-content
-                    .reportingGettingData
-                        i.fa.fa-spinner.fa-spin.fa-3x
-                        span Getting data...
-                    .tabConfiguration.well.tab-pane.active
-                        .row.form-horizontal
-                            .form-group.clearfix.direportgroup
-                                h5.col-sm-2.control-label
-                                    strong.center-block Point Name
-                                .col-sm-10
-                                    .form-inline
-                                        input.pointName1.form-control.input-md(required, disabled="disabled", type="text", placeholder="Point1", style="width:20%")
-                                        input.pointName2.form-control.input-md(required, disabled="disabled", type="text", placeholder="Point2", style="width:20%")
-                                        input.pointName3.form-control.input-md(type="text", disabled="disabled", placeholder="Point3", style="width:20%")
-                                        input.pointName4.form-control.input-md(type="text", disabled="disabled", placeholder="Point4", style="width:20%")
-                                        |&nbsp;&nbsp;&nbsp;&nbsp;
-                                        i.iconLink#editPoint.fa.fa-3x.fa-pencil-square
-                                        i.iconLink#updatePoint.fa.fa-3x.fa-check-square(data-loading-text="<i class='fa fa-spinner fa-spin'>",style="display:none")
-                                        i.iconLink#cancelUpdate.fa.fa-3x.fa-times-circle(style="display:none")
-                        .row.form-horizontal
-                            .form-group.clearfix.direportgroup
-                                h5.col-sm-2.control-label
-                                    strong Report Title
-                                .col-sm-10.reporttitle
-                                    medium(data-bind="text: reportDisplayTitle")
-                        .row.form-horizontal
-                            .form-group.clearfix.direportgroup
-                                h5.col-sm-2.control-label
-                                    strong Report Type
-                                .col-sm-10.reporttype
-                                    medium(data-bind="text: reportType")
-                        .row.clearfix
-                            .panel-group
-                                .panel.panel-default
-                                       .panel-heading.direportpanelheader
-                                            h4.strong.panel-title
-                                                a.panel-anchor(data-toggle="collapse" data-target="#columnsPanel" href="#columnsPanel") Columns
-                                                .panel-collapse.collapse#columnsPanel.direportpanel
-                                                    .panel-body
-                                                        table.columnsGrid.small.grid.table
-                                                            thead
-                                                                tr.strong
-                                                                    th.medium.strong Name
-                                                            tbody.sortablecolums(data-bind="foreach: listOfColumns()")
-                                                                tr.pointdata(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
-                                                                    td
-                                                                        .handle
-                                                                        // ko if: ($parent.reportType !== 'Property')
-                                                                        .columnName(data-bind="text: colName, click: function(){ $parent.selectPoint($data, $index) }")
-                                                                        // /ko
-                                                                        // ko if: ($parent.reportType === 'Property')
-                                                                        .dropdown.availablePropertiesContainer
-                                                                            button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
-                                                                                span(data-bind="text: (colName !== '- - -' ? colName : 'Properties (' + $root.listOfPropertiesLength + ')')")
-                                                                                span.caret.lm10px
-                                                                            ul.enumproperties.dropdown-menu
-                                                                                input.form-control(data-bind="textInput: $root.propertiesFilter", type="text", placeholder="Search...")
-                                                                                li(role="separator", class="divider")
-                                                                                // ko foreach: $root.filteredProps()
-                                                                                li
-                                                                                    a(data-bind="click: function(){ $root.selectPropertyColumn($parentContext.$index(), $data) }, text: $data.name")
-                                                                                // /ko
-                                                                        // /ko
-                                                                    td.removecolumn
-                                                                        a.span.removerow(data-bind="click: $parent.deleteColumnRow") Remove
-                                                            tbody.showInEdit
-                                                                tr
-                                                                    td(colspan="4")
-                                                                        a.addPointbutton(href="#") Add Column
-                                .panel.panel-default
-                                    .panel-heading.direportpanelheader
-                                        h4.panel-title
-                                            a.panel-anchor.filterByPointPanelAnchor(data-toggle="collapse" data-target="#filterByPointPanel" href="#filterByPointPanel") Filter By Point Types / Points
-                                            .panel-collapse.collapse#filterByPointPanel.direportpanel
+                .reportingGettingData
+                    i.fa.fa-spinner.fa-spin.fa-3x
+                    span.spinnertext
+                .tabConfiguration.well.tab-pane.active.workingPane
+                    .row.form-horizontal
+                        .form-group.clearfix.direportgroup
+                            h5.col-sm-2.control-label
+                                strong.center-block Point Name
+                            .col-sm-10
+                                .form-inline
+                                    input.pointName1.form-control.input-md(required, type="text", placeholder="Point1", style="width:20%")
+                                    input.pointName2.form-control.input-md(required, type="text", placeholder="Point2", style="width:20%")
+                                    input.pointName3.form-control.input-md(type="text", placeholder="Point3", style="width:20%")
+                                    input.pointName4.form-control.input-md(type="text", placeholder="Point4", style="width:20%")
+                    .row.form-horizontal
+                        .form-group.clearfix.direportgroup
+                            h5.col-sm-2.control-label
+                                strong Report Title
+                            .col-sm-10.reporttitle
+                                input.form-control.input-md(data-bind="value: reportDisplayTitle")
+                    .row.form-horizontal
+                        .form-group.clearfix.direportgroup
+                            h5.col-sm-2.control-label
+                                strong Report Type
+                            .col-sm-10.reporttype
+                                medium(data-bind="text: reportType")
+                    .row.clearfix
+                        .panel-group
+                            .panel.panel-default
+                                   .panel-heading.direportpanelheader
+                                        h4.strong.panel-title
+                                            a.panel-anchor(data-toggle="collapse" data-target="#columnsPanel" href="#columnsPanel") Columns
+                                            .panel-collapse.collapse#columnsPanel.direportpanel
                                                 .panel-body
-                                                    iframe.pointLookupFrame(name='pid_filter', min-height='800px', min-width='960px', width='100%', height='400px', frameborder='', scrolling='no')
-                                .panel.panel-default
-                                    .panel-heading.direportpanelheader
-                                        h4.panel-title
-                                            a.panel-anchor(data-toggle="collapse" data-target="#filtersPanel" href="#filtersPanel") Additional Filters
-                                            .panel-collapse.collapse#filtersPanel.direportpanel
-                                                .panel-body
-                                                    table.filtersGrid.small.grid.table
-                                                        tbody(data-bind="foreach: listOfFilters()")
-                                                            tr.filterdata
-                                                                // ko if: ($parent.reportType === 'Property')
-                                                                td.sorthandle
+                                                    table.columnsGrid.small.grid.table
+                                                        thead
+                                                            tr.strong
+                                                                th.medium.strong Name
+                                                        tbody.sortablecolums(data-bind="foreach: listOfColumns()")
+                                                            tr.pointdata(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
+                                                                td
                                                                     .handle
-
-                                                                td.filterCondition(data-bind="css: {childCondition: childLogic === true} ")
-                                                                    .dropdown.availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
-                                                                        button.btn.btn-default.dropdown-toggle.conditionButton(data-toggle="dropdown")
-                                                                            span(data-bind="text: $root.displayCondition(condition)")
-                                                                        ul.operators.dropdown-menu
-                                                                            // ko foreach: $root.conditions()
-                                                                            li
-                                                                                a.condition(data-bind="click: function(){ $root.selectedFilterCondition($parentContext.$index(), $data) }, text: text", required)
-                                                                            // /ko
-                                                                // /ko
-                                                                td.filterName
                                                                     // ko if: ($parent.reportType !== 'Property')
-                                                                    span(data-bind="text: column")
+                                                                    .columnName(data-bind="text: colName, click: function(){ $parent.selectPoint($data, $index) }")
                                                                     // /ko
                                                                     // ko if: ($parent.reportType === 'Property')
                                                                     .dropdown.availablePropertiesContainer
                                                                         button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
-                                                                            span(data-bind="text: (column !== '- - -' ? column : 'Properties (' + $root.listOfPropertiesLength + ')')")
+                                                                            span(data-bind="text: (colName !== '- - -' ? colName : 'Properties (' + $root.listOfPropertiesLength + ')')")
                                                                             span.caret.lm10px
                                                                         ul.enumproperties.dropdown-menu
                                                                             input.form-control(data-bind="textInput: $root.propertiesFilter", type="text", placeholder="Search...")
                                                                             li(role="separator", class="divider")
                                                                             // ko foreach: $root.filteredProps()
                                                                             li
-                                                                                a(data-bind="click: function(){ $root.selectPropertyFilter($parentContext.$index(), $data) }, text: $data.name")
+                                                                                a(data-bind="click: function(){ $root.selectPropertyColumn($parentContext.$index(), $data) }, text: $data.name")
                                                                             // /ko
-                                                                    // /ko
-                                                                td.filterOperator
-                                                                    // ko if: ($parent.reportType === 'Property')
-                                                                    .dropdown.availableOperatorsContainer
-                                                                        button.btn.btn-default.dropdown-toggle.operatorButton(data-toggle="dropdown")
-                                                                            span(data-bind="text: $root.displayOperator(operator)")
-                                                                            //span.caret.lm10px
-                                                                        ul.operators.dropdown-menu
-                                                                            // ko foreach: $root.operators(valueType)
-                                                                            li
-                                                                                a.operator(data-bind="click: function(){ $root.selectedFilterOperator($parentContext.$index(), $data) }, text: text", required)
-                                                                            // /ko
-                                                                    // /ko
-                                                                td.filterValue
-                                                                    // ko if: (valueType && valueType === "DateTime")
-                                                                    input.input-sm.form-control(data-bind="reportDatePicker: value", type="text", required)
-                                                                    // /ko
-                                                                    // ko if: (valueType && valueType !== "DateTime")
-                                                                    input.input-sm.form-control(data-bind="value: value", type="text", required)
                                                                     // /ko
                                                                 td.removecolumn
-                                                                    a.span.removerow(data-bind="click: $parent.deleteFilterRow") Remove
+                                                                    a.span.removerow(data-bind="click: $parent.deleteColumnRow") Remove
                                                         tbody.showInEdit
                                                             tr
                                                                 td(colspan="4")
-                                                                    // ko if: (reportType === 'Property')
-                                                                    a.addFilterbutton(href="#") Add Filter
-                                                                    // /ko
-                                .panel.panel-default
-                                    .panel-heading.direportpanelheader
-                                        h4.panel-title
-                                            a.panel-anchor(data-toggle="collapse" data-target="#reportOptions" href="#reportOptions") Options
-                                            .panel-collapse.collapse#reportOptions.direportpanel
-                                                .panel-body.small
-                                                    .col-xs-6
-                                                        h5 Report Footer Details
-                                                        .checkbox
-                                                            label
-                                                                input#includeFilter(type="checkbox")
-                                                                | Include filter criteria at the end of the Report
-                                                        .checkbox
-                                                            label
-                                                                input#includeReportName(type="checkbox")
-                                                                | Include report name at the end of the Report
-                                                    .col-xs-1(style='display:none')
-                                                        h5 Data Size
-                                                        .checkbox
-                                                            label
-                                                                input(name="returnLimit" type="radio", value ="200")
-                                                                | Preview Mode With Limit to 200
-                                                        .checkbox
-                                                            label
-                                                                input(name="returnLimit" type="radio", value ="500")
-                                                                | Preview Mode With Limit to 500
-                                                        .checkbox
-                                                            label
-                                                                input(name="returnLimit" type="radio", value ="1000")
-                                                                | Preview Mode With Limit to 1000
-                                                        .checkbox
-                                                            label
-                                                                input(name="returnLimit" type="radio", value ="0", checked="checked")
-                                                                | Live Mode
-                                        .row
-                                            .col-xs-6(style='display:none')
-                                                h4 Run Report Button Option
-                                                .checkbox
-                                                    label
-                                                        input(name="alwaysRun" type="checkbox", value ="0", checked="checked")
-                                                        | Get Fresh Report Everytime
-                        .row.clearfix(style="padding:10px")
-                            .col-xs-4
-                            .col-xs-8.pull-right
-                                .scheduleReportButton.btn.btn-primary
-                                    | Schedule Report
-                                .saveReportButton.btn.btn-primary
-                                    | Save Report
-                                .runReportButton.btn.btn-primary
-                                    | Run Report
-                    .tabPreview.well.tab-pane
+                                                                    a.addPointbutton(href="#") Add Column
+                            // ko if: (reportType === 'Property')
+                            .panel.panel-default
+                                .panel-heading.direportpanelheader
+                                    h4.panel-title
+                                        a.panel-anchor.filterByPointPanelAnchor(data-toggle="collapse" data-target="#filterByPointPanel" href="#filterByPointPanel") Filter By Point Types / Points
+                                        .panel-collapse.collapse#filterByPointPanel.direportpanel
+                                            .panel-body
+                                                iframe.pointLookupFrame(name='pid_filter', min-height='800px', min-width='960px', width='100%', height='400px', frameborder='', scrolling='no')
+                            // /ko
+                            .panel.panel-default
+                                .panel-heading.direportpanelheader
+                                    h4.panel-title
+                                        a.panel-anchor.filtersPanelAnchor(data-toggle="collapse" data-target="#filtersPanel" href="#filtersPanel") Additional Filters
+                                        .panel-collapse.collapse#filtersPanel.direportpanel
+                                            .panel-body
+                                                table.filtersGrid.small.grid.table
+                                                    tbody(data-bind="foreach: listOfFilters()")
+                                                        tr.filterdata
+                                                            // ko if: ($parent.reportType === 'Property')
+                                                            td.sorthandle
+                                                                .handle
+
+                                                            td.filterCondition(data-bind="css: {childCondition: childLogic === true} ")
+                                                                .dropdown.availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
+                                                                    button.btn.btn-default.dropdown-toggle.conditionButton(data-toggle="dropdown")
+                                                                        span(data-bind="text: $root.displayCondition(condition)")
+                                                                    ul.operators.dropdown-menu
+                                                                        // ko foreach: $root.conditions()
+                                                                        li
+                                                                            a.condition(data-bind="click: function(){ $root.selectedFilterCondition($parentContext.$index(), $data) }, text: text", required)
+                                                                        // /ko
+                                                            // /ko
+                                                            td.filterName
+                                                                // ko if: ($parent.reportType !== 'Property')
+                                                                span(data-bind="text: column")
+                                                                // /ko
+                                                                // ko if: ($parent.reportType === 'Property')
+                                                                .dropdown.availablePropertiesContainer
+                                                                    button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
+                                                                        span(data-bind="text: (column !== '- - -' ? column : 'Properties (' + $root.listOfPropertiesLength + ')')")
+                                                                        span.caret.lm10px
+                                                                    ul.enumproperties.dropdown-menu
+                                                                        input.form-control(data-bind="textInput: $root.propertiesFilter", type="text", placeholder="Search...")
+                                                                        li(role="separator", class="divider")
+                                                                        // ko foreach: $root.filteredProps()
+                                                                        li
+                                                                            a(data-bind="click: function(){ $root.selectPropertyFilter($parentContext.$index(), $data) }, text: $data.name")
+                                                                        // /ko
+                                                                // /ko
+                                                            td.filterOperator
+                                                                // ko if: ($parent.reportType === 'Property')
+                                                                .dropdown.availableOperatorsContainer
+                                                                    button.btn.btn-default.dropdown-toggle.operatorButton(data-toggle="dropdown")
+                                                                        span(data-bind="text: $root.displayOperator(operator)")
+                                                                        //span.caret.lm10px
+                                                                    ul.operators.dropdown-menu
+                                                                        // ko foreach: $root.operators(valueType)
+                                                                        li
+                                                                            a.operator(data-bind="click: function(){ $root.selectedFilterOperator($parentContext.$index(), $data) }, text: text", required)
+                                                                        // /ko
+                                                                // /ko
+                                                            td.filterValue
+                                                                // ko if: (valueType && valueType === "DateTime")
+                                                                input.input-sm.form-control(data-bind="reportDatePicker: value", type="text", required)
+                                                                // /ko
+                                                                // ko if: (valueType && valueType !== "DateTime")
+                                                                input.input-sm.form-control(data-bind="value: value", type="text", required)
+                                                                // /ko
+                                                            td.removecolumn
+                                                                a.span.removerow(data-bind="click: $parent.deleteFilterRow") Remove
+                                                    tbody.showInEdit
+                                                        tr
+                                                            td(colspan="4")
+                                                                // ko if: (reportType === 'Property')
+                                                                a.addFilterbutton(href="#") Add Filter
+                                                                // /ko
+                            .panel.panel-default
+                                .panel-heading.direportpanelheader
+                                    h4.panel-title
+                                        a.panel-anchor(data-toggle="collapse" data-target="#reportOptions" href="#reportOptions") Options
+                                        .panel-collapse.collapse#reportOptions.direportpanel
+                                            .panel-body.small
+                                                .col-xs-6
+                                                    h5 Report Footer Details
+                                                    .checkbox
+                                                        label
+                                                            input#includeFilter(type="checkbox")
+                                                            | Include filter criteria at the end of the Report
+                                                    .checkbox
+                                                        label
+                                                            input#includeReportName(type="checkbox")
+                                                            | Include report name at the end of the Report
+                                                .col-xs-1(style='display:none')
+                                                    h5 Data Size
+                                                    .checkbox
+                                                        label
+                                                            input(name="returnLimit" type="radio", value ="200")
+                                                            | Preview Mode With Limit to 200
+                                                    .checkbox
+                                                        label
+                                                            input(name="returnLimit" type="radio", value ="500")
+                                                            | Preview Mode With Limit to 500
+                                                    .checkbox
+                                                        label
+                                                            input(name="returnLimit" type="radio", value ="1000")
+                                                            | Preview Mode With Limit to 1000
+                                                    .checkbox
+                                                        label
+                                                            input(name="returnLimit" type="radio", value ="0", checked="checked")
+                                                            | Live Mode
+                                    .row
+                                        .col-xs-6(style='display:none')
+                                            h4 Run Report Button Option
+                                            .checkbox
+                                                label
+                                                    input(name="alwaysRun" type="checkbox", value ="0", checked="checked")
+                                                    | Get Fresh Report Everytime
+                    .row.clearfix(style="padding:10px")
+                        .col-xs-4
+                        .col-xs-8.pull-right
+                            .scheduleReportButton.btn.btn-primary
+                                | Schedule Report
+                            .saveReportButton.btn.btn-primary
+                                | Save Report
+                            .runReportButton.btn.btn-primary
+                                | Run Report
+                    .screenMessages
+                        .row.well-sm
+                            .col-sm-6
+                                .errorMessage.alert-danger
+                                .successMessage.alert-success
+                .tabPreview.well.tab-pane.workingPane
                         .row
                             h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
                             table.table.table-striped.table-hover.table-condensed.previewReport
                             .left.reportDisplayFooter(data-bind="text: reportDisplayFooter")
-                    .tabDesign.well.tab-pane
+                .tabDesign.well.tab-pane.workingPane
                         .row
                             .designReport
-                    .tabReportNotes.well.tab-pane
+                .tabReportNotes.well.tab-pane.workingPane
                         .row
                             .reportNotes
     include footer
     include modals/dialogScreens
-    include modals/saveReport
