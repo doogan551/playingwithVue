@@ -48,7 +48,7 @@ block content
                                                                 td
                                                                     .handle
                                                                     // ko if: ($parent.reportType !== 'Property')
-                                                                    .columnName(data-bind="text: colName, click: function(){ $parent.selectPoint($data, $index) }")
+                                                                    .columnName(data-bind="text: colName, click: function(){ $parent.selectPointForColumn($data, $index) }")
                                                                     // /ko
                                                                     // ko if: ($parent.reportType === 'Property')
                                                                     .dropdown.availablePropertiesContainer
@@ -138,12 +138,14 @@ block content
                                                                 // ko if: (valueType === "Float" || valueType === "Unsigned")
                                                                 input.input-sm.form-control(data-bind="value: value", type="number", required)
                                                                 // /ko
-                                                                // ko if: (valueType === "Enum" | valueType === "String")
+                                                                // ko if: (valueType === "String")
+                                                                input.input-sm.form-control(data-bind="value: value", type="text", required)
+                                                                // /ko
+                                                                // ko if: (valueType === "Enum")
                                                                 input.input-sm.form-control(data-bind="value: value", type="text", required)
                                                                 // /ko
                                                                 // ko if: (valueType === "UniquePID")
-                                                                .pointRef.columnName(data-bind="text: value, click: function(){ $parent.selectPoint($data, $index) }")
-                                                                span(data-bind="text: value")
+                                                                .pointRef.columnName(data-bind="text: ($data.value !== '' ? $data.value : '- - -'), click: function(){ $parent.selectPointForFilter($data, $index) }")
                                                                 // /ko
                                                                 // ko if: (valueType === "Bool")
                                                                 .dropdown.availablefilterValues

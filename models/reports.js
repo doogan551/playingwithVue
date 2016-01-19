@@ -625,6 +625,7 @@ module.exports = Rpt = {
     },
     reportSearch: function (data, cb) {
         logger.info("- - - reportSearch() called");
+        
         var reportConfig = data.reportConfig,
             reportType = data.reportType,
             filters = reportConfig.filters,

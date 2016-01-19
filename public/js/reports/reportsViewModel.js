@@ -158,12 +158,12 @@ var reportsViewModel = function () {
                 // hey hey
             });
         },
-        openPointSelector = function (selectObjectIndex, upi, newUrl) {
+        openPointSelectorForColumn = function (selectObjectIndex, upi, newUrl) {
             var url = newUrl || '/pointLookup',
                 windowRef,
-                objIndex,
-                tempObject,
-                updatedList,
+                objIndex = selectObjectIndex,
+                updatedList = self.listOfColumns(),
+                tempObject = updatedList[selectObjectIndex],
                 pointSelectedCallback = function (pid, name, type) {
                     if (!!pid) {
                         tempObject.upi = pid;
@@ -179,9 +179,31 @@ var reportsViewModel = function () {
                     windowRef.pointLookup.init(pointSelectedCallback, {});
                 };
 
-            objIndex = selectObjectIndex;
-            updatedList = self.listOfColumns();
-            tempObject = updatedList[selectObjectIndex];
+            windowRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'Select Point Column', {
+                callback: windowOpenedCallback,
+                width: 1000
+            });
+        },
+        openPointSelectorForFilter = function (selectObjectIndex, upi, newUrl) {
+            var url = newUrl || '/pointLookup',
+                windowRef,
+                objIndex = selectObjectIndex,
+                updatedList = self.listOfFilters(),
+                tempObject = updatedList[selectObjectIndex],
+                pointSelectedCallback = function (pid, name, type) {
+                    if (!!pid) {
+                        tempObject.upi = pid;
+                        tempObject.valueType = "UniquePID";
+                        tempObject.value = name;
+                        updatedList[objIndex] = tempObject;
+                        self.listOfFilters([]);
+                        self.listOfFilters(updatedList);
+                    }
+                },
+                windowOpenedCallback = function () {
+                    windowRef.pointLookup.MODE = 'select';
+                    windowRef.pointLookup.init(pointSelectedCallback, {});
+                };
 
             windowRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'Select Point Filter', {
                 callback: windowOpenedCallback,
@@ -460,7 +482,7 @@ var reportsViewModel = function () {
         setReportEvents = function () {
             $columnNames.on('click', function (e) {
                 //console.log('$columnNames clicked');
-                openPointSelector();
+                openPointSelectorForColumn();
                 e.preventDefault();
                 e.stopPropagation();
             });
@@ -1079,12 +1101,19 @@ var reportsViewModel = function () {
         }
     };
 
-    self.selectPoint = function (data, index) {
+    self.selectPointForColumn = function (data, index) {
         var upi = parseInt(data.upi, 10),
             columnIndex = parseInt(index(), 10);
 
-        openPointSelector(columnIndex, upi);
-    },
+        openPointSelectorForColumn(columnIndex, upi);
+    };
+
+    self.selectPointForFilter = function (data, index) {
+        var upi = parseInt(data.upi, 10),
+            columnIndex = parseInt(index(), 10);
+
+        openPointSelectorForFilter(columnIndex, upi);
+    };
 
     self.showPointReview = function (data) {
             var openWindow = window.workspaceManager.openWindowPositioned,
