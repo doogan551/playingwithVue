@@ -1156,7 +1156,7 @@ var findInSql = function(options, tables, callback) {
 
 				}
 
-				if (['weather', 'history', 'latest history'].indexOf(options.ops[0].fx) >= 0) {
+				if (['weather', 'history match', 'latest history'].indexOf(options.ops[0].fx) >= 0) {
 					statement.push('AND TIMESTAMP >=');
 				} else {
 					statement.push('AND TIMESTAMP >');
@@ -1164,7 +1164,7 @@ var findInSql = function(options, tables, callback) {
 				statement.push(options.range.start);
 				statement.push('AND TIMESTAMP <=');
 				statement.push(options.range.end);
-				if (['history'].indexOf(options.ops[0].fx) >= 0) {
+				if (['history match'].indexOf(options.ops[0].fx) >= 0) {
 					statement.push('AND TIMESTAMP IN (');
 					statement.push(options.timestamps);
 					statement.push(')');
@@ -1212,6 +1212,7 @@ var fixResults = function(sResults, mResults, callback) {
 				delete sResult[prop];
 			}
 			sResult.value = parseFloat(sResult.value);
+			sResult.Value = parseFloat(sResult.value);
 			for (m = 0; m < mResults.length; m++) {
 				if (sResult.timestamp === mResults[m].timestamp) {
 					sResult.value += parseFloat(mResults[m].Value);
@@ -1848,8 +1849,9 @@ module.exports = historyModel = {
 	findHistory: function(options, callback) {
 		// find history based on upis and exact timestamps
 		options.ops = [{
-			fx: 'history'
+			fx: (!!options.fx) ? options.fx : 'history match'
 		}];
+
 		getTables(options, function(err, tables) {
 			findInSql(options, tables, function(err, sResults) {
 				// console.log(err, sResults);
@@ -1874,7 +1876,6 @@ module.exports = historyModel = {
 				fixResults(sResults || [], [], function(err, results) {
 					if (!results.length && moment.unix(range.start).year() > 2000) {
 						range.end = range.start - 1;
-						formatRange(range);
 						historyModel.findLatest(options, callback);
 					} else {
 						// console.log(options.upis, moment.unix(range.end).format(), moment.unix(results[0].timestamp).format());
