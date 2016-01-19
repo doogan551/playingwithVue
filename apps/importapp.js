@@ -14,7 +14,6 @@ var Utility = require('../models/utility');
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
-
 var conn = importconfig.conn;
 var xmlPath = importconfig.xmlPath;
 
@@ -121,22 +120,23 @@ function importUpdate() {
 			// logger.info("retrieved", err);
 			importPoint(db, doc, function(err) {
 				count++;
-				if (count % 10000 === 0) {
+				if (count % 100 === 0) {
 					logger.info(count);
 				}
-				/*else if (count % 500 === 0) {
-					logger.info.write('.');
-				}*/
 				cb(err);
 			});
 		}, function(err) {
 			logger.info('innerLoop cursor done', err);
 			updateGPLReferences(db, function(err) {
-				if (err)
-					logger.info("updateGPLReferences err:", err);
-				logger.info("!!Check Port 1-4 Timeouts on devices!!");
-				logger.info("done", err, new Date());
-				process.exit(0);
+				cleanupDB(db, function(err) {
+					if (err) {
+						logger.info("updateGPLReferences err:", err);
+					}
+					logger.info("!!Check Port 1-4 Timeouts on devices!!");
+					logger.info("done", err, new Date());
+					process.exit(0);
+
+				});
 			});
 		});
 
@@ -730,6 +730,15 @@ function insertScheduleEntry(db, scheduleEntry, callback) {
 	});
 }
 
+function cleanupDB(db, callback) {
+	db.dropCollection('ScheduleEntries', function(err) {
+		if (err) {
+			return callback(err);
+		}
+		db.dropCollection('OldHistLogs', callback);
+	});
+}
+
 function updateGPLReferences(db, callback) {
 	logger.info("starting updateGPLReferences");
 	db.collection(pointsCollection).find({
@@ -1084,8 +1093,8 @@ function updateGPLBlocks(point, callback) {
 				break;
 			case 'Math':
 			case 'Multiplexer':
-				point['Operand 1 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
-				point['Operand 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+				point['Input 1 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
+				point['Input 2 Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
 				break;
 			case 'Delay':
 				point['Trigger Constant'].isReadOnly = (parentUpi !== 0) ? true : false;
