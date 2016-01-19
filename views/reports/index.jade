@@ -60,7 +60,7 @@ block content
                                                                             li(role="separator", class="divider")
                                                                             // ko foreach: $root.filteredProps()
                                                                             li
-                                                                                a(data-bind="click: function(){ $root.selectPropertyColumn($parentContext.$index(), $data) }, text: $data.name")
+                                                                                a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
                                                                             // /ko
                                                                     // /ko
                                                                 td.removecolumn
@@ -115,7 +115,7 @@ block content
                                                                         li(role="separator", class="divider")
                                                                         // ko foreach: $root.filteredProps()
                                                                         li
-                                                                            a(data-bind="click: function(){ $root.selectPropertyFilter($parentContext.$index(), $data) }, text: $data.name")
+                                                                            a(data-bind="click: function(){ $root.selectPropertyFilter($element, $parentContext.$index(), $data) }, text: $data.name")
                                                                         // /ko
                                                                 // /ko
                                                             td.filterOperator
@@ -131,11 +131,30 @@ block content
                                                                         // /ko
                                                                 // /ko
                                                             td.filterValue
-                                                                // ko if: (valueType && valueType === "DateTime")
+                                                                p(data-bind="text: valueType")
+                                                                // ko if: (valueType === "DateTime")
                                                                 input.input-sm.form-control(data-bind="reportDatePicker: value", type="text", required)
                                                                 // /ko
-                                                                // ko if: (valueType && valueType !== "DateTime")
+                                                                // ko if: (valueType === "Float" || valueType === "Unsigned")
+                                                                input.input-sm.form-control(data-bind="value: value", type="number", required)
+                                                                // /ko
+                                                                // ko if: (valueType === "Enum" | valueType === "String")
                                                                 input.input-sm.form-control(data-bind="value: value", type="text", required)
+                                                                // /ko
+                                                                // ko if: (valueType === "UniquePID")
+                                                                .pointRef.columnName(data-bind="text: value, click: function(){ $parent.selectPoint($data, $index) }")
+                                                                span(data-bind="text: value")
+                                                                // /ko
+                                                                // ko if: (valueType === "Bool")
+                                                                .dropdown.availablefilterValues
+                                                                    button.btn.btn-default.dropdown-toggle.operatorButton(data-toggle="dropdown")
+                                                                        span(data-bind="text: value")
+                                                                        span.caret.lm10px
+                                                                    ul.filterValues.dropdown-menu
+                                                                        li
+                                                                            a(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'True') }, text: 'True'", required)
+                                                                        li
+                                                                            a(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'False') }, text: 'False'", required)
                                                                 // /ko
                                                             td.removecolumn
                                                                 a.span.removerow(data-bind="click: $parent.deleteFilterRow") Remove

@@ -28,18 +28,17 @@ var initKnockout = function () {
 
 var reportsViewModel = function () {
     var self = this,
+        $mainWindow,
         $direports,
         $tabs,
         $tabConfiguration,
         $tabPreview,
         $previewReport,
         $tabReportNotes,
-        $runReportForm,
         $tabDesign,
         $designReport,
         $reportSpinner,
         $spinnertext,
-        $runReport,
         $pointName1,
         $pointName2,
         $pointName3,
@@ -57,7 +56,6 @@ var reportsViewModel = function () {
         $filterOperator,
         $filterByPointPanel,
         $filterByPointPanelAnchor,
-        $filtersPanel,
         $filtersPanelAnchor,
         $listBoxContentpointTypes,
         $modalScheduleReport,
@@ -72,32 +70,43 @@ var reportsViewModel = function () {
         workspace = {},
         originalPoint = {},
         reportId,
-        selectTemplate = {},
+        pointFilter = {
+                name1Filter: '',
+                name2Filter: '',
+                name3Filter: '',
+                name4Filter: '',
+                selectedPointTypes: []
+            },
         propertyFields = [],
-        filterGrid = {},
-        selectedColumnRow = {},
         templateId,
-        sortJsonObject = function (object) {
-            var sortedObj = {},
-                keys = Object.keys(object);
+        sortObject = function (obj, order) {
+            var key,
+                tempArry = [],
+                i,
+                tempObj = {};
 
-            keys.sort(function (key1, key2) {
-                key1 = key1.toLowerCase(), key2 = key2.toLowerCase();
-                if (key1 < key2) return -1;
-                if (key1 > key2) return 1;
-                return 0;
-            });
+            for (key in obj) {
+                tempArry.push(key);
+            }
 
-            for (var index in keys) {
-                var key = keys[index];
-                if (typeof object[key] == 'object' && !(object[key] instanceof Array)) {
-                    sortedObj[key] = sortJsonObject(object[key]);
-                } else {
-                    sortedObj[key] = object[key];
+            tempArry.sort(
+                function (a, b) {
+                    return a.localeCompare(b);
+                    //return a.toLowerCase().localeCompare(b.toLowerCase());
+                }
+            );
+
+            if (order === 'desc') {
+                for (i = tempArry.length - 1; i >= 0; i--) {
+                    tempObj[tempArry[i]] = obj[tempArry[i]];
+                }
+            } else {
+                for (i = 0; i < tempArry.length; i++) {
+                    tempObj[tempArry[i]] = obj[tempArry[i]];
                 }
             }
 
-            return sortedObj;
+            return tempObj;
         },
         blockUI = function ($control, state, text) {
             if (state === true) {
@@ -149,13 +158,6 @@ var reportsViewModel = function () {
                 // hey hey
             });
         },
-        pointFilter = (point["Report Config"] && point["Report Config"].pointFilter) || {
-                name1: '',
-                name2: '',
-                name3: '',
-                name4: '',
-                pointTypes: []
-            },
         openPointSelector = function (selectObjectIndex, upi, newUrl) {
             var url = newUrl || '/pointLookup',
                 windowRef,
@@ -203,10 +205,10 @@ var reportsViewModel = function () {
                 windowOpenedCallback = function () {
                     pointSelectorRef.pointLookup.MODE = 'select';
                     pointSelectorRef.pointLookup.init(pointSelectedCallback, {
-                        name1: point["Report Config"].dataSources[self.reportType].name1Filter,
-                        name2: point["Report Config"].dataSources[self.reportType].name2Filter,
-                        name3: point["Report Config"].dataSources[self.reportType].name3Filter,
-                        name4: point["Report Config"].dataSources[self.reportType].name4Filter
+                        name1: point["Report Config"].pointFilter.name1Filter,
+                        name2: point["Report Config"].pointFilter.name2Filter,
+                        name3: point["Report Config"].pointFilter.name3Filter,
+                        name4: point["Report Config"].pointFilter.name4Filter
                     });
                     setPointLookupFilterValues();
                 };
@@ -270,20 +272,19 @@ var reportsViewModel = function () {
                     }
                 }
 
+                pointFilter.selectedPointTypes = getPointLookupFilterValues();
+                pointFilter.name1Filter = getPointLookupFilterNameValues(1);
+                pointFilter.name2Filter = getPointLookupFilterNameValues(2);
+                pointFilter.name3Filter = getPointLookupFilterNameValues(3);
+                pointFilter.name4Filter = getPointLookupFilterNameValues(4);
+                point["Report Config"].pointFilter = pointFilter;
+
                 result = {
                     upis: upis,
-                    columns: columns,
                     startTime: startDate,
                     endTime: endDate,
-                    filters: filters,
-                    selectedPointTypes: getPointLookupFilterValues(),
-                    name1: getPointLookupFilterNameValues(1),
-                    name2: getPointLookupFilterNameValues(2),
-                    name3: getPointLookupFilterNameValues(3),
-                    name4: getPointLookupFilterNameValues(4),
-                    limit: point["Report Config"].returnLimit,
-                    interval: point["Report Config"].interval,
-                    offset: point["Report Config"].offset,
+                    reportConfig: point["Report Config"],
+                    reportType: point["Report Type"].Value,
                     sort: ""
                 }
             }
@@ -350,6 +351,40 @@ var reportsViewModel = function () {
                 }
             });
         },
+        getScreenFields = function () {
+            $mainWindow = $(".mainWindow");
+            $direports = $(".direports");
+            $modalScheduleReport = $(".modal-scheduleReport");
+            $tabs = $direports.find(".tabs");
+            $tabConfiguration = $direports.find(".tabConfiguration");
+            $tabPreview = $direports.find(".tabPreview");
+            $tabDesign = $direports.find(".tabDesign");
+            $tabReportNotes = $direports.find(".tabReportNotes");
+            $previewReport = $direports.find(".previewReport");
+            $designReport = $direports.find(".designReport");
+            $reportSpinner = $direports.find(".reportingGettingData");
+            $spinnertext = $reportSpinner.find(".spinnertext");
+            $pointName1 = $direports.find(".pointName1");
+            $pointName2 = $direports.find(".pointName2");
+            $pointName3 = $direports.find(".pointName3");
+            $pointName4 = $direports.find(".pointName4");
+            $columnsGrid = $direports.find(".columnsGrid");
+            $filtersGrid = $direports.find(".filtersGrid");
+            $containerFluid = $direports.find(".container-fluid");
+            $addPointbutton = $direports.find(".addPointbutton");
+            $addFilterbutton = $direports.find(".addFilterbutton");
+            $scheduleReportButton = $direports.find(".scheduleReportButton");
+            $saveReportButton = $direports.find(".saveReportButton");
+            $runReportButton = $direports.find(".runReportButton");
+            $columnNames = $direports.find(".columnName");
+            $filterOperator = $direports.find(".filterOperator");
+            $filterByPointPanel = $direports.find("#filterByPointPanel");
+            $filterByPointPanelAnchor = $filterByPointPanel.find(".filterByPointPanelAnchor");
+            $filtersPanelAnchor = $direports.find(".filtersPanelAnchor");
+            $pointSelectorIframe = $filterByPointPanel.find(".pointLookupFrame");
+            $reporttitleInput = $direports.find(".reporttitle").find("input");
+            $listBoxContentpointTypes = $pointSelectorIframe.contents().find("#listBoxContentpointTypes");
+        },
         getPointLookupFilterNameValues = function (nameNumber) {
             var $nameInputField,
                 searchPattern = "input[placeholder='Segment " + nameNumber + "']";
@@ -372,7 +407,7 @@ var reportsViewModel = function () {
             return answer;
         },
         setPointLookupFilterValues = function () {
-            var selectedPointTypes = point["Report Config"].dataSources[self.reportType].selectedPointTypes;
+            var selectedPointTypes = point["Report Config"].pointFilter.selectedPointTypes;
 
             if (selectedPointTypes.length > 0) {
                 pointSelectorRef.window.pointLookup.checkPointTypes(selectedPointTypes);
@@ -399,22 +434,24 @@ var reportsViewModel = function () {
         },
         saveReportConfig = function () {
             point._pStatus = 0;  // activate report
-            point["Report Config"].dataSources[self.reportType].columns = self.listOfColumns();
-            point["Report Config"].dataSources[self.reportType].filters = self.listOfFilters();
-            point["Report Config"].dataSources[self.reportType].selectedPointTypes = getPointLookupFilterValues();
-            point["Report Config"].dataSources[self.reportType].name1Filter = getPointLookupFilterNameValues(1);
-            point["Report Config"].dataSources[self.reportType].name2Filter = getPointLookupFilterNameValues(2);
-            point["Report Config"].dataSources[self.reportType].name3Filter = getPointLookupFilterNameValues(3);
-            point["Report Config"].dataSources[self.reportType].name4Filter = getPointLookupFilterNameValues(4);
+            point["Report Config"].columns = self.listOfColumns();
+            point["Report Config"].filters = self.listOfFilters();
+            pointFilter.selectedPointTypes = getPointLookupFilterValues();
+            pointFilter.name1Filter = getPointLookupFilterNameValues(1);
+            pointFilter.name2Filter = getPointLookupFilterNameValues(2);
+            pointFilter.name3Filter = getPointLookupFilterNameValues(3);
+            pointFilter.name4Filter = getPointLookupFilterNameValues(4);
+            point["Report Config"].pointFilter = pointFilter;
             point.name1 = $pointName1.val();
             point.name2 = $pointName2.val();
             point.name3 = $pointName3.val();
             point.name4 = $pointName4.val();
 
+
             //if (JSON.stringify(originalPoint) === JSON.stringify(point)) {
             //    return;
             //}
-            //point = sortJsonObject(point);
+            point = sortObject(point);
             reportSocket.emit('updatePoint', JSON.stringify({
                 'newPoint': point,
                 'oldPoint': originalPoint
@@ -444,11 +481,6 @@ var reportsViewModel = function () {
                     $newRow.addClass("ui-sortable-handle");
                     $newRow.addClass("danger");
                 }
-                //self.bindings.metersSortOrder("none");
-                // Auto scroll to bottom of page
-                //$mainContent.stop().animate({
-                //    scrollTop: $mainContent.get(0).scrollHeight
-                //}, 700);
             });
 
             $addFilterbutton.on('click', function (e) {
@@ -471,11 +503,6 @@ var reportsViewModel = function () {
                     //$newRow = $filtersTbody.find('tr:last');
                     //$newRow.addClass("ui-sortable-handle");
                 }
-                //self.bindings.metersSortOrder("none");
-                // Auto scroll to bottom of page
-                //$mainContent.stop().animate({
-                //    scrollTop: $mainContent.get(0).scrollHeight
-                //}, 700);
             });
 
             $scheduleReportButton.on('click', function (e) {
@@ -526,7 +553,7 @@ var reportsViewModel = function () {
             $('.panel-group').on('shown.bs.collapse', function (e) {
                 var offset = $(e.target).offset();
                 if (offset) {
-                    $('html,body').animate({
+                    $('html,body').stop().animate({
                         scrollTop: $(e.target).parent().offset().top - 20
                     }, 0);
                 }
@@ -555,6 +582,7 @@ var reportsViewModel = function () {
                     var name;
                     switch (self.reportType) {
                         case "History":
+                        case "Totalizer":
                             name = columnName;
                             break;
                         case "Property":
@@ -579,6 +607,7 @@ var reportsViewModel = function () {
                     if (columnConfig.colName === "Name") {
                         switch (self.reportType) {
                             case "History":
+                            case "Totalizer":
                                 break;
                             case "Property":
                                 $(tdField).addClass("pointInstance");
@@ -600,6 +629,7 @@ var reportsViewModel = function () {
             }
             switch (self.reportType) {
                 case "History":
+                case "Totalizer":
                 case "Property":
                     columnsArray = self.listOfColumns();
                     len = columnsArray.length;
@@ -636,32 +666,39 @@ var reportsViewModel = function () {
             }
             self.designChanged(false);
         },
+        renderReport = function (data) {
+            $previewReport.DataTable().clear();
+            $previewReport.DataTable().rows.add(data).draw();
+            if (currentTab === 2) {
+                $previewReport.show();
+                $tabPreview.show();
+                blockUI($tabPreview, false);
+            }
+            self.refreshData(false);
+        },
         renderHistoryReport = function (data) {
             if (data.err === undefined) {
                 reportJsonData = pivotHistoryData(data.historyData);
                 self.truncatedData(data.truncated);
-                $previewReport.DataTable().clear();
-                $previewReport.DataTable().rows.add(reportJsonData).draw();
-                if (currentTab === 2) {
-                    $previewReport.show();
-                    $tabPreview.show();
-                    blockUI($tabPreview, false);
-                }
-                self.refreshData(false);
+                renderReport(reportJsonData);
             } else {
                 console.log(" - * - * - renderHistoryReport() ERROR = ", data.err);
+            }
+        },
+        renderTotalizerReport = function (data) {
+            if (data.err === undefined) {
+                reportJsonData = pivotHistoryData(data.historyData);
+                self.truncatedData(data.truncated);
+                renderReport(reportJsonData);
+            } else {
+                console.log(" - * - * - renderTotalizerReport() ERROR = ", data.err);
             }
         },
         renderPropertyReport = function (data) {
             if (data.err === undefined) {
                 reportJsonData = data;
                 self.truncatedData(data.truncated);
-                $previewReport.DataTable().clear();
-                $previewReport.DataTable().rows.add(reportJsonData).draw();
-                $previewReport.show();
-                $tabPreview.show();
-                blockUI($tabPreview, false);
-                self.refreshData(false);
+                renderReport(reportJsonData);
             } else {
                 console.log(" - * - * - renderPropertyReport() ERROR = ", data.err);
             }
@@ -730,42 +767,12 @@ var reportsViewModel = function () {
     };
 
     self.init = function () {
-        var datasources;
+        var columns,
+            reportConfig;
 
-        $direports = $(".direports");
-        $modalScheduleReport = $(".modal-scheduleReport");
-        $tabs = $direports.find(".tabs");
-        $tabConfiguration = $direports.find(".tabConfiguration");
-        $tabPreview = $direports.find(".tabPreview");
-        $tabDesign = $direports.find(".tabDesign");
-        $tabReportNotes = $direports.find(".tabReportNotes");
-        $previewReport = $direports.find(".previewReport");
-        $designReport = $direports.find(".designReport");
-        $reportSpinner = $direports.find(".reportingGettingData");
-        $spinnertext = $reportSpinner.find(".spinnertext");
-        $pointName1 = $direports.find(".pointName1");
-        $pointName2 = $direports.find(".pointName2");
-        $pointName3 = $direports.find(".pointName3");
-        $pointName4 = $direports.find(".pointName4");
-        $columnsGrid = $direports.find(".columnsGrid");
-        $filtersGrid = $direports.find(".filtersGrid");
-        $containerFluid = $direports.find(".container-fluid");
-        $addPointbutton = $direports.find(".addPointbutton");
-        $addFilterbutton = $direports.find(".addFilterbutton");
-        $scheduleReportButton = $direports.find(".scheduleReportButton");
-        $saveReportButton = $direports.find(".saveReportButton");
-        $runReportButton = $direports.find(".runReportButton");
-        $columnNames = $direports.find(".columnName");
-        $filterOperator = $direports.find(".filterOperator");
-        $filterByPointPanel = $direports.find("#filterByPointPanel");
-        $filterByPointPanelAnchor = $filterByPointPanel.find(".filterByPointPanelAnchor");
-        $filtersPanelAnchor = $direports.find(".filtersPanelAnchor");
-        $pointSelectorIframe = $filterByPointPanel.find(".pointLookupFrame");
-        $reporttitleInput = $direports.find(".reporttitle").find("input");
-        $listBoxContentpointTypes = $pointSelectorIframe.contents().find("#listBoxContentpointTypes");
         currentTab = 1;
         workspace = workspace;
-
+        getScreenFields();
         initKnockout();
         $modalScheduleReport.hide();
 
@@ -776,8 +783,9 @@ var reportsViewModel = function () {
                 point["Report Config"] = {};
             }
             self.reportType = point["Report Type"].Value;
-            templateId = (point["Report Config"] && point["Report Config"].reportTemplate) || "";
-            datasources = (point["Report Config"] && point["Report Config"].dataSources) ? point["Report Config"].dataSources[self.reportType] : undefined;
+            reportConfig = (point["Report Config"] ? point["Report Config"] : undefined);
+            templateId = (reportConfig ? reportConfig.reportTemplate : "");
+            columns = (reportConfig ? reportConfig.columns : undefined);
             $pointName1.val(point.name1);
             $pointName2.val(point.name2);
             $pointName3.val(point.name3);
@@ -788,11 +796,12 @@ var reportsViewModel = function () {
 
             self.reportDisplayTitle(point.Name);
             self.reportDisplayFooter(moment().format("dddd MMMM DD, YYYY hh:mm:ss a"));
-            if (datasources) {
-                self.listOfColumns(datasources.columns);
-                self.listOfFilters(datasources.filters);
+            if (columns) {
+                self.listOfColumns(reportConfig.columns);
+                self.listOfFilters(reportConfig.filters);
                 switch (self.reportType) {
                     case "History":
+                    case "Totalizer":
                         break;
                     case "Property":
                         filterOpenPointSelector($filterByPointPanel);
@@ -802,9 +811,12 @@ var reportsViewModel = function () {
                         console.log(" - - - DEFAULT  init()");
                         break;
                 }
+                pointFilter = (reportConfig.pointFilter ? reportConfig.pointFilter : pointFilter);
+
             } else { // Initial config
                 switch (self.reportType) {
                     case "History":
+                    case "Totalizer":
                         point["Report Config"].returnLimit = 200;
                         self.listOfColumns.push({
                             colName: "Date",
@@ -837,19 +849,13 @@ var reportsViewModel = function () {
                         });
                         break;
                     default:
-                        console.log(" - - - DEFAULT  init() null datasources");
+                        console.log(" - - - DEFAULT  init() null columns");
                         break;
                 }
 
-                point["Report Config"].dataSources = {};
-                point["Report Config"].dataSources[self.reportType] = {};
-                point["Report Config"].dataSources[self.reportType].columns = [];
-                point["Report Config"].dataSources[self.reportType].filters = [];
-                point["Report Config"].dataSources[self.reportType].selectedPointTypes = [];
-                point["Report Config"].dataSources[self.reportType].name1Filter = "";
-                point["Report Config"].dataSources[self.reportType].name2Filter = "";
-                point["Report Config"].dataSources[self.reportType].name3Filter = "";
-                point["Report Config"].dataSources[self.reportType].name4Filter = "";
+                point["Report Config"].columns = [];
+                point["Report Config"].filters = [];
+                point["Report Config"].pointFilter = pointFilter;
                 point["Report Config"].interval = 1;
                 point["Report Config"].offset = 6;
                 originalPoint = JSON.parse(JSON.stringify(point)); // reset original point ref since we've added attribs
@@ -953,7 +959,7 @@ var reportsViewModel = function () {
 
             setTimeout(function () {
                 $reporttitleInput.focus();
-            }, 1500);  // display success message
+            }, 1500);
         }
     };
 
@@ -1107,6 +1113,7 @@ var reportsViewModel = function () {
         console.log("report preview");
         var requestObj,
             historyDataUrl = "/report/historyDataSearch",
+            totalizerDataUrl = "/report/totalizeDataSearch",
             propertyDataUrl = "/report/reportSearch";
 
         tabSwitch(2);
@@ -1122,6 +1129,9 @@ var reportsViewModel = function () {
                 case "History":
                     ajaxPost(requestObj, historyDataUrl, renderHistoryReport);
                     break;
+                case "Totalizer":
+                    ajaxPost(requestObj, totalizerDataUrl, renderTotalizerReport);
+                    break;
                 case "Property":
                     ajaxPost(requestObj, propertyDataUrl, renderPropertyReport);
                     break;
@@ -1134,6 +1144,9 @@ var reportsViewModel = function () {
             $tabPreview.show();
             blockUI($tabPreview, false);
         }
+        $('html,body').stop().animate({
+            scrollTop: 0
+        }, 700);
     };
 
     self.reportDesign = function () {
@@ -1153,7 +1166,7 @@ var reportsViewModel = function () {
         }
     };
 
-    self.selectPropertyColumn = function (indexOfColumn, selectedValue) {
+    self.selectPropertyColumn = function (element, indexOfColumn, selectedValue) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn],
             prop = getProperty(selectedValue.name);
@@ -1163,16 +1176,19 @@ var reportsViewModel = function () {
         self.listOfColumns(tempArray);
     };
 
-    self.selectPropertyFilter = function (indexOfFilter, selectedValue) {
+    self.selectPropertyFilter = function (element, indexOfFilter, selectedValue) {
         var tempArray = self.listOfFilters(),
             filter = tempArray[indexOfFilter],
-            prop = getProperty(selectedValue.name);
+            prop = getProperty(selectedValue.name),
+            $elementRow = $(element).parent().parent().parent().parent().parent(),
+            $inputField = $elementRow.find(".filterValue").find("input"),
+            options = window.workspaceManager.config.Utility.pointTypes.getEnums(prop, prop);
         filter.column = selectedValue.name;
         filter.condition = "$and";
         filter.operator = "EqualTo";
         filter.childLogic = false;
         filter.valueType = prop.valueType;
-        filter.value = "";
+        filter.value = (filter.valueType === "Bool" ? "True" : "");
         filter.valueList = "";
         self.listOfFilters([]);
         self.listOfFilters(tempArray);
@@ -1195,6 +1211,17 @@ var reportsViewModel = function () {
             filter = tempArray[indexOfOperator];
         if (filter.operator != selectedValue.value) {
             filter.operator = selectedValue.value;
+            self.listOfFilters([]);
+            self.listOfFilters(tempArray);
+        }
+    };
+
+    self.selectedFilterValue = function (element, indexOfValue, selectedValue) {
+        console.log(" - - selectedFilterValue() indexOfValue = " + indexOfValue + "  selectedValue = " + selectedValue);
+        var tempArray = self.listOfFilters(),
+            filter = tempArray[indexOfValue];
+        if (filter.value != selectedValue) {
+            filter.value = selectedValue;
             self.listOfFilters([]);
             self.listOfFilters(tempArray);
         }

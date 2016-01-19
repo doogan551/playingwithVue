@@ -277,14 +277,15 @@ module.exports = Rpt = {
         }
     },
     historyDataSearch: function (data, cb) {
-        var checkForOldest = {},
+        var reportConfig = data.reportConfig,
+            checkForOldest = {},
             criteria = {},
             endTime = data.endTime,
             getNextOldest,
             interval = data.interval,
-            limit = (data.limit) ? data.limit : 0,
+            returnLimit = (reportConfig.limit) ? reportConfig.limit : 200,
             noOlderTimes = [],
-            offset = data.offset,
+            offset = reportConfig.offset,
             returnObj = {},
             returnPoints = [],
             searchCriteria = {},
@@ -624,18 +625,21 @@ module.exports = Rpt = {
     },
     reportSearch: function (data, cb) {
         logger.info("- - - reportSearch() called");
-        var filters = data.filters,
+        var reportConfig = data.reportConfig,
+            reportType = data.reportType,
+            filters = reportConfig.filters,
+            pointFilter = reportConfig.pointFilter,
             searchCriteria = {},
             fields = {},
             getPointRefs = false,
-            selectedPointTypes = data.selectedPointTypes,
+            selectedPointTypes = pointFilter.selectedPointTypes,
             uniquePIDs = [],
-            properties = data.columns,
+            properties = reportConfig.columns,
             sort = data.Sort,
             sortObject = {},
             nameQuery,
             $or = [],
-            returnLimit = utils.converters.convertType(data.limit),
+            returnLimit = utils.converters.convertType(reportConfig.returnLimit),
             parseNameField = function (paramsField, fieldName) {
                 var parsedNameField = {};
                 //logger.info(" - -  paramsField = "  + paramsField + "   fieldName = " + fieldName);
@@ -648,7 +652,6 @@ module.exports = Rpt = {
                 return parsedNameField;
             };
         //logger.info(" - - -  reportSearch()  data = " + JSON.stringify(data));
-        //searchCriteria.$or = [];
 
         if (properties) {
             for (var k = 0; k < properties.length; k++) {
@@ -672,14 +675,14 @@ module.exports = Rpt = {
             $or = Rpt.collectFilters(filters);
         }
 
-        logger.info("--------------");
-        logger.info(" ---------- $or 1 = " + JSON.stringify($or));
-        logger.info("--------------");
+        //logger.info("--------------");
+        //logger.info(" ---------- $or 1 = " + JSON.stringify($or));
+        //logger.info("--------------");
 
         for (var i = 1; i < 5; i++) {
-            key = "name" + i;
-            if (data[key]) {
-                nameQuery = parseNameField(data[key], key);
+            key = "name" + i + "Filter";
+            if (pointFilter[key]) {
+                nameQuery = parseNameField(pointFilter[key], key);
                 if (nameQuery) {
                     $or[0].$and.push(nameQuery);
                 }
@@ -694,9 +697,9 @@ module.exports = Rpt = {
                 }
             });
         }
-        logger.info("--------------");
-        logger.info(" ---------- $or 2 = " + JSON.stringify($or));
-        logger.info("--------------");
+        //logger.info("--------------");
+        //logger.info(" ---------- $or 2 = " + JSON.stringify($or));
+        //logger.info("--------------");
 
         if (sort) {
             for (var key2 in sort) {
@@ -704,8 +707,8 @@ module.exports = Rpt = {
             }
         }
 
-        if ($or.length > 0) {
-            searchCriteria.$or = $or;
+        if (filters.length > 0) {
+            searchCriteria = $or;
         } else {
             searchCriteria.$and = [{}];
         }
