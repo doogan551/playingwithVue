@@ -155,6 +155,21 @@ router.post('/historySearch', function(req, res, next) {
   });
 });
 // NOT CHECKED
+router.post('/totalizerReport', function(req, res, next) {
+  var data = _.merge(req.params, req.body);
+  data.user = req.user;
+
+  Reports.totalizerReport(data, function(err, trends) {
+    if (err) {
+      return utils.sendResponse(res, {
+        err: err
+      });
+    }
+
+    return utils.sendResponse(res, trends);
+  });
+});
+// NOT CHECKED
 router.get('/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;

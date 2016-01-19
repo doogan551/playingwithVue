@@ -580,4 +580,32 @@ function totalizers() {
 
   });
 }
-totalizers();
+// totalizers();
+
+function testTotalizerModel() {
+  var Reports = require('../models/reports');
+
+  var data = {
+    points: [/*{
+      'upi': 28366,
+      'op': 'starts'  // BI, BO, BV
+    },*/ {
+      'upi': 28366,
+      'op': 'runtime'  // BI, BO, BV
+    }/*, {
+      'upi': 2813,
+      'op': 'total' // All other types
+    }*/],
+    range: {
+      'start': 1453233600,
+      'end': 1453240800
+    },
+    interval: 60 // time in minutes
+  };
+  db.connect(connectionString.join(''), function(err) {
+    Reports.totalizerReport(data, function(err, result) {
+      console.log(err, JSON.stringify(result));
+    });
+  });
+}
+testTotalizerModel();
