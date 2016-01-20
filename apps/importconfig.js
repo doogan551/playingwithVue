@@ -6,8 +6,8 @@ module.exports = {
 	//var conn = 'mongodb://10.250.0.10/infoscan';
 	//var conn = 'mongodb://ROBERT4/infoscan';
 	// conn: 'mongodb://localhost/infoscan',
-	conn: 'mongodb://localhost/infoscan',
-	xmlPath: "//192.168.1.88/D$/InfoAdmin/MSFC GPL/XML",
+	conn: 'mongodb://localhost/yadkinville',
+	xmlPath: "//192.168.1.88/D$/InfoAdmin/yville",
 	// xmlPath: "C:/Users/rob/Documents/MSFC_GPL/MSFC_GPL",
 	ctrlrs: {
 		"Name": "Controllers",

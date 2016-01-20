@@ -4,8 +4,10 @@ logs/
 tmp/
 scripts/
 dist/
-build/
 nbproject/
 iisnode/
 *.scc
 Cpp_API*.log
+.idea
+public/js/reports/deleteme.json
+npm-debug.log

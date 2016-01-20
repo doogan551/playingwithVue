@@ -4,7 +4,7 @@
   "description": "infoscan",
   "main": "app.js",
   "dependencies": {
-    "acorn": "^2.6.4",
+    "acorn": "^2.7.0",
     "async": "^1.0.0",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.12.4",
@@ -39,6 +39,7 @@
     "morgan": "^1.5.3",
     "ms": "^0.7.1",
     "multer": "^0.1.8",
+    "node-uuid": "^1.4.7",
     "nodemailer": "^0.7.1",
     "passport": "^0.3.0",
     "passport-local": "^1.0.0",
@@ -54,7 +55,8 @@
     "twilio": "^2.8.0",
     "winston": "^2.0.1",
     "xhr-request": "^1.0.1",
-    "xml2js": "^0.4.9"
+    "xml2js": "^0.4.9",
+    "zmq": "^2.14.0"
   },
   "devDependencies": {},
   "scripts": {

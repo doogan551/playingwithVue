@@ -18,7 +18,8 @@ var CONSTANTS = function(constant) {
 		"SYSTEMINFOPROPERTIES": "SystemInfo",
 		"HISTORYCOLLECTION": "historydata",
 		"USERGROUPSCOLLECTION": "User Groups",
-		"ACTIVITYLOGCOLLECTION": "Activity Logs"
+		"ACTIVITYLOGCOLLECTION": "Activity Logs",
+		"UPIS": "upis"
 	};
 
 	return constants[constant];
@@ -160,10 +161,11 @@ var converters = {
 		switch (type) {
 			case "String":
 				return n.toString();
+			case "Unsigned":
+				return this.convertNumber(n);
 			default:
 				return this.convertBool(this.convertNumber(n));
 		}
-
 	}
 };
 

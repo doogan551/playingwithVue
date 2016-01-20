@@ -3,6 +3,7 @@ var router = express.Router();
 var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Reports = require('../models/reports');
+var logger = require('../helpers/logger')(module);
 // NOT CHECKED
 router.get('/getMRT/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
@@ -209,7 +210,7 @@ var reportMainCallback = function(res, err, locals, result) {
             res.render('reports/index');
             break;
           case "History":
-            res.render('reports/history');
+            res.render('reports/index');
             break;
             //case "Point Involvement":
             //    res.render('reports/cannedReports/pointInvolvement');

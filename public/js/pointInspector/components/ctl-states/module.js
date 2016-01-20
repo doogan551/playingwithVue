@@ -20,8 +20,11 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
 
             }*/
         };
-        self.setOriginal = function(item, event) {
+        self.setOriginalText = function(item, event) {
             self.originalText = item.name();
+        };
+        self.setOriginalEnum = function(item, event) {
+            self.orignalEnum = item.value();
         };
         self.triggerHandler = function(item, event) {
             var allTexts = [];
@@ -34,7 +37,25 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 }
             }
 
+            var allEnums = [];
+            for (var j = 0; j < self.states().length; j++) {
+                if (allEnums.indexOf(self.states()[j].value()) < 0) {
+                    allEnums.push(self.states()[j].value());
+                } else {
+                    item.value(self.orignalEnum);
+                    bannerJS.showBanner('Cannot have duplicate States enums. The States has been set back to its original value.', 'Dismiss');
+                }
+            }
+
+            self.updateEnumOrder();
+
             _triggerHandler($(event.target));
+        };
+        self.updateEnumOrder = function() {
+            var compare = function(a, b) {
+                return a.value() - b.value();
+            };
+            self.states().sort(compare);
         };
     }
 

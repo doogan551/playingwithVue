@@ -129,6 +129,7 @@ module.exports = {
 
 (function loop() {
   setTimeout(function() {
+    logger.info('@@@@@@@ Server still active');
     autoAcknowledgeAlarms(function(result) {
       loop();
     });
@@ -235,8 +236,32 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
       updateProperties();
     }
 
+    var compare = function(a, b) {
+      return a * 1 > b * 1;
+    };
+
     function updateProperties() {
       for (var prop in newPoint) {
+
+        // sort enums first
+        if (newPoint[prop].hasOwnProperty('ValueOptions')) {
+          var options = newPoint[prop].ValueOptions;
+
+          var newOptions = {};
+          var temp = [];
+          for (var stringVal in options) {
+            temp.push(options[stringVal]);
+          }
+          temp.sort(compare);
+          for (var key = 0; key < temp.length; key++) {
+            for (var property in options) {
+              if (options[property] === temp[key]) {
+                newOptions[property] = options[property];
+              }
+            }
+          }
+          newPoint[prop].ValueOptions = newOptions;
+        }
 
         // this will compare Slides and Point Refs arrays.
         if (!_.isEqual(newPoint[prop], oldPoint[prop])) {

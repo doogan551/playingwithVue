@@ -6,6 +6,11 @@ var defaults = {
             'dbName': 'infoscan',
             'driver': 'mongodb'
         },
+        'zmqConfig':{
+            'protocol': 'tcp',
+            'server': '127.0.0.1',
+            'port': '5570'
+        },
         'siteConfig': {
             'port': 80,
             'siteTitle': 'Info Scan',
@@ -22,7 +27,8 @@ var defaults = {
             'archiveLocation': '/InfoScan/Archive/History/'
         },
         'location': {
-            'site' : 'Dorsett'
+            'site' : 'Dorsett',
+            'email': null
         }
     }
 };

@@ -49,7 +49,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         var options,
             data = this.data,
             valueIsInOptions;
-            console.log('get options', this.propertyName);
+
         if (typeof data.ValueOptions == 'function') {
             options = data.ValueOptions();
         } else {
@@ -69,6 +69,14 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 value: data.eValue(),
                 badProperty: true
             });
+        } else {
+            for (var o = 0; o < options.length; o++) {
+                if (ko.isObservable(options[0].name)) {
+                    if (data.eValue() === options[o].value()) {
+                        data.Value(options[o].name());
+                    }
+                }
+            }
         }
         return options;
     };
