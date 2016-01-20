@@ -82,17 +82,21 @@
     cursor: pointer;
 }
 
-.filterName {
+.availablePropertiesContainer {
     cursor: pointer;
+}
+
+.availableOperatorsContainer {
+    cursor: pointer;
+}
+
+.emptyColumn {
+    width: 10px;
 }
 
 .filterOperator {
-    cursor: pointer;
+    width: 55px;
 }
-
-.operator {
-    cursor: pointer;
- }
 
 .operators.dropdown-menu {
     min-width: 55px;
@@ -101,6 +105,14 @@
 }
 
 .operator {
+    cursor: pointer;
+}
+
+.filterContainer {
+    cursor: pointer;
+}
+
+.condition {
     cursor: pointer;
 }
 
@@ -114,6 +126,23 @@
 
 ul.enumproperties.dropdown-menu li a:hover {
     background-color: #d5e1f2;
+}
+
+ul.filterValues.dropdown-menu li a:hover {
+    background-color: #d5e1f2;
+}
+
+ul.operators.dropdown-menu li a:hover {
+    background-color: #d5e1f2;
+}
+
+input.input.form-control.filterContainer {
+    color: #333;
+}
+
+.pointRef.columnName.container-fluid.filterContainer {
+    color: #333;
+    margin-top: 10px;
 }
 
 .btn-primary {

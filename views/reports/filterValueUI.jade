@@ -1,0 +1,54 @@
+// ko if: (valueType === "DateTime")
+input.input.form-control.filterContainer(data-bind="reportDatePicker: value", type="text", required)
+// /ko
+// ko if: (valueType === "Float" || valueType === "Unsigned")
+input.input.form-control.filterContainer(data-bind="value: value", type="number", required)
+// /ko
+// ko if: (valueType === "String")
+input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
+// /ko
+// ko if: (valueType === "Enum")
+// ko if: (valueList.length > 0)
+.dropdown.availablefilterValues
+   button.btn.btn-default.dropdown-toggle.filterValueButton(data-toggle="dropdown")
+      span(data-bind="text: value")
+      span.caret.lm10px
+   ul.filterValues.dropdown-menu
+      // ko foreach: valueList
+      li
+         a.filterContainer(data-bind="click: function(){ $root.selectedFilterValue($element, $parentContext.$index(), $data) }, text: $data", required)
+      // /ko
+// /ko
+// ko if: (valueList.length === 0)
+input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
+// /ko
+// /ko
+// ko if: (valueType === "UniquePID")
+.pointRef.columnName.container-fluid.filterContainer(data-bind="text: ($data.value !== '' ? $data.value : 'Choose Point'), click: function(){ $parent.selectPointForFilter($data, $index) }")
+// /ko
+// ko if: (valueType === "Bool")
+.dropdown.availablefilterValues
+   button.btn.btn-default.dropdown-toggle.filterValueButton(data-toggle="dropdown")
+      span(data-bind="text: value")
+      span.caret.lm10px
+   ul.filterValues.dropdown-menu
+      li
+         a.filterContainer(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'True') }, text: 'True'", required)
+      li
+         a.filterContainer(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'False') }, text: 'False'", required)
+// /ko
+// ko if: (valueType === "MinSec")
+input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
+// /ko
+// ko if: (valueType === "HourMin")
+input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
+// /ko
+// ko if: (valueType === "HourMinSec")
+input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
+// /ko
+// ko if: (valueType === "Timet")
+input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
+// /ko
+
+
+
