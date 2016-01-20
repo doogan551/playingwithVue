@@ -1,20 +1,21 @@
 var rob = {
-    'Infoscan': {
-        'dbConfig': {
-            'host': 'localhost'
-        },
-        'files': {
-            'driveLetter': 'C'
-        },
-        'location': {
-            'site': 'Rob',
-            'email': 'rkendall@dorsett-tech.com'
-        }
+  'Infoscan': {
+    'dbConfig': {
+      'host': 'localhost',
+      'dbName': 'infoscan'
+    },
+    'files': {
+      'driveLetter': 'C'
+    },
+    'location': {
+      'site': 'Rob',
+      'email': 'rkendall@dorsett-tech.com'
     }
+  }
 };
 
 rob.redisConfig = {
-    host: rob.Infoscan.dbConfig.host
+  host: rob.Infoscan.dbConfig.host
 };
 
 module.exports = rob;

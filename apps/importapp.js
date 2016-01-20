@@ -10,7 +10,7 @@ var logger = require('../helpers/logger')(module);
 var importconfig = require('./importconfig.js');
 var dbModel = require('../helpers/db');
 var Utility = require('../models/utility');
-
+var localTZ = config.get('Infoscan.location').timezone;
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
@@ -419,7 +419,15 @@ function setupReportsCollections(db, callback) {
 function setupSystemInfo(db, callback) {
 	var timezones = importconfig.timeZones;
 
-	db.collection(systemInfoCollection).insert(timezones, callback);
+	db.collection(systemInfoCollection).insert(timezones, function(err, result) {
+		db.collection(systemInfoCollection).update({
+			Name: 'Preferences'
+		}, {
+			$set: {
+				'Time Zone': localTZ
+			}
+		}, callback);
+	});
 }
 
 function setupPointRefsArray(db, callback) {
@@ -1126,7 +1134,16 @@ function updateGPLBlocks(point, callback) {
 
 function updateTimeZones(point, cb) {
 	if (point['Point Type'].Value === 'Device') {
+		var timezones = Config.Enums['Time Zones'];
+
 		point['Time Zone'] = Config.Templates.getTemplate("Device")["Time Zone"];
+		point['Time Zone'].eValue = localTZ;
+
+		for (var prop in timezones) {
+			if (timezones[prop].enum === localTZ) {
+				point['Time Zone'].Value = prop;
+			}
+		}
 	}
 	cb(null);
 }

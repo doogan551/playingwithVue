@@ -1,14 +1,13 @@
 var localhost = {
   'Infoscan': {
     'dbConfig': {
-      'host': '192.168.1.88',
-      'dbName': 'infoscan'
+      'host': 'localhost'
     },
     'files': {
       'driveLetter': 'C'
     },
     'location': {
-      'site': 'Rob'
+      'site': 'localhost'
     }
   }
 };

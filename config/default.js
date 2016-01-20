@@ -28,7 +28,8 @@ var defaults = {
         },
         'location': {
             'site' : 'Dorsett',
-            'email': null
+            'email': null,
+            'timezone': 5
         }
     }
 };
