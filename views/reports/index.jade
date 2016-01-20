@@ -53,7 +53,7 @@ block content
                                                                     // ko if: ($parent.reportType === 'Property')
                                                                     .dropdown.availablePropertiesContainer
                                                                         button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
-                                                                            span(data-bind="text: (colName !== '- - -' ? colName : 'Properties (' + $root.listOfPropertiesLength + ')')")
+                                                                            span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfPropertiesLength + ')')")
                                                                             span.caret.lm10px
                                                                         ul.enumproperties.dropdown-menu
                                                                             input.form-control(data-bind="textInput: $root.propertiesFilter", type="text", placeholder="Search...")
@@ -130,36 +130,13 @@ block content
                                                                             a.operator(data-bind="click: function(){ $root.selectedFilterOperator($parentContext.$index(), $data) }, text: text", required)
                                                                         // /ko
                                                                 // /ko
+                                                            td.emptyColumn
                                                             td.filterValue
-                                                                p(data-bind="text: valueType")
-                                                                // ko if: (valueType === "DateTime")
-                                                                input.input-sm.form-control(data-bind="reportDatePicker: value", type="text", required)
-                                                                // /ko
-                                                                // ko if: (valueType === "Float" || valueType === "Unsigned")
-                                                                input.input-sm.form-control(data-bind="value: value", type="number", required)
-                                                                // /ko
-                                                                // ko if: (valueType === "String")
-                                                                input.input-sm.form-control(data-bind="value: value", type="text", required)
-                                                                // /ko
-                                                                // ko if: (valueType === "Enum")
-                                                                input.input-sm.form-control(data-bind="value: value", type="text", required)
-                                                                // /ko
-                                                                // ko if: (valueType === "UniquePID")
-                                                                .pointRef.columnName(data-bind="text: ($data.value !== '' ? $data.value : '- - -'), click: function(){ $parent.selectPointForFilter($data, $index) }")
-                                                                // /ko
-                                                                // ko if: (valueType === "Bool")
-                                                                .dropdown.availablefilterValues
-                                                                    button.btn.btn-default.dropdown-toggle.operatorButton(data-toggle="dropdown")
-                                                                        span(data-bind="text: value")
-                                                                        span.caret.lm10px
-                                                                    ul.filterValues.dropdown-menu
-                                                                        li
-                                                                            a(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'True') }, text: 'True'", required)
-                                                                        li
-                                                                            a(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'False') }, text: 'False'", required)
-                                                                // /ko
+                                                                div.col-md-9
+                                                                    include ./filterValueUI
                                                             td.removecolumn
                                                                 a.span.removerow(data-bind="click: $parent.deleteFilterRow") Remove
+                                                                span(data-bind="text: valueType")
                                                     tbody.showInEdit
                                                         tr
                                                             td(colspan="4")

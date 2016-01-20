@@ -4,11 +4,12 @@ window.workspaceManager = (window.opener || window.top).workspaceManager;
 var initKnockout = function () {
     ko.bindingHandlers.reportDatePicker = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-            var options = {
-                autoclose: true,
-                startView: 'year'
+            var initialMomentDate = moment.unix(viewModel.value),
+                options = {
+                defaultDate: initialMomentDate,
+                format: 'MM/DD/YYYY, h:mm a'
             };
-            $(element).datepicker(options).on("changeDate", function (ev) {
+            $(element).datetimepicker(options).on("dp.change", function (ev) {
                 var val = $.isFunction(valueAccessor()) ? valueAccessor() : parseInt(valueAccessor(), 10);
                 if (ev.date) {
                     viewModel.value = moment(ev.date).unix();
@@ -17,11 +18,16 @@ var initKnockout = function () {
                         viewModel.value = val;
                     }
                 }
+
+                //  help user select valid start & end dates
+                //$("#dpStart").on("dp.change", function(e) {
+                //    alert('hey');
+                //    $('#dpEnd').data("DateTimePicker").setMinDate(e.date);
+                //});
+                //$("#dpEnd").on("dp.change", function(e) {
+                //    $('#dpStart').data("DateTimePicker").setMaxDate(e.date);
+                //});
             });
-        },
-        update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-            var value = ko.utils.unwrapObservable(valueAccessor());
-            $(element).datepicker("setDate", moment.unix(value).format("MM/DD/YYYY"));
         }
     };
 }
@@ -240,6 +246,44 @@ var reportsViewModel = function () {
                 width: 1000
             });
         },
+        validateColumns = function () {
+            var results = [],
+                localArray = self.listOfColumns(),
+                i;
+
+            for (i = 0; i < localArray.length; i++) {
+                if (localArray[i].colName !== "Choose Point") {
+                    results.push(localArray[i]);
+                }
+            }
+
+            return results;
+        },
+        validateFilters = function () {
+            var results = [],
+                localArray = self.listOfFilters(),
+                i;
+
+            for (i = 0; i < localArray.length; i++) {
+                if (localArray[i].column !== "") {
+                    results.push(localArray[i]);
+                }
+            }
+
+            return results;
+        },
+        getValueList = function (property, pointType) {
+            var result = [],
+                i,
+                options = window.workspaceManager.config.Utility.pointTypes.getEnums(property, pointType),
+                len = (options && options.length ? options.length : 0);
+
+            for (i = 0; i < len; i++) {
+                result.push(options[i].name);
+            }
+
+            return result;
+        },
         getProperty = function (key) {
             return window.workspaceManager.config.Enums.Properties[key];
         },
@@ -265,8 +309,8 @@ var reportsViewModel = function () {
                 i,
                 startDate,
                 endDate,
-                columns = self.listOfColumns(),
-                filters = self.listOfFilters(),
+                columns = validateColumns(),
+                filters = validateFilters(),
                 filter,
                 key,
                 upis = [];
@@ -300,6 +344,8 @@ var reportsViewModel = function () {
                 pointFilter.name3Filter = getPointLookupFilterNameValues(3);
                 pointFilter.name4Filter = getPointLookupFilterNameValues(4);
                 point["Report Config"].pointFilter = pointFilter;
+                point["Report Config"].columns = columns;
+                point["Report Config"].filters = filters;
 
                 result = {
                     upis: upis,
@@ -456,8 +502,8 @@ var reportsViewModel = function () {
         },
         saveReportConfig = function () {
             point._pStatus = 0;  // activate report
-            point["Report Config"].columns = self.listOfColumns();
-            point["Report Config"].filters = self.listOfFilters();
+            point["Report Config"].columns = validateColumns();
+            point["Report Config"].filters = validateFilters();
             pointFilter.selectedPointTypes = getPointLookupFilterValues();
             pointFilter.name1Filter = getPointLookupFilterNameValues(1);
             pointFilter.name2Filter = getPointLookupFilterNameValues(2);
@@ -490,7 +536,7 @@ var reportsViewModel = function () {
             $addPointbutton.on('click', function (e) {
                 //console.log('$addPointbutton clicked');
                 var rowTemplate = {
-                        colName: "- - -",
+                        colName: "Choose Point",
                         valueType: "String",
                         upi: 0
                     },
@@ -508,7 +554,7 @@ var reportsViewModel = function () {
             $addFilterbutton.on('click', function (e) {
                 //console.log('$addFilterbutton clicked');
                 var rowTemplate = {
-                        column: "- - -",
+                        column: "",
                         condition: "$and",
                         childLogic: false,
                         operator: "EqualTo",
@@ -1210,15 +1256,14 @@ var reportsViewModel = function () {
             filter = tempArray[indexOfFilter],
             prop = getProperty(selectedValue.name),
             $elementRow = $(element).parent().parent().parent().parent().parent(),
-            $inputField = $elementRow.find(".filterValue").find("input"),
-            options = window.workspaceManager.config.Utility.pointTypes.getEnums(prop, prop);
+            $inputField = $elementRow.find(".filterValue").find("input");
         filter.column = selectedValue.name;
         filter.condition = "$and";
         filter.operator = "EqualTo";
         filter.childLogic = false;
         filter.valueType = prop.valueType;
         filter.value = (filter.valueType === "Bool" ? "True" : "");
-        filter.valueList = "";
+        filter.valueList = getValueList(selectedValue.name, selectedValue.name);
         self.listOfFilters([]);
         self.listOfFilters(tempArray);
     };
