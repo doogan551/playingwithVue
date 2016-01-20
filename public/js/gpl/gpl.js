@@ -5977,7 +5977,7 @@ gpl.Manager = function() {
 
             //fix for IE not showing window.opener when first loaded
             gpl.getPointTypes = window.opener && window.opener.workspaceManager && window.opener.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes;
-            gpl.workspaceManager = window.opener && window.opener.workspaceManager;
+            gpl.workspaceManager = window.opener && window.opener.workspaceManager || window.top.workspaceManager;
             gpl._openWindow = window.opener && window.opener.workspaceManager && window.opener.workspaceManager.openWindowPositioned;
             gpl.controllers = gpl.workspaceManager.systemEnums.controllers;
 
