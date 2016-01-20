@@ -18,7 +18,8 @@ var CONSTANTS = function(constant) {
 		"SYSTEMINFOPROPERTIES": "SystemInfo",
 		"HISTORYCOLLECTION": "historydata",
 		"USERGROUPSCOLLECTION": "User Groups",
-		"ACTIVITYLOGCOLLECTION": "Activity Logs"
+		"ACTIVITYLOGCOLLECTION": "Activity Logs",
+		"UPIS": "upis"
 	};
 
 	return constants[constant];

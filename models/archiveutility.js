@@ -81,7 +81,9 @@ var getSdb = function(year, callback) {
       buildSdb(parseInt(year, 10), cb);
     }, function(err) {
       var nextYear = moment().add(1, 'year').year();
-      buildSdb(nextYear, callback);
+      buildSdb(nextYear, function(){
+        buildSdb(moment().year(), callback);
+      });
     });
   });
 })(function() {
