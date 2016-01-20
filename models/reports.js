@@ -626,7 +626,6 @@ module.exports = Rpt = {
     },
     reportSearch: function (data, cb) {
         logger.info("- - - reportSearch() called");
-        
         var reportConfig = data.reportConfig,
             reportType = data.reportType,
             filters = reportConfig.filters,
@@ -644,16 +643,13 @@ module.exports = Rpt = {
             returnLimit = utils.converters.convertType(reportConfig.returnLimit),
             parseNameField = function (paramsField, fieldName) {
                 var parsedNameField = {};
-                //logger.info(" - -  paramsField = "  + paramsField + "   fieldName = " + fieldName);
                 if (paramsField !== null && paramsField !== undefined) {
                     parsedNameField[fieldName] = {
                         '$regex': '(?i)^' + paramsField
                     };
                 }
-                //logger.info(" - -  parsedNameField = "  + JSON.stringify(parsedNameField));
                 return parsedNameField;
             };
-        //logger.info(" - - -  reportSearch()  data = " + JSON.stringify(data));
 
         if (properties) {
             for (var k = 0; k < properties.length; k++) {
@@ -673,35 +669,26 @@ module.exports = Rpt = {
         }
 
         if (filters && filters.length > 0) {
-            //console.log("filters", filters);
             $or = Rpt.collectFilters(filters);
         }
-
-        //logger.info("--------------");
-        //logger.info(" ---------- $or 1 = " + JSON.stringify($or));
-        //logger.info("--------------");
 
         for (var i = 1; i < 5; i++) {
             key = "name" + i + "Filter";
             if (pointFilter[key]) {
-                nameQuery = parseNameField(pointFilter[key], key);
+                nameQuery = parseNameField(pointFilter[key], ("name" + i));
                 if (nameQuery) {
-                    $or[0].$and.push(nameQuery);
+                    $or["$or"][0].$and.push(nameQuery);
                 }
             }
         }
 
-        //logger.info(" ---------- selectedPointTypes = " + JSON.stringify(selectedPointTypes));
         if (selectedPointTypes && selectedPointTypes.length > 0) {
-            $or[0].$and.push({
+            $or["$or"][0].$and.push({
                 "Point Type.Value": {
                     $in: selectedPointTypes
                 }
             });
         }
-        //logger.info("--------------");
-        //logger.info(" ---------- $or 2 = " + JSON.stringify($or));
-        //logger.info("--------------");
 
         if (sort) {
             for (var key2 in sort) {
