@@ -699,7 +699,7 @@ var reportsViewModel = function () {
                 case "History":
                 case "Totalizer":
                 case "Property":
-                    columnsArray = self.listOfColumns();
+                    columnsArray = validateColumns();
                     len = columnsArray.length;
                     for (i = 0; i < len; i++) {
                         item = columnsArray[i];
