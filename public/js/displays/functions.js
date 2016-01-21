@@ -1,5 +1,78 @@
 var displays = window.displays || {};
 
+var ActionButton = function (config) {
+    var codes = [
+            {text: 'No Action (useless)'},
+            {text: 'History Log Plot – No longer supported'},
+            {text: 'History Log Report'},
+            {text: 'History Log Export'},
+            {text: 'Totalizer Plot'},
+            {text: 'Totalizer Report'},
+            {text: 'Totalizer Export'},
+            {text: 'MultiState Value Command'},
+            {text: 'Program Start'},
+            {text: 'Analog Output Command'},
+            {text: 'Analog Value Command'},
+            {text: 'Binary Output Command'},
+            {text: 'Binary Value Command'},
+            {text: 'Report Display'},
+            {text: 'Verification Report'},
+            {text: 'Browse Verify Reports'},
+            {text: 'Data Report'}
+        ],
+        actions = {
+            'MultiState Value': {},
+            'Analog Output': {},
+            'Analog Value': {},
+            'Binary Output': {},
+            'Binary Value': {}
+        },
+        parameters = [
+            {text: 'None'},
+            {text: 'This Hour'},
+            {text: 'Last Hour'},
+            {text: 'Today'},
+            {text: 'Yesterday'},
+            {text: 'This Week'},
+            {text: 'Last Week'},
+            {text: 'This Month'},
+            {text: 'Last Month'},
+            {text: 'This Year'},
+            {text: 'Last Year'},
+            {text: 'Select Time'},
+            {text: 'Last 24 Hours'},
+            {text: 'Last 7 Days'},
+            {text: 'Select Interval'},
+            {text: 'Display'},
+            {text: 'Print'}
+        ],
+
+        _pointData,
+        _code,
+        _parameter,
+        _upi,
+
+        processPointData = function (response) {
+            _pointData = response;
+
+            return;
+        },
+        getPointData = function () {
+            $.ajax({
+                url: '/api/points/' + _upi
+            }).done(function (response) {
+                processPointData(response);
+            });
+        },
+        validateOptions = function () {
+            return;
+        };
+
+    return {
+        validate: validateOptions
+    };
+};
+
 displays.DisplayAnimation = function(el, screenObject) {
     var self = this,
         frame,
@@ -183,6 +256,44 @@ displays = $.extend(displays, {
     sizing: false,
     foc: false,
     popUpWindowActive: false,
+    actionCodes: {
+        0:  "No Action (useless)",
+        1:  "History Log Plot – No longer supported",
+        2:  "History Log Report",
+        3:  "History Log Export",
+        4:  "Totalizer Plot",
+        5:  "Totalizer Report",
+        6:  "Totalizer Export",
+        7:  "MultiState Value Command",
+        8:  "Program Start",
+        9:  "Analog Output Command",
+        10: "Analog Value Command",
+        11: "Binary Output Command",
+        12: "Binary Value Command",
+        13: "Report Display",
+        14: "Verification Report",
+        15: "Browse Verify Reports",
+        16: "Data Report"
+    },
+    actionParameters: {
+        0:  "None",
+        1:  "This Hour",
+        2:  "Last Hour",
+        3:  "Today",
+        4:  "Yesterday",
+        5:  "This Week",
+        6:  "Last Week",
+        7:  "This Month",
+        8:  "Last Month",
+        9:  "This Year",
+        10: "Last Year",
+        11: "Select Time",
+        12: "Last 24 Hours",
+        13: "Last 7 Days",
+        14: "Select Interval",
+        15: "Display",
+        16: "Print"
+    },
     resolveDisplayObjectPropertyName: function (screenObject) {
         var propertyName;
         switch (screenObject) {
@@ -895,7 +1006,7 @@ displays = $.extend(displays, {
                 // displayPrecision = (displayPrecision > 0) ? displayPrecision : parseInt(inputPrecision);   // incase we care about number to left of .
                 displayPrecision = (displayPrecision > 0) ? displayPrecision : 0;
 
-                return ((displayPrecision > 0) ? "###." +  Array(parseInt(displayPrecision)+1).join("#") : "###");
+                return ((displayPrecision > 0) ? "###." +  Array(parseInt(displayPrecision, 10)+1).join("#") : "###");
             };
 
         displays.displayApp = displayApp;
@@ -906,7 +1017,7 @@ displays = $.extend(displays, {
         if (!displays.isEdit) {
             displayApp.controller('DisplayCtrl', function($scope, $http) {
                 var $topBar = $(".topBar.ui-header"),
-                    maxScrollPercentage = .25,
+                    maxScrollPercentage = 0.25,
                     previousScrollValue = 0,
                     displayJson = window.displayJson,
                     action = function(item, e) {
@@ -928,20 +1039,24 @@ displays = $.extend(displays, {
 
                         if (screenObject === 1) {
                             //alert(item['Point Type']);
-                            if (item['Point Type'] === 151) {
-                                openGpl(item);
+                            if (item.hasOwnProperty('ActionCode')) { // action button
+
                             } else {
-                                if (item.upi === 'none') {
-                                    alert('Display not set');
+                                if (item['Point Type'] === 151) {
+                                    openGpl(item);
                                 } else {
-                                    _pointName = displays.upiNames[item.upi] || item.Text;
-                                    if (_pointName !== item.Text) {
-                                        _pointType = 'display';
+                                    if (item.upi === 'none') {
+                                        alert('Display not set');
+                                    } else {
+                                        _pointName = displays.upiNames[item.upi] || item.Text;
+                                        if (_pointName !== item.Text) {
+                                            _pointType = 'display';
+                                        }
+                                        if (e && e.shiftKey) {
+                                            _target = '';
+                                        }
+                                        displays.openWindow('/displays/view/' + item.upi, _pointName, _pointType, _target, item.upi);
                                     }
-                                    if (e && e.shiftKey) {
-                                        _target = '';
-                                    }
-                                    displays.openWindow('/displays/view/' + item.upi, _pointName, _pointType, _target, item.upi);
                                 }
                             }
                         }
@@ -1141,7 +1256,7 @@ displays = $.extend(displays, {
                         // "height": filterwh(object.Height)
                     };
 
-                    if(object['Screen Object'] === 1 || object['Screen Object'] === 4) {// button
+                    if(object['Screen Object'] === 1 || object.hasOwnProperty('ActionCode')) {// button or action button
                         ret.width = filterwh(object.Width, object['Screen Object']);
                         ret.height = filterwh(object.Height, object['Screen Object']);
                     }
@@ -1232,7 +1347,7 @@ displays = $.extend(displays, {
                         previousScrollValue = parseInt(panH,10);
                     } else {
                         //event.preventDefault();
-                        $('#panh-slider').val(parseInt(previousScrollValue),10);
+                        $('#panh-slider').val(parseInt(previousScrollValue,10));
                     }
                 });
                 zoomToFitWindow();
@@ -1321,8 +1436,8 @@ displays = $.extend(displays, {
                             case 0:  // Dynamic
                             {
                                 if (isEdit) {
-                                    precision = ' data-precision="' + parseInt(input.uiPrecision) + '"';
-                                    text = ((input.uiPrecision > 0) ? "###." + Array(parseInt(input.uiPrecision) + 1).join("#") : "###");
+                                    precision = ' data-precision="' + parseInt(input.uiPrecision, 10) + '"';
+                                    text = ((input.uiPrecision > 0) ? "###." + Array(parseInt(input.uiPrecision, 10) + 1).join("#") : "###");
                                 } else {
                                     text = (input.Text || resolvePrecisionPlaceholder(input.Precision));
                                 }
@@ -1451,6 +1566,7 @@ displays = $.extend(displays, {
         displayApp.filter('screenType', function() {
             return function(input) {
                 var out = '???',
+                    isActionButton = input.hasOwnProperty('ActionCode'),
                     v = '',
                     rClass;
                 //dynamic
@@ -1472,6 +1588,10 @@ displays = $.extend(displays, {
                 if (input['Screen Object'] === 3) {
                     out = 'Animation';
                     v = 'image here';
+                }
+                if (isActionButton) {
+                    out = 'Action Button';
+                    v = input.Text;
                 }
                 //history report
                 if (input['Screen Object'] === 5) {
@@ -1582,6 +1702,7 @@ displays = $.extend(displays, {
                 return out;
             };
         });
+
         angular.bootstrap(document, ['displayApp']);
 
         displays.initAnimations();

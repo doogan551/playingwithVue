@@ -139,7 +139,7 @@ displays = $.extend(displays, {
             len =  localDisplay["Screen Objects"].length;
 
         for (i = 0; i < len; i++) {
-            screenObject = parseInt(localDisplay["Screen Objects"][i]["Screen Object"], 10)
+            screenObject = parseInt(localDisplay["Screen Objects"][i]["Screen Object"], 10);
             if (screenObject === 0) {  //dynamic
                 uiPrecision = localDisplay["Screen Objects"][i].uiPrecision;
                 localDisplay["Screen Objects"][i].Precision = "0." + uiPrecision;
@@ -224,12 +224,18 @@ displays = $.extend(displays, {
         }
     },
     syncRightPanel: function (obj) {
-
         var screenObject = obj['Screen Object'],
+            isActionButton = obj.hasOwnProperty('ActionCode'),
             fgColorPicker,
             $foregroundCustomColorPicker = $("#foregroundCustomColorPicker");
 
-        if (screenObject === 1 || screenObject === 2 || screenObject === 4) {
+        if (isActionButton) {
+            $('#actionButtonProps').show();
+        } else {
+            $('#actionButtonProps').hide();
+        }
+
+        if (screenObject === 1 || screenObject === 2 || isActionButton) {
             // delay = 500;
             // if ($('#rightPanel').hasClass('ui-panel-open')) {
             //     delay = 1;
@@ -272,9 +278,11 @@ displays = $.extend(displays, {
             $('#imgProps').hide();
         }
 
-        if (screenObject === 0 || screenObject === 1 || screenObject === 3) {
+        if (screenObject === 0 || screenObject === 1 || screenObject === 3 || isActionButton) {
             $('#dynamicProps').show();
-            $("#editItemPrecision").parent().css("width", "20%");
+            if (screenObject !== 4) {
+                $("#editItemPrecision").parent().css("width", "20%");
+            }
         } else {
             $('#dynamicProps').hide();
         }
@@ -343,7 +351,7 @@ displays = $.extend(displays, {
                     if (objs[c].upi) {
                         upiList.push(objs[c].upi);
                         if (objs[c].Precision) {
-                            objs[c].uiPrecision = parseInt(displays.getEditItemPrecision(objs[c].Precision));
+                            objs[c].uiPrecision = parseInt(displays.getEditItemPrecision(objs[c].Precision), 10);
                         }
                     }
                 }
@@ -374,11 +382,11 @@ displays = $.extend(displays, {
 
         function setScreenSize() {
             var adjustToWidth = (screen.width),
-                adjustToHeight = (screen.height * .9);
+                adjustToHeight = (screen.height * 0.9);
 
-            window.moveTo(0, (screen.height * .05));  // centering up window
+            window.moveTo(0, (screen.height * 0.05));  // centering up window
             window.resizeTo(adjustToWidth, adjustToHeight); // set window to % of screen res
-        };
+        }
 
         function handleDragStart(e) {
             displays.$scope.blur();
@@ -463,7 +471,7 @@ displays = $.extend(displays, {
         dBg.addEventListener('drop', handleDrop2, false);
 
         displays.mouseEvents();
-        setScreenSize();
+        // setScreenSize();
 
         bgColorpicker = new CustomColorsPicker($backgroundCustomColorPicker, display, display['Background Color'], 'Background Color');
         bgColorpicker.render();
@@ -511,7 +519,7 @@ displays = $.extend(displays, {
 
                         editItem.upi = pid;
                         displays.pushPointRef(pid, name, pointType, propertyName);
-                        editItem["Point Type"] = displays.workspaceManager.config.Enums['Point Types'][pointType].enum
+                        editItem["Point Type"] = displays.workspaceManager.config.Enums['Point Types'][pointType].enum;
                         displays.upiNames[pid] = displays.upiNames[pid] || name;
                         displays.updateEditItem(editItem);
                         displays.EditItemCtrl.$apply();
@@ -843,7 +851,7 @@ displays = $.extend(displays, {
 
         displayApp.controller('DisplayCtrl', function($scope, $http) {
             var $topBar = $(".topBar.ui-header"),
-                maxScrollPercentage = .25,
+                maxScrollPercentage = 0.25,
                 previousScrollValue = 0,
                 upiList = [],
                 filterms2rgb = function (input) {
@@ -1018,7 +1026,7 @@ displays = $.extend(displays, {
             $scope.dTop = (-1 * ($scope.display.Height / 2)) + $scope.panH;
             $scope.objs = $scope.display['Screen Objects'];
             $scope.openWindow = displays.openWindow;
-            $scope.serverImageBrowser = new diFileBrowser(),
+            $scope.serverImageBrowser = new diFileBrowser();
             displays.popUpWindowActive = false;
 
             $('#editDisplay').hide();
@@ -1047,7 +1055,7 @@ displays = $.extend(displays, {
                     previousScrollValue = parseInt(panH,10);
                 } else {
                     //event.preventDefault();
-                    $('#panh-slider').val(parseInt(previousScrollValue),10);
+                    $('#panh-slider').val(parseInt(previousScrollValue,10));
                 }
             });
 
@@ -1208,6 +1216,7 @@ displays = $.extend(displays, {
 
             $scope.addNewActionButton = function() {
                 var obj = {
+                    "ActionCode": "Analog Value Command",
                     "Animation File": "",
                     "Animation ID": 0,
                     "Background Color": 0,
@@ -1570,7 +1579,7 @@ displays = $.extend(displays, {
             };
 
             $scope.resetZoom = function() {
-                $('#zoom-slider').val(100).slider("refresh");;
+                $('#zoom-slider').val(100).slider("refresh");
                 updateZoom();
                 return false;
             };
