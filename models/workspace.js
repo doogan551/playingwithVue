@@ -23,6 +23,7 @@ module.exports = {
 
 		Utility.update(criteria, cb);
 	},
+
 	resetPassword: function(data, cb) {
 		var username = data.username;
 		var oldPass = data.oldPass;
