@@ -83,12 +83,20 @@ router.post('/lost-password', function(req, res, next) {
   });
 });
 // NOT CHECKED
-router.get('/reset-password', function(req, res, next) {
+router.post('/reset-password', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
-
-  return utils.sendResponse(res, {
-    err: 'Route not implemented.'
+  logger.info('reset password');
+  Workspace.resetPassword(data, function(err, result) {
+    if (err) {
+      return utils.sendResponse(res, {
+        err: err
+      });
+    } else {
+      return utils.sendResponse(res, {
+        message: 'success'
+      });
+    }
   });
 });
 // NOT CHECKED

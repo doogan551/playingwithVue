@@ -267,11 +267,6 @@ var dorsett = (function() {
                         'Group Admin': item['Group Admin']
                     };
                 }));
-                dorsett.editData['Password Reset'].subscribe(function(value) {
-                    if (!value) {
-                        dorsett.editData.Password('');
-                    }
-                });
             }
 
             dorsett.editData.isEditMode = ko.observable(false);
@@ -470,6 +465,7 @@ var dorsett = (function() {
             extractProperty.call(saveModel, 'Last Login Time');
             extractProperty.call(saveModel, 'Last Activity Time');
             saveModel['User Groups'] = extractProperty.call(saveModel, 'Groups');
+
             if (!!!saveModel._id) {
                 extractProperty.call(saveModel, '_id')
                 saveGraph = saveModel;

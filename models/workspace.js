@@ -1,6 +1,7 @@
 var bcrypt = require('bcrypt-nodejs');
 var Utility = require('../models/utility');
 var logger = require('../helpers/logger')(module);
+var utils = require('../helpers/utils');
 
 module.exports = {
 
@@ -25,7 +26,7 @@ module.exports = {
 	resetPassword: function(data, cb) {
 		var username = data.username;
 		var oldPass = data.oldPass;
-		var newPass = Utils.encrypt(data.newPass);
+		var newPass = utils.encrypt(data.newPass);
 
 		var criteria = {
 			collection: 'Users',
