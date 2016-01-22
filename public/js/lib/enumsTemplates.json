@@ -931,12 +931,15 @@
             "History": {
                 "enum": 1
             },
+            "Totalizer": {
+                "enum": 2
+            },
             "Involvement": {
-                "enum": 2,
+                "enum": 3,
                 "noninitializable": true
             },
             "Test": {
-                "enum": 3,
+                "enum": 4,
                 "noninitializable": true
             }
         },

@@ -377,7 +377,7 @@ var runBackUp = function(upis, limitRange, cb) {
 			limit: 0
 		};
 		Utility.get(criteria, function(err, points) {
-			console.log(err, points.length);
+			// JS console.log(err, points.length);
 			buildTimeRanges(points);
 		});
 
@@ -1204,21 +1204,26 @@ var fixResults = function(sResults, mResults, callback) {
 		return 0;
 	};
 	if (!!sResults.length) {
+		// JS logger.info("---- fixResults() --> sResults.length = " + sResults.length);
+		// JS logger.info("---- fixResults() --> sResults = " + JSON.stringify(sResults));
 		for (var a = 0; a < sResults.length; a++) {
 			var sResult = sResults[a];
-			for (var prop in sResult) {
-				var lc = prop.toLowerCase();
-				sResult[lc] = sResult[prop];
-				delete sResult[prop];
-			}
-			sResult.value = parseFloat(sResult.value);
-			sResult.Value = parseFloat(sResult.value);
-			for (m = 0; m < mResults.length; m++) {
-				if (sResult.timestamp === mResults[m].timestamp) {
-					sResult.value += parseFloat(mResults[m].Value);
-					sResult.upis++;
-					mResults.splice(m, 1);
-					m--;
+			if (!!sResult) {
+				// JS logger.info("---- fixResults() --> sResults[" + a + "] = " + sResult);
+				for (var prop in sResult) {
+					var lc = prop.toLowerCase();
+					sResult[lc] = sResult[prop];
+					delete sResult[prop];
+				}
+				sResult.value = parseFloat(sResult.value);
+				sResult.Value = parseFloat(sResult.value);
+				for (m = 0; m < mResults.length; m++) {
+					if (sResult.timestamp === mResults[m].timestamp) {
+						sResult.value += parseFloat(mResults[m].Value);
+						sResult.upis++;
+						mResults.splice(m, 1);
+						m--;
+					}
 				}
 			}
 		}
@@ -1851,10 +1856,10 @@ module.exports = historyModel = {
 		options.ops = [{
 			fx: (!!options.fx) ? options.fx : 'history match'
 		}];
-
+		// JS console.log('%%%%%%%%%%%', JSON.stringify(options));
 		getTables(options, function(err, tables) {
 			findInSql(options, tables, function(err, sResults) {
-				// console.log(err, sResults);
+				// JS console.log('***********', err, sResults);
 				fixResults(sResults || [], [], function(err, results) {
 					callback(err, results);
 				});

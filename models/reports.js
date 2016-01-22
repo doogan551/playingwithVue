@@ -242,7 +242,7 @@ module.exports = Rpt = {
                         callback(null);
                     }
                 }, function (err) {
-                    console.log("historySearch()", new Date() - start);
+                    // JS console.log("historySearch()", new Date() - start);
                     return cb(err, histPoints);
                 });
             });
@@ -281,36 +281,51 @@ module.exports = Rpt = {
         var reportConfig = data.reportConfig,
             checkForOldest = {},
             criteria = {},
-            endTime = data.endTime,
+            endTime = data.range.end,
             getNextOldest,
-            interval = data.interval,
+            interval = reportConfig.interval,
             returnLimit = (reportConfig.limit) ? reportConfig.limit : 200,
             noOlderTimes = [],
             offset = reportConfig.offset,
             returnObj = {},
             returnPoints = [],
             searchCriteria = {},
-            startTime = data.startTime,
+            startTime = data.range.start,
             timeSlotLimit = 200,
             timestamps,
             tooManyFlag = false,
             upis = data.upis,
+            justUpis = [],
+            i,
             qualityCodes = data.qualityCodes; // wrong way to access this
 
+        var makeTimestamps = function(timestampObjects){
+            var timestamps = timestampObjects.map(function(ts){
+                return ts.start;
+            });
+
+            return timestamps;
+        }
+
         logger.info(" - historyDataSearch() data: " + JSON.stringify(data));
-        for (var i = 0; i < upis.length; i++) {
+        for (i = 0; i < upis.length; i++) {
             if (upis[i] === 0) {
                 upis.splice(i, 1);
                 continue;
             }
             checkForOldest[upis[i]] = true;
         }
-        // make timestamps as normal then convert to new id. find all between min/max and any that match
-        timestamps = buildTimestamps(startTime, endTime, interval, offset);
 
+        justUpis = upis.map(function (res) {
+           return res.upi;
+        });
+
+        // make timestamps as normal then convert to new id. find all between min/max and any that match
+        //timestamps = buildTimestamps(startTime, endTime, interval, offset);
+        timestamps = makeTimestamps(buildIntervals(data.range, interval));
         searchCriteria = {
             upi: {
-                $in: upis
+                $in: justUpis
             },
             timestamp: {
                 $in: timestamps
@@ -329,8 +344,8 @@ module.exports = Rpt = {
         // find points in points collection to get name and valueoptions if needed
         criteria = {
             query: {
-                upi: {
-                    $in: upis
+                _id: {
+                    $in: justUpis
                 }
             },
             collection: 'points'
@@ -354,7 +369,7 @@ module.exports = Rpt = {
                     return cb(err, null);
                 }
                 History.findHistory({
-                    upis: upis,
+                    upis: justUpis,
                     range: {
                         start: startTime,
                         end: endTime
@@ -375,13 +390,14 @@ module.exports = Rpt = {
                         }
                     }
                     histPoints = results;
+
                     async.eachSeries(timestamps.reverse(), function (ts, callback1) {
                             //convert id to ts and upi
                             returnObj = {
                                 timestamp: ts,
                                 HistoryResults: []
                             };
-                            async.eachSeries(upis, function (upi, callback2) {
+                            async.eachSeries(justUpis, function (upi, callback2) {
                                 if (noOlderTimes.indexOf(upi) !== -1) {
                                     for (var x = 0; x < points.length; x++) {
                                         if (points[x]._id === upi)
@@ -985,9 +1001,11 @@ module.exports = Rpt = {
         });
     },
     totalizerReport: function(data, cb) {
-        var points = data.points;
+        logger.info(" -- - --  totalizerReport()  data = " + JSON.stringify(data));
+        var points = data.upis;
+        var reportConfig = data.reportConfig;
         var range = data.range;
-        var interval = data.interval;
+        var interval = reportConfig.interval;
 
         var compare = function(a, b) {
             return a.timestamp - b.timestamp;
@@ -1076,7 +1094,13 @@ module.exports = Rpt = {
 
         var findTotal = function(initial, history) {
             var totals = [];
-            var value = (initial.Value > history[0].Value) ? 0 : history[0].Value - initial.Value;
+            // JS console.log("initial = " + initial + "  history[0] = " + history[0]);
+            var value = 0;
+            if(!!history.length && !!initial){
+                value = (initial.Value > history[0].Value) ? 0 : history[0].Value - initial.Value;
+            }else {
+                value = 0;
+            }
 
             intervals.forEach(function(interval, index) {
                 var total = 0;
@@ -1110,33 +1134,6 @@ module.exports = Rpt = {
             });
 
             return totals;
-        };
-
-        var buildIntervals = function(range, interval) {
-            var intervalRanges = [];
-            var intervalStart;
-            var intervalEnd;
-            var fixLongerInterval = function() {
-                if (intervalEnd > range.end && intervalStart < range.end) {
-                    intervalEnd = range.end;
-                }
-            };
-
-            intervalStart = moment.unix(range.start).unix();
-            intervalEnd = moment.unix(range.start).add(interval, 'minutes').unix();
-            fixLongerInterval();
-
-            while (intervalEnd <= range.end) {
-                intervalRanges.push({
-                    start: intervalStart,
-                    end: intervalEnd
-                });
-                intervalStart = moment.unix(intervalStart).add(interval, 'minutes').unix();
-                intervalEnd = moment.unix(intervalEnd).add(interval, 'minutes').unix();
-                fixLongerInterval();
-            }
-
-            return intervalRanges;
         };
 
 
@@ -1248,6 +1245,33 @@ module.exports = Rpt = {
         });
 
     }
+};
+
+var buildIntervals = function(range, interval) {
+    var intervalRanges = [];
+    var intervalStart;
+    var intervalEnd;
+    var fixLongerInterval = function() {
+        if (intervalEnd > range.end && intervalStart < range.end) {
+            intervalEnd = range.end;
+        }
+    };
+
+    intervalStart = moment.unix(range.start).unix();
+    intervalEnd = moment.unix(range.start).add(interval, 'minutes').unix();
+    fixLongerInterval();
+
+    while (intervalEnd <= range.end) {
+        intervalRanges.push({
+            start: intervalStart,
+            end: intervalEnd
+        });
+        intervalStart = moment.unix(intervalStart).add(interval, 'minutes').unix();
+        intervalEnd = moment.unix(intervalEnd).add(interval, 'minutes').unix();
+        fixLongerInterval();
+    }
+
+    return intervalRanges;
 };
 
 var buildPointRef = function (key, regex) {
