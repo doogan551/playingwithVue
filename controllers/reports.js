@@ -227,6 +227,9 @@ var reportMainCallback = function(res, err, locals, result) {
           case "History":
             res.render('reports/index');
             break;
+          case "Totalizer":
+            res.render('reports/index');
+            break;
             //case "Point Involvement":
             //    res.render('reports/cannedReports/pointInvolvement');
             //    break;

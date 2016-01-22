@@ -63,6 +63,20 @@ block content
                                                                                 a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
                                                                             // /ko
                                                                     // /ko
+                                                                // ko if: ($parent.reportType === 'Totalizer')
+                                                                td.totalizerOperator
+                                                                    .dropdown.availableTotalizerOperatorsContainer
+                                                                        button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
+                                                                            span(data-bind="text: operator")
+                                                                            span.caret.lm10px
+                                                                        ul.enumoperators.dropdown-menu
+                                                                            li
+                                                                                a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $index(), 'Starts') }") Starts
+                                                                            li
+                                                                                a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $index(), 'Runtime') }") Runtime
+                                                                            li
+                                                                                a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $index(), 'Total') }") Total
+                                                                // /ko
                                                                 td.removecolumn
                                                                     a.span.removerow(data-bind="click: $parent.deleteColumnRow") Remove
                                                         tbody.showInEdit
