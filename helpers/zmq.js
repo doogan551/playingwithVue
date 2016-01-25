@@ -13,20 +13,16 @@ module.exports.sendMessage = function(msg, callback) {
   zmqConn.send(msg);
 
   zmqConn.on('message', function(data) {
-    if (data.toString() !== 'Done') {
       logger.info(data.toString());
       data = JSON.parse(data.toString());
       if (data.hasOwnProperty('err') && data.err !== 0 && data.err !== null) {
 
         console.timeEnd('test');
-        callback(data.err, null);
+        return callback(data.err, null);
       } else if (!data.DEBUG) {
         console.timeEnd('test');
-        callback(null, data);
+        return callback(null, data);
       }
-    } else {
-      callback(null, 'done');
-    }
   });
 };
 
