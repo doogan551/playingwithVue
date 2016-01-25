@@ -3,13 +3,13 @@ var moment = require('moment');
 var Utility = require('../models/utility');
 var History = require('../models/history');
 var utils = require('../helpers/utils.js');
-var historyCollection = utils.CONSTANTS("HISTORYCOLLECTION");  // points to "historydata"
+var historyCollection = utils.CONSTANTS("HISTORYCOLLECTION"); // points to "historydata"
 var Config = require('../public/js/lib/config');
 var logger = require('../helpers/logger')(module);
 
 module.exports = Rpt = {
 
-    getMRT: function (data, cb) {
+    getMRT: function(data, cb) {
         var criteria = {
             query: {
                 _id: utils.converters.convertType(data.id)
@@ -20,7 +20,7 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.get(criteria, function (err, result) {
+        Utility.get(criteria, function(err, result) {
             if (!err) {
                 if (!result) {
                     return cb("No mrt file found");
@@ -34,7 +34,7 @@ module.exports = Rpt = {
             }
         });
     },
-    saveMRT: function (data, cb) {
+    saveMRT: function(data, cb) {
         var criteria = {
             collection: 'points',
             query: {
@@ -47,7 +47,7 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.update(criteria, function (err, result) {
+        Utility.update(criteria, function(err, result) {
 
             if (!err) {
                 return cb(null, {
@@ -59,7 +59,7 @@ module.exports = Rpt = {
                 return cb(err);
         });
     },
-    saveSVG: function (data, cb) {
+    saveSVG: function(data, cb) {
         var criteria = {
             collection: 'points',
             query: {
@@ -72,7 +72,7 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.update(criteria, function (err, result) {
+        Utility.update(criteria, function(err, result) {
 
             if (!err) {
                 return cb(null, {
@@ -83,7 +83,7 @@ module.exports = Rpt = {
             }
         });
     },
-    saveReport: function (data, cb) {
+    saveReport: function(data, cb) {
         var criteria = {
             collection: 'points',
             query: {
@@ -96,7 +96,7 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.get(criteria, function (err, result) {
+        Utility.get(criteria, function(err, result) {
             if (!err) {
                 return cb(null, {
                     data: "Data has been saved successfully!!!"
@@ -106,7 +106,7 @@ module.exports = Rpt = {
             }
         });
     },
-    getSVG: function (data, cb) {
+    getSVG: function(data, cb) {
         var criteria = {
             query: {
                 _id: utils.converters.convertType(data.id)
@@ -117,7 +117,7 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.get(criteria, function (err, result) {
+        Utility.get(criteria, function(err, result) {
             if (!err) {
                 return cb(null, result.SVGData);
             } else {
@@ -125,7 +125,7 @@ module.exports = Rpt = {
             }
         });
     },
-    getHistoryPoints: function (data, cb) {
+    getHistoryPoints: function(data, cb) {
         var criteria = {
             query: {},
             collection: 'historydata',
@@ -135,7 +135,7 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.get(criteria, function (err, result) {
+        Utility.get(criteria, function(err, result) {
             if (!err) {
                 if (!result) {
                     return cb("No results found");
@@ -147,7 +147,7 @@ module.exports = Rpt = {
                 return cb(err);
         });
     },
-    historySearch: function (data, cb) {
+    historySearch: function(data, cb) {
         var startTime = data.startTime;
         var endTime = data.endTime;
 
@@ -166,7 +166,7 @@ module.exports = Rpt = {
             }
         };
 
-        Utility.get(criteria, function (err, points) {
+        Utility.get(criteria, function(err, points) {
 
             criteria = {
                 query: [{
@@ -204,14 +204,14 @@ module.exports = Rpt = {
                 collection: 'historydata'
             };
 
-            Utility.aggregate(criteria, function (err, histPoints) {
+            Utility.aggregate(criteria, function(err, histPoints) {
                 if (err)
                     return cb(err);
 
                 for (var a = 0; a < histPoints.length; a++) {
 
                 }
-                async.eachSeries(histPoints, function (historyPoint, callback) {
+                async.eachSeries(histPoints, function(historyPoint, callback) {
 
                     if (historyPoint.data[historyPoint.data.length - 1].timestamp !== startTime) {
                         criteria = {
@@ -232,7 +232,7 @@ module.exports = Rpt = {
                             }
                         };
 
-                        Utility.get(criteria, function (err, nextOldest) {
+                        Utility.get(criteria, function(err, nextOldest) {
                             historyPoint.data.push(nextOldest);
                             fixHistoryData(historyPoint, points);
                             callback(err);
@@ -241,7 +241,7 @@ module.exports = Rpt = {
                         fixHistoryData(historyPoint, points);
                         callback(null);
                     }
-                }, function (err) {
+                }, function(err) {
                     // JS console.log("historySearch()", new Date() - start);
                     return cb(err, histPoints);
                 });
@@ -277,7 +277,7 @@ module.exports = Rpt = {
             return;
         }
     },
-    historyDataSearch: function (data, cb) {
+    historyDataSearch: function(data, cb) {
         var reportConfig = data.reportConfig,
             checkForOldest = {},
             criteria = {},
@@ -299,13 +299,13 @@ module.exports = Rpt = {
             i,
             qualityCodes = data.qualityCodes; // wrong way to access this
 
-        var makeTimestamps = function(timestampObjects){
-            var timestamps = timestampObjects.map(function(ts){
+        var makeTimestamps = function(timestampObjects) {
+            var timestamps = timestampObjects.map(function(ts) {
                 return ts.start;
             });
 
             return timestamps;
-        }
+        };
 
         logger.info(" - historyDataSearch() data: " + JSON.stringify(data));
         for (i = 0; i < upis.length; i++) {
@@ -316,8 +316,8 @@ module.exports = Rpt = {
             checkForOldest[upis[i]] = true;
         }
 
-        justUpis = upis.map(function (res) {
-           return res.upi;
+        justUpis = upis.map(function(res) {
+            return res.upi;
         });
 
         // make timestamps as normal then convert to new id. find all between min/max and any that match
@@ -353,7 +353,7 @@ module.exports = Rpt = {
         logger.info("---------");
         logger.info(" - historyDataSearch() criteria = " + JSON.stringify(criteria));
         logger.info("---------");
-        Utility.get(criteria, function (err, points) {
+        Utility.get(criteria, function(err, points) {
             if (err)
                 return cb(err, null);
 
@@ -364,7 +364,7 @@ module.exports = Rpt = {
                     timestamp: 1
                 }
             };
-            Utility.get(criteria, function (err, histPoints) {
+            Utility.get(criteria, function(err, histPoints) {
                 if (err) {
                     return cb(err, null);
                 }
@@ -375,7 +375,7 @@ module.exports = Rpt = {
                         end: endTime
                     },
                     timestamps: timestamps
-                }, function (err, results) {
+                }, function(err, results) {
                     for (var h = 0; h < histPoints.length; h++) {
                         var hadTS = false;
                         for (var r = 0; r < results.length; r++) {
@@ -391,13 +391,13 @@ module.exports = Rpt = {
                     }
                     histPoints = results;
 
-                    async.eachSeries(timestamps.reverse(), function (ts, callback1) {
+                    async.eachSeries(timestamps.reverse(), function(ts, callback1) {
                             //convert id to ts and upi
                             returnObj = {
                                 timestamp: ts,
                                 HistoryResults: []
                             };
-                            async.eachSeries(justUpis, function (upi, callback2) {
+                            async.eachSeries(justUpis, function(upi, callback2) {
                                 if (noOlderTimes.indexOf(upi) !== -1) {
                                     for (var x = 0; x < points.length; x++) {
                                         if (points[x]._id === upi)
@@ -435,13 +435,13 @@ module.exports = Rpt = {
                                             },
                                             limit: 1
                                         };
-                                        Utility.get(criteria, function (err, nextOldest) {
+                                        Utility.get(criteria, function(err, nextOldest) {
                                             History.findLatest({
                                                 upis: [upi],
                                                 range: {
                                                     end: ts
                                                 }
-                                            }, function (err, results) {
+                                            }, function(err, results) {
                                                 if (!!results.length) {
                                                     if ((!!nextOldest.length && nextOldest[0].timestamp < results[0].timestamp) || !nextOldest.length) {
                                                         nextOldest = results;
@@ -470,10 +470,10 @@ module.exports = Rpt = {
                                         callback2(null);
                                     }
                                 }
-                            }, function (err) {
+                            }, function(err) {
                                 returnPoints.push(returnObj);
                                 if (returnPoints.length % 500 === 0) {
-                                    setTimeout(function () {
+                                    setTimeout(function() {
                                         callback1(err);
                                     }, 0);
                                 } else {
@@ -481,7 +481,7 @@ module.exports = Rpt = {
                                 }
                             });
                         },
-                        function (err) {
+                        function(err) {
                             return cb(err, {
                                 truncated: tooManyFlag,
                                 historyData: returnPoints.reverse()
@@ -553,21 +553,21 @@ module.exports = Rpt = {
             interval = (interval) ? parseInt(interval, 10) : 0;
 
             switch (interval) {
-                case 0:     //minute
+                case 0: //minute
                     timestampInterval = minute * offset;
                     break;
-                case 1:     //hour
+                case 1: //hour
                     timestampInterval = hour * offset;
                     break;
-                case 2:     //day
+                case 2: //day
                     timestampInterval = day * offset;
                     break;
-                case 3:     //week
+                case 3: //week
                     timestampInterval = week * offset;
                     break;
-                case 4:     // month
+                case 4: // month
                     break;
-                case 5:     // year
+                case 5: // year
                     break;
                 default:
                     logger.info(" - - - - - - - - interval is DEFAULT");
@@ -615,7 +615,7 @@ module.exports = Rpt = {
             return timestamps;
         }
     },
-    reportMain: function (data, cb) {
+    reportMain: function(data, cb) {
         var criteria = {
             query: {
                 _id: utils.converters.convertType(data.id)
@@ -623,7 +623,7 @@ module.exports = Rpt = {
             collection: 'points'
         };
 
-        Utility.getOne(criteria, function (err, result) {
+        Utility.getOne(criteria, function(err, result) {
             if (err) {
                 return cb(err);
             } else {
@@ -640,7 +640,7 @@ module.exports = Rpt = {
             }
         });
     },
-    reportSearch: function (data, cb) {
+    reportSearch: function(data, cb) {
         logger.info("- - - reportSearch() called");
         var reportConfig = data.reportConfig,
             reportType = data.reportType,
@@ -657,7 +657,7 @@ module.exports = Rpt = {
             nameQuery,
             $or = [],
             returnLimit = utils.converters.convertType(reportConfig.returnLimit),
-            parseNameField = function (paramsField, fieldName) {
+            parseNameField = function(paramsField, fieldName) {
                 var parsedNameField = {};
                 if (paramsField !== null && paramsField !== undefined) {
                     parsedNameField[fieldName] = {
@@ -726,7 +726,7 @@ module.exports = Rpt = {
             fields: fields
         };
 
-        Utility.get(criteria, function (err, docs) {
+        Utility.get(criteria, function(err, docs) {
 
             if (err) {
                 return cb(err);
@@ -745,7 +745,7 @@ module.exports = Rpt = {
             return cb(null, docs);
         });
     },
-    collectFilters: function (theFilters) {
+    collectFilters: function(theFilters) {
         var grouping = "$and",
             currentFilter,
             localSearchCriteria = {},
@@ -754,7 +754,7 @@ module.exports = Rpt = {
             expressions = [],
             currentIndex = 0,
             numberOfFilters = theFilters.length,
-            groupLogic = function (logicType) {
+            groupLogic = function(logicType) {
                 var group = [],
                     sameGroup = true;
 
@@ -804,7 +804,9 @@ module.exports = Rpt = {
         }
 
         if (andExpressions.length > 0) {
-            localSearchCriteria.$or = localSearchCriteria.$or.concat({$and : andExpressions});
+            localSearchCriteria.$or = localSearchCriteria.$or.concat({
+                $and: andExpressions
+            });
         }
 
         if (orExpressions.length > 0) {
@@ -814,7 +816,7 @@ module.exports = Rpt = {
         //logger.info(" - - collectFilter  localSearchCriteria = " + JSON.stringify(localSearchCriteria));
         return localSearchCriteria;
     },
-    collectFilter: function (filter) {
+    collectFilter: function(filter) {
         var searchQuery = {},
             key = filter.column,
             filterValueType = Config.Enums["Properties"][key].valueType;
@@ -903,7 +905,7 @@ module.exports = Rpt = {
                     } else {
                         searchQuery[propertyCheckForValue(key)] = {
                             $regex: '(?i)^(?!' + filter.value + ")"
-                            //$ne: utils.converters.convertType(filter.value, filterValueType)
+                                //$ne: utils.converters.convertType(filter.value, filterValueType)
                         };
                     }
                     break;
@@ -962,7 +964,7 @@ module.exports = Rpt = {
         }
         return searchQuery;
     },
-    groupOrExpression: function (listOfExpressions) {
+    groupOrExpression: function(listOfExpressions) {
         var concatJSON = {},
             tempObj = {},
             i;
@@ -977,7 +979,7 @@ module.exports = Rpt = {
         }
         return concatJSON;
     },
-    pointInvolvement: function (data, cb) {
+    pointInvolvement: function(data, cb) {
         var criteria = {
             query: {
                 "Name": "Point Involvement"
@@ -985,7 +987,7 @@ module.exports = Rpt = {
             collection: 'CannedReports'
         };
 
-        Utility.getOne(criteria, function (err, result) {
+        Utility.getOne(criteria, function(err, result) {
             if (err) {
                 return cb(err);
             } else {
@@ -1001,7 +1003,6 @@ module.exports = Rpt = {
         });
     },
     totalizerReport: function(data, cb) {
-        logger.info(" -- - --  totalizerReport()  data = " + JSON.stringify(data));
         var points = data.upis;
         var reportConfig = data.reportConfig;
         var range = data.range;
@@ -1050,35 +1051,39 @@ module.exports = Rpt = {
             var previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
 
             intervals.forEach(function(interval, index) {
-
+                formatRange(interval);
                 var runtime = 0;
                 var now = moment().unix();
-                var intervalLonger =  now < interval.end;
+                var intervalLonger = now < interval.end;
                 var start = interval.start;
                 var end = (!!intervalLonger) ? now : interval.end;
 
                 var matches = history.filter(function(data) {
                     return data.timestamp > start && data.timestamp <= end;
                 });
-
                 if (!!matches.length) {
                     for (var i = 0; i < matches.length; i++) {
-                        if (previousValue !== 0 && matches[i].Value === 0) {
+                        var currentValue = matches[i].Value;
+                        if (previousValue !== 0 && currentValue === 0) {
                             runtime += matches[i].timestamp - start;
-                        } else if (i === (matches.length - 1) && matches[i].Value !== 0) {
-                            runtime += end - start;
+                        } else if (i === (matches.length - 1)) {
+                            if (previousValue === 0 && currentValue !== 0) {
+                                runtime = end - matches[i].timestamp;
+                            } else if (previousValue !== 0 && currentValue === 0) {
+                                runtime = matches[i].timestamp - start;
+                            } else if (previousValue !== 0 && currentValue !== 0) {
+                                runtime = end - start;
+                            }
                         }
-                        if (previousValue === 0 && matches[i].Value !== 0) {
+                        if (previousValue === 0 && currentValue !== 0) {
                             start = matches[i].timestamp;
                         }
-                        previousValue = matches[i].Value;
+                        previousValue = currentValue;
                     }
                 } else if (previousValue !== 0) {
-                    if (start < now && now <= end) {
-                        runtime = end - start;
-                    } else {
-                        runtime = 0;
-                    }
+                    runtime = end - start;
+                } else {
+                    runtime = 0;
                 }
 
                 var result = {
@@ -1094,14 +1099,13 @@ module.exports = Rpt = {
 
         var findTotal = function(initial, history) {
             var totals = [];
-            // JS console.log("initial = " + initial + "  history[0] = " + history[0]);
             var value = 0;
-            if(!!history.length && !!initial){
+
+            if (!!history.length && !!initial) {
                 value = (initial.Value > history[0].Value) ? 0 : history[0].Value - initial.Value;
-            }else {
+            } else {
                 value = 0;
             }
-
             intervals.forEach(function(interval, index) {
                 var total = 0;
                 var start = interval.start;
@@ -1122,6 +1126,7 @@ module.exports = Rpt = {
                         total += value;
                     }
                 }
+
                 var result = {
                     total: total,
                     range: {
@@ -1274,7 +1279,7 @@ var buildIntervals = function(range, interval) {
     return intervalRanges;
 };
 
-var buildPointRef = function (key, regex) {
+var buildPointRef = function(key, regex) {
     return {
         "Point Refs": {
             $elemMatch: {
@@ -1285,7 +1290,7 @@ var buildPointRef = function (key, regex) {
     };
 };
 
-var propertyCheckForValue = function (prop) {
+var propertyCheckForValue = function(prop) {
     if (prop.match(/^name/i) !== null) {
         return prop;
     } else {
@@ -1293,7 +1298,7 @@ var propertyCheckForValue = function (prop) {
     }
 };
 
-var getPoints = function (pointsCol, cb) {
+var getPoints = function(pointsCol, cb) {
     var criteria = {
         query: {
             _id: {

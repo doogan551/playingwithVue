@@ -586,21 +586,28 @@ function testTotalizerModel() {
   var Reports = require('../models/reports');
 
   var data = {
-    points: [/*{
-      'upi': 28366,
-      'op': 'starts'  // BI, BO, BV
-    },*/ {
-      'upi': 28366,
-      'op': 'runtime'  // BI, BO, BV
-    }/*, {
-      'upi': 2813,
-      'op': 'total' // All other types
-    }*/],
+    upis: [
+      /*{
+            'upi': 28366,
+            'op': 'starts'  // BI, BO, BV
+          },*/
+      {
+        'upi': 2813,
+        'op': 'total' // BI, BO, BV
+      }
+      /*, {
+            'upi': 2813,
+            'op': 'total' // All other types
+          }*/
+    ],
     range: {
-      'start': 1453233600,
-      'end': 1453240800
+      'start': 1453352400,
+      'end': 1453356000
     },
-    interval: 60 // time in minutes
+    "reportConfig": {
+      "returnLimit": 200,
+      "interval": 60
+    }
   };
   db.connect(connectionString.join(''), function(err) {
     Reports.totalizerReport(data, function(err, result) {
