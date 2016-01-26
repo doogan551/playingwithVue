@@ -193,48 +193,16 @@ function addProperties() {
 // addProperties();
 
 function testTwilio() {
-  var client = require('twilio')('AC197afc3a1bff2117f0ce2b26becd96e7', 'e0a0537c16e912d59166f5777c2beef7');
+  var Twilio = require('../models/twilio');
+  var Plivo = require('../models/plivo');
+  var Notifications = require('../models/notifications');
+  var notifications = new Notifications();
 
-  var sendText = function() {
-    client.sendMessage({
-
-      to: '+13364694547', // Any number Twilio can deliver to
-      from: '+13367702400', // A number you bought from Twilio and can use for outbound communication
-      body: 'Today\'s date is ' + moment().format('MM/DD/YYYY') // body of the SMS message
-
-    }, function(err, responseData) { //this function is executed when a response is received from Twilio
-
-      if (!err) { // "err" is an error received during the request, if any
-        console.log(responseData.from); // outputs "+14506667788"
-        console.log(responseData.body); // outputs "word to your mother."
-
-      } else {
-        console.log(err);
-      }
-    });
-  };
-
-  var sendVoice = function() {
-    var msg = 'Johnny Roberts is a girl'.split(' ').join('+');
-    var url = 'http://twimlets.com/echo?Twiml=%3CResponse%3E%3CSay%3E' + msg + '%3C%2FSay%3E%3C%2FResponse%3E';
-    console.log(url);
-    client.makeCall({
-
-      to: '+13364694547', // Any number Twilio can call
-      from: '+13367702400', // A number you bought from Twilio and can use for outbound communication
-      url: url // A URL that produces an XML document (TwiML) which contains instructions for the call
-
-    }, function(err, responseData) {
-      console.log(err);
-      //executed when the call has been initiated.
-      console.log(responseData.from); // outputs "+14506667788"
-
-    });
-  };
-  sendText();
-
+  notifications.testText('13364694547', 'helllllllo', function(err, response) {
+    
+  });
 }
-// testTwilio();
+testTwilio();
 
 function updateGPL() {
   var count = 0;
@@ -615,4 +583,4 @@ function testTotalizerModel() {
     });
   });
 }
-testTotalizerModel();
+// testTotalizerModel();

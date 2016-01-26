@@ -45,6 +45,7 @@
     "passport-local": "^1.0.0",
     "passport.socketio": "^3.5.1",
     "pg": "^4.3.0",
+    "plivo": "^0.3.3",
     "redis": "^0.12.1",
     "regression": "^1.2.1",
     "rimraf": "^2.3.4",
