@@ -4,9 +4,8 @@ var authId = config.get('Plivo').authId;
 var authToken = config.get('Plivo').authToken;
 var src = config.get('Plivo').phoneNumber;
 
-var Notifications = require('./notifications');
-var notifications = new Notifications();
-
+var NotifierUtility = require('./notifierutility');
+var notifierUtility = new NotifierUtility();
 
 var client = plivo.RestAPI({
   authId: authId,
@@ -15,7 +14,7 @@ var client = plivo.RestAPI({
 
 module.exports = {
   sendText: function(toNumber, message, cb) {
-    toNumber = notifications.fixPhoneNumbers(toNumber, 'Plivo');
+    toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Plivo');
 
     var params = {
       src: src,
@@ -24,12 +23,20 @@ module.exports = {
       method: 'GET'
     };
 
-    client.send_message(params, cb);
+    client.send_message(params, function(code, response) {
+      var err = null;
+      if (code >= 400) {
+        err = {
+          code: code
+        };
+      }
+      return cb(err, response);
+    });
   },
 
   sendVoice: function(toNumber, message, cb) {
-    toNumber = notifications.fixPhoneNumbers(toNumber, 'Plivo');
-    var url = notifications.buildVoiceUrl(message, 'Plivo');
+    toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Plivo');
+    var url = notifierUtility.buildVoiceUrl(message, 'Plivo');
 
     var params = {
       from: src,
@@ -38,6 +45,14 @@ module.exports = {
       answer_method: 'GET'
     };
 
-    client.make_call(params, cb);
+    client.make_call(params, function(code, response) {
+      var err = null;
+      if (code >= 400) {
+        err = {
+          code: code
+        };
+      }
+      return cb(err, response);
+    });
   }
 };

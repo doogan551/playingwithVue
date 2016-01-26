@@ -5,12 +5,12 @@ var from = config.get('Twilio').phoneNumber;
 
 var client = require('twilio')(accountSid, authToken);
 
-var Notifications = require('./notifications');
-var notifications = new Notifications();
+var NotifierUtility = require('./notifierutility');
+var notifierUtility = new NotifierUtility();
 
 module.exports = {
   sendText: function(toNumber, message, cb) {
-    toNumber = notifications.fixPhoneNumbers(toNumber, 'Twilio');
+    toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Twilio');
 
     client.sendMessage({
       to: toNumber,
@@ -20,8 +20,8 @@ module.exports = {
   },
 
   sendVoice: function(toNumber, message, cb) {
-    toNumber = notifications.fixPhoneNumbers(toNumber, 'Twilio');
-    var url = notifications.buildVoiceUrl(message, 'Twilio');
+    toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Twilio');
+    var url = notifierUtility.buildVoiceUrl(message, 'Twilio');
 
     client.makeCall({
       to: toNumber,

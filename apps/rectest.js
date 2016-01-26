@@ -192,13 +192,11 @@ function addProperties() {
 // addProperties();
 
 function testTwilio() {
-  var Twilio = require('../models/twilio');
-  var Plivo = require('../models/plivo');
-  var Notifications = require('../models/notifications');
-  var notifications = new Notifications();
+  var NotifierUtility = require('../models/notifierutility');
+  var notifierUtility = new NotifierUtility();
 
-  notifications.testText('13364694547', 'helllllllo', function(err, response) {
-    
+  notifierUtility.sendVoice('13364694547', 'asafsadfafasfawf asfsaf wef wafasf', function(err, response) {
+    console.log(err, response);
   });
 }
 testTwilio();
