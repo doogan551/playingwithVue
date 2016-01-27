@@ -283,10 +283,10 @@ module.exports = Rpt = {
             criteria = {},
             endTime = data.range.end,
             getNextOldest,
-            interval = reportConfig.interval,
+            interval = reportConfig.intervalType.value,
             returnLimit = (reportConfig.limit) ? reportConfig.limit : 200,
             noOlderTimes = [],
-            offset = reportConfig.offset,
+            offset = reportConfig.intervalOffset,
             returnObj = {},
             returnPoints = [],
             searchCriteria = {},
@@ -1006,7 +1006,8 @@ module.exports = Rpt = {
         var points = data.upis;
         var reportConfig = data.reportConfig;
         var range = data.range;
-        var interval = reportConfig.interval;
+        var interval = reportConfig.intervalType.value;
+        var offset = reportConfig.intervalOffset;
 
         var compare = function(a, b) {
             return a.timestamp - b.timestamp;
