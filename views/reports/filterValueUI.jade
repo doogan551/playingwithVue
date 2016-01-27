@@ -29,13 +29,13 @@ input.input.form-control.filterContainer(data-bind="value: value", type="text", 
 // ko if: (valueType === "Bool")
 .dropdown.availablefilterValues
    button.btn.btn-default.dropdown-toggle.filterValueButton(data-toggle="dropdown")
-      span(data-bind="text: value")
+      span(data-bind="text: $root.displayBool(value)")
       span.caret.lm10px
    ul.filterValues.dropdown-menu
       li
-         a.filterContainer(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'True') }, text: 'True'", required)
+         a.filterContainer(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'True') }, text: 'On'", required)
       li
-         a.filterContainer(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'False') }, text: 'False'", required)
+         a.filterContainer(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'False') }, text: 'Off'", required)
 // /ko
 // ko if: (valueType === "MinSec")
 input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
