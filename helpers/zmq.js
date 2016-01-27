@@ -1,4 +1,4 @@
-/*var config = require('config');
+var config = require('config');
 var zmq = require('zmq');
 var uuid = require('node-uuid');
 
@@ -13,7 +13,7 @@ module.exports.sendMessage = function(msg, callback) {
   zmqConn.send(msg);
 
   zmqConn.on('message', function(data) {
-      logger.info(data.toString());
+      // logger.info(data.toString());
       data = JSON.parse(data.toString());
       if (data.hasOwnProperty('err') && data.err !== 0 && data.err !== null) {
 
@@ -32,4 +32,4 @@ function makeZMQConn(sockType, idPrefix, addr, bindSyncOrConnect) {
   // call the function name in bindSyncOrConnect
   sock[bindSyncOrConnect](addr);
   return sock;
-}*/
+}

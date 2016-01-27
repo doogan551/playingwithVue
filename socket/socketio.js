@@ -238,15 +238,15 @@ module.exports = function socketio(_common) {
         }, function(err, result) {});
       }
 
-      /*zmq.sendMessage(data, function(err, msg) {
+      zmq.sendMessage(data, function(err, msg) {
         if (err) {
           sock.emit('returnFromField', {err:err});
         } else {
           sock.emit('returnFromField', msg);
         }
-      });*/
+      });
 
-      cppApi.command(data, function(err, msg) {
+      /*cppApi.command(data, function(err, msg) {
 
         if (err !== 0 && err !== null) {
           error = JSON.parse(err);
@@ -257,7 +257,7 @@ module.exports = function socketio(_common) {
         } else {
           sock.emit('returnFromField', msg);
         }
-      });
+      });*/
     });
     // Checked
     sock.on('firmwareLoader', function(data) {
