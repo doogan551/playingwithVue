@@ -1093,6 +1093,10 @@ function updateGPLBlocks(point, callback) {
 			}
 		}
 
+		if(point['Shutdown Point'].Value === 0){
+			point['Shutdown Control'].Value = true;
+		}
+
 		switch (point["Point Type"].Value) {
 			case 'Proportional':
 			case 'Binary Selector':
