@@ -7,13 +7,13 @@ var logger = require('./logger')(module);
 var zmqConfig = config.get('Infoscan.zmqConfig');
 var zmqString = zmqConfig.protocol + '://' + zmqConfig.server + ':' + zmqConfig.port;
 
-module.exports.sendMessage = function(msg, callback) {
+module.exports.sendCommand = function(msg, callback) {
   var zmqConn = makeZMQConn('dealer', 'client', zmqString, 'connect');
   console.time('test');
   zmqConn.send(msg);
 
   zmqConn.on('message', function(data) {
-      // logger.info(data.toString());
+      logger.info(data.toString());
       data = JSON.parse(data.toString());
       if (data.hasOwnProperty('err') && data.err !== 0 && data.err !== null) {
 

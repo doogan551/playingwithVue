@@ -198,12 +198,12 @@ module.exports = function socketio(_common) {
             }
 
           }
-        } else if(logData.point['Point Type'].eValue == 128){
+        } else if (logData.point['Point Type'].eValue == 128) {
           logData.newValue = {
             Value: jsonData.logData.newValue.Value
           };
           logData.log = 'Value reset to ' + logData.newValue.Value;
-        }else {
+        } else {
           for (i = 0; i < controllerPriorities.length; i++) {
             if (controllerPriorities[i]["Priority Level"] === jsonData.Priority) {
               logData.log = "Control relinquished at priority " + controllerPriorities[i]["Priority Text"];
@@ -238,9 +238,11 @@ module.exports = function socketio(_common) {
         }, function(err, result) {});
       }
 
-      zmq.sendMessage(data, function(err, msg) {
-        if (err) {
-          sock.emit('returnFromField', {err:err});
+      zmq.sendCommand(data, function(err, msg) {
+        if (!!err) {
+          sock.emit('returnFromField', {
+            err: err
+          });
         } else {
           sock.emit('returnFromField', msg);
         }
@@ -281,7 +283,17 @@ module.exports = function socketio(_common) {
             "firmwarefile": filePath,
           };
           command = JSON.stringify(command);
-          cppApi.command(command, function(data) {
+
+          zmq.sendCommand(command, function(err, msg) {
+            if (!!err) {
+              sock.emit('returnFromLoader', {
+                err: err
+              });
+            } else {
+              sock.emit('returnFromLoader', msg);
+            }
+          });
+          /*cppApi.command(command, function(data) {
             data = JSON.parse(data);
 
             if (data.err !== undefined) {
@@ -299,7 +311,7 @@ module.exports = function socketio(_common) {
                 message: data.msg
               });
             }
-          });
+          });*/
 
           /*function testProgress(percent) {
 						if (percent <= 100) {

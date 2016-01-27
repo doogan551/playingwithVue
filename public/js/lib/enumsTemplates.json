@@ -931,13 +931,8 @@
             "History": {
                 "enum": 1
             },
-            "Involvement": {
-                "enum": 2,
-                "noninitializable": true
-            },
-            "Test": {
-                "enum": 3,
-                "noninitializable": true
+            "Totalizer": {
+                "enum": 2
             }
         },
         "Sensor Types": {
