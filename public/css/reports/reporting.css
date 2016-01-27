@@ -110,6 +110,9 @@
     width: 55px;
 }
 
+.pointLookupColumn {
+    min-width: 270px;
+}
 .operators.dropdown-menu {
     min-width: 55px;
     width: 55px;

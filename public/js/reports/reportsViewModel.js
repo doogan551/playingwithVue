@@ -61,7 +61,7 @@ var reportsViewModel = function () {
         $filterByPointPanelAnchor,
         $filtersPanelAnchor,
         $listBoxContentpointTypes,
-        $intervalOffset,
+        //$intervalOffset,
         $modalScheduleReport,
         $reporttitleInput,
         $columnNames,
@@ -351,7 +351,7 @@ var reportsViewModel = function () {
                 point["Report Config"].columns = columns;
                 point["Report Config"].filters = filters;
                 point["Report Config"].intervalType = self.intervalType();
-                point["Report Config"].intervalOffset = self.intervalOffset();
+                //point["Report Config"].intervalOffset = self.intervalOffset();
 
                 result = {
                     upis: upis,
@@ -428,7 +428,7 @@ var reportsViewModel = function () {
             $filtersPanelAnchor = $direports.find(".filtersPanelAnchor");
             $pointSelectorIframe = $filterByPointPanel.find(".pointLookupFrame");
             $reporttitleInput = $direports.find(".reporttitle").find("input");
-            $intervalOffset = $direports.find(".intervalOffset");
+            //$intervalOffset = $direports.find(".intervalOffset");
             $listBoxContentpointTypes = $pointSelectorIframe.contents().find("#listBoxContentpointTypes");
         },
         getPointLookupFilterNameValues = function (nameNumber) {
@@ -510,7 +510,7 @@ var reportsViewModel = function () {
             pointFilter.name4Filter = getPointLookupFilterNameValues(4);
             point["Report Config"].pointFilter = pointFilter;
             point["Report Config"].intervalType = self.intervalType();
-            point["Report Config"].intervalOffset = self.intervalOffset();
+            //point["Report Config"].intervalOffset = self.intervalOffset();
             point.name1 = $pointName1.val();
             point.name2 = $pointName2.val();
             point.name3 = $pointName3.val();
@@ -804,7 +804,19 @@ var reportsViewModel = function () {
                 });
             }
 
-            $viewReport.find("thead th").addClass("diSortable");
+            switch (self.reportType) {
+                case "History":
+                case "Totalizer":
+                    $viewReport.find("thead th").addClass("diSortable");
+                    $viewReport.find("thead th").attr("title", "Right mouse click to run PointInspector");
+                    break;
+                case "Property":
+                    $viewReport.find("thead th:first").addClass("pointLookupColumn");
+                    break;
+                default:
+                    break;
+            }
+
             self.designChanged(false);
         },
         renderReport = function (data) {
@@ -831,25 +843,15 @@ var reportsViewModel = function () {
                     console.log("page # = " + (page + 1));
                 });
 
-            $viewReport.find(".diSortable").on('contextmenu', function(ev) {
+            $viewReport.find(".diSortable").on('contextmenu', function (ev) {
                 ev.preventDefault();
                 return false;
             }, false);
 
             $viewReport.find(".diSortable").mousedown(function (event) {
-                var columnIndex = $(event.target).index(),
-                    order,
-                    columnIndexSort,
-                    sortType;
+                var columnIndex = $(event.target).index();
                 switch (event.which) {
                     case 1: // left mouse button
-                        order = $viewReport.DataTable().order();
-                        columnIndexSort = order[0][0];
-                        sortType = order[0][1];
-                        $viewReport.DataTable()
-                            .column(columnIndex + ':visible')
-                            .order((sortType === 'asc' ? 'desc' : 'asc'))
-                            .draw();
                         break;
                     case 2: // middle mouse button
                         break;
@@ -933,7 +935,7 @@ var reportsViewModel = function () {
 
     self.intervalType = ko.observable(0);
 
-    self.intervalOffset = ko.observable(0);
+    //self.intervalOffset = ko.observable(0);
 
     self.listOfIntervals = ko.observableArray([]);
 
@@ -1036,7 +1038,7 @@ var reportsViewModel = function () {
                             value: moment().unix()
                         });
                         point["Report Config"].intervalType = self.intervalType().value;
-                        point["Report Config"].intervalOffset = 0;
+                        //point["Report Config"].intervalOffset = 0;
                         break;
                     case "Property":
                         getEnumProperties();
@@ -1046,7 +1048,7 @@ var reportsViewModel = function () {
                             valueType: "String"
                         });
                         point["Report Config"].intervalType = self.intervalType().value;
-                        point["Report Config"].intervalOffset = 0;
+                        //point["Report Config"].intervalOffset = 0;
                         break;
                     default:
                         console.log(" - - - DEFAULT  init() null columns");
@@ -1056,14 +1058,13 @@ var reportsViewModel = function () {
                 point["Report Config"].columns = [];
                 point["Report Config"].filters = [];
                 point["Report Config"].pointFilter = pointFilter;
-                point["Report Config"].offset = 6;
                 originalPoint = JSON.parse(JSON.stringify(point)); // reset original point ref since we've added attribs
             }
 
             self.intervalType(self.listOfIntervals()[point["Report Config"].intervalType.value]);
-            self.intervalOffset(point["Report Config"].intervalOffset);
-            $intervalOffset.attr("max", self.intervalType().max);
-            $intervalOffset.attr("min", self.intervalType().min);
+            //self.intervalOffset(point["Report Config"].intervalOffset);
+            //$intervalOffset.attr("max", self.intervalType().max);
+            //$intervalOffset.attr("min", self.intervalType().min);
 
             $filtersTbody = $('.filtersGrid tbody');
             $columnsTbody = $('.columnsGrid .sortablecolums');
@@ -1454,9 +1455,9 @@ var reportsViewModel = function () {
 
     self.selectIntervalType = function (selectedIntervalType) {
         self.intervalType(self.listOfIntervals()[selectedIntervalType]);
-        $intervalOffset.attr("max", self.intervalType().max);
-        $intervalOffset.attr("min", self.intervalType().min);
-        self.intervalOffset(self.intervalType().min);
+        //$intervalOffset.attr("max", self.intervalType().max);
+        //$intervalOffset.attr("min", self.intervalType().min);
+        //self.intervalOffset(self.intervalType().min);
     };
 
     self.selectedFilterCondition = function (indexOfCondition, selectedValue) {
