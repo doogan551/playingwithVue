@@ -1008,14 +1008,6 @@
             },
             "Totalizer": {
                 "enum": 2
-            },
-            "Involvement": {
-                "enum": 3,
-                "noninitializable": true
-            },
-            "Test": {
-                "enum": 4,
-                "noninitializable": true
             }
         },
         "Sensor Types": {

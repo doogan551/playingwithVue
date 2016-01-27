@@ -8,7 +8,7 @@ var defaults = {
         },
         'zmqConfig': {
             'protocol': 'tcp',
-            'server': '127.0.0.1',
+            'server': '192.168.1.88',
             'port': '5570'
         },
         'siteConfig': {
