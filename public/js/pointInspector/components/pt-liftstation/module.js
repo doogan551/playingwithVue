@@ -5,12 +5,12 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
             configBits = params.utility.config.Enums['Lift Station Alarm Output Configuration Bits'],
             configKeys = Object.keys(configBits),
             configLen = configKeys.length,
-            newConfigArray = function (alarmOutputConfigValue) {
+            newConfigArray = function (outputConfiguration) {
                 var arr = [];
                 for (var i = 0; i < configLen; i++) {
                     arr.push({
                         name: configKeys[i],
-                        value: ko.observable((alarmOutputConfigValue & Math.pow(2, configBits[configKeys[i]].enum)) ? true:false)
+                        value: ko.observable((outputConfiguration & Math.pow(2, configBits[configKeys[i]].enum)) ? true:false)
                     });
                 }
                 return arr;

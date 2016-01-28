@@ -117,12 +117,39 @@
             </div>
             <hr>
             <div class="row">
-                <!--  ko component: { name: 'ctl-bitstring', params: { propertyName: 'Light Output Configuration', data: data, columnClasses: 'col col-sm-3 col-xs-12', enumSetName: 'Lift Station Alarm Output Configuration Bits', rootContext: $root } } -->
-                <!-- /ko -->
-                <!--  ko component: { name: 'ctl-bitstring', params: { propertyName: 'Horn Output Configuration', data: data, columnClasses: 'col col-sm-3 col-xs-12', enumSetName: 'Lift Station Alarm Output Configuration Bits', rootContext: $root } } -->
-                <!-- /ko -->
-                <!--  ko component: { name: 'ctl-bitstring', params: { propertyName: 'Auxiliary Output Configuration', data: data, columnClasses: 'col col-sm-3 col-xs-12', enumSetName: 'Lift Station Alarm Output Configuration Bits', rootContext: $root } } -->
-                <!-- /ko -->
+                <div class="col col-sm-4 col-xs-12">
+                    <strong>Light Output Configuration</strong>
+                    <!-- ko foreach: lightConfigOptions -->
+                    <div class="checkbox">
+                        <label>
+                            <input data-bind="checked: data.value" type="checkbox">
+                            <span data-bind="text: name">
+                        </label>
+                    </div>
+                    <!-- /ko -->
+                </div>
+                <div class="col col-sm-4 col-xs-12">
+                    <strong>Horn Output Configuration</strong>
+                    <!-- ko foreach: hornConfigOptions -->
+                    <div class="checkbox">
+                        <label>
+                            <input data-bind="checked: data.value" type="checkbox">
+                            <span data-bind="text: name">
+                        </label>
+                    </div>
+                    <!-- /ko -->
+                </div>
+                <div class="col col-sm-4 col-xs-12">
+                    <strong>Auxiliary Output Configuration</strong>
+                    <!-- ko foreach: auxConfigOptions -->
+                    <div class="checkbox">
+                        <label>
+                            <input data-bind="checked: data.value" type="checkbox">
+                            <span data-bind="text: name">
+                        </label>
+                    </div>
+                    <!-- /ko -->
+                </div>
             </div>
         </div>
     </div>
