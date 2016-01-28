@@ -9,7 +9,6 @@ var zmqString = zmqConfig.protocol + '://' + zmqConfig.server + ':' + zmqConfig.
 
 module.exports.sendCommand = function(msg, callback) {
   var zmqConn = makeZMQConn('dealer', 'client', zmqString, 'connect');
-  console.time('test');
   zmqConn.send(msg);
 
   zmqConn.on('message', function(data) {
@@ -17,10 +16,8 @@ module.exports.sendCommand = function(msg, callback) {
       data = JSON.parse(data.toString());
       if (data.hasOwnProperty('err') && data.err !== 0 && data.err !== null) {
 
-        console.timeEnd('test');
-        return callback(data.err, null);
+        return callback(data, null);
       } else if (!data.DEBUG) {
-        console.timeEnd('test');
         return callback(null, data);
       }
   });
