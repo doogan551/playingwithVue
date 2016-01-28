@@ -1121,9 +1121,8 @@ function updPoint(downloadPoint, newPoint, callback) {
 
     zmq.sendCommand(command, function(error, msg) {
       if (!!error) {
-        errVar = JSON.parse(error);
-        err = errVar.ApduErrorMsg;
-        code = parseInt(errVar.ApduError, 10);
+        err = error.msg;
+        code = parseInt(error.ApduError, 10);
       }
 
       if (err) {
@@ -1144,8 +1143,9 @@ function updPoint(downloadPoint, newPoint, callback) {
             else
               return callback(err, "success");
           });
-        } else
+        } else {
           return callback(err, null);
+        }
       } else {
         return callback(null, "success");
       }
