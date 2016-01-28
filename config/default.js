@@ -44,6 +44,8 @@ var defaults = {
     }
 };
 
+defaults.Infoscan.files.firmwareLocation = defaults.Infoscan.files.driveLetter + ":/InfoScan/Firmware/";
+
 defaults.redisConfig = {
     host: defaults.Infoscan.dbConfig.host,
     port: 6379

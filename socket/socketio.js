@@ -338,7 +338,7 @@ module.exports = function socketio(_common) {
         };
 
       if (data.uploadFile !== undefined) {
-        filePath = config.get('Infoscan.files').driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
+        filePath = config.get('Infoscan.files').firmwareLocation + data.model + "/" + data.fileName;
         logMessage(logData);
         fs.writeFile(filePath, data.uploadFile, function(err) {
           sendCommand(filePath);
@@ -349,7 +349,7 @@ module.exports = function socketio(_common) {
           }
         });
       } else {
-        filePath = config.get('Infoscan.files').driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
+        filePath = config.get('Infoscan.files').firmwareLocation + data.model + "/" + data.fileName;
         logMessage(logData);
         sendCommand(filePath);
       }
