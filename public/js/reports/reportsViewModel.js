@@ -632,7 +632,6 @@ var reportsViewModel = function () {
             $viewReport.on('click', '.pointInstance', function () {
                 var data = {
                     upi: $(this).attr('upi'),
-                    pointType: $(this).attr('pointType'),
                     pointName: $(this).text()
                 };
 
@@ -705,7 +704,11 @@ var reportsViewModel = function () {
                     var result = "";
                     if (data[columnName] !== undefined) {
                         if (typeof data[columnName] === 'object') {
-                            result = data[columnName].Value;
+                            if (data[columnName].PointInst && data[columnName].PointInst > 0) {
+                                result = data[columnName].PointName;
+                            } else {
+                                result = data[columnName].Value;
+                            }
                         } else {
                             result = data[columnName];
                         }
@@ -747,13 +750,16 @@ var reportsViewModel = function () {
                                 $(tdField).addClass("pointInstance");
                                 $(tdField).addClass("col-md-2");
                                 $(tdField).attr('upi', data["Point Instance"].Value);
-                                $(tdField).attr('pointType', data["Point Type"].Value);
                                 $(tdField).attr('columnIndex', columnIndex);
                                 break;
                             default:
                                 console.log(" - - - DEFAULT  setTdAttribs()");
                                 break;
                         }
+                    }
+                    if (data[columnConfig.colName] && data[columnConfig.colName].PointInst) {
+                        $(tdField).addClass("pointInstance");
+                        $(tdField).attr('upi', data[columnConfig.colName].PointInst);
                     }
                 },
                 buildColumnObject = function (item, columnIndex) {
@@ -1297,21 +1303,13 @@ var reportsViewModel = function () {
 
     self.showPointReview = function (data) {
         var openWindow = window.workspaceManager.openWindowPositioned,
-            pointTypesUtility = window.workspaceManager.config.Utility.pointTypes,
-            pointType = data.pointType,
-            endPoint,
             upi = parseInt(data.upi, 10),
             options = {
                 width: 850,
                 height: 600
             };
-        if (upi > 0 && pointType !== undefined) {
-            endPoint = pointTypesUtility.getUIEndpoint(pointType, upi);
-            if (endPoint) {
-                openWindow(endPoint.review.url, data.pointName, pointType, endPoint.review.target, upi, options);
-            } else {
-                //  handle a bad UPI reference
-            }
+        if (upi > 0) {
+            openWindow("/pointinspector/" + upi, 'Point', 'Point', 'newwindow', upi, options);
         }
     };
 
