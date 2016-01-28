@@ -69,6 +69,7 @@ require(['knockout'], function (ko) {
     ko.components.register('pt-totalizer',      { require: 'components/pt-totalizer/module' });
     ko.components.register('pt-vav',            { require: 'components/pt-vav/module'});
     ko.components.register('pt-sensor',         { require: 'components/pt-sensor/module'});
+    ko.components.register('pt-liftstation',    { require: 'components/pt-liftstation/module'});
 });
 
 define([
