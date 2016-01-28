@@ -157,7 +157,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
       point: newPoint
     };
 
-  readOnlyProps = ["_id", "_relDevice", "_relRMU", "_cfgDevice", "_updTOD", "_pollTime",
+  readOnlyProps = ["_id", "_cfgDevice", "_updTOD", "_pollTime",
     "_forceAllCOV", "_actvAlmId", "Alarm State", "Control Pending", "Device Status",
     "Last Report Time", "Point Instance", "Point Type", "Reliability"
   ];
