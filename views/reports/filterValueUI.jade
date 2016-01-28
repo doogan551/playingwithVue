@@ -1,5 +1,6 @@
 // ko if: (valueType === "DateTime")
-input.input.form-control.filterContainer(data-bind="reportDatePicker: value", type="text", required)
+input.input.form-control.filterContainer.dateTimeDate(data-bind="reportDatePicker: date", type="text", required)
+input.input.form-control.filterContainer.dateTimeTime(data-bind="reportTimePicker: time", type="text", required)
 // /ko
 // ko if: (valueType === "Float" || valueType === "Unsigned")
 input.input.form-control.filterContainer(data-bind="value: value", type="number", required)
@@ -16,7 +17,7 @@ input.input.form-control.filterContainer(data-bind="value: value", type="text", 
    ul.filterValues.dropdown-menu
       // ko foreach: valueList
       li
-         a.filterContainer(data-bind="click: function(){ $root.selectedFilterValue($element, $parentContext.$index(), $data) }, text: $data", required)
+         a.filterContainer(data-bind="click: function(){ $root.selectedFilterEValue($element, $parentContext.$index(), $data) }, text: $data.value", required)
       // /ko
 // /ko
 // ko if: (valueList.length === 0)

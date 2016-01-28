@@ -864,49 +864,59 @@ module.exports = Rpt = {
                     };
                     break;
                 case "EqualTo":
-                    if (filter.value === "False") {
-                        searchQuery[propertyCheckForValue(key)] = false;
-                    } else if (filter.value === "True") {
-                        searchQuery[propertyCheckForValue(key)] = true;
-                    } else if (utils.converters.isNumber(filter.value)) {
-                        searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filterValueType);
-                    } else if (filter.value.indexOf(",") > -1) {
-                        var splitValues = filter.value.split(",");
-                        //if (!searchCriteria.$or)
-                        //    searchCriteria.$or = [];
-                        var new$or = {};
-                        new$or.$or = [];
-                        for (var kk = 0; kk < splitValues.length; kk++) {
-                            var ppp = {};
-                            if (utils.converters.isNumber(splitValues[kk])) {
-                                ppp[key] = convertType(splitValues[kk]);
-                            } else {
-                                ppp[key] = splitValues[kk];
-                            }
-                            new$or.$or.push(ppp);
-                        }
+                    if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
+                        searchQuery[key + ".eValue"] = filter.evalue;
                     } else {
-                        if (utils.converters.isNumber(filter.value))
+                        if (filter.value === "False") {
+                            searchQuery[propertyCheckForValue(key)] = false;
+                        } else if (filter.value === "True") {
+                            searchQuery[propertyCheckForValue(key)] = true;
+                        } else if (utils.converters.isNumber(filter.value)) {
                             searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filterValueType);
-                        else
-                            searchQuery[propertyCheckForValue(key)] = {
-                                $regex: '(?i)^' + filter.value
-                            };
+                        } else if (filter.value.indexOf(",") > -1) {
+                            var splitValues = filter.value.split(",");
+                            //if (!searchCriteria.$or)
+                            //    searchCriteria.$or = [];
+                            var new$or = {};
+                            new$or.$or = [];
+                            for (var kk = 0; kk < splitValues.length; kk++) {
+                                var ppp = {};
+                                if (utils.converters.isNumber(splitValues[kk])) {
+                                    ppp[key] = convertType(splitValues[kk]);
+                                } else {
+                                    ppp[key] = splitValues[kk];
+                                }
+                                new$or.$or.push(ppp);
+                            }
+                        } else {
+                            if (utils.converters.isNumber(filter.value))
+                                searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filterValueType);
+                            else
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $regex: '(?i)^' + filter.value
+                                };
+                        }
                     }
                     break;
                 case "NotEqualTo":
                     //searchQuery[key] = {
                     //    $exists: true
                     //};
-                    if (utils.converters.isNumber(filter.value)) {
-                        searchQuery[propertyCheckForValue(key)] = {
-                            $ne: utils.converters.convertType(filter.value, filterValueType)
-                        };
+                    if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
+                        searchQuery[key + ".eValue"] = {
+                            $ne: filter.evalue
+                        }
                     } else {
-                        searchQuery[propertyCheckForValue(key)] = {
-                            $regex: '(?i)^(?!' + filter.value + ")"
+                        if (utils.converters.isNumber(filter.value)) {
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $ne: utils.converters.convertType(filter.value, filterValueType)
+                            };
+                        } else {
+                            searchQuery[propertyCheckForValue(key)] = {
+                                $regex: '(?i)^(?!' + filter.value + ")"
                                 //$ne: utils.converters.convertType(filter.value, filterValueType)
-                        };
+                            };
+                        }
                     }
                     break;
                 case "LessThan":
@@ -1003,6 +1013,7 @@ module.exports = Rpt = {
         });
     },
     totalizerReport: function(data, cb) {
+        logger.info(" - totalizerReport() data: " + JSON.stringify(data));
         var points = data.upis;
         var reportConfig = data.reportConfig;
         var range = data.range;
@@ -1052,7 +1063,7 @@ module.exports = Rpt = {
             var previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
 
             intervals.forEach(function(interval, index) {
-                formatRange(interval);
+                //formatRange(interval);
                 var runtime = 0;
                 var now = moment().unix();
                 var intervalLonger = now < interval.end;

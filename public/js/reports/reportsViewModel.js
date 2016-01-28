@@ -4,21 +4,18 @@ window.workspaceManager = (window.opener || window.top).workspaceManager;
 var initKnockout = function () {
     ko.bindingHandlers.reportDatePicker = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-            var initialMomentDate = moment.unix(viewModel.value),
-                options = {
-                    defaultDate: initialMomentDate,
-                    format: 'MM/DD/YYYY, h:mm a'
+            var options = {
+                    autoclose: true
                 };
-            $(element).datetimepicker(options).on("dp.change", function (ev) {
+            $(element).datepicker(options).on("changeDate", function (ev) {
                 var val = $.isFunction(valueAccessor()) ? valueAccessor() : parseInt(valueAccessor(), 10);
                 if (ev.date) {
-                    viewModel.value = moment(ev.date).unix();
+                    viewModel.date = moment(ev.date).unix();
                 } else {
                     if (val !== '') {
-                        viewModel.value = val;
+                        viewModel.date = val;
                     }
                 }
-
                 //  help user select valid start & end dates
                 //$("#dpStart").on("dp.change", function(e) {
                 //    alert('hey');
@@ -28,8 +25,47 @@ var initKnockout = function () {
                 //    $('#dpStart').data("DateTimePicker").setMaxDate(e.date);
                 //});
             });
+        },
+        update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            var value = ko.utils.unwrapObservable(valueAccessor());
+            $(element).datepicker("setDate", moment.unix(value).format("MM/DD/YYYY"));
         }
     };
+
+    ko.bindingHandlers.reportTimePicker = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var timestamp = valueAccessor(),
+                options = {
+                    doneText: 'Done',
+                    autoclose: true,
+                    afterDone: function () {
+                        timestamp = $(element).val();
+                        viewModel.time  = $(element).val();
+                    }
+                };
+
+            $(element).clockpicker(options);
+
+            $(element).change(function (event) {
+                $(element).clockpicker('resetclock');
+            });
+        },
+
+        update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var value = ko.utils.unwrapObservable(valueAccessor()),
+                hr,
+                min;
+
+            if (typeof value !== 'string') {
+                hr = ('00' + Math.floor(value / 100)).slice(-2);
+                min = ('00' + value % 100).slice(-2);
+                $(element).val(hr + ':' + min);
+            } else {
+                $(element).val(value);
+            }
+        }
+    };
+
 }
 
 var reportsViewModel = function () {
@@ -245,6 +281,21 @@ var reportsViewModel = function () {
                 width: 1000
             });
         },
+        getAdjustedDatetime = function (filter) {
+            var result,
+                hour,
+                min,
+                timestamp = parseInt((filter.time.toString()).replace(':', ''), 10);
+
+            hour = ('00' + Math.floor(timestamp / 100)).slice(-2);
+            min = ('00' + timestamp % 100).slice(-2);
+
+            result = moment.unix(filter.date).startOf('day').unix();
+            result = moment.unix(result).add(hour, 'h').unix();
+            result = moment.unix(result).add(min, 'm').unix();
+
+            return result;
+        },
         validateColumns = function () {
             var results = [],
                 localArray = self.listOfColumns(),
@@ -265,20 +316,60 @@ var reportsViewModel = function () {
 
             for (i = 0; i < localArray.length; i++) {
                 if (localArray[i].column !== "") {
+                    if (localArray[i].valueType === "DateTime") {
+                        localArray[i].value = getAdjustedDatetime(localArray[i]);
+                    }
                     results.push(localArray[i]);
+                    delete results[results.length-1]["valueList"]; // clean up
                 }
             }
 
             return results;
         },
+        initFilters = function (theFilters) {
+            var result = [],
+                i,
+                len = theFilters.length;
+
+            for(i = 0; i < len; i++) {
+                result.push(theFilters[i]);
+                result[i].valueList = getValueList(result[i].column, result[i].column);
+            }
+
+            return result;
+        },
         getValueList = function (property, pointType) {
             var result = [],
                 i,
                 options = window.workspaceManager.config.Utility.pointTypes.getEnums(property, pointType),
-                len = (options && options.length ? options.length : 0);
+                len = (options && options.length ? options.length : 0),
+                enumsSetKey,
+                enumsSet,
+                prop;
 
             for (i = 0; i < len; i++) {
-                result.push(options[i].name);
+                result.push({
+                    value: options[i].name,
+                    evalue: options[i].value
+                });
+            }
+
+            if (result.length === 0) {
+                prop = getProperty(property);
+                if (prop && prop.enumsSet) {
+                    enumsSetKey = prop.enumsSet;
+                    if (enumsSetKey !== undefined && enumsSetKey !== "") {
+                        enumsSet = window.workspaceManager.config.Enums[enumsSetKey];
+                        for (var key in enumsSet) {
+                            if (enumsSet.hasOwnProperty(key)) {
+                                result.push({
+                                    value: key,
+                                    evalue: enumsSet[key].enum
+                                });
+                            }
+                        }
+                    }
+                }
             }
 
             return result;
@@ -350,7 +441,7 @@ var reportsViewModel = function () {
                 point["Report Config"].pointFilter = pointFilter;
                 point["Report Config"].columns = columns;
                 point["Report Config"].filters = filters;
-                point["Report Config"].intervalType = self.intervalType();
+                point["Report Config"].intervalType.value = self.intervalType().value;
                 //point["Report Config"].intervalOffset = self.intervalOffset();
 
                 result = {
@@ -509,7 +600,7 @@ var reportsViewModel = function () {
             pointFilter.name3Filter = getPointLookupFilterNameValues(3);
             pointFilter.name4Filter = getPointLookupFilterNameValues(4);
             point["Report Config"].pointFilter = pointFilter;
-            point["Report Config"].intervalType = self.intervalType();
+            point["Report Config"].intervalType.value = self.intervalType().value;
             //point["Report Config"].intervalOffset = self.intervalOffset();
             point.name1 = $pointName1.val();
             point.name2 = $pointName2.val();
@@ -995,7 +1086,7 @@ var reportsViewModel = function () {
             self.reportDisplayFooter(moment().format("dddd MMMM DD, YYYY hh:mm:ss a"));
             if (columns) {
                 self.listOfColumns(reportConfig.columns);
-                self.listOfFilters(reportConfig.filters);
+                self.listOfFilters(initFilters(reportConfig.filters));
                 switch (self.reportType) {
                     case "History":
                     case "Totalizer":
@@ -1037,7 +1128,7 @@ var reportsViewModel = function () {
                             valueType: "DateTime",
                             value: moment().unix()
                         });
-                        point["Report Config"].intervalType = self.intervalType().value;
+                        point["Report Config"].intervalType.value = self.intervalType().value;
                         //point["Report Config"].intervalOffset = 0;
                         break;
                     case "Property":
@@ -1047,7 +1138,7 @@ var reportsViewModel = function () {
                             colName: "Name",
                             valueType: "String"
                         });
-                        point["Report Config"].intervalType = self.intervalType().value;
+                        point["Report Config"].intervalType.value = self.intervalType().value;
                         //point["Report Config"].intervalOffset = 0;
                         break;
                     default:
@@ -1418,37 +1509,37 @@ var reportsViewModel = function () {
         self.listOfColumns(tempArray);
     };
 
-    self.selectPropertyColumn = function (element, indexOfColumn, selectedValue) {
+    self.selectPropertyColumn = function (element, indexOfColumn, selectedItem) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn],
-            prop = getProperty(selectedValue.name);
-        column.colName = selectedValue.name;
+            prop = getProperty(selectedItem.name);
+        column.colName = selectedItem.name;
         column.valueType = prop.valueType;
         self.listOfColumns([]);
         self.listOfColumns(tempArray);
     };
 
-    self.selectPropertyFilter = function (element, indexOfFilter, selectedValue) {
+    self.selectPropertyFilter = function (element, indexOfFilter, selectedItem) {
         var tempArray = self.listOfFilters(),
             filter = tempArray[indexOfFilter],
-            prop = getProperty(selectedValue.name),
+            prop = getProperty(selectedItem.name),
             $elementRow = $(element).parent().parent().parent().parent().parent(),
             $inputField = $elementRow.find(".filterValue").find("input");
-        filter.column = selectedValue.name;
+        filter.column = selectedItem.name;
         filter.condition = "$and";
         filter.operator = "EqualTo";
         filter.childLogic = false;
         filter.valueType = prop.valueType;
         filter.value = (filter.valueType === "Bool" ? "True" : "");
-        filter.valueList = getValueList(selectedValue.name, selectedValue.name);
+        filter.valueList = getValueList(selectedItem.name, selectedItem.name);
         self.listOfFilters([]);
         self.listOfFilters(tempArray);
     };
 
-    self.selectTotalizerOperator = function (element, indexOfColumn, selectedValue) {
+    self.selectTotalizerOperator = function (element, indexOfColumn, selectedItem) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn];
-        column.operator = selectedValue;
+        column.operator = selectedItem;
         self.listOfColumns([]);
         self.listOfColumns(tempArray);
     };
@@ -1460,31 +1551,42 @@ var reportsViewModel = function () {
         //self.intervalOffset(self.intervalType().min);
     };
 
-    self.selectedFilterCondition = function (indexOfCondition, selectedValue) {
+    self.selectedFilterCondition = function (indexOfCondition, selectedItem) {
         var tempArray = self.listOfFilters(),
             filter = tempArray[indexOfCondition];
-        if (filter.condition != selectedValue.value) {
-            filter.condition = selectedValue.value;
+        if (filter.condition != selectedItem.value) {
+            filter.condition = selectedItem.value;
             self.listOfFilters([]);
             self.listOfFilters(tempArray);
         }
     };
 
-    self.selectedFilterOperator = function (indexOfOperator, selectedValue) {
+    self.selectedFilterOperator = function (indexOfOperator, selectedItem) {
         var tempArray = self.listOfFilters(),
             filter = tempArray[indexOfOperator];
-        if (filter.operator != selectedValue.value) {
-            filter.operator = selectedValue.value;
+        if (filter.operator != selectedItem.value) {
+            filter.operator = selectedItem.value;
             self.listOfFilters([]);
             self.listOfFilters(tempArray);
         }
     };
 
-    self.selectedFilterValue = function (element, indexOfValue, selectedValue) {
+    self.selectedFilterValue = function (element, indexOfValue, selectedItem) {
         var tempArray = self.listOfFilters(),
             filter = tempArray[indexOfValue];
-        if (filter.value != selectedValue) {
-            filter.value = selectedValue;
+        if (filter.value != selectedItem) {
+            filter.value = selectedItem;
+            self.listOfFilters([]);
+            self.listOfFilters(tempArray);
+        }
+    };
+
+    self.selectedFilterEValue = function (element, indexOfValue, selectedItem) {
+        var tempArray = self.listOfFilters(),
+            filter = tempArray[indexOfValue];
+        if (filter.evalue != selectedItem.evalue) {
+            filter.value = selectedItem.value;
+            filter.evalue = selectedItem.evalue;
             self.listOfFilters([]);
             self.listOfFilters(tempArray);
         }
