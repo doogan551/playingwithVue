@@ -44,9 +44,9 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
         this.hornConfigOptions = newConfigArray(this.data['Horn Output Configuration']());
         this.auxConfigOptions = newConfigArray(this.data['Auxiliary Output Configuration']());
 
-        this.updateLightConfigComputed = newComputed(this.lightConfigArray, this.data['Light Output Configuration']);
-        this.updateHornConfigComputed = newComputed(this.hornConfigArray, this.data['Horn Output Configuration']);
-        this.updateAuxConfigComputed = newComputed(this.auxConfigArray, this.data['Auxiliary Output Configuration']);
+        this.updateLightConfigComputed = newComputed(this.lightConfigOptions, this.data['Light Output Configuration']);
+        this.updateHornConfigComputed = newComputed(this.hornConfigOptions, this.data['Horn Output Configuration']);
+        this.updateAuxConfigComputed = newComputed(this.auxConfigOptions, this.data['Auxiliary Output Configuration']);
 
         params.initDOM();
     }
