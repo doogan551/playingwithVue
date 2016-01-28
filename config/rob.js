@@ -1,7 +1,7 @@
 var rob = {
   'Infoscan': {
     'dbConfig': {
-      'host': 'localhost',
+      'host': '192.168.1.88',
       'dbName': 'infoscan'
     },
     'zmqConfig': {
@@ -18,6 +18,8 @@ var rob = {
     }
   }
 };
+
+rob.Infoscan.files.firmwareLocation = "\\\\192.168.1.88/d$/InfoScan/Firmware/";
 
 rob.redisConfig = {
   host: rob.Infoscan.dbConfig.host

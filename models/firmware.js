@@ -8,7 +8,7 @@ module.exports = {
 
 	getModelFiles: function(data, cb) {
 		var model = data.model;
-		var firmwareFolder = config.get('Infoscan.files').driveLetter + ":/InfoScan/Firmware/" + model + "/";
+		var firmwareFolder = config.get('Infoscan.files').firmwareLocation + model + "/";
 
 		fs.readdir(firmwareFolder, cb);
 	},

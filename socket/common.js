@@ -13,6 +13,7 @@ var Config = require('../public/js/lib/config.js');
 var actLogsEnums = Config.Enums["Activity Logs"];
 var cppApi = new(require('Cpp_API').Tasks)();
 var logger = require('../helpers/logger')(module);
+var zmq = require('../helpers/zmq');
 
 var pointsCollection = utils.CONSTANTS("pointsCollection");
 var historyCollection = utils.CONSTANTS("historyCollection");
@@ -1111,12 +1112,46 @@ function updPoint(downloadPoint, newPoint, callback) {
   if (downloadPoint === true) {
     //send download point request to c++ module
     var command = {
-        "Command Type": 6,
-        "upi": newPoint._id
-      },
-      err, code;
+      "Command Type": 6,
+      "upi": newPoint._id
+    };
+    var err;
+    var code;
     command = JSON.stringify(command);
-    cppApi.command(command, function(error, msg) {
+
+    zmq.sendCommand(command, function(error, msg) {
+      if (!!error) {
+        errVar = JSON.parse(error);
+        err = errVar.ApduErrorMsg;
+        code = parseInt(errVar.ApduError, 10);
+      }
+
+      if (err) {
+        if (code >= 2300 && code < 2304) {
+          Utility.update({
+            collection: constants('pointsCollection'),
+            query: {
+              _id: newPoint._id
+            },
+            updateObj: {
+              $set: {
+                _updPoint: true
+              }
+            }
+          }, function(dberr, result) {
+            if (dberr)
+              return callback(dberr, null);
+            else
+              return callback(err, "success");
+          });
+        } else
+          return callback(err, null);
+      } else {
+        return callback(null, "success");
+      }
+    });
+
+    /*cppApi.command(command, function(error, msg) {
       if (error !== 0 && error !== null) {
         errVar = JSON.parse(error);
         err = errVar.ApduErrorMsg;
@@ -1147,7 +1182,7 @@ function updPoint(downloadPoint, newPoint, callback) {
       } else {
         return callback(null, "success");
       }
-    });
+    });*/
 
   } else {
     callback(null, "success");
@@ -1161,13 +1196,17 @@ function signalExecTOD(executeTOD, callback) {
       "Command Type": 10
     };
     command = JSON.stringify(command);
-    cppApi.command(command, function(error, msg) {
+    zmq.sendCommand(command, function(err, msg) {
+      return callback(err, msg);
+    });
+
+    /*cppApi.command(command, function(error, msg) {
       error = JSON.parse(error);
       msg = JSON.parse(msg);
 
 
       return callback(error, msg);
-    });
+    });*/
 
   } else {
     callback(null, "success");
@@ -1599,13 +1638,17 @@ function signalHostTOD(signalTOD, callback) {
       "Command Type": 9
     };
     command = JSON.stringify(command);
-    cppApi.command(command, function(error, msg) {
+    zmq.sendCommand(command, function(err, msg) {
+      return callback(err, msg);
+    });
+
+    /*cppApi.command(command, function(error, msg) {
       error = JSON.parse(error);
       msg = JSON.parse(msg);
 
 
       return callback(error, msg);
-    });
+    });*/
 
   } else {
     callback(null, "success");

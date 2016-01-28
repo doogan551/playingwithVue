@@ -1,4 +1,4 @@
-/*var config = require('config');
+var config = require('config');
 var zmq = require('zmq');
 var uuid = require('node-uuid');
 
@@ -7,26 +7,22 @@ var logger = require('./logger')(module);
 var zmqConfig = config.get('Infoscan.zmqConfig');
 var zmqString = zmqConfig.protocol + '://' + zmqConfig.server + ':' + zmqConfig.port;
 
-module.exports.sendMessage = function(msg, callback) {
+module.exports.sendCommand = function(msg, callback) {
   var zmqConn = makeZMQConn('dealer', 'client', zmqString, 'connect');
   console.time('test');
   zmqConn.send(msg);
 
   zmqConn.on('message', function(data) {
-    if (data.toString() !== 'Done') {
       logger.info(data.toString());
       data = JSON.parse(data.toString());
       if (data.hasOwnProperty('err') && data.err !== 0 && data.err !== null) {
 
         console.timeEnd('test');
-        callback(data.err, null);
+        return callback(data.err, null);
       } else if (!data.DEBUG) {
         console.timeEnd('test');
-        callback(null, data);
+        return callback(null, data);
       }
-    } else {
-      callback(null, 'done');
-    }
   });
 };
 
@@ -36,4 +32,4 @@ function makeZMQConn(sockType, idPrefix, addr, bindSyncOrConnect) {
   // call the function name in bindSyncOrConnect
   sock[bindSyncOrConnect](addr);
   return sock;
-}*/
+}
