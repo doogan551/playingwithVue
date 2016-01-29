@@ -173,18 +173,19 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
       _id: 0
     }
   }, function(err, dbPoint) {
-    if (err)
+    if (err) {
       return callback({
         err: err
       }, null);
-    else if (!dbPoint)
+    } else if (!dbPoint) {
       return callback({
         err: "Point not found: " + newPoint._id
       }, null);
-    else if (dbPoint._pStatus === Config.Enums["Point Statuses"].Deleted.enum)
+    } else if (dbPoint._pStatus === Config.Enums["Point Statuses"].Deleted.enum) {
       return callback({
         err: "Point deleted: " + newPoint._id
       }, null);
+    }
 
     configRequired = newPoint._cfgRequired;
 

@@ -17,7 +17,7 @@ module.exports.sendCommand = function(msg, callback) {
       if (data.hasOwnProperty('err') && data.err !== 0 && data.err !== null) {
 
         return callback(data, null);
-      } else if (!data.DEBUG) {
+      } else if (!data.DEBUG && data.msg !== 'Done') {
         return callback(null, data);
       }
   });
