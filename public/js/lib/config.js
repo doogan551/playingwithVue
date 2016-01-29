@@ -1660,6 +1660,11 @@ var Config = (function(obj) {
             return data;
         },
 
+        "Pump Control Mode": function(data) {
+            data.point = obj.EditChanges[data.property](data);
+            return data;
+        },
+
         "Reset Gain": function(data) {
             var point = data.point,
                 val = data.propertyObject.Value;
@@ -2703,6 +2708,33 @@ var Config = (function(obj) {
         "name4": function(data) {
             obj.EditChanges.updateName(data);
             return data.point;
+        },
+
+        "Pump Control Mode": function(data) {
+            var i,
+                len,
+                isDisplayable,
+                point = data.point,
+                val = point[data.property].Value,
+                props = ['Low Level Setpoint', 'Off Level Setpoint', 'Lead Level Setpoint', 'Lag Level Setpoint', 'High Level Setpoint'],
+                refProps = ['Off Level Float Point', 'Lead Level Float Point', 'Lag Level Float Point'];
+
+            if (val === 'Transducer') {
+                isDisplayable = true;
+            } else {
+                isDisplayable = false;
+            }
+            obj.Utility.getPropertyObject("Level Sensor Point", point).isDisplayable = isDisplayable;
+            point['Emergency Pump Down Time'].isDisplayable = isDisplayable;
+            for (i=0, len=props.length; i<len; i++) {
+                point[props[i]].isDisplayable = isDisplayable;
+            }
+
+            isDisplayable = !isDisplayable;
+            for (i=0, len=refProps.length; i<len; i++) {
+                obj.Utility.getPropertyObject(refProps[i], point).isDisplayable = isDisplayable;
+            }
+            return point;
         },
 
         "Setback Enable": function(data) {

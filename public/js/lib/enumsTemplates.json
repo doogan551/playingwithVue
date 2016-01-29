@@ -14567,6 +14567,12 @@
                     "isDisplayable": true,
                     "isReadOnly": false
                 },
+                "Description": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 2,
+                    "Value": ""
+                },
                 "Emergency Pump Down Time": {
                     "ValueType": 13,
                     "Value": 0,
