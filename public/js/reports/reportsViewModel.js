@@ -1359,6 +1359,14 @@ var reportsViewModel = function () {
         self.listOfColumns(tempArray);
     };
 
+    self.clearFilterPoint = function (indexOfColumn) {
+        var tempArray = self.listOfFilters(),
+            item = tempArray[indexOfColumn];
+        item.value = "";
+        self.listOfFilters([]);
+        self.listOfFilters(tempArray);
+    };
+
     self.selectPropertyColumn = function (element, indexOfColumn, selectedItem) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn],

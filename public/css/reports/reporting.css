@@ -361,6 +361,19 @@ body.modal-open {
     display: inline-block;
 }
 
+.filterPointName {
+    display: inline-block;
+    margin-left: 4px;
+}
+
+.pointreference {
+    margin-top: 9px;
+}
+
+.pointreference button.btn.btn-danger.btn-xs {
+    margin-right: 3px;
+}
+
 .availablePropertiesContainer {
     display: inline-block;
 }
