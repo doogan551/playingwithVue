@@ -1,0 +1,24 @@
+<!-- ko if: data.isDisplayable -->
+<div data-bind="attr: { class: columnClasses }">
+    <div class="dataField">
+      <div class="row">
+        <div class="col col-xs-6">
+        <input class="switch" type="checkbox" data-bind="checked: covDisabled, bootstrapSwitchOptions: { disabled: isDisabled() }">
+        <label>COV Disabled</label>
+      </div>
+        <div class="col col-xs-6">
+        <input class="switch" type="checkbox" data-bind="checked: alarmsOff, bootstrapSwitchOptions: { disabled: isDisabled() }">
+        <label>Alarms Off</label>
+      </div>
+        <div class="col col-xs-6">
+        <input class="switch" type="checkbox" data-bind="checked: override, bootstrapSwitchOptions: { disabled: isDisabled() }">
+        <label>Override</label>
+      </div>
+        <div class="col col-xs-6">
+        <input class="switch" type="checkbox" data-bind="checked: commandPending, bootstrapSwitchOptions: { disabled: isDisabled() }">
+        <label>Command Pending</label>
+      </div>
+      </div>
+    </div>
+</div>
+<!-- /ko -->
