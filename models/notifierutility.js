@@ -27,10 +27,10 @@ NotifierUtility.prototype.buildVoiceUrl = function(message, type) {
 
 NotifierUtility.prototype.sendText = function(number, message, cb) {
   var errors = [];
-  this.Plivo.sendText(number, message, function(err, response) {
+  this.Twilio.sendText(number, message, function(err, response) {
     if (!!err) {
       errors.push(err);
-      this.Twilio.sendText(number, message, function(err, response) {
+      this.Plivo.sendText(number, message, function(err, response) {
         if (!!err) {
           errors.push(err);
           return cb(errors);

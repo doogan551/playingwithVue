@@ -195,9 +195,12 @@ function testTwilio() {
   var NotifierUtility = require('../models/notifierutility');
   var notifierUtility = new NotifierUtility();
 
-  notifierUtility.sendVoice('13364694547', 'asafsadfafasfawf asfsaf wef wafasf', function(err, response) {
+  /*notifierUtility.sendText('13364694547', 'asafsadfafasfawf asfsaf wef wafasf', function(err, response) {
     console.log(err, response);
-  });
+  });*/
+
+  var Twilio = require('../models/twilio');
+  Twilio.getCalls();
 }
 testTwilio();
 
