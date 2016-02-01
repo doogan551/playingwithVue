@@ -1122,7 +1122,7 @@ function updPoint(downloadPoint, newPoint, callback) {
 
     zmq.sendCommand(command, function(error, msg) {
       if (!!error) {
-        err = error.msg;
+        err = error.ApduErrorMsg;
         code = parseInt(error.ApduError, 10);
       }
 
