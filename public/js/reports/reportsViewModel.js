@@ -817,6 +817,7 @@ var reportsViewModel = function () {
                             columnTitle = item.colName.replace(/_/g, " ");
                             if (columnIndex !== 0) {
                                 item.dataColumnName += " - " + item.operator.toLowerCase();
+                                columnTitle += " - " + item.operator.toLowerCase();
                             }
                             break;
                         case "Property":
