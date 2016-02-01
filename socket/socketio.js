@@ -240,6 +240,7 @@ module.exports = function socketio(_common) {
 
       zmq.sendCommand(data, function(err, msg) {
         if (!!err) {
+          err = err.ApduErrorMsg;
           sock.emit('returnFromField', {
             err: err
           });
