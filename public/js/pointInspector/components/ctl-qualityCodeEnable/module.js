@@ -55,15 +55,30 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.data = params.data[this.propertyName];
         this.isInEditMode = params.rootContext.isInEditMode;
         this.isSystemAdmin = params.rootContext.isSystemAdmin();
-        this.isDisabled = ko.computed(function() {
-            return !this.isInEditMode() || this.data.isReadOnly();
+        this.isEnabled = ko.computed(function() {
+            return !!this.isInEditMode() && !this.data.isReadOnly();
         }, this);
-        this.enums = params.rootContext.utility.config.Enums;
-        this.override = this.data.Value() & this.enums['Quality Code Enable Bits'].Override.enum;
-        this.covDisabled = this.data.Value() & this.enums['Quality Code Enable Bits'].Override.enum;
-        this.alarmsOff = this.data.Value() & this.enums['Quality Code Enable Bits'].Override.enum;
-        this.commandPending = this.data.Value() & this.enums['Quality Code Enable Bits'].Override.enum;
+        this.qualityEnums = params.rootContext.utility.config.Enums['Quality Code Enable Bits'];
 
+        this.override = ko.observable(this.data.Value() & this.qualityEnums.Override.enum);
+        this.covDisabled = ko.observable(this.data.Value() & this.qualityEnums['COV Enable'].enum);
+        this.alarmsOff = ko.observable(this.data.Value() & this.qualityEnums['Alarms Off'].enum);
+        this.commandPending = ko.observable(this.data.Value() & this.qualityEnums['Command Pending'].enum);
+
+        this.tempVal = ko.computed(function() {
+            var override = (!!this.override()) ? this.qualityEnums.Override.enum : 0;
+            var covDisabled = (!!this.covDisabled()) ? this.qualityEnums['COV Enable'].enum : 0;
+            var alarmsOff = (!!this.alarmsOff()) ? this.qualityEnums['Alarms Off'].enum : 0;
+            var commandPending = (!!this.commandPending()) ? this.qualityEnums['Command Pending'].enum : 0;
+            var total = this.qualityEnums.Override.enum | this.qualityEnums['COV Enable'].enum | this.qualityEnums['Alarms Off'].enum | this.qualityEnums['Command Pending'].enum;
+
+            var val = override | covDisabled | alarmsOff | commandPending;
+            if (val === total) {
+                val = this.qualityEnums.All.enum;
+            }
+            this.data.Value(val);
+            return val;
+        }, this);
     }
 
     // Use prototype to declare any public methods
