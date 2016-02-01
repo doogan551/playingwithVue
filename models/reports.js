@@ -671,11 +671,10 @@ module.exports = Rpt = {
             for (var k = 0; k < properties.length; k++) {
                 var p = properties[k].colName;
                 if (Config.Utility.getUniquePIDprops().indexOf(p) !== -1) {
-                    if (getPointRefs === false) {
-                        fields["Point Refs"] = 1;
-                        uniquePIDs.push(p);
-                        getPointRefs = true;
-                    }
+                    fields["Point Refs"] = 1;
+                    uniquePIDs.push(p);
+                    getPointRefs = true;
+
                 } else {
                     fields[propertyCheckForValue(p)] = 1;
                 }
@@ -731,6 +730,7 @@ module.exports = Rpt = {
             if (err) {
                 return cb(err);
             }
+
             if (getPointRefs === true) {
                 for (var i = 0; i < docs.length; i++) {
                     for (var m = 0; m < docs[i]["Point Refs"].length; m++) {
@@ -741,7 +741,6 @@ module.exports = Rpt = {
                     delete docs[i]["Point Refs"];
                 }
             }
-
             return cb(null, docs);
         });
     },

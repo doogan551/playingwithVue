@@ -262,7 +262,6 @@ var reportsViewModel = function () {
                     result = "True";
                     break;
                 case "UniquePID":
-                case "Enum":
                 case "undecided":
                 case "Float":
                 case "Integer":
@@ -275,6 +274,7 @@ var reportsViewModel = function () {
                 case "Timet":
                     result = 0;
                     break;
+                case "Enum":
                 case "String":
                 case "None":
                     result = "";
@@ -739,14 +739,20 @@ var reportsViewModel = function () {
                     var result = "";
                     if (data[columnName] !== undefined) {
                         if (typeof data[columnName] === 'object') {
-                            if (data[columnName].PointInst && data[columnName].PointInst > 0) {
-                                result = data[columnName].PointName;
+                            if (data[columnName].PointInst !== undefined) {
+                                if (data[columnName].PointInst > 0) {
+                                    result = data[columnName].PointName;
+                                } else {
+                                    result = "";
+                                }
                             } else {
                                 result = data[columnName].Value;
                             }
                         } else {
                             result = data[columnName];
                         }
+                    } else {
+                        console.log(" ERROR -- Data set does NOT contain value for '" + columnName + "'")
                     }
                     return result;
                 },
@@ -1410,8 +1416,9 @@ var reportsViewModel = function () {
 
     self.clearFilterPoint = function (indexOfColumn) {
         var tempArray = self.listOfFilters(),
-            item = tempArray[indexOfColumn];
-        item.value = "";
+            filter = tempArray[indexOfColumn];
+
+        filter.value = setDefaultValue(filter.valueType);;
         self.listOfFilters([]);
         self.listOfFilters(tempArray);
     };
