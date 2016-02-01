@@ -734,6 +734,7 @@ var reportsViewModel = function () {
                 i,
                 columnsArray = validateColumns(),
                 len = columnsArray.length,
+                pointType,
                 renderCell = function (data, columnName) {
                     var result = "";
                     if (data[columnName] !== undefined) {
@@ -792,9 +793,10 @@ var reportsViewModel = function () {
                         }
                     }
                     if (data[columnConfig.colName] && data[columnConfig.colName].PointInst) {
+                        pointType = window.workspaceManager.config.Utility.pointTypes.getPointTypeNameFromEnum(data[columnConfig.colName].PointType);
                         $(tdField).addClass("pointInstance");
                         $(tdField).attr('upi', data[columnConfig.colName].PointInst);
-                        $(tdField).attr('pointType', data[columnConfig.colName].PointType);
+                        $(tdField).attr('pointType', pointType);
                     }
                 },
                 buildColumnObject = function (item, columnIndex) {
