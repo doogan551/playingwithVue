@@ -361,6 +361,20 @@ body.modal-open {
     display: inline-block;
 }
 
+.columnNameContainer {
+    width: 550px;
+}
+
+.columnTotals {
+    width: 70px;
+}
+
+.columnTotals span {
+    margin-left: 3px;
+    margin-right: 3px;
+    color: #565656;
+}
+
 .filterPointName {
     display: inline-block;
     margin-left: 4px;

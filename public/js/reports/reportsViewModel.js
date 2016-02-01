@@ -84,7 +84,7 @@ var reportsViewModel = function () {
         $columnsTbody,
         $filtersTbody,
         $containerFluid,
-        $addPointbutton,
+        $addColumnButton,
         $addFilterbutton,
         $saveReportButton,
         $runReportButton,
@@ -251,6 +251,38 @@ var reportsViewModel = function () {
             result = moment.unix(filter.date).startOf('day').unix();
             result = moment.unix(result).add(hour, 'h').unix();
             result = moment.unix(result).add(min, 'm').unix();
+
+            return result;
+        },
+        setDefaultValue = function (valueType) {
+            var result;
+            switch (valueType) {
+                case "Bool":
+                case "BitString":
+                    result = "True";
+                    break;
+                case "UniquePID":
+                case "Enum":
+                case "undecided":
+                case "Float":
+                case "Integer":
+                case "Unsigned":
+                case "null":
+                case "MinSec":
+                case "HourMin":
+                case "HourMinSec":
+                case "DateTime":
+                case "Timet":
+                    result = 0;
+                    break;
+                case "String":
+                case "None":
+                    result = "";
+                    break;
+                default:
+                    result = "";
+                    break;
+            }
 
             return result;
         },
@@ -461,7 +493,7 @@ var reportsViewModel = function () {
             $columnsGrid = $direports.find(".columnsGrid");
             $filtersGrid = $direports.find(".filtersGrid");
             $containerFluid = $direports.find(".container-fluid");
-            $addPointbutton = $direports.find(".addPointbutton");
+            $addColumnButton = $direports.find(".addColumnButton");
             $addFilterbutton = $direports.find(".addFilterbutton");
             $saveReportButton = $direports.find(".saveReportButton");
             $runReportButton = $direports.find(".runReportButton");
@@ -576,11 +608,12 @@ var reportsViewModel = function () {
                 e.stopPropagation();
             });
 
-            $addPointbutton.on('click', function (e) {
+            $addColumnButton.on('click', function (e) {
                 var rowTemplate = {
                         colName: "Choose Point",
                         valueType: "String",
                         operator: "",
+                        totalColumn: false,
                         upi: 0
                     },
                     $newRow;
@@ -632,6 +665,7 @@ var reportsViewModel = function () {
             $viewReport.on('click', '.pointInstance', function () {
                 var data = {
                     upi: $(this).attr('upi'),
+                    pointType: $(this).attr('pointType'),
                     pointName: $(this).text()
                 };
 
@@ -760,6 +794,7 @@ var reportsViewModel = function () {
                     if (data[columnConfig.colName] && data[columnConfig.colName].PointInst) {
                         $(tdField).addClass("pointInstance");
                         $(tdField).attr('upi', data[columnConfig.colName].PointInst);
+                        $(tdField).attr('pointType', data[columnConfig.colName].PointType);
                     }
                 },
                 buildColumnObject = function (item, columnIndex) {
@@ -817,6 +852,15 @@ var reportsViewModel = function () {
 
             if (aoColumns.length > 0) {
                 $viewReport.DataTable({
+                    //drawCallback: function () {
+                    //    var api = this.api();
+                    //    api.table().footer().html(
+                    //        aoColumns.each(function (item) {
+                    //            console.log(" item = " + item);
+                    //            //api.column( 4, {page:'current'} ).data().sum()
+                    //        })
+                    //    );
+                    //},
                     data: reportJsonData,
                     aoColumns: aoColumns,
                     pageLength: 25,
@@ -1133,7 +1177,6 @@ var reportsViewModel = function () {
     };
 
     self.operators = function (op) {
-        //console.log(" - - operators() op = ", op);
         var opArray = [];
         switch (op) {
             case "Bool":
@@ -1309,7 +1352,11 @@ var reportsViewModel = function () {
                 height: 600
             };
         if (upi > 0) {
-            openWindow("/pointinspector/" + upi, 'Point', 'Point', 'newwindow', upi, options);
+            if (data.pointType === "Display") {
+                openWindow("/displays/view/" + upi, 'Display', 'Display', "newwindow", upi, options);
+            } else {
+                openWindow("/pointinspector/" + upi, 'Point', 'Point', 'newwindow', upi, options);
+            }
         }
     };
 
@@ -1388,7 +1435,7 @@ var reportsViewModel = function () {
         filter.operator = "EqualTo";
         filter.childLogic = false;
         filter.valueType = prop.valueType;
-        filter.value = (filter.valueType === "Bool" ? "True" : "");
+        filter.value = setDefaultValue(filter.valueType);
         filter.valueList = getValueList(selectedItem.name, selectedItem.name);
         self.listOfFilters([]);
         self.listOfFilters(tempArray);

@@ -28,7 +28,7 @@ input.input.form-control.filterContainer(data-bind="value: value", type="text", 
 div.pointreference
    button.btn.btn-danger.btn-xs.fa.fa-times(data-bind="click: function(){ $parent.clearFilterPoint($index()) }, tooltip: { title: 'Clear' }")
    button.btn.btn-info.btn-xs.fa.fa-pencil(data-bind="click: function(){ $parent.selectPointForFilter($data, $index) }, tooltip: { title: 'Edit' }")
-   .pointRef.filterPointName.container-fluid.filterContainer(data-bind="text: ($data.value !== '' ? $data.value : '- blank -'), click: function(){ $parent.showPointReview($data) }")
+   .pointRef.filterPointName.container-fluid.filterContainer(data-bind="text: ($data.value !== 0 ? $data.value : '- blank -'), click: function(){ $parent.showPointReview($data) }")
 // /ko
 // ko if: (valueType === "Bool")
 .dropdown.availablefilterValues

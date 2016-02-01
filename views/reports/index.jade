@@ -45,7 +45,7 @@ block content
                                                                 th.medium.strong Name
                                                         tbody.sortablecolums(data-bind="foreach: listOfColumns()")
                                                             tr.pointdata(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
-                                                                td
+                                                                td.columnNameContainer
                                                                     .handle
                                                                     // ko if: ($parent.reportType !== 'Property')
                                                                     button.btn.btn-danger.btn-xs.fa.fa-times(data-bind="click: function(){ $parent.clearColumnPoint($index()) }, tooltip: { title: 'Clear' }")
@@ -65,6 +65,11 @@ block content
                                                                                 a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
                                                                             // /ko
                                                                     // /ko
+                                                                td.columnTotals
+                                                                    // ko if: (($parent.reportType === 'Property') && (valueType === "Unsigned" || valueType === "Float" || valueType === "Integer"))
+                                                                    span Total
+                                                                    input.columnTotalFlag(type='checkbox', value='1', data-bind='checked: totalColumn')
+                                                                    // /ko
                                                                 // ko if: ($parent.reportType === 'Totalizer')
                                                                 td.totalizerOperator
                                                                     .dropdown.availableTotalizerOperatorsContainer
@@ -80,11 +85,11 @@ block content
                                                                                 a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $index(), 'Total') }") Total
                                                                 // /ko
                                                                 td.removecolumn
-                                                                    a.span.removerow(data-bind="click: $parent.deleteColumnRow") Remove
+                                                                    a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
                                                         tbody.showInEdit
                                                             tr
                                                                 td(colspan="4")
-                                                                    a.addPointbutton(href="#") Add Column
+                                                                    a.addColumnButton(href="#") Add Column
                             // ko if: (reportType === 'Property')
                             .panel.panel-default
                                 .panel-heading.direportpanelheader
