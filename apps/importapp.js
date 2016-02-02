@@ -2548,13 +2548,22 @@ function doGplImport(db, xmlPath, cb) {
 			filedata,
 			c,
 			cleanup = function(str) {
-				var st = JSON.stringify(str);
-				st = st.replace(/\"(f|F)alse\"/g, 'false');
-				st = st.replace(/\"(t|T)rue\"/g, 'true');
-				st = st.replace(/xp:Value/g, 'value');
-				st = st.replace('Value', 'value');
-				return JSON.parse(st);
-			},
+                if (str.sequence['xd:Dynamics']) {
+                    // console.log('copying dynamics');
+                    str.sequence.dynamic = str.sequence['xd:Dynamics']['xd:Dynamic'];
+                    // console.log(str.sequence['xd:Dynamics']['xd:Dynamic']);
+                    // console.log(str.sequence.dynamic);
+                    delete str.sequence['xd:Dynamics'];
+                }
+                var st = JSON.stringify(str);
+                st = st.replace(/\"(f|F)alse\"/g, 'false');
+                st = st.replace(/\"(t|T)rue\"/g, 'true');
+                st = st.replace(/xp:Value/g, 'value');
+                st = st.replace('Value', 'value');
+                // st = st.replace(/xd:Dynamics/g, 'dynamic');
+                // st = st.replace(/xd:Dynamic/g, 'dynamic');
+                return JSON.parse(st);
+            },
 			doNext = function() {
 				if (c < max) {
 					filename = xmls[c];
