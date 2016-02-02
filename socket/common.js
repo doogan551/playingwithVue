@@ -587,6 +587,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Port 4 Maximum Address":
               case "Port 4 Network":
               case "Port 4 Protocol":
+              case "Time Zone":
               case "VAV Channel":
                 configRequired = true;
                 break;
