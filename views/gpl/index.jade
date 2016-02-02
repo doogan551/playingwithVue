@@ -6,6 +6,9 @@ html
         link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.flat.css')
         link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
         link(rel='stylesheet', href='/css/lib/bootstrap.darkly.css')
+        //- link(rel='stylesheet', href='/css/lib/bootstrap.bootswatch.darkly.min.css')
+
+        //- link(rel='stylesheet', href='/less/lib-bootstrap/bootstrap')
         link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
         link(rel='stylesheet', href='/css/gpl/gpl.css')
         script.
@@ -171,18 +174,54 @@ html
                             .col-sm-6
                                 div#fontColorPicker(data-dropdown="true", data-sm-palette="true", data-vertical="true", data-insertpalette="true")
 
-                        //- br
-                        //- .form-group
-                        //-     label(for="editTextFontSize") Font Size
-                        //-     input#editTextFontSize(type="number", min="8", max="72", data-bind="textInput: editTextFontSize")
-                        //- .subtitle.col-xs-12.center-block Numeric Format
-                        //-     .input-row  # of Characters
-                        //-         input.pull-right(type="number", min="1", max="10", data-bind="value: editPointCharacters")
-                        //-     .input-row # of Decimals
-                        //-         input.pull-right(type="number", min="1", max="10", data-bind="value: editPointDecimals")
                     .modal-footer
                         button.btn.btn-default.btn-sm(data-dismiss="modal") Close
                         button.btn.btn-primary.btn-sm(data-bind="click: updateText") Save
+
+        #editActionButtonModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
+            .modal-dialog
+                .modal-content
+                    .modal-header
+                        h3.panel-title Edit Button
+                    .modal-body.clearfix
+                        .row.bm10px
+                            .form-group
+                                .col-sm-1.noBoldControls
+                                    label(for="actionButtonText") Text:
+                                .col-sm-11
+                                    input#actionButtonText.form-control.input-sm.input-xs(type="text", data-bind="textInput: actionButtonText")
+
+                        .row
+                            .form-group
+                                .col-sm-2
+                                    button.btn.btn-xs.btn-primary(data-bind="click: selectActionButtonPoint") Select Point
+                                .col-sm-10
+                                    small(data-bind="text: actionButtonPointName")
+
+                        .row
+                            .form-group
+                                .noBoldControls.spacedRadio
+                                    .radio
+                                        label Link to point
+                                            input(type="radio", name="actionButtonType", value="link", data-bind="checked: actionButtonType")
+                                .noBoldControls.spacedRadio
+                                    .radio
+                                        label Control point
+                                            input(type="radio", name="actionButtonType", value="control", data-bind="checked: actionButtonType")
+
+                        .row.bm10px(data-bind="visible: actionButtonType() === 'control'")
+                            .form-group.form-inline
+                                .col-sm-2.noBoldControls
+                                    label(for="actionButtonParameter") Parameter:
+                                .col-sm-10
+                                    input#actionButtonParameter.form-control.input-sm.input-xs(type="text", data-bind="textInput: actionButtonParameter")
+
+
+                    .modal-footer
+                        button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+                        button.btn.btn-primary.btn-sm(data-bind="click: updateActionButton") Save
+                        button.btn.btn-danger.btn-sm(data-bind="click: deleteActionButton") Delete
+
 
         #editInputOutput.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
             .modal-dialog
@@ -265,8 +304,8 @@ html
                     a(href="", data-bind="click:showUpdateSequenceModal") Sequence Properties
                 li.default(data-ignoretheme="true")
                     a(href="", data-bind="click: showDevicePoint") Edit Device Point
-                //- li.default(data-ignoretheme="true")
-                //-     a(href="", data-bind="click: addNewButton") Action Button
+                li.default(data-ignoretheme="true")
+                    a(href="", data-bind="click: addNewButton") Action Button
                 //- li.default(data-ignoretheme="true")
                 //-     a(href="", data-bind="click: addNewDynamic") Dynamic
                 li.default(data-ignoretheme="true")
@@ -278,6 +317,7 @@ html
         script(src='/js/lib/jquery.min.js')
         script(src='/js/lib/jquery.blockUI.js')
         script(src='/js/lib/bootstrap3.min.js')
+        script(src='/js/lib/jquery-ui.js')
         script(src='/js/lib/fabric.js')
         script(src='/js/lib/socket.io.js')
         script(src='/js/lib/knockout-3.2.0.js')
