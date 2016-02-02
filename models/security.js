@@ -27,13 +27,11 @@ var Users = {
   },
   newUser: function(data, cb) {
     var username = data.username;
-
     var password = utils.encrypt(data.Password);
 
     var searchCriteria = {
       username: username
     };
-
     var userTemplate = {
       "Auto Logout Duration": {
         "Value": "0"
@@ -107,6 +105,9 @@ var Users = {
       else if (userTemplate["System Admin"].Value == "false")
         userTemplate["System Admin"].Value = false;
     }
+    if (data.hasOwnProperty('Password Reset')) {
+      userTemplate['Password Reset'].Value = data['Password Reset'];
+    }
 
     userTemplate.username = username;
 
@@ -148,7 +149,7 @@ var Users = {
             collection: usersCollection,
             insertObj: userTemplate
           };
-          
+
           Utility.insert(criteria, function(err, userArray) {
 
             if (err) {
@@ -311,7 +312,6 @@ var Users = {
     var updateCriteria = {
       $set: {}
     };
-
     for (var key in updateData) {
       if (key == "username") {
         updateCriteria.$set[key] = updateData[key];
@@ -1034,7 +1034,6 @@ module.exports = {
       return cb(null, text);
     },
     editPhoto: function(data, cb) {
-      console.log(data.user);
       var userid = ObjectID(data.user);
       var image = data.image;
       var filename = data.name;

@@ -16,7 +16,6 @@ var upis = {
   'reactive': [918956, 918957, 918958, 918959, 918960, 918961, 918962, 918963, 918964, 918965, 918966, 918967, 918968, 918969, 918970, 918971, 918972, 918973, 918974, 918975, 918976, 918977, 918978, 918979, 918980, 918981, 918982, 918983, 918984, 918985, 918986, 918987, 918988, 918989]
 };
 
-
 function newHistory() {
   var history = require('../models/history.js');
   var start = moment('10/01/15', 'MM/DD/YY').unix();
@@ -193,48 +192,14 @@ function addProperties() {
 // addProperties();
 
 function testTwilio() {
-  var client = require('twilio')('AC197afc3a1bff2117f0ce2b26becd96e7', 'e0a0537c16e912d59166f5777c2beef7');
+  var NotifierUtility = require('../models/notifierutility');
+  var notifierUtility = new NotifierUtility();
 
-  var sendText = function() {
-    client.sendMessage({
-
-      to: '+13364694547', // Any number Twilio can deliver to
-      from: '+13367702400', // A number you bought from Twilio and can use for outbound communication
-      body: 'Today\'s date is ' + moment().format('MM/DD/YYYY') // body of the SMS message
-
-    }, function(err, responseData) { //this function is executed when a response is received from Twilio
-
-      if (!err) { // "err" is an error received during the request, if any
-        console.log(responseData.from); // outputs "+14506667788"
-        console.log(responseData.body); // outputs "word to your mother."
-
-      } else {
-        console.log(err);
-      }
-    });
-  };
-
-  var sendVoice = function() {
-    var msg = 'Johnny Roberts is a girl'.split(' ').join('+');
-    var url = 'http://twimlets.com/echo?Twiml=%3CResponse%3E%3CSay%3E' + msg + '%3C%2FSay%3E%3C%2FResponse%3E';
-    console.log(url);
-    client.makeCall({
-
-      to: '+13364694547', // Any number Twilio can call
-      from: '+13367702400', // A number you bought from Twilio and can use for outbound communication
-      url: url // A URL that produces an XML document (TwiML) which contains instructions for the call
-
-    }, function(err, responseData) {
-      console.log(err);
-      //executed when the call has been initiated.
-      console.log(responseData.from); // outputs "+14506667788"
-
-    });
-  };
-  sendText();
-
+  notifierUtility.sendVoice('13364694547', 'asafsadfafasfawf asfsaf wef wafasf', function(err, response) {
+    console.log(err, response);
+  });
 }
-// testTwilio();
+testTwilio();
 
 function updateGPL() {
   var count = 0;
@@ -586,21 +551,28 @@ function testTotalizerModel() {
   var Reports = require('../models/reports');
 
   var data = {
-    points: [/*{
-      'upi': 28366,
-      'op': 'starts'  // BI, BO, BV
-    },*/ {
-      'upi': 28366,
-      'op': 'runtime'  // BI, BO, BV
-    }/*, {
-      'upi': 2813,
-      'op': 'total' // All other types
-    }*/],
+    upis: [
+      /*{
+            'upi': 28366,
+            'op': 'starts'  // BI, BO, BV
+          },*/
+      {
+        'upi': 2813,
+        'op': 'total' // BI, BO, BV
+      }
+      /*, {
+            'upi': 2813,
+            'op': 'total' // All other types
+          }*/
+    ],
     range: {
-      'start': 1453233600,
-      'end': 1453240800
+      'start': 1453352400,
+      'end': 1453356000
     },
-    interval: 60 // time in minutes
+    "reportConfig": {
+      "returnLimit": 200,
+      "interval": 60
+    }
   };
   db.connect(connectionString.join(''), function(err) {
     Reports.totalizerReport(data, function(err, result) {
@@ -608,4 +580,4 @@ function testTotalizerModel() {
     });
   });
 }
-testTotalizerModel();
+// testTotalizerModel();

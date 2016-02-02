@@ -3,6 +3,11 @@ var msfc = {
     'dbConfig': {
       'host': 'localhost'
     },
+    'zmqConfig': {
+      'protocol': 'tcp',
+      'server': '127.0.0.1',
+      'port': '5570'
+    },
     'files': {
       'driveLetter': 'D'
     },

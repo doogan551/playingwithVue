@@ -77,7 +77,6 @@
     background-color: #d5e1f2;
 }
 
-
 .removerow {
     cursor: pointer;
 }
@@ -90,6 +89,19 @@
     cursor: pointer;
 }
 
+.availableIntervalsContainer {
+    cursor: pointer;
+    display: inline-block;
+    margin-left: 7px;
+    margin-right: 7px;
+}
+
+.intervalOffset {
+    width: 65px;
+    display: inline-block;
+    margin-left: 7px;
+}
+
 .emptyColumn {
     width: 10px;
 }
@@ -98,9 +110,30 @@
     width: 55px;
 }
 
+.dateTimeDate {
+    width: 85px;
+    display: inline-block;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+.dateTimeTime {
+    width: 50px;
+    display: inline-block;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+.pointLookupColumn {
+    min-width: 270px;
+}
 .operators.dropdown-menu {
     min-width: 55px;
     width: 55px;
+    text-indent: 0px;
+}
+
+.intervals.dropdown-menu {
+    min-width: 85px;
+    width: 85px;
     text-indent: 0px;
 }
 
@@ -133,6 +166,10 @@ ul.filterValues.dropdown-menu li a:hover {
 }
 
 ul.operators.dropdown-menu li a:hover {
+    background-color: #d5e1f2;
+}
+
+ul.intervals.dropdown-menu li a:hover {
     background-color: #d5e1f2;
 }
 
@@ -324,6 +361,33 @@ body.modal-open {
     display: inline-block;
 }
 
+.columnNameContainer {
+    width: 550px;
+}
+
+.columnTotals {
+    width: 70px;
+}
+
+.columnTotals span {
+    margin-left: 3px;
+    margin-right: 3px;
+    color: #565656;
+}
+
+.filterPointName {
+    display: inline-block;
+    margin-left: 4px;
+}
+
+.pointreference {
+    margin-top: 9px;
+}
+
+.pointreference button.btn.btn-danger.btn-xs {
+    margin-right: 3px;
+}
+
 .availablePropertiesContainer {
     display: inline-block;
 }
@@ -335,7 +399,7 @@ body.modal-open {
     display: inline-block;
     vertical-align: middle;
     cursor: move;
-    margin-right: 5px;
+    margin-right: 12px;
 }
 
 .filtersGrid .handle {
@@ -422,10 +486,14 @@ body.modal-open {
     text-indent: 15px;
 }
 .sorthandle {
-    width: 12px;
+    width: 25px;
 }
 
 .screenMessages {
     margin-left: 20%;
     width: 120%;
+}
+
+.pointdata button {
+    margin-right: 5px;
 }

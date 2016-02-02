@@ -654,6 +654,10 @@ body {
     white-space: nowrap;
 }
 
+.qualityLabel {
+    color: #777;
+}
+
 /* COMMON ELEMENTS */
 
 .removeRow:hover {

@@ -347,6 +347,81 @@
                 "enum": 255
             }
         },
+        "Default Active States": {
+            "Inactive State": {
+                "enum": 0
+            },
+            "Active State": {
+                "enum": 1
+            }
+        },
+        "Default Control Priorities": {
+            "Level 0": {
+                "enum": 0
+            },
+            "Level 1": {
+                "enum": 1
+            },
+            "Level 2": {
+                "enum": 2
+            },
+            "Level 3": {
+                "enum": 3
+            },
+            "Level 4": {
+                "enum": 4
+            },
+            "Level 5": {
+                "enum": 5
+            },
+            "Level 6": {
+                "enum": 6
+            },
+            "Level 7": {
+                "enum": 7
+            },
+            "Level 8": {
+                "enum": 8
+            },
+            "Level 9": {
+                "enum": 9
+            },
+            "Level 10": {
+                "enum": 10
+            },
+            "Level 11": {
+                "enum": 11
+            },
+            "Level 12": {
+                "enum": 12
+            },
+            "Level 13": {
+                "enum": 13
+            },
+            "Level 14": {
+                "enum": 14
+            },
+            "Level 15": {
+                "enum": 15
+            },
+            "Level 16": {
+                "enum": 16
+            }
+        },
+        "Default Feedback Types": {
+            "None": {
+                "enum": 0
+            },
+            "Single": {
+                "enum": 1
+            },
+            "Dual": {
+                "enum": 2
+            },
+            "Point": {
+                "enum": 3
+            }
+        },
         "Device Model Types": {
             "Unknown": {
                 "enum": 0
@@ -931,13 +1006,8 @@
             "History": {
                 "enum": 1
             },
-            "Involvement": {
-                "enum": 2,
-                "noninitializable": true
-            },
-            "Test": {
-                "enum": 3,
-                "noninitializable": true
+            "Totalizer": {
+                "enum": 2
             }
         },
         "Sensor Types": {
@@ -1296,7 +1366,8 @@
             "Active Value": {
                 "enum": 4,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Alarm Adjust Band": {
                 "enum": 67,
@@ -1311,7 +1382,8 @@
             "Alarm Class": {
                 "enum": 33,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Alarm Classes"
             },
             "Alarm Deadband": {
                 "enum": 68,
@@ -1346,12 +1418,14 @@
             "Alarm State": {
                 "enum": 34,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Alarm States"
             },
             "Alarm Value": {
                 "enum": 35,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Default Active States"
             },
             "Alarms Off": {
                 "enum": 9,
@@ -1371,7 +1445,8 @@
             "Authorized Value": {
                 "enum": 231,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Default Active States"
             },
             "Background Color": {
                 "enum": 312,
@@ -1426,7 +1501,8 @@
             "Calculation Type": {
                 "enum": 36,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Calibration Factor": {
                 "enum": 284,
@@ -1461,7 +1537,8 @@
             "Close Polarity": {
                 "enum": 230,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Polarities"
             },
             "Compiled Code": {
                 "enum": 269,
@@ -1496,12 +1573,14 @@
             "Control Data Type": {
                 "enum": 37,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Modbus Data Types"
             },
             "Control Function": {
                 "enum": 38,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Modbus Control Functions"
             },
             "Control Pending": {
                 "enum": 13,
@@ -1516,7 +1595,8 @@
             "Control Priority": {
                 "enum": 39,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Default Control Priorities"
             },
             "Control Property": {
                 "enum": 241,
@@ -1541,7 +1621,8 @@
             "Controller": {
                 "enum": 40,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Conversion Adjustment": {
                 "enum": 69,
@@ -1571,7 +1652,8 @@
             "Conversion Type": {
                 "enum": 41,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Conversion Types"
             },
             "Cooling Equipment": {
                 "enum": 256,
@@ -1691,12 +1773,14 @@
             "Device Port": {
                 "enum": 42,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Device Ports"
             },
             "Device Status": {
                 "enum": 43,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Device Statuses"
             },
             "Digital Heat 1 Control Point": {
                 "enum": 297,
@@ -1861,7 +1945,8 @@
             "Ethernet Protocol": {
                 "enum": 44,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Ethernet Protocols"
             },
             "Execute Now": {
                 "enum": 237,
@@ -1876,7 +1961,8 @@
             "Fan Control Strategy": {
                 "enum": 389,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Fan Control Strategy"
             },
             "Fan Off CFM Setpoint": {
                 "enum": 305,
@@ -1896,7 +1982,8 @@
             "Fail Action": {
                 "enum": 45,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Fail Actions"
             },
             "Fall Time": {
                 "enum": 76,
@@ -1921,12 +2008,14 @@
             "Feedback Polarity": {
                 "enum": 46,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Polarities"
             },
             "Feedback Type": {
                 "enum": 238,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Default Feedback Types"
             },
             "Filter": {
                 "enum": 19,
@@ -2196,7 +2285,8 @@
             "Inactive Value": {
                 "enum": 120,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Input 1 Constant": {
                 "enum": 202,
@@ -2251,17 +2341,20 @@
             "Input Range": {
                 "enum": 47,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Input Rate": {
                 "enum": 210,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Input Rates"
             },
             "Input Type": {
                 "enum": 48,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Instance": {
                 "enum": 166,
@@ -2291,7 +2384,8 @@
             "Interlock State": {
                 "enum": 49,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Last Report Time": {
                 "enum": 135,
@@ -2386,12 +2480,14 @@
             "Modbus Order": {
                 "enum": 357,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Modbus Orders"
             },
             "Model Type": {
                 "enum": 50,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Momentary Delay": {
                 "enum": 112,
@@ -2436,7 +2532,8 @@
             "Network Type": {
                 "enum": 10,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Network Types"
             },
             "Number of Starts": {
                 "enum": 214,
@@ -2506,12 +2603,14 @@
             "Off Control Data Type": {
                 "enum": 219,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Modbus Data Types"
             },
             "Off Control Function": {
                 "enum": 220,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Modbus Control Functions"
             },
             "Off Control Register": {
                 "enum": 221,
@@ -2531,12 +2630,14 @@
             "On Control Data Type": {
                 "enum": 224,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Modbus Data Types"
             },
             "On Control Function": {
                 "enum": 225,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Modbus Control Functions"
             },
             "On Control Register": {
                 "enum": 226,
@@ -2556,7 +2657,8 @@
             "Open Polarity": {
                 "enum": 229,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Polarities"
             },
             "Out of Service": {
                 "enum": 23,
@@ -2566,7 +2668,8 @@
             "Output Type": {
                 "enum": 51,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Outside Air Gain": {
                 "enum": 262,
@@ -2596,7 +2699,8 @@
             "Point Type": {
                 "enum": 52,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Point Types"
             },
             "Point Register Count": {
                 "enum": 335,
@@ -2621,17 +2725,20 @@
             "Polarity": {
                 "enum": 53,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Polarities"
             },
             "Poll Data Type": {
                 "enum": 54,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Modbus Data Types"
             },
             "Poll Function": {
                 "enum": 55,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Modbus Poll Functions"
             },
             "Poll Register": {
                 "enum": 169,
@@ -2656,7 +2763,8 @@
             "Port 1 Protocol": {
                 "enum": 56,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Port Protocols"
             },
             "Port 1 Timeout": {
                 "enum": 390,
@@ -2681,7 +2789,8 @@
             "Port 2 Protocol": {
                 "enum": 57,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Port Protocols"
             },
             "Port 2 Timeout": {
                 "enum": 391,
@@ -2706,7 +2815,8 @@
             "Port 3 Protocol": {
                 "enum": 58,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Port Protocols"
             },
             "Port 3 Timeout": {
                 "enum": 392,
@@ -2731,7 +2841,8 @@
             "Port 4 Protocol": {
                 "enum": 59,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Port Protocols"
             },
             "Port 4 Timeout": {
                 "enum": 393,
@@ -2741,17 +2852,20 @@
             "Program Change Request": {
                 "enum": 273,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Program Change Request"
             },
             "Program Error": {
                 "enum": 272,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Program Error"
             },
             "Program State": {
                 "enum": 271,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Program States"
             },
             "Proportional Band": {
                 "enum": 94,
@@ -2801,7 +2915,8 @@
             "Reliability": {
                 "enum": 60,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Reliabilities"
             },
             "Remarks": {
                 "enum": 134,
@@ -2816,12 +2931,12 @@
             "Report Interval": {
                 "enum": 7,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": false
             },
             "Report Type": {
                 "enum": 132,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": false
             },
             "Repeat Count": {
                 "enum": 253,
@@ -2836,12 +2951,14 @@
             "Reset Interval": {
                 "enum": 209,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Reset Intervals"
             },
             "Reset State": {
                 "enum": 274,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Reset Time": {
                 "enum": 208,
@@ -2931,17 +3048,20 @@
             "Select State": {
                 "enum": 207,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Sensor IO Device": {
                 "enum":399,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Sensor IO Type": {
                 "enum":400,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Sensor Point": {
                 "enum": 154,
@@ -2951,12 +3071,14 @@
             "Sensor RTD Type": {
                 "enum":401,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Sensor Type": {
                 "enum": 61,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Sensor Types"
             },
             "Sequence Device": {
                 "enum": 276,
@@ -2971,7 +3093,8 @@
             "Setback Controller": {
                 "enum": 261,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Setback Deadband": {
                 "enum": 264,
@@ -3036,7 +3159,8 @@
             "Shutdown State": {
                 "enum": 62,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Shutdown Value": {
                 "enum": 121,
@@ -3076,7 +3200,7 @@
             "States": {
                 "enum": 63,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": false
             },
             "Status Flags": {
                 "enum": 6,
@@ -3106,7 +3230,8 @@
             "Time Zone": {
                 "enum": 406,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Time Zones"
             },
             "Total": {
                 "enum": 205,
@@ -3146,7 +3271,9 @@
             "Trigger Constant": {
                 "enum": 64,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Trigger Point": {
                 "enum": 157,
@@ -3201,7 +3328,8 @@
             "Uplink Port": {
                 "enum": 65,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": "Device Ports"
             },
             "Value": {
                 "enum": 122,
@@ -3216,7 +3344,8 @@
             "VAV Channel": {
                 "enum": 66,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": true,
+                "enumsSet": ""
             },
             "Velocity Flow": {
                 "enum":402,
@@ -3226,7 +3355,7 @@
             "Velocity Type": {
                 "enum":403,
                 "valueType": "Enum",
-                "reportEnable": true
+                "reportEnable": false
             },
             "Velocity Pressure": {
                 "enum":404,

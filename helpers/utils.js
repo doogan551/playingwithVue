@@ -162,6 +162,7 @@ var converters = {
 			case "String":
 				return n.toString();
 			case "Unsigned":
+			case "UniquePID":
 				return this.convertNumber(n);
 			default:
 				return this.convertBool(this.convertNumber(n));

@@ -13,6 +13,7 @@ var Config = require('../public/js/lib/config.js');
 var actLogsEnums = Config.Enums["Activity Logs"];
 var cppApi = new(require('Cpp_API').Tasks)();
 var logger = require('../helpers/logger')(module);
+var zmq = require('../helpers/zmq');
 
 var pointsCollection = utils.CONSTANTS("pointsCollection");
 var historyCollection = utils.CONSTANTS("historyCollection");
@@ -156,7 +157,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
       point: newPoint
     };
 
-  readOnlyProps = ["_id", "_relDevice", "_relRMU", "_cfgDevice", "_updTOD", "_pollTime",
+  readOnlyProps = ["_id", "_cfgDevice", "_updTOD", "_pollTime",
     "_forceAllCOV", "_actvAlmId", "Alarm State", "Control Pending", "Device Status",
     "Last Report Time", "Point Instance", "Point Type", "Reliability"
   ];
@@ -172,18 +173,19 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
       _id: 0
     }
   }, function(err, dbPoint) {
-    if (err)
+    if (err) {
       return callback({
         err: err
       }, null);
-    else if (!dbPoint)
+    } else if (!dbPoint) {
       return callback({
         err: "Point not found: " + newPoint._id
       }, null);
-    else if (dbPoint._pStatus === Config.Enums["Point Statuses"].Deleted.enum)
+    } else if (dbPoint._pStatus === Config.Enums["Point Statuses"].Deleted.enum) {
       return callback({
         err: "Point deleted: " + newPoint._id
       }, null);
+    }
 
     configRequired = newPoint._cfgRequired;
 
@@ -585,6 +587,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Port 4 Maximum Address":
               case "Port 4 Network":
               case "Port 4 Protocol":
+              case "Time Zone":
               case "VAV Channel":
                 configRequired = true;
                 break;
@@ -1111,12 +1114,46 @@ function updPoint(downloadPoint, newPoint, callback) {
   if (downloadPoint === true) {
     //send download point request to c++ module
     var command = {
-        "Command Type": 6,
-        "upi": newPoint._id
-      },
-      err, code;
+      "Command Type": 6,
+      "upi": newPoint._id
+    };
+    var err;
+    var code;
     command = JSON.stringify(command);
-    cppApi.command(command, function(error, msg) {
+
+    zmq.sendCommand(command, function(error, msg) {
+      if (!!error) {
+        err = error.ApduErrorMsg;
+        code = parseInt(error.ApduError, 10);
+      }
+
+      if (err) {
+        if (code >= 2300 && code < 2304) {
+          Utility.update({
+            collection: constants('pointsCollection'),
+            query: {
+              _id: newPoint._id
+            },
+            updateObj: {
+              $set: {
+                _updPoint: true
+              }
+            }
+          }, function(dberr, result) {
+            if (dberr)
+              return callback(dberr, null);
+            else
+              return callback(err, "success");
+          });
+        } else {
+          return callback(err, null);
+        }
+      } else {
+        return callback(null, "success");
+      }
+    });
+
+    /*cppApi.command(command, function(error, msg) {
       if (error !== 0 && error !== null) {
         errVar = JSON.parse(error);
         err = errVar.ApduErrorMsg;
@@ -1147,7 +1184,7 @@ function updPoint(downloadPoint, newPoint, callback) {
       } else {
         return callback(null, "success");
       }
-    });
+    });*/
 
   } else {
     callback(null, "success");
@@ -1161,13 +1198,17 @@ function signalExecTOD(executeTOD, callback) {
       "Command Type": 10
     };
     command = JSON.stringify(command);
-    cppApi.command(command, function(error, msg) {
+    zmq.sendCommand(command, function(err, msg) {
+      return callback(err, msg);
+    });
+
+    /*cppApi.command(command, function(error, msg) {
       error = JSON.parse(error);
       msg = JSON.parse(msg);
 
 
       return callback(error, msg);
-    });
+    });*/
 
   } else {
     callback(null, "success");
@@ -1599,13 +1640,17 @@ function signalHostTOD(signalTOD, callback) {
       "Command Type": 9
     };
     command = JSON.stringify(command);
-    cppApi.command(command, function(error, msg) {
+    zmq.sendCommand(command, function(err, msg) {
+      return callback(err, msg);
+    });
+
+    /*cppApi.command(command, function(error, msg) {
       error = JSON.parse(error);
       msg = JSON.parse(msg);
 
 
       return callback(error, msg);
-    });
+    });*/
 
   } else {
     callback(null, "success");

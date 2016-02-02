@@ -91,7 +91,7 @@ module.exports = {
 			"Value": ""
 		},
 		"First Name": {
-			"Value": "John"
+			"Value": "Dorsett"
 		},
 		"Last Activity Time": {
 			"Value": 0
@@ -100,7 +100,7 @@ module.exports = {
 			"Value": 0
 		},
 		"Last Name": {
-			"Value": "Doe"
+			"Value": "Technologies"
 		},
 		"Password": {
 			"Value": "$2a$10$kXPCe68hNnuTtMRsHpm2F.wnxoWvyAaiRFLhSqoGgG/Wyu3kP4NEG"
@@ -109,15 +109,15 @@ module.exports = {
 			"Value": false
 		},
 		"Photo": {
-			"Value": "JohnnyRoberts.jpg"
+			"Value": ""
 		},
 		"System Admin": {
 			"Value": true
 		},
 		"Title": {
-			"Value": "user1's title"
+			"Value": "Administrator"
 		},
-		"username": "user1"
+		"username": "admin"
 	},
 	cannedReports: [{
 		"_id": 1,
