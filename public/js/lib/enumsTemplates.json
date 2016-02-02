@@ -1168,13 +1168,13 @@
             },
             "Analog Input": {
                 "enum": 0,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math"],
+                "lists": ["ai", "default", "value", "dynamic", "register", "schedEntry", "float", "math"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
             },
             "Analog Output": {
                 "enum": 1,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
+                "lists": ["ao", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
             },
@@ -1186,7 +1186,7 @@
             },
             "Analog Value": {
                 "enum": 2,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
+                "lists": ["av", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
             },
@@ -1198,13 +1198,13 @@
             },
             "Binary Input": {
                 "enum": 3,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "math"],
+                "lists": ["bi", "default", "value", "dynamic", "register", "schedEntry", "enum", "math"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Alarm Value"]
             },
             "Binary Output": {
                 "enum": 4,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "math"],
+                "lists": ["bo", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "math"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value", "Alarms Off"]
             },
@@ -1216,7 +1216,7 @@
             },
             "Binary Value": {
                 "enum": 5,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control"],
+                "lists": ["bv", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Alarm Value"]
             },

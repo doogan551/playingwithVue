@@ -201,14 +201,31 @@ var Config = (function(obj) {
                 totalTypes = Object.keys(types).length,
                 filterPointTypes = function(filter) {
                     var filtered = [],
-                        item = {};
-                    for (var prop in types) {
-                        item = types[prop];
-                        if (!filter || !!~item.lists.indexOf(filter)) {
-                            filtered.push({
-                                key: prop,
-                                enum: item.enum
-                            });
+                        added = {},
+                        i,
+                        len,
+                        doFilter = function (_filter) {
+                            var prop,
+                                item,
+                                arr = [];
+                            for (prop in types) {
+                                item = types[prop];
+                                if ((!_filter || !!~item.lists.indexOf(_filter)) && !added[prop]) {
+                                    added[prop] = true;
+                                    arr.push({
+                                        key: prop,
+                                        enum: item.enum
+                                    });
+                                }
+                            }
+                            return arr;
+                        };
+                    if (typeof filter === 'string') {
+                        filtered = doFilter(filter);
+                    } else {
+                        len = filter.length;
+                        for (i=0; i<len; i++) {
+                            filtered = filtered.concat(doFilter(filter[i]));
                         }
                     }
                     return filtered;
@@ -394,6 +411,31 @@ var Config = (function(obj) {
                         case "Fan Control Point":
                         case "Lights Control Point":
                             return filterPointTypes('enumControl');
+                        // Begin Lift Station point properties
+                        case "High Level Float Point":
+                        case "Lag Level Float Point":
+                        case "Lead Level Float Point":
+                        case "Off Level Float Point":
+                        case "Low Level Float Point":
+                            return filterPointTypes(['bi', 'bv']);
+                        case "Flow Rate Point":
+                        case "Level Sensor Point":
+                            return filterPointTypes(['ai', 'av']);
+                        case "Light Control Point":
+                        case "Horn Control Point":
+                        case "Auxiliary Control Point":
+                            return filterPointTypes(['bo', 'bv']);
+                        case "Float Alarm Point":
+                        case "Runtime Alarm Point":
+                            return filterPointTypes('bv');
+                        case "Power Fail Point":
+                            return filterPointTypes('bi');
+                        case "Flow Total Point":
+                            return filterPointTypes('av');
+                        case "Pump 1 Control Point":
+                        case "Pump 2 Control Point":
+                            return filterPointTypes(['bi', 'bo', 'bv']);
+                        // End Lift Station point properties
                         default:
                             return {
                                 error: 'Property not recognized. Received "' + property + '".'
