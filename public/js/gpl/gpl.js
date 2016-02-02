@@ -6026,7 +6026,7 @@ gpl.BlockManager = function (manager) {
                     movingBlock = bmSelf.getBlock(target.gplId);
                 }
             }
-            if (event.e.which === 1 && movingBlock && !movingBlock.isNonPoint && !bmSelf.handlingDoubleClick && !gpl.isEdit) {
+            if (event.e.which === 1 && movingBlock && !(movingBlock instanceof gpl.blocks.ConstantBlock) && !bmSelf.handlingDoubleClick && !gpl.isEdit) {
                 bmSelf.openPointEditor(movingBlock);
                 bmSelf.deselect();
             }
