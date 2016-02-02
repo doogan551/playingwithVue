@@ -4031,6 +4031,12 @@
                     "Value": "Central Time Zone",
                     "eValue": 6
                 },
+                "Trend Interval": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 13,
+                    "Value": 60
+                },
                 "Uplink Port": {
                     "isDisplayable": true,
                     "isReadOnly": false,
