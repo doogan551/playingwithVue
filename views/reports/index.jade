@@ -106,7 +106,7 @@ block content
 											// ko if: ($parent.reportType === 'Property')
 											td.sorthandle
 												.handle
-											td.filterCondition(data-bind="css: {childCondition: childLogic === true, firstConditionInGroup: beginGroup === true, lastConditionInGroup: endGroup === true} ")
+											td(data-bind="css: {filterCondition: ($parent.listOfFilters().length > 1), childCondition: childLogic === true, firstConditionInGroup: beginGroup === true, lastConditionInGroup: endGroup === true} ")
 												.dropdown.availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
 													button.btn.btn-default.dropdown-toggle.conditionButton(data-toggle="dropdown")
 														span(data-bind="text: $root.displayCondition(condition)")
@@ -159,7 +159,7 @@ block content
 												// /ko
 												// ko if: (reportType !== 'Property')
 												span.intervalLabel.medium Interval
-												input.intervalValue.form-control(data-bind="value: $root.intervalValue", type="number", min="0", max="9999")
+												input.intervalValue.form-control(data-bind="value: $root.intervalValue", type="number", min="1", max="9999")
 												.dropdown.availableIntervalsContainer
 													button.btn.btn-default.dropdown-toggle.intervalButton(data-toggle="dropdown")
 														span(data-bind="text: $root.interval()")

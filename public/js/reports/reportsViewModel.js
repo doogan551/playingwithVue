@@ -797,7 +797,7 @@ var reportsViewModel = function () {
                             result = data[columnName];
                         }
                     } else {
-                        console.log(" ERROR -- Data set does NOT contain value for '" + columnName + "'")
+                        //console.log(" ERROR -- Data set does NOT contain value for '" + columnName + "'")
                     }
                     return result;
                 },
@@ -1002,7 +1002,7 @@ var reportsViewModel = function () {
 
     self.interval = ko.observable("Minute");
 
-    self.intervalValue = ko.observable(0);
+    self.intervalValue = ko.observable(1);
 
     self.listOfIntervals = ko.observableArray([]);
 
