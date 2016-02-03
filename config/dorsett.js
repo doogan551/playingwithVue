@@ -4,9 +4,7 @@ var dorsett = {
       'host': 'localhost'
     },
     'zmqConfig': {
-      'protocol': 'tcp',
-      'server': '127.0.0.1',
-      'port': '5570'
+      'server': '127.0.0.1'
     },
     'files': {
       'driveLetter': 'D'
