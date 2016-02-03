@@ -3,7 +3,6 @@ var fs = require('fs');
 
 var Config = require('../public/js/lib/config');
 var Utility = require('../models/utility');
-var cppApi = new(require('Cpp_API').Tasks)();
 var logger = require('../helpers/logger')(module);
 var zmq = require('../helpers/zmq');
 
@@ -114,15 +113,6 @@ function runScheduleEntry(scheduleEntry, callback) {
                         callback(null);
                     }
                 });
-                /*cppApi.command(control, function(err, msg) {
-                    if (err !== 0 && err !== null) {
-                        error = JSON.parse(err);
-
-                        callback(error);
-                    } else {
-                        callback(null);
-                    }
-                });*/
             } else {
                 var oldPoint = _.cloneDeep(point);
                 point[controlProperty].Value = scheduleEntry["Control Value"].Value;
