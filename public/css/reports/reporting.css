@@ -96,9 +96,9 @@
     margin-right: 7px;
 }
 
-.intervalOffset {
-    width: 65px;
-    display: inline-block;
+.intervalValue {
+    width: 80px;
+    display: inline-flex;
     margin-left: 7px;
 }
 

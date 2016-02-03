@@ -283,10 +283,9 @@ module.exports = Rpt = {
             criteria = {},
             endTime = data.range.end,
             getNextOldest,
-            interval = reportConfig.intervalType.value,
+            intervalOptions = reportConfig.intervalType,
             returnLimit = (reportConfig.limit) ? reportConfig.limit : 200,
             noOlderTimes = [],
-            offset = reportConfig.intervalOffset,
             returnObj = {},
             returnPoints = [],
             searchCriteria = {},
@@ -322,7 +321,7 @@ module.exports = Rpt = {
 
         // make timestamps as normal then convert to new id. find all between min/max and any that match
         //timestamps = buildTimestamps(startTime, endTime, interval, offset);
-        timestamps = makeTimestamps(buildIntervals(data.range, interval));
+        timestamps = makeTimestamps(buildIntervals(data.range, intervalOptions));
         searchCriteria = {
             upi: {
                 $in: justUpis
@@ -1023,8 +1022,8 @@ module.exports = Rpt = {
         var points = data.upis;
         var reportConfig = data.reportConfig;
         var range = data.range;
-        var interval = reportConfig.intervalType;
-        var offset = reportConfig.intervalOffset;
+        var intervalOptions = reportConfig.intervalType;
+
 
         var compare = function(a, b) {
             return a.timestamp - b.timestamp;
@@ -1160,7 +1159,7 @@ module.exports = Rpt = {
         };
 
 
-        var intervals = buildIntervals(range, interval);
+        var intervals = buildIntervals(range, intervalOptions);
 
         var getInitialDataMongo = function(point, callback) {
             var history = [];
