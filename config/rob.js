@@ -5,9 +5,7 @@ var rob = {
       'dbName': 'infoscan'
     },
     'zmqConfig': {
-      'protocol': 'tcp',
       'server': '192.168.1.88',
-      'port': '5570'
     },
     'files': {
       'driveLetter': 'C'
