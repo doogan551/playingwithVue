@@ -11,7 +11,6 @@ var utils = require('../helpers/utils');
 var constants = utils.CONSTANTS;
 var Config = require('../public/js/lib/config.js');
 var actLogsEnums = Config.Enums["Activity Logs"];
-var cppApi = new(require('Cpp_API').Tasks)();
 var logger = require('../helpers/logger')(module);
 var zmq = require('../helpers/zmq');
 
@@ -1153,39 +1152,6 @@ function updPoint(downloadPoint, newPoint, callback) {
       }
     });
 
-    /*cppApi.command(command, function(error, msg) {
-      if (error !== 0 && error !== null) {
-        errVar = JSON.parse(error);
-        err = errVar.ApduErrorMsg;
-        code = parseInt(errVar.ApduError, 10);
-      } else
-        msg = JSON.parse(msg);
-
-      if (err) {
-        if (code >= 2300 && code < 2304) {
-          Utility.update({
-            collection: constants('pointsCollection'),
-            query: {
-              _id: newPoint._id
-            },
-            updateObj: {
-              $set: {
-                _updPoint: true
-              }
-            }
-          }, function(dberr, result) {
-            if (dberr)
-              return callback(dberr, null);
-            else
-              return callback(err, "success");
-          });
-        } else
-          return callback(err, null);
-      } else {
-        return callback(null, "success");
-      }
-    });*/
-
   } else {
     callback(null, "success");
   }
@@ -1201,14 +1167,6 @@ function signalExecTOD(executeTOD, callback) {
     zmq.sendCommand(command, function(err, msg) {
       return callback(err, msg);
     });
-
-    /*cppApi.command(command, function(error, msg) {
-      error = JSON.parse(error);
-      msg = JSON.parse(msg);
-
-
-      return callback(error, msg);
-    });*/
 
   } else {
     callback(null, "success");
@@ -1643,14 +1601,6 @@ function signalHostTOD(signalTOD, callback) {
     zmq.sendCommand(command, function(err, msg) {
       return callback(err, msg);
     });
-
-    /*cppApi.command(command, function(error, msg) {
-      error = JSON.parse(error);
-      msg = JSON.parse(msg);
-
-
-      return callback(error, msg);
-    });*/
 
   } else {
     callback(null, "success");
