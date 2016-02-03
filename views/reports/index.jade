@@ -162,7 +162,7 @@ block content
 												input.intervalValue.form-control(data-bind="value: $root.intervalValue", type="number", min="1", max="9999")
 												.dropdown.availableIntervalsContainer
 													button.btn.btn-default.dropdown-toggle.intervalButton(data-toggle="dropdown")
-														span(data-bind="text: $root.interval()")
+														span(data-bind="text: $root.interval")
 														span.caret.lm10px
 													ul.intervals.dropdown-menu
 														// ko foreach: $root.listOfIntervals()

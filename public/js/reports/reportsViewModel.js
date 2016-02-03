@@ -724,7 +724,6 @@ var reportsViewModel = function () {
                 }
             ];
             self.listOfIntervals(intervals);
-            self.interval(self.listOfIntervals()[0].text);
         },
         configureDataTable = function () {
             var aoColumns = [],
@@ -1052,7 +1051,8 @@ var reportsViewModel = function () {
                         break;
                 }
                 pointFilter = (reportConfig.pointFilter ? reportConfig.pointFilter : pointFilter);
-
+                self.interval(point["Report Config"].interval.text);
+                self.intervalValue(point["Report Config"].interval.value);
             } else { // Initial config
                 switch (self.reportType) {
                     case "History":
@@ -1107,8 +1107,6 @@ var reportsViewModel = function () {
                 point["Report Config"].pointFilter = pointFilter;
                 originalPoint = JSON.parse(JSON.stringify(point)); // reset original point ref since we've added attribs
             }
-
-            self.interval(point["Report Config"].interval.text);
 
             $filtersGrid.sortable({
                 appendTo: $filtersTbody,
