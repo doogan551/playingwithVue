@@ -2,8 +2,11 @@
 var async = require('async');
 var ObjectID = require('mongodb').ObjectID;
 var _ = require('lodash');
+var moment = require('moment');
 
 // OTHERS
+var NotifierUtility = require('../models/notifierutility');
+var notifierUtility = new NotifierUtility();
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
@@ -86,6 +89,10 @@ module.exports = function(_common) {
                     }
                 }
             }
+
+            notifierUtility.sendNotification(doc.o, function(err){
+
+            });
 
         } else if (doc.ns === 'infoscan.historydata') {
             // module.exports.updateDashboard(doc.o);

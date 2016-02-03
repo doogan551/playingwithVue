@@ -65,11 +65,11 @@ app.post('/twilio/sms', function(req, res){
   console.log('T', req.body.Body);
 });
 
-app.post('/plivo/sms', function(req, res){
-  console.log('P', req.body.From);
-  console.log('P', req.body.To);
-  console.log('P', req.body.Text);
-});
+// app.post('/plivo/sms', function(req, res){
+//   console.log('P', req.body.From);
+//   console.log('P', req.body.To);
+//   console.log('P', req.body.Text);
+// });
 
 app.listen(85, function(){
   console.log('listening on port', 85);

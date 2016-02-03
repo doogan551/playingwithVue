@@ -195,14 +195,15 @@ function testTwilio() {
   var NotifierUtility = require('../models/notifierutility');
   var notifierUtility = new NotifierUtility();
 
-  notifierUtility.sendVoice('13364694547', 'An alarm has occured in building 4200.', function(err, response) {
+  
+  notifierUtility.sendText('13364694547', 'An alarm has occured in building 4200. Respond with asdf to acknowledge the alarm', function(err, response) {
     console.log(err, response);
   });
 
   /*var Twilio = require('../models/twilio');
   Twilio.getCalls();*/
 }
-testTwilio();
+// testTwilio();
 
 function updateGPL() {
   var count = 0;
@@ -342,4 +343,4 @@ function testMail() {
     // mail processing code goes here 
   });
 }
-// testMail();
+testMail();

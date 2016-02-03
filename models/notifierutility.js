@@ -1,6 +1,11 @@
+var async = require('async');
+var moment = require('moment');
+var Utility = require('../models/utility');
+
 var NotifierUtility = function() {
   this.Twilio = require('./twilio');
   this.Plivo = require('./plivo');
+  this.Mailer = require('./mailer');
 };
 
 NotifierUtility.prototype.testText = function(number, message, cb) {
@@ -21,48 +26,120 @@ NotifierUtility.prototype.fixPhoneNumbers = function(number, type) {
 NotifierUtility.prototype.buildVoiceUrl = function(message, type) {
   var talkVerb = (type === 'Twilio') ? 'Say' : 'Speak';
   message = message.split(' ').join('+');
-  var url = 'http://www.infoscanweb.com:85/'+type+'/xml?say='+message+'&gather';
+  var url = 'http://www.infoscanweb.com:85/' + type + '/xml?say=' + message + '&gather';
   console.log(url);
   return url;
   // return 'http://twimlets.com/echo?Twiml=%3CResponse%3E%3C' + talkVerb + '%3E' + message + '%3C%2F' + talkVerb + '%3E%3C%2FResponse%3E';
 };
 
 NotifierUtility.prototype.sendText = function(number, message, cb) {
-  var errors = [];
-  this.Twilio.sendText(number, message, function(err, response) {
+  var self = this;
+
+  console.log(number, message);
+  self.Twilio.sendText(number, message, function(err, response) {
     if (!!err) {
-      errors.push(err);
-      this.Plivo.sendText(number, message, function(err, response) {
-        if (!!err) {
-          errors.push(err);
-          return cb(errors);
-        } else {
-          return cb(null, response);
-        }
-      });
+      return cb(err);
     } else {
-      return cb(null, response);
+      return cb(null);
     }
   });
+
 };
 
 NotifierUtility.prototype.sendVoice = function(number, message, cb) {
   var errors = [];
   this.Twilio.sendVoice(number, message, function(err, response) {
     if (!!err) {
-      errors.push(err);
-      this.Plivo.sendVoice(number, message, function(err, response) {
-        if (!!err) {
-          errors.push(err);
-          return cb(errors);
-        } else {
-          return cb(null, response);
-        }
-      });
+      return cb(err);
     } else {
-      return cb(null, response);
+      return cb(null);
     }
   });
+};
+
+NotifierUtility.prototype.sendEmail = function(email, message, cb) {
+  this.Mailer.sendEmail(email, message, cb);
+};
+
+NotifierUtility.prototype.sendNotification = function(alarm, cb) {
+  console.log('sendNotification');
+  var self = this;
+  var hasNotifications = function(upi, cb) {
+    var doSend = false;
+    Utility.getOne({
+      collection: 'points',
+      query: {
+        _id: upi
+      }
+    }, function(err, point) {
+      var pointAlarms = point['Alarm Messages'];
+      for (var i = 0; i < pointAlarms.length; i++) {
+        if (alarm.msgType === pointAlarms[i].msgType && !!pointAlarms[i].notify) {
+          doSend = true;
+        }
+      }
+      return cb(err, doSend);
+    });
+  };
+  var checkPolicies = function(alarm, callback) {
+    var policies = [{
+      number: '13364694547',
+      type: 6,
+      ack: true,
+      email: 'rkendall@dorsett-tech.com'
+    }, {
+      number: '13364690900',
+      type: 2,
+      ack: true,
+      email: 'jroberts@dorsett-tech.com'
+    }];
+
+    callback(null, policies);
+  };
+
+  hasNotifications(alarm.upi, function(err, doSend) {
+    checkPolicies(alarm, function(err, notifications) {
+      async.each(notifications, function(notification, callback) {
+        async.waterfall([function(wfcb) {
+          if (notification.type & 1) { //voice
+            self.sendVoice(notification.number, self.makeMessage(alarm, notification), wfcb);
+          }else{
+            wfcb(null);
+          }
+        }, function(wfcb) {
+          if (notification.type & 2) { // sms
+            self.sendText(notification.number, self.makeMessage(alarm, notification), wfcb);
+          }else{
+            wfcb(null);
+          }
+        }, function(wfcb) {
+          if (notification.type & 4) {
+            self.sendEmail(notification.email, self.makeMessage(alarm, notification), wfcb);
+          }else{
+            wfcb(null);
+          }
+        }], callback);
+      }, cb);
+    });
+
+  });
+};
+
+NotifierUtility.prototype.makeMessage = function(alarm, notification) {
+  var makeAckString = function() {
+    var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var string = '';
+    for (var i = 0; i < 4; i++) {
+      string += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return string;
+  };
+  var message = 'Alarm: "' + alarm.msgText + '" at ' + moment.unix(alarm.msgTime).format('MM/DD/YYYY HH:mm:ss') + '.';
+  if (!!notification.ack) {
+    message += ' Reply with ' + makeAckString() + ' to acknowledge';
+    //update alarm
+  }
+  return message;
 };
 
 module.exports = NotifierUtility;

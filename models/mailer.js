@@ -15,5 +15,14 @@ module.exports = {
         text: msg
       });
     }
+  },
+  sendEmail: function(to, msg, cb) {
+    nodemailer.mail({
+      from: 'robert.ian.kendall@gmail.com',
+      to: to,
+      subject: 'Alarm',
+      text: msg
+    });
+    cb();
   }
 };
