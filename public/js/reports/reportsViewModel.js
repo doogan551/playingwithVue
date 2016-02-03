@@ -636,6 +636,7 @@ var reportsViewModel = function () {
             point.name2 = $pointName2.val();
             point.name3 = $pointName3.val();
             point.name4 = $pointName4.val();
+            point.Name = self.reportDisplayTitle();
 
             //if (JSON.stringify(originalPoint) === JSON.stringify(point)) {
             //    return;
@@ -646,9 +647,7 @@ var reportsViewModel = function () {
             }));
         },
         setReportEvents = function () {
-            var intervals,
-                $availablePropertiesContainer = $filtersGrid.find(".availablePropertiesContainer"),
-                $propertySelect = $availablePropertiesContainer.find(".propertySelect");
+            var intervals;
             $columnNames.on('click', function (e) {
                 openPointSelectorForColumn();
                 e.preventDefault();
@@ -721,12 +720,12 @@ var reportsViewModel = function () {
                 self.showPointReview(data);
             });
 
-            $propertySelect.on('click', function (e) {
-                console.log("  you are here dude ---------------------------------------->");
-                window.setTimeout(function () { // Delay the focus for drop down transition to finish
-                    $propertySelect.find(".inputSearch").focus();
-                }, 50);
-            });
+            //$propertySelect.on('click', function (e) {
+            //    console.log("  you are here dude ---------------------------------------->");
+            //    window.setTimeout(function () { // Delay the focus for drop down transition to finish
+            //        $propertySelect.find(".inputSearch").focus();
+            //    }, 50);
+            //});
 
             intervals = [
                 {
@@ -1053,8 +1052,8 @@ var reportsViewModel = function () {
             $pointName4.val(point.name4);
 
             initSocket();
-
             self.reportDisplayTitle(point.Name);
+
             self.reportDisplayFooter(moment().format("dddd MMMM DD, YYYY hh:mm:ss a"));
             if (columns) {
                 self.listOfColumns(reportConfig.columns);
@@ -1436,6 +1435,7 @@ var reportsViewModel = function () {
             filter = tempArray[indexOfColumn];
 
         filter.value = setDefaultValue(filter.valueType);
+        filter.upi = 0;
         updateListOfFilters(tempArray);
     };
 
@@ -1505,6 +1505,13 @@ var reportsViewModel = function () {
             filter.evalue = selectedItem.evalue;
             updateListOfFilters(tempArray);
         }
+    };
+
+    self.propertySelectClick = function (element) {
+        var $searchInputField = $(element).parent().find("input");
+            window.setTimeout(function () { // Delay the focus for drop down transition to finish
+                $searchInputField.focus();
+            }, 50);
     };
 
     self.filteredProps = ko.computed(function () {

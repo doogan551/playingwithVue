@@ -59,7 +59,7 @@ block content
 												// /ko
 												// ko if: ($parent.reportType === 'Property')
 												.dropdown.availablePropertiesContainer
-													button.btn.btn-default.dropdown-toggle.propertySelect(data-toggle="dropdown")
+													button.btn.btn-default.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}",data-toggle="dropdown")
 														span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfPropertiesLength + ')')")
 														span.caret.lm10px
 													ul.enumproperties.dropdown-menu
@@ -122,7 +122,7 @@ block content
 												// /ko
 												// ko if: ($parent.reportType === 'Property')
 												.dropdown.availablePropertiesContainer
-													button.btn.btn-default.dropdown-toggle.propertySelect(data-toggle="dropdown")
+													button.btn.btn-default.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}",data-toggle="dropdown")
 														span(data-bind="text: (column !== '- - -' ? column : 'Properties (' + $root.listOfPropertiesLength + ')')")
 														span.caret.lm10px
 													ul.enumproperties.dropdown-menu
