@@ -587,6 +587,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Port 4 Maximum Address":
               case "Port 4 Network":
               case "Port 4 Protocol":
+              case "Time Zone":
               case "VAV Channel":
                 configRequired = true;
                 break;
@@ -1122,7 +1123,7 @@ function updPoint(downloadPoint, newPoint, callback) {
 
     zmq.sendCommand(command, function(error, msg) {
       if (!!error) {
-        err = error.msg;
+        err = error.ApduErrorMsg;
         code = parseInt(error.ApduError, 10);
       }
 

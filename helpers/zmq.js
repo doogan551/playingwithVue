@@ -15,9 +15,9 @@ module.exports.sendCommand = function(msg, callback) {
       logger.info(data.toString());
       data = JSON.parse(data.toString());
       if (data.hasOwnProperty('err') && data.err !== 0 && data.err !== null) {
-
-        return callback(data, null);
+        return callback(data.err, null);
       } else if (!data.DEBUG && data.msg !== 'Done') {
+        data = data.msg || data;
         return callback(null, data);
       }
   });
