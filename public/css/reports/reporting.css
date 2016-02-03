@@ -201,10 +201,6 @@ span.caret.lm10px {
     text-decoration: #00B04F;
 }
 
-.rightPanel {
-    padding-left: 125px;
-}
-
 .hint {
     border: 2px solid #2db245;
     border-radius: 6px;
@@ -392,6 +388,11 @@ body.modal-open {
     display: inline-block;
 }
 
+.inputSearch {
+    margin-left: 6px;
+    width: 215px;
+}
+
 .columnsGrid .handle {
     background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGElEQVQIW2NkYGBIA+JZQMzACCJgAIUDACENAQR6zKpeAAAAAElFTkSuQmCC) repeat;
     width: 7px;
@@ -455,23 +456,25 @@ body.modal-open {
 .enumproperties li:hover{
     cursor: pointer;
 }
-.panel-default > .panel-heading.direportpanelheader {
+.direports .rightPanel {
     background-color: lightyellow;
-}
-.panel-collapse.direportpanel {
-    background-color: white;
-}
-.form-group.clearfix.direportgroup {
-    background-color: lightyellow;
-    padding: 3px;
     width: 100%;
-    margin-left: 1px;
-    margin-bottom: 3px;
+    padding-left: 124px;
+    margin-left: 11px;
+    margin-top: -5px;
+}
+.direports .tab-content {
+    margin-top: 11px;
 }
 .reporttype {
     margin-top: 12px;
 }
-.reporttitle {
+.reportTitle {
+    margin-top: 12px;
+    text-align: center;
+    padding: 10px;
+}
+.reporttitlediv {
     margin-top: 12px;
 }
 .hideCell {
@@ -479,11 +482,22 @@ body.modal-open {
 }
 .filterCondition {
     width: 50px;
+    background: #EAEAEA;
     padding-left: 3px;
     padding-right: 3px;
 }
 .filterCondition.childCondition {
     text-indent: 15px;
+    padding-left: 12px;
+    padding-right: 10px;
+}
+.filterCondition.firstConditionInGroup {
+    border-top-left-radius: 22px;
+    border-top-right-radius: 22px;
+}
+.filterCondition.lastConditionInGroup {
+    border-bottom-left-radius: 22px;
+    border-bottom-right-radius: 22px;
 }
 .sorthandle {
     width: 25px;

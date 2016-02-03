@@ -1,4 +1,4 @@
-// ko if: (valueType === "DateTime")
+// ko if: (valueType === "DateTime" || valueType === "Timet")
 input.input.form-control.filterContainer.dateTimeDate(data-bind="reportDatePicker: date", type="text", required)
 input.input.form-control.filterContainer.dateTimeTime(data-bind="reportTimePicker: time", type="text", required)
 // /ko
@@ -51,7 +51,7 @@ input.input.form-control.filterContainer(data-bind="value: value", type="text", 
 input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
 // /ko
 // ko if: (valueType === "Timet")
-input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
+//input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
 // /ko
 
 

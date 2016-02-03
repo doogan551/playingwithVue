@@ -660,13 +660,19 @@ module.exports = Rpt = {
             parseNameField = function(paramsField, fieldName) {
                 var parsedNameField = {};
                 if (paramsField !== null && paramsField !== undefined) {
-                    parsedNameField[fieldName] = {
-                        '$regex': '(?i)^' + paramsField
-                    };
+                    logger.info("- - - - - - -------------- parseNameField() paramsField = [" + paramsField + "]");
+                    if (paramsField === "ISBLANK") {
+                        parsedNameField[fieldName] = "";
+                    } else {
+                        parsedNameField[fieldName] = {
+                            '$regex': '(?i)^' + paramsField
+                        };
+                    }
                 }
                 return parsedNameField;
             };
 
+        //logger.info("- - - - - - - data = " + JSON.stringify(data));
         if (properties) {
             for (var k = 0; k < properties.length; k++) {
                 var p = properties[k].colName;

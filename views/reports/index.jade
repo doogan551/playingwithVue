@@ -8,187 +8,182 @@ block content
                 .reportingGettingData
                     i.fa.fa-spinner.fa-spin.fa-3x
                     span.spinnertext
-                .tabConfiguration.well.tab-pane.active.workingPane
-                    .row.form-horizontal
-                        .form-group.clearfix.direportgroup
-                            h5.col-sm-2.control-label
-                                strong.center-block Point Name
-                            .col-sm-10
-                                .form-inline
-                                    input.pointName1.form-control.input-md(required, type="text", placeholder="Point1", style="width:20%")
-                                    input.pointName2.form-control.input-md(required, type="text", placeholder="Point2", style="width:20%")
-                                    input.pointName3.form-control.input-md(type="text", placeholder="Point3", style="width:20%")
-                                    input.pointName4.form-control.input-md(type="text", placeholder="Point4", style="width:20%")
-                    .row.form-horizontal
-                        .form-group.clearfix.direportgroup
-                            h5.col-sm-2.control-label
-                                strong Report Title
-                            .col-sm-10.reporttitle
-                                input.form-control.input-md(data-bind="value: reportDisplayTitle")
-                    .row.form-horizontal
-                        .form-group.clearfix.direportgroup
-                            h5.col-sm-2.control-label
-                                strong Report Type
-                            .col-sm-10.reporttype
-                                medium(data-bind="text: reportType")
-                    .row.clearfix
-                        .panel-group
-                            .panel.panel-default
-                                   .panel-heading.direportpanelheader
-                                        h4.strong.panel-title
-                                            a.panel-anchor(data-toggle="collapse" data-target="#columnsPanel" href="#columnsPanel") Columns
-                                            .panel-collapse.collapse#columnsPanel.direportpanel
-                                                .panel-body
-                                                    table.columnsGrid.small.grid.table
-                                                        thead
-                                                            tr.strong
-                                                                th.medium.strong Name
-                                                        tbody.sortablecolums(data-bind="foreach: listOfColumns()")
-                                                            tr.pointdata(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
-                                                                td.columnNameContainer
-                                                                    .handle
-                                                                    // ko if: ($parent.reportType !== 'Property')
-                                                                    button.btn.btn-danger.btn-xs.fa.fa-times(data-bind="click: function(){ $parent.clearColumnPoint($index()) }, tooltip: { title: 'Clear' }")
-                                                                    button.btn.btn-info.btn-xs.fa.fa-pencil(data-bind="click: function(){ $parent.selectPointForColumn($data, $index) }, tooltip: { title: 'Edit' }")
-                                                                    .columnName(data-bind="text: colName, click: function(){ $parent.showPointReview($data) }")
-                                                                    // /ko
-                                                                    // ko if: ($parent.reportType === 'Property')
-                                                                    .dropdown.availablePropertiesContainer
-                                                                        button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
-                                                                            span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfPropertiesLength + ')')")
-                                                                            span.caret.lm10px
-                                                                        ul.enumproperties.dropdown-menu
-                                                                            input.form-control(data-bind="textInput: $root.propertiesFilter", type="text", placeholder="Search...")
-                                                                            li(role="separator", class="divider")
-                                                                            // ko foreach: $root.filteredProps()
-                                                                            li
-                                                                                a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
-                                                                            // /ko
-                                                                    // /ko
-                                                                td.columnTotals
-                                                                    // ko if: (($parent.reportType === 'Property') && (valueType === "Unsigned" || valueType === "Float" || valueType === "Integer"))
-                                                                    span Total
-                                                                    input.columnTotalFlag(type='checkbox', value='1', data-bind='checked: totalColumn')
-                                                                    // /ko
-                                                                // ko if: ($parent.reportType === 'Totalizer')
-                                                                td.totalizerOperator
-                                                                    .dropdown.availableTotalizerOperatorsContainer
-                                                                        button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
-                                                                            span(data-bind="text: operator")
-                                                                            span.caret.lm10px
-                                                                        ul.enumoperators.dropdown-menu
-                                                                            li
-                                                                                a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $index(), 'Starts') }") Starts
-                                                                            li
-                                                                                a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $index(), 'Runtime') }") Runtime
-                                                                            li
-                                                                                a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $index(), 'Total') }") Total
-                                                                // /ko
-                                                                td.removecolumn
-                                                                    a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
-                                                        tbody.showInEdit
-                                                            tr
-                                                                td(colspan="4")
-                                                                    a.addColumnButton(href="#") Add Column
-                            // ko if: (reportType === 'Property')
-                            .panel.panel-default
-                                .panel-heading.direportpanelheader
-                                    h4.panel-title
-                                        a.panel-anchor.filterByPointPanelAnchor(data-toggle="collapse" data-target="#filterByPointPanel" href="#filterByPointPanel") Filter By Point Types / Points
-                                        .panel-collapse.collapse#filterByPointPanel.direportpanel
-                                            .panel-body
-                                                iframe.pointLookupFrame(name='pid_filter', min-height='800px', min-width='960px', width='100%', height='400px', frameborder='', scrolling='no')
-                            // /ko
-                            .panel.panel-default
-                                .panel-heading.direportpanelheader
-                                    h4.panel-title
-                                        a.panel-anchor.filtersPanelAnchor(data-toggle="collapse" data-target="#filtersPanel" href="#filtersPanel") Additional Filters
-                                        .panel-collapse.collapse#filtersPanel.direportpanel
-                                            .panel-body
-                                                table.filtersGrid.small.grid.table
-                                                    tbody(data-bind="foreach: listOfFilters()")
-                                                        tr.filterdata
-                                                            // ko if: ($parent.reportType === 'Property')
-                                                            td.sorthandle
-                                                                .handle
+                .tabConfiguration
+                    ul.nav.nav-tabs
+                        li.attribs.active(role="presentation")
+                            a.strong(href="#reportAttribs", data-toggle="tab") Report Attributes
+                        li.columns(role="presentation")
+                            a.strong(href="#reportColumns", data-toggle="tab") Columns
+                        li.filterByPoint(role="presentation")
+                            a.strong(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
+                        li.additionalFilters(role="presentation")
+                            a.strong(href="#additionalFilters", data-toggle="tab") Additional Filters
+                    h4.strong.reportTitle(data-bind="text: reportDisplayTitle")
+                    div.tab-content
+                        div#reportAttribs.active.tab-pane
+                            .form-group.clearfix.direportgroup
+                                h5.col-sm-2.control-label
+                                    strong.center-block Point Name
+                                .col-sm-10
+                                    .form-inline
+                                        input.pointName1.form-control.input-md(required, type="text", placeholder="Point1", style="width:20%")
+                                        input.pointName2.form-control.input-md(required, type="text", placeholder="Point2", style="width:20%")
+                                        input.pointName3.form-control.input-md(type="text", placeholder="Point3", style="width:20%")
+                                        input.pointName4.form-control.input-md(type="text", placeholder="Point4", style="width:20%")
+                            .form-group.clearfix.direportgroup
+                                h5.col-sm-2.control-label
+                                    strong Report Title
+                                .col-sm-10.reporttitlediv
+                                    input.form-control.input-md(data-bind="value: reportDisplayTitle")
+                            .form-group.clearfix.direportgroup
+                                h5.col-sm-2.control-label
+                                    strong Report Type
+                                .col-sm-10.reporttype
+                                    medium(data-bind="text: reportType")
+                        div#reportColumns.tab-pane
+                            h4.strong.panel-title
+                                table.columnsGrid.small.grid.table
+                                    thead
+                                        tr.strong
+                                            th.medium.strong Name
+                                    tbody.sortablecolums(data-bind="foreach: listOfColumns()")
+                                        tr.pointdata(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
+                                            td.columnNameContainer
+                                                .handle
+                                                // ko if: ($parent.reportType !== 'Property')
+                                                button.btn.btn-danger.btn-xs.fa.fa-times(data-bind="click: function(){ $parent.clearColumnPoint($index()) }, tooltip: { title: 'Clear' }")
+                                                button.btn.btn-info.btn-xs.fa.fa-pencil(data-bind="click: function(){ $parent.selectPointForColumn($data, $index) }, tooltip: { title: 'Edit' }")
+                                                .columnName(data-bind="text: colName, click: function(){ $parent.showPointReview($data) }")
+                                                // /ko
+                                                // ko if: ($parent.reportType === 'Property')
+                                                .dropdown.availablePropertiesContainer
+                                                    button.btn.btn-default.dropdown-toggle.propertySelect(data-toggle="dropdown")
+                                                        span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfPropertiesLength + ')')")
+                                                        span.caret.lm10px
+                                                    ul.enumproperties.dropdown-menu
+                                                        input.form-control.inputSearch(data-bind="textInput: $root.propertiesFilter", type="text", placeholder="Search...")
+                                                        li(role="separator", class="divider")
+                                                        // ko foreach: $root.filteredProps()
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
+                                                        // /ko
+                                                // /ko
+                                            td.columnTotals
+                                                // ko if: (($parent.reportType === 'Property') && (valueType === "Unsigned" || valueType === "Float" || valueType === "Integer"))
+                                                span Total
+                                                input.columnTotalFlag(type='checkbox', value='1', data-bind='checked: totalColumn')
+                                                // /ko
+                                            // ko if: ($parent.reportType === 'Totalizer')
+                                            td.totalizerOperator
+                                                .dropdown.availableTotalizerOperatorsContainer
+                                                    button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
+                                                        span(data-bind="text: operator")
+                                                        span.caret.lm10px
+                                                    ul.enumoperators.dropdown-menu
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $index(), 'Starts') }") Starts
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $index(), 'Runtime') }") Runtime
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $index(), 'Total') }") Total
+                                            // /ko
+                                            td.removecolumn
+                                                a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
+                                    tbody.showInEdit
+                                        tr
+                                            td(colspan="4")
+                                                a.addColumnButton(href="#") Add Column
+                        div#filterByPoint.tab-pane
+                            h4.strong.panel-title
+                                iframe.pointLookupFrame(name='pid_filter', min-height='800px', min-width='960px', width='100%', height='500px', frameborder='', scrolling='no')
+                        div#additionalFilters.tab-pane
+                            h4.strong.panel-title
+                                table.filtersGrid.small.grid.table
+                                    tbody(data-bind="foreach: listOfFilters()")
+                                        tr.filterdata
+                                            // ko if: ($parent.reportType === 'Property')
+                                            td.sorthandle
+                                                .handle
+                                            td.filterCondition(data-bind="css: {childCondition: childLogic === true, firstConditionInGroup: beginGroup === true, lastConditionInGroup: endGroup === true} ")
+                                                .dropdown.availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
+                                                    button.btn.btn-default.dropdown-toggle.conditionButton(data-toggle="dropdown")
+                                                        span(data-bind="text: $root.displayCondition(condition)")
+                                                    ul.operators.dropdown-menu
+                                                        // ko foreach: $root.conditions()
+                                                        li
+                                                            a.condition(data-bind="click: function(){ $root.selectedFilterCondition($parentContext.$index(), $data) }, text: text", required)
+                                                        // /ko
+                                            // /ko
+                                            td.filterName
+                                                // ko if: ($parent.reportType !== 'Property')
+                                                span(data-bind="text: column")
+                                                // /ko
+                                                // ko if: ($parent.reportType === 'Property')
+                                                .dropdown.availablePropertiesContainer
+                                                    button.btn.btn-default.dropdown-toggle.propertySelect(data-toggle="dropdown")
+                                                        span(data-bind="text: (column !== '- - -' ? column : 'Properties (' + $root.listOfPropertiesLength + ')')")
+                                                        span.caret.lm10px
+                                                    ul.enumproperties.dropdown-menu
+                                                        input.form-control.inputSearch(data-bind="textInput: $root.propertiesFilter", type="text", placeholder="Search...")
+                                                        li(role="separator", class="divider")
+                                                        // ko foreach: $root.filteredProps()
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectPropertyFilter($element, $parentContext.$index(), $data) }, text: $data.name")
+                                                        // /ko
+                                                // /ko
+                                            td.filterOperator
+                                                // ko if: ($parent.reportType === 'Property')
+                                                .dropdown.availableOperatorsContainer
+                                                    button.btn.btn-default.dropdown-toggle.operatorButton(data-toggle="dropdown")
+                                                        span(data-bind="text: $root.displayOperator(operator)")
+                                                        //span.caret.lm10px
+                                                    ul.operators.dropdown-menu
+                                                        // ko foreach: $root.operators(valueType)
+                                                        li
+                                                            a.operator(data-bind="click: function(){ $root.selectedFilterOperator($parentContext.$index(), $data) }, text: text", required)
+                                                        // /ko
+                                                // /ko
+                                            td.emptyColumn
+                                            td.filterValue
+                                                div.col-md-9
+                                                    include ./filterValueUI
+                                            td.removecolumn
+                                                a.span.removerow(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") Remove
 
-                                                            td.filterCondition(data-bind="css: {childCondition: childLogic === true} ")
-                                                                .dropdown.availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
-                                                                    button.btn.btn-default.dropdown-toggle.conditionButton(data-toggle="dropdown")
-                                                                        span(data-bind="text: $root.displayCondition(condition)")
-                                                                    ul.operators.dropdown-menu
-                                                                        // ko foreach: $root.conditions()
-                                                                        li
-                                                                            a.condition(data-bind="click: function(){ $root.selectedFilterCondition($parentContext.$index(), $data) }, text: text", required)
-                                                                        // /ko
-                                                            // /ko
-                                                            td.filterName
-                                                                // ko if: ($parent.reportType !== 'Property')
-                                                                span(data-bind="text: column")
-                                                                // /ko
-                                                                // ko if: ($parent.reportType === 'Property')
-                                                                .dropdown.availablePropertiesContainer
-                                                                    button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
-                                                                        span(data-bind="text: (column !== '- - -' ? column : 'Properties (' + $root.listOfPropertiesLength + ')')")
-                                                                        span.caret.lm10px
-                                                                    ul.enumproperties.dropdown-menu
-                                                                        input.form-control(data-bind="textInput: $root.propertiesFilter", type="text", placeholder="Search...")
-                                                                        li(role="separator", class="divider")
-                                                                        // ko foreach: $root.filteredProps()
-                                                                        li
-                                                                            a(data-bind="click: function(){ $root.selectPropertyFilter($element, $parentContext.$index(), $data) }, text: $data.name")
-                                                                        // /ko
-                                                                // /ko
-                                                            td.filterOperator
-                                                                // ko if: ($parent.reportType === 'Property')
-                                                                .dropdown.availableOperatorsContainer
-                                                                    button.btn.btn-default.dropdown-toggle.operatorButton(data-toggle="dropdown")
-                                                                        span(data-bind="text: $root.displayOperator(operator)")
-                                                                        //span.caret.lm10px
-                                                                    ul.operators.dropdown-menu
-                                                                        // ko foreach: $root.operators(valueType)
-                                                                        li
-                                                                            a.operator(data-bind="click: function(){ $root.selectedFilterOperator($parentContext.$index(), $data) }, text: text", required)
-                                                                        // /ko
-                                                                // /ko
-                                                            td.emptyColumn
-                                                            td.filterValue
-                                                                div.col-md-9
-                                                                    include ./filterValueUI
-                                                            td.removecolumn
-                                                                a.span.removerow(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") Remove
-                                                    tbody.showInEdit
-                                                        tr
-                                                            td(colspan="4")
-                                                                // ko if: (reportType === 'Property')
-                                                                a.addFilterbutton(href="#") Add Filter
-                                                                // /ko
-                                                                // ko if: (reportType !== 'Property')
-                                                                span.intervalLabel.medium Interval
-                                                                .dropdown.availableIntervalsContainer
-                                                                    button.btn.btn-default.dropdown-toggle.intervalButton(data-toggle="dropdown")
-                                                                        span(data-bind="text: $root.intervalType().text")
-                                                                        span.caret.lm10px
-                                                                    ul.intervals.dropdown-menu
-                                                                        // ko foreach: $root.listOfIntervals()
-                                                                        li
-                                                                            a.operator(data-bind="click: function(){ $root.selectIntervalType($data.value) }, text: $data.text", required)
-                                                                        // /ko
-                                                                //span.intervalLabel.medium Offset
-                                                                //input.intervalOffset.form-control(data-bind="value: $root.intervalOffset", type="number")
-                                                                // /ko
-                    .row.clearfix(style="padding:10px")
-                        .col-xs-4
-                        .col-xs-8.pull-right
-                            .saveReportButton.btn.btn-primary
-                                | Save Report
-                            .runReportButton.btn.btn-primary
-                                | Run Report
-                    .screenMessages
-                        .row.well-sm
-                            .col-sm-6
-                                .errorMessage.alert-danger
-                                .successMessage.alert-success
+                                    tbody.showInEdit
+                                        tr
+                                            td(colspan="4")
+                                                // ko if: (reportType === 'Property')
+                                                a.addFilterbutton(href="#") Add Filter
+                                                // /ko
+                                                // ko if: (reportType !== 'Property')
+                                                span.intervalLabel.medium Interval
+                                                .dropdown.availableIntervalsContainer
+                                                    button.btn.btn-default.dropdown-toggle.intervalButton(data-toggle="dropdown")
+                                                        span(data-bind="text: $root.intervalType().text")
+                                                        span.caret.lm10px
+                                                    ul.intervals.dropdown-menu
+                                                        // ko foreach: $root.listOfIntervals()
+                                                        li
+                                                            a.operator(data-bind="click: function(){ $root.selectIntervalType($data.value) }, text: $data.text", required)
+                                                        // /ko
+                                                //span.intervalLabel.medium Offset
+                                                //input.intervalOffset.form-control(data-bind="value: $root.intervalOffset", type="number")
+                                                // /ko
+
+                    .helpMe
+                        .row.clearfix(style="padding:10px")
+                            .col-xs-4
+                            .col-xs-8.pull-right
+                                .saveReportButton.btn.btn-primary
+                                    | Save Report
+                                .runReportButton.btn.btn-primary
+                                    | Run Report
+                        .screenMessages
+                            .row.well-sm
+                                .col-sm-6
+                                    .errorMessage.alert-danger
+                                    .successMessage.alert-success
                 .tabViewReport.well.tab-pane.workingPane
                         .row
                             h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
