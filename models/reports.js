@@ -655,7 +655,11 @@ module.exports = Rpt = {
             sort = data.Sort,
             sortObject = {},
             nameQuery,
-            $or = [],
+            searchCriteria = {
+                $or: [{
+                    $and: []
+                }]
+            },
             returnLimit = utils.converters.convertType(reportConfig.returnLimit),
             parseNameField = function(paramsField, fieldName) {
                 var parsedNameField = {};
@@ -690,7 +694,7 @@ module.exports = Rpt = {
         }
 
         if (filters && filters.length > 0) {
-            $or = Rpt.collectFilters(filters);
+            searchCriteria = Rpt.collectFilters(filters);
         }
 
         for (var i = 1; i < 5; i++) {
@@ -698,13 +702,13 @@ module.exports = Rpt = {
             if (pointFilter[key]) {
                 nameQuery = parseNameField(pointFilter[key], ("name" + i));
                 if (nameQuery) {
-                    $or["$or"][0].$and.push(nameQuery);
+                    searchCriteria["$or"][0].$and.push(nameQuery);
                 }
             }
         }
 
         if (selectedPointTypes && selectedPointTypes.length > 0) {
-            $or["$or"][0].$and.push({
+            searchCriteria["$or"][0].$and.push({
                 "Point Type.Value": {
                     $in: selectedPointTypes
                 }
@@ -717,9 +721,7 @@ module.exports = Rpt = {
             }
         }
 
-        if (filters.length > 0) {
-            searchCriteria = $or;
-        } else {
+        if (searchCriteria.length === 0) {
             searchCriteria.$and = [{}];
         }
         logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));

@@ -120,8 +120,14 @@ var reportsViewModel = function () {
             }
             $control.attr('disabled', state);
         },
-        setFiltersParentChildLogic = function () {
-            var filters = self.listOfFilters(),
+        updateListOfFilters = function (newArray) {
+            self.listOfFilters([]);
+            self.listOfFilters(setFiltersParentChildLogic(newArray));
+            self.designChanged(true);
+            self.refreshData(true);
+        },
+        setFiltersParentChildLogic = function (array) {
+            var filters = array,
                 len = filters.length,
                 i,
                 orConditionFound = false,
@@ -138,12 +144,11 @@ var reportsViewModel = function () {
 
             for (i = 0; i < len; i++) {
                 filters[i].beginGroup = (i === 0);
+                filters[i].childLogic = false;
 
                 if (i === 0) {
                     filters[i].condition = "$and";
-                    filters[i].childLogic = false;
                 } else {
-                    filters[i].childLogic = false;
                     if (filters[i].condition === "$or") {
                         orConditionFound = true;
                         filters[i].beginGroup = true;
@@ -155,6 +160,8 @@ var reportsViewModel = function () {
                 }
                 filters[i].endGroup = calcEndGroup(i);
             }
+
+            return filters;
         },
         ajaxPost = function (input, url, callback) {
             $.ajax({
@@ -212,8 +219,7 @@ var reportsViewModel = function () {
                         tempObject.valueType = "UniquePID";
                         tempObject.value = name;
                         updatedList[objIndex] = tempObject;
-                        self.listOfFilters([]);
-                        self.listOfFilters(updatedList);
+                        updateListOfFilters(updatedList);
                     }
                 },
                 windowOpenedCallback = function () {
@@ -675,6 +681,8 @@ var reportsViewModel = function () {
                     column: "",
                     condition: "$and",
                     childLogic: false,
+                    beginGroup: false,
+                    endGroup: false,
                     operator: "EqualTo",
                     valueType: "String",
                     value: "",
@@ -684,7 +692,7 @@ var reportsViewModel = function () {
                 e.stopPropagation();
                 if (self.listOfFilters.indexOf(rowTemplate) === -1) {
                     self.listOfFilters.push(rowTemplate);
-                    setFiltersParentChildLogic();
+                    updateListOfFilters(self.listOfFilters());
                 }
             });
 
@@ -1040,6 +1048,7 @@ var reportsViewModel = function () {
 
     self.deleteFilterRow = function (item) {
         self.listOfFilters.remove(item);
+        updateListOfFilters(self.listOfFilters());
     };
 
     self.init = function () {
@@ -1117,6 +1126,7 @@ var reportsViewModel = function () {
                         });
                         break;
                     case "Property":
+                        filterOpenPointSelector($filterByPoint);
                         getEnumProperties();
                         point["Report Config"].returnLimit = 4000;
                         self.listOfColumns.push({
@@ -1164,8 +1174,7 @@ var reportsViewModel = function () {
                     self.listOfFilters.remove(item);
                     self.listOfFilters.splice(newIndex, 0, item);
                     tempArray = self.listOfFilters();
-                    self.listOfFilters([]);
-                    self.listOfFilters(tempArray);
+                    updateListOfFilters(tempArray);
                 },
                 scroll: true,
                 handle: '.handle'
@@ -1205,12 +1214,12 @@ var reportsViewModel = function () {
                 self.refreshData(true);
             }, null, "arrayChange");
 
-            self.listOfFilters.subscribe(function (changes) { // watch for changes to filter array
-                console.log(" - - - - listOfFilters() changed!   changes = ", changes);
-                setFiltersParentChildLogic();
-                self.designChanged(true);
-                self.refreshData(true);
-            }, null, "arrayChange");
+            //self.listOfFilters.subscribe(function (changes) { // watch for changes to filter array
+            //    console.log(" - - - - listOfFilters() changed!   changes = ", changes);
+            //    setFiltersParentChildLogic();
+            //    self.designChanged(true);
+            //    self.refreshData(true);
+            //}, null, "arrayChange");
 
             $reportSpinner.hide();
             $containerFluid.show();
@@ -1233,7 +1242,7 @@ var reportsViewModel = function () {
                 blockUI($tabConfiguration, false);
             });
 
-            setFiltersParentChildLogic();
+            updateListOfFilters(self.listOfFilters());
             setTimeout(function () {
                 $reporttitleInput.focus();
             }, 1500);
@@ -1475,9 +1484,8 @@ var reportsViewModel = function () {
         var tempArray = self.listOfFilters(),
             filter = tempArray[indexOfColumn];
 
-        filter.value = setDefaultValue(filter.valueType);;
-        self.listOfFilters([]);
-        self.listOfFilters(tempArray);
+        filter.value = setDefaultValue(filter.valueType);
+        updateListOfFilters(tempArray);
     };
 
     self.selectPropertyColumn = function (element, indexOfColumn, selectedItem) {
@@ -1496,8 +1504,7 @@ var reportsViewModel = function () {
             $elementRow = $(element).parent().parent().parent().parent().parent(),
             $inputField = $elementRow.find(".filterValue").find("input");
         filter = initializeNewFilter(selectedItem, filter);
-        self.listOfFilters([]);
-        self.listOfFilters(tempArray);
+        updateListOfFilters(tempArray);
     };
 
     self.selectTotalizerOperator = function (element, indexOfColumn, selectedItem) {
@@ -1520,8 +1527,7 @@ var reportsViewModel = function () {
             filter = tempArray[indexOfCondition];
         if (filter.condition != selectedItem.value) {
             filter.condition = selectedItem.value;
-            self.listOfFilters([]);
-            self.listOfFilters(tempArray);
+            updateListOfFilters(tempArray);
         }
     };
 
@@ -1530,8 +1536,7 @@ var reportsViewModel = function () {
             filter = tempArray[indexOfOperator];
         if (filter.operator != selectedItem.value) {
             filter.operator = selectedItem.value;
-            self.listOfFilters([]);
-            self.listOfFilters(tempArray);
+            updateListOfFilters(tempArray);
         }
     };
 
@@ -1540,8 +1545,7 @@ var reportsViewModel = function () {
             filter = tempArray[indexOfValue];
         if (filter.value != selectedItem) {
             filter.value = selectedItem;
-            self.listOfFilters([]);
-            self.listOfFilters(tempArray);
+            updateListOfFilters(tempArray);
         }
     };
 
@@ -1551,8 +1555,7 @@ var reportsViewModel = function () {
         if (filter.evalue != selectedItem.evalue) {
             filter.value = selectedItem.value;
             filter.evalue = selectedItem.evalue;
-            self.listOfFilters([]);
-            self.listOfFilters(tempArray);
+            updateListOfFilters(tempArray);
         }
     };
 

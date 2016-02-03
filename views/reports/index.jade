@@ -14,8 +14,10 @@ block content
                             a.strong(href="#reportAttribs", data-toggle="tab") Report Attributes
                         li.columns(role="presentation")
                             a.strong(href="#reportColumns", data-toggle="tab") Columns
+                        // ko if: (reportType === 'Property')
                         li.filterByPoint(role="presentation")
                             a.strong(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
+                        // /ko
                         li.additionalFilters(role="presentation")
                             a.strong(href="#additionalFilters", data-toggle="tab") Additional Filters
                     h4.strong.reportTitle(data-bind="text: reportDisplayTitle")
