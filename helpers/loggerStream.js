@@ -5,13 +5,16 @@ winston.emitErrs = true;
 var logger = new winston.Logger({
   transports: [
     new winston.transports.File({
-      level: 'debug',
+      level: 'info',
       filename: './logs/all-logs.json',
       handleExceptions: true,
       json: true,
       maxsize: 5242880, //5MB
       maxFiles: 5,
-      colorize: false
+      colorize: false,
+      timestamp: function() {
+        return moment().format();
+      }
     }),
     new winston.transports.Console({
       level: 'debug',

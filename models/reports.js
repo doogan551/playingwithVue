@@ -646,7 +646,6 @@ module.exports = Rpt = {
             reportType = data.reportType,
             filters = reportConfig.filters,
             pointFilter = reportConfig.pointFilter,
-            searchCriteria = {},
             fields = {},
             getPointRefs = false,
             selectedPointTypes = pointFilter.selectedPointTypes,
@@ -912,7 +911,7 @@ module.exports = Rpt = {
                     if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
                         searchQuery[key + ".eValue"] = {
                             $ne: filter.evalue
-                        }
+                        };
                     } else {
                         if (utils.converters.isNumber(filter.value)) {
                             searchQuery[propertyCheckForValue(key)] = {
@@ -1024,7 +1023,7 @@ module.exports = Rpt = {
         var points = data.upis;
         var reportConfig = data.reportConfig;
         var range = data.range;
-        var interval = reportConfig.intervalType.value;
+        var interval = reportConfig.intervalType;
         var offset = reportConfig.intervalOffset;
 
         var compare = function(a, b) {
@@ -1119,12 +1118,12 @@ module.exports = Rpt = {
         var findTotal = function(initial, history) {
             var totals = [];
             var value = 0;
-
-            if (!!history.length && !!initial) {
+            if (!!history.length && initial.hasOwnProperty('Value')) {
                 value = (initial.Value > history[0].Value) ? 0 : history[0].Value - initial.Value;
             } else {
                 value = 0;
             }
+
             intervals.forEach(function(interval, index) {
                 var total = 0;
                 var start = interval.start;
@@ -1272,6 +1271,8 @@ module.exports = Rpt = {
 };
 
 var buildIntervals = function(range, interval) {
+    var intervalType = interval.text;
+    var intervalValue = interval.value;
     var intervalRanges = [];
     var intervalStart;
     var intervalEnd;
@@ -1282,7 +1283,7 @@ var buildIntervals = function(range, interval) {
     };
 
     intervalStart = moment.unix(range.start).unix();
-    intervalEnd = moment.unix(range.start).add(interval, 'minutes').unix();
+    intervalEnd = moment.unix(range.start).add(intervalValue, intervalType).unix();
     fixLongerInterval();
 
     while (intervalEnd <= range.end) {
@@ -1290,8 +1291,8 @@ var buildIntervals = function(range, interval) {
             start: intervalStart,
             end: intervalEnd
         });
-        intervalStart = moment.unix(intervalStart).add(interval, 'minutes').unix();
-        intervalEnd = moment.unix(intervalEnd).add(interval, 'minutes').unix();
+        intervalStart = moment.unix(intervalStart).add(intervalValue, intervalType).unix();
+        intervalEnd = moment.unix(intervalEnd).add(intervalValue, intervalType).unix();
         fixLongerInterval();
     }
 

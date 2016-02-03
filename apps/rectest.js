@@ -199,7 +199,7 @@ function testTwilio() {
     console.log(err, response);
   });
 }
-testTwilio();
+// testTwilio();
 
 function updateGPL() {
   var count = 0;
@@ -271,7 +271,7 @@ function totalizers() {
     op: 'starts'
   }];
   var count = points.length;
-  var date = '12/21/2015 14:00';
+  var date = '2//2015 14:00';
   var range = {
     start: moment(date, 'MM/DD/YYYY HH:mm').unix(),
     end: moment(date, 'MM/DD/YYYY HH:mm').add(1 * 60, 'minutes').unix(),
@@ -549,7 +549,9 @@ function totalizers() {
 
 function testTotalizerModel() {
   var Reports = require('../models/reports');
-
+  var interval = 'month';
+  var start = moment('10/01/2015', 'MM/DD/YYYY').unix();
+  var end = moment.unix(start).add(5, interval).unix();
   var data = {
     upis: [
       /*{
@@ -566,18 +568,21 @@ function testTotalizerModel() {
           }*/
     ],
     range: {
-      'start': 1453352400,
-      'end': 1453356000
+      'start': start,
+      'end': end
     },
     "reportConfig": {
       "returnLimit": 200,
-      "interval": 60
+      "intervalType": {
+        "text": interval,
+        "value": 1
+      }
     }
   };
   db.connect(connectionString.join(''), function(err) {
     Reports.totalizerReport(data, function(err, result) {
-      console.log(err, JSON.stringify(result));
+      console.log(err, JSON.stringify(result[0].totals.length));
     });
   });
 }
-// testTotalizerModel();
+testTotalizerModel();

@@ -17,7 +17,10 @@ var logger = function(moduleName) {
         maxsize: 5242880, //5MB
         maxFiles: 5,
         label: label,
-        colorize: false
+        colorize: false,
+        timestamp: function() {
+          return moment().format();
+        }
       }),
       new winston.transports.Console({
         level: 'debug',
@@ -25,12 +28,12 @@ var logger = function(moduleName) {
         json: false,
         colorize: true,
         label: label,
-        timestamp: function(){
+        timestamp: function() {
           return moment().format();
         }
       })
     ],
-    exceptionHandlers:[
+    exceptionHandlers: [
       new winston.transports.File({
         filename: './logs/exceptions.json',
         handleExceptions: true,
@@ -39,7 +42,10 @@ var logger = function(moduleName) {
         maxsize: 5242880, //5MB
         maxFiles: 5,
         label: label,
-        colorize: false
+        colorize: false,
+        timestamp: function() {
+          return moment().format();
+        }
       })
     ],
     exitOnError: false
