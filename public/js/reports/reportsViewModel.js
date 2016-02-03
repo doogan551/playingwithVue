@@ -90,7 +90,6 @@ var reportsViewModel = function () {
         $runReportButton,
         $filterByPoint,
         $filtersPanelAnchor,
-        //$intervalOffset,
         $reporttitleInput,
         $columnNames,
         pointSelectorRef,
@@ -471,8 +470,8 @@ var reportsViewModel = function () {
                 point["Report Config"].pointFilter = pointFilter;
                 point["Report Config"].columns = columns;
                 point["Report Config"].filters = filters;
-                point["Report Config"].intervalType.value = self.intervalType().value;
-                //point["Report Config"].intervalOffset = self.intervalOffset();
+                point["Report Config"].interval.text = self.interval();
+                point["Report Config"].interval.value = self.intervalValue();
 
                 result = {
                     upis: upis,
@@ -545,7 +544,6 @@ var reportsViewModel = function () {
             $reporttitleInput = $direports.find(".reporttitle").find("input");
             $filtersTbody = $direports.find('.filtersGrid tbody');
             $columnsTbody = $direports.find('.columnsGrid .sortablecolums');
-            //$intervalOffset = $direports.find(".intervalOffset");
         },
         getPointLookupFilterNameValues = function (nameNumber) {
             var result = "",
@@ -632,8 +630,8 @@ var reportsViewModel = function () {
             pointFilter.name3Filter = getPointLookupFilterNameValues(3);
             pointFilter.name4Filter = getPointLookupFilterNameValues(4);
             point["Report Config"].pointFilter = pointFilter;
-            point["Report Config"].intervalType.value = self.intervalType().value;
-            //point["Report Config"].intervalOffset = self.intervalOffset();
+            point["Report Config"].interval.text = self.interval();
+            point["Report Config"].interval.value = self.intervalValue();
             point.name1 = $pointName1.val();
             point.name2 = $pointName2.val();
             point.name3 = $pointName3.val();
@@ -732,39 +730,21 @@ var reportsViewModel = function () {
 
             intervals = [
                 {
-                    text: "Minute",
-                    value: 0,
-                    min: 0,
-                    max: 59
+                    text: "Minute"
                 }, {
-                    text: "Hour",
-                    value: 1,
-                    min: 0,
-                    max: 59
+                    text: "Hour"
                 }, {
-                    text: "Day",
-                    value: 2,
-                    min: 0,
-                    max: 23
+                    text: "Day"
                 }, {
-                    text: "Week",
-                    value: 3,
-                    min: 1,
-                    max: 7
+                    text: "Week"
                 }, {
-                    text: "Month",
-                    value: 4,
-                    min: 1,
-                    max: 31
+                    text: "Month"
                 }, {
-                    text: "Year",
-                    value: 5,
-                    min: 1,
-                    max: 12
+                    text: "Year"
                 }
             ];
             self.listOfIntervals(intervals);
-            self.intervalType(self.listOfIntervals()[0]);
+            self.interval(self.listOfIntervals()[0].text);
         },
         configureDataTable = function () {
             var aoColumns = [],
@@ -1020,9 +1000,9 @@ var reportsViewModel = function () {
 
     self.reportDisplayTitle = ko.observable("");
 
-    self.intervalType = ko.observable(0);
+    self.interval = ko.observable("Minute");
 
-    //self.intervalOffset = ko.observable(0);
+    self.intervalValue = ko.observable(0);
 
     self.listOfIntervals = ko.observableArray([]);
 
@@ -1139,19 +1119,16 @@ var reportsViewModel = function () {
                         break;
                 }
 
-                point["Report Config"].intervalType = {};
-                point["Report Config"].intervalType.value = self.intervalType().value;
-                point["Report Config"].intervalOffset = 0;
+                point["Report Config"].interval = {};
+                point["Report Config"].interval.text = self.interval();
+                point["Report Config"].interval.value = self.intervalValue();
                 point["Report Config"].columns = [];
                 point["Report Config"].filters = [];
                 point["Report Config"].pointFilter = pointFilter;
                 originalPoint = JSON.parse(JSON.stringify(point)); // reset original point ref since we've added attribs
             }
 
-            self.intervalType(self.listOfIntervals()[point["Report Config"].intervalType.value]);
-            //self.intervalOffset(point["Report Config"].intervalOffset);
-            //$intervalOffset.attr("max", self.intervalType().max);
-            //$intervalOffset.attr("min", self.intervalType().min);
+            self.interval(point["Report Config"].interval.text);
 
             $filtersGrid.sortable({
                 appendTo: $filtersTbody,
@@ -1362,32 +1339,6 @@ var reportsViewModel = function () {
         }
     };
 
-    self.displayIntervalType = function () {
-        switch (self.intervalType()) {
-            case 0:
-                return "Minute";
-                break;
-            case 1:
-                return "Hour";
-                break;
-            case 2:
-                return "Day";
-                break;
-            case 3:
-                return "Week";
-                break;
-            case 4:
-                return "Month";
-                break;
-            case 5:
-                return "Year";
-                break;
-            default:
-                return self.intervalType();
-                break;
-        }
-    };
-
     self.displayBool = function (val) {
         switch (val) {
             case true:
@@ -1515,11 +1466,8 @@ var reportsViewModel = function () {
         self.listOfColumns(tempArray);
     };
 
-    self.selectIntervalType = function (selectedIntervalType) {
-        self.intervalType(self.listOfIntervals()[selectedIntervalType]);
-        //$intervalOffset.attr("max", self.intervalType().max);
-        //$intervalOffset.attr("min", self.intervalType().min);
-        //self.intervalOffset(self.intervalType().min);
+    self.selectInterval = function (selectedInterval) {
+        self.interval(selectedInterval);
     };
 
     self.selectedFilterCondition = function (indexOfCondition, selectedItem) {
