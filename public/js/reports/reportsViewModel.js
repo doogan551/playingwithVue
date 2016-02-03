@@ -285,9 +285,15 @@ var reportsViewModel = function () {
             localFilter.valueType = prop.valueType;
             localFilter.value = setDefaultValue(localFilter.valueType);
             localFilter.valueList = getValueList(selectedItem.name, selectedItem.name);
-            if (localFilter.valueType === "Timet" || localFilter.valueType === "DateTime") {
-                localFilter.date = moment().unix();
-                localFilter.time = 0;
+            switch(localFilter.valueType) {
+                case "Timet":
+                case "DateTime":
+                    localFilter.date = moment().unix();
+                    localFilter.time = 0;
+                    break;
+                case "Enum":
+                    localFilter.evalue = -1;
+                    break;
             }
 
             return localFilter;
@@ -371,35 +377,14 @@ var reportsViewModel = function () {
         getValueList = function (property, pointType) {
             var result = [],
                 i,
-                options = window.workspaceManager.config.Utility.pointTypes.getEnums(property, pointType),
-                len = (options && options.length ? options.length : 0),
-                enumsSetKey,
-                enumsSet,
-                prop;
+                options = window.workspaceManager.config.Utility.pointTypes.getEnums(property, pointType, true),
+                len = (options && options.length ? options.length : 0);
 
             for (i = 0; i < len; i++) {
                 result.push({
                     value: options[i].name,
                     evalue: options[i].value
                 });
-            }
-
-            if (result.length === 0) {
-                prop = getProperty(property);
-                if (prop && prop.enumsSet) {
-                    enumsSetKey = prop.enumsSet;
-                    if (enumsSetKey !== undefined && enumsSetKey !== "") {
-                        enumsSet = window.workspaceManager.config.Enums[enumsSetKey];
-                        for (var key in enumsSet) {
-                            if (enumsSet.hasOwnProperty(key)) {
-                                result.push({
-                                    value: key,
-                                    evalue: enumsSet[key].enum
-                                });
-                            }
-                        }
-                    }
-                }
             }
 
             return result;
@@ -670,6 +655,9 @@ var reportsViewModel = function () {
                     $newRow = $columnsTbody.find('tr:last');
                     $newRow.addClass("ui-sortable-handle");
                     $newRow.addClass("danger");
+                    if (self.reportType !== "Property") {
+                        self.selectPointForColumn(rowTemplate, (self.listOfColumns().length - 1));
+                    }
                 }
             });
 
@@ -719,13 +707,6 @@ var reportsViewModel = function () {
 
                 self.showPointReview(data);
             });
-
-            //$propertySelect.on('click', function (e) {
-            //    console.log("  you are here dude ---------------------------------------->");
-            //    window.setTimeout(function () { // Delay the focus for drop down transition to finish
-            //        $propertySelect.find(".inputSearch").focus();
-            //    }, 50);
-            //});
 
             intervals = [
                 {
@@ -1356,7 +1337,8 @@ var reportsViewModel = function () {
 
     self.selectPointForColumn = function (data, index) {
         var upi = parseInt(data.upi, 10),
-            columnIndex = parseInt(index(), 10);
+            currentIndex = (typeof index === "function" ? index(): index),
+            columnIndex = parseInt(currentIndex, 10);
 
         openPointSelectorForColumn(columnIndex, upi);
     };

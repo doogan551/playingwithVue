@@ -510,7 +510,9 @@ var Config = (function(obj) {
                         var enums = enumsTemplatesJson.Enums[property],
                             keys = !!enums && Object.keys(enums),
                             enumArray = [],
-                            item;
+                            item,
+                            enumsSetKey,
+                            enumsSet;
 
                         if (!enums) return null;
 
@@ -526,6 +528,23 @@ var Config = (function(obj) {
                             }
                             enumArray.push(item);
                         }
+
+                        if (property && property.enumsSet) {
+                            enumsSetKey = property.enumsSet;
+                            if (enumsSetKey !== undefined && enumsSetKey !== "") {
+                                enumsSet = enumsTemplatesJson.Enums[enumsSetKey];
+                                for (var key in enumsSet) {
+                                    if (enumsSet.hasOwnProperty(key)) {
+                                        enumArray.push({
+                                            name: key,
+                                            value: enumsSet[key].enum,
+                                            noninitializable: enums[keys[i]].noninitializable
+                                        });
+                                    }
+                                }
+                            }
+                        }
+
                         return enumArray;
                     }
                 },
