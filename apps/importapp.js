@@ -1967,6 +1967,7 @@ function updateDevices(point, callback) {
 		point["Serial Number"] = Config.Templates.getTemplate("Device")["Serial Number"];
 		point["Device Address"] = Config.Templates.getTemplate("Device")["Device Address"];
 		point["Network Segment"] = Config.Templates.getTemplate("Device")["Network Segment"];
+		point['Trend Interval'] = Config.Templates.getTemplate("Device")["Trend Interval"];
 
 		var propertyNetwork = point["Uplink Port"].Value + " Network",
 			propertyAddress = point["Uplink Port"].Value + " Address";
