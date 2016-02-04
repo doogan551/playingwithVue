@@ -14,7 +14,7 @@ var localTZ = config.get('Infoscan.location').timezone;
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
-var conn = importconfig.conn;
+var conn = connectionString.join('');
 var xmlPath = importconfig.xmlPath;
 
 var pointsCollection = "points";
@@ -494,9 +494,9 @@ function fixUpisCollection(db, callback) {
 				}
 			});
 		};
-	setupUpis(function(err) {
+	/*setupUpis(function(err) {
 		if (err)
-			return callback(err);
+			return callback(err);*/
 
 		async.forEachSeries(indexes, function(index, indexCB) {
 			db.ensureIndex('upis', index.index, index.options, function(err, IndexName) {
@@ -553,7 +553,7 @@ function fixUpisCollection(db, callback) {
 				});
 			});
 		});
-	});
+	/*});*/
 }
 
 function testHistory() {
