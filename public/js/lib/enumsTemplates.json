@@ -850,14 +850,6 @@
                 "enum": 4
             }
         },
-        "Pump Control Modes": {
-            "Floats": {
-                "enum": 0
-            },
-            "Transducer": {
-                "enum": 1
-            }
-        },
         "Pump Select Modes": {
             "Alternating": {
                 "enum": 0
@@ -1648,8 +1640,7 @@
             "Pump Control Mode": {
                 "enum": 419,
                 "valueType": "Enum",
-                "reportEnable": false,
-                "enumSet": "Pump Control Modes"
+                "reportEnable": false
             },
             "Control Pending": {
                 "enum": 13,
@@ -14836,6 +14827,10 @@
                     "ValueType": 5,
                     "Value": "Floats",
                     "eValue": 0,
+                    "ValueOptions": {
+                        "Floats": 0,
+                        "Transducer": 1
+                    },
                     "isDisplayable": true,
                     "isReadOnly": false
                 },
@@ -14843,6 +14838,10 @@
                     "ValueType": 5,
                     "Value": "Alternating",
                     "eValue": 0,
+                    "ValueOptions": {
+                        "Alternating": 0,
+                        "Lowest Runtime": 1
+                    },
                     "isDisplayable": true,
                     "isReadOnly": false
                 },
