@@ -64,7 +64,7 @@ NotifierUtility.prototype.sendEmail = function(email, message, cb) {
 NotifierUtility.prototype.sendNotification = function(alarm, cb) {
   var self = this;
 
-  self.Notifications.hasNotifications(alarm, function(err, doSend) {
+  if (!!alarm.almNotify) {
     self.Notifications.checkPolicies(alarm, function(err, notifications) {
       async.each(notifications, function(notification, callback) {
         async.waterfall([function(wfcb) {
@@ -88,8 +88,9 @@ NotifierUtility.prototype.sendNotification = function(alarm, cb) {
         }], callback);
       }, cb);
     });
-
-  });
+  } else {
+    return cb();
+  }
 };
 
 NotifierUtility.prototype.makeMessage = function(alarm, notification) {
