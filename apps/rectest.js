@@ -343,4 +343,4 @@ function testMail() {
     // mail processing code goes here 
   });
 }
-testMail();
+// testMail();

@@ -9,7 +9,7 @@ module.exports = {
   sendError: function(msg) {
     if (!!toMail) {
       nodemailer.mail({
-        from: 'noreply@dorsett-tech.com',
+        from: 'dorsett.alarms@gmail.com',
         to: toMail,
         subject: 'Error: ' + serverConfig,
         text: msg
@@ -18,7 +18,7 @@ module.exports = {
   },
   sendEmail: function(to, msg, cb) {
     nodemailer.mail({
-      from: 'robert.ian.kendall@gmail.com',
+      from: 'dorsett.alarms@gmail.com',
       to: to,
       subject: 'Alarm',
       text: msg

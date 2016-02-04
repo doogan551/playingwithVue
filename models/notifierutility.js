@@ -1,11 +1,11 @@
 var async = require('async');
 var moment = require('moment');
-var Utility = require('../models/utility');
 
 var NotifierUtility = function() {
   this.Twilio = require('./twilio');
   this.Plivo = require('./plivo');
   this.Mailer = require('./mailer');
+  this.Notifications = require('./notifications');
 };
 
 NotifierUtility.prototype.testText = function(number, message, cb) {
@@ -62,60 +62,27 @@ NotifierUtility.prototype.sendEmail = function(email, message, cb) {
 };
 
 NotifierUtility.prototype.sendNotification = function(alarm, cb) {
-  console.log('sendNotification');
   var self = this;
-  var hasNotifications = function(upi, cb) {
-    var doSend = false;
-    Utility.getOne({
-      collection: 'points',
-      query: {
-        _id: upi
-      }
-    }, function(err, point) {
-      var pointAlarms = point['Alarm Messages'];
-      for (var i = 0; i < pointAlarms.length; i++) {
-        if (alarm.msgType === pointAlarms[i].msgType && !!pointAlarms[i].notify) {
-          doSend = true;
-        }
-      }
-      return cb(err, doSend);
-    });
-  };
-  var checkPolicies = function(alarm, callback) {
-    var policies = [{
-      number: '13364694547',
-      type: 6,
-      ack: true,
-      email: 'rkendall@dorsett-tech.com'
-    }, {
-      number: '13364690900',
-      type: 2,
-      ack: true,
-      email: 'jroberts@dorsett-tech.com'
-    }];
 
-    callback(null, policies);
-  };
-
-  hasNotifications(alarm.upi, function(err, doSend) {
-    checkPolicies(alarm, function(err, notifications) {
+  self.Notifications.hasNotifications(alarm, function(err, doSend) {
+    self.Notifications.checkPolicies(alarm, function(err, notifications) {
       async.each(notifications, function(notification, callback) {
         async.waterfall([function(wfcb) {
           if (notification.type & 1) { //voice
             self.sendVoice(notification.number, self.makeMessage(alarm, notification), wfcb);
-          }else{
+          } else {
             wfcb(null);
           }
         }, function(wfcb) {
           if (notification.type & 2) { // sms
             self.sendText(notification.number, self.makeMessage(alarm, notification), wfcb);
-          }else{
+          } else {
             wfcb(null);
           }
         }, function(wfcb) {
           if (notification.type & 4) {
             self.sendEmail(notification.email, self.makeMessage(alarm, notification), wfcb);
-          }else{
+          } else {
             wfcb(null);
           }
         }], callback);
