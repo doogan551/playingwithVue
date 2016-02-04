@@ -1,8 +1,8 @@
 var rob = {
   'Infoscan': {
     'dbConfig': {
-      'host': '192.168.1.88',
-      'dbName': 'infoscan'
+      'host': 'localhost',
+      'dbName': 'yadkinville'
     },
     'zmqConfig': {
       'server': '192.168.1.88',
