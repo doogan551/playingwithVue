@@ -238,7 +238,8 @@ block panels
             //- option(value='16') Data Report
             option Command Point
 
-          div(ng-show="editItem['ActionCode'] > 6 && editItem['ActionCode'] < 13")
+          //- div(ng-show="editItem['ActionCode'] > 6 && editItem['ActionCode'] < 13")
+          div
             label(for='ActionParmText') Parameter
             input#ActionParmText(ng-model="editItem.ActionParm", type='text', value='editItem["ActionParm"]')
           //- below for reports

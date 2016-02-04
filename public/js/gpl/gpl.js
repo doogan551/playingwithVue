@@ -6026,7 +6026,7 @@ gpl.BlockManager = function (manager) {
                     movingBlock = bmSelf.getBlock(target.gplId);
                 }
             }
-            if (event.e.which === 1 && movingBlock && !movingBlock.isNonPoint && !bmSelf.handlingDoubleClick && !gpl.isEdit) {
+            if (event.e.which === 1 && movingBlock && !(movingBlock instanceof gpl.blocks.ConstantBlock) && !bmSelf.handlingDoubleClick && !gpl.isEdit) {
                 bmSelf.openPointEditor(movingBlock);
                 bmSelf.deselect();
             }
@@ -6608,53 +6608,63 @@ gpl.Manager = function () {
                     managerSelf.resizeCanvas(newWidth, newHeight);
                 }
             },
+            processDimension = function () {
+                if (left < managerSelf.minX) {
+                    managerSelf.minX = left;
+                }
+
+                if (right > managerSelf.maxX) {
+                    managerSelf.maxX = right;
+                    resizes.push(resizeRight);
+                }
+
+                if (top < managerSelf.minY) {
+                    managerSelf.minY = top;
+                }
+
+                if (bottom > managerSelf.maxY) {
+                    managerSelf.maxY = bottom;
+                    resizes.push(resizeBottom);
+                }
+            },
             resizes = [],
             c,
             cc;
 
-        if (block.isToolbar !== true) {
-            for (c = 0; c < items.length; c++) {
-                item = items[c];
-                rect = item.getBoundingRect();
-                left = rect.left;
-                top = rect.top;
-                bottom = top + rect.height;
-                right = left + rect.width;
+        if (block instanceof gpl.Block || block instanceof gpl.blocks.TextBlock) {
+            if (block.isToolbar !== true) {
+                for (c = 0; c < items.length; c++) {
+                    item = items[c];
+                    rect = item.getBoundingRect();
+                    left = rect.left;
+                    top = rect.top;
+                    bottom = top + rect.height;
+                    right = left + rect.width;
 
-                if (block.isToolbar !== true) {
-                    if (left < managerSelf.minX) {
-                        managerSelf.minX = left;
-                    }
-
-                    if (right > managerSelf.maxX) {
-                        managerSelf.maxX = right;
-                        resizes.push(resizeRight);
-                    }
-
-                    if (top < managerSelf.minY) {
-                        managerSelf.minY = top;
-                    }
-
-                    if (bottom > managerSelf.maxY) {
-                        managerSelf.maxY = bottom;
-                        resizes.push(resizeBottom);
+                    if (block.isToolbar !== true) {
+                        processDimension();
                     }
                 }
-            }
 
-            if (gpl.rendered === true) {
-                managerSelf.getBoundingBox();
-            }
-
-            if (resizes.length > 0) {
-                for (cc = 0; cc < resizes.length; cc++) {
-                    resizes[cc]();
+                if (gpl.rendered === true) {
+                    managerSelf.getBoundingBox();
                 }
 
-                doResizes();
+                if (resizes.length > 0) {
+                    for (cc = 0; cc < resizes.length; cc++) {
+                        resizes[cc]();
+                    }
+
+                    doResizes();
+                }
             }
+        } else {
+            left = block.left;
+            top = block.top;
+            bottom = top + 20;
+            right = left + block.text * 8;
 
-
+            processDimension();
         }
 
         gpl.boundingRectTime += new Date() - start;
@@ -7244,6 +7254,8 @@ gpl.Manager = function () {
         }
 
         actionButton = new gpl.ActionButton(config);
+
+        managerSelf.addToBoundingRect(actionButton);
 
         managerSelf.actionButtons[actionButton.id] = actionButton;
 
