@@ -1,53 +1,20 @@
 define(['knockout', 'text!./view.html'], function(ko, view) {
 
-    /*//Bootstrap switch
-    ko.bindingHandlers.switch = {
-        init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
-            console.log(element, valueAccessor, allBindingsAccessor);
-            var $element = $(element),
-                context = ko.contextFor(element),
-                value = ko.utils.unwrapObservable(valueAccessor()),
-                allBindings = allBindingsAccessor(),
-                options = allBindings.bootstrapSwitchOptions || {},
-                doValidate = allBindings.doValidate;
-            $element.bootstrapSwitch();
-            $element.bootstrapSwitch('state', value); // Set intial state
-            // Update the model when changed.
-            $element.on('switchChange.bootstrapSwitch', function(e, data) {
-                valueAccessor()(data);
-                if (doValidate) {
-                    $(document).triggerHandler({
-                        type: 'viewmodelChange',
-                        targetElement: $element,
-                        property: context.$data.propertyName,
-                        refPoint: null
-                    });
+    ko.observable.fn.bit = function(bit) {
+        var mask = Math.pow(2, bit);
+        return ko.computed({
+            read: function() {
+                return !!(this() & bit);
+            },
+            write: function(checked) {
+                if (checked) {
+                    this(this() | bit);
+                } else {
+                    this(this() & ~bit);
                 }
-            });
-            // Adding component options
-            for (var property in options) {
-                $element.bootstrapSwitch(property, ko.unwrap(options[property]));
             }
-            //handle disposal (if KO removes by the template binding)
-            ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
-                $element.bootstrapSwitch('destroy');
-            });
-        },
-        update: function(element, valueAccessor, allBindingsAccessor, viewModel) {
-            var $element = $(element),
-                switchState = $element.bootstrapSwitch('state'),
-                value = ko.utils.unwrapObservable(valueAccessor()),
-                allBindings = allBindingsAccessor(),
-                options = allBindings.bootstrapSwitchOptions || {};
-            if (switchState != value) {
-                $element.bootstrapSwitch('state', value);
-            }
-            // Adding component options
-            for (var property in options) {
-                $element.bootstrapSwitch(property, ko.unwrap(options[property]));
-            }
-        }
-    };*/
+        }, this);
+    };
 
     function ViewModel(params) {
         this.columnClasses = params.columnClasses;
