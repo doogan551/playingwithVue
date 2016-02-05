@@ -295,6 +295,13 @@ var reportsViewModel = function () {
                     localFilter.date = moment().unix();
                     localFilter.time = 0;
                     break;
+                case "HourMinSec":
+                case "HourMin":
+                case "MinSec":
+                    localFilter.hours = 0;
+                    localFilter.minutes = 0;
+                    localFilter.seconds = 0;
+                    break;
                 case "Enum":
                     localFilter.evalue = -1;
                     break;
@@ -351,15 +358,28 @@ var reportsViewModel = function () {
         },
         validateFilters = function () {
             var results = [],
-                localArray = $.extend(true, [], self.listOfFilters()),
+                filters = $.extend(true, [], self.listOfFilters()),
                 i;
 
-            for (i = 0; i < localArray.length; i++) {
-                if (localArray[i].column !== "") {
-                    if (localArray[i].valueType === "DateTime" || localArray[i].valueType === "Timet") {
-                        localArray[i].value = getAdjustedDatetime(localArray[i]);
+            for (i = 0; i < filters.length; i++) {
+                if (filters[i].column !== "") {
+                    switch(filters[i].valueType) {
+                        case "Timet":
+                        case "DateTime":
+                            filters[i].value = getAdjustedDatetime(filters[i]);
+                            break;
+                        case "HourMinSec":
+                        case "HourMin":
+                        case "MinSec":
+                            filters[i].hours = parseInt(filters[i].hours, 10);
+                            filters[i].minutes = parseInt(filters[i].minutes, 10);
+                            filters[i].seconds = parseInt(filters[i].seconds, 10);
+                            filters[i].value = parseInt(filters[i].hours * 3600, 10);
+                            filters[i].value += parseInt(filters[i].minutes * 60, 10);
+                            filters[i].value += parseInt(filters[i].seconds, 10);
+                            break;
                     }
-                    results.push(localArray[i]);
+                    results.push(filters[i]);
                     delete results[results.length - 1]["valueList"]; // valuelist is only used in UI
                 }
             }
@@ -753,7 +773,7 @@ var reportsViewModel = function () {
                 columnsArray = validateColumns(),
                 len = columnsArray.length,
                 pointType,
-                renderCell = function (data, columnName, valueType) {
+                generateFieldValue = function (data, columnName, valueType) {
                     var result = "";
                     if (data[columnName] !== undefined) {
                         if (typeof data[columnName] === 'object') {
@@ -767,9 +787,6 @@ var reportsViewModel = function () {
                                 case "Integer":
                                 case "Unsigned":
                                 case "null":
-                                case "MinSec":
-                                case "HourMin":
-                                case "HourMinSec":
                                 case "None":
                                     result = data[columnName].Value;
                                     break;
@@ -780,6 +797,11 @@ var reportsViewModel = function () {
                                     } else {
                                         result = "";
                                     }
+                                    break;
+                                case "MinSec":
+                                case "HourMin":
+                                case "HourMinSec":
+                                    result = data[columnName].Value;
                                     break;
                                 case "UniquePID":
                                     if (data[columnName].PointInst !== undefined) {
@@ -818,13 +840,40 @@ var reportsViewModel = function () {
                     }
                     return name;
                 },
-                setTdClasses = function (tdField, datatype) {
-                    switch (datatype) {
-                        case "DateTime":
-                            $(tdField).addClass("small");
-                            break;
-                        default:
-                            break;
+                generateCustomHtml = function (tdField, columnConfig, data, columnIndex) {
+                    var $customField,
+                        htmlString,
+                        value;
+                    setTdClasses(tdField, columnConfig.valueType);
+                    setTdAttribs(tdField, columnConfig, data, columnIndex);
+                    if (data[columnConfig.colName]) {
+                        switch (columnConfig.valueType) {
+                            case "MinSec":
+                                value = data[columnConfig.colName].Value;
+                                htmlString = '<div class="durationCtrl durationDisplay"><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
+                                $customField = $(htmlString);
+                                $customField.find(".min").html(~~((value % 3600) / 60));
+                                $customField.find(".sec").html(value % 60);
+                                $(tdField).html($customField);
+                                break;
+                            case "HourMin":
+                                value = data[columnConfig.colName].Value;
+                                htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span></div>';
+                                $customField = $(htmlString);
+                                $customField.find(".hr").html(~~(value / 3600));
+                                $customField.find(".min").html(~~((value % 3600) / 60));
+                                $(tdField).html($customField);
+                                break;
+                            case "HourMinSec":
+                                value = data[columnConfig.colName].Value;
+                                htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
+                                $customField = $(htmlString);
+                                $customField.find(".hr").html(~~(value / 3600));
+                                $customField.find(".min").html(~~((value % 3600) / 60));
+                                $customField.find(".sec").html(value % 60);
+                                $(tdField).html($customField);
+                                break;
+                        }
                     }
                 },
                 setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
@@ -849,6 +898,15 @@ var reportsViewModel = function () {
                         $(tdField).addClass("pointInstance");
                         $(tdField).attr('upi', data[columnConfig.colName].PointInst);
                         $(tdField).attr('pointType', pointType);
+                    }
+                },
+                setTdClasses = function (tdField, datatype) {
+                    switch (datatype) {
+                        case "DateTime":
+                            $(tdField).addClass("small");
+                            break;
+                        default:
+                            break;
                     }
                 },
                 buildColumnObject = function (item, columnIndex) {
@@ -881,12 +939,11 @@ var reportsViewModel = function () {
                         // data: getColumnField(item.colName),
                         // render: getColumnField(item.colName),
                         render: function (data, type, row, item) {
-                            return renderCell(data, columnsArray[item.col].dataColumnName, columnsArray[item.col].valueType);
+                            return generateFieldValue(data, columnsArray[item.col].dataColumnName, columnsArray[item.col].valueType);
                         },
                         className: "dt-head-center",
                         fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
-                            setTdClasses(nTd, columnsArray[iCol].valueType);
-                            setTdAttribs(nTd, columnsArray[iCol], oData, iCol);
+                            generateCustomHtml(nTd, columnsArray[iCol], oData, iCol);
                         },
                         bSortable: true
                     };
