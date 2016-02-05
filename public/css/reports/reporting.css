@@ -57,6 +57,38 @@
     text-decoration: underline;
 }
 
+.durationCtrl {
+    background-color: white;
+    border: 1px solid #D0D0D0;
+    border-radius: 3px;
+    padding: 2px 8px 2px 2px;
+    width: 130px;
+    text-align: right;
+}
+.durationCtrl > input {
+    width: 25px;
+    text-align: right;
+    padding: 3px;
+    border: none;
+    outline: none;
+}
+.durationCtrl > .timeSeg {
+    font-size: x-small;
+}
+.durationCtrl.durationDisplay {
+    text-align: right;
+    padding: 3px 10px 3px 3px;
+    border: none;
+    outline: none;
+}
+.durationCtrl.durationDisplay > .timeSeg {
+    padding-right: 4px;
+}
+.durationCtrl > input::-webkit-inner-spin-button,
+.durationCtrl > input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
 .workingPane {
     min-width: 1120px;
     margin-left: 13px;
