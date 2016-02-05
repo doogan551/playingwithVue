@@ -103,13 +103,14 @@ module.exports = {
 			"Value": "Technologies"
 		},
 		"Password": {
-			"Value": "$2a$10$kXPCe68hNnuTtMRsHpm2F.wnxoWvyAaiRFLhSqoGgG/Wyu3kP4NEG"
+			// "Value": "$2a$10$kXPCe68hNnuTtMRsHpm2F.wnxoWvyAaiRFLhSqoGgG/Wyu3kP4NEG"
+			"Value": "$2a$10$JTDBjtJyR7r/36yrKzVOjuLh4g4gIlV0UwghIOZk6BveEGPNPMWQ6" // AdminPassword(0)
 		},
 		"Password Reset": {
 			"Value": false
 		},
 		"Photo": {
-			"Value": ""
+			"Value": "dorsett-tech.png"
 		},
 		"System Admin": {
 			"Value": true
@@ -117,7 +118,7 @@ module.exports = {
 		"Title": {
 			"Value": "Administrator"
 		},
-		"username": "admin"
+		"username": "Admin"
 	},
 	cannedReports: [{
 		"_id": 1,
