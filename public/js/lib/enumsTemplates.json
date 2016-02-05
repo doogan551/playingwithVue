@@ -14634,17 +14634,6 @@
                     "PointInst": 0,
                     "DevInst": 0
                 }, {
-                    "PropertyName": "Remote Unit Point",
-                    "PropertyEnum": 152,
-                    "AppIndex": 0,
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
-                    "PointInst": 0,
-                    "DevInst": 0
-                }, {
                     "PropertyName": "Auxiliary Control Point",
                     "PropertyEnum": 423,
                     "AppIndex": 0,
