@@ -29,41 +29,39 @@
     <div id="overview" class="content">
         <div class="container-fluid">
             <div class="row">
-                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Controller', data: data, columnClasses: 'col col-sm-3 col-xs-12', enumSetName: 'Controller', rootContext: $root } } -->
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Controller', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Controller', rootContext: $root } } -->
                 <!-- /ko -->
-                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Control Priority', data: data, columnClasses: 'col col-sm-3 col-xs-12', enumSetName: 'Control Priority', rootContext: $root } } -->
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Control Priority', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Control Priority', rootContext: $root } } -->
                 <!-- /ko -->
             </div>
             <hr>
             <div class="row">
-                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Pump Control Mode', data: data, columnClasses: 'col col-sm-3 col-xs-12', rootContext: $root } } -->
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Pump Control Mode', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
                 <!-- /ko -->
-                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Pump Select Mode', data: data, columnClasses: 'col col-sm-3 col-xs-12', rootContext: $root } } -->
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Pump Select Mode', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
                 <!-- /ko -->
-
-                <!--  ko component: { name: 'ctl-number', params: { propertyName: 'High Level Setpoint', data: data, columnClasses: 'col col-sm-3 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
-                <!-- /ko -->
-                <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Lag Level Setpoint', data: data, columnClasses: 'col col-sm-3 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
-                <!-- /ko -->
-                <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Lead Level Setpoint', data: data, columnClasses: 'col col-sm-3 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
-                <!-- /ko -->
-                <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Off Level Setpoint', data: data, columnClasses: 'col col-sm-3 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
-                <!-- /ko -->
-                <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Low Level Setpoint', data: data, columnClasses: 'col col-sm-3 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
+                <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Pump Sequence Delay', data: data, columnClasses: 'col col-sm-4 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
                 <!-- /ko -->
             </div>
             <div class="row">
-                <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Pump Sequence Delay', data: data, columnClasses: 'col col-sm-3 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
+                <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Max Pump Off Time', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+                <!-- /ko -->
+                <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Max Pump Run Time', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
+                <!-- /ko -->
+                <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Emergency Pump Down Time', data: data, columnClasses: 'col col-sm-4 col-xs-12', rootContext: $root } } -->
                 <!-- /ko -->
             </div>
+            <hr data-bind="visible: data['Pump Control Mode'].Value() === 'Transducer'">
             <div class="row">
-                <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Max Pump Off Time', data: data, columnClasses: 'col col-sm-3 col-xs-12', rootContext: $root } } -->
+                <!--  ko component: { name: 'ctl-number', params: { propertyName: 'High Level Setpoint', data: data, columnClasses: 'col col-sm-4 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
                 <!-- /ko -->
-                <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Max Pump Run Time', data: data, columnClasses: 'col col-sm-3 col-xs-12', rootContext: $root } } -->
+                <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Lag Level Setpoint', data: data, columnClasses: 'col col-sm-4 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
                 <!-- /ko -->
-            </div>
-            <div class="row">
-                <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Emergency Pump Down Time', data: data, columnClasses: 'col col-sm-3 col-xs-12', rootContext: $root } } -->
+                <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Lead Level Setpoint', data: data, columnClasses: 'col col-sm-4 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
+                <!-- /ko -->
+                <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Off Level Setpoint', data: data, columnClasses: 'col col-sm-4 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
+                <!-- /ko -->
+                <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Low Level Setpoint', data: data, columnClasses: 'col col-sm-4 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
                 <!-- /ko -->
             </div>
             <hr>
@@ -115,37 +113,37 @@
                 <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Auxiliary Control Point', rootContext: $root } } -->
                 <!-- /ko -->
             </div>
-            <hr>
+            <div class="vspacer20"></div>
             <div class="row">
                 <div class="col col-sm-4 col-xs-12">
                     <strong>Light Output Configuration</strong>
-                    <!-- ko foreach: lightConfigOptions -->
+                    <!-- ko foreach: alarmOutputConfig -->
                     <div class="checkbox">
                         <label>
-                            <input data-bind="checked: data.value" type="checkbox">
-                            <span data-bind="text: name">
+                            <input data-bind="checked: $parent.data['Light Output Configuration'].Value.bit($data.bit), enable: $parent.isInEditMode" type="checkbox">
+                            <span data-bind="text: $data.key"></span>
                         </label>
                     </div>
                     <!-- /ko -->
                 </div>
                 <div class="col col-sm-4 col-xs-12">
                     <strong>Horn Output Configuration</strong>
-                    <!-- ko foreach: hornConfigOptions -->
+                    <!-- ko foreach: alarmOutputConfig -->
                     <div class="checkbox">
                         <label>
-                            <input data-bind="checked: data.value" type="checkbox">
-                            <span data-bind="text: name">
+                            <input data-bind="checked: $parent.data['Horn Output Configuration'].Value.bit($data.bit), enable: $parent.isInEditMode" type="checkbox">
+                            <span data-bind="text: $data.key"></span>
                         </label>
                     </div>
                     <!-- /ko -->
                 </div>
                 <div class="col col-sm-4 col-xs-12">
                     <strong>Auxiliary Output Configuration</strong>
-                    <!-- ko foreach: auxConfigOptions -->
+                    <!-- ko foreach: alarmOutputConfig -->
                     <div class="checkbox">
                         <label>
-                            <input data-bind="checked: data.value" type="checkbox">
-                            <span data-bind="text: name">
+                            <input data-bind="checked: $parent.data['Auxiliary Output Configuration'].Value.bit($data.bit), enable: $parent.isInEditMode" type="checkbox">
+                            <span data-bind="text: $data.key"></span>
                         </label>
                     </div>
                     <!-- /ko -->
@@ -170,7 +168,7 @@
                 <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Low Level Float Point', rootContext: $root } } -->
                 <!-- /ko -->
             </div>
-            <hr>
+            <div class="vspacer20"></div>
             <div class="row">
                 <!--  ko component: { name: 'ctl-number', params: { propertyName: 'High Level Setpoint', data: data, columnClasses: 'col col-sm-3 col-xs-12', min: 0, max: 60, rootContext: $root } } -->
                 <!-- /ko -->

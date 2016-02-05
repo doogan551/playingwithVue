@@ -1,36 +1,45 @@
 define(['knockout', 'text!./view.html'], function (ko, view) {
 
+    ko.observable.fn.bit = function (bit) {
+        var mask = Math.pow(2, bit);
+        return ko.computed({
+            read: function () {
+                return !!(this() & mask);
+            },
+            write: function (checked) {
+                if (checked) {
+                    this(this() | mask);
+                } else {
+                    this(this() & ~mask);
+                }
+            }
+        }, this);
+    };
+
     function ViewModel(params) {
         var self = this,
-            configBits = params.utility.config.Enums['Lift Station Alarm Output Configuration Bits'],
-            configKeys = Object.keys(configBits),
-            configLen = configKeys.length,
-            newConfigArray = function (outputConfiguration) {
-                var arr = [];
-                for (var i = 0; i < configLen; i++) {
+            alarmOutputConfig = (function (){
+                var i,
+                    enumSet = params.utility.config.Enums['Lift Station Alarm Output Configuration Bits'],
+                    keys = Object.keys(enumSet),
+                    len = keys.length,
+                    arr = [];
+                for (i = 0; i < len; i++) {
                     arr.push({
-                        name: configKeys[i],
-                        value: ko.observable((outputConfiguration & Math.pow(2, configBits[configKeys[i]].enum)) ? true:false)
+                        key: keys[i],
+                        bit: enumSet[keys[i]].enum
                     });
                 }
                 return arr;
-            },
-            newComputed = function (srcArray, targetObservable) {
-                return ko.computed(function () {
-                    var value = 0;
-                    for (var i = 0; i < configLen; i++) {
-                        if (srcArray[i].value() === true)
-                            value += Math.pow(2, configBits[configKeys[i]].enum);
-                    }
-                    targetObservable(value);
-                });
-            };
+            })();
 
         this.point = params.point;
         this.data = params.point.data;
         this.utility = params.utility;
         this.apiEndpoint = params.apiEndpoint;
         this.isInEditMode = params.isInEditMode;
+
+        this.alarmOutputConfig = alarmOutputConfig;
 
         //define any tab triggers here
         //these are simple booleans for now
@@ -39,14 +48,6 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
             permissions: ko.observable(false)
         };
         params.tabTriggers = this.tabTriggers;
-
-        this.lightConfigOptions = newConfigArray(this.data['Light Output Configuration']());
-        this.hornConfigOptions = newConfigArray(this.data['Horn Output Configuration']());
-        this.auxConfigOptions = newConfigArray(this.data['Auxiliary Output Configuration']());
-
-        this.updateLightConfigComputed = newComputed(this.lightConfigOptions, this.data['Light Output Configuration']);
-        this.updateHornConfigComputed = newComputed(this.hornConfigOptions, this.data['Horn Output Configuration']);
-        this.updateAuxConfigComputed = newComputed(this.auxConfigOptions, this.data['Auxiliary Output Configuration']);
 
         params.initDOM();
     }
@@ -59,9 +60,6 @@ define(['knockout', 'text!./view.html'], function (ko, view) {
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
     ViewModel.prototype.dispose = function () {
-        this.updateLightConfigComputed.dispose();
-        this.updateHornConfigComputed.dispose();
-        this.updateAuxConfigComputed.dispose();
     };
 
     // Return component definition
