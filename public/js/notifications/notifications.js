@@ -146,3 +146,34 @@ var actions = {
     }
     // etc
 };
+
+var ACTIVE = 1,
+    RECURRING = 2;
+
+var notificationEntries = [{
+    // active just points to a policy every minute?  config resides on policy
+    // in case things change, rather than having static action list
+    // also for multiple actions, only want one entry
+    type: ACTIVE,
+    policyID: 123123123
+}, {
+    // recurring resides in collection since they could be long-term actions
+    // what about editing?  go through all recurring for policy, see what was changed,
+    // then rebuild the list?
+    type: RECURRING,
+    policyID: 123123123,
+    // rounded to minute
+    // instead of interval/day/hour?  precalculate
+    // if downtime, or during ping, 'get all recurring where nextAction <= nowInMinutes'
+    lastAction: 123123123123,
+    nextAction: 123321123123,
+    interval: 21, // days, for calculations
+    day: 5, // sun-sat, 0-6
+    hour: 9,
+    //below are specific to action
+    action: 'rotateMembers',
+    config: {
+        groupID: 1,
+        escalationID: 1
+    }
+}];
