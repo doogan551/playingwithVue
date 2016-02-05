@@ -401,7 +401,7 @@ var reportsViewModel = function () {
         getValueList = function (property, pointType) {
             var result = [],
                 i,
-                options = window.workspaceManager.config.Utility.pointTypes.getEnums(property, pointType, true),
+                options = window.workspaceManager.config.Utility.pointTypes.getEnums(property, pointType),
                 len = (options && options.length ? options.length : 0);
 
             for (i = 0; i < len; i++) {
@@ -778,12 +778,14 @@ var reportsViewModel = function () {
                     if (data[columnName] !== undefined) {
                         if (typeof data[columnName] === 'object') {
                             switch (valueType) {
+                                case "Float":
+                                    result = data[columnName].Value;
+                                    break;
                                 case "Bool":
                                 case "BitString":
                                 case "Enum":
                                 case "undecided":
                                 case "String":
-                                case "Float":
                                 case "Integer":
                                 case "Unsigned":
                                 case "null":

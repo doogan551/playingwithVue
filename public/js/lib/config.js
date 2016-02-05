@@ -550,13 +550,12 @@ var Config = (function(obj) {
 
                     function _getEnumFromTemplate(property) {
                         var enums = enumsTemplatesJson.Enums[property],
+                            enumsProperty = enumsTemplatesJson.Enums.Properties[property],
                             keys = !!enums && Object.keys(enums),
                             enumArray = [],
                             item,
                             enumsSetKey,
                             enumsSet;
-
-                        if (!enums) return null;
 
                         for (var i = 0, last = keys.length; i < last; i++) {
                             if (_hasPointType) {
@@ -571,8 +570,12 @@ var Config = (function(obj) {
                             enumArray.push(item);
                         }
 
-                        if (property && property.enumsSet) {
-                            enumsSetKey = property.enumsSet;
+                        if (!!enumsProperty && !!enumsProperty["enumsSet"]) {
+                            enumsSetKey = enumsProperty["enumsSet"];
+                        }
+
+                        if (property && enumsSetKey) {
+                            enumsSetKey = enumsSetKey;
                             if (enumsSetKey !== undefined && enumsSetKey !== "") {
                                 enumsSet = enumsTemplatesJson.Enums[enumsSetKey];
                                 for (var key in enumsSet) {
@@ -580,12 +583,14 @@ var Config = (function(obj) {
                                         enumArray.push({
                                             name: key,
                                             value: enumsSet[key].enum,
-                                            noninitializable: enums[keys[i]].noninitializable
+                                            noninitializable: false
                                         });
                                     }
                                 }
                             }
                         }
+
+                        if (!enums && enumArray.length === 0) enumArray = null;
 
                         return enumArray;
                     }
