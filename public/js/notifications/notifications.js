@@ -128,19 +128,21 @@ var getActiveSchedules = function (policy) {
     });
 };
 
-var getAlertRecipients = function (schedule) {
+var actions = {
+    replaceMember: function (config) {
 
+    },
+    rotateMembers: function (config) {
+
+    },
+    escalateAlert: function (config) {
+
+    },
+    sendNotification: function (config) {
+
+    },
+    getAlertRecipients: function (config) {
+
+    }
+    // etc
 };
-
-var expandedSchedules = [{
-    date: '8-1-2016',
-    endDate: '8-2-2016',
-    actionCfg: 'replaceMember',
-    currMemberID: 123,
-    replacementMemberID: 234
-}, {
-    date: '8-1-2016',
-    endDate: '8-2-2016',
-    actionCfg: 'replaceMember' // ??
-}];
-
