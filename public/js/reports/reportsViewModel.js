@@ -65,7 +65,7 @@ var initKnockout = function () {
             }
         }
     };
-}
+};
 
 var reportsViewModel = function () {
     var self = this,
@@ -97,7 +97,6 @@ var reportsViewModel = function () {
         reportSocket,
         reportJsonData = {},
         Name = "dorsett.reportUI",
-        workspace = {},
         originalPoint = {},
         pointFilter = {
             name1Filter: '',
@@ -122,6 +121,12 @@ var reportsViewModel = function () {
         updateListOfFilters = function (newArray) {
             self.listOfFilters([]);
             self.listOfFilters(setFiltersParentChildLogic(newArray));
+            self.designChanged(true);
+            self.refreshData(true);
+        },
+        updateListOfColumns = function (newArray) {
+            self.listOfColumns([]);
+            self.listOfColumns(newArray);
             self.designChanged(true);
             self.refreshData(true);
         },
@@ -192,8 +197,7 @@ var reportsViewModel = function () {
                         tempObject.colName = name;
                         tempObject.pointType = type;
                         updatedList[objIndex] = tempObject;
-                        self.listOfColumns([]);
-                        self.listOfColumns(updatedList);
+                        updateListOfColumns(updatedList);
                     }
                 },
                 windowOpenedCallback = function () {
@@ -550,8 +554,8 @@ var reportsViewModel = function () {
                 selectedPointTypes,
                 numberOfAllPointTypes;
             if (pointSelectorRef && pointSelectorRef.window.pointLookup) {
-                selectedPointTypes = pointSelectorRef.window.pointLookup.getCheckedPointTypes(),
-                    numberOfAllPointTypes = pointSelectorRef.window.pointLookup.POINTTYPES.length;
+                selectedPointTypes = pointSelectorRef.window.pointLookup.getCheckedPointTypes();
+                numberOfAllPointTypes = pointSelectorRef.window.pointLookup.POINTTYPES.length;
                 if (numberOfAllPointTypes !== selectedPointTypes.length) {
                     answer = selectedPointTypes;
                 }
@@ -652,6 +656,7 @@ var reportsViewModel = function () {
                 e.stopPropagation();
                 if (self.listOfColumns.indexOf(rowTemplate) === -1) {
                     self.listOfColumns.push(rowTemplate);
+                    updateListOfColumns(self.listOfColumns());
                     $newRow = $columnsTbody.find('tr:last');
                     $newRow.addClass("ui-sortable-handle");
                     $newRow.addClass("danger");
@@ -671,7 +676,7 @@ var reportsViewModel = function () {
                     operator: "EqualTo",
                     valueType: "String",
                     value: "",
-                    valueList: "",
+                    valueList: ""
                 };
                 e.preventDefault();
                 e.stopPropagation();
@@ -706,6 +711,23 @@ var reportsViewModel = function () {
                 };
 
                 self.showPointReview(data);
+            });
+
+            reportSocket.on('pointUpdated', function (data) {
+                var $currentmessageholder;
+                console.log(" -  -  - reportSocket() 'pointUpdated' returned");
+                if (data.err === null || data.err === undefined) {
+                    $currentmessageholder = $tabConfiguration.find(".screenMessages").find(".successMessage");
+                    $currentmessageholder.text("Report Saved");
+                    setTimeout(function () {
+                        $currentmessageholder.text("");
+                    }, 3000);  // display success message
+                } else {
+                    originalPoint = _.clone(newPoint, true);
+                    self.reportDisplayTitle(originalPoint.Name);
+                    $tabConfiguration.find(".screenMessages").find(".errorMessage").text(data.err);
+                }
+                blockUI($tabConfiguration, false);
             });
 
             intervals = [
@@ -867,7 +889,7 @@ var reportsViewModel = function () {
                             setTdAttribs(nTd, columnsArray[iCol], oData, iCol);
                         },
                         bSortable: true
-                    }
+                    };
 
                     return result;
                 };
@@ -1003,6 +1025,7 @@ var reportsViewModel = function () {
 
     self.deleteColumnRow = function (item) {
         self.listOfColumns.remove(item);
+        updateListOfColumns(self.listOfColumns());
     };
 
     self.deleteFilterRow = function (item) {
@@ -1014,7 +1037,6 @@ var reportsViewModel = function () {
         var columns,
             reportConfig;
 
-        workspace = workspace;
         getScreenFields();
         initKnockout();
 
@@ -1156,46 +1178,15 @@ var reportsViewModel = function () {
                     self.listOfColumns.remove(item);
                     self.listOfColumns.splice(newIndex, 0, item);
                     tempArray = self.listOfColumns();
-                    self.listOfColumns([]);
-                    self.listOfColumns(tempArray);
+                    updateListOfColumns(tempArray);
                 },
                 scroll: true,
                 handle: '.handle'
             });
 
-            self.listOfColumns.subscribe(function (changes) { // watch for changes to Columns array
-                console.log(" - - - - listOfColumns() changed!   changes = ", changes);
-                self.designChanged(true);
-                self.refreshData(true);
-            }, null, "arrayChange");
-
-            //self.listOfFilters.subscribe(function (changes) { // watch for changes to filter array
-            //    console.log(" - - - - listOfFilters() changed!   changes = ", changes);
-            //    setFiltersParentChildLogic();
-            //    self.designChanged(true);
-            //    self.refreshData(true);
-            //}, null, "arrayChange");
-
             $reportSpinner.hide();
             $containerFluid.show();
             tabSwitch(1);
-
-            reportSocket.on('pointUpdated', function (data) {
-                var $currentmessageholder;
-                console.log(" -  -  - reportSocket() 'pointUpdated' returned");
-                if (data.err === null || data.err === undefined) {
-                    $currentmessageholder = $tabConfiguration.find(".screenMessages").find(".successMessage");
-                    $currentmessageholder.text("Report Saved");
-                    setTimeout(function () {
-                        $currentmessageholder.text("");
-                    }, 3000);  // display success message
-                } else {
-                    originalPoint = _.clone(newPoint, true);
-                    self.reportDisplayTitle(originalPoint.Name);
-                    $tabConfiguration.find(".screenMessages").find(".errorMessage").text(data.err);
-                }
-                blockUI($tabConfiguration, false);
-            });
 
             updateListOfFilters(self.listOfFilters());
             setTimeout(function () {
@@ -1406,8 +1397,7 @@ var reportsViewModel = function () {
         item.valueType = "String";
         item.operator = "";
         item.upi = 0;
-        self.listOfColumns([]);
-        self.listOfColumns(tempArray);
+        updateListOfColumns(tempArray);
     };
 
     self.clearFilterPoint = function (indexOfColumn) {
@@ -1425,8 +1415,7 @@ var reportsViewModel = function () {
             prop = getProperty(selectedItem.name);
         column.colName = selectedItem.name;
         column.valueType = prop.valueType;
-        self.listOfColumns([]);
-        self.listOfColumns(tempArray);
+        updateListOfColumns(tempArray);
     };
 
     self.selectPropertyFilter = function (element, indexOfFilter, selectedItem) {
@@ -1442,8 +1431,7 @@ var reportsViewModel = function () {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn];
         column.operator = selectedItem;
-        self.listOfColumns([]);
-        self.listOfColumns(tempArray);
+        updateListOfColumns(tempArray);
     };
 
     self.selectInterval = function (selectedInterval) {
