@@ -804,6 +804,12 @@ displays = $.extend(displays, {
             $scope.editItem = {};
 
             $scope.updateEditItem = displays.updateEditItem = function(item) {
+                if ($scope.editItem._idx === item._idx) {// is update
+                    if (item.hasOwnProperty('ActionCode')) { // is action button
+                        item._actionButton.updateConfig(item);
+                    }
+                }
+
                 $scope.editItem = item;
                 displays.updateAnimItem(item);
             };
@@ -1106,6 +1112,19 @@ displays = $.extend(displays, {
 
             $scope.editItem = {};
 
+            $scope.cleanActionButtons = function (disp) {
+                var c,
+                    objects = disp['Screen Objects'],
+                    obj;
+
+                for (c = 0; c < objects.length; c++) {
+                    obj = objects[c];
+                    if (obj._actionButton) {
+                        delete obj._actionButton;
+                    }
+                }
+            };
+
             //    if (window.self !== window.top) {
             //        window.top.tabTitle($scope.display._id, $scope.display.Name);
             //    }
@@ -1231,7 +1250,7 @@ displays = $.extend(displays, {
                     "Left": displays.dropX,
                     "Point Type": 151,
                     "Precision": "0.0",
-                    "Screen Object": 4,
+                    "Screen Object": 1,
                     "Text": 'Action Button',
                     "Top": displays.dropY,
                     "upi": 'none',
@@ -1496,6 +1515,8 @@ displays = $.extend(displays, {
                     cc,
                     innerObj;
 
+                $scope.cleanActionButtons(saveObj);
+
                 for (c = 0; c < list.length; c++) {
                     obj = displays.filesToUpload[list[c]];
                     if(obj.file) {
@@ -1548,6 +1569,9 @@ displays = $.extend(displays, {
 
             $scope.saveLater = function() {
                 var saveObj = angular.copy(window.displayJson);
+
+                $scope.cleanActionButtons(saveObj);
+
                 saveObj.vid = saveObj._id;
                 $scope.blur();
                 delete saveObj.version;

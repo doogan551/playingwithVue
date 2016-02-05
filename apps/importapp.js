@@ -14,7 +14,7 @@ var localTZ = config.get('Infoscan.location').timezone;
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
-var conn = importconfig.conn;
+var conn = connectionString.join('');
 var xmlPath = importconfig.xmlPath;
 
 var pointsCollection = "points";
@@ -494,9 +494,9 @@ function fixUpisCollection(db, callback) {
 				}
 			});
 		};
-	setupUpis(function(err) {
+	/*setupUpis(function(err) {
 		if (err)
-			return callback(err);
+			return callback(err);*/
 
 		async.forEachSeries(indexes, function(index, indexCB) {
 			db.ensureIndex('upis', index.index, index.options, function(err, IndexName) {
@@ -553,7 +553,7 @@ function fixUpisCollection(db, callback) {
 				});
 			});
 		});
-	});
+	/*});*/
 }
 
 function testHistory() {
@@ -1967,6 +1967,7 @@ function updateDevices(point, callback) {
 		point["Serial Number"] = Config.Templates.getTemplate("Device")["Serial Number"];
 		point["Device Address"] = Config.Templates.getTemplate("Device")["Device Address"];
 		point["Network Segment"] = Config.Templates.getTemplate("Device")["Network Segment"];
+		point['Trend Interval'] = Config.Templates.getTemplate("Device")["Trend Interval"];
 
 		var propertyNetwork = point["Uplink Port"].Value + " Network",
 			propertyAddress = point["Uplink Port"].Value + " Address";
@@ -2548,13 +2549,22 @@ function doGplImport(db, xmlPath, cb) {
 			filedata,
 			c,
 			cleanup = function(str) {
-				var st = JSON.stringify(str);
-				st = st.replace(/\"(f|F)alse\"/g, 'false');
-				st = st.replace(/\"(t|T)rue\"/g, 'true');
-				st = st.replace(/xp:Value/g, 'value');
-				st = st.replace('Value', 'value');
-				return JSON.parse(st);
-			},
+                if (str.sequence['xd:Dynamics']) {
+                    // console.log('copying dynamics');
+                    str.sequence.dynamic = str.sequence['xd:Dynamics']['xd:Dynamic'];
+                    // console.log(str.sequence['xd:Dynamics']['xd:Dynamic']);
+                    // console.log(str.sequence.dynamic);
+                    delete str.sequence['xd:Dynamics'];
+                }
+                var st = JSON.stringify(str);
+                st = st.replace(/\"(f|F)alse\"/g, 'false');
+                st = st.replace(/\"(t|T)rue\"/g, 'true');
+                st = st.replace(/xp:Value/g, 'value');
+                st = st.replace('Value', 'value');
+                // st = st.replace(/xd:Dynamics/g, 'dynamic');
+                // st = st.replace(/xd:Dynamic/g, 'dynamic');
+                return JSON.parse(st);
+            },
 			doNext = function() {
 				if (c < max) {
 					filename = xmls[c];

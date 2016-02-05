@@ -34,6 +34,7 @@ require(['knockout'], function (ko) {
     ko.components.register('ctl-firmwareVersion',    { require: 'components/ctl-firmwareVersion/module' });
     ko.components.register('ctl-conversionWizard',  { require: 'components/ctl-conversionWizard/module' });
     ko.components.register('ctl-scheduleEntries',   { require: 'components/ctl-scheduleEntries/module'});
+    ko.components.register('ctl-qualityCodeEnable',    { require: 'components/ctl-qualityCodeEnable/module' });
     // Point Reviews
     ko.components.register('pt-accumulator',    { require: 'components/pt-accumulator/module' });
     ko.components.register('pt-alarmstatus',    { require: 'components/pt-alarmstatus/module' });
@@ -69,6 +70,7 @@ require(['knockout'], function (ko) {
     ko.components.register('pt-totalizer',      { require: 'components/pt-totalizer/module' });
     ko.components.register('pt-vav',            { require: 'components/pt-vav/module'});
     ko.components.register('pt-sensor',         { require: 'components/pt-sensor/module'});
+    ko.components.register('pt-liftstation',    { require: 'components/pt-liftstation/module'});
 });
 
 define([
@@ -779,7 +781,7 @@ define([
             ko.utils.extend(command.commandTX, data);
             pointInspector.socket.emit('fieldCommand', ko.toJSON(command.commandTX));
             pointInspector.socket.once('returnFromField', function (data) {
-                data = $.parseJSON(data);
+                // data = $.parseJSON(data);
                 if (data.err) {
                     command.commandRX.value('');
                     command.commandRX.error(data.err);

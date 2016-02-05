@@ -28,9 +28,9 @@ function clientTask() {
 
   sock.on('message', function(data) {
     var args = Array.apply(null, arguments);
-    if(data.toString() !== 'Done'){
-      console.log(JSON.parse(data));  
-    }    
+    if (data.toString() !== 'Done') {
+      console.log(JSON.parse(data));
+    }
 
     console.timeEnd('test');
   });

@@ -9,12 +9,12 @@ var ActionButton = function (config) {
             {text: 'Totalizer Plot'},
             {text: 'Totalizer Report'},
             {text: 'Totalizer Export'},
-            {text: 'MultiState Value Command'},
+            {text: 'MultiState Value Command', pointType: 'MultiState Value'},
             {text: 'Program Start'},
-            {text: 'Analog Output Command'},
-            {text: 'Analog Value Command'},
-            {text: 'Binary Output Command'},
-            {text: 'Binary Value Command'},
+            {text: 'Analog Output Command', pointType: 'Analog Output'},
+            {text: 'Analog Value Command', pointType: 'Analog Value'},
+            {text: 'Binary Output Command', pointType: 'Binary Output'},
+            {text: 'Binary Value Command', pointType: 'Binary Value'},
             {text: 'Report Display'},
             {text: 'Verification Report'},
             {text: 'Browse Verify Reports'},
@@ -47,29 +47,88 @@ var ActionButton = function (config) {
             {text: 'Print'}
         ],
 
+        _commandArguments = {
+            'Command Type'  : 7,
+            upi             : '',
+            Value           : '',
+            Controller      : '',
+            Relinquish      : '',
+            Priority        : '',
+            Wait            : ''
+        },
+        _id,
         _pointData,
         _code,
-        _parameter,
+        _parameter,//not needed for now
         _upi,
 
-        processPointData = function (response) {
-            _pointData = response;
+        _getCommandArguments = function () {
+            var ret = $.extend(true, {}, _commandArguments);
 
-            return;
+            ret.upi = _upi;
+            ret.value = _parameter;
+
+            return ret;
         },
-        getPointData = function () {
+        _processPointData = function (response) {
+            _pointData = response;
+            _validateOptions('upi');
+        },
+        _getPointData = function (upi) {
             $.ajax({
-                url: '/api/points/' + _upi
+                url: '/api/points/' + upi
             }).done(function (response) {
-                processPointData(response);
+                _processPointData(response);
             });
         },
-        validateOptions = function () {
-            return;
+        _validateOptions = function (arg) {
+            var pointType = _code.pointType;
+
+            if (pointType && pointType !== _pointData['Point Type']) {
+                //invalid point type/code combo
+                //update UI, if 'upi', else 'command'
+            }
+        },
+
+        sendCommand = function () {
+            console.log('Send Command', _getCommandArguments());
+            displays.socket.emit('fieldCommand', _getCommandArguments());
+        },
+        setCommand = function (idx) {
+            _code = codes[idx];
+            _validateOptions('command');
+        },
+        setParameter = function (parameter) {
+            _parameter = parameter;
+        },
+        getPointData = function () {
+            return _pointData;
+        },
+        updateConfig = function (newCfg) {
+            _code = newCfg.ActionCode;
+            _parameter = newCfg.ActionParm;
+            if (_upi !== newCfg.ActionPoint) {
+                _getPointData(newCfg.ActionPoint);
+            }
+            _upi = newCfg.ActionPoint;
+            _commandArguments.Priority = newCfg.ActionPriority;
+        },
+        setUPI = function (upi) {
+            _upi = upi;
+            _getPointData(upi);
         };
 
+    _id = displays.actionButtonCount++;
+    updateConfig(config);
+
     return {
-        validate: validateOptions
+        id: _id,
+        setUPI: setUPI,
+        setCommand: setCommand,
+        setParameter: setParameter,
+        getPointData: getPointData,
+        updateConfig: updateConfig,
+        sendCommand: sendCommand
     };
 };
 
@@ -252,6 +311,7 @@ displays = $.extend(displays, {
     dpageY: 0,
     pageX: 0,
     pageY: 0,
+    actionButtonCount: 0,
     tip: false,
     sizing: false,
     foc: false,
@@ -1040,7 +1100,7 @@ displays = $.extend(displays, {
                         if (screenObject === 1) {
                             //alert(item['Point Type']);
                             if (item.hasOwnProperty('ActionCode')) { // action button
-
+                                item.actionButton.sendCommand();
                             } else {
                                 if (item['Point Type'] === 151) {
                                     openGpl(item);
@@ -1274,6 +1334,7 @@ displays = $.extend(displays, {
                         pointType,
                         isDisplayObject = item['Point Type'] === 151,
                         localUPI = item.upi,
+                        isActionButton = item.hasOwnProperty('ActionCode'),
                         target = (window.name === 'mainWindow' && isDisplayObject) ? window.name : 'pid_' + item.upi,
 
                         openWin = function() {
@@ -1285,14 +1346,18 @@ displays = $.extend(displays, {
                             });
                         };
 
-                    if (localUPI && !(displays.pointReferenceSoftDeleted(localUPI) && isDisplayObject)) {  // don't get softdeleted display references
-                        if (typeof localUPI !== 'string') { //upi is string for static text
-                            $.ajax({
-                                url: '/api/points/' + localUPI
-                            }).done(function(response) {
-                                pointType = response['Point Type'].Value;
-                                openWin();
-                            });
+                    if (isActionButton) {
+                        item._actionButton.sendCommand();
+                    } else {
+                        if (localUPI && !(displays.pointReferenceSoftDeleted(localUPI) && isDisplayObject)) {  // don't get softdeleted display references
+                            if (typeof localUPI !== 'string') { //upi is string for static text
+                                $.ajax({
+                                    url: '/api/points/' + localUPI
+                                }).done(function(response) {
+                                    pointType = response['Point Type'].Value;
+                                    openWin();
+                                });
+                            }
                         }
                     }
                 };
@@ -1454,6 +1519,10 @@ displays = $.extend(displays, {
                                 style += 'line-height:' + input['Height'] + 'px;' + '"';
                                 text = ((input.Text) ? input.Text.split("\n").join("<br/>") : '&nbsp;');
 
+                                if (input.hasOwnProperty('ActionCode') && input._actionButton === undefined) { // action button
+                                    input._actionButton = new ActionButton(input);
+                                }
+
                                 if (pointSoftDeleted) {
                                     out = '<p' + screenIdx + style + ' class="displayBtn' + cls + '"' + noAjax + dataUpi + '>' + text + '</p>';
                                 } else {
@@ -1500,19 +1569,6 @@ displays = $.extend(displays, {
                                 });
 
                                 out = '<img ' + animId + screenIdx + dataUpi + precision + ' class="' + cls + '" src="' + imgSrc + '" />';
-                            }
-                                break;
-                            case 4:  // action button
-                            {
-                                out = '';
-                                if (+input['Background Color'] !== 0) {
-                                    style += 'background-image:none;border:none;';
-                                }
-                                //style += underline;
-                                style += 'line-height:' + input['Height'] + 'px;' + '"';
-                                text = ((input.Text) ? input.Text.split("\n").join("<br/>") : '&nbsp;');
-
-                                out = '<a' + screenIdx + style + ' class="displayBtn' + cls + '"' + noAjax + dataUpi + '>' + text + '</a>';
                             }
                                 break;
                             case 5:  // history report

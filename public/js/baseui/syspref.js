@@ -1250,9 +1250,9 @@ var telemetryViewModel = function() {
             }
             console.log("updatedata originalValues", originalValues);
         },
-        getZoneFromEnum = function(eval) {
+        getZoneFromEnum = function(eValue) {
             for (var prop in tzEnums) {
-                if (tzEnums[prop].enum === eval) {
+                if (tzEnums[prop].enum === eValue) {
                     return prop;
                 }
             }
@@ -1330,7 +1330,7 @@ var telemetryViewModel = function() {
                 self.dirty(true);
             }
         }
-    }
+    };
 };
 
 // Backup Screen --------------------------------------------------------------
@@ -1358,7 +1358,7 @@ var backupViewModel = function() {
     };
 
     socket.on('returnFromField', function(data) {
-        data = $.parseJSON(data);
+        // data = $.parseJSON(data);
 
         if(data.err){
             self.backupMsg('Error: ' + data.err);

@@ -86,19 +86,24 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
 
                     if (response.percent !== undefined) {
                         self.progressPercent(parseInt(response.percent, 10));
+                        $('.progress-bar').removeClass('progress-bar-danger');
+                        $('.progress-bar').removeClass('progress-bar-success');
                         $('.progress-bar').css('width', self.progressPercent() + '%');
                         $('.progress-bar').text(self.progressPercent() + "%");
                     } else if (response.err !== undefined) {
                         $('.progress-bar').addClass('progress-bar-danger');
+                        $('.progress-bar').css('width', '100%');
                         self.progressMessage(response.err);
                         $btnSubmit.prop('disabled', false);
                         self.modal.isDownloading(false);
                     } else {
-
+                        if (response.msg === 'Done') {
+                            $('.progress-bar').addClass('progress-bar-success');
+                        }
                         $('.beforeLoad').hide();
                         $('.afterLoad').show();
                         $modalWait.hide();
-                        self.progressMessage(response.message);
+                        self.progressMessage(response.msg);
                         $btnSubmit.prop('disabled', false);
                         self.modal.isDownloading(false);
                     }
@@ -142,7 +147,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             self.progressMessage('');
         });
         $modal.one('shown.bs.modal', function(e) {
-            console.log(self.modal.isDownloading(), self.progressPercent());
+
+
             if (self.modal.isDownloading()) {
 
                 $modalProgress.show();
@@ -151,10 +157,22 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 $modalLoad.show();
             }
             $.getJSON('/api/firmwareLoader/get/' + self.model, function(data) {
-                if (data.err)
+                if (data.err) {
                     console.log(data.err);
-                else {
-                    self.firmwareFiles(data.files);
+                    $btnSubmit.prop('disabled', true);
+                } else {
+                    if (!!data.files.length) {
+                        if (!!self.selectedFile) {
+                            self.selectedFile(data.files[0]);
+                        }
+                        $btnSubmit.prop('disabled', false);
+                        self.firmwareFiles(data.files);
+                    } else {
+
+                        self.firmwareFiles(['No files found']);
+                        $btnSubmit.prop('disabled', true);
+                    }
+
                 }
             });
         });

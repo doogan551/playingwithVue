@@ -3,8 +3,8 @@ var fs = require('fs');
 
 var Config = require('../public/js/lib/config');
 var Utility = require('../models/utility');
-var cppApi = new(require('Cpp_API').Tasks)();
 var logger = require('../helpers/logger')(module);
+var zmq = require('../helpers/zmq');
 
 var common;
 var io;
@@ -105,11 +105,10 @@ function runScheduleEntry(scheduleEntry, callback) {
                 control.Value = (scheduleEntry["Control Value"].ValueType === 5) ? scheduleEntry["Control Value"].eValue : scheduleEntry["Control Value"].Value;
 
                 control = JSON.stringify(control);
-                cppApi.command(control, function(err, msg) {
-                    if (err !== 0 && err !== null) {
-                        error = JSON.parse(err);
 
-                        callback(error);
+                zmq.sendCommand(control, function(err, msg) {
+                    if (!!err) {
+                        callback(err);
                     } else {
                         callback(null);
                     }

@@ -568,6 +568,29 @@
                 "enum": 4
             }
         },
+        "Lift Station Alarm Output Configuration Bits": {
+            "High Level": {
+                "enum": 0
+            },
+            "Low Level": {
+                "enum": 1
+            },
+            "Pump 1 Problem": {
+                "enum": 2
+            },
+            "Pump 2 Problem": {
+                "enum": 3
+            },
+            "Float Stuck": {
+                "enum": 4
+            },
+            "Primary Transducer Problem": {
+                "enum": 5
+            },
+            "Power Fail": {
+                "enum": 6
+            }
+        },
         "Modbus Control Functions": {
             "None": {
                 "enum": 0
@@ -827,6 +850,14 @@
                 "enum": 4
             }
         },
+        "Pump Select Modes": {
+            "Alternating": {
+                "enum": 0
+            },
+            "Lowest Runtime": {
+                "enum": 1
+            }
+        },
         "Quality Code Enable Bits": {
             "Override": {
                 "enum": 1
@@ -1008,14 +1039,6 @@
             },
             "Totalizer": {
                 "enum": 2
-            },
-            "Involvement": {
-                "enum": 3,
-                "noninitializable": true
-            },
-            "Test": {
-                "enum": 4,
-                "noninitializable": true
             }
         },
         "Sensor Types": {
@@ -1129,13 +1152,13 @@
             },
             "Analog Input": {
                 "enum": 0,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math"],
+                "lists": ["ai", "default", "value", "dynamic", "register", "schedEntry", "float", "math"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
             },
             "Analog Output": {
                 "enum": 1,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
+                "lists": ["ao", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
             },
@@ -1147,7 +1170,7 @@
             },
             "Analog Value": {
                 "enum": 2,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
+                "lists": ["av", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
             },
@@ -1159,13 +1182,13 @@
             },
             "Binary Input": {
                 "enum": 3,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "math"],
+                "lists": ["bi", "default", "value", "dynamic", "register", "schedEntry", "enum", "math"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Alarm Value"]
             },
             "Binary Output": {
                 "enum": 4,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "math"],
+                "lists": ["bo", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "math"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value", "Alarms Off"]
             },
@@ -1177,7 +1200,7 @@
             },
             "Binary Value": {
                 "enum": 5,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control"],
+                "lists": ["bv", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control"],
                 "endpoint": "default",
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Alarm Value"]
             },
@@ -1232,6 +1255,12 @@
             "Imux Watchdog": {
                 "enum": 141,
                 "lists": ["default", "dynamic"],
+                "endpoint": "default",
+                "schedProps": []
+            },
+            "Lift Station": {
+                "enum": 201,
+                "lists": ["default"],
                 "endpoint": "default",
                 "schedProps": []
             },
@@ -1456,6 +1485,16 @@
                 "reportEnable": true,
                 "enumsSet": "Default Active States"
             },
+            "Auxiliary Control Point": {
+                "enum": 423,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "Auxiliary Output Configuration": {
+                "enum": 426,
+                "valueType": "BitString",
+                "reportEnable": false
+            },
             "Background Color": {
                 "enum": 312,
                 "valueType": "String",
@@ -1589,6 +1628,11 @@
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": "Modbus Control Functions"
+            },
+            "Pump Control Mode": {
+                "enum": 419,
+                "valueType": "Enum",
+                "reportEnable": false
             },
             "Control Pending": {
                 "enum": 13,
@@ -1878,12 +1922,12 @@
             "Downlink Broadcast Delay": {
                 "enum": 283,
                 "valueType": "Unsigned",
-                "reportEnabele": true
+                "reportEnable": true
             },
             "Downlink IP Port": {
                 "enum": 295,
                 "valueType": "Unsigned",
-                "reportEnabele": true
+                "reportEnable": true
             },
             "Downlink Network": {
                 "enum": 164,
@@ -1903,6 +1947,11 @@
             "eDate": {
                 "enum": 314,
                 "valueType": "Unsigned",
+                "reportEnable": false
+            },
+            "Emergency Pump Down Time": {
+                "enum": 418,
+                "valueType": "MinSec",
                 "reportEnable": false
             },
             "Enable Schedule": {
@@ -2040,6 +2089,21 @@
                 "valueType": "String",
                 "reportEnable": true
             },
+            "Float Alarm Point": {
+                "enum": 408,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "Flow Rate Point": {
+                "enum": 411,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "Flow Total Point": {
+                "enum": 412,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
             "Font Bold": {
                 "enum": 315,
                 "valueType": "String",
@@ -2165,6 +2229,16 @@
                 "valueType": "Float",
                 "reportEnable": true
             },
+            "High Level Float Point": {
+                "enum": 428,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "High Level Setpoint": {
+                "enum": 433,
+                "valueType": "Float",
+                "reportEnable": false
+            },
             "High Setpoint": {
                 "enum": 81,
                 "valueType": "Float",
@@ -2174,6 +2248,16 @@
                 "enum": 82,
                 "valueType": "Float",
                 "reportEnable": true
+            },
+            "Horn Control Point": {
+                "enum": 422,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "Horn Output Configuration": {
+                "enum": 425,
+                "valueType": "BitString",
+                "reportEnable": false
             },
             "Host Schedule": {
                 "enum": 234,
@@ -2395,6 +2479,16 @@
                 "reportEnable": true,
                 "enumsSet": ""
             },
+            "Lag Level Float Point": {
+                "enum": 429,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "Lag Level Setpoint": {
+                "enum": 434,
+                "valueType": "Float",
+                "reportEnable": false
+            },
             "Last Report Time": {
                 "enum": 135,
                 "valueType": "Timet",
@@ -2410,10 +2504,35 @@
                 "valueType": "Timet",
                 "reportEnable": true
             },
+            "Lead Level Float Point": {
+                "enum": 430,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "Lead Level Setpoint": {
+                "enum": 435,
+                "valueType": "Float",
+                "reportEnable": false
+            },
             "Lead Time": {
                 "enum": 263,
                 "valueType": "HourMin",
                 "reportEnable": true
+            },
+            "Level Sensor Point": {
+                "enum": 427,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "Light Control Point": {
+                "enum": 421,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "Light Output Configuration": {
+                "enum": 424,
+                "valueType": "BitString",
+                "reportEnable": false
             },
             "Lights Control Point": {
                 "enum": 364,
@@ -2430,6 +2549,16 @@
                 "valueType": "Float",
                 "reportEnable": true
             },
+            "Low Level Float Point": {
+                "enum": 432,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "Low Level Setpoint": {
+                "enum": 437,
+                "valueType": "Float",
+                "reportEnable": false
+            },
             "Low Setpoint": {
                 "enum": 88,
                 "valueType": "Float",
@@ -2439,6 +2568,16 @@
                 "enum": 89,
                 "valueType": "Float",
                 "reportEnable": true
+            },
+            "Max Pump Off Time": {
+                "enum": 416,
+                "valueType": "HourMin",
+                "reportEnable": false
+            },
+            "Max Pump Run Time": {
+                "enum": 417,
+                "valueType": "HourMin",
+                "reportEnable": false
             },
             "Maximize Displays": {
                 "enum": 252,
@@ -2629,6 +2768,16 @@
                 "enum": 222,
                 "valueType": "Unsigned",
                 "reportEnable": true
+            },
+            "Off Level Float Point": {
+                "enum": 431,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "Off Level Setpoint": {
+                "enum": 436,
+                "valueType": "Float",
+                "reportEnable": false
             },
             "On Channel": {
                 "enum": 223,
@@ -2857,6 +3006,11 @@
                 "valueType": "Unsigned",
                 "reportEnable": true
             },
+            "Power Fail Point": {
+                "enum": 414,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
             "Program Change Request": {
                 "enum": 273,
                 "valueType": "Enum",
@@ -2884,6 +3038,27 @@
                 "enum": 95,
                 "valueType": "Float",
                 "reportEnable": true
+            },
+            "Pump 1 Control Point": {
+                "enum": 409,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "Pump 2 Control Point": {
+                "enum": 410,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "Pump Select Mode": {
+                "enum": 420,
+                "valueType": "Enum",
+                "reportEnable": false,
+                "enumSet": "Pump Select Modes"
+            },
+            "Pump Sequence Delay": {
+                "enum": 415,
+                "valueType": "Unsigned",
+                "reportEnable": false
             },
             "Qualifier Point": {
                 "enum": 130,
@@ -3012,6 +3187,11 @@
                 "enum": 211,
                 "valueType": "Timet",
                 "reportEnable": true
+            },
+            "Runtime Alarm Point": {
+                "enum": 413,
+                "valueType": "UniquePID",
+                "reportEnable": false
             },
             "Same State Test": {
                 "enum": 233,
@@ -3279,7 +3459,6 @@
             "Trigger Constant": {
                 "enum": 64,
                 "valueType": "Enum",
-                "reportEnable": true,
                 "reportEnable": true,
                 "enumsSet": ""
             },
@@ -4038,6 +4217,12 @@
                     "ValueType": 5,
                     "Value": "Central Time Zone",
                     "eValue": 6
+                },
+                "Trend Interval": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 13,
+                    "Value": 60
                 },
                 "Uplink Port": {
                     "isDisplayable": true,
@@ -14362,6 +14547,297 @@
                 },
                 "Point Refs": [],
                 "Slides": []
+            },
+
+            "Lift Station": {
+                "Auxiliary Output Configuration": {
+                    "ValueType": 18,
+                    "Value": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false
+                },
+                "Description": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 2,
+                    "Value": ""
+                },
+                "Emergency Pump Down Time": {
+                    "ValueType": 13,
+                    "Value": 0,
+                    "isDisplayable": false,
+                    "isReadOnly": false
+                },
+                "High Level Setpoint": {
+                    "ValueType": 1,
+                    "Value": 0,
+                    "isDisplayable": false,
+                    "isReadOnly": false
+                },
+                "Horn Output Configuration": {
+                    "ValueType": 18,
+                    "Value": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false
+                },
+                "Lag Level Setpoint": {
+                    "ValueType": 1,
+                    "Value": 0,
+                    "isDisplayable": false,
+                    "isReadOnly": false
+                },
+                "Lead Level Setpoint": {
+                    "ValueType": 1,
+                    "Value": 0,
+                    "isDisplayable": false,
+                    "isReadOnly": false
+                },
+                "Light Output Configuration": {
+                    "ValueType": 18,
+                    "Value": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false
+                },
+                "Low Level Setpoint": {
+                    "ValueType": 1,
+                    "Value": 0,
+                    "isDisplayable": false,
+                    "isReadOnly": false
+                },
+                "Max Pump Off Time": {
+                    "ValueType": 17,
+                    "Value": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false
+                },
+                "Max Pump Run Time": {
+                    "ValueType": 17,
+                    "Value": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false
+                },
+                "Off Level Setpoint": {
+                    "ValueType": 1,
+                    "Value": 0,
+                    "isDisplayable": false,
+                    "isReadOnly": false
+                },
+                "Point Refs": [{
+                    "PropertyName": "Device Point",
+                    "PropertyEnum": 139,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Auxiliary Control Point",
+                    "PropertyEnum": 423,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Float Alarm Point",
+                    "PropertyEnum": 408,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Flow Rate Point",
+                    "PropertyEnum": 411,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Flow Total Point",
+                    "PropertyEnum": 412,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "High Level Float Point",
+                    "PropertyEnum": 428,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Horn Control Point",
+                    "PropertyEnum": 422,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Lag Level Float Point",
+                    "PropertyEnum": 429,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Lead Level Float Point",
+                    "PropertyEnum": 430,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Level Sensor Point",
+                    "PropertyEnum": 427,
+                    "AppIndex": 0,
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Light Control Point",
+                    "PropertyEnum": 421,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Low Level Float Point",
+                    "PropertyEnum": 432,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Off Level Float Point",
+                    "PropertyEnum": 431,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Power Fail Point",
+                    "PropertyEnum": 414,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Pump 1 Control Point",
+                    "PropertyEnum": 409,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Pump 2 Control Point",
+                    "PropertyEnum": 410,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }, {
+                    "PropertyName": "Runtime Alarm Point",
+                    "PropertyEnum": 413,
+                    "AppIndex": 0,
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "Value": 0,
+                    "PointName": "",
+                    "PointType": 0,
+                    "PointInst": 0,
+                    "DevInst": 0
+                }],
+                "Pump Control Mode": {
+                    "ValueType": 5,
+                    "Value": "Floats",
+                    "eValue": 0,
+                    "ValueOptions": {
+                        "Floats": 0,
+                        "Transducer": 1
+                    },
+                    "isDisplayable": true,
+                    "isReadOnly": false
+                },
+                "Pump Select Mode": {
+                    "ValueType": 5,
+                    "Value": "Alternating",
+                    "eValue": 0,
+                    "ValueOptions": {
+                        "Alternating": 0,
+                        "Lowest Runtime": 1
+                    },
+                    "isDisplayable": true,
+                    "isReadOnly": false
+                },
+                "Pump Sequence Delay": {
+                    "ValueType": 4,
+                    "Value": 5,
+                    "isDisplayable": true,
+                    "isReadOnly": false
+                }
             }
         }
     }

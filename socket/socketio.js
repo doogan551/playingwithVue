@@ -13,7 +13,6 @@ var config = require('config');
 // OTHERS
 var utils = require('../helpers/utils.js');
 var Config = require('../public/js/lib/config.js');
-var cppApi = new(require('Cpp_API').Tasks)();
 var compiler = require('../helpers/scriptCompiler.js');
 var Utility = require('../models/utility.js');
 var History = require('../models/history');
@@ -198,12 +197,12 @@ module.exports = function socketio(_common) {
             }
 
           }
-        } else if(logData.point['Point Type'].eValue == 128){
+        } else if (logData.point['Point Type'].eValue == 128) {
           logData.newValue = {
             Value: jsonData.logData.newValue.Value
           };
           logData.log = 'Value reset to ' + logData.newValue.Value;
-        }else {
+        } else {
           for (i = 0; i < controllerPriorities.length; i++) {
             if (controllerPriorities[i]["Priority Level"] === jsonData.Priority) {
               logData.log = "Control relinquished at priority " + controllerPriorities[i]["Priority Text"];
@@ -238,26 +237,17 @@ module.exports = function socketio(_common) {
         }, function(err, result) {});
       }
 
-      /*zmq.sendMessage(data, function(err, msg) {
-        if (err) {
-          sock.emit('returnFromField', {err:err});
-        } else {
-          sock.emit('returnFromField', msg);
-        }
-      });*/
-
-      cppApi.command(data, function(err, msg) {
-
-        if (err !== 0 && err !== null) {
-          error = JSON.parse(err);
-
-          sock.emit('returnFromField', JSON.stringify({
-            err: error.ApduErrorMsg
-          }));
+      zmq.sendCommand(data, function(err, msg) {
+        if (!!err) {
+          err = err.ApduErrorMsg || err.msg;
+          sock.emit('returnFromField', {
+            err: err
+          });
         } else {
           sock.emit('returnFromField', msg);
         }
       });
+
     });
     // Checked
     sock.on('firmwareLoader', function(data) {
@@ -281,41 +271,16 @@ module.exports = function socketio(_common) {
             "firmwarefile": filePath,
           };
           command = JSON.stringify(command);
-          cppApi.command(command, function(data) {
-            data = JSON.parse(data);
 
-            if (data.err !== undefined) {
+          zmq.sendCommand(command, function(err, msg) {
+            if (!!err) {
               sock.emit('returnFromLoader', {
-                percent: 100
+                err: err
               });
-              sock.emit('returnFromLoader', JSON.stringify({
-                err: data.error.ApduErrorMsg
-              }));
             } else {
-              sock.emit('returnFromLoader', {
-                percent: 100
-              });
-              sock.emit('returnFromLoader', {
-                message: data.msg
-              });
+              sock.emit('returnFromLoader', msg);
             }
           });
-
-          /*function testProgress(percent) {
-						if (percent <= 100) {
-							sock.emit('returnFromLoader', {
-								percent: percent
-							});
-							setTimeout(function() {
-								testProgress(percent + 10);
-							}, 500);
-						} else {
-							sock.emit('returnFromLoader', {
-								message: "success"
-							});
-						}
-					}
-					testProgress(0);*/
         },
         logMessage = function(logData) {
           logData = utils.buildActivityLog(logData);
@@ -326,7 +291,7 @@ module.exports = function socketio(_common) {
         };
 
       if (data.uploadFile !== undefined) {
-        filePath = config.get('Infoscan.files').driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
+        filePath = config.get('Infoscan.files').firmwareLocation + data.model + "/" + data.fileName;
         logMessage(logData);
         fs.writeFile(filePath, data.uploadFile, function(err) {
           sendCommand(filePath);
@@ -337,7 +302,7 @@ module.exports = function socketio(_common) {
           }
         });
       } else {
-        filePath = config.get('Infoscan.files').driveLetter + ":/InfoScan/Firmware/" + data.model + "/" + data.fileName;
+        filePath = config.get('Infoscan.files').firmwareLocation + data.model + "/" + data.fileName;
         logMessage(logData);
         sendCommand(filePath);
       }

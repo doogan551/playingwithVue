@@ -18,7 +18,6 @@ exports.get = function(criteria, cb) {
 
   // console.log(query, coll);
   collection = db.get().collection(coll);
-
   collection.find(query, fields).limit(limit).sort(sort).skip(skip).toArray(cb);
 };
 

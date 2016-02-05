@@ -8,7 +8,7 @@ var defaults = {
         },
         'zmqConfig': {
             'protocol': 'tcp',
-            'server': '127.0.0.1',
+            'server': '192.168.1.88',
             'port': '5570'
         },
         'siteConfig': {
@@ -43,6 +43,8 @@ var defaults = {
         'phoneNumber': '16623384486'
     }
 };
+
+defaults.Infoscan.files.firmwareLocation = defaults.Infoscan.files.driveLetter + ":/InfoScan/Firmware/";
 
 defaults.redisConfig = {
     host: defaults.Infoscan.dbConfig.host,
