@@ -70,6 +70,11 @@ app.post('/twilio/sms', function(req, res) {
 //   console.log('P', req.body.To);
 //   console.log('P', req.body.Text);
 // });
+// 
+
+app.all('/gitlabhook', function(req, res){
+  console.log(req.body);
+});
 
 app.listen(85, function() {
   console.log('listening on port', 85);
