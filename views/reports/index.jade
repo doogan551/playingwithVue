@@ -151,9 +151,7 @@ block content
 													include ./filterValueUI
 											td.removecolumn
 												a.span.removerow(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") Remove
-									tbody.showInEdit
-										tr
-											td(colspan="4")
+								span.small.intervalSettings
 												// ko if: (reportType === 'Property')
 												a.addFilterbutton(href="#") Add Filter
 												// /ko
