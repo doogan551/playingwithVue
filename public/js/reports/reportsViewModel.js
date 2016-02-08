@@ -966,6 +966,47 @@ var reportsViewModel = function () {
 
             if (aoColumns.length > 0) {
                 $viewReport.DataTable({
+                    dom: 'Bfrtip',
+                    buttons: [
+                        {
+                            extend: 'copyHtml5',
+                            key: {
+                                altKey: true,
+                                key: '1'
+                            }
+                        },
+                        {
+                            extend: 'csvHtml5',
+                            key: {
+                                altKey: true,
+                                key: '2'
+                            }
+                        },
+                        {
+                            extend: 'excelHtml5',
+                            key: {
+                                altKey: true,
+                                key: '3'
+                            }
+                        },
+                        {
+                            extend: 'pdfHtml5',
+                            key: {
+                                altKey: true,
+                                key: '4'
+                            },
+                            customize: function (doc, thisButton) {
+                                // could insert TrendPlots here
+                            }
+                        },
+                        {
+                            extend: 'print',
+                            key: {
+                                altKey: true,
+                                key: '5'
+                            }
+                        }
+                    ],
                     //drawCallback: function () {
                     //    var api = this.api();
                     //    api.table().footer().html(
