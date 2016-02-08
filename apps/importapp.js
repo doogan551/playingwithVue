@@ -65,7 +65,12 @@ if (processFlag === "gpl") {
 		});
 	});
 } else {
-	importProcess.start();
+	// importProcess.start();
+	mongo.connect(conn, function(err, db) {
+		fixUpisCollection(db, function(err){
+			console.log('done', err);
+		});
+	});
 	// testHistory();
 }
 //fixUpisCollection();
@@ -468,7 +473,7 @@ function fixUpisCollection(db, callback) {
 			options: {}
 		}],
 		setupUpis = function(fnCB) {
-			var upisCount = 1918359, //4194302
+			var upisCount = 4194302, //4194302
 				upisArray = [];
 			db.collection('upis').count({}, function(err, count) {
 				if (count < upisCount) {
@@ -494,66 +499,66 @@ function fixUpisCollection(db, callback) {
 				}
 			});
 		};
-	/*setupUpis(function(err) {
+	setupUpis(function(err) {
 		if (err)
-			return callback(err);*/
+			return callback(err);
 
-		async.forEachSeries(indexes, function(index, indexCB) {
-			db.ensureIndex('upis', index.index, index.options, function(err, IndexName) {
-				logger.info(IndexName, "err:", err);
-				indexCB(null);
-			});
-		}, function(err) {
-			logger.info("done with indexing");
+	async.forEachSeries(indexes, function(index, indexCB) {
+		db.ensureIndex('upis', index.index, index.options, function(err, IndexName) {
+			logger.info(IndexName, "err:", err);
+			indexCB(null);
 		});
+	}, function(err) {
+		logger.info("done with indexing");
+	});
 
-		db.collection('upis').update({}, {
-			$set: {
-				_pStatus: 1
-			}
-		}, {
-			multi: true
-		}, function(err, result) {
+	db.collection('upis').update({}, {
+		$set: {
+			_pStatus: 1
+		}
+	}, {
+		multi: true
+	}, function(err, result) {
+		if (err) callback(err);
+		db.collection(pointsCollection).find({}, {
+			_id: 1
+		}).toArray(function(err, points) {
 			if (err) callback(err);
-			db.collection(pointsCollection).find({}, {
-				_id: 1
-			}).toArray(function(err, points) {
-				if (err) callback(err);
-				async.forEach(points, function(point, callback) {
-					var criteria = {
-						collection: 'upis',
-						query: {
-							_id: point._id
-						},
-						sort: [
-							['_id', 'asc']
-						],
-						updateObj: {
-							$set: {
-								_pStatus: 0
-							}
-						},
-						options: {
-							'new': true
+			async.forEach(points, function(point, callback) {
+				var criteria = {
+					collection: 'upis',
+					query: {
+						_id: point._id
+					},
+					sort: [
+						['_id', 'asc']
+					],
+					updateObj: {
+						$set: {
+							_pStatus: 0
 						}
-					};
-					Utility.findAndModify(criteria, function(err, result) {
-						if (!!err)
-							logger.info(err);
-						/*else if (!result)
-							logger.info(point._id);
-						else if (result._pStatus !== 0)
-							logger.info(result);*/
-						callback(err);
-					});
-				}, function(err) {
-					if (err) logger.info("err", err);
-					logger.info("finished fixUpisCollection");
-					return callback(err);
+					},
+					options: {
+						'new': true
+					}
+				};
+				Utility.findAndModify(criteria, function(err, result) {
+					if (!!err)
+						logger.info(err);
+					/*else if (!result)
+						logger.info(point._id);
+					else if (result._pStatus !== 0)
+						logger.info(result);*/
+					callback(err);
 				});
+			}, function(err) {
+				if (err) logger.info("err", err);
+				logger.info("finished fixUpisCollection");
+				return callback(err);
 			});
 		});
-	/*});*/
+	});
+	});
 }
 
 function testHistory() {
@@ -1093,7 +1098,7 @@ function updateGPLBlocks(point, callback) {
 			}
 		}
 
-		if(point['Shutdown Point'].Value === 0){
+		if (point['Shutdown Point'].Value === 0) {
 			point['Shutdown Control'].Value = true;
 		}
 
@@ -2549,22 +2554,22 @@ function doGplImport(db, xmlPath, cb) {
 			filedata,
 			c,
 			cleanup = function(str) {
-                if (str.sequence['xd:Dynamics']) {
-                    // console.log('copying dynamics');
-                    str.sequence.dynamic = str.sequence['xd:Dynamics']['xd:Dynamic'];
-                    // console.log(str.sequence['xd:Dynamics']['xd:Dynamic']);
-                    // console.log(str.sequence.dynamic);
-                    delete str.sequence['xd:Dynamics'];
-                }
-                var st = JSON.stringify(str);
-                st = st.replace(/\"(f|F)alse\"/g, 'false');
-                st = st.replace(/\"(t|T)rue\"/g, 'true');
-                st = st.replace(/xp:Value/g, 'value');
-                st = st.replace('Value', 'value');
-                // st = st.replace(/xd:Dynamics/g, 'dynamic');
-                // st = st.replace(/xd:Dynamic/g, 'dynamic');
-                return JSON.parse(st);
-            },
+				if (str.sequence['xd:Dynamics']) {
+					// console.log('copying dynamics');
+					str.sequence.dynamic = str.sequence['xd:Dynamics']['xd:Dynamic'];
+					// console.log(str.sequence['xd:Dynamics']['xd:Dynamic']);
+					// console.log(str.sequence.dynamic);
+					delete str.sequence['xd:Dynamics'];
+				}
+				var st = JSON.stringify(str);
+				st = st.replace(/\"(f|F)alse\"/g, 'false');
+				st = st.replace(/\"(t|T)rue\"/g, 'true');
+				st = st.replace(/xp:Value/g, 'value');
+				st = st.replace('Value', 'value');
+				// st = st.replace(/xd:Dynamics/g, 'dynamic');
+				// st = st.replace(/xd:Dynamic/g, 'dynamic');
+				return JSON.parse(st);
+			},
 			doNext = function() {
 				if (c < max) {
 					filename = xmls[c];
