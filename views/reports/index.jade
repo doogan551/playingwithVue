@@ -91,7 +91,7 @@ block content
 											// /ko
 											td.removecolumn
 												a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
-									tbody.showInEdit
+									tbody
 										tr
 											td(colspan="4")
 												a.addColumnButton(href="#") Add Column
@@ -168,19 +168,19 @@ block content
 															a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
 														// /ko
 												// /ko
-					.helpMe
-						.row.clearfix(style="padding:10px")
-							.col-xs-4
-							.col-xs-8.pull-right
-								.saveReportButton.btn.btn-primary
-									| Save Report
-								.runReportButton.btn.btn-primary
-									| Run Report
-						.screenMessages
-							.row.well-sm
-								.col-sm-6
-									.errorMessage.alert-danger
-									.successMessage.alert-success
+						.reportButtons
+							.row.clearfix(style="padding:10px")
+								.col-xs-4
+								.col-xs-8.pull-right
+									.saveReportButton.btn.btn-primary
+										| Save Report
+									.runReportButton.btn.btn-primary
+										| Run Report
+							.screenMessages
+								.row.well-sm
+									.col-sm-6
+										.errorMessage.alert-danger
+										.successMessage.alert-success
 				.tabViewReport.well.tab-pane.workingPane
 						.row
 							h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")

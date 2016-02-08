@@ -6,48 +6,16 @@
     bottom: 25px;
     left: 0;
     padding: 15px 0px 10px 10px;
-    width: 135px;
-    height: 1200px;
+    width: 120px;
+    height: 100%;
     color: #ffffff;
     background-color: #33B171;
     border-right: 2px solid #696969;
     overflow: hidden;
     overflow-y: auto;
 }
-.leftBar .icon {
-    width: 30px;
-    height: 30px;
-    margin-top: 20px;
-    border-radius: 25px;
-    background-color: #FFF;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 24px;
-}
-
-.leftBar .icon {
-    cursor: pointer;
-}
-
-.leftBar .icon img {
-    height: 25px;
-}
-
-.leftBar .icon-lg {
-    width: 50px;
-    height: 50px;
-    background-color: #ffffff;
-    color: #2B8453;
-    padding-top: 3px;
-    display: block;
-}
 .leftBar li.active {
     background-color: #6b9355;
-}
-.leftBar .icon img {
-    display: inline-block;
-    margin-top: 2px;
-    color: #2B8453;
 }
 .leftBar .title {
     padding: 5px;
@@ -91,7 +59,7 @@
 }
 .workingPane {
     min-width: 1120px;
-    margin-left: 13px;
+    margin-left: 1px;
 }
 .leftBar .tabs li {
     padding: 6px 6px 6px 6px;
@@ -206,7 +174,30 @@ td.filterName {
 .filterName.open:focus {
     border-color: #d5e1f2;
 }
-
+.tabConfiguration{
+    padding-top: 12px;
+}
+.tabConfiguration ul.nav.nav-tabs {
+    background-color: #6b9355;
+    border-bottom: none;
+}
+.tabConfiguration ul.nav.nav-tabs li.active a {
+    background-color: lightyellow;
+}
+.tabConfiguration ul.nav.nav-tabs li a {
+    background-color: #C5C5A6;
+}
+.tabConfiguration .tab-content {
+    background-color: lightyellow;
+    border-radius: 0px 0px 7px 7px;
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+.reportButtons {
+}
 ul.enumproperties.dropdown-menu li a:hover {
     background-color: #d5e1f2;
 }
@@ -289,26 +280,6 @@ body {
     padding-right: 5px;
 }
 
-ul#panelbar > li > .row {
-    padding: 20px;
-}
-
-.modal-body p {
-    font-size: 16pt;
-    font-weight: bold;
-    word-wrap: break-word;
-}
-
-#modal-errorProcess > .modal-dialog > .modal-content > .modal-body {
-    padding: 2px;
-}
-
-#modal-errorProcess > .modal-dialog > .modal-content > .modal-footer {
-    padding: 2px;
-    margin-top: 0;
-    border-top: 0;
-}
-
 #reportSpinner {
     top: 20%;
     left: 45%;
@@ -323,70 +294,6 @@ ul#panelbar > li > .row {
     position: absolute;
     z-index: 999999;
     font-size: 14px;
-}
-
-.form-horizontal .control-label {
-    padding-top: 0px;
-}
-
-.btn-arrow-right {
-    position: relative;
-    padding-left: 18px;
-    padding-right: 18px;
-}
-
-.btn-arrow-right {
-    padding-left: 36px;
-}
-
-.btn-arrow-right:before,
-.btn-arrow-right:after { /* make two squares (before and after), looking similar to the button */
-    content: "";
-    position: absolute;
-    top: 5px; /* move it down because of rounded corners */
-    width: 22px; /* same as height */
-    height: 22px; /* button_outer_height / sqrt(2) */
-    background: inherit; /* use parent background */
-    border: inherit; /* use parent border */
-    border-left-color: transparent; /* hide left border */
-    border-bottom-color: transparent; /* hide bottom border */
-    border-radius: 0px 4px 0px 0px; /* round arrow corner, the shorthand property doesn't accept "inherit" so it is set to 4px */
-    -webkit-border-radius: 0px 4px 0px 0px;
-    -moz-border-radius: 0px 4px 0px 0px;
-}
-
-.btn-arrow-right:before,
-.btn-arrow-right:after {
-    transform: rotate(45deg); /* rotate right arrow squares 45 deg to point right */
-    -webkit-transform: rotate(45deg);
-    -moz-transform: rotate(45deg);
-    -o-transform: rotate(45deg);
-    -ms-transform: rotate(45deg);
-}
-
-.btn-arrow-right:before { /* align the "before" square to the left */
-    left: -11px;
-    z-index: -1;
-}
-
-.btn-arrow-right:after { /* align the "after" square to the right */
-    right: -11px;
-}
-
-.btn-arrow-right:after { /* bring arrow pointers to front */
-    z-index: 1;
-}
-
-/*.btn-arrow-right:before{ *//* hide arrow tails background */
-/*background-color: white;*/
-
-i.insideButton {
-    vertical-align: middle;
-    padding-right: 20px;
-}
-
-.gridInput {
-    height: 10px;
 }
 
 i.iconLink {
@@ -426,11 +333,11 @@ body.modal-open {
     margin-left: 4px;
 }
 
-.pointreference {
+.pointreferenceDELETME {
     margin-top: 9px;
 }
 
-.pointreference button.btn.btn-danger.btn-xs {
+.pointreferenceDELETEME button.btn.btn-danger.btn-xs {
     margin-right: 3px;
 }
 
@@ -507,22 +414,19 @@ body.modal-open {
     cursor: pointer;
 }
 .direports .rightPanel {
-    background-color: lightyellow;
-    margin-left: 132px;
+    margin-left: 117px;
     margin-top: -5px;
-}
-.direports .tab-content {
-    margin-top: 11px;
-    margin-left: 20px;
-    margin-right: 30px;
 }
 .reporttype {
     margin-top: 8px;
 }
 .reportTitle {
-    margin-top: 12px;
+    background-color: lightyellow;
+    border-top-right-radius: 7px;
+    margin-top: 0px;
     text-align: center;
-    padding: 10px;
+    padding: 15px 0px 10px 0px;
+    margin-bottom: 0px;
 }
 .reporttitlediv {
     width: 74%;
@@ -533,8 +437,6 @@ body.modal-open {
     display: none;
 }
 td.filterCondition {
-    /* my matching yellow color   #FBFBD1  */
-    /*  pink  #fb9ff8*/
     width: 50px;
     background: #FBFBD1;
     padding: 0px 3px 0 3px;
@@ -543,9 +445,6 @@ td.filterCondition {
     -webkit-box-shadow: 0 -20px 0px 0px #FBFBD1, 0 -9px 0px 0px #FBFBD1, 0px -3px 24px 1px rgba(150, 169, 137, 0.46);
     -moz-box-shadow: 0 -20px 0px 0px #FBFBD1, 0 -9px 0px 0px #FBFBD1, 0px -3px 24px 1px rgba(150, 169, 137, 0.46);
     box-shadow: 0 -20px 0px 0px #FBFBD1, 0 -9px 0px 0px #FBFBD1, 0px -3px 24px 1px rgba(150, 169, 137, 0.46)
-    /*-webkit-box-shadow: 0px -51px 0px 0px #FBFBD1, 0px 2px 24px 1px rgba(150, 169, 137, 0.46);*/
-    /*-moz-box-shadow: 0px -51px 0px 0px #FBFBD1, 0px 2px 24px 1px rgba(150, 169, 137, 0.46);*/
-    /*box-shadow: 0px -51px 0px 0px #FBFBD1, 0px 2px 24px 1px rgba(150, 169, 137, 0.46);*/
 }
 td.filterCondition.childCondition {
     text-indent: 15px;
@@ -564,9 +463,6 @@ td.filterCondition.firstConditionInGroup {
     -webkit-box-shadow: 0px 5px 0px 0px #FBFBD1, 0px 2px 28px 1px rgba(150, 169, 137, 0.46);
     -moz-box-shadow: 0px 5px 0px 0px #FBFBD1, 0px 2px 28px 1px rgba(150, 169, 137, 0.46);
     box-shadow: 0px 5px 0px 0px #FBFBD1, 0px 2px 28px 1px rgba(150, 169, 137, 0.46);
-    /*-webkit-box-shadow: 0px 2px 28px 1px rgba(150, 169, 137, 0.46);*/
-    /*-moz-box-shadow: 0px 2px 28px 1px rgba(150, 169, 137, 0.46);*/
-    /*box-shadow: 0px 2px 28px 1px rgba(150, 169, 137, 0.46);*/
 }
 td.filterCondition.lastConditionInGroup {
     -webkit-border-bottom-left-radius: 22px;
