@@ -512,7 +512,6 @@ var reportsViewModel = function () {
                     $tabConfiguration.removeClass("active");
                     $tabConfiguration.hide();
                     $tabViewReport.addClass("active");
-                    $viewReport.hide();
                     blockUI($tabViewReport, true, " Getting Data..");
                     break;
             }
@@ -1018,6 +1017,12 @@ var reportsViewModel = function () {
                     //},
                     data: reportJsonData,
                     aoColumns: aoColumns,
+                    scrollY: "75vh",
+                    scrollCollapse: true,
+                    //paging: false,
+                    //bFilter: false,  // search box
+                    //showColumnMenu: false,
+                    //showFilter: false,
                     pageLength: 25,
                     bLengthChange: false
                 });
@@ -1041,8 +1046,8 @@ var reportsViewModel = function () {
         renderReport = function (data) {
             $viewReport.DataTable().clear();
             $viewReport.DataTable().rows.add(data).draw();
-            $viewReport.show();
             blockUI($tabViewReport, false);
+            $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust();
             self.refreshData(false);
 
             $viewReport.find(".diSortable").on('contextmenu', function (ev) {
@@ -1482,7 +1487,6 @@ var reportsViewModel = function () {
                     break;
             }
         } else {
-            $viewReport.show();
             blockUI($tabViewReport, false);
         }
         $('html,body').stop().animate({
