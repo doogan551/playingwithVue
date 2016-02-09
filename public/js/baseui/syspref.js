@@ -1,38 +1,3 @@
-// function showTools (x) {
-//     var tr = $(x).closest('tr'),
-//         shownItems,
-//         hiddenItems;
-
-//     if (tr.attr('id') !== "shown") {
-//         tr.attr('id', "shown");
-
-//         shownItems  = tr.find('.show');
-//         hiddenItems = tr.find('.hide');
-
-//         hiddenItems.removeClass('hide').addClass('show');
-//         shownItems.removeClass('show').addClass('hide');
-//     }
-// }
-
-// function hideTools (x) {
-//     var tr = $(x).closest('tr'),
-//         shownItems  = tr.find('.show'),
-//         hiddenItems = tr.find('.hide');
-
-//     tr.attr("id", "hidden");
-
-//     hiddenItems.removeClass('hide').addClass('show');
-//     shownItems.removeClass('show').addClass('hide');
-// }
-
-// function prepTools () {
-//     $("#holidaysTable td").attr("onmouseover", "showTools(this)");
-//     $("#holidaysTable td").attr("onmouseout",  "hideTools(this)");
-//     $("#holidaysTable td input").blur(function(){
-//         hideTools($("#holidaysTable td"));
-//     });
-// }
-
 var sysPrefsViewModel = (function() {
 
     var self = this,
@@ -1059,7 +1024,7 @@ var qualityCodesViewModel = function() {
 };
 
 
-// Custom Color Codes Screen -------------------------------------------------------
+// Custom Color Codes Screen --------------------------------------------------
 var customColorCodesViewModel = function () {
     var self = this,
         originalData,
@@ -2076,6 +2041,30 @@ var weatherViewModel = function() {
     };
 };
 
+
+// Notifications screen -------------------------------------------------------
+var notificationsViewModel = function() {
+    var self = this;
+
+    self.init = function () {
+        self.$tabs = $('.notificationsContent .nav a').click(function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+    };
+
+    self.cancel = function () {
+
+    };
+    self.save = function () {
+        self.dirty(false);
+    };
+
+    self.displayName = 'Notifications';
+    self.dirty = ko.observable(false);
+    self.hasError = ko.observable(false);
+};
+
 // About Infoscan -------------------------------------------------------------
 /*
 var aboutInfoScanViewModel = function() {
@@ -2111,6 +2100,7 @@ $(function() {
             sysPrefsViewModel.registerSection(backupViewModel, 'init');
             sysPrefsViewModel.registerSection(alarmMessageDefinitions);
             sysPrefsViewModel.registerSection(weatherViewModel, 'init');
+            sysPrefsViewModel.registerSection(notificationsViewModel, 'init');
 
             year = new Date().getFullYear();
             calendarVM = sysPrefsViewModel.getSection('Calendar');
