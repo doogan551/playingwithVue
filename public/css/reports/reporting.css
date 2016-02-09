@@ -172,8 +172,23 @@ td.filterName {
     padding-left: 20px;
     padding-right: 20px;
 }
+.tabConfiguration .tab-pane {
+    height: 70vh;
+}
+#reportColumns {
+    overflow-y: scroll;
+}
+#additionalFilters {
+    overflow-y: scroll;
+}
+.configurationContent {
+}
 .viewReport div.dataTables_sizing {
     height: 37px;
+}
+.tabViewReport div.dataTables_scrollBody {
+    height: 70vh;
+    width: 68vw;
 }
 .tabViewReport div.dataTables_filter {
     display: inline-block;
@@ -351,8 +366,8 @@ i.iconLink:hover {
     cursor: pointer;
 }
 .direports .rightPanel {
-    height: 850px;
-    width: 1160px;
+    height: 99vh;
+    width: 90vw;
     overflow-x: hidden;
     overflow-y: hidden;
     margin-left: 117px;

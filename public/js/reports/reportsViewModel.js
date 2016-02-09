@@ -91,6 +91,8 @@ var reportsViewModel = function () {
         $filterByPoint,
         $filtersPanelAnchor,
         $reporttitleInput,
+        $reportColumns,
+        $additionalFilters,
         $columnNames,
         pointSelectorRef,
         $pointSelectorIframe,
@@ -552,6 +554,8 @@ var reportsViewModel = function () {
             $reporttitleInput = $direports.find(".reporttitle").find("input");
             $filtersTbody = $direports.find('.filtersGrid tbody');
             $columnsTbody = $direports.find('.columnsGrid .sortablecolums');
+            $reportColumns = $direports.find("#reportColumns");
+            $additionalFilters = $direports.find("#additionalFilters");
         },
         getPointLookupFilterNameValues = function (nameNumber) {
             var result = "",
@@ -683,6 +687,9 @@ var reportsViewModel = function () {
                         self.selectPointForColumn(rowTemplate, (self.listOfColumns().length - 1));
                     }
                 }
+                $reportColumns.stop().animate({
+                    scrollTop: $reportColumns.get(0).scrollHeight
+                }, 700);
             });
 
             $addFilterbutton.on('click', function (e) {
@@ -703,6 +710,9 @@ var reportsViewModel = function () {
                     self.listOfFilters.push(rowTemplate);
                     updateListOfFilters(self.listOfFilters());
                 }
+                $additionalFilters.stop().animate({
+                    scrollTop: $additionalFilters.get(0).scrollHeight
+                }, 700);
             });
 
             $saveReportButton.on('click', function (e) {
@@ -1023,7 +1033,7 @@ var reportsViewModel = function () {
                     //bFilter: false,  // search box
                     //showColumnMenu: false,
                     //showFilter: false,
-                    pageLength: 25,
+                    pageLength: 18,
                     bLengthChange: false
                 });
             }
