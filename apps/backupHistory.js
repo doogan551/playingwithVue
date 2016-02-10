@@ -204,7 +204,29 @@ function backUp() {
 function newBackup() {
     db.connect(connectionString.join(''), function(err) {
         History.doBackUp(upis.all, false, function(err) {
-            console.log('done');
+            if (err) {
+                logToFile('doBackUp Error: ' + err);
+            }
+            logToFile('Finished with SQLite backup');
+            setTimeout(function() {
+                mdb.dropCollection('historydata', function(err, result) {
+                    if (err) {
+                        logToFile('dropCollection Error: ' + err);
+                    }
+                    mdb.collection('historydata').ensureIndex({
+                        upi: 1,
+                        timestamp: 1
+                    }, {
+                        unique: true
+                    }, function(err, result) {
+                        if (err) {
+                            logToFile('ensureIndex Error: ' + err);
+                        }
+                        logToFile('backupHistory completed. Exiting.');
+                        process.exit(0);
+                    });
+                });
+            }, 2000);
         });
     });
 }
