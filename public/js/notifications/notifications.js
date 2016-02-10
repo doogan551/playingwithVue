@@ -3,17 +3,22 @@ var policy = {
     members: [],
     memberGroups: [],
     enabled: true,
+    _currAlertID: 1,
     alertConfigs: [{
-        _id: 1,
+        _id: 1, // seeded from _currAlertID
         _currGroupID: 4,
         _currEscalationID: 4,
         name: 'Off-Hours',
         isOnCall: true,
         rotateConfig: { // false/null if only 1?
-            active: true,
+            enabled: true,
             scale: 'week',
             time: '9:00',
             day: 'Friday'
+        },
+        repeatConfig: {
+            enabled: true,
+            repeatCount: 0
         },
         groups: [{
             _id: 1,// seeded from _currGroupID
@@ -26,13 +31,13 @@ var policy = {
                 alertStyle: 'Sequenced', //FirstResponder, Everyone
                 memberAlertDelay: 5,
                 rotateConfig: { // false/null if unchecked?
-                    active: true,// if retain the object
+                    enabled: true,// if retain the object
                     scale: 'week',
                     time: '9:00',
                     day: 'Friday'
                 },
                 repeatConfig: {
-                    active: true,
+                    enabled: true,
                     repeatCount: 0
                 }
             }]
@@ -67,13 +72,14 @@ var policy = {
         triggeringUPI: 12345,
         triggeringAlarm: 'OH NO!',
         initialTimestamp: 123123123,
-        lastNotify: {
+        lastNotify: [{
+            alertConfigID: 1,
             timestamp: 123123123,
             groupID: 1,
             escalationID: 1,
             method: 'text',// text/phone/email/etc
             escalationRepeats: 0 // increment to check rotateConfig
-        }
+        }]
     }]
 };
 
@@ -105,7 +111,7 @@ var user = {
     onCallConfig: [{ // when cron job cycles on and off call, check users and notify
         type: TEXT,
         info: '1234567890',
-        delay: 0
+        reminder: 0
     }],
     notifyOnAcknowledge: true // if gets notified, add to 'listen to alarm' queue, with action 'alert on acknowledge'
 };
@@ -147,10 +153,27 @@ var actions = {
     // etc
 };
 
-var ACTIVE = 1,
-    RECURRING = 2;
+var NEW = 0,
+    ACTIVE = 1,
+    RECURRING = 2,
+    ACKNOWLEDGE= 3,
+    RETURN = 4;
 
 var notificationEntries = [{
+    type: NEW,
+    policyID: 123123123,
+    triggeringUPI: 12345,
+    triggeringAlarm: 'Oh no',
+    triggerTime: 123123123123
+}, {
+    type: ACKNOWLEDGE,
+    triggeringUPI: 12345,
+    triggerTime: 123123123123
+}, {
+    type: RETURN,
+    triggeringUPI: 12345,
+    triggerTime: 123123123
+}, {
     // active just points to a policy every minute?  config resides on policy
     // in case things change, rather than having static action list
     // also for multiple actions, only want one entry

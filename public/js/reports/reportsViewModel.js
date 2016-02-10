@@ -91,6 +91,8 @@ var reportsViewModel = function () {
         $filterByPoint,
         $filtersPanelAnchor,
         $reporttitleInput,
+        $reportColumns,
+        $additionalFilters,
         $columnNames,
         pointSelectorRef,
         $pointSelectorIframe,
@@ -512,7 +514,6 @@ var reportsViewModel = function () {
                     $tabConfiguration.removeClass("active");
                     $tabConfiguration.hide();
                     $tabViewReport.addClass("active");
-                    $viewReport.hide();
                     blockUI($tabViewReport, true, " Getting Data..");
                     break;
             }
@@ -553,6 +554,8 @@ var reportsViewModel = function () {
             $reporttitleInput = $direports.find(".reporttitle").find("input");
             $filtersTbody = $direports.find('.filtersGrid tbody');
             $columnsTbody = $direports.find('.columnsGrid .sortablecolums');
+            $reportColumns = $direports.find("#reportColumns");
+            $additionalFilters = $direports.find("#additionalFilters");
         },
         getPointLookupFilterNameValues = function (nameNumber) {
             var result = "",
@@ -684,6 +687,9 @@ var reportsViewModel = function () {
                         self.selectPointForColumn(rowTemplate, (self.listOfColumns().length - 1));
                     }
                 }
+                $reportColumns.stop().animate({
+                    scrollTop: $reportColumns.get(0).scrollHeight
+                }, 700);
             });
 
             $addFilterbutton.on('click', function (e) {
@@ -704,6 +710,9 @@ var reportsViewModel = function () {
                     self.listOfFilters.push(rowTemplate);
                     updateListOfFilters(self.listOfFilters());
                 }
+                $additionalFilters.stop().animate({
+                    scrollTop: $additionalFilters.get(0).scrollHeight
+                }, 700);
             });
 
             $saveReportButton.on('click', function (e) {
@@ -1018,7 +1027,13 @@ var reportsViewModel = function () {
                     //},
                     data: reportJsonData,
                     aoColumns: aoColumns,
-                    pageLength: 25,
+                    scrollY: "75vh",
+                    scrollCollapse: true,
+                    //paging: false,
+                    //bFilter: false,  // search box
+                    //showColumnMenu: false,
+                    //showFilter: false,
+                    pageLength: 18,
                     bLengthChange: false
                 });
             }
@@ -1041,8 +1056,8 @@ var reportsViewModel = function () {
         renderReport = function (data) {
             $viewReport.DataTable().clear();
             $viewReport.DataTable().rows.add(data).draw();
-            $viewReport.show();
             blockUI($tabViewReport, false);
+            $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust();
             self.refreshData(false);
 
             $viewReport.find(".diSortable").on('contextmenu', function (ev) {
@@ -1482,7 +1497,6 @@ var reportsViewModel = function () {
                     break;
             }
         } else {
-            $viewReport.show();
             blockUI($tabViewReport, false);
         }
         $('html,body').stop().animate({

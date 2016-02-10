@@ -492,3 +492,113 @@ tr:hover .showOnHover {
     cursor: pointer;
 }
 /* end weather info */
+
+
+
+/* notifications */
+/* blue #1771B3 */
+
+#notifications {
+    color: #666;
+}
+
+#notifications .notificationHeader {
+    margin-bottom: 30px;
+}
+
+#notifications .notificationHeader h2 {
+    font-weight: bold;
+}
+
+.caret-spaced {
+    margin-left: 5px !important;
+}
+
+.nav-tabs > li.active > a:before {
+    display: block;
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #ddd;
+    bottom: 0;
+    position: absolute;
+    z-index: 9999;
+    left: calc(50% - 8px);
+}
+
+.nav-tabs-arrow > li > a {
+    font-weight: bold;
+    color: #666;
+    font-size: 1.2em;
+}
+
+.nav-tabs-arrow > li.active > a,
+.nav-tabs-arrow > li.active > a:hover,
+.nav-tabs-arrow > li.active > a:focus {
+    color: #1771B3;
+    border: 1px solid #fff !important;
+    border-bottom: 1px solid #ddd !important;
+}
+
+
+#notifications .tab-content {
+    margin-top: 30px;
+    margin-left: 15px;
+}
+
+#notifications .tab-pane h3 {
+    font-style: italic;
+}
+
+
+.policyList {
+    margin-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.policyList .policy {
+    border-bottom: 1px solid #ddd;
+    padding: 20px 0;
+    font-size: 1.2em;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.policyList .policy a {
+    color: #1771B3;
+    font-weight: bold;
+}
+
+.policyList .deletePolicy {
+    color: #CC3333;
+}
+
+.deletePolicy i {
+    font-size: 1.4em;
+}
+
+.editPolicy i {
+    font-size: 1.4em;
+    color: #1771B3;
+}
+
+.policyToolbar i {
+    margin-right: 15px;
+}
+
+/*.policyList .policyTitle,
+.policyList .policyInfo {
+    display: inline-block;
+}
+
+.policyList .policyTitle {
+    width: 20%;
+}
+
+.policyList .policyInfo {
+    width: auto;
+}*/
+
+/* notifications */
