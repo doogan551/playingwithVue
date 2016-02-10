@@ -17,6 +17,7 @@ module.exports = {
     }
   },
   sendEmail: function(to, msg, cb) {
+    console.log(to, msg);
     nodemailer.mail({
       from: 'dorsett.alarms@gmail.com',
       to: to,

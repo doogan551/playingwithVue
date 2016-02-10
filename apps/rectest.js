@@ -195,7 +195,7 @@ function testTwilio() {
   var NotifierUtility = require('../models/notifierutility');
   var notifierUtility = new NotifierUtility();
 
-  
+
   notifierUtility.sendText('13364694547', 'An alarm has occured in building 4200. Respond with asdf to acknowledge the alarm', function(err, response) {
     console.log(err, response);
   });
@@ -307,8 +307,8 @@ function testMail() {
   var MailListener = require("mail-listener2");
 
   var mailListener = new MailListener({
-    username: "robert.ian.kendall@gmail.com",
-    password: "tghy6655",
+    username: "dorsett.alarms@gmail.com",
+    password: "dorsettgmailpass",
     host: "imap.gmail.com",
     port: 993, // imap port 
     tls: true,

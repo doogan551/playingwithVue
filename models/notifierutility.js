@@ -80,7 +80,7 @@ NotifierUtility.prototype.sendNotification = function(alarm, cb) {
             wfcb(null);
           }
         }, function(wfcb) {
-          if (notification.type & 4) {
+          if (notification.type & 4) { // email
             self.sendEmail(notification.email, self.makeMessage(alarm, notification), wfcb);
           } else {
             wfcb(null);

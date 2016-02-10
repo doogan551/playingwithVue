@@ -11,7 +11,7 @@ app.use(bodyParser.urlencoded({
 
 app.get('/', function(req, res, next) {
   console.log('/');
-  return next();
+  res.send('hello world');
 });
 
 app.all('/twilio/xml', function(req, res) {

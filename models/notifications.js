@@ -26,13 +26,12 @@ module.exports = {
       email: 'rkendall@dorsett-tech.com'
     }, {
       number: '13364690900',
-      type: 2,
+      type: 0,
       ack: true,
       email: 'jroberts@dorsett-tech.com'
     }];
 
     callback(null, policies);
   }
-
 
 };

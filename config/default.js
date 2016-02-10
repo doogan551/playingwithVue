@@ -33,9 +33,9 @@ var defaults = {
         }
     },
     'Twilio': {
-        'accountSid': 'AC197afc3a1bff2117f0ce2b26becd96e7',
-        'authToken': 'e0a0537c16e912d59166f5777c2beef7',
-        'phoneNumber': '+13367702400'
+        'accountSid': 'AC0fc63c36f70cccee175fc2427d8ec2be',
+        'authToken': '4da6ed7c8aee56285e2b25b8441a6d39',
+        'phoneNumber': '+13367702223'
     },
     'Plivo': {
         'authId': 'MAOTAYY2RKNJU5MMQWZT',
