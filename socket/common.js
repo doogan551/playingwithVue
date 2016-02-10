@@ -1982,11 +1982,11 @@ function getActiveAlarmsNew(data, callback) {
     sort: sort,
     skip: (currentPage - 1) * itemsPerPage,
     limit: numberItems
-  }, function(err, recents) {
+  }, function(err, alarms) {
     Utility.count({
       collection: "ActiveAlarms",
       query: query
-    }, function(err, alarms) {
+    }, function(err, count) {
 
       callback(err, alarms, count);
     });
