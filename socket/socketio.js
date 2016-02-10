@@ -944,7 +944,10 @@ function sendAcknowledge(data, callback) {
 
 
   Utility.update(criteria, function(err, result) {
-    callback(err, result);
+    criteria.collection = 'ActiveAlarms';
+    Utility.update(criteria, function(err2, result2) {
+      callback(err || err2, result);
+    });
   });
 }
 
