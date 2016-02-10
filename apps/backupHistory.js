@@ -1,17 +1,25 @@
 var mongo = require('mongodb');
 var BSON = mongo.BSONPure;
 var async = require('async');
-var Config = require('./public/js/lib/config.js');
-var Utils = require('./lib/utils.js');
+var Config = require('../public/js/lib/config.js');
+var Utils = require('../helpers/utils.js');
+var db = require('../helpers/db');
 var numLong = mongo.Long;
 var fs = require('fs');
 var moment = require('moment');
+var config = require('config');
+var logger = require('../helpers/logger')(module);
+
+var dbConfig = config.get('Infoscan.dbConfig');
+var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
 var conn = 'mongodb://localhost/infoscan';
 
 // process.env.driveLetter = "D";
 // process.env.archiveLocation = "/InfoScan/Archive/History/";
-var history = require('./controllers/history.js');
+var History = require('../models/history.js');
+var ArchiveUtility = require('../models/archiveutility.js');
+var Utility = require('../models/utility.js');
 
 var logFilePath = "D:/InfoScan/PowerData/PowerMeterDataXfer.log";
 
@@ -20,6 +28,7 @@ var logToFile = function(msg) {
     var data = '\n' + timestamp + ' ' + msg;
     fs.appendFileSync(logFilePath, data);
 };
+
 var lowTempUpi = 41312;
 var hiTempUpi = 41313;
 var hddUpi = 41324;
@@ -54,7 +63,7 @@ function getMeterUpis(mdb, cb) {
         upis.all = upis.all.concat(upis.wS);
         cb(err);
     });
-};
+}
 
 function calculateWeather(mdb, cb) {
     var removals = [lowTempUpi, hiTempUpi, hddUpi, cddUpi];
@@ -78,7 +87,7 @@ function calculateWeather(mdb, cb) {
             if (err) {
                 return cb(err);
             }
-            if(data.length === 0){
+            if (data.length === 0) {
                 return cb('no data found in mongo');
             }
             // var endTime = moment.unix(data[data.length - 1].timestamp).endOf('day').unix();
@@ -167,7 +176,7 @@ function backUp() {
                     }
                     logToFile('Finished with SQLite backup');
                     setTimeout(function() {
-                        /*mdb.dropCollection('historydata', function(err, result) {
+                        mdb.dropCollection('historydata', function(err, result) {
                             if (err) {
                                 logToFile('dropCollection Error: ' + err);
                             }
@@ -183,11 +192,20 @@ function backUp() {
                                 logToFile('backupHistory completed. Exiting.');
                                 process.exit(0);
                             });
-                        });*/
+                        });
                     }, 2000);
                 });
             });
         });
     });
 }
-backUp();
+// backUp();
+
+function newBackup() {
+    db.connect(connectionString.join(''), function(err) {
+        History.doBackUp(upis.all, false, function(err) {
+            console.log('done');
+        });
+    });
+}
+newBackup();
