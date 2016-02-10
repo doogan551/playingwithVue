@@ -328,112 +328,119 @@ var updateRows = function(results, options, rows, callback) {
 var runBackUp = function(upis, limitRange, cb) {
 	var criteria = {};
 	var today = moment().startOf('day').unix();
-	var dates = [{
-		start: moment('01/01/2000', 'MM/DD/YYYY'),
-		end: moment('01/01/2012', 'MM/DD/YYYY')
-	}, {
-		start: moment('01/01/2012', 'MM/DD/YYYY'),
-		end: moment('01/01/2013', 'MM/DD/YYYY')
-	}, {
-		start: moment('01/01/2013', 'MM/DD/YYYY'),
-		end: moment('01/01/2014', 'MM/DD/YYYY')
-	}, {
-		start: moment('01/01/2014', 'MM/DD/YYYY'),
-		end: moment('01/01/2015', 'MM/DD/YYYY')
-	}, {
-		start: moment('01/01/2015', 'MM/DD/YYYY'),
-		end: moment('01/01/2016', 'MM/DD/YYYY')
-	}];
-
-	var query = {
-		/*timestamp: {
-			$lt: today
-		}*/
+	var dates = [];
+	var query = {};
+	var findRangeEnds = function(callback) {
+		Utility.get({
+			collection: 'historydata',
+			query: {},
+			sort: {
+				timestamp: 1
+			},
+			limit: 1
+		}, function(err, first) {
+			Utility.get({
+				collection: 'historydata',
+				query: {},
+				sort: {
+					timestamp: -1
+				},
+				limit: 1
+			}, function(_err, last) {
+				callback(err, {
+					start: first[0].timestamp,
+					end: last[0].timestamp
+				});
+			});
+		});
 	};
-	async.eachSeries(dates, function(date, callback) {
+	var buildDates = function(range, callback) {
+		var start = range.start;
+		var end = range.end;
+		var tempTime = range.start;
 
-		if (!limitRange) {
-			query = {
-				/*upi: {
-					$in: upis
-				}*/
-			};
-		} else {
+		while (tempTime <= end) {
+			var date = {};
+			date.start = tempTime;
+			tempTime = moment.unix(tempTime).add(1, 'year').unix();
+			date.end = tempTime;
+			dates.push(date);
+		}
+
+	};
+	findRangeEnds(function(err, range) {
+		buildDates(range);
+		console.log(dates.length);
+		async.eachSeries(dates, function(date, callback) {
+
+
 			query = {
 				$and: [{
 					timestamp: {
-						$gte: date.start.unix()
+						$gte: date.start
 					}
 				}, {
 					timestamp: {
-						$lt: date.end.unix()
+						$lt: date.end
 					}
 				}]
 			};
-		}
-		criteria = {
-			collection: 'historydata',
-			query: query,
-			limit: 0
-		};
-		Utility.get(criteria, function(err, points) {
-			// JS console.log(err, points.length);
-			buildTimeRanges(points);
-		});
 
-		var buildTimeRanges = function(points) {
-			var compare = function(a, b) {
-				if (a.timestamp < b.timestamp)
-					return -1;
-				if (a.timestamp > b.timestamp)
-					return 1;
-				return 0;
+			criteria = {
+				collection: 'historydata',
+				query: query,
+				limit: 0
 			};
 
-			var upsertRange = function(month, year, point) {
-				var range = {
-					month: month,
-					year: year,
-					points: []
+			Utility.get(criteria, function(err, points) {
+				console.log(moment.unix(date.start).format(), points.length);
+				buildTimeRanges(points);
+			});
+
+			var buildTimeRanges = function(points) {
+				var compare = function(a, b) {
+					if (a.timestamp < b.timestamp)
+						return -1;
+					if (a.timestamp > b.timestamp)
+						return 1;
+					return 0;
 				};
-				for (var j = 0; j < ranges.length; j++) {
-					if (ranges[j].year === year && ranges[j].month === month) {
-						ranges[j].points.push(point);
-						return;
+
+				var upsertRange = function(month, year, point) {
+					var range = {
+						month: month,
+						year: year,
+						points: []
+					};
+					for (var j = 0; j < ranges.length; j++) {
+						if (ranges[j].year === year && ranges[j].month === month) {
+							ranges[j].points.push(point);
+							return;
+						}
 					}
+					range.points.push(point);
+					ranges.push(range);
+				};
+
+				var ranges = [];
+
+				points.sort(compare);
+
+				for (var i = 0; i < points.length; i++) {
+					var month = moment.unix(points[i].timestamp).format('MM');
+					var year = moment.unix(points[i].timestamp).format('YYYY');
+
+					upsertRange(month, year, points[i]);
 				}
-				range.points.push(point);
-				ranges.push(range);
-			};
-
-			var ranges = [];
-			// var ptsSubset = [];
-
-			points.sort(compare);
-
-			// var start = moment().year(year).month(month).startOf('month').unix();
-			// var end = moment().year(year).month(month).endOf('month').unix();
-
-			for (var i = 0; i < points.length; i++) {
-				// points[i].timestamp -= 60 * 60;
-				var month = moment.unix(points[i].timestamp).format('MM');
-				var year = moment.unix(points[i].timestamp).format('YYYY');
-
-				upsertRange(month, year, points[i]);
-				// ptsSubset.push(points[i]);
-			}
-			if (!limitRange) {
-				addToSQLite(ranges, function(err) {
-					callback(err || 'finishing early');
-				});
-			} else {
+				console.log(ranges.length);
 				addToSQLite(ranges, callback);
-			}
 
-		};
-	}, function(err) {
-		cb(err);
+			};
+		}, function(err) {
+			cb(err);
+		});
 	});
+
 };
 
 var getValues = function(option, callback) {
@@ -1505,19 +1512,18 @@ var getUsage = function(options, callback) {
 var addToSQLite = function(ranges, cb) {
 	var criteria = {};
 	var doMonth = function(range, cb2) {
-		ArchiveUtility.serialize(function() {
+		ArchiveUtility.serialize(range, function() {
 			criteria = {
 				year: range.year,
 				statement: 'PRAGMA synchronous = OFF'
 			};
 			ArchiveUtility.exec(criteria, function() {
 				var tableName = 'History_' + range.year.toString() + range.month.toString();
-
 				criteria = {
 					year: range.year,
 					statement: 'BEGIN TRANSACTION'
 				};
-				ArchiveUtility.run(criteria, function() {
+				ArchiveUtility.runDB(criteria, function() {
 					var batchSize = 100;
 					var count = 0;
 					var parameterPlaceholder = '?,?,?,?,?,?';
@@ -1586,13 +1592,14 @@ var addToSQLite = function(ranges, cb) {
 
 
 	async.eachSeries(ranges, function(range, callback) {
+		console.log(range.year, range.month);
 		doMonth(range, callback);
 	}, function(err) {
-		removeFromHistorydata(mdb, ranges, cb);
+		removeFromHistorydata(ranges, cb);
 	});
 };
 
-var removeFromHistorydata = function(mdb, ranges, cb) {
+var removeFromHistorydata = function(ranges, cb) {
 	// no longer removing data by mongo.remove()
 	// keeping function in case mongo.drop and ensureIndex needs to be added later
 	cb();
