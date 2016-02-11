@@ -209,22 +209,29 @@ function newBackup() {
             }
             logToFile('Finished with SQLite backup');
             setTimeout(function() {
-                mdb.dropCollection('historydata', function(err, result) {
+                Utility.dropCollection({
+                    collection: 'historydata'
+                }, function(err, result) {
                     if (err) {
                         logToFile('dropCollection Error: ' + err);
                     }
-                    mdb.collection('historydata').ensureIndex({
-                        upi: 1,
-                        timestamp: 1
-                    }, {
-                        unique: true
-                    }, function(err, result) {
-                        if (err) {
-                            logToFile('ensureIndex Error: ' + err);
-                        }
-                        logToFile('backupHistory completed. Exiting.');
-                        process.exit(0);
-                    });
+                    Utility.ensureIndex({
+                            collection: 'historydata',
+                            index: {
+                                upi: 1,
+                                timestamp: 1
+                            },
+                            options: {
+                                unique: true
+                            }
+                        },
+                        function(err, result) {
+                            if (err) {
+                                logToFile('ensureIndex Error: ' + err);
+                            }
+                            logToFile('backupHistory completed. Exiting.');
+                            process.exit(0);
+                        });
                 });
             }, 2000);
         });

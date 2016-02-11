@@ -243,34 +243,30 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
 
     function updateProperties() {
       for (var prop in newPoint) {
+        if (readOnlyProps.indexOf(prop) === -1) {
+          // sort enums first
+          if (newPoint[prop].hasOwnProperty('ValueOptions')) {
+            var options = newPoint[prop].ValueOptions;
 
-        // sort enums first
-        if (newPoint[prop].hasOwnProperty('ValueOptions')) {
-          var options = newPoint[prop].ValueOptions;
-
-          var newOptions = {};
-          var temp = [];
-          for (var stringVal in options) {
-            temp.push(options[stringVal]);
-          }
-          temp.sort(compare);
-          for (var key = 0; key < temp.length; key++) {
-            for (var property in options) {
-              if (options[property] === temp[key]) {
-                newOptions[property] = options[property];
+            var newOptions = {};
+            var temp = [];
+            for (var stringVal in options) {
+              temp.push(options[stringVal]);
+            }
+            temp.sort(compare);
+            for (var key = 0; key < temp.length; key++) {
+              for (var property in options) {
+                if (options[property] === temp[key]) {
+                  newOptions[property] = options[property];
+                }
               }
             }
+            newPoint[prop].ValueOptions = newOptions;
           }
-          newPoint[prop].ValueOptions = newOptions;
-        }
 
-        // this will compare Slides and Point Refs arrays.
-        if (!_.isEqual(newPoint[prop], oldPoint[prop])) {
-          if (readOnlyProps.indexOf(prop) !== -1) {
-            return callback({
-              err: "A read only property has been changed: " + prop
-            }, null);
-          } else {
+          // this will compare Slides and Point Refs arrays.
+          if (!_.isEqual(newPoint[prop], oldPoint[prop])) {
+
             logger.info(newPoint._id, prop);
             if (prop === "Broadcast Enable" && user["System Admin"].Value !== true) {
               continue;
@@ -840,6 +836,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
             } else {
               generateActivityLog = false;
             }
+
           }
         }
       }
