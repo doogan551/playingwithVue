@@ -21,7 +21,8 @@
     border: 1px solid #D0D0D0;
     border-radius: 3px;
     padding: 2px 8px 2px 2px;
-    width: 130px;
+    /*width: 130px;*/
+    width: 100%;
     text-align: right;
 }
 .durationCtrl > input {
@@ -55,12 +56,28 @@
 .leftBar .tabs li {
     padding: 6px 6px 6px 6px;
 }
+.reportDisplayTitle {
+    margin-top: 2px;
+}
 
 .leftBar .tabs li:hover {
     cursor: pointer;
     text-decoration: underline;
 }
-
+.direports > body > ul.dt-button-collection.dropdown-menu {
+    width: 100px;
+    min-width: 90px;
+    margin-left: 25px;
+}
+.direports > body > .dropdown-menu > li {
+    cursor: pointer;
+}
+.direports > body > .dropdown-menu > li > a:hover {
+    background-color: #d5e1f2;
+}
+.tableFooter {
+    cursor: default;
+}
 .pointInstance {
     cursor: pointer;
 }
@@ -122,6 +139,14 @@
     margin-left: 8px;
     margin-top: -2px;
 }
+.totalizerOperators.dropdown-menu {
+    width: 80px;
+    min-width: 80px;
+    text-indent: -13px;
+    margin-left: 15px;
+    margin-top: -2px;
+}
+
 .childCondition > .dropdown > .operators.dropdown-menu {
     min-width: 45px;
     width: 45px;
@@ -203,6 +228,9 @@ ul.filterValues.dropdown-menu li a:hover {
     background-color: #d5e1f2;
 }
 ul.operators.dropdown-menu li a:hover {
+    background-color: #d5e1f2;
+}
+ul.totalizerOperators.dropdown-menu li a:hover {
     background-color: #d5e1f2;
 }
 ul.intervals.dropdown-menu li a:hover {
