@@ -111,6 +111,7 @@ common.getActiveAlarmsNew = getActiveAlarmsNew;
 common.getRecentAlarms = getRecentAlarms;
 common.getUnacknowledged = getUnacknowledged;
 common.sendUpdate = sendUpdate;
+common.acknowledgePointAlarms = acknowledgePointAlarms;
 
 module.exports = {
   socket: socket
@@ -1890,6 +1891,7 @@ function getUnacknowledged(data, callback) {
       $in: data.msgCat
     };
   }
+
   if (data.almClass) {
     query.almClass = {
       $in: data.almClass
@@ -2117,4 +2119,41 @@ function sendUpdate(dynamic) {
     upi: dynamic.upi,
     dynamic: dynamic.dyn
   });
+}
+
+function acknowledgePointAlarms(alarm) {
+  if (alarm.msgCat === Config.Enums['Alarm Categories'].Return.enum && alarm.ackStatus === Config.Enums['Acknowledge Statuses']['Not Acknowledged'].enum) {
+    var now = Math.floor(Date.now() / 1000);
+    var upi = alarm.upi;
+    var criteria = {
+      collection: 'Alarms',
+      query: {
+        upi: upi,
+        ackStatus: Config.Enums['Acknowledge Statuses']['Not Acknowledged'].enum
+      },
+      updateObj: {
+        $set: {
+          ackUser: "System",
+          ackTime: now,
+          ackStatus: Config.Enums['Acknowledge Statuses']['Acknowledged'].enum
+        }
+      },
+      options: {
+        multi: true
+      }
+    };
+    Utility.update(criteria, function(err, result) {
+      if (err) {
+        logger.error(err);
+      } else {
+        criteria.collection = 'ActiveAlarms';
+        Utility.update(criteria, function(err, result) {
+          if (err) {
+            logger.error(err);
+          }
+
+        });
+      }
+    });
+  }
 }

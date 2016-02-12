@@ -62,7 +62,7 @@ module.exports = function(_common) {
                     }
 
                     // unack
-                    if (doc.o.ackStatus === 1 && openAlarms[k].alarmView === "Unacknowledged" && doc.ns === 'infoscan.Alarms') {
+                    if (doc.o.ackStatus === 1 && openAlarms[k].alarmView === "Unacknowledged" && doc.ns === 'infoscan.Alarms' && doc.o.msgCat !== Config.Enums['Alarm Categories'].Return.enum) {
                         io.sockets.connected[openAlarms[k].sockId].emit('newUnackAlarm', {
                             newAlarm: doc.o,
                             reqID: openAlarms[k].data.reqID
@@ -78,6 +78,9 @@ module.exports = function(_common) {
                             reqID: openAlarms[k].data.reqID
                         });
                     }
+                    if (doc.ns === 'infoscan.Alarms') {
+                        common.acknowledgePointAlarms(doc.o);
+                    }
 
                     // active
                     if (openAlarms[k].alarmView === "Active" && doc.ns === 'infoscan.ActiveAlarms') {
@@ -90,9 +93,9 @@ module.exports = function(_common) {
                 }
             }
 
-            notifierUtility.sendNotification(doc.o, function(err){
+            /*notifierUtility.sendNotification(doc.o, function(err) {
 
-            });
+            });*/
 
         } else if (doc.ns === 'infoscan.historydata') {
             // module.exports.updateDashboard(doc.o);

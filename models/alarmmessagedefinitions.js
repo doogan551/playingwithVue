@@ -81,7 +81,7 @@ module.exports = {
             });
         },
         post: function(req, res, next) {
-            var m = new model(req.alarmMessageDefinition);
+            var m = new amdModel(req.alarmMessageDefinition);
             m._id = new ObjectId();
             m.isSystemMessage = false;
             m.save(function(er, doc, rows) {
