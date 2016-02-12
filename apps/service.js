@@ -9,6 +9,18 @@ var cli = commandLineArgs([{
   name: 'uninstall',
   alias: 'u',
   type: Boolean
+}, {
+  name: 'start',
+  alias: 's',
+  type: Boolean
+}, {
+  name: 'stop',
+  alias: 'x',
+  type: Boolean
+}, {
+  name: 'restart',
+  alias: 'r',
+  type: Boolean
 }]);
 
 var options = cli.parse();
@@ -34,6 +46,15 @@ svc.on('uninstall', function() {
 
 if (!!options.uninstall) {
   svc.uninstall();
-} else {
+} else if (!!optins.install) {
   svc.install();
+} else if (!!options.start) {
+  svc.start();
+} else if (!!options.stop) {
+  svc.stop();
+} else if (!!options.restart) {
+  svc.stop();
+  svc.start();
+} else{
+  throw new Error('No valid arguments passed');
 }
