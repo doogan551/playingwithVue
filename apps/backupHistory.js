@@ -226,11 +226,19 @@ function newBackup() {
                             }
                         },
                         function(err, result) {
-                            if (err) {
-                                logToFile('ensureIndex Error: ' + err);
-                            }
-                            logToFile('backupHistory completed. Exiting.');
-                            process.exit(0);
+                            Utility.ensureIndex({
+                                    collection: 'historydata',
+                                    index: {
+                                        timestamp: -1
+                                    }
+                                },
+                                function(err, result) {
+                                    if (err) {
+                                        logToFile('ensureIndex Error: ' + err);
+                                    }
+                                    logToFile('backupHistory completed. Exiting.');
+                                    process.exit(0);
+                                });
                         });
                 });
             }, 2000);
