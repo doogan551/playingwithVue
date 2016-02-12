@@ -5,9 +5,9 @@ block content
 			.leftBar
 				include ./tabLinks
 			.rightPanel
-				.reportingGettingData
+				.runReportSpinner(data-bind="css: { displayIcon: displayMainSpinner(), hideIcon: !displayMainSpinner()} ", title="Requesting Report Data")
 					i.fa.fa-spinner.fa-spin.fa-3x
-					span.spinnertext
+					span.spinnertext Getting Data
 				.tabConfiguration
 					ul.nav.nav-tabs
 						li.attribs.active(role="presentation")
@@ -177,7 +177,7 @@ block content
 									.col-xs-8.pull-right
 										.saveReportButton.btn.btn-primary
 											| Save Report
-										.runReportButton.btn.btn-primary
+										.runReportButton.btn.btn-primary(data-bind="enabled: reportResultViewed()")
 											| Run Report
 								.screenMessages
 									.row.well-sm
