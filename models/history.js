@@ -362,7 +362,7 @@ var runBackUp = function(upis, limitRange, cb) {
 		while (tempTime <= end) {
 			var date = {};
 			date.start = tempTime;
-			tempTime = moment.unix(tempTime).add(1, 'year').unix();
+			tempTime = moment.unix(tempTime).add(1, 'month').unix();
 			date.end = tempTime;
 			dates.push(date);
 		}
