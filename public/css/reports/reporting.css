@@ -56,6 +56,12 @@
 .leftBar .tabs li {
     padding: 6px 6px 6px 6px;
 }
+.runReportTabSpinner {
+    margin-left: 5px;
+}
+.runReportCheckMark {
+    margin-left: 5px;
+}
 .reportDisplayTitle {
     margin-top: 2px;
 }
@@ -284,14 +290,13 @@ body {
     padding-top: 5px;
     padding-right: 5px;
 }
-#reportSpinner {
-    top: 20%;
-    left: 45%;
-    position: absolute;
-    z-index: 999999;
-    font-size: 14px;
+.displayIcon {
+    display: inline-block;
 }
-.reportingGettingData {
+.hideIcon {
+    display: none;
+}
+.runReportSpinner {
     top: 20%;
     left: 45%;
     position: absolute;
