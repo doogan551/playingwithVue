@@ -74,7 +74,8 @@ var reportsViewModel = function () {
         $tabConfiguration,
         $tabViewReport,
         $viewReport,
-        $reportSpinner,
+        $runReportSpinner,
+        $runReportTabSpinner,
         $spinnertext,
         $pointName1,
         $pointName2,
@@ -97,6 +98,8 @@ var reportsViewModel = function () {
         $columnNames,
         pointSelectorRef,
         $pointSelectorIframe,
+        reportData,
+        activeDataRequests,
         reportSocket,
         reportJsonData = {},
         Name = "dorsett.reportUI",
@@ -109,6 +112,15 @@ var reportsViewModel = function () {
             selectedPointTypes: []
         },
         propertyFields = [],
+        generateUUID = function () {
+            var d = new Date().getTime(),
+                uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                    var r = (d + Math.random() * 16) % 16 | 0;
+                    d = Math.floor(d / 16);
+                    return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+                });
+            return uuid;
+        },
         toFixed = function (number, precision) {
             var abs = Math.abs(number),
                 str = abs.toString(),
@@ -154,11 +166,9 @@ var reportsViewModel = function () {
         },
         blockUI = function ($control, state, text) {
             if (state === true) {
-                $reportSpinner.show();
                 $control.hide();
                 $spinnertext.text(text);
             } else {
-                $reportSpinner.hide();
                 $control.show();
                 $spinnertext.text("");
             }
@@ -535,7 +545,8 @@ var reportsViewModel = function () {
                 filters = validateFilters(),
                 filter,
                 key,
-                upis = [];
+                upis = [],
+                uuid;
 
             if (columns.length > 1) {
                 for (i = 0; i < columns.length; i++) {
@@ -575,7 +586,11 @@ var reportsViewModel = function () {
                 point["Report Config"].interval.text = self.interval();
                 point["Report Config"].interval.value = self.intervalValue();
 
+                uuid = generateUUID();
+                activeDataRequests.push(uuid);
+
                 result = {
+                    requestID: uuid,
                     upis: upis,
                     range: {
                         start: startDate,
@@ -594,6 +609,7 @@ var reportsViewModel = function () {
                 $tabs.find("li").removeClass("active");
                 $tabs.find("li:eq(" + (tabNumber - 1) + ")").addClass("active");
             }
+            self.currentTab(tabNumber);
             switch (tabNumber) {
                 case 1:
                     $tabConfiguration.addClass("active");
@@ -605,7 +621,6 @@ var reportsViewModel = function () {
                     $tabConfiguration.removeClass("active");
                     $tabConfiguration.hide();
                     $tabViewReport.addClass("active");
-                    blockUI($tabViewReport, true, " Getting Data..");
                     break;
             }
         },
@@ -618,6 +633,15 @@ var reportsViewModel = function () {
                     cb();
                 }
             });
+
+            reportSocket.on('returnReport', function (data) {
+                if (data.err === null) {
+                    //parseReturnedData(data.results);
+                } else {
+                    console.log("Error while retrieving data");
+                }
+            });
+
         },
         getScreenFields = function () {
             var $direports = $(".direports");
@@ -625,8 +649,9 @@ var reportsViewModel = function () {
             $tabConfiguration = $direports.find(".tabConfiguration");
             $tabViewReport = $direports.find(".tabViewReport");
             $viewReport = $direports.find(".viewReport");
-            $reportSpinner = $direports.find(".reportingGettingData");
-            $spinnertext = $reportSpinner.find(".spinnertext");
+            $runReportSpinner = $direports.find(".runReportSpinner");
+            $runReportTabSpinner = $direports.find(".runReportTabSpinner");
+            $spinnertext = $runReportSpinner.find(".spinnertext");
             $pointName1 = $direports.find(".pointName1");
             $pointName2 = $direports.find(".pointName2");
             $pointName3 = $direports.find(".pointName3");
@@ -820,7 +845,7 @@ var reportsViewModel = function () {
             });
 
             $runReportButton.on('click', function (e) {
-                self.viewReport();
+                self.requestReportData();
                 e.preventDefault();
                 e.stopPropagation();
             });
@@ -1243,61 +1268,67 @@ var reportsViewModel = function () {
                 $viewReport.append($footerTable);
             //}
         },
-        renderReport = function (data) {
-            $viewReport.DataTable().clear();
-            $viewReport.DataTable().rows.add(data).draw();
-            blockUI($tabViewReport, false);
-            $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust().draw;
-            self.refreshData(false);
-            appendFooter();
+        renderReport = function () {
+            if (reportData !== undefined && self.currentTab() === 2) {
+                self.reportResultViewed(self.currentTab() === 2);
+                blockUI($tabViewReport, false);
+                $viewReport.DataTable().clear();
+                $viewReport.DataTable().rows.add(reportData).draw();
+                $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust().draw;
+                self.refreshData(false);
+                appendFooter();
 
-            $viewReport.find(".diSortable").on('contextmenu', function (ev) {
-                ev.preventDefault();
-                return false;
-            }, false);
+                $viewReport.find(".diSortable").on('contextmenu', function (ev) {
+                    ev.preventDefault();
+                    return false;
+                }, false);
 
-            $viewReport.find(".diSortable").mousedown(function (event) {
-                var columnIndex = $(event.target).index();
-                switch (event.which) {
-                    case 1: // left mouse button
-                        break;
-                    case 2: // middle mouse button
-                        break;
-                    case 3: // right mouse button
-                        event.preventDefault();
-                        event.stopPropagation();
-                        self.showPointReview(self.listOfColumns()[columnIndex]);
-                        return false;
-                        break;
-                    default:
-                        console.log("what mouse button did you click?");
-                        break;
-                }
-            });
+                $viewReport.find(".diSortable").mousedown(function (event) {
+                    var columnIndex = $(event.target).index();
+                    switch (event.which) {
+                        case 1: // left mouse button
+                            break;
+                        case 2: // middle mouse button
+                            break;
+                        case 3: // right mouse button
+                            event.preventDefault();
+                            event.stopPropagation();
+                            self.showPointReview(self.listOfColumns()[columnIndex]);
+                            return false;
+                            break;
+                        default:
+                            console.log("what mouse button did you click?");
+                            break;
+                    }
+                });
+            }
         },
         renderHistoryReport = function (data) {
+            self.activeDataRequest(false);
             if (data.err === undefined) {
-                reportJsonData = pivotHistoryData(data.historyData);
-                self.truncatedData(data.truncated);
-                renderReport(reportJsonData);
+                reportData = pivotHistoryData(data.historyData);
+                self.truncatedData(reportData.truncated);
+                renderReport();
             } else {
                 console.log(" - * - * - renderHistoryReport() ERROR = ", data.err);
             }
         },
         renderTotalizerReport = function (data) {
+            self.activeDataRequest(false);
             if (data.err === undefined) {
-                reportJsonData = pivotTotalizerData(data);
-                self.truncatedData(data.truncated);
-                renderReport(reportJsonData);
+                reportData = pivotTotalizerData(data);
+                self.truncatedData(reportData.truncated);
+                renderReport();
             } else {
                 console.log(" - * - * - renderTotalizerReport() ERROR = ", data.err);
             }
         },
         renderPropertyReport = function (data) {
+            self.activeDataRequest(false);
             if (data.err === undefined) {
-                reportJsonData = data;
-                self.truncatedData(data.truncated);
-                renderReport(reportJsonData);
+                reportData = data;
+                self.truncatedData(reportData);
+                renderReport();
             } else {
                 console.log(" - * - * - renderPropertyReport() ERROR = ", data.err);
             }
@@ -1325,6 +1356,12 @@ var reportsViewModel = function () {
 
     self.refreshData = ko.observable(true);
 
+    self.activeDataRequest = ko.observable(false);
+
+    self.reportResultViewed = ko.observable(true);
+
+    self.currentTab = ko.observable(1);
+
     self.listOfColumns = ko.observableArray([]);
 
     self.listOfFilters = ko.observableArray([]);
@@ -1344,6 +1381,7 @@ var reportsViewModel = function () {
             reportConfig;
 
         decimalPrecision = 2;
+        activeDataRequests = [];
         getScreenFields();
         initKnockout();
 
@@ -1495,7 +1533,6 @@ var reportsViewModel = function () {
                 handle: '.handle'
             });
 
-            $reportSpinner.hide();
             $containerFluid.show();
             tabSwitch(1);
 
@@ -1670,30 +1707,42 @@ var reportsViewModel = function () {
         tabSwitch(1);
     };
 
-    self.viewReport = function () {
-        var requestObj = buildReportDataRequest();
-
-        tabSwitch(2);
-        if (self.designChanged()) {
-            configureDataTable();
-        }
-        if (requestObj) {
-            switch (self.reportType) {
-                case "History":
-                    ajaxPost(requestObj, "/report/historyDataSearch", renderHistoryReport);
-                    break;
-                case "Totalizer":
-                    ajaxPost(requestObj, "/report/totalizerReport", renderTotalizerReport);
-                    break;
-                case "Property":
-                    ajaxPost(requestObj, "/report/reportSearch", renderPropertyReport);
-                    break;
-                default:
-                    console.log(" - - - DEFAULT  viewReport()");
-                    break;
+    self.requestReportData = function () {
+        var requestObj;
+        if (self.currentTab() !== 2) {
+            requestObj = buildReportDataRequest();
+            tabSwitch(2);
+            if (self.reportResultViewed()) {
+                self.activeDataRequest(true);
+                self.reportResultViewed(false);
+                if (self.designChanged()) {
+                    configureDataTable();
+                }
+                if (requestObj) {
+                    reportData = undefined;
+                    switch (self.reportType) {
+                        case "History":
+                            ajaxPost(requestObj, "/report/historyDataSearch", renderHistoryReport);
+                            //reportSocket.emit("historyDataSearch", {options: requestObj});
+                            break;
+                        case "Totalizer":
+                            ajaxPost(requestObj, "/report/totalizerReport", renderTotalizerReport);
+                            //reportSocket.emit("totalizerReport", {options: requestObj});
+                            break;
+                        case "Property":
+                            ajaxPost(requestObj, "/report/reportSearch", renderPropertyReport);
+                            //reportSocket.emit("reportSearch", {options: requestObj});
+                            break;
+                        default:
+                            console.log(" - - - DEFAULT  viewReport()");
+                            break;
+                    }
+                } else {
+                    renderReport();
+                }
+            } else {
+                renderReport();
             }
-        } else {
-            blockUI($tabViewReport, false);
         }
         $('html,body').stop().animate({
             scrollTop: 0
@@ -1805,6 +1854,18 @@ var reportsViewModel = function () {
                 return prop.name.toLowerCase().indexOf(filter) > -1;
             });
         }
+    }, self);
+
+    self.displayMainSpinner = ko.computed(function () {
+        return (self.activeDataRequest() && self.currentTab() === 2);
+    }, self);
+
+    self.displayTabSpinner = ko.computed(function () {
+        return self.activeDataRequest();
+    }, self);
+
+    self.displayTabCheckmark = ko.computed(function () {
+        return (!self.reportResultViewed() && !self.activeDataRequest());
     }, self);
 };
 
