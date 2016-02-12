@@ -201,6 +201,7 @@ function backUp() {
 }
 // backUp();
 
+
 function newBackup() {
     db.connect(connectionString.join(''), function(err) {
         History.doBackUp(upis.all, false, function(err) {
