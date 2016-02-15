@@ -49,6 +49,8 @@ block content
 										thead
 											tr.strong
 												th.medium.strong Name
+												th.medium.strong Calculate
+												th.medium.strong Type
 										tbody.sortablecolums(data-bind="foreach: listOfColumns()")
 											tr.pointdata(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
 												td.columnNameContainer
@@ -72,9 +74,21 @@ block content
 															// /ko
 													// /ko
 												td.columnTotals
-													// ko if: ($data.canSum === true)
-													span Sum
-													input.columnSumFlag(type='checkbox', value='1', data-bind='checked: sumColumn', title="Sum this column")
+													// ko if: ($data.canCalculate === true)
+													button.btn.btn-danger.btn-xs.fa.fa-times(data-bind="click: function(){ $parent.clearColumnCalculation($index()) }, tooltip: { title: 'Clear' }")
+													.dropdown.availableCalculations
+														button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
+															span(data-bind="text: calculation")
+															// ko if: ($parent.listOfCalculations().length > 1)
+															span.caret.lm10px
+															// /ko
+														// ko if: ($parent.listOfCalculations().length > 1)
+														ul.totalizerOperators.dropdown-menu
+															// ko foreach: $parent.listOfCalculations()
+															li
+																a(data-bind="click: function(){ $root.selectCalculation($element, $parentContext.$index(), $data.text) }, text: $data.text")
+															// /ko
+														// /ko
 													// /ko
 												// ko if: ($parent.reportType === 'Totalizer')
 												td.totalizerOperator

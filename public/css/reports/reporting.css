@@ -317,12 +317,15 @@ i.iconLink:hover {
     width: 550px;
 }
 .columnTotals {
-    width: 70px;
+    width: 170px;
 }
 .columnTotals span {
     margin-left: 3px;
     margin-right: 3px;
     color: #565656;
+}
+.availableCalculations {
+    display: inline-block;
 }
 .filterPointName {
     display: inline-block;

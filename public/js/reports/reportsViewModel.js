@@ -154,7 +154,7 @@ var reportsViewModel = function () {
                 return "";
             }
         },
-        columnCanBeSummed = function (column) {
+        columnCanBeCalculated = function (column) {
           var result = false;
             if (column.valueType === "Unsigned" || column.valueType === "Float" || column.valueType === "Integer") {
                 result = true;
@@ -252,6 +252,8 @@ var reportsViewModel = function () {
                         tempObject.valueType = "String";
                         tempObject.colName = name;
                         tempObject.pointType = type;
+                        tempObject.canCalculate = columnCanBeCalculated(tempObject);
+                        tempObject.calculation = "";
                         if (self.reportType === "Totalizer") {
                             tempObject.valueList = getTotalizerValueList(type),
                             tempObject.operator = (tempObject.valueList.length === 1 ? tempObject.valueList[0].text : "");
@@ -468,12 +470,12 @@ var reportsViewModel = function () {
                     case "History":
                     case "Property":
                         result = theColumns;
-                        result[i].canSum = columnCanBeSummed(result[i]);
+                        result[i].canCalculate = columnCanBeCalculated(result[i]);
                         break;
                     case "Totalizer":
                         result.push(theColumns[i]);
                         result[i].valueList = getTotalizerValueList(result[i].pointType);
-                        result[i].canSum = true;
+                        result[i].canCalculate = true;
                         break;
                     default:
                         console.log(" - - - DEFAULT  initColumns()");
@@ -775,7 +777,8 @@ var reportsViewModel = function () {
             }));
         },
         setReportEvents = function () {
-            var intervals;
+            var intervals,
+                calculations;
             $columnNames.on('click', function (e) {
                 openPointSelectorForColumn();
                 e.preventDefault();
@@ -787,8 +790,8 @@ var reportsViewModel = function () {
                         colName: "Choose Point",
                         valueType: "String",
                         operator: "",
-                        sumColumn: false,
-                        canSum: false,
+                        calculation: "",
+                        canCalculate: false,
                         valueList: [],
                         upi: 0
                     },
@@ -892,7 +895,145 @@ var reportsViewModel = function () {
                     text: "Year"
                 }
             ];
+
+            calculations = [
+                {
+                    text: "mean"
+                }, {
+                    text: "max"
+                }, {
+                    text: "min"
+                }, {
+                    text: "sum"
+                }, {
+                    text: "std"
+                }
+            ];
+
             self.listOfIntervals(intervals);
+            self.listOfCalculations(calculations);
+        },
+        getVariance = function (columnData, start, end) {
+            var i,
+                meanCalc = getColumnMean(columnData, start, end),
+                squaredTotalResults = [],
+                squaredPageResults = [],
+                squaredTotal = 0,
+                squaredPage = 0,
+                sum = {
+                    totalCalc: 0,
+                    pageCalc: 0
+                },
+                variance = {
+                    totalCalc: 0,
+                    pageCalc: 0
+                };
+
+            for (i = 0; i < columnData.length; i++) {
+                squaredTotal = Math.pow((columnData[i] - meanCalc.totalCalc), 2);
+                sum.totalCalc += squaredTotal;
+                squaredTotalResults.push(squaredTotal);
+                if (i >= start && i < end) {
+                    squaredPage = Math.pow((columnData[i] - meanCalc.pageCalc), 2);
+                    sum.pageCalc += squaredPage;
+                    squaredPageResults.push(squaredPage);
+                }
+            }
+
+            if (squaredTotalResults.length > 0) {
+                variance.totalCalc = sum.totalCalc / squaredTotalResults.length;
+            }
+            if ((end - start) > 0) {
+                variance.pageCalc = sum.pageCalc / (end - start);
+            }
+
+            return variance;
+        },
+        getColumnStandardDeviation = function (columnData, start, end) {
+            var variance = getVariance(columnData, start, end),
+                calc = {
+                    totalCalc: 0,
+                    pageCalc: 0
+                };
+
+            calc.totalCalc = Math.sqrt(variance.totalCalc);
+            calc.pageCalc = Math.sqrt(variance.pageCalc);
+
+            return calc;
+        },
+        getColumnMean = function (columnData, start, end) {
+            var i,
+                calc = {
+                    totalCalc: 0,
+                    pageCalc: 0
+                };
+
+            for (i = 0; i < columnData.length; i++) {
+                calc.totalCalc += columnData[i];
+                if (i >= start && i < end) {
+                    calc.pageCalc += columnData[i];
+                }
+            }
+            if (columnData.length > 0) {
+                calc.totalCalc = calc.totalCalc / columnData.length;
+            }
+            if (end - start > 0) {
+                calc.pageCalc = calc.pageCalc / (end - start);
+            }
+            return calc;
+        },
+        getColumnMax = function (columnData, start, end) {
+            var i,
+                calc = {
+                    totalCalc: 0,
+                    pageCalc: 0
+                };
+
+            for (i = 0; i < columnData.length; i++) {
+                if (columnData[i] > calc.totalCalc) {
+                    calc.totalCalc = columnData[i];
+                }
+                if (i >= start && i < end) {
+                    if (columnData[i] > calc.pageCalc) {
+                        calc.pageCalc = columnData[i];
+                    }
+                }
+            }
+            return calc;
+        },
+        getColumnMin = function (columnData, start, end) {
+            var i,
+                calc = {
+                    totalCalc: 0,
+                    pageCalc: 0
+                };
+
+            for (i = 0; i < columnData.length; i++) {
+                if (columnData[i] < calc.totalCalc) {
+                    calc.totalCalc = columnData[i];
+                }
+                if (i >= start && i < end) {
+                    if (columnData[i] < calc.pageCalc) {
+                        calc.pageCalc = columnData[i];
+                    }
+                }
+            }
+            return calc;
+        },
+        getColumnSum = function (columnData, start, end) {
+            var i,
+                calc = {
+                    totalCalc: 0,
+                    pageCalc: 0
+                };
+
+            for (i = 0; i < columnData.length; i++) {
+                calc.totalCalc += columnData[i];
+                if (i >= start && i < end) {
+                    calc.pageCalc += columnData[i];
+                }
+            }
+            return calc;
         },
         configureDataTable = function () {
             var aoColumns = [],
@@ -1043,7 +1184,7 @@ var reportsViewModel = function () {
                         case "DateTime":
                             $(tdField).addClass("small");
                             break;
-                        case "float":
+                        case "Float":
                         case "Integer":
                         case "Unsigned":
                             $(tdField).addClass("text-right");
@@ -1097,23 +1238,45 @@ var reportsViewModel = function () {
 
                     return result;
                 },
-                getSumForColumn = function (column, columnName, start, end) {
+                getCalcForColumn = function (column, columnDesign, start, end) {
                     var columnData = column.data(),
                         columnDataLen = columnData.length,
+                        columnName = (self.reportType === "Totalizer" ? columnDesign.dataColumnName : columnDesign.colName),
                         value,
-                        sum = {};
+                        rawValues = [],
+                        calc = {};
                         i;
-                    sum.totalSum = 0;
-                    sum.pageSum = 0;
+                    calc.totalCalc = 0;
+                    calc.pageCalc = 0;
+
                     for (i = 0; i < columnDataLen; i++) {
                         value = columnData[i][columnName];
                         value = (typeof value === "object" ? value.Value : value);
-                        sum.totalSum += parseFloat(value);
-                        if (i >= start && i <= end) {
-                            sum.pageSum += parseFloat(value);
+                        if ($.isNumeric(value)) {
+                            rawValues.push(parseFloat(value));
+                        } else {
+                            rawValues.push(0);
                         }
                     }
-                    return sum;
+
+                    switch (columnDesign.calculation) {
+                        case "mean":
+                            calc = getColumnMean(rawValues, start, end);
+                            break;
+                        case "max":
+                            calc = getColumnMax(rawValues, start, end);
+                            break;
+                        case "min":
+                            calc = getColumnMin(rawValues, start, end);
+                            break;
+                        case "sum":
+                            calc = getColumnSum(rawValues, start, end);
+                            break;
+                        case "std":
+                            calc = getColumnStandardDeviation(rawValues, start, end);
+                            break;
+                    }
+                    return calc;
                 };
 
             if (self.designChanged() && $.fn.DataTable.isDataTable($viewReport)) {
@@ -1191,24 +1354,19 @@ var reportsViewModel = function () {
                         var i,
                             len = columnsArray.length;
                         for (i = 0; i < len; i++) {
-                            if (columnsArray[i].sumColumn === true) {
-                                $(thead).find('th').eq(i).addClass("sum");
+                            if (!!columnsArray[i].calculation && columnsArray[i].calculation !== "") {
+                                $(thead).find('th').eq(i).addClass("calculate");
                             }
                             $(thead).find('th').eq(i).addClass("text-center");
                         }
                     },
                     footerCallback: function ( tfoot, data, start, end, display ) {
-                        this.api().columns('.sum').every(function(whatIsThis){
+                        this.api().columns('.calculate').every(function(whatIsThis){
                             var column = this,
-                                sum;
+                                calc = getCalcForColumn(column, columnsArray[column[0]], start, end);
 
-                            if (self.reportType === "Totalizer") {
-                                sum = getSumForColumn(column, columnsArray[column[0]].dataColumnName, start, end);
-                            } else {
-                                sum = getSumForColumn(column, columnsArray[column[0]].colName, start, end);
-                            }
-                            self.listOfColumns()[column[0]].totalSum = sum.totalSum;
-                            self.listOfColumns()[column[0]].pageSum = sum.pageSum;
+                            self.listOfColumns()[column[0]].totalCalc = calc.totalCalc;
+                            self.listOfColumns()[column[0]].pageCalc = calc.pageCalc;
                         });
                     },
                     data: reportJsonData,
@@ -1244,29 +1402,29 @@ var reportsViewModel = function () {
             self.designChanged(false);
         },
         appendFooter = function () {
-            //if (self.reportType !== "Property") {
-                var buildFooterTable = function () {
-                        var htmlFooterString = "<tfoot class='tableFooter'><tr>",
-                            columns = self.listOfColumns(),
-                            i,
-                            len = columns.length;
+            var buildFooterTable = function () {
+                    var htmlFooterString = "<tfoot class='tableFooter'><tr>",
+                        columns = self.listOfColumns(),
+                        i,
+                        len = columns.length;
 
-                        for (i = 0; i < len; i++) {
-                            if (columns[i].sumColumn === true) {
-                                htmlFooterString += "<th class='text-right' title='Page Total (Table Total)'>" + toFixedComma(columns[i].pageSum, decimalPrecision) + " (" + toFixedComma(columns[i].totalSum, decimalPrecision) + ")</th>";
-                            } else {
-                                htmlFooterString += "<th></th>";
-                            }
+                    for (i = 0; i < len; i++) {
+                        if (!!columns[i].calculation && columns[i].calculation !== "") {
+                            htmlFooterString += "<th class='text-right' title='Page Calc (Table Calc)'>";
+                            htmlFooterString += columns[i].calculation + "  " + toFixedComma(columns[i].pageCalc, decimalPrecision);
+                            htmlFooterString += " (" + toFixedComma(columns[i].totalCalc, decimalPrecision) + ")</th>";
+                        } else {
+                            htmlFooterString += "<th></th>";
                         }
-                        htmlFooterString += "</tr></tfoot>";
-                        return htmlFooterString;
-                    },
-                    $footerTable;
+                    }
+                    htmlFooterString += "</tr></tfoot>";
+                    return htmlFooterString;
+                },
+                $footerTable;
 
-                $viewReport.find(".tableFooter").remove();
-                $footerTable = $(buildFooterTable());
-                $viewReport.append($footerTable);
-            //}
+            $viewReport.find(".tableFooter").remove();
+            $footerTable = $(buildFooterTable());
+            $viewReport.append($footerTable);
         },
         renderReport = function () {
             if (reportData !== undefined && self.currentTab() === 2) {
@@ -1343,6 +1501,8 @@ var reportsViewModel = function () {
     self.intervalValue = ko.observable(1);
 
     self.listOfIntervals = ko.observableArray([]);
+
+    self.listOfCalculations = ko.observableArray([]);
 
     self.listOfPropertiesLength = 0;
 
@@ -1429,8 +1589,8 @@ var reportsViewModel = function () {
                             colName: "Date",
                             valueType: "DateTime",
                             operator: "",
-                            sumColumn : false,
-                            canSum : false,
+                            calculation : "",
+                            canCalculate : false,
                             upi: 0
                         });
                         self.listOfFilters.push({
@@ -1461,8 +1621,8 @@ var reportsViewModel = function () {
                         self.listOfColumns.push({
                             colName: "Name",
                             valueType: "String",
-                            sumColumn : false,
-                            canSum : false
+                            calculation : "",
+                            canCalculate : false
                         });
                         break;
                     default:
@@ -1751,11 +1911,18 @@ var reportsViewModel = function () {
 
     self.clearColumnPoint = function (indexOfColumn) {
         var tempArray = self.listOfColumns(),
-            item = tempArray[indexOfColumn];
-        item.colName = "Choose Point";
-        item.valueType = "String";
-        item.operator = "";
-        item.upi = 0;
+            column = tempArray[indexOfColumn];
+        column.colName = "Choose Point";
+        column.valueType = "String";
+        column.operator = "";
+        column.upi = 0;
+        updateListOfColumns(tempArray);
+    };
+
+    self.clearColumnCalculation = function (indexOfColumn) {
+        var tempArray = self.listOfColumns(),
+            column = tempArray[indexOfColumn];
+        column.calculation = "";
         updateListOfColumns(tempArray);
     };
 
@@ -1774,8 +1941,8 @@ var reportsViewModel = function () {
             prop = getProperty(selectedItem.name);
         column.colName = selectedItem.name;
         column.valueType = prop.valueType;
-        column.sumColumn = false;
-        column.canSum = columnCanBeSummed(column);
+        column.calculation = "";
+        column.canCalculate = columnCanBeCalculated(column);
         updateListOfColumns(tempArray);
     };
 
@@ -1792,6 +1959,13 @@ var reportsViewModel = function () {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn];
         column.operator = selectedItem;
+        updateListOfColumns(tempArray);
+    };
+
+    self.selectCalculation = function (element, indexOfColumn, selectedItem) {
+        var tempArray = self.listOfColumns(),
+            column = tempArray[indexOfColumn];
+        column.calculation = selectedItem;
         updateListOfColumns(tempArray);
     };
 
