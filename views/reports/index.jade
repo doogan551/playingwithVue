@@ -85,7 +85,7 @@ block content
 															span.caret.lm10px
 															// /ko
 														// ko if: ($parent.listOfCalculations().length > 1)
-														ul.totalizerOperators.dropdown-menu
+														ul.calculations.dropdown-menu
 															// ko foreach: $parent.listOfCalculations()
 															li
 																a(data-bind="click: function(){ $root.selectCalculation($element, $parentContext.$index(), $data.text) }, text: $data.text")
