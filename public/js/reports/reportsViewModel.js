@@ -174,6 +174,20 @@ var reportsViewModel = function () {
             }
             $control.attr('disabled', state);
         },
+        checkForColumnCalculations = function () {
+            var i,
+                columns = self.listOfColumns(),
+                len = columns.length,
+                $calcHeader;
+
+            for (i = 0; i < len; i++) {
+                if (!!columns[i].canCalculate && columns[i].canCalculate === true) {
+                    $calcHeader = $columnsGrid.find(".calculateColumn");
+                    $calcHeader.show();
+                    break;
+                }
+            }
+        },
         updateListOfFilters = function (newArray) {
             self.listOfFilters([]);
             self.listOfFilters(setFiltersParentChildLogic(newArray));
@@ -183,6 +197,7 @@ var reportsViewModel = function () {
         updateListOfColumns = function (newArray) {
             self.listOfColumns([]);
             self.listOfColumns(newArray);
+            checkForColumnCalculations();
             self.designChanged(true);
             self.refreshData(true);
         },
@@ -912,6 +927,7 @@ var reportsViewModel = function () {
 
             self.listOfIntervals(intervals);
             self.listOfCalculations(calculations);
+            checkForColumnCalculations();
         },
         getVariance = function (columnData, start, end) {
             var i,
