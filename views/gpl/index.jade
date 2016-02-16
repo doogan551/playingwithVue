@@ -222,6 +222,23 @@ html
                         button.btn.btn-primary.btn-sm(data-bind="click: updateActionButton") Save
                         button.btn.btn-danger.btn-sm(data-bind="click: deleteActionButton") Delete
 
+        #editActionButtonValueModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
+            .modal-dialog
+                .modal-content
+                    .modal-header
+                        h3.panel-title Enter Value
+                    .modal-body.clearfix
+                        .row.bm10px
+                            .form-group
+                                .col-sm-1.noBoldControls
+                                    label(for="actionButtonValue") Value:
+                                .col-sm-11
+                                    input#actionButtonValue.form-control.input-sm.input-xs(type="text", data-bind="numeric: actionButtonValue, value: actionButtonValue")
+
+                    .modal-footer
+                        button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+                        button.btn.btn-primary.btn-sm(data-bind="click: sendActionButtonValue") Send Command
+
 
         #editInputOutput.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
             .modal-dialog

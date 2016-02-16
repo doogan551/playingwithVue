@@ -397,6 +397,7 @@ module.exports = Rpt = {
                                 HistoryResults: []
                             };
                             async.eachSeries(justUpis, function(upi, callback2) {
+
                                 if (noOlderTimes.indexOf(upi) !== -1) {
                                     for (var x = 0; x < points.length; x++) {
                                         if (points[x]._id === upi)
@@ -413,8 +414,9 @@ module.exports = Rpt = {
                                     for (var w = 0; w < histPoints.length; w++) {
                                         if (histPoints[w].timestamp === ts && histPoints[w].upi === upi) {
                                             for (var y = 0; y < points.length; y++) {
-                                                if (points[y]._id === histPoints[w].upi)
+                                                if (points[y]._id === histPoints[w].upi) {
                                                     returnObj.HistoryResults.push(buildHistoryValue(points[y], histPoints[w]));
+                                                }
                                             }
                                             getNextOldest = false;
                                         }
@@ -446,19 +448,18 @@ module.exports = Rpt = {
                                                         nextOldest = results;
                                                     }
                                                 }
-
-                                                if ((upi && nextOldest[0]) && (upi === nextOldest[0].upi)) {
-                                                    for (var x = 0; x < points.length; x++) {
-                                                        if (nextOldest.length > 0) {
+                                                for (var x = 0; x < points.length; x++) {
+                                                    if (nextOldest.length > 0) {
+                                                        if (nextOldest[0].upi === points[x]._id) {
                                                             returnObj.HistoryResults.push(buildHistoryValue(points[x], nextOldest[0]));
-                                                        } else {
-                                                            returnObj.HistoryResults.push({
-                                                                upi: upi,
-                                                                Name: points[x].Name,
-                                                                Value: "No Older Value"
-                                                            });
-                                                            noOlderTimes.push(upi);
                                                         }
+                                                    } else {
+                                                        returnObj.HistoryResults.push({
+                                                            upi: upi,
+                                                            Name: points[x].Name,
+                                                            Value: "No Older Value"
+                                                        });
+                                                        noOlderTimes.push(upi);
                                                     }
                                                 }
                                                 callback2(err);
@@ -919,7 +920,7 @@ module.exports = Rpt = {
                         } else {
                             searchQuery[propertyCheckForValue(key)] = {
                                 $regex: '(?i)^(?!' + filter.value + ")"
-                                //$ne: utils.converters.convertType(filter.value, filterValueType)
+                                    //$ne: utils.converters.convertType(filter.value, filterValueType)
                             };
                         }
                     }

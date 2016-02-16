@@ -14,6 +14,15 @@ block content
   #backDrop(ng-style="{'background-color' : convertColor(display['Background Color'])}")
     #display(ng-style='getDisplayStyle(display)')
       include _displayview
+    #actionButtonInput.ui-corner-all(data-overlay-theme='a', data-theme='c', data-dismissible='false', style='max-width: 500px;')
+        .ui-corner-top(data-role='header', data-theme='a')
+          h1 Enter Value
+        .ui-corner-bottom.ui-content(data-role='content', style='padding: 5px;', data-theme='d')
+          h3.ui-title
+            label(for="actionButtonValue")
+            input#actionButtonValue(type="number", name="actionButtonValue")
+          a(href='#', ng-click="sendCommand()", data-role='button', data-inline='true', data-rel='back', data-transition='flow', data-theme='b') Send Command
+          a(href='#', data-role='button', data-inline='true', data-rel='back', data-theme='c') Cancel
 
     //div(class='topBar',style='position: absolute; width: 100%;', data-role='header', data-theme='a')
 

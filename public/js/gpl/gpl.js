@@ -43,6 +43,7 @@ var gpl = {
     $editVersionModal: $('#editVersionModal'),
     $colorpickerModal: $('#colorpickerModal'),
     $editActionButtonModal: $('#editActionButtonModal'),
+    $editActionButtonValueModal: $('#editActionButtonValueModal'),
     $useEditVersionButton: $('#useEditVersion'),
     $discardEditVersionButton: $('#discardEditVersion'),
     point: window.gplData.point,
@@ -3696,9 +3697,24 @@ gpl.ActionButton = function (config) {
             }
         },
 
-        sendCommand = function () {
+        _sendCommand = function () {
             console.log('Send Command', _getCommandArguments());
             gpl.socket.emit('fieldCommand', _getCommandArguments());
+        },
+        sendCommand = function () {
+            if (_local.pointData['Point Type'].Value.match('Analog')) {
+                $('#actionButtonValue').attr({
+                    min: _local.pointData['Minimum Value'].Value,
+                    max: _local.pointData['Maximum Value'].Value
+                });
+                gpl.$editActionButtonValueModal.modal('show');
+            } else {
+                _sendCommand();
+            }
+        },
+        sendValue = function (value) {
+            _local.parameter = value;
+            _sendCommand();
         },
         click = function () {
             var url,
@@ -3810,7 +3826,8 @@ gpl.ActionButton = function (config) {
         postInit: postInit,
         destroy: destroy,
         click: click,
-        sendCommand: sendCommand
+        sendCommand: sendCommand,
+        sendValue: sendValue
     });
 
     return _local;
@@ -5182,6 +5199,7 @@ gpl.BlockManager = function (manager) {
             actionButtonText: ko.observable(),
             actionButtonType: ko.observable(),
             actionButtonParameter: ko.observable(),
+            actionButtonValue: ko.observable(),
             actionButtonPointName: ko.observable(),
             actionButtonUpi: ko.observable(),
             selectedReference: ko.observable(),
@@ -7475,6 +7493,14 @@ gpl.Manager = function () {
                 gpl.$editActionButtonModal.modal('show');
             },
 
+            sendActionButtonValue: function () {
+                var value = parseFloat(managerSelf.bindings.actionButtonValue());
+
+                managerSelf.editBlock.sendValue(value);
+
+                gpl.$editActionButtonValueModal.modal('hide');
+            },
+
             updateActionButton: function () {
                 var bindings = managerSelf.bindings,
                     pointName = bindings.actionButtonPointName(),
@@ -7707,6 +7733,30 @@ gpl.Manager = function () {
                     // parent.jqxDropDownButton('setContent', getTextElementByColor(event.args.color));
                 });
 
+            }
+        };
+
+        ko.bindingHandlers.numeric = {
+            init: function (element, valueAccessor) {
+                $(element).on("keydown", function (event) {
+                    // Allow: backspace, delete, tab, escape, and enter
+                    if (event.keyCode == 46 || event.keyCode == 8 || event.keyCode == 9 || event.keyCode == 27 || event.keyCode == 13 ||
+                        // Allow: Ctrl+A
+                        (event.keyCode == 65 && event.ctrlKey === true) ||
+                        // Allow: . ,
+                        (event.keyCode == 188 || event.keyCode == 190 || event.keyCode == 110) ||
+                        // Allow: home, end, left, right
+                        (event.keyCode >= 35 && event.keyCode <= 39)) {
+                        // let it happen, don't do anything
+                        return;
+                    }
+                    else {
+                        // Ensure that it is a number and stop the keypress
+                        if (event.shiftKey || (event.keyCode < 48 || event.keyCode > 57) && (event.keyCode < 96 || event.keyCode > 105)) {
+                            event.preventDefault();
+                        }
+                    }
+                });
             }
         };
     };
@@ -8166,13 +8216,15 @@ gpl.Manager = function () {
 
                 if ($target.hasClass('actionBtn')) {
                     button = managerSelf.actionButtons[$target.attr('data-actionButtonID')];
+                    managerSelf.editBlock = button;
                     if (gpl.isEdit) {
                         if (button) {
-                            managerSelf.editBlock = button;
                             managerSelf.bindings.editActionButton();
                         }
                     } else {
-                        button.click();
+                        if (button) {
+                            button.click();
+                        }
                     }
                 }
             }

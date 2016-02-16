@@ -62,17 +62,24 @@ var ActionButton = function (config) {
         _parameter,//not needed for now
         _upi,
 
+        min = 0,
+        max = 10,
+        external,
+
         _getCommandArguments = function () {
             var ret = $.extend(true, {}, _commandArguments);
 
             ret.upi = _upi;
-            ret.value = _parameter;
+            ret.Value = _parameter;
 
             return ret;
         },
         _processPointData = function (response) {
             _pointData = response;
             _validateOptions('upi');
+
+            external.min = _pointData['Minimum Value'].Value;
+            external.max = _pointData['Maximum Value'].Value;
         },
         _getPointData = function (upi) {
             $.ajax({
@@ -89,10 +96,22 @@ var ActionButton = function (config) {
                 //update UI, if 'upi', else 'command'
             }
         },
-
-        sendCommand = function () {
+        _sendCommand = function () {
             console.log('Send Command', _getCommandArguments());
             displays.socket.emit('fieldCommand', _getCommandArguments());
+            displays.$scope.currActionButton = null;
+        },
+
+        sendCommand = function () {
+            if (_pointData['Point Type'].Value.match('Analog')) {
+                $('#actionButtonInput').popup('open');
+            } else {
+                _sendCommand();
+            }
+        },
+        sendValue = function (value) {
+            _parameter = value;
+            _sendCommand();
         },
         setCommand = function (idx) {
             _code = codes[idx];
@@ -118,18 +137,28 @@ var ActionButton = function (config) {
             _getPointData(upi);
         };
 
-    _id = displays.actionButtonCount++;
-    updateConfig(config);
+    if (config.ActionPoint === undefined) {
+        config.ActionPoint = config.upi;
+    }
 
-    return {
+    _id = displays.actionButtonCount++;
+
+    external = {
         id: _id,
         setUPI: setUPI,
         setCommand: setCommand,
         setParameter: setParameter,
         getPointData: getPointData,
         updateConfig: updateConfig,
-        sendCommand: sendCommand
+        sendCommand: sendCommand,
+        sendValue: sendValue,
+        min: min,
+        max: max
     };
+
+    updateConfig(config);
+
+    return external;
 };
 
 displays.DisplayAnimation = function(el, screenObject) {
@@ -659,6 +688,8 @@ displays = $.extend(displays, {
                 }
             };
 
+        displays.$scope = scope;
+
         displays.upiNames = displays.upiNames || {};
 
         if (scope.objs === undefined) {
@@ -741,6 +772,8 @@ displays = $.extend(displays, {
                 height: parseInt(window.displayJson.Height, 10) + 100
             });
         });
+
+        $('#actionButtonInput').popup();
 
         $('#leftPanel').hover(
             function() {
@@ -844,9 +877,9 @@ displays = $.extend(displays, {
             switch (whichEventCode) {
                 case 1:
                     leftMouseDown = true;
-                    if (((event.target === $("#displayObjects")[0]) || (event.target === $("#backDrop")[0])) && displays.$scope) {
-                        displays.$scope.blur();
-                    }
+                    // if (((event.target === $("#displayObjects")[0]) || (event.target === $("#backDrop")[0])) && displays.$scope) {
+                    //     displays.$scope.blur();
+                    // }
                     break;
                 case 2:
                     displays.pushPullMode = true;
@@ -1100,7 +1133,8 @@ displays = $.extend(displays, {
                         if (screenObject === 1) {
                             //alert(item['Point Type']);
                             if (item.hasOwnProperty('ActionCode')) { // action button
-                                item.actionButton.sendCommand();
+                                displays.$scope.currActionButton = item;
+                                item._actionButton.sendCommand();
                             } else {
                                 if (item['Point Type'] === 151) {
                                     openGpl(item);
@@ -1273,6 +1307,11 @@ displays = $.extend(displays, {
                     $scope: $scope
                 });
 
+                $scope.sendCommand = function () {
+                    var val = parseFloat($('#actionButtonValue').val());
+                    $scope.currActionButton._actionButton.sendValue(val);
+                };
+
                 $scope.action = action;
                 $scope.getBGStyle = function(display) {
                     var ret = {
@@ -1347,6 +1386,11 @@ displays = $.extend(displays, {
                         };
 
                     if (isActionButton) {
+                        displays.$scope.currActionButton = item;
+                        $('#actionButtonValue').attr({
+                            min: item._actionButton.min,
+                            max: item._actionButton.max
+                        });
                         item._actionButton.sendCommand();
                     } else {
                         if (localUPI && !(displays.pointReferenceSoftDeleted(localUPI) && isDisplayObject)) {  // don't get softdeleted display references
