@@ -3703,6 +3703,10 @@ gpl.ActionButton = function (config) {
         },
         sendCommand = function () {
             if (_local.pointData['Point Type'].Value.match('Analog')) {
+                $('#actionButtonValue').attr({
+                    min: _local.pointData['Minimum Value'].Value,
+                    max: _local.pointData['Maximum Value'].Value
+                });
                 gpl.$editActionButtonValueModal.modal('show');
             } else {
                 _sendCommand();
