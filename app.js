@@ -21,6 +21,7 @@ var errorHandler = require('errorhandler');
 var favicon = require('serve-favicon');
 var RedisStore = require('connect-redis')(session);
 var redis = require('redis');
+console.log('NODE_CONFIG_DIR: ' + config.util.getEnv('NODE_CONFIG_DIR'));
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 var port = config.get('Infoscan.siteConfig').port;

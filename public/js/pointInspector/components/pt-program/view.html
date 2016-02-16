@@ -66,6 +66,21 @@
             </div>
             <hr>
             <div class="row">
+                <div class="col col-sm-6 col-xs-12">
+                    <div class="dataField">
+                        <label>Controller</label>
+                        <span class="lh30" data-bind="text: data.Controller.Value()"></span>
+                    </div>
+                </div>
+                <div class="col col-sm-6 col-xs-12">
+                    <div class="dataField">
+                        <label>Control Priority</label>
+                        <span class="lh30" data-bind="text: data['Control Priority'].Value()"></span>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
                 <!-- ko component: { name: 'ctl-pointReference', params: { refType: 'Script Point', rootContext: $root } } -->
                 <!-- /ko -->
             </div>
