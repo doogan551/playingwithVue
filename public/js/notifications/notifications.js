@@ -4,10 +4,11 @@ var policy = {
     memberGroups: [],
     enabled: true,
     _currAlertID: 1,
+    _currGroupID: 4,
+    _currEscalationID: 4,
+    _currThreadID: 1,
     alertConfigs: [{
-        _id: 1, // seeded from _currAlertID
-        _currGroupID: 4,
-        _currEscalationID: 4,
+        id: 1, // seeded from _currAlertID
         name: 'Off-Hours',
         isOnCall: true,
         rotateConfig: { // false/null if only 1?
@@ -21,12 +22,13 @@ var policy = {
             repeatCount: 0
         },
         groups: [{
-            _id: 1,// seeded from _currGroupID
+            id: 1,// seeded from _currGroupID
+            active: true,
             name: 'Group 1',
             alertDelay: 0,
             escalationDelay: 30,
             escalations: [{
-                _id: 1, // seeded from _currEscalationID
+                id: 1, // seeded from _currEscalationID
                 members: [],
                 alertStyle: 'Sequenced', //FirstResponder, Everyone
                 memberAlertDelay: 5,
@@ -69,6 +71,7 @@ var policy = {
         }]
     }],
     threads: [{
+        id: 1,// on process, update these IDs, then remove these IDs
         triggeringUPI: 12345,
         triggeringAlarm: 'OH NO!',
         initialTimestamp: 123123123,
@@ -77,7 +80,9 @@ var policy = {
             timestamp: 123123123,
             groupID: 1,
             escalationID: 1,
-            method: 'text',// text/phone/email/etc
+            recipients: [], //ids of the members
+            // method: 'text',// text/phone/email/etc
+            groupRepeats: 0,
             escalationRepeats: 0 // increment to check rotateConfig
         }]
     }]
@@ -178,6 +183,7 @@ var notificationEntries = [{
     // in case things change, rather than having static action list
     // also for multiple actions, only want one entry
     type: ACTIVE,
+    triggeringUPI: 12345,
     policyID: 123123123
 }, {
     // recurring resides in collection since they could be long-term actions
@@ -185,6 +191,7 @@ var notificationEntries = [{
     // then rebuild the list?
     type: RECURRING,
     policyID: 123123123,
+    triggeringUPI: 12345,
     // rounded to minute
     // instead of interval/day/hour?  precalculate
     // if downtime, or during ping, 'get all recurring where nextAction <= nowInMinutes'

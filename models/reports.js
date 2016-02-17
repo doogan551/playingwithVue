@@ -449,17 +449,19 @@ module.exports = Rpt = {
                                                     }
                                                 }
                                                 for (var x = 0; x < points.length; x++) {
-                                                    if (nextOldest.length > 0) {
-                                                        if (nextOldest[0].upi === points[x]._id) {
-                                                            returnObj.HistoryResults.push(buildHistoryValue(points[x], nextOldest[0]));
+                                                    if (points[x]._id === upi) {
+                                                        if (nextOldest.length > 0) {
+                                                            if (nextOldest[0].upi === points[x]._id) {
+                                                                returnObj.HistoryResults.push(buildHistoryValue(points[x], nextOldest[0]));
+                                                            }
+                                                        } else {
+                                                            returnObj.HistoryResults.push({
+                                                                upi: upi,
+                                                                Name: points[x].Name,
+                                                                Value: "No Older Value"
+                                                            });
+                                                            noOlderTimes.push(upi);
                                                         }
-                                                    } else {
-                                                        returnObj.HistoryResults.push({
-                                                            upi: upi,
-                                                            Name: points[x].Name,
-                                                            Value: "No Older Value"
-                                                        });
-                                                        noOlderTimes.push(upi);
                                                     }
                                                 }
                                                 callback2(err);
