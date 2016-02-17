@@ -338,6 +338,16 @@ i.iconLink:hover {
 .availableCalculations {
     display: inline-block;
 }
+.availableCalculations button {
+    display: inline-block;
+    width: 70px;
+    padding: 2px 2px 2px 4px;
+}
+.availableTotalizerOperatorsContainer button {
+    display: inline-block;
+    width: 80px;
+    padding: 2px 2px 2px 4px;
+}
 .filterPointName {
     display: inline-block;
     margin-left: 4px;
