@@ -103,6 +103,7 @@ var reportsViewModel = function () {
         reportData,
         activeDataRequests,
         reportSocket,
+        exportEventSet,
         reportJsonData = {},
         Name = "dorsett.reportUI",
         originalPoint = {},
@@ -1074,44 +1075,6 @@ var reportsViewModel = function () {
             }
             return calc;
         },
-        getColumnMax = function (columnData, start, end) {
-            var i,
-                calc = {
-                    totalCalc: 0,
-                    pageCalc: 0
-                };
-
-            for (i = 0; i < columnData.length; i++) {
-                if (columnData[i] > calc.totalCalc) {
-                    calc.totalCalc = columnData[i];
-                }
-                if (i >= start && i < end) {
-                    if (columnData[i] > calc.pageCalc) {
-                        calc.pageCalc = columnData[i];
-                    }
-                }
-            }
-            return calc;
-        },
-        getColumnMin = function (columnData, start, end) {
-            var i,
-                calc = {
-                    totalCalc: 0,
-                    pageCalc: 0
-                };
-
-            for (i = 0; i < columnData.length; i++) {
-                if (columnData[i] < calc.totalCalc) {
-                    calc.totalCalc = columnData[i];
-                }
-                if (i >= start && i < end) {
-                    if (columnData[i] < calc.pageCalc) {
-                        calc.pageCalc = columnData[i];
-                    }
-                }
-            }
-            return calc;
-        },
         getColumnSum = function (columnData, start, end) {
             var i,
                 calc = {
@@ -1347,10 +1310,12 @@ var reportsViewModel = function () {
                             calc = getColumnMean(rawValues, start, end);
                             break;
                         case "max":
-                            calc = getColumnMax(rawValues, start, end);
+                            calc.totalCalc = Math.max.apply(Math, rawValues);
+                            calc.pageCalc = Math.max.apply(Math, rawValues.slice(start, end));
                             break;
                         case "min":
-                            calc = getColumnMin(rawValues, start, end);
+                            calc.totalCalc = Math.min.apply(Math, rawValues);
+                            calc.pageCalc = Math.min.apply(Math, rawValues.slice(start, end));
                             break;
                         case "sum":
                             calc = getColumnSum(rawValues, start, end);
@@ -1517,7 +1482,6 @@ var reportsViewModel = function () {
         },
         renderReport = function () {
             if (reportData !== undefined && self.currentTab() === 2) {
-                var eventSet = false;
                 self.reportResultViewed(self.currentTab() === 2);
                 blockUI($tabViewReport, false);
                 $viewReport.DataTable().clear();
@@ -1526,16 +1490,18 @@ var reportsViewModel = function () {
                 self.refreshData(false);
                 appendFooter();
 
-                $tabViewReport.find("a.btn.btn-default.buttons-collection").on('click', function (ev) {
-                    if (!eventSet) {
-                        setTimeout(function () {
-                            $direports.find("li.dt-button > a").on('click', function (ev) {  // export buttons clicked
-                                console.log($(this).text() + " button clicked");
-                            });
-                        }, 100);
-                    }
-                    eventSet = true;
-                });
+                if (!exportEventSet) {
+                    $tabViewReport.find("a.btn.btn-default.buttons-collection").on('click', function (ev) {
+                        if (!exportEventSet) {
+                            setTimeout(function () {
+                                $direports.find("li.dt-button > a").on('click', function (ev) {  // export buttons clicked
+                                    console.log($(this).text() + " button clicked");
+                                });
+                            }, 100);
+                        }
+                        exportEventSet = true;
+                    });
+                }
             }
         },
         renderHistoryReport = function (data) {
@@ -1617,6 +1583,7 @@ var reportsViewModel = function () {
         var columns,
             reportConfig;
 
+        exportEventSet = false;
         decimalPrecision = 2;
         activeDataRequests = [];
         getScreenFields();
