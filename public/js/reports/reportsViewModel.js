@@ -158,7 +158,8 @@ var reportsViewModel = function () {
             }
         },
         columnCanBeCalculated = function (column) {
-          var result = false;
+            var result = false,
+                valueOptions;
             if (self.reportType === "Totalizer") {
                 result = true;
             } else {
@@ -180,7 +181,8 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        result = true;
+                        valueOptions = window.workspaceManager.config.Templates.getTemplate(column.pointType).Value.ValueOptions;
+                        result = (valueOptions === undefined);
                         break;
                 }
             }
@@ -284,7 +286,6 @@ var reportsViewModel = function () {
                 objIndex = selectObjectIndex,
                 updatedList = self.listOfColumns(),
                 tempObject = updatedList[selectObjectIndex],
-                templates = window.workspaceManager.config.Templates,
                 pointSelectedCallback = function (pid, name, type) {
                     if (!!pid) {
                         tempObject.upi = pid;
@@ -297,7 +298,7 @@ var reportsViewModel = function () {
                             tempObject.valueList = getTotalizerValueList(type),
                             tempObject.operator = (tempObject.valueList.length === 1 ? tempObject.valueList[0].text : "");
                         } else {
-                            tempObject.valueOptions = templates.getTemplate(type).Value.ValueOptions;
+                            tempObject.valueOptions = window.workspaceManager.config.Templates.getTemplate(type).Value.ValueOptions;
                         }
                         updatedList[objIndex] = tempObject;
                         updateListOfColumns(updatedList);
@@ -1255,7 +1256,7 @@ var reportsViewModel = function () {
                     if (columnConfig.valueType === "DateTime") {
                         $(tdField).addClass("small");
                     } else {
-                        if (columnCanBeCalculated(columnConfig)) {
+                        if (columnConfig.canCalculate === true) {
                             $(tdField).addClass("text-right");
                         }
                     }
