@@ -1,5 +1,6 @@
 "use strict";
 window.workspaceManager = (window.opener || window.top).workspaceManager;
+var reportsVM;
 
 var initKnockout = function () {
     ko.bindingHandlers.reportDatePicker = {
@@ -70,6 +71,7 @@ var initKnockout = function () {
 var reportsViewModel = function () {
     var self = this,
         decimalPrecision,
+        $direports,
         $tabs,
         $tabConfiguration,
         $tabViewReport,
@@ -101,6 +103,7 @@ var reportsViewModel = function () {
         reportData,
         activeDataRequests,
         reportSocket,
+        exportEventSet,
         reportJsonData = {},
         Name = "dorsett.reportUI",
         originalPoint = {},
@@ -156,12 +159,31 @@ var reportsViewModel = function () {
         },
         columnCanBeCalculated = function (column) {
           var result = false;
-            if (column.valueType === "Unsigned" || column.valueType === "Float" || column.valueType === "Integer") {
-                result = true;
-            }
             if (self.reportType === "Totalizer") {
                 result = true;
+            } else {
+                switch (column.valueType) {
+                    case "Unsigned":
+                    case "Float":
+                    case "Integer":
+                        result = true;
+                        break;
+                }
+                switch (column.pointType) {
+                    case "Analog Input":
+                    case "Analog Output":
+                    case "Analog Value":
+                    case "Average":
+                    case "Binary Input":
+                    case "Binary Output":
+                    case "Binary Value":
+                    case "Math":
+                    case "Totalizer":
+                        result = true;
+                        break;
+                }
             }
+
             return result;
         },
         blockUI = function ($control, state, text) {
@@ -661,7 +683,7 @@ var reportsViewModel = function () {
 
         },
         getScreenFields = function () {
-            var $direports = $(".direports");
+            $direports = $(".direports");
             $tabs = $direports.find(".tabs");
             $tabConfiguration = $direports.find(".tabConfiguration");
             $tabViewReport = $direports.find(".tabViewReport");
@@ -737,7 +759,8 @@ var reportsViewModel = function () {
                 historyResults = historyData[i].HistoryResults;
                 tempPivot = {Date: new Date(historyData[i].timestamp * 1000).toLocaleString()};
                 for (j = 0; j < historyResults.length; j++) {
-                    tempPivot[historyResults[j].Name] = (historyResults[j].Value ? historyResults[j].Value : Math.floor(Math.random() * 250) + 1 );
+                    //tempPivot[historyResults[j].Name] = (historyResults[j].Value ? historyResults[j].Value : Math.floor(Math.random() * 250) + 1 );
+                    tempPivot[historyResults[j].Name] = historyResults[j].Value;
                 }
                 pivotedData.push(tempPivot);
             }
@@ -895,6 +918,60 @@ var reportsViewModel = function () {
                 blockUI($tabConfiguration, false);
             });
 
+            $filtersGrid.sortable({
+                appendTo: $filtersTbody,
+                disabled: false,
+                items: "tr",
+                forceHelperSize: true,
+                helper: 'original',
+                stop: function (event, ui) {
+                    var tempArray,
+                        item = ko.dataFor(ui.item[0]),
+                        newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                    if (newIndex >= self.listOfFilters().length) {
+                        newIndex = self.listOfFilters().length - 1;
+                    }
+                    if (newIndex < 0) {
+                        newIndex = 0;
+                    }
+
+                    ui.item.remove();
+                    self.listOfFilters.remove(item);
+                    self.listOfFilters.splice(newIndex, 0, item);
+                    tempArray = self.listOfFilters();
+                    updateListOfFilters(tempArray);
+                },
+                scroll: true,
+                handle: '.handle'
+            });
+
+            $columnsGrid.sortable({
+                appendTo: $columnsTbody,
+                disabled: false,
+                items: "tr",
+                forceHelperSize: true,
+                helper: 'original',
+                stop: function (event, ui) {
+                    var tempArray,
+                        item = ko.dataFor(ui.item[0]),
+                        newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                    if (newIndex >= self.listOfColumns().length) {
+                        newIndex = self.listOfColumns().length - 1;
+                    }
+                    if (newIndex < 0) {
+                        newIndex = 0;
+                    }
+
+                    ui.item.remove();
+                    self.listOfColumns.remove(item);
+                    self.listOfColumns.splice(newIndex, 0, item);
+                    tempArray = self.listOfColumns();
+                    updateListOfColumns(tempArray);
+                },
+                scroll: true,
+                handle: '.handle'
+            });
+
             intervals = [
                 {
                     text: "Minute"
@@ -995,44 +1072,6 @@ var reportsViewModel = function () {
             }
             if (end - start > 0) {
                 calc.pageCalc = calc.pageCalc / (end - start);
-            }
-            return calc;
-        },
-        getColumnMax = function (columnData, start, end) {
-            var i,
-                calc = {
-                    totalCalc: 0,
-                    pageCalc: 0
-                };
-
-            for (i = 0; i < columnData.length; i++) {
-                if (columnData[i] > calc.totalCalc) {
-                    calc.totalCalc = columnData[i];
-                }
-                if (i >= start && i < end) {
-                    if (columnData[i] > calc.pageCalc) {
-                        calc.pageCalc = columnData[i];
-                    }
-                }
-            }
-            return calc;
-        },
-        getColumnMin = function (columnData, start, end) {
-            var i,
-                calc = {
-                    totalCalc: 0,
-                    pageCalc: 0
-                };
-
-            for (i = 0; i < columnData.length; i++) {
-                if (columnData[i] < calc.totalCalc) {
-                    calc.totalCalc = columnData[i];
-                }
-                if (i >= start && i < end) {
-                    if (columnData[i] < calc.pageCalc) {
-                        calc.pageCalc = columnData[i];
-                    }
-                }
             }
             return calc;
         },
@@ -1139,7 +1178,7 @@ var reportsViewModel = function () {
                     var $customField,
                         htmlString,
                         value;
-                    setTdClasses(tdField, columnConfig.valueType);
+                    setTdClasses(tdField, columnConfig);
                     setTdAttribs(tdField, columnConfig, data, columnIndex);
                     if (data[columnConfig.colName]) {
                         switch (columnConfig.valueType) {
@@ -1195,21 +1234,12 @@ var reportsViewModel = function () {
                         $(tdField).attr('pointType', pointType);
                     }
                 },
-                setTdClasses = function (tdField, datatype) {
-                    switch (datatype) {
-                        case "DateTime":
-                            $(tdField).addClass("small");
-                            break;
-                        case "Float":
-                        case "Integer":
-                        case "Unsigned":
-                            $(tdField).addClass("text-right");
-                            break;
-                        default:
-                            if (self.reportType === "Totalizer") { // Totalizer columns are sums
-                                $(tdField).addClass("text-right");
-                            }
-                            break;
+                setTdClasses = function (tdField, columnConfig) {
+                    if (columnCanBeCalculated(columnConfig)) {
+                        $(tdField).addClass("text-right");
+                    }
+                    if (columnConfig.valueType === "DateTime") {
+                        $(tdField).addClass("small");
                     }
                 },
                 buildColumnObject = function (item, columnIndex) {
@@ -1280,10 +1310,12 @@ var reportsViewModel = function () {
                             calc = getColumnMean(rawValues, start, end);
                             break;
                         case "max":
-                            calc = getColumnMax(rawValues, start, end);
+                            calc.totalCalc = Math.max.apply(Math, rawValues);
+                            calc.pageCalc = Math.max.apply(Math, rawValues.slice(start, end));
                             break;
                         case "min":
-                            calc = getColumnMin(rawValues, start, end);
+                            calc.totalCalc = Math.min.apply(Math, rawValues);
+                            calc.pageCalc = Math.min.apply(Math, rawValues.slice(start, end));
                             break;
                         case "sum":
                             calc = getColumnSum(rawValues, start, end);
@@ -1366,14 +1398,33 @@ var reportsViewModel = function () {
                             ]
                         }
                     ],
-                    headerCallback: function( thead, data, start, end, display ) {
+                    headerCallback: function (thead, data, start, end, display) {
                         var i,
-                            len = columnsArray.length;
+                            len = columnsArray.length,
+                            $theads;
                         for (i = 0; i < len; i++) {
                             if (!!columnsArray[i].calculation && columnsArray[i].calculation !== "") {
                                 $(thead).find('th').eq(i).addClass("calculate");
                             }
                             $(thead).find('th').eq(i).addClass("text-center");
+                        }
+
+                        switch (self.reportType) {
+                            case "History":
+                            case "Totalizer":
+                                $theads = $(thead).find('th');
+                                $theads.each(function (i, el) {
+                                    $(el).addClass("diSortable");
+                                    $(el).attr("oncontextmenu", "reportsVM.showPointReviewViaIndex(" + i + "); return false;");
+                                    $(el).attr("title", "Right mouse click to run PointInspector");
+                                });
+                                break;
+                            case "Property":
+                                $theads = $(thead).find('th:first');
+                                $theads.addClass("pointLookupColumn");
+                                break;
+                            default:
+                                break;
                         }
                     },
                     footerCallback: function ( tfoot, data, start, end, display ) {
@@ -1396,19 +1447,6 @@ var reportsViewModel = function () {
                     pageLength: 17,
                     bLengthChange: false
                 });
-            }
-
-            switch (self.reportType) {
-                case "History":
-                case "Totalizer":
-                    $viewReport.find("thead th").addClass("diSortable");
-                    $viewReport.find("thead th").attr("title", "Right mouse click to run PointInspector");
-                    break;
-                case "Property":
-                    $viewReport.find("thead th:first").addClass("pointLookupColumn");
-                    break;
-                default:
-                    break;
             }
 
             $viewReport.on('draw.dt', function () {
@@ -1452,29 +1490,18 @@ var reportsViewModel = function () {
                 self.refreshData(false);
                 appendFooter();
 
-                $viewReport.find(".diSortable").on('contextmenu', function (ev) {
-                    ev.preventDefault();
-                    return false;
-                }, false);
-
-                $viewReport.find(".diSortable").mousedown(function (event) {
-                    var columnIndex = $(event.target).index();
-                    switch (event.which) {
-                        case 1: // left mouse button
-                            break;
-                        case 2: // middle mouse button
-                            break;
-                        case 3: // right mouse button
-                            event.preventDefault();
-                            event.stopPropagation();
-                            self.showPointReview(self.listOfColumns()[columnIndex]);
-                            return false;
-                            break;
-                        default:
-                            console.log("what mouse button did you click?");
-                            break;
-                    }
-                });
+                if (!exportEventSet) {
+                    $tabViewReport.find("a.btn.btn-default.buttons-collection").on('click', function (ev) {
+                        if (!exportEventSet) {
+                            setTimeout(function () {
+                                $direports.find("li.dt-button > a").on('click', function (ev) {  // export buttons clicked
+                                    console.log($(this).text() + " button clicked");
+                                });
+                            }, 100);
+                        }
+                        exportEventSet = true;
+                    });
+                }
             }
         },
         renderHistoryReport = function (data) {
@@ -1556,6 +1583,7 @@ var reportsViewModel = function () {
         var columns,
             reportConfig;
 
+        exportEventSet = false;
         decimalPrecision = 2;
         activeDataRequests = [];
         getScreenFields();
@@ -1607,6 +1635,7 @@ var reportsViewModel = function () {
                             operator: "",
                             calculation : "",
                             canCalculate : false,
+                            valueList: [],
                             upi: 0
                         });
                         self.listOfFilters.push({
@@ -1615,6 +1644,7 @@ var reportsViewModel = function () {
                             childLogic: false,
                             operator: "EqualTo",
                             valueType: "DateTime",
+                            valueList: [],
                             value: moment().subtract(1, 'days').unix(),
                             date: moment().subtract(1, 'days').unix(),
                             time: "00:00"
@@ -1625,6 +1655,7 @@ var reportsViewModel = function () {
                             childLogic: false,
                             operator: "EqualTo",
                             valueType: "DateTime",
+                            valueList: [],
                             value: moment().unix(),
                             date: moment().unix(),
                             time: "00:00"
@@ -1654,60 +1685,6 @@ var reportsViewModel = function () {
                 point["Report Config"].pointFilter = pointFilter;
                 originalPoint = JSON.parse(JSON.stringify(point)); // reset original point ref since we've added attribs
             }
-
-            $filtersGrid.sortable({
-                appendTo: $filtersTbody,
-                disabled: false,
-                items: "tr",
-                forceHelperSize: true,
-                helper: 'original',
-                stop: function (event, ui) {
-                    var tempArray,
-                        item = ko.dataFor(ui.item[0]),
-                        newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
-                    if (newIndex >= self.listOfFilters().length) {
-                        newIndex = self.listOfFilters().length - 1;
-                    }
-                    if (newIndex < 0) {
-                        newIndex = 0;
-                    }
-
-                    ui.item.remove();
-                    self.listOfFilters.remove(item);
-                    self.listOfFilters.splice(newIndex, 0, item);
-                    tempArray = self.listOfFilters();
-                    updateListOfFilters(tempArray);
-                },
-                scroll: true,
-                handle: '.handle'
-            });
-
-            $columnsGrid.sortable({
-                appendTo: $columnsTbody,
-                disabled: false,
-                items: "tr",
-                forceHelperSize: true,
-                helper: 'original',
-                stop: function (event, ui) {
-                    var tempArray,
-                        item = ko.dataFor(ui.item[0]),
-                        newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
-                    if (newIndex >= self.listOfColumns().length) {
-                        newIndex = self.listOfColumns().length - 1;
-                    }
-                    if (newIndex < 0) {
-                        newIndex = 0;
-                    }
-
-                    ui.item.remove();
-                    self.listOfColumns.remove(item);
-                    self.listOfColumns.splice(newIndex, 0, item);
-                    tempArray = self.listOfColumns();
-                    updateListOfColumns(tempArray);
-                },
-                scroll: true,
-                handle: '.handle'
-            });
 
             $containerFluid.show();
             tabSwitch(1);
@@ -1861,6 +1838,10 @@ var reportsViewModel = function () {
             columnIndex = parseInt(index(), 10);
 
         openPointSelectorForFilter(columnIndex, upi);
+    };
+
+    self.showPointReviewViaIndex = function (index) {
+        self.showPointReview(self.listOfColumns()[index]);
     };
 
     self.showPointReview = function (data) {
@@ -2060,13 +2041,12 @@ var reportsViewModel = function () {
 };
 
 function applyBindings() {
-    var vm;
     if (window.opener === undefined) {
         window.setTimeout(applyBindings, 2);
     } else {
-        vm = new reportsViewModel();
-        vm.init();
-        ko.applyBindings(vm);
+        reportsVM = new reportsViewModel();
+        reportsVM.init();
+        ko.applyBindings(reportsVM);
     }
 };
 
