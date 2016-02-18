@@ -1,32 +1,38 @@
-var lex = require('letsencrypt-express').testing();
-var express = require('express');
-var app = express();
+var LEX = require('letsencrypt-express').testing();
+var http = require('http');
+var https = require('https');
+// NOTE: you could use the old https module if for some reason you don't want to support modern browsers
 
-app.use('/', function(req, res) {
-  res.send({
-    success: true
-  });
-});
-
-lex.create({
-  configDir: '../lib/letsencrypt.config', // ~/letsencrypt, /etc/letsencrypt, whatever you want
-  onRequest: app, // your express app (or plain node http app)
-  letsencrypt: null, // you can provide you own instance of letsencrypt
-  // if you need to configure it (with an agreeToTerms
-  // callback, for example)
-  approveRegistration: function(hostname, cb) { // PRODUCTION MODE needs this function, but only if you want
-    // automatic registration (usually not necessary)
-    // renewals for registered domains will still be automatic
+var lex = LEX.create({
+  approveRegistration: function(hostname, cb) {
+    console.log('----------', cb);
     cb(null, {
       domains: ['dorsett.duckdns.org'],
-      email: 'rkendall@dorsett-tech.com',
-      agreeTos: true // you 
+      email: 'rkendall@dorsett-tech.com', // 'user@example.com'
+      agreeTos: true
     });
   }
-}).listen([80], [443], function() {
-  console.log("ENCRYPT __ALL__ THE DOMAINS!");
 });
 
-// ./letsencrypt-auto certonly --standalone --email rkendall@dorsett-tech.com -d dorsett.duckdns.org
+function redirectHttp() {
 
-// /etc/letsencrypt/live/dorsett.duckdns.org/fullchain.pem
+  http.createServer(LEX.createAcmeResponder(lex, function redirectHttps(req, res) {
+    res.writeHead(301, {
+      "Location": "https://" + req.headers['host'] + req.url
+    });
+    res.end();
+  })).listen(80);
+}
+
+function serveHttps() {
+  var app = require('express')();
+
+  app.use('/', function(req, res) {
+    res.end('Hello!');
+  });
+
+  https.createServer(lex.httpsOptions, LEX.createAcmeResponder(lex, app)).listen(443);
+}
+
+redirectHttp();
+serveHttps();
