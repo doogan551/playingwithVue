@@ -158,7 +158,8 @@ var reportsViewModel = function () {
             }
         },
         columnCanBeCalculated = function (column) {
-          var result = false;
+            var result = false,
+                valueOptions;
             if (self.reportType === "Totalizer") {
                 result = true;
             } else {
@@ -170,6 +171,7 @@ var reportsViewModel = function () {
                         break;
                 }
                 switch (column.pointType) {
+                    case "Accumulator":
                     case "Analog Input":
                     case "Analog Output":
                     case "Analog Value":
@@ -179,7 +181,8 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        result = true;
+                        valueOptions = window.workspaceManager.config.Templates.getTemplate(column.pointType).Value.ValueOptions;
+                        result = (valueOptions === undefined);
                         break;
                 }
             }
@@ -294,6 +297,8 @@ var reportsViewModel = function () {
                         if (self.reportType === "Totalizer") {
                             tempObject.valueList = getTotalizerValueList(type),
                             tempObject.operator = (tempObject.valueList.length === 1 ? tempObject.valueList[0].text : "");
+                        } else {
+                            tempObject.valueOptions = window.workspaceManager.config.Templates.getTemplate(type).Value.ValueOptions;
                         }
                         updatedList[objIndex] = tempObject;
                         updateListOfColumns(updatedList);
@@ -341,6 +346,7 @@ var reportsViewModel = function () {
                     valueType: "",
                     colName: ""
                 },
+                selectedPointTypes = point["Report Config"].pointFilter.selectedPointTypes,
                 pointSelectedCallback = function (pid, name, type) {
                     if (!!pid) {
                         tempObject.upi = pid;
@@ -357,7 +363,10 @@ var reportsViewModel = function () {
                         name3: point["Report Config"].pointFilter.name3Filter,
                         name4: point["Report Config"].pointFilter.name4Filter
                     });
-                    setPointLookupFilterValues();
+
+                    if (selectedPointTypes.length > 0) {
+                        pointSelectorRef.window.pointLookup.checkPointTypes(selectedPointTypes);
+                    }
                 };
 
             pointSelectorRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'filter', {
@@ -575,6 +584,15 @@ var reportsViewModel = function () {
                 }
             }
         },
+        getKeyBasedOnValue = function getKeyValue(obj, value) {
+            for(var key in obj) {
+                if(obj.hasOwnProperty(key)) {
+                    if (obj[key] === value) {
+                        return key;
+                    }
+                }
+            }
+        },
         buildReportDataRequest = function () {
             var result,
                 i,
@@ -740,13 +758,6 @@ var reportsViewModel = function () {
             }
             return answer;
         },
-        setPointLookupFilterValues = function () {
-            var selectedPointTypes = point["Report Config"].pointFilter.selectedPointTypes;
-
-            if (selectedPointTypes.length > 0) {
-                pointSelectorRef.window.pointLookup.checkPointTypes(selectedPointTypes);
-            }
-        },
         pivotHistoryData = function (historyData) {
             var pivotedData = [],
                 tempPivot,
@@ -806,9 +817,6 @@ var reportsViewModel = function () {
             point.name4 = $pointName4.val();
             point.Name = self.reportDisplayTitle();
 
-            //if (JSON.stringify(originalPoint) === JSON.stringify(point)) {
-            //    return;
-            //}
             reportSocket.emit('updatePoint', JSON.stringify({
                 'newPoint': point,
                 'oldPoint': originalPoint
@@ -1096,8 +1104,11 @@ var reportsViewModel = function () {
                 columnsArray = validateColumns(),
                 len = columnsArray.length,
                 pointType,
-                generateFieldValue = function (data, columnName, valueType) {
+                generateFieldValue = function (data, column) {
                     var result = "",
+                        columnName = column.dataColumnName,
+                        valueType = column.valueType,
+                        valueOptions = column.valueOptions,
                         value;
                     if (data[columnName] !== undefined) {
                         if (typeof data[columnName] === 'object') {
@@ -1106,52 +1117,59 @@ var reportsViewModel = function () {
                             value = data[columnName];
                         }
 
-                        switch (valueType) {
-                            case "Float":
-                            case "Integer":
-                            case "Unsigned":
-                                result = toFixedComma(value, decimalPrecision);
-                                break;
-                            case "String":
-                                if ($.isNumeric(value) === true) {
+                        if (valueOptions !== undefined) {
+                            result = getKeyBasedOnValue(valueOptions, value);
+                            if (result === undefined || result === null) {
+                                result = value;
+                            }
+                        } else {
+                            switch (valueType) {
+                                case "Float":
+                                case "Integer":
+                                case "Unsigned":
                                     result = toFixedComma(value, decimalPrecision);
-                                } else {
-                                    result = value;
-                                }
-                                break;
-                            case "Bool":
-                            case "BitString":
-                            case "Enum":
-                            case "undecided":
-                            case "null":
-                            case "None":
-                                result = value;
-                                break;
-                            case "DateTime":
-                            case "Timet":
-                                if ($.isNumeric(value) === true && value > 0) {
-                                    result = moment.unix(value).format("MM/DD/YYYY hh:mm a");
-                                } else {
-                                    result = value;
-                                }
-                                break;
-                            case "MinSec":
-                            case "HourMin":
-                            case "HourMinSec":
-                                result = value;
-                                break;
-                            case "UniquePID":
-                                if (data[columnName].PointInst !== undefined) {
-                                    if (data[columnName].PointInst > 0) {
-                                        result = data[columnName].PointName;
+                                    break;
+                                case "String":
+                                    if ($.isNumeric(value) === true) {
+                                        result = toFixedComma(value, decimalPrecision);
                                     } else {
-                                        result = "";
+                                        result = value;
                                     }
-                                }
-                                break;
-                            default:
-                                result = value;
-                                break;
+                                    break;
+                                case "Bool":
+                                case "BitString":
+                                case "Enum":
+                                case "undecided":
+                                case "null":
+                                case "None":
+                                    result = value;
+                                    break;
+                                case "DateTime":
+                                case "Timet":
+                                    if ($.isNumeric(value) === true && value > 0) {
+                                        result = moment.unix(value).format("MM/DD/YYYY hh:mm a");
+                                    } else {
+                                        result = value;
+                                    }
+                                    break;
+                                case "MinSec":
+                                case "HourMin":
+                                case "HourMinSec":
+                                    result = value;
+                                    break;
+                                case "UniquePID":
+                                    if (data[columnName].PointInst !== undefined) {
+                                        if (data[columnName].PointInst > 0) {
+                                            result = data[columnName].PointName;
+                                        } else {
+                                            result = "";
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    result = value;
+                                    break;
+                            }
                         }
                     } else {
                         //console.log(" ERROR -- Data set does NOT contain value for '" + columnName + "'")
@@ -1235,11 +1253,12 @@ var reportsViewModel = function () {
                     }
                 },
                 setTdClasses = function (tdField, columnConfig) {
-                    if (columnCanBeCalculated(columnConfig)) {
-                        $(tdField).addClass("text-right");
-                    }
                     if (columnConfig.valueType === "DateTime") {
                         $(tdField).addClass("small");
+                    } else {
+                        if (columnConfig.canCalculate === true) {
+                            $(tdField).addClass("text-right");
+                        }
                     }
                 },
                 buildColumnObject = function (item, columnIndex) {
@@ -1269,12 +1288,9 @@ var reportsViewModel = function () {
                     result = {
                         title: columnTitle,
                         data: null,
-                        // data: getColumnField(item.colName),
-                        // render: getColumnField(item.colName),
                         render: function (data, type, row, item) {
-                            return generateFieldValue(data, columnsArray[item.col].dataColumnName, columnsArray[item.col].valueType);
+                            return generateFieldValue(data, columnsArray[item.col]);
                         },
-                        //className: "dt-head-center",
                         className: "",
                         fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
                             generateCustomHtml(nTd, columnsArray[iCol], oData, iCol);
