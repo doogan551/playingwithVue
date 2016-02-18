@@ -64,7 +64,7 @@ var cronRunning = false,
 
 			},
 			process: function (data) {
-				var pLookup,
+				var pLookup = actions.common.buildPolicyLookupTable(data.policies), // Policy lookup table
 					entry,
 					processNew = function (policyID) {
 						var policy = pLookup[policyID],
@@ -80,9 +80,6 @@ var cronRunning = false,
 							actions.alarmQueue.processReturn(entry, policy);
 						}
 					};
-
-				// Build policy lookup table
-				pLookup = actions.common.buildPolicyLookupTable(data.policies);
 
 				// Process the queue
 				data.alarmQueue.forEach(function (_entry) {
@@ -127,7 +124,7 @@ var cronRunning = false,
 		}
 	};
 
-function notifyManager () {
+function run () {
 	var tbd = null,
 		terminate = function (err) {
 			// logs
@@ -138,7 +135,7 @@ function notifyManager () {
 
 	cronRunning = true;
 
-	async.series({
+	async.parallel({
 		policies: actions.policies.getAll,
 		alarmQueue: actions.alarmQueue.getAll
 	}, function (err, data) {
@@ -155,7 +152,9 @@ function notifyManager () {
 }
 
 module.exports = {
-
+	run: run,
+	actions: actions,
+	processIncomingAlarm: actions.common.processIncomingAlarm
 };
 
 
