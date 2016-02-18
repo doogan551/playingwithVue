@@ -6,7 +6,9 @@ html
         link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.base.css')
         link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
         link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css')
+        link(rel='stylesheet', href='/css/lib/fullcalendar.css')
         link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.10/dataTables.bootstrap.min.css')
         // syspref.css must follow after bootstrap.min.css so we can override bootstrap themes
         link(rel='stylesheet', href='/css/baseui/syspref.css')
         link(rel='stylesheet', href='/css/alarmMessageDefinitions/alarmMessageDefinitions.css')
@@ -33,17 +35,21 @@ html
         script(type='text/javascript', src='/js/lib/jqwidgets/jqxdropdownbutton.js')
         script(type='text/javascript', src='/js/lib/jqwidgets/jqxknockout.js')
         script(type='text/javascript', src='/js/lib/date.js')
+        script(type='text/javascript', src='/js/lib/moment.js')
         script(type='text/javascript', src='/js/lib/underscore.js')
         script(type='text/javascript', src='/js/alarmMessageDefinition/underscore.string.min.js')
         script(type='text/javascript', src='/js/lib/backbone.min.js')
         script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.hoverIntent.min.js')
         script(type='text/javascript', src='/js/lib/knockback.min.js')
+        script(type='text/javascript', src='/js/lib/fullcalendar.js')
         script(type='text/javascript', src='/js/alarmMessageDefinition/ko.editables.js')
         script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.caret.js')
         script(type='text/javascript', src='/js/alarmMessageDefinition/knockout-inline-confirm.js')
         script(type='text/javascript', src='/js/alarmMessageDefinition/koGrid-2.1.1.js')
         script(type='text/javascript', src='/js/alarmMessageDefinition/ko.bindingHandler.definitionColorPicker.js')
         script(type='text/javascript', src='/js/util/components/colorpicker/diColorPicker.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.10/jquery.dataTables.min.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.10/dataTables.bootstrap.min.js')
         script(type='text/javascript', src='/js/baseui/syspref.js')
         include ../AlarmMessageDefinition/templates.jade
 
@@ -317,7 +323,7 @@ html
             // ------ Notifications ---------------------------------------------------------------------------------
             div#notifications(data-bind="visible: section() == 'Notifications'")
                 .notificationHeader
-                    //- .pull-right(data-bind="visible: selectedPolicy() !== null")
+                    .pull-right
                         .dropdown
                             button.btn.btn-primary.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Change Policy
                                 span.caret.caret-spaced
@@ -348,29 +354,28 @@ html
                                         .col-xs-3
                                             a(href="#") WWTP
                                         .col-xs-3 Members: 9
-                                        .col-xs-1.pull-right.deletePolicy
+                                        .col-xs-1.pull-right.deleteIcon
                                             i.fa.fa-times
 
                                     .policy.row
                                         .col-xs-3
                                             a(href="#") Water Plant
                                         .col-xs-3 Members: 11
-                                        .col-xs-1.pull-right.deletePolicy
+                                        .col-xs-1.pull-right.deleteIcon
                                             i.fa.fa-times
                                     .policy.row
                                         .col-xs-3
                                             a(href="#") Lift Stations
                                         .col-xs-3 Members: 1
-                                        .col-xs-1.pull-right.deletePolicy
+                                        .col-xs-1.pull-right.deleteIcon
                                             i.fa.fa-times
-
 
                             #notificationsActivity.tab-pane
                                 h3 Activity
 
                     .policyEdit.hidden1
                         ul.nav.nav-tabs.nav-tabs-arrow
-                            li.active(role="presentation")
+                            li
                                 a(href="#policyGeneral") General
                             li
                                 a(href="#policyMembers") Members
@@ -378,13 +383,13 @@ html
                                 a(href="#policyAlertConfig") Alert Configurations
                             li
                                 a(href="#policySchedule") Schedule
-                            li
+                            li.active
                                 a(href="#policyCalendar") Calendar
                             li
                                 a(href="#policyActivity") Activity
 
                         .tab-content
-                            #policyGeneral.tab-pane.active
+                            #policyGeneral.tab-pane
                                 h3 General
 
                                 .policyList
@@ -406,21 +411,122 @@ html
 
                             #policyMembers.tab-pane
                                 h3 Members
+                                    span.dropdown
+                                        button.btn.btn-sm.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Send all members a test message
+                                            span.caret.caret-spaced
+                                        ul.dropdown-menu
+                                            li
+                                                a(href="#") Email
+                                                a(href="#") Text Mobile
+                                                a(href="#") Call Mobile
+                                                a(href="#") Call Home
+                                                a(href="#") Call Work
 
-                            #policyAlertConfig.tab-pane
+                                .memberList
+                                    table#memberList.display.table.table-striped(style="width: 100%")
+
+                            #policyAlertConfig.tab-pane.active
+                                //- .pull-right
+                                //-     .button.btn.btn-success New Configuration
+                                //- h3 Alert Configurations
+
+                                //- .policyList
+                                //-     .policy.row
+                                //-         .col-xs-6
+                                //-             a(href="#") Off-Hours
+                                //-         .col-xs-6.policyToolbar
+                                //-             a(href="#")
+                                //-                 i.fa.fa-pencil-square-o
+                                //-             a(href="#")
+                                //-                 i.fa.fa-files-o
+                                //-             a(href="#")
+                                //-                 i.fa.fa-times.deleteIcon
                                 .pull-right
-                                    .button.btn.btn-success New Configuration
-                                h3 Alert Configurations
+                                    .button.btn.btn-sm.btn-default Edit
+                                h3 Off-Hours
+                                .checkbox.isOnCall
+                                    label
+                                        input(type="checkbox")
+                                        |This configuration is used for On-Call
 
-                                .policyList
-                                    .policy.row
-                                        .col-xs-6
-                                            a(href="#") Off-Hours
-                                        .col-xs-3.pull-right.policyToolbar
-                                            i.fa.fa-pencil-square-o
-                                            i.fa.fa-files-o
-                                            i.fa.fa-times
+                                .alertGroup
+                                    .groupTitle Group 1
+                                    .alertSection
+                                        .alertBody
+                                            .col
+                                                .sectionIcon
+                                                    i.fa.fa-bell-o
+                                                .sectionTitle 0 minute(s) after an alarm occurs
 
+                                    .alertSection
+                                        .alertBody
+                                            .leftCol.col
+                                                .sectionIcon
+                                                    i.fa.fa-male
+                                                .sectionTitle Alert:
+                                                .rotationList
+                                                    .member Adam Eldridge
+                                                    .member Brantley Angell
+                                                    .member Stephen Trent
+                                            .rightCol.col
+                                                .sectionTitle.sectionTitleNoIcon Alert Style: Everyone Sequenced
+                                                .sectionWait
+                                                    i.fa.fa-clock-o
+                                                    |Wait 5 minutes before alerting the next person in the list
+                                                .sectionRotate
+                                                    .checkbox
+                                                        label
+                                                            input(type="checkbox")
+                                                            |Rotate the first responder
+                                                            |Every week at 9AM on Friday
+                                        .alertFooter
+                                            .escalationTimer
+                                                i.fa.fa-arrow-down
+                                                | Escalates after 30 minutes
+
+                            #policyCalendar.tab-pane
+                                h3 Calendar
+
+                                .panel.panel-default
+                                    .panel-heading
+                                        h3.panel-title Legend
+                                    .panel-body
+                                        .legendEntry Normal Business Hours, 8A-5P
+
+                                #calendarDisplay
+
+                                .panel.panel-default
+                                    .panel-heading
+                                        h3.panel-title Current Rotation
+                                    .panel-body
+                                        .bodyHeading Off Hours
+                                        .smallRow
+                                            span.dropdown
+                                                button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Adam Eldridge (first responder)
+                                                    span.caret.caret-spaced
+                                                ul.dropdown-menu
+                                                    li
+                                                        a(href="#") Adam Eldridge
+                                                        a(href="#") Johnny Roberts
+                                                        a(href="#") Stephen Trent
+
+                                            span.dropdown
+                                                button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Perry Lyon
+                                                    span.caret.caret-spaced
+                                                ul.dropdown-menu
+                                                    li
+                                                        a(href="#") Fred Trivette
+
+                                        .bodyHeading Normal Business Hours
+                                        .smallRow
+                                            span.rowTitle Active Group
+                                            span.dropdown
+                                                button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Group 1
+                                                    span.caret.caret-spaced
+                                                ul.dropdown-menu
+                                                    li
+                                                        a(href="#") Group 1
+                                                        a(href="#") Group 2
 
 
             // ------ About -----------------------------------------------------------------------------------------

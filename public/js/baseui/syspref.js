@@ -2041,15 +2041,121 @@ var weatherViewModel = function() {
     };
 };
 
-
 // Notifications screen -------------------------------------------------------
 var notificationsViewModel = function() {
     var self = this;
 
     self.init = function () {
+        var data = [{
+                firstName: 'Adam',
+                lastName: 'Eldridge',
+                securityGroup: 'WWTP'
+            }, {
+                firstName: 'Brantley',
+                lastName: 'Angell',
+                securityGroup: 'WWTP'
+            }, {
+                firstName: 'Jeff',
+                lastName: 'Shore',
+                securityGroup: null
+            }, {
+                firstName: 'Johnny',
+                lastName: 'Roberts',
+                securityGroup: null
+            }, {
+                firstName: 'Stephen',
+                lastName: 'Trent',
+                securityGroup: null
+            }],
+            columns = [{
+                data: 'firstName',
+                title: 'First Name'
+            }, {
+                data: 'lastName',
+                title: 'Last Name'
+            }, {
+                data: 'securityGroup',
+                title: 'Member By Way Of Security Group'
+            }];
+
+        $('#memberList').DataTable({
+            columns: columns,
+            data: data,
+            paging: false,
+            searching: false,
+            bInfo: false
+        });
+
         self.$tabs = $('.notificationsContent .nav a').click(function (e) {
             e.preventDefault();
             $(this).tab('show');
+        });
+
+        $('#calendarDisplay').fullCalendar({
+            eventClick: function (calEvent, jsEvent, view) {
+                console.log(calEvent);
+                jsEvent.preventDefault();
+            },
+            header: {
+                left: 'prev,next',
+                center: 'title',
+                right: 'agendaWeek,agendaDay'
+            },
+            eventColor: '#7156FB',
+            allDaySlot: false,
+            defaultDate: '2016-01-12',
+            defaultView: 'agendaWeek',
+            editable: false,
+            eventLimit: false, // allow "more" link when too many events
+            height: 575,
+            slotDuration: '01:00:00',
+            slotLabelInterval: '02:00:00',
+            events: [
+                // {
+                //     title: 'All Day Event',
+                //     start: '2016-01-01'
+                // },
+                // {
+                //     title: 'Long Event',
+                //     start: '2016-01-07',
+                //     end: '2016-01-10'
+                // },
+                {
+                    id: 999,
+                    start: '2016-01-10T08:00:00',
+                    end: '2016-01-10T17:00:00'
+                },
+                {
+                    id: 999,
+                    start: '2016-01-11T08:00:00',
+                    end: '2016-01-11T17:00:00'
+                },
+                {
+                    id: 999,
+                    start: '2016-01-12T08:00:00',
+                    end: '2016-01-12T17:00:00'
+                },
+                {
+                    id: 999,
+                    start: '2016-01-13T08:00:00',
+                    end: '2016-01-13T17:00:00'
+                },
+                {
+                    id: 999,
+                    start: '2016-01-14T08:00:00',
+                    end: '2016-01-14T17:00:00'
+                },
+                {
+                    id: 999,
+                    start: '2016-01-15T08:00:00',
+                    end: '2016-01-15T17:00:00'
+                },
+                {
+                    id: 999,
+                    start: '2016-01-16T08:00:00',
+                    end: '2016-01-16T17:00:00'
+                }
+            ]
         });
     };
 
