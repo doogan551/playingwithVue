@@ -13,7 +13,6 @@ var config = require('config');
 // OTHERS
 var utils = require('../helpers/utils.js');
 var Config = require('../public/js/lib/config.js');
-var cppApi = new(require('Cpp_API').Tasks)();
 var compiler = require('../helpers/scriptCompiler.js');
 var Utility = require('../models/utility.js');
 var History = require('../models/history');
@@ -240,6 +239,7 @@ module.exports = function socketio(_common) {
 
       zmq.sendCommand(data, function(err, msg) {
         if (!!err) {
+          err = err.ApduErrorMsg || err.msg;
           sock.emit('returnFromField', {
             err: err
           });
@@ -248,18 +248,6 @@ module.exports = function socketio(_common) {
         }
       });
 
-      /*cppApi.command(data, function(err, msg) {
-
-        if (err !== 0 && err !== null) {
-          error = JSON.parse(err);
-
-          sock.emit('returnFromField', JSON.stringify({
-            err: error.ApduErrorMsg
-          }));
-        } else {
-          sock.emit('returnFromField', msg);
-        }
-      });*/
     });
     // Checked
     sock.on('firmwareLoader', function(data) {
@@ -293,41 +281,6 @@ module.exports = function socketio(_common) {
               sock.emit('returnFromLoader', msg);
             }
           });
-          /*cppApi.command(command, function(data) {
-            data = JSON.parse(data);
-
-            if (data.err !== undefined) {
-              sock.emit('returnFromLoader', {
-                percent: 100
-              });
-              sock.emit('returnFromLoader', JSON.stringify({
-                err: data.error.ApduErrorMsg
-              }));
-            } else {
-              sock.emit('returnFromLoader', {
-                percent: 100
-              });
-              sock.emit('returnFromLoader', {
-                message: data.msg
-              });
-            }
-          });*/
-
-          /*function testProgress(percent) {
-						if (percent <= 100) {
-							sock.emit('returnFromLoader', {
-								percent: percent
-							});
-							setTimeout(function() {
-								testProgress(percent + 10);
-							}, 500);
-						} else {
-							sock.emit('returnFromLoader', {
-								message: "success"
-							});
-						}
-					}
-					testProgress(0);*/
         },
         logMessage = function(logData) {
           logData = utils.buildActivityLog(logData);
@@ -991,7 +944,10 @@ function sendAcknowledge(data, callback) {
 
 
   Utility.update(criteria, function(err, result) {
-    callback(err, result);
+    criteria.collection = 'ActiveAlarms';
+    Utility.update(criteria, function(err2, result2) {
+      callback(err || err2, result);
+    });
   });
 }
 

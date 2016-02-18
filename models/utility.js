@@ -18,7 +18,6 @@ exports.get = function(criteria, cb) {
 
   // console.log(query, coll);
   collection = db.get().collection(coll);
-
   collection.find(query, fields).limit(limit).sort(sort).skip(skip).toArray(cb);
 };
 
@@ -177,6 +176,21 @@ exports.distinct = function(criteria, cb) {
   var collection = db.get().collection(coll);
 
   collection.distinct(field, query, options, cb);
+};
+
+exports.dropCollection = function(criteria, cb) {
+  var coll = criteria.collection;
+
+  db.get().dropCollection(coll, cb);
+};
+
+exports.ensureIndex = function(criteria, cb) {
+  var coll = criteria.collection;
+  var index = criteria.index;
+  var options = criteria.options || {};
+
+  var collection = db.get().collection(coll);
+  collection.ensureIndex(index, options, cb);
 };
 
 exports.getCursor = function(criteria, cb) {

@@ -1,334 +1,547 @@
 doctype html
 html
-	head
-		meta(name='viewport',content='width=device-width,initial-scale=1')
-		title= title
-		link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.base.css')
-		link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
-		link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css')
-		link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
-		// syspref.css must follow after bootstrap.min.css so we can override bootstrap themes
-		link(rel='stylesheet', href='/css/baseui/syspref.css')
-		link(rel='stylesheet', href='/css/alarmMessageDefinitions/alarmMessageDefinitions.css')
-		script(type='text/javascript', src='/js/lib/json2.js')
-		script(type='text/javascript', src='/js/lib/jquery.min.js')
-		script(type='text/javascript', src='/js/lib/knockout-2.3.0.js')
-		script(type='text/javascript', src='/js/lib/bootstrap-3.0.3.min.js')
-		script(type='text/javascript', src='/js/lib/ko.validation.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxcore.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxdatetimeinput.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxcalendar.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxtooltip.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/globalization/globalize.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxdata.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxbuttons.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxscrollbar.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxmenu.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxcheckbox.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxlistbox.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxdropdownlist.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxvalidator.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxwindow.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxcolorpicker.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxdropdownbutton.js')
-		script(type='text/javascript', src='/js/lib/jqwidgets/jqxknockout.js')
-		script(type='text/javascript', src='/js/lib/date.js')
-		script(type='text/javascript', src='/js/lib/underscore.js')
-		script(type='text/javascript', src='/js/alarmMessageDefinition/underscore.string.min.js')
-		script(type='text/javascript', src='/js/lib/backbone.min.js')
-		script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.hoverIntent.min.js')
-		script(type='text/javascript', src='/js/lib/knockback.min.js')
-		script(type='text/javascript', src='/js/alarmMessageDefinition/ko.editables.js')
-		script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.caret.js')
-		script(type='text/javascript', src='/js/alarmMessageDefinition/knockout-inline-confirm.js')
-		script(type='text/javascript', src='/js/alarmMessageDefinition/koGrid-2.1.1.js')
-		script(type='text/javascript', src='/js/alarmMessageDefinition/ko.bindingHandler.definitionColorPicker.js')
-		script(type='text/javascript', src='/js/util/components/colorpicker/diColorPicker.js')
-		script(type='text/javascript', src='/js/baseui/syspref.js')
-		include ../AlarmMessageDefinition/templates.jade
+    head
+        meta(name='viewport',content='width=device-width,initial-scale=1')
+        title= title
+        link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.base.css')
+        link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
+        link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css')
+        link(rel='stylesheet', href='/css/lib/fullcalendar.css')
+        link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.10/dataTables.bootstrap.min.css')
+        // syspref.css must follow after bootstrap.min.css so we can override bootstrap themes
+        link(rel='stylesheet', href='/css/baseui/syspref.css')
+        link(rel='stylesheet', href='/css/alarmMessageDefinitions/alarmMessageDefinitions.css')
+        script(type='text/javascript', src='/js/lib/json2.js')
+        script(type='text/javascript', src='/js/lib/jquery.min.js')
+        script(type='text/javascript', src='/js/lib/knockout-2.3.0.js')
+        script(type='text/javascript', src='/js/lib/bootstrap-3.0.3.min.js')
+        script(type='text/javascript', src='/js/lib/ko.validation.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxcore.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxdatetimeinput.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxcalendar.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxtooltip.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/globalization/globalize.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxdata.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxbuttons.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxscrollbar.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxmenu.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxcheckbox.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxlistbox.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxdropdownlist.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxvalidator.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxwindow.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxcolorpicker.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxdropdownbutton.js')
+        script(type='text/javascript', src='/js/lib/jqwidgets/jqxknockout.js')
+        script(type='text/javascript', src='/js/lib/date.js')
+        script(type='text/javascript', src='/js/lib/moment.js')
+        script(type='text/javascript', src='/js/lib/underscore.js')
+        script(type='text/javascript', src='/js/alarmMessageDefinition/underscore.string.min.js')
+        script(type='text/javascript', src='/js/lib/backbone.min.js')
+        script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.hoverIntent.min.js')
+        script(type='text/javascript', src='/js/lib/knockback.min.js')
+        script(type='text/javascript', src='/js/lib/fullcalendar.js')
+        script(type='text/javascript', src='/js/alarmMessageDefinition/ko.editables.js')
+        script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.caret.js')
+        script(type='text/javascript', src='/js/alarmMessageDefinition/knockout-inline-confirm.js')
+        script(type='text/javascript', src='/js/alarmMessageDefinition/koGrid-2.1.1.js')
+        script(type='text/javascript', src='/js/alarmMessageDefinition/ko.bindingHandler.definitionColorPicker.js')
+        script(type='text/javascript', src='/js/util/components/colorpicker/diColorPicker.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.10/jquery.dataTables.min.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.10/dataTables.bootstrap.min.js')
+        script(type='text/javascript', src='/js/baseui/syspref.js')
+        include ../AlarmMessageDefinition/templates.jade
 
-	body.whitebg
-		div#navbar
-			ul(data-bind="foreach: sections")
-				li(data-bind="click: function() {$root.goToSection(displayName);}, css: { error: hasError, selected: displayName == $root.section() }")
-					i(class="fa fa-asterisk", data-bind="visible: dirty() && !hasError()")
-					i(class="fa fa-warning", data-bind="visible: hasError")
-					span(data-bind="text: displayName")
+    body.whitebg
+        div#navbar
+            ul(data-bind="foreach: sections")
+                li(data-bind="click: function() {$root.goToSection(displayName);}, css: { error: hasError, selected: displayName == $root.section() }")
+                    i(class="fa fa-asterisk", data-bind="visible: dirty() && !hasError()")
+                    i(class="fa fa-warning", data-bind="visible: hasError")
+                    span(data-bind="text: displayName")
 
-			#navActions.center-block(data-bind="visible: dirty")
-				button(class="btn btn-default btn-sm", data-bind="enable: dirty, click: cancelAll") Cancel
-				button(class="btn btn-info btn-sm", data-bind="enable: dirty, click: saveAll") Save
-		div#content
-			// ------ Calendar --------------------------------------------------------------------------------------
-			div#calendar(data-bind="visible: section() == 'Calendar'")
-				.title Season Control
+            #navActions.center-block(data-bind="visible: dirty")
+                button(class="btn btn-default btn-sm", data-bind="enable: dirty, click: cancelAll") Cancel
+                button(class="btn btn-info btn-sm", data-bind="enable: dirty, click: saveAll") Save
+        div#content
+            // ------ Calendar --------------------------------------------------------------------------------------
+            div#calendar(data-bind="visible: section() == 'Calendar'")
+                .title Season Control
 
-				div(data-bind="with: calendarViewModel")
-					#season
-						input(type='radio', data-bind='checked: season,click:changeSeason,attr:{disabled:gettingData()}' name='season', id='heatingSeason', value='Heating')
-						label(for='heatingSeason') Heating
-						input(type='radio', data-bind='checked: season,click:changeSeason,attr:{disabled:gettingData()}' name='season', id='coolingSeason', value='Cooling')
-						label(for='coolingSeason') Cooling
+                div(data-bind="with: calendarViewModel")
+                    #season
+                        input(type='radio', data-bind='checked: season,click:changeSeason,attr:{disabled:gettingData()}' name='season', id='heatingSeason', value='Heating')
+                        label(for='heatingSeason') Heating
+                        input(type='radio', data-bind='checked: season,click:changeSeason,attr:{disabled:gettingData()}' name='season', id='coolingSeason', value='Cooling')
+                        label(for='coolingSeason') Cooling
 
-					br
-					br
-					.title System Holidays
-						#yearContainer
-							a.fa.fa-chevron-circle-left(href='#', data-bind='click: decrementYear', title='Previous Year')
-							span#year(data-bind='text: year')
-							a.fa.fa-chevron-circle-right(href='#', data-bind='click: incrementYear', title='Previous Year')
+                    br
+                    br
+                    .title System Holidays
+                        #yearContainer
+                            a.fa.fa-chevron-circle-left(href='#', data-bind='click: decrementYear', title='Previous Year')
+                            span#year(data-bind='text: year')
+                            a.fa.fa-chevron-circle-right(href='#', data-bind='click: incrementYear', title='Previous Year')
 
-					div(data-bind="visible: holidays().length > 0")
-						table#holidaysTable(data-bind="template: {foreach: holidays}")
-							tr
-								td.dow(data-bind="text: $parent.getDayOfWeek($data)")
-								td.month(data-bind="text: $parent.getMonth($data)")
-								td.icon
-									a.showOnHover(href='#', data-bind="click: $parent.decrementDay", title='Click to subtract one day')
-										img(src='/img/icon_minus.png')
-								td.date
-									span.dateText(data-bind="text: date")
-								td.icon
-									a.showOnHover(href='#', data-bind="click: $parent.incrementDay", title='Click to add one day')
-										img(src='/img/icon_plus.png')
-								td.spacer15
-								td.clickToEdit(data-bind="clickEdit: comment")
-									span(data-bind="text: comment")
-									input.hide.comment.form-control(type='text', data-bind="value: comment", data-role="none")
-								td &nbsp;
-								td.icon
-									a.showOnHover(href='#',data-role='none', data-bind='click: $parent.delete', title='Click to delete this entry')
-										img(src='/img/icon_delete.png')
+                    div(data-bind="visible: holidays().length > 0")
+                        table#holidaysTable(data-bind="template: {foreach: holidays}")
+                            tr
+                                td.dow(data-bind="text: $parent.getDayOfWeek($data)")
+                                td.month(data-bind="text: $parent.getMonth($data)")
+                                td.icon
+                                    a.showOnHover(href='#', data-bind="click: $parent.decrementDay", title='Click to subtract one day')
+                                        img(src='/img/icon_minus.png')
+                                td.date
+                                    span.dateText(data-bind="text: date")
+                                td.icon
+                                    a.showOnHover(href='#', data-bind="click: $parent.incrementDay", title='Click to add one day')
+                                        img(src='/img/icon_plus.png')
+                                td.spacer15
+                                td.clickToEdit(data-bind="clickEdit: comment")
+                                    span(data-bind="text: comment")
+                                    input.hide.comment.form-control(type='text', data-bind="value: comment", data-role="none")
+                                td &nbsp;
+                                td.icon
+                                    a.showOnHover(href='#',data-role='none', data-bind='click: $parent.delete', title='Click to delete this entry')
+                                        img(src='/img/icon_delete.png')
 
-					div(data-bind="visible: holidays().length == 0")
-						|No holidays have been defined for this year. Click&nbsp;
-						a(href='#',data-bind='click: copyPreviousYear') here
-						|&nbsp;to copy the previous year's data.
+                    div(data-bind="visible: holidays().length == 0")
+                        |No holidays have been defined for this year. Click&nbsp;
+                        a(href='#',data-bind='click: copyPreviousYear') here
+                        |&nbsp;to copy the previous year's data.
 
-					div(style='position:relative')
-						br
-						input#datepicker(type='hidden')
-						//div#jqxDateTimeInput
-						div#jqxCalendar
-						span(onClick='javascript:$("#jqxCalendar").toggle()')
-							img(src='/img/icon_calendarAdd.png')
-						span.italics &nbsp; Click the calendar to add a holiday.&nbsp;
+                    div(style='position:relative')
+                        br
+                        input#datepicker(type='hidden')
+                        //div#jqxDateTimeInput
+                        div#jqxCalendar
+                        span(onClick='javascript:$("#jqxCalendar").toggle()')
+                            img(src='/img/icon_calendarAdd.png')
+                        span.italics &nbsp; Click the calendar to add a holiday.&nbsp;
 
-			// ------ Controllers -----------------------------------------------------------------------------------
-			div#controllers(data-bind="visible: section() == 'Controllers'")
-				.title Manage Controllers
+            // ------ Controllers -----------------------------------------------------------------------------------
+            div#controllers(data-bind="visible: section() == 'Controllers'")
+                .title Manage Controllers
 
-				#controllerContainer(data-bind="with: controllersViewModel")
-					#controllerAlert(style="height: 75px")
-						#controllerMessage(style="display: none", class="alert-info")
+                #controllerContainer(data-bind="with: controllersViewModel")
+                    #controllerAlert(style="height: 75px")
+                        #controllerMessage(style="display: none", class="alert-info")
 
-					#controllerGridContainer
-						#controllerTableHeader
-						#controllerTableContainer
-							table#controllerGrid.linedTable.sortable
-								thead
-									tr
-										th.col-sm-1
-											div(data-bind="click: sortByID") ID
-										th.col-sm-2
-											div(data-bind="click: sortByName") Name
-										th.col-sm-8
-											div(data-bind="click: sortByDescription") Description
-										th.col-sm-1
-								tbody(data-bind="foreach: controllers")
-									tr(data-bind="visible: $data['Controller Name']() !== ''")
-										td.controllerID(data-bind="text: $data['Controller ID']")
-										td.controllerName(data-bind="clickEdit: $data['Controller Name']")
-											span(data-bind="text: $data['Controller Name']")
-											input.hide.form-control(type="text", data-bind="value: $data['Controller Name']")
-										td.controllerDescription(data-bind="clickEdit: $data.Description")
-											span(data-bind="text: $data.Description")
-											input.hide.form-control(type="text", data-bind="value: $data.Description")
-										td.controllerDelete
-											span(class="showOnHover valign pull-right" data-bind="visible: !$data.isUser")
-												a(href="#", title="Delete", data-bind="click: $parent.deleteController")
-													img(src="/img/icon_delete.png")
+                    #controllerGridContainer
+                        #controllerTableHeader
+                        #controllerTableContainer
+                            table#controllerGrid.linedTable.sortable
+                                thead
+                                    tr
+                                        th.col-sm-1
+                                            div(data-bind="click: sortByID") ID
+                                        th.col-sm-2
+                                            div(data-bind="click: sortByName") Name
+                                        th.col-sm-8
+                                            div(data-bind="click: sortByDescription") Description
+                                        th.col-sm-1
+                                tbody(data-bind="foreach: controllers")
+                                    tr(data-bind="visible: $data['Controller Name']() !== ''")
+                                        td.controllerID(data-bind="text: $data['Controller ID']")
+                                        td.controllerName(data-bind="clickEdit: $data['Controller Name']")
+                                            span(data-bind="text: $data['Controller Name']")
+                                            input.hide.form-control(type="text", data-bind="value: $data['Controller Name']")
+                                        td.controllerDescription(data-bind="clickEdit: $data.Description")
+                                            span(data-bind="text: $data.Description")
+                                            input.hide.form-control(type="text", data-bind="value: $data.Description")
+                                        td.controllerDelete
+                                            span(class="showOnHover valign pull-right" data-bind="visible: !$data.isUser")
+                                                a(href="#", title="Delete", data-bind="click: $parent.deleteController")
+                                                    img(src="/img/icon_delete.png")
 
-					//- div(style="width: 100%")
-					//- 	#controllerGrid.di-grid
+                    //- div(style="width: 100%")
+                    //-     #controllerGrid.di-grid
 
-					#controllerActionBar
-						button(id='controllerAdd', type='button', class='btn btn-primary btn-sm', data-bind='click: showForm, visible: showEntryForm() == false ') Add New
+                    #controllerActionBar
+                        button(id='controllerAdd', type='button', class='btn btn-primary btn-sm', data-bind='click: showForm, visible: showEntryForm() == false ') Add New
 
-					#controllerEntryForm(data-bind="visible: showEntryForm", class="panel panel-default")
-						form(id='newControllerForm', action='./', data-bind="submit: handleFormSubmit", class="form-inline", role="form")
-							.panel-body
-								.form-group
-									label(for='newControllerName', class="sr-only") Name
-									input(data-bind='value: controllerName', id='newControllerName', type='text', placeholder='Name', class="form-control")
+                    #controllerEntryForm(data-bind="visible: showEntryForm", class="panel panel-default")
+                        form(id='newControllerForm', action='./', data-bind="submit: handleFormSubmit", class="form-inline", role="form")
+                            .panel-body
+                                .form-group
+                                    label(for='newControllerName', class="sr-only") Name
+                                    input(data-bind='value: controllerName', id='newControllerName', type='text', placeholder='Name', class="form-control")
 
-								.form-group
-									label(for='newControllerDesc', class="sr-only") Description
-									input(data-bind='value: controllerDesc', id='newControllerDesc', type='text', placeholder='Description', class="form-control")
+                                .form-group
+                                    label(for='newControllerDesc', class="sr-only") Description
+                                    input(data-bind='value: controllerDesc', id='newControllerDesc', type='text', placeholder='Description', class="form-control")
 
-								#addControllerActionBar
-									button(type='button', class="pull-right btn btn-sm btn-link", data-bind="click: resetForm") Cancel
-									button(id='newControllerSubmit', type='submit', class='btn btn-primary btn-sm pull-right') Submit
+                                #addControllerActionBar
+                                    button(type='button', class="pull-right btn btn-sm btn-link", data-bind="click: resetForm") Cancel
+                                    button(id='newControllerSubmit', type='submit', class='btn btn-primary btn-sm pull-right') Submit
 
-			// ------ Control Priority Text -------------------------------------------------------------------------
-			div#controlPriorityText(data-bind="visible: section() == 'Control Priority Text'")
-				.title Priority Levels
+            // ------ Control Priority Text -------------------------------------------------------------------------
+            div#controlPriorityText(data-bind="visible: section() == 'Control Priority Text'")
+                .title Priority Levels
 
-				.scrollableContainer(data-bind="with: controlPriorityTextViewModel")
-					.scrollableGridContainer(style="height: 100%")
-						.scrollableTableHeader
-						.scrollableTableContainer
-							table#controlPriorityList.linedTable
-								thead
-									tr
-										th.col-sm-1 Priority
-										th.col-sm-11 Text
-								tbody(data-bind="foreach: controlPriorities")
-									tr
-										td(data-bind="text: $data['Priority Level']")
-										td.clickToEdit(data-bind="clickEdit: $data['Priority Text']")
-											span(data-bind="text: $data['Priority Text']")
-											input.hide.form-control(type="text", maxlength="40", data-bind="value: $data['Priority Text']")
+                .scrollableContainer(data-bind="with: controlPriorityTextViewModel")
+                    .scrollableGridContainer(style="height: 100%")
+                        .scrollableTableHeader
+                        .scrollableTableContainer
+                            table#controlPriorityList.linedTable
+                                thead
+                                    tr
+                                        th.col-sm-1 Priority
+                                        th.col-sm-11 Text
+                                tbody(data-bind="foreach: controlPriorities")
+                                    tr
+                                        td(data-bind="text: $data['Priority Level']")
+                                        td.clickToEdit(data-bind="clickEdit: $data['Priority Text']")
+                                            span(data-bind="text: $data['Priority Text']")
+                                            input.hide.form-control(type="text", maxlength="40", data-bind="value: $data['Priority Text']")
 
-			// ------ Custom Colors  ---------------------------------------------------------------------------------
-			div#customColorCodes(data-bind="visible: section() == 'Custom Color Codes'")
-				div(data-bind="with: customColorCodesViewModel")
-					.title(data-bind="text: displayName")
-					table#customColorCodesList.linedTable
-						thead
-							th.col-sm-1
-							th.col-sm-3
-						tbody(data-bind="foreach: customColorCodes")
-							tr
-								td(data-bind="text: $index() + 1")
-								td
-									div
-										div(data-usedropdown="true", data-insertpalette="false", data-bind="diColorpicker: hexColor")
+            // ------ Custom Colors  --------------------------------------------------------------------------------
+            div#customColorCodes(data-bind="visible: section() == 'Custom Color Codes'")
+                div(data-bind="with: customColorCodesViewModel")
+                    .title(data-bind="text: displayName")
+                    table#customColorCodesList.linedTable
+                        thead
+                            th.col-sm-1
+                            th.col-sm-3
+                        tbody(data-bind="foreach: customColorCodes")
+                            tr
+                                td(data-bind="text: $index() + 1")
+                                td
+                                    div
+                                        div(data-usedropdown="true", data-insertpalette="false", data-bind="diColorpicker: hexColor")
 
-			// ------ Quality Codes ---------------------------------------------------------------------------------
-			div#qualityCodes(data-bind="visible: section() == 'Quality Codes'")
-				.title Quality Code Enable
+            // ------ Quality Codes ---------------------------------------------------------------------------------
+            div#qualityCodes(data-bind="visible: section() == 'Quality Codes'")
+                .title Quality Code Enable
 
-				div(data-bind="with: qualityCodesViewModel")
-					.qualityCodeOptions
-						.qualityCodeRow
-							div
-								input#COVDisabled(type="checkbox", data-bind="checked: covDisabled")
-								label(for="COVDisabled") COV Disabled
-							div
-								input#AlarmsOff(type="checkbox", data-bind="checked: alarmsOff")
-								label(for="AlarmsOff") Alarms Off
-						.qualityCodeRow
-							div
-								input#Overriden(type="checkbox", data-bind="checked: overriden")
-								label(for="Overriden") Overriden
-							div
-								input#CommandPending(type="checkbox", data-bind="checked: commandPending")
-								label(for="CommandPending") Command Pending
+                div(data-bind="with: qualityCodesViewModel")
+                    .qualityCodeOptions
+                        .qualityCodeRow
+                            div
+                                input#COVDisabled(type="checkbox", data-bind="checked: covDisabled")
+                                label(for="COVDisabled") COV Disabled
+                            div
+                                input#AlarmsOff(type="checkbox", data-bind="checked: alarmsOff")
+                                label(for="AlarmsOff") Alarms Off
+                        .qualityCodeRow
+                            div
+                                input#Overriden(type="checkbox", data-bind="checked: overriden")
+                                label(for="Overriden") Overriden
+                            div
+                                input#CommandPending(type="checkbox", data-bind="checked: commandPending")
+                                label(for="CommandPending") Command Pending
 
-					.title Quality Codes
+                    .title Quality Codes
 
-					table#qualityCodesList.linedTable
-						thead
-							th.col-sm-4
-							th.col-sm-2
-							th.col-sm-3
-						tbody(data-bind="foreach: qualityCodes")
-							tr
-								td(data-bind="text: $data['Quality Code Label']")
-								td.clickToEdit(data-bind="clickEdit: $data['Quality Code']")
-									span(data-bind="text: $data['Quality Code']")
-									input.hide.form-control(type="text", maxlength="2", data-bind="value: $data['Quality Code']")
-								td
-									div
-										div(data-usedropdown="true", data-insertpalette="true", data-bind="diColorpicker: $data['Quality Code Font HTML Color']")
+                    table#qualityCodesList.linedTable
+                        thead
+                            th.col-sm-4
+                            th.col-sm-2
+                            th.col-sm-3
+                        tbody(data-bind="foreach: qualityCodes")
+                            tr
+                                td(data-bind="text: $data['Quality Code Label']")
+                                td.clickToEdit(data-bind="clickEdit: $data['Quality Code']")
+                                    span(data-bind="text: $data['Quality Code']")
+                                    input.hide.form-control(type="text", maxlength="2", data-bind="value: $data['Quality Code']")
+                                td
+                                    div
+                                        div(data-usedropdown="true", data-insertpalette="true", data-bind="diColorpicker: $data['Quality Code Font HTML Color']")
 
-			// ------ Telemetry -------------------------------------------------------------------------------------
-			div#telemetry(data-bind="visible: section() == 'Telemetry'")
-				.title Telemetry
+            // ------ Telemetry -------------------------------------------------------------------------------------
+            div#telemetry(data-bind="visible: section() == 'Telemetry'")
+                .title Telemetry
 
-				form#telemetryForm(data-bind="with: telemetryViewModel")
-					table#telemetryList.linedTable
-						tbody
-							tr
-								td.col-sm-4 IP Network Segment
-								td.col-sm-9.clickToEdit(data-bind="clickEdit: $data['IP Network Segment']")
-									span(data-bind="text: $data['IP Network Segment']")
-									input#telemetryIPNetworkSegment.hide.form-control(type="text", data-bind="value: $data['IP Network Segment']")
-							tr
-								td IP Port
-								td.clickToEdit(data-bind="clickEdit: $data['IP Port']")
-									span(data-bind="text: $data['IP Port']")
-									input#telemetryIPNetworkSegment.hide.form-control(type="text", data-bind="value: $data['IP Port']")
-							tr
-								td APDU Timeout (seconds)
-								td.clickToEdit(data-bind="clickEdit: $data['APDU Timeout']")
-									span(data-bind="text: $data['APDU Timeout']")
-									input#telemetryAPDUTimeout.hide.form-control(type="text", data-bind="value: $data['APDU Timeout']")
-							tr
-								td APDU Retries
-								td.clickToEdit(data-bind="clickEdit: $data['APDU Retries']")
-									span(data-bind="text: $data['APDU Retries']")
-									input#telemetryAPDURetries.hide.form-control(type="text", data-bind="value: $data['APDU Retries']")
-							tr
-								td Time Zone
-								td.clickToEdit(data-bind="clickEdit: $data['Time Zone']")
-									span(data-bind="text: selectedTimeZoneText")
-									select#telemetryTimeZone.hide.form-control(type="text", data-bind="event:{blur:changeTimezone},options: timeZones(), optionsText: 'name', optionsValue: 'value', value:selectedTimeZone")
-							//-Hiding Public IP Address per LMH. This property is expected to be completely removed in the near future
-							//-tr
-								td Public IP Address
-								td.clickToEdit(data-bind="clickEdit: $data['Public IP']")
-									span(data-bind="text: $data['Public IP']")
-									input#telemetryPublicIP.hide.form-control.input-sm(type="text", data-bind="value: $data['Public IP']")
+                form#telemetryForm(data-bind="with: telemetryViewModel")
+                    table#telemetryList.linedTable
+                        tbody
+                            tr
+                                td.col-sm-4 IP Network Segment
+                                td.col-sm-9.clickToEdit(data-bind="clickEdit: $data['IP Network Segment']")
+                                    span(data-bind="text: $data['IP Network Segment']")
+                                    input#telemetryIPNetworkSegment.hide.form-control(type="text", data-bind="value: $data['IP Network Segment']")
+                            tr
+                                td IP Port
+                                td.clickToEdit(data-bind="clickEdit: $data['IP Port']")
+                                    span(data-bind="text: $data['IP Port']")
+                                    input#telemetryIPNetworkSegment.hide.form-control(type="text", data-bind="value: $data['IP Port']")
+                            tr
+                                td APDU Timeout (seconds)
+                                td.clickToEdit(data-bind="clickEdit: $data['APDU Timeout']")
+                                    span(data-bind="text: $data['APDU Timeout']")
+                                    input#telemetryAPDUTimeout.hide.form-control(type="text", data-bind="value: $data['APDU Timeout']")
+                            tr
+                                td APDU Retries
+                                td.clickToEdit(data-bind="clickEdit: $data['APDU Retries']")
+                                    span(data-bind="text: $data['APDU Retries']")
+                                    input#telemetryAPDURetries.hide.form-control(type="text", data-bind="value: $data['APDU Retries']")
+                            tr
+                                td Time Zone
+                                td.clickToEdit(data-bind="clickEdit: $data['Time Zone']")
+                                    span(data-bind="text: selectedTimeZoneText")
+                                    select#telemetryTimeZone.hide.form-control(type="text", data-bind="event:{blur:changeTimezone},options: timeZones(), optionsText: 'name', optionsValue: 'value', value:selectedTimeZone")
+                            //-Hiding Public IP Address per LMH. This property is expected to be completely removed in the near future
+                            //-tr
+                                td Public IP Address
+                                td.clickToEdit(data-bind="clickEdit: $data['Public IP']")
+                                    span(data-bind="text: $data['Public IP']")
+                                    input#telemetryPublicIP.hide.form-control.input-sm(type="text", data-bind="value: $data['Public IP']")
 
-			// ------ Alarm Message Definitions -------------------------------------------------------------------------------------
-			#alarmMessageDefinitionContainer(data-bind="visible: section() == 'Alarm Messages'")
-				.title Alarm Messages
-				br
-				div(data-bind='with:alarmMessagesViewModel.viewModel()')
-					include ../AlarmMessageDefinition/AlarmMessageDefinitionModule.jade
+            // ------ Alarm Message Definitions ---------------------------------------------------------------------
+            #alarmMessageDefinitionContainer(data-bind="visible: section() == 'Alarm Messages'")
+                .title Alarm Messages
+                br
+                div(data-bind='with:alarmMessagesViewModel.viewModel()')
+                    include ../AlarmMessageDefinition/AlarmMessageDefinitionModule.jade
 
-			// ------ Backup -------------------------------------------------------------------------------------
-			div#telemetry(data-bind="visible: section() == 'Backup'")
-				.title Backup
-				br
-				div#backupForm(data-bind="with: backupViewModel")
-					button(id='backup', type='button', class='btn btn-primary btn-sm', data-bind='click: startBackup') Backup Now
-					br
-					div#backupMessage(data-bind="text: backupMsg, visible: showBackupMsg")
+            // ------ Backup ----------------------------------------------------------------------------------------
+            div#telemetry(data-bind="visible: section() == 'Backup'")
+                .title Backup
+                br
+                div#backupForm(data-bind="with: backupViewModel")
+                    button(id='backup', type='button', class='btn btn-primary btn-sm', data-bind='click: startBackup') Backup Now
+                    br
+                    div#backupMessage(data-bind="text: backupMsg, visible: showBackupMsg")
 
-			// ------ Weather ---------------------------------------------------------------------------------------
-			div#weather(data-bind="visible: section() == 'Weather'")
-				div(data-bind="with: weatherViewModel")
-					.title Weather
-					div.weatherPoints(data-bind="foreach: weatherPoints")
-						.weatherTitle(data-bind="text: $data.title")
-						.well.well-sm
-							.btn.btn-danger.btn-xs(data-bind="click: $parent.removePointRef, visible: $data.point() !== null")
-								i.fa.fa-fw.fa-times
-							.btn.btn-info.btn-xs(data-bind="click: $parent.editPointRef")
-								i.fa.fa-fw.fa-pencil(data-bind="visible: $data.point() !== null")
-								i.fa.fa-fw.fa-plus(data-bind="visible: $data.point() === null")
-							// ko if: $data.point() !== null
-							a(data-bind="text: $data.point().Name, click: $parent.openPointRef")
-							// /ko
+            // ------ Weather ---------------------------------------------------------------------------------------
+            div#weather(data-bind="visible: section() == 'Weather'")
+                div(data-bind="with: weatherViewModel")
+                    .title Weather
+                    div.weatherPoints(data-bind="foreach: weatherPoints")
+                        .weatherTitle(data-bind="text: $data.title")
+                        .well.well-sm
+                            .btn.btn-danger.btn-xs(data-bind="click: $parent.removePointRef, visible: $data.point() !== null")
+                                i.fa.fa-fw.fa-times
+                            .btn.btn-info.btn-xs(data-bind="click: $parent.editPointRef")
+                                i.fa.fa-fw.fa-pencil(data-bind="visible: $data.point() !== null")
+                                i.fa.fa-fw.fa-plus(data-bind="visible: $data.point() === null")
+                            // ko if: $data.point() !== null
+                            a(data-bind="text: $data.point().Name, click: $parent.openPointRef")
+                            // /ko
+
+            // ------ Notifications ---------------------------------------------------------------------------------
+            div#notifications(data-bind="visible: section() == 'Notifications'")
+                .notificationHeader
+                    .pull-right
+                        .dropdown
+                            button.btn.btn-primary.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Change Policy
+                                span.caret.caret-spaced
+                            ul.dropdown-menu
+                                li
+                                    a(href="#") WWTP
+                                    a(href="#") Water Plant
+                    h2.hidden Notification Control Center
+                    h2 Notify Policies #[i.fa.fa-caret-right] WWTP
 
 
+                .notificationsContent
+                    .policySelect.hidden
+                        ul.nav.nav-tabs.nav-tabs-arrow
+                            li.active
+                                a(href="#notifyPolicies") Notify Policies
+                            li
+                                a(href="#notificationsActivity") Activity
 
-			// ------ About -----------------------------------------------------------------------------------------
-			//div#about(data-bind="visible: section() == 'About InfoScan'")
-				img#infologo(src='/img/InfoScanLogoBlue.png')
-				#rev Version x.xx
-				br
-				br
-				|For help, please contact us via email or phone:
-				br
-				a(href='mailto:support@dorsett-tech.com') support@dorsett-tech.com
-				br
-				|P: 800-331-7605
-				br
-				br
-				br
-				img#dorlogo(src='/img/dorsett_logoGraphic_small.png')
-				|Copyright 2013 Dorsett Technologies, Inc. All rights reserved.
+                        .tab-content
+                            #notifyPolicies.tab-pane.active
+                                .pull-right
+                                    .button.btn.btn-success New Policy
+                                h3 Notify Policies
+
+                                .policyList
+                                    .policy.row
+                                        .col-xs-3
+                                            a(href="#") WWTP
+                                        .col-xs-3 Members: 9
+                                        .col-xs-1.pull-right.deleteIcon
+                                            i.fa.fa-times
+
+                                    .policy.row
+                                        .col-xs-3
+                                            a(href="#") Water Plant
+                                        .col-xs-3 Members: 11
+                                        .col-xs-1.pull-right.deleteIcon
+                                            i.fa.fa-times
+                                    .policy.row
+                                        .col-xs-3
+                                            a(href="#") Lift Stations
+                                        .col-xs-3 Members: 1
+                                        .col-xs-1.pull-right.deleteIcon
+                                            i.fa.fa-times
+
+                            #notificationsActivity.tab-pane
+                                h3 Activity
+
+                    .policyEdit.hidden1
+                        ul.nav.nav-tabs.nav-tabs-arrow
+                            li
+                                a(href="#policyGeneral") General
+                            li
+                                a(href="#policyMembers") Members
+                            li
+                                a(href="#policyAlertConfig") Alert Configurations
+                            li
+                                a(href="#policySchedule") Schedule
+                            li.active
+                                a(href="#policyCalendar") Calendar
+                            li
+                                a(href="#policyActivity") Activity
+
+                        .tab-content
+                            #policyGeneral.tab-pane
+                                h3 General
+
+                                .policyList
+                                    .policy.row
+                                        .col-xs-3 Policy Name
+                                        .col-xs-9 WWTP
+                                            .pull-right.editPolicy
+                                                i.fa.fa-pencil-square-o
+                                    .policy.row
+                                        .col-xs-3 Notification Control
+                                        .col-xs-9 Notifications are enabled
+                                            .pull-right.editPolicy
+                                                i.fa.fa-pencil-square-o
+                                    .policy.row
+                                        .col-xs-3 Throttle Control
+                                        .col-xs-9 ????????
+                                            .pull-right.editPolicy
+                                                i.fa.fa-pencil-square-o
+
+                            #policyMembers.tab-pane
+                                h3 Members
+                                    span.dropdown
+                                        button.btn.btn-sm.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Send all members a test message
+                                            span.caret.caret-spaced
+                                        ul.dropdown-menu
+                                            li
+                                                a(href="#") Email
+                                                a(href="#") Text Mobile
+                                                a(href="#") Call Mobile
+                                                a(href="#") Call Home
+                                                a(href="#") Call Work
+
+                                .memberList
+                                    table#memberList.display.table.table-striped(style="width: 100%")
+
+                            #policyAlertConfig.tab-pane.active
+                                //- .pull-right
+                                //-     .button.btn.btn-success New Configuration
+                                //- h3 Alert Configurations
+
+                                //- .policyList
+                                //-     .policy.row
+                                //-         .col-xs-6
+                                //-             a(href="#") Off-Hours
+                                //-         .col-xs-6.policyToolbar
+                                //-             a(href="#")
+                                //-                 i.fa.fa-pencil-square-o
+                                //-             a(href="#")
+                                //-                 i.fa.fa-files-o
+                                //-             a(href="#")
+                                //-                 i.fa.fa-times.deleteIcon
+                                .pull-right
+                                    .button.btn.btn-sm.btn-default Edit
+                                h3 Off-Hours
+                                .checkbox.isOnCall
+                                    label
+                                        input(type="checkbox")
+                                        |This configuration is used for On-Call
+
+                                .alertGroup
+                                    .groupTitle Group 1
+                                    .alertSection
+                                        .alertBody
+                                            .col
+                                                .sectionIcon
+                                                    i.fa.fa-bell-o
+                                                .sectionTitle 0 minute(s) after an alarm occurs
+
+                                    .alertSection
+                                        .alertBody
+                                            .leftCol.col
+                                                .sectionIcon
+                                                    i.fa.fa-male
+                                                .sectionTitle Alert:
+                                                .rotationList
+                                                    .member Adam Eldridge
+                                                    .member Brantley Angell
+                                                    .member Stephen Trent
+                                            .rightCol.col
+                                                .sectionTitle.sectionTitleNoIcon Alert Style: Everyone Sequenced
+                                                .sectionWait
+                                                    i.fa.fa-clock-o
+                                                    |Wait 5 minutes before alerting the next person in the list
+                                                .sectionRotate
+                                                    .checkbox
+                                                        label
+                                                            input(type="checkbox")
+                                                            |Rotate the first responder
+                                                            |Every week at 9AM on Friday
+                                        .alertFooter
+                                            .escalationTimer
+                                                i.fa.fa-arrow-down
+                                                | Escalates after 30 minutes
+
+                            #policyCalendar.tab-pane
+                                h3 Calendar
+
+                                .panel.panel-default
+                                    .panel-heading
+                                        h3.panel-title Legend
+                                    .panel-body
+                                        .legendEntry Normal Business Hours, 8A-5P
+
+                                #calendarDisplay
+
+                                .panel.panel-default
+                                    .panel-heading
+                                        h3.panel-title Current Rotation
+                                    .panel-body
+                                        .bodyHeading Off Hours
+                                        .smallRow
+                                            span.dropdown
+                                                button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Adam Eldridge (first responder)
+                                                    span.caret.caret-spaced
+                                                ul.dropdown-menu
+                                                    li
+                                                        a(href="#") Adam Eldridge
+                                                        a(href="#") Johnny Roberts
+                                                        a(href="#") Stephen Trent
+
+                                            span.dropdown
+                                                button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Perry Lyon
+                                                    span.caret.caret-spaced
+                                                ul.dropdown-menu
+                                                    li
+                                                        a(href="#") Fred Trivette
+
+                                        .bodyHeading Normal Business Hours
+                                        .smallRow
+                                            span.rowTitle Active Group
+                                            span.dropdown
+                                                button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Group 1
+                                                    span.caret.caret-spaced
+                                                ul.dropdown-menu
+                                                    li
+                                                        a(href="#") Group 1
+                                                        a(href="#") Group 2
+
+
+            // ------ About -----------------------------------------------------------------------------------------
+            //div#about(data-bind="visible: section() == 'About InfoScan'")
+                img#infologo(src='/img/InfoScanLogoBlue.png')
+                #rev Version x.xx
+                br
+                br
+                |For help, please contact us via email or phone:
+                br
+                a(href='mailto:support@dorsett-tech.com') support@dorsett-tech.com
+                br
+                |P: 800-331-7605
+                br
+                br
+                br
+                img#dorlogo(src='/img/dorsett_logoGraphic_small.png')
+                |Copyright 2013 Dorsett Technologies, Inc. All rights reserved.

@@ -12,14 +12,15 @@ module.exports.sendCommand = function(msg, callback) {
   zmqConn.send(msg);
 
   zmqConn.on('message', function(data) {
-      logger.info(data.toString());
-      data = JSON.parse(data.toString());
-      if (data.hasOwnProperty('err') && data.err !== 0 && data.err !== null) {
+    logger.info(data.toString());
+    data = JSON.parse(data.toString());
 
-        return callback(data, null);
-      } else if (!data.DEBUG && data.msg !== 'Done') {
-        return callback(null, data);
-      }
+    if (data.hasOwnProperty('err') && data.err !== 0 && data.err !== null) {
+      return callback(data.err, null);
+    } else if (data.msg !== 'Done' && (!data.hasOwnProperty('msg') || (data.hasOwnProperty('msg') && !data.msg.hasOwnProperty('DEBUG')))) {
+      data = data.msg || data;
+      return callback(null, data);
+    }
   });
 };
 

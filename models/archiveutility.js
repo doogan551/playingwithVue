@@ -140,7 +140,7 @@ exports.exec = function(criteria, cb) {
     cb('No statement supplied.', []);
   } else {
     getSdb(year, function(_sdb) {
-      _sdb.exec(statement, parameters, cb);
+      _sdb.exec(statement, cb);
     });
   }
 };
@@ -183,8 +183,12 @@ exports.finalizeStatement = function(criteria, cb) {
 
 exports.serialize = function(criteria, cb) {
   var year = criteria.year || moment().year();
-
+  console.log('serializing');
   getSdb(year, function(_sdb) {
-    _sdb.serialize(cb);
+    console.log('gotten db');
+    _sdb.serialize(function(err){
+      console.log(err);
+      return cb();
+    });
   });
 };

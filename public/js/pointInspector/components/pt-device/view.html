@@ -52,30 +52,26 @@
             </div>
             <hr>
             <div class="row">
-                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Model Type', data: data, columnClasses: 'col col-sm-4 col-xs-6', enumSetName: 'Device Model Types', rootContext: $root } } -->
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Model Type', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Device Model Types', rootContext: $root } } -->
                 <!-- /ko -->
-                <div class="col col-sm-2 col-xs-0">
+                <div class="col col-sm-4 col-xs-12">
+                    <div data-bind="component: { name: 'ctl-firmwareVersion', params: { firmwareVersion: data['Firmware Version'].Value, rootContext: $root } }"></div>
                 </div>
-                <div class="col col-sm-4 col-xs-6">
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Time Zone', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Time Zones', rootContext: $root } } -->
+                <!-- /ko -->
+            </div>
+            <div class="row">
+                <div class="col col-xs-12">
                     <div class="dataField">
                         <label>Device Time</label>
                         <div class="input-group">
-                            <input type="text" disabled class="form-control input-sm" data-bind="value: deviceTime">
                             <span class="input-group-btn">
                                 <button class="btn btn-info btn-sm" type="button" data-bind="click: getDeviceTime">Read</button>
                             </span>
+                            <input type="text" disabled class="form-control input-sm" data-bind="value: deviceTime">
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col col-sm-4 col-xs-6">
-                    <div data-bind="component: { name: 'ctl-firmwareVersion', params: { firmwareVersion: data['Firmware Version'].Value, rootContext: $root } }"></div>
-                </div>
-                <div class="col col-sm-2 col-xs-0">
-                </div>
-                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Time Zone', data: data, columnClasses: 'col col-sm-4 col-xs-6', enumSetName: 'Time Zones', rootContext: $root } } -->
-                <!-- /ko -->
             </div>
             <hr>
             <div class="row">
@@ -116,6 +112,8 @@
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'COV Period', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
+            <!--  ko component: { name: 'ctl-duration', params: { propertyName: 'Trend Interval', data: data, columnClasses: 'col col-sm-3 col-xs-4', min: '0:0:1', max: '0:59:59', rootContext: $root } } -->
+            <!-- /ko -->
         </div>
     </div>
 
@@ -124,6 +122,11 @@
             <!--  ko component: { name: 'ctl-text', params: { propertyName: 'Active Text', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-text', params: { propertyName: 'Inactive Text', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
+            <!-- /ko -->
+        </div>
+        <hr>
+        <div class="row">
+            <!--  ko component: { name: 'ctl-qualityCodeEnable', params: { propertyName: 'Quality Code Enable', data: data, columnClasses: 'col-xs-12', rootContext: $root } } -->
             <!-- /ko -->
         </div>
     </div>

@@ -1,38 +1,3 @@
-// function showTools (x) {
-//     var tr = $(x).closest('tr'),
-//         shownItems,
-//         hiddenItems;
-
-//     if (tr.attr('id') !== "shown") {
-//         tr.attr('id', "shown");
-
-//         shownItems  = tr.find('.show');
-//         hiddenItems = tr.find('.hide');
-
-//         hiddenItems.removeClass('hide').addClass('show');
-//         shownItems.removeClass('show').addClass('hide');
-//     }
-// }
-
-// function hideTools (x) {
-//     var tr = $(x).closest('tr'),
-//         shownItems  = tr.find('.show'),
-//         hiddenItems = tr.find('.hide');
-
-//     tr.attr("id", "hidden");
-
-//     hiddenItems.removeClass('hide').addClass('show');
-//     shownItems.removeClass('show').addClass('hide');
-// }
-
-// function prepTools () {
-//     $("#holidaysTable td").attr("onmouseover", "showTools(this)");
-//     $("#holidaysTable td").attr("onmouseout",  "hideTools(this)");
-//     $("#holidaysTable td input").blur(function(){
-//         hideTools($("#holidaysTable td"));
-//     });
-// }
-
 var sysPrefsViewModel = (function() {
 
     var self = this,
@@ -1059,7 +1024,7 @@ var qualityCodesViewModel = function() {
 };
 
 
-// Custom Color Codes Screen -------------------------------------------------------
+// Custom Color Codes Screen --------------------------------------------------
 var customColorCodesViewModel = function () {
     var self = this,
         originalData,
@@ -2076,6 +2041,136 @@ var weatherViewModel = function() {
     };
 };
 
+// Notifications screen -------------------------------------------------------
+var notificationsViewModel = function() {
+    var self = this;
+
+    self.init = function () {
+        var data = [{
+                firstName: 'Adam',
+                lastName: 'Eldridge',
+                securityGroup: 'WWTP'
+            }, {
+                firstName: 'Brantley',
+                lastName: 'Angell',
+                securityGroup: 'WWTP'
+            }, {
+                firstName: 'Jeff',
+                lastName: 'Shore',
+                securityGroup: null
+            }, {
+                firstName: 'Johnny',
+                lastName: 'Roberts',
+                securityGroup: null
+            }, {
+                firstName: 'Stephen',
+                lastName: 'Trent',
+                securityGroup: null
+            }],
+            columns = [{
+                data: 'firstName',
+                title: 'First Name'
+            }, {
+                data: 'lastName',
+                title: 'Last Name'
+            }, {
+                data: 'securityGroup',
+                title: 'Member By Way Of Security Group'
+            }];
+
+        $('#memberList').DataTable({
+            columns: columns,
+            data: data,
+            paging: false,
+            searching: false,
+            bInfo: false
+        });
+
+        self.$tabs = $('.notificationsContent .nav a').click(function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+
+        $('#calendarDisplay').fullCalendar({
+            eventClick: function (calEvent, jsEvent, view) {
+                console.log(calEvent);
+                jsEvent.preventDefault();
+            },
+            header: {
+                left: 'prev,next',
+                center: 'title',
+                right: 'agendaWeek,agendaDay'
+            },
+            eventColor: '#7156FB',
+            allDaySlot: false,
+            defaultDate: '2016-01-12',
+            defaultView: 'agendaWeek',
+            editable: false,
+            eventLimit: false, // allow "more" link when too many events
+            height: 575,
+            slotDuration: '01:00:00',
+            slotLabelInterval: '02:00:00',
+            events: [
+                // {
+                //     title: 'All Day Event',
+                //     start: '2016-01-01'
+                // },
+                // {
+                //     title: 'Long Event',
+                //     start: '2016-01-07',
+                //     end: '2016-01-10'
+                // },
+                {
+                    id: 999,
+                    start: '2016-01-10T08:00:00',
+                    end: '2016-01-10T17:00:00'
+                },
+                {
+                    id: 999,
+                    start: '2016-01-11T08:00:00',
+                    end: '2016-01-11T17:00:00'
+                },
+                {
+                    id: 999,
+                    start: '2016-01-12T08:00:00',
+                    end: '2016-01-12T17:00:00'
+                },
+                {
+                    id: 999,
+                    start: '2016-01-13T08:00:00',
+                    end: '2016-01-13T17:00:00'
+                },
+                {
+                    id: 999,
+                    start: '2016-01-14T08:00:00',
+                    end: '2016-01-14T17:00:00'
+                },
+                {
+                    id: 999,
+                    start: '2016-01-15T08:00:00',
+                    end: '2016-01-15T17:00:00'
+                },
+                {
+                    id: 999,
+                    start: '2016-01-16T08:00:00',
+                    end: '2016-01-16T17:00:00'
+                }
+            ]
+        });
+    };
+
+    self.cancel = function () {
+
+    };
+    self.save = function () {
+        self.dirty(false);
+    };
+
+    self.displayName = 'Notifications';
+    self.dirty = ko.observable(false);
+    self.hasError = ko.observable(false);
+};
+
 // About Infoscan -------------------------------------------------------------
 /*
 var aboutInfoScanViewModel = function() {
@@ -2111,6 +2206,7 @@ $(function() {
             sysPrefsViewModel.registerSection(backupViewModel, 'init');
             sysPrefsViewModel.registerSection(alarmMessageDefinitions);
             sysPrefsViewModel.registerSection(weatherViewModel, 'init');
+            sysPrefsViewModel.registerSection(notificationsViewModel, 'init');
 
             year = new Date().getFullYear();
             calendarVM = sysPrefsViewModel.getSection('Calendar');

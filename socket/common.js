@@ -11,7 +11,6 @@ var utils = require('../helpers/utils');
 var constants = utils.CONSTANTS;
 var Config = require('../public/js/lib/config.js');
 var actLogsEnums = Config.Enums["Activity Logs"];
-var cppApi = new(require('Cpp_API').Tasks)();
 var logger = require('../helpers/logger')(module);
 var zmq = require('../helpers/zmq');
 
@@ -245,34 +244,30 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
 
     function updateProperties() {
       for (var prop in newPoint) {
+        if (readOnlyProps.indexOf(prop) === -1) {
+          // sort enums first
+          if (newPoint[prop].hasOwnProperty('ValueOptions')) {
+            var options = newPoint[prop].ValueOptions;
 
-        // sort enums first
-        if (newPoint[prop].hasOwnProperty('ValueOptions')) {
-          var options = newPoint[prop].ValueOptions;
-
-          var newOptions = {};
-          var temp = [];
-          for (var stringVal in options) {
-            temp.push(options[stringVal]);
-          }
-          temp.sort(compare);
-          for (var key = 0; key < temp.length; key++) {
-            for (var property in options) {
-              if (options[property] === temp[key]) {
-                newOptions[property] = options[property];
+            var newOptions = {};
+            var temp = [];
+            for (var stringVal in options) {
+              temp.push(options[stringVal]);
+            }
+            temp.sort(compare);
+            for (var key = 0; key < temp.length; key++) {
+              for (var property in options) {
+                if (options[property] === temp[key]) {
+                  newOptions[property] = options[property];
+                }
               }
             }
+            newPoint[prop].ValueOptions = newOptions;
           }
-          newPoint[prop].ValueOptions = newOptions;
-        }
 
-        // this will compare Slides and Point Refs arrays.
-        if (!_.isEqual(newPoint[prop], oldPoint[prop])) {
-          if (readOnlyProps.indexOf(prop) !== -1) {
-            return callback({
-              err: "A read only property has been changed: " + prop
-            }, null);
-          } else {
+          // this will compare Slides and Point Refs arrays.
+          if (!_.isEqual(newPoint[prop], oldPoint[prop])) {
+
             logger.info(newPoint._id, prop);
             if (prop === "Broadcast Enable" && user["System Admin"].Value !== true) {
               continue;
@@ -588,6 +583,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Port 4 Maximum Address":
               case "Port 4 Network":
               case "Port 4 Protocol":
+              case "Time Zone":
               case "VAV Channel":
                 configRequired = true;
                 break;
@@ -841,6 +837,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
             } else {
               generateActivityLog = false;
             }
+
           }
         }
       }
@@ -1123,7 +1120,7 @@ function updPoint(downloadPoint, newPoint, callback) {
 
     zmq.sendCommand(command, function(error, msg) {
       if (!!error) {
-        err = error.msg;
+        err = error.ApduErrorMsg;
         code = parseInt(error.ApduError, 10);
       }
 
@@ -1153,39 +1150,6 @@ function updPoint(downloadPoint, newPoint, callback) {
       }
     });
 
-    /*cppApi.command(command, function(error, msg) {
-      if (error !== 0 && error !== null) {
-        errVar = JSON.parse(error);
-        err = errVar.ApduErrorMsg;
-        code = parseInt(errVar.ApduError, 10);
-      } else
-        msg = JSON.parse(msg);
-
-      if (err) {
-        if (code >= 2300 && code < 2304) {
-          Utility.update({
-            collection: constants('pointsCollection'),
-            query: {
-              _id: newPoint._id
-            },
-            updateObj: {
-              $set: {
-                _updPoint: true
-              }
-            }
-          }, function(dberr, result) {
-            if (dberr)
-              return callback(dberr, null);
-            else
-              return callback(err, "success");
-          });
-        } else
-          return callback(err, null);
-      } else {
-        return callback(null, "success");
-      }
-    });*/
-
   } else {
     callback(null, "success");
   }
@@ -1201,14 +1165,6 @@ function signalExecTOD(executeTOD, callback) {
     zmq.sendCommand(command, function(err, msg) {
       return callback(err, msg);
     });
-
-    /*cppApi.command(command, function(error, msg) {
-      error = JSON.parse(error);
-      msg = JSON.parse(msg);
-
-
-      return callback(error, msg);
-    });*/
 
   } else {
     callback(null, "success");
@@ -1644,14 +1600,6 @@ function signalHostTOD(signalTOD, callback) {
       return callback(err, msg);
     });
 
-    /*cppApi.command(command, function(error, msg) {
-      error = JSON.parse(error);
-      msg = JSON.parse(msg);
-
-
-      return callback(error, msg);
-    });*/
-
   } else {
     callback(null, "success");
   }
@@ -2033,11 +1981,11 @@ function getActiveAlarmsNew(data, callback) {
     sort: sort,
     skip: (currentPage - 1) * itemsPerPage,
     limit: numberItems
-  }, function(err, recents) {
+  }, function(err, alarms) {
     Utility.count({
       collection: "ActiveAlarms",
       query: query
-    }, function(err, alarms) {
+    }, function(err, count) {
 
       callback(err, alarms, count);
     });

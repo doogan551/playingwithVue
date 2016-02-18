@@ -1,4 +1,4 @@
-// ko if: (valueType === "DateTime")
+// ko if: (valueType === "DateTime" || valueType === "Timet")
 input.input.form-control.filterContainer.dateTimeDate(data-bind="reportDatePicker: date", type="text", required)
 input.input.form-control.filterContainer.dateTimeTime(data-bind="reportTimePicker: time", type="text", required)
 // /ko
@@ -28,7 +28,7 @@ input.input.form-control.filterContainer(data-bind="value: value", type="text", 
 div.pointreference
    button.btn.btn-danger.btn-xs.fa.fa-times(data-bind="click: function(){ $parent.clearFilterPoint($index()) }, tooltip: { title: 'Clear' }")
    button.btn.btn-info.btn-xs.fa.fa-pencil(data-bind="click: function(){ $parent.selectPointForFilter($data, $index) }, tooltip: { title: 'Edit' }")
-   .pointRef.filterPointName.container-fluid.filterContainer(data-bind="text: ($data.value !== '' ? $data.value : '- blank -'), click: function(){ $parent.showPointReview($data) }")
+   .pointRef.filterPointName.container-fluid.filterContainer(data-bind="text: ($data.value !== 0 ? $data.value : '- blank -'), click: function(){ $parent.showPointReview($data) }")
 // /ko
 // ko if: (valueType === "Bool")
 .dropdown.availablefilterValues
@@ -41,17 +41,18 @@ div.pointreference
       li
          a.filterContainer(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'False') }, text: 'Off'", required)
 // /ko
-// ko if: (valueType === "MinSec")
-input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
-// /ko
-// ko if: (valueType === "HourMin")
-input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
-// /ko
-// ko if: (valueType === "HourMinSec")
-input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
-// /ko
-// ko if: (valueType === "Timet")
-input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
+// ko if: ((valueType === "HourMinSec") || (valueType === "HourMin") || (valueType === "MinSec"))
+div.durationCtrl
+   // ko if: ((valueType === "HourMinSec") || (valueType === "HourMin"))
+   input.hr(data-bind="value: hours", type="number", min="0", max="23")
+   span.timeSeg hr
+   // /ko
+   input.min(data-bind="value: minutes", type="number", min="0", max="59")
+   span.timeSeg min
+   // ko if: ((valueType === "HourMinSec") || (valueType === "MinSec"))
+   input.sec(data-bind="value: seconds", type="number", min="0", max="59")
+   span.timeSeg sec
+   // /ko
 // /ko
 
 

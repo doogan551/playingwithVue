@@ -201,14 +201,31 @@ var Config = (function(obj) {
                 totalTypes = Object.keys(types).length,
                 filterPointTypes = function(filter) {
                     var filtered = [],
-                        item = {};
-                    for (var prop in types) {
-                        item = types[prop];
-                        if (!filter || !!~item.lists.indexOf(filter)) {
-                            filtered.push({
-                                key: prop,
-                                enum: item.enum
-                            });
+                        added = {},
+                        i,
+                        len,
+                        doFilter = function (_filter) {
+                            var prop,
+                                item,
+                                arr = [];
+                            for (prop in types) {
+                                item = types[prop];
+                                if ((!_filter || !!~item.lists.indexOf(_filter)) && !added[prop]) {
+                                    added[prop] = true;
+                                    arr.push({
+                                        key: prop,
+                                        enum: item.enum
+                                    });
+                                }
+                            }
+                            return arr;
+                        };
+                    if (typeof filter === 'string') {
+                        filtered = doFilter(filter);
+                    } else {
+                        len = filter.length;
+                        for (i=0; i<len; i++) {
+                            filtered = filtered.concat(doFilter(filter[i]));
                         }
                     }
                     return filtered;
@@ -394,6 +411,31 @@ var Config = (function(obj) {
                         case "Fan Control Point":
                         case "Lights Control Point":
                             return filterPointTypes('enumControl');
+                        // Begin Lift Station point properties
+                        case "High Level Float Point":
+                        case "Lag Level Float Point":
+                        case "Lead Level Float Point":
+                        case "Off Level Float Point":
+                        case "Low Level Float Point":
+                            return filterPointTypes(['bi', 'bv']);
+                        case "Flow Rate Point":
+                        case "Level Sensor Point":
+                            return filterPointTypes(['ai', 'av']);
+                        case "Light Control Point":
+                        case "Horn Control Point":
+                        case "Auxiliary Control Point":
+                            return filterPointTypes(['bo', 'bv']);
+                        case "Float Alarm Point":
+                        case "Runtime Alarm Point":
+                            return filterPointTypes('bv');
+                        case "Power Fail Point":
+                            return filterPointTypes('bi');
+                        case "Flow Total Point":
+                            return filterPointTypes('av');
+                        case "Pump 1 Control Point":
+                        case "Pump 2 Control Point":
+                            return filterPointTypes(['bi', 'bo', 'bv']);
+                        // End Lift Station point properties
                         default:
                             return {
                                 error: 'Property not recognized. Received "' + property + '".'
@@ -508,11 +550,12 @@ var Config = (function(obj) {
 
                     function _getEnumFromTemplate(property) {
                         var enums = enumsTemplatesJson.Enums[property],
+                            enumsProperty = enumsTemplatesJson.Enums.Properties[property],
                             keys = !!enums && Object.keys(enums),
                             enumArray = [],
-                            item;
-
-                        if (!enums) return null;
+                            item,
+                            enumsSetKey,
+                            enumsSet;
 
                         for (var i = 0, last = keys.length; i < last; i++) {
                             if (_hasPointType) {
@@ -526,6 +569,29 @@ var Config = (function(obj) {
                             }
                             enumArray.push(item);
                         }
+
+                        if (!!enumsProperty && !!enumsProperty["enumsSet"]) {
+                            enumsSetKey = enumsProperty["enumsSet"];
+                        }
+
+                        if (property && enumsSetKey) {
+                            enumsSetKey = enumsSetKey;
+                            if (enumsSetKey !== undefined && enumsSetKey !== "") {
+                                enumsSet = enumsTemplatesJson.Enums[enumsSetKey];
+                                for (var key in enumsSet) {
+                                    if (enumsSet.hasOwnProperty(key)) {
+                                        enumArray.push({
+                                            name: key,
+                                            value: enumsSet[key].enum,
+                                            noninitializable: false
+                                        });
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!enums && enumArray.length === 0) enumArray = null;
+
                         return enumArray;
                     }
                 },
@@ -1660,6 +1726,11 @@ var Config = (function(obj) {
             return data;
         },
 
+        "Pump Control Mode": function(data) {
+            data.point = obj.EditChanges[data.property](data);
+            return data;
+        },
+
         "Reset Gain": function(data) {
             var point = data.point,
                 val = data.propertyObject.Value;
@@ -2703,6 +2774,33 @@ var Config = (function(obj) {
         "name4": function(data) {
             obj.EditChanges.updateName(data);
             return data.point;
+        },
+
+        "Pump Control Mode": function(data) {
+            var i,
+                len,
+                isDisplayable,
+                point = data.point,
+                val = point[data.property].Value,
+                props = ['Low Level Setpoint', 'Off Level Setpoint', 'Lead Level Setpoint', 'Lag Level Setpoint', 'High Level Setpoint'],
+                refProps = ['Off Level Float Point', 'Lead Level Float Point', 'Lag Level Float Point'];
+
+            if (val === 'Transducer') {
+                isDisplayable = true;
+            } else {
+                isDisplayable = false;
+            }
+            obj.Utility.getPropertyObject("Level Sensor Point", point).isDisplayable = isDisplayable;
+            point['Emergency Pump Down Time'].isDisplayable = isDisplayable;
+            for (i=0, len=props.length; i<len; i++) {
+                point[props[i]].isDisplayable = isDisplayable;
+            }
+
+            isDisplayable = !isDisplayable;
+            for (i=0, len=refProps.length; i<len; i++) {
+                obj.Utility.getPropertyObject(refProps[i], point).isDisplayable = isDisplayable;
+            }
+            return point;
         },
 
         "Setback Enable": function(data) {

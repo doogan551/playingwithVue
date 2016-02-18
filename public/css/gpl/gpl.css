@@ -2,6 +2,15 @@ body {
     overflow: hidden;
 }
 
+.dynamicBtn,
+.actionBtn {
+    padding: 2px 5px;
+}
+
+.bm10px {
+    margin-bottom: 10px;
+}
+
 .canvas-container {
     position: absolute !important;
     top: 0;
@@ -77,8 +86,20 @@ body {
     margin-bottom: 10px;
 }
 
+.modal .form-group label {
+    margin-right: 5px;
+}
+
+.modal .form-group .input-xs {
+    height: 1.8em;
+}
+
 .noBoldControls label {
     font-weight: normal;
+}
+
+.spacedRadio input {
+    margin-left: 10px !important;
 }
 
 .dataField > label {
