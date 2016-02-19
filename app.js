@@ -6,7 +6,9 @@ var logger = require('./helpers/logger')(module);
 logger.info('NODE_ENV:' + process.env.NODE_ENV);
 var express = require('express');
 var app = express();
-var lex = require('letsencrypt');
+var LEX = require('letsencrypt-express').testing();
+var http = require('http');
+var https = require('https');
 var db = require('./helpers/db');
 var sockets = require('./helpers/sockets');
 var config = require('config');
@@ -63,6 +65,26 @@ app.use(passport.session());
 
 app.use('/', require('./helpers/router')(_controllers));
 
+var lex = LEX.create({
+  approveRegistration: function(hostname, cb) {
+    console.log('----------', cb);
+    cb(null, {
+      domains: ['dorsett.duckdns.org'],
+      email: 'rkendall@dorsett-tech.com', // 'user@example.com'
+      agreeTos: true
+    });
+  }
+});
+
+http.createServer(LEX.createAcmeResponder(lex, function redirectHttps(req, res) {
+  console.log('request on 80', req.body);
+  res.writeHead(301, {
+    "Location": "https://" + req.headers['host'] + req.url
+  });
+  res.end();
+})).listen(80);
+
+
 require('./helpers/mongooseconn.js')(function() {
   db.connect(connectionString.join(''), function(err) {
     if (err) {
@@ -70,35 +92,10 @@ require('./helpers/mongooseconn.js')(function() {
       process.exit(1);
     } else {
       logger.info('mongo connected to', connectionString.join(''));
-      sockets.connect(config, sessionStore, cookieParser, function() {
+      var server = https.createServer(lex.httpsOptions, LEX.createAcmeResponder(lex, app));
+      sockets.connect(config, server, sessionStore, cookieParser, function() {
         require('./socket/common').socket();
-        app.listen(port, function(){
-          logger.info('listening on port', port);
-        app.listen(443, function(){
-          logger.info('listening on 443');
-        });
-        app.listen(5001, function(){
-          logger.info('listening on 5001');
-        });
-        });
-        /*var le = lex.create(lexConfig, handlers);
-        le.register({
-          domains: ['66.226.33.45'],
-          email: 'rkendall@dorsett-tech.com',
-          agreeTos: false
-        }, function(err) {
-          if (err) {
-            // Note: you must have a webserver running
-            // and expose handlers.getChallenge to it
-            // in order to pass validation
-            // See letsencrypt-cli and or letsencrypt-express
-            console.error('[Error]: node-letsencrypt/examples/standalone');
-            console.error(err.stack);
-          } else {
-            console.log('success');
-          }
-          logger.info('server started in', (new Date() - startTime) / 1000, 'seconds');
-        });*/
+        server.listen(443);
       });
     }
   });

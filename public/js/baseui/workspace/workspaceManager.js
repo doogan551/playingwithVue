@@ -9,8 +9,8 @@ window.workspaceManager = (function ($) {
         $systemStatus,
         $systemStatusElement;
 
-    _local.webEndpoint      = 'http://' + window.location.hostname + ':' + window.location.port;
-    _local.socketEndPoint   = 'http://' + window.location.hostname + ':8085';
+    _local.webEndpoint      = 'https://' + window.location.hostname + ':' + window.location.port;
+    _local.socketEndPoint   = 'https://' + window.location.hostname;
     _local.apiEndpoint      = _local.webEndpoint + '/api/';
 
     //logged in user
@@ -1129,6 +1129,7 @@ window.workspaceManager = (function ($) {
                 return;
             }
             $btnSignIn.attr('disabled', 'disabled');
+            console.log(_local);
             $.ajax(
                 {
                     url        : _local.webEndpoint + '/authenticate',
