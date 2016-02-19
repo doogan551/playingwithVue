@@ -344,3 +344,27 @@ function testMail() {
   });
 }
 // testMail();
+
+function testCron(fx) {
+  var CronJob = require('../models/cronjob');
+
+  var testFx = function() {
+    console.log(new Date());
+  };
+  var cron = new CronJob('00 * * * * *', testFx);
+
+  new CronJob('30 * * * * *', function() {
+    console.log('second job');
+  });
+
+  var now = Date.now();
+  console.log('starting', new Date());
+  var interval = setInterval(function() {
+    if (Date.now() >= now + (2 * 60 * 1000)) {
+      cron.stop();
+      clearInterval(interval);
+    }
+  }, 1000);
+
+}
+// testCron();
