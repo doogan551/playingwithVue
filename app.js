@@ -24,7 +24,6 @@ var errorHandler = require('errorhandler');
 var favicon = require('serve-favicon');
 var RedisStore = require('connect-redis')(session);
 var redis = require('redis');
-console.log('NODE_CONFIG_DIR: ' + config.util.getEnv('NODE_CONFIG_DIR'));
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 var port = config.get('Infoscan.siteConfig').port;
@@ -76,7 +75,6 @@ require('./helpers/mongooseconn.js')(function() {
       logger.info('mongo connected to', connectionString.join(''));
 
       require('./helpers/globals').setGlobals(function() {
-        console.log('----------', config.get('Infoscan.files').driveLetter);
         if (!!config.get('Infoscan.letsencrypt').enabled) {
 
           var lex = LEX.create({
@@ -91,7 +89,6 @@ require('./helpers/mongooseconn.js')(function() {
           });
 
           http.createServer(LEX.createAcmeResponder(lex, function redirectHttps(req, res) {
-            console.log('request on 80', req.body);
             res.writeHead(301, {
               "Location": "https://" + req.headers['host'] + req.url
             });
