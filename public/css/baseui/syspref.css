@@ -49,7 +49,7 @@ img {
 }
 
 #navbar {
-    position:absolute;
+    position: fixed;
     top: 0px;
     bottom: 0px;
     height: 100%;
@@ -514,7 +514,7 @@ tr:hover .showOnHover {
     margin-left: 5px !important;
 }
 
-.nav-tabs > li.active > a:before {
+.nav-tabs-arrow > li.active > a:after {
     display: block;
     content: "";
     width: 0;
@@ -522,6 +522,26 @@ tr:hover .showOnHover {
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
     border-bottom: 8px solid #ddd;
+    bottom: 0;
+    position: absolute;
+    z-index: 9999;
+    left: calc(50% - 8px);
+}
+
+.nav-tabs-arrow > li > a:hover {
+    border-color: #fff;
+    border-bottom-color: #ddd;
+    background: none;
+}
+
+.nav-tabs-arrow > li > a:hover:after {
+    display: block;
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #eee;
     bottom: 0;
     position: absolute;
     z-index: 9999;
@@ -571,7 +591,7 @@ tr:hover .showOnHover {
     font-weight: bold;
 }
 
-.policyList .deletePolicy {
+#notifications .deleteIcon {
     color: #CC3333;
 }
 
@@ -584,8 +604,177 @@ tr:hover .showOnHover {
     color: #1771B3;
 }
 
+.policyToolbar {
+    text-align: right;
+}
+
 .policyToolbar i {
-    margin-right: 15px;
+    margin-right: 20px;
+    color: #1771B3;
+    font-size: 1.4em;
+}
+
+
+#policyMembers > h3 > .dropdown {
+    margin-left: 20px;
+}
+
+.fc-event {
+    cursor: pointer;
+}
+
+.legendEntry:before {
+    display: inline-block;
+    content: ' ';
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+    background-color: #7156FB;
+    border-radius: 2px;
+}
+
+.fc {
+    margin-bottom: 30px;
+}
+
+#notifications span.dropdown,
+.smallRow .rowTitle {
+    margin-right: 20px;
+}
+
+.smallRow {
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.smallRow .rowTitle {
+    margin-left: 10px;
+}
+
+.bodyHeading {
+    font-size: 1.2em;
+}
+
+.isOnCall {
+    margin-bottom: 25px;
+}
+
+.alertGroup {
+    border-radius: 3px;
+    background-color: #eee;
+    padding: 15px 20px 25px 20px;
+}
+
+.groupTitle {
+    font-size: 1.3em;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+}
+
+.alertGroup .alertSection {
+    position: relative;
+    background-color: #fff;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 35px;
+}
+
+.alertSection .alertBody {
+    overflow: hidden;
+}
+
+.alertBody > .col,
+.alertFooter {
+    padding: 10px 15px;
+}
+
+.alertSection .alertBody .leftCol {
+    width: 40%;
+    float: left;
+}
+
+.alertSection .alertBody .rightCol {
+    width: 60%;
+    float: left;
+}
+
+.sectionTitle {
+    margin-left: 40px;
+    padding-top: 5px;
+}
+
+.sectionTitleNoIcon {
+    margin-left: 0;
+}
+
+.sectionIcon {
+    position: absolute;
+    width: 20px;
+    text-align: center;
+    left: 25px;
+}
+
+.alertSection i {
+    font-size: 2em;
+}
+
+.alertGroup .alertSection:before {
+    display: block;
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-top: 11px solid #ccc;
+    bottom: -13px;
+    position: absolute;
+    z-index: 9999;
+    left: 90px;
+}
+
+.alertGroup .alertSection:after {
+    display: block;
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #fff;
+    bottom: -10px;
+    position: absolute;
+    z-index: 9999;
+    left: 91px;
+}
+
+.rotationList {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: 15px;
+}
+
+.rotationList .member {
+    background-color: #eee;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    padding: 5px;
+    padding-left: 10px;
+    font-size: 1.2em;
+    width: 80%;
+}
+
+.rotationList .member:last-child {
+    border-bottom: 1px solid #ccc;
+}
+
+.escalationTimer {
+    font-size: 1.2em;
+}
+
+.escalationTimer i {
+    font-size: 1.2em;
+    margin-right: 10px;
+    margin-left: 10px;
 }
 
 /*.policyList .policyTitle,

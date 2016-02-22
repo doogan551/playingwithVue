@@ -72,9 +72,11 @@ require('./helpers/mongooseconn.js')(function() {
       logger.info('mongo connected to', connectionString.join(''));
       sockets.connect(config, sessionStore, cookieParser, function() {
         require('./socket/common').socket();
-        app.listen(port, function() {
-          logger.info('listening on port', port);
-          logger.info('server started in', (new Date() - startTime) / 1000, 'seconds');
+        require('./helpers/globals').setGlobals(function() {
+          app.listen(port, function() {
+            logger.info('listening on port', port);
+            logger.info('server started in', (new Date() - startTime) / 1000, 'seconds');
+          });
         });
       });
     }
