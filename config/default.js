@@ -30,6 +30,10 @@ var defaults = {
             'site': 'Dorsett',
             'email': null,
             'timezone': 5
+        },
+        'letsencrypt': {
+            'directory': '/letsencrypt/etc',
+            'enabled': false
         }
     },
     'Twilio': {

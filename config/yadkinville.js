@@ -12,7 +12,9 @@ var yadkinville = {
     'location': {
       'site': 'Yadkinville',
       'email': 'rkendall@dorsett-tech.com'
-
+    },
+    'letsencrypt': {
+      'enabled': true
     }
   }
 };

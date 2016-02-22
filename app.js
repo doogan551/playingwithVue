@@ -64,26 +64,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/', require('./helpers/router')(_controllers));
-console.log('%%%%%%%%%%%%%%', process.env.letsencrypt);
-var lex = LEX.create({
-  configDir: process.env.letsencrypt,
-  approveRegistration: function(hostname, cb) {
-    console.log('----------', cb);
-    cb(null, {
-      domains: ['dorsett-tech.org'],
-      email: 'rkendall@dorsett-tech.com', // 'user@example.com'
-      agreeTos: true
-    });
-  }
-});
-
-http.createServer(LEX.createAcmeResponder(lex, function redirectHttps(req, res) {
-  console.log('request on 80', req.body);
-  res.writeHead(301, {
-    "Location": "https://" + req.headers['host'] + req.url
-  });
-  res.end();
-})).listen(80);
 
 
 require('./helpers/mongooseconn.js')(function() {
@@ -93,11 +73,41 @@ require('./helpers/mongooseconn.js')(function() {
       process.exit(1);
     } else {
       logger.info('mongo connected to', connectionString.join(''));
-      var server = https.createServer(lex.httpsOptions, LEX.createAcmeResponder(lex, app));
-      sockets.connect(config, server, sessionStore, cookieParser, function() {
-        require('./socket/common').socket();
-        server.listen(443);
-      });
+      if (!!config.get('Infoscan.letsencrypt').enabled) {
+
+        var lex = LEX.create({
+          configDir: config.get('files').driveLetter + ':' + config.get('Infoscan.letsencrypt').directory,
+          approveRegistration: function(hostname, cb) {
+            console.log('----------', cb);
+            cb(null, {
+              domains: ['dorsett-tech.org'],
+              email: 'rkendall@dorsett-tech.com', // 'user@example.com'
+              agreeTos: true
+            });
+          }
+        });
+
+        http.createServer(LEX.createAcmeResponder(lex, function redirectHttps(req, res) {
+          console.log('request on 80', req.body);
+          res.writeHead(301, {
+            "Location": "https://" + req.headers['host'] + req.url
+          });
+          res.end();
+        })).listen(80);
+
+        var httpsServer = https.createServer(lex.httpsOptions, LEX.createAcmeResponder(lex, app));
+        sockets.connect(config, httpsServer, sessionStore, cookieParser, function() {
+          require('./socket/common').socket();
+          httpsServer.listen(443);
+        });
+      } else {
+        var httpServer = http.createServer(app);
+        sockets.connect(config, httpServer, sessionStore, cookieParser, function() {
+          require('./socket/common').socket();
+          httpServer.listen(80);
+        });
+      }
+
     }
   });
 });
