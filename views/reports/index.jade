@@ -50,9 +50,8 @@ block content
 											tr.strong
 												th.medium.strong Name
 												th.medium.strong.calculateColumn(style="display:none") Calculate
-												// ko if: (reportType === 'Totalizer')
-												th.medium.strong.typeColumn Type
-												// /ko
+												th.medium.strong.typeColumn(style="display:none") Type
+												th.medium.strong.precisionColumn(style="display:none") Precision
 										tbody.sortablecolums(data-bind="foreach: listOfColumns()")
 											tr.pointdata(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
 												td.columnNameContainer
@@ -92,8 +91,8 @@ block content
 															// /ko
 														// /ko
 													// /ko
+												// ko if: ($parent.reportType === 'Totalizer')
 												td.totalizerOperator
-													// ko if: ($parent.reportType === 'Totalizer')
 													.dropdown.availableTotalizerOperatorsContainer
 														button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
 															span(data-bind="text: operator")
@@ -107,6 +106,10 @@ block content
 																a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $parentContext.$index(), $data.text) }, text: $data.text")
 															// /ko
 														// /ko
+												// /ko
+												td.precision
+													// ko if: ($data.canCalculate === true)
+													input.form-control.inputPrecision(data-bind="numericArrowKeysOnly, value: precision", type="number", min="0", max="20", placeholder="...")
 													// /ko
 												td.removecolumn
 													a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
@@ -132,17 +135,17 @@ block content
 														ul.operators.dropdown-menu
 															// ko foreach: $root.conditions()
 															li
-																a.condition(data-bind="click: function(){ $root.selectedFilterCondition($parentContext.$index(), $data) }, text: text", required)
+																a.condition(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'condition') }, text: text", required)
 															// /ko
 												// /ko
 												td.filterName
 													// ko if: ($parent.reportType !== 'Property')
-													span(data-bind="text: column")
+													span(data-bind="text: filterName")
 													// /ko
 													// ko if: ($parent.reportType === 'Property')
 													.dropdown.availablePropertiesContainer
 														button.btn.btn-default.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}",data-toggle="dropdown")
-															span(data-bind="text: (column !== '- - -' ? column : 'Properties (' + $root.listOfPropertiesLength + ')')")
+															span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfPropertiesLength + ')')")
 															span.caret.lm10px
 														ul.enumproperties.dropdown-menu
 															input.form-control.inputSearch(data-bind="textInput: $root.propertiesFilter", type="text", placeholder="Search...")
@@ -161,7 +164,7 @@ block content
 														ul.operators.dropdown-menu
 															// ko foreach: $root.operators(valueType)
 															li
-																a.operator(data-bind="click: function(){ $root.selectedFilterOperator($parentContext.$index(), $data) }, text: text", required)
+																a.operator(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'operator') }, text: text", required)
 															// /ko
 													// /ko
 												td.emptyColumn
@@ -169,24 +172,40 @@ block content
 													div.col-md-9
 														include ./filterValueUI
 												td.removecolumn
+													// ko if: ($root.reportType === 'Property')
 													a.span.removerow(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") Remove
+													// /ko
+									// ko if: ($root.reportType === 'Property')
+									a.small.addFilterbutton(href="#") Add Filter
+									// /ko
+									// ko if: (reportType !== 'Property')
 									span.small.intervalSettings
-													// ko if: (reportType === 'Property')
-													a.addFilterbutton(href="#") Add Filter
-													// /ko
-													// ko if: (reportType !== 'Property')
-													span.intervalLabel.medium Interval
-													input.intervalValue.form-control(data-bind="value: $root.intervalValue", type="number", min="1", max="9999")
-													.dropdown.availableIntervalsContainer
-														button.btn.btn-default.dropdown-toggle.intervalButton(data-toggle="dropdown")
-															span(data-bind="text: $root.interval")
-															span.caret.lm10px
-														ul.intervals.dropdown-menu
-															// ko foreach: $root.listOfIntervals()
-															li
-																a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
-															// /ko
-													// /ko
+										span.intervalLabel.medium Interval
+										input.intervalValue.form-control(data-bind="value: $root.intervalValue", type="number", min="1", max="9999")
+										.dropdown.availableIntervalsContainer
+											button.btn.btn-default.dropdown-toggle.intervalButton(data-toggle="dropdown")
+												span(data-bind="text: $root.interval")
+												span.caret.lm10px
+											ul.intervals.dropdown-menu
+												// ko foreach: $root.listOfIntervals()
+												li
+													a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
+												// /ko
+									br
+									br
+									span.small.durationSettings
+										span.durationLabel.medium Duration
+										input.durationCheckbox(data-bind="checked: $root.useDuration", type="checkbox")
+										.dropdown.availableDurationsContainer(data-bind="css: {disabled: $root.useDuration() === false }")
+											button.btn.btn-default.dropdown-toggle.durationButton(data-toggle="dropdown")
+												span(data-bind="text: $root.selectedDuration")
+												span.caret.lm10px
+											ul.durations.dropdown-menu
+												// ko foreach: $root.listOfDurations()
+												li
+													a.duration(data-bind="click: function(){ $root.selectDuration($index()) }, text: $data.value", required)
+												// /ko
+									// /ko
 							.reportButtons
 								.row.clearfix(style="padding:10px")
 									.col-xs-4

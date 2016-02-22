@@ -1,6 +1,6 @@
 // ko if: (valueType === "DateTime" || valueType === "Timet")
-input.input.form-control.filterContainer.dateTimeDate(data-bind="reportDatePicker: date", type="text", required)
-input.input.form-control.filterContainer.dateTimeTime(data-bind="reportTimePicker: time", type="text", required)
+input.input.form-control.filterContainer.dateTimeDate(data-bind="reportDatePicker: date, css: {startDate: (filterName === 'Start_Date'), endDate: (filterName === 'End_Date') }", type="text", required)
+input.input.form-control.filterContainer.dateTimeTime(data-bind="reportTimePicker: time, css: {startDateTime: (filterName === 'Start_Date'), endDateTime: (filterName === 'End_Date') }", type="text", required)
 // /ko
 // ko if: (valueType === "Float" || valueType === "Unsigned")
 input.input.form-control.filterContainer(data-bind="value: value", type="number", required)
@@ -17,7 +17,7 @@ input.input.form-control.filterContainer(data-bind="value: value", type="text", 
    ul.filterValues.dropdown-menu
       // ko foreach: valueList
       li
-         a.filterContainer(data-bind="click: function(){ $root.selectedFilterEValue($element, $parentContext.$index(), $data) }, text: $data.value", required)
+         a.filterContainer(data-bind="click: function(){ $root.selectedFilterEValue($parentContext.$index(), $data) }, text: $data.value", required)
       // /ko
 // /ko
 // ko if: (valueList.length === 0)
@@ -37,9 +37,9 @@ div.pointreference
       span.caret.lm10px
    ul.filterValues.dropdown-menu
       li
-         a.filterContainer(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'True') }, text: 'On'", required)
+         a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'True'}, 'value') }, text: 'On'", required)
       li
-         a.filterContainer(data-bind="click: function(){ $root.selectedFilterValue($element, $index(), 'False') }, text: 'Off'", required)
+         a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'False'}, 'value') }, text: 'Off'", required)
 // /ko
 // ko if: ((valueType === "HourMinSec") || (valueType === "HourMin") || (valueType === "MinSec"))
 div.durationCtrl

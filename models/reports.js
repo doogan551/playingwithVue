@@ -826,7 +826,7 @@ module.exports = Rpt = {
     },
     collectFilter: function(filter) {
         var searchQuery = {},
-            key = filter.column,
+            key = filter.filterName,
             filterValueType = Config.Enums["Properties"][key].valueType;
 
         if (Config.Utility.getUniquePIDprops().indexOf(key) !== -1) {
