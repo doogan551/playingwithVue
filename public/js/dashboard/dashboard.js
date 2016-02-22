@@ -2213,7 +2213,7 @@ var tou = {
     },
 
     initSocket: function(cb) {
-        var socket = io.connect('https://' + window.location.hostname);
+        var socket = io.connect(window.location.origin);
         socket.on('connect', function() {
             tou.socket = socket;
             tou.socketid = socket.id;

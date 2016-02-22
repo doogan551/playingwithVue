@@ -69,7 +69,7 @@ var lex = LEX.create({
   approveRegistration: function(hostname, cb) {
     console.log('----------', cb);
     cb(null, {
-      domains: ['dorsett.duckdns.org'],
+      domains: ['dorsett-tech.org'],
       email: 'rkendall@dorsett-tech.com', // 'user@example.com'
       agreeTos: true
     });

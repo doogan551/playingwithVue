@@ -965,7 +965,7 @@ define([
             return;
         }
         pointInspector.point = new Point(data);
-        pointInspector.socket = io.connect(pointInspector.webEndpoint + ':8085');
+        pointInspector.socket = io.connect(window.location.origin);
         $('.wrapper').show(400, function() {
             // Show animation complete
             // On slower machines the UI gets really choppy if applying multiple animations @ the same time

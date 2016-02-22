@@ -518,7 +518,7 @@ var reportsViewModel = function () {
             }
         },
         initSocket = function (cb) {
-            reportSocket = io.connect('https://' + window.location.hostname);
+            reportSocket = io.connect(window.location.origin);
 
             reportSocket.on('connect', function () {
                 console.log('SOCKETID:', reportSocket.id);

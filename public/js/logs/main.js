@@ -17,7 +17,7 @@ function ViewModel() {
     return self.logs();
   }, self);
 
-  socket = io.connect('https://' + window.location.hostname);
+  socket = io.connect(window.location.origin);
   socket.emit('getLogs');
   socket.on('newLog', function(data) {
     console.log(data);
