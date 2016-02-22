@@ -296,7 +296,7 @@ module.exports = Rpt = {
             upis = data.upis,
             justUpis = [],
             i,
-            qualityCodes = data.qualityCodes; // wrong way to access this
+            qualityCodes = global.qualityCodes;
 
         var makeTimestamps = function(timestampObjects) {
             var timestamps = timestampObjects.map(function(ts) {
@@ -500,6 +500,7 @@ module.exports = Rpt = {
             tempObj.upi = historyPoint.upi;
             tempObj.Name = point.Name;
             tempObj.statusflag = setStatusFlag(historyPoint.statusflags);
+            tempObj.ValueType = point.Value.ValueType;
 
             if (historyPoint.timestamp === startTime)
                 checkForOldest[historyPoint.upi] = false;
