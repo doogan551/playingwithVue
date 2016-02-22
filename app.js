@@ -64,8 +64,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/', require('./helpers/router')(_controllers));
-
+console.log('%%%%%%%%%%%%%%', process.env.letsencrypt);
 var lex = LEX.create({
+  configDir: process.env.letsencrypt,
   approveRegistration: function(hostname, cb) {
     console.log('----------', cb);
     cb(null, {
