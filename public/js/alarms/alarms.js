@@ -80,7 +80,7 @@ ko.bindingHandlers.dataSrc = {
 
 var AlarmManager = function (conf) {
     var self = this,
-        socket = io.connect('http://' + window.location.hostname + ':8085'),
+        socket = io.connect(window.location.origin),
         workspaceManager = window.opener.workspaceManager,
         sessionId = workspaceManager.sessionId(),
         user = workspaceManager.user(),

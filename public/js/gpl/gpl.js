@@ -8055,7 +8055,7 @@ gpl.Manager = function () {
 
     managerSelf.initSocket = function () {
         if (!gpl.noSocket) {
-            var socket = io.connect('http://' + window.location.hostname + ':8085');
+            var socket = io.connect(window.location.origin);
 
             managerSelf.socket = gpl.socket = socket;
 

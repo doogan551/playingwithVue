@@ -8,14 +8,14 @@ var state = {
 
 var _app = null;
 
-exports.connect = function(config, sessionStore, cookieParser, done) {
+exports.connect = function(config, server, sessionStore, cookieParser, done) {
     var socketConfig = config.get('Infoscan.socketConfig');
     var dbConfig = config.get('Infoscan.dbConfig');
     var oplogString = dbConfig.driver + '://' + dbConfig.host + ':' + dbConfig.port + '/' + socketConfig.oplogDb;
 
     // if (!!state.socket) return done();
     var passportSocketIo = require('passport.socketio');
-    state.io = require('socket.io').listen(socketConfig.ioPort);
+    state.io = require('socket.io')(server);
     logger.info('socket.io listening on port', socketConfig.ioPort);
     state.tcp = require('net').createServer().listen(socketConfig.tcpPort, socketConfig.tcpAddress);
     logger.info('tcp server listening on ', socketConfig.tcpAddress + ":" + socketConfig.tcpPort);
