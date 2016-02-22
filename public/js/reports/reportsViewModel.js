@@ -10,8 +10,8 @@ var initKnockout = function () {
     ko.bindingHandlers.reportDatePicker = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var options = {
-                    autoclose: true
-                };
+                autoclose: true
+            };
 
             $(element).datepicker(options).on("changeDate", function (ev) {
                 var $dependantDatePicker,
@@ -89,7 +89,7 @@ var initKnockout = function () {
     ko.bindingHandlers.numericArrowKeysOnly = {
         init: function (element, valueAccessor) {
             $(element).on("keydown", function (event) {
-                if (event.keyCode !== 38 && event.keyCode !== 40 ) {  // upArrow & downArrow
+                if (event.keyCode !== 38 && event.keyCode !== 40) {  // upArrow & downArrow
                     event.preventDefault();
                 }
             });
@@ -143,6 +143,13 @@ var reportsViewModel = function () {
             name4Filter: '',
             selectedPointTypes: []
         },
+        pointFilterSearch = {
+            name1: '',
+            name2: '',
+            name3: '',
+            name4: '',
+            selectedPointTypes: []
+        },
         propertyFields = [],
         generateUUID = function () {
             var d = new Date().getTime(),
@@ -154,7 +161,7 @@ var reportsViewModel = function () {
             return uuid;
         },
         toFixed = function (number, precision) {
-            var abs = Math.abs(number),
+            var abs = Math.abs(parseFloat(number, 10)),
                 str = abs.toString(),
                 digits = str.split('.')[1],
                 negative = number < 0,
@@ -267,7 +274,7 @@ var reportsViewModel = function () {
                     var answer = false,
                         nextCondition = ((index + 1) < len) ? filters[index + 1] : undefined;
 
-                    if ((!!nextCondition && nextCondition.condition === "$or") || (index === (len -1))) {
+                    if ((!!nextCondition && nextCondition.condition === "$or") || (index === (len - 1))) {
                         answer = true;
                     }
 
@@ -334,7 +341,7 @@ var reportsViewModel = function () {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType),
                             tempObject.operator = (tempObject.valueList.length === 1 ? tempObject.valueList[0].text : "");
                     } else {
-                        if(!!selectedPoint.Value.ValueOptions) {
+                        if (!!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
                             tempObject.valueOptions = window.workspaceManager.config.Templates.getTemplate(tempObject.pointType).Value.ValueOptions;
@@ -343,14 +350,15 @@ var reportsViewModel = function () {
                     updatedList[objIndex] = tempObject;
                     updateListOfColumns(updatedList);
                 },
-                pointSelectedCallback = function (pid, name, type) {
+                pointSelectedCallback = function (pid, name, type, filter) {
                     if (!!pid) {
                         ajaxPost({pointid: pid}, getPointURL, setColumnPoint);
                     }
+                    pointFilterSearch = filter;
                 },
                 windowOpenedCallback = function () {
                     windowRef.pointLookup.MODE = 'select';
-                    windowRef.pointLookup.init(pointSelectedCallback, {});
+                    windowRef.pointLookup.init(pointSelectedCallback, pointFilterSearch);
                 };
 
             windowRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'Select Point Column', {
@@ -441,7 +449,7 @@ var reportsViewModel = function () {
             localFilter.valueType = prop.valueType;
             localFilter.value = setDefaultValue(localFilter.valueType);
             localFilter.valueList = getValueList(selectedItem.name, selectedItem.name);
-            switch(localFilter.valueType) {
+            switch (localFilter.valueType) {
                 case "Timet":
                 case "DateTime":
                     localFilter.date = moment().unix();
@@ -516,7 +524,7 @@ var reportsViewModel = function () {
 
             for (i = 0; i < filters.length; i++) {
                 if (filters[i].filterName !== "") {
-                    switch(filters[i].valueType) {
+                    switch (filters[i].valueType) {
                         case "Timet":
                         case "DateTime":
                             filters[i].value = getAdjustedDatetime(filters[i]);
@@ -629,8 +637,8 @@ var reportsViewModel = function () {
             }
         },
         getKeyBasedOnValue = function getKeyValue(obj, value) {
-            for(var key in obj) {
-                if(obj.hasOwnProperty(key)) {
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
                     if (obj[key] === parseInt(value, 10)) {
                         return key;
                     }
@@ -701,11 +709,11 @@ var reportsViewModel = function () {
                         break;
                 }
 
-                pointFilter.selectedPointTypes = getPointLookupFilterValues();
-                pointFilter.name1Filter = getPointLookupFilterNameValues(1);
-                pointFilter.name2Filter = getPointLookupFilterNameValues(2);
-                pointFilter.name3Filter = getPointLookupFilterNameValues(3);
-                pointFilter.name4Filter = getPointLookupFilterNameValues(4);
+                pointFilter.selectedPointTypes = getPointLookupFilterValues(pointSelectorRef);
+                pointFilter.name1Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 1);
+                pointFilter.name2Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 2);
+                pointFilter.name3Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 3);
+                pointFilter.name4Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 4);
                 point["Report Config"].pointFilter = pointFilter;
                 point["Report Config"].columns = columns;
                 point["Report Config"].filters = filters;
@@ -797,12 +805,12 @@ var reportsViewModel = function () {
             $reportColumns = $direports.find("#reportColumns");
             $additionalFilters = $direports.find("#additionalFilters");
         },
-        getPointLookupFilterNameValues = function (nameNumber) {
+        getPointLookupFilterNameValues = function (iFrameContents, nameNumber) {
             var result = "",
                 $nameInputField,
                 searchPattern = "input[placeholder='Segment " + nameNumber + "']";
 
-            $nameInputField = $pointSelectorIframe.contents().find(searchPattern);
+            $nameInputField = iFrameContents.find(searchPattern);
 
             if ($nameInputField.attr("disabled") === "disabled") {
                 result = "ISBLANK";
@@ -812,13 +820,13 @@ var reportsViewModel = function () {
 
             return result;
         },
-        getPointLookupFilterValues = function () {
+        getPointLookupFilterValues = function (pointSelectorReference) {
             var answer = [],
                 selectedPointTypes,
                 numberOfAllPointTypes;
-            if (pointSelectorRef && pointSelectorRef.window.pointLookup) {
-                selectedPointTypes = pointSelectorRef.window.pointLookup.getCheckedPointTypes();
-                numberOfAllPointTypes = pointSelectorRef.window.pointLookup.POINTTYPES.length;
+            if (pointSelectorReference && pointSelectorReference.window.pointLookup) {
+                selectedPointTypes = pointSelectorReference.window.pointLookup.getCheckedPointTypes();
+                numberOfAllPointTypes = pointSelectorReference.window.pointLookup.POINTTYPES.length;
                 if (numberOfAllPointTypes !== selectedPointTypes.length) {
                     answer = selectedPointTypes;
                 }
@@ -853,7 +861,7 @@ var reportsViewModel = function () {
                 i,
                 j;
 
-            if (numberOfColumnsFound > 0 && totalizerData[0].totals)  {
+            if (numberOfColumnsFound > 0 && totalizerData[0].totals) {
                 for (j = 0; j < totalizerData[0].totals.length; j++) {
                     tempPivot = {};
                     tempPivot["Date"] = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YYYY hh:mm:ss a");
@@ -870,11 +878,11 @@ var reportsViewModel = function () {
             point._pStatus = 0;  // activate report
             point["Report Config"].columns = validateColumns();
             point["Report Config"].filters = validateFilters();
-            pointFilter.selectedPointTypes = getPointLookupFilterValues();
-            pointFilter.name1Filter = getPointLookupFilterNameValues(1);
-            pointFilter.name2Filter = getPointLookupFilterNameValues(2);
-            pointFilter.name3Filter = getPointLookupFilterNameValues(3);
-            pointFilter.name4Filter = getPointLookupFilterNameValues(4);
+            pointFilter.selectedPointTypes = getPointLookupFilterValues(pointSelectorRef);
+            pointFilter.name1Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 1);
+            pointFilter.name2Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 2);
+            pointFilter.name3Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 3);
+            pointFilter.name4Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 4);
             point["Report Config"].pointFilter = pointFilter;
             switch (self.reportType) {
                 case "History":
@@ -1433,7 +1441,7 @@ var reportsViewModel = function () {
                         value,
                         rawValues = [],
                         calc = {};
-                        i;
+                    i;
                     calc.totalCalc = 0;
                     calc.pageCalc = 0;
 
@@ -1628,7 +1636,7 @@ var reportsViewModel = function () {
                 blockUI($tabViewReport, false);
                 $viewReport.DataTable().clear();
                 $viewReport.DataTable().rows.add(reportData).draw();
-                $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust().draw;
+                $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
                 self.refreshData(false);
                 appendFooter();
 
@@ -1783,8 +1791,8 @@ var reportsViewModel = function () {
                             colName: "Date",
                             valueType: "DateTime",
                             operator: "",
-                            calculation : "",
-                            canCalculate : false,
+                            calculation: "",
+                            canCalculate: false,
                             valueList: [],
                             upi: 0
                         });
@@ -1824,8 +1832,8 @@ var reportsViewModel = function () {
                         self.listOfColumns.push({
                             colName: "Name",
                             valueType: "String",
-                            calculation : "",
-                            canCalculate : false
+                            calculation: "",
+                            canCalculate: false
                         });
                         break;
                     default:
@@ -1980,7 +1988,7 @@ var reportsViewModel = function () {
 
     self.selectPointForColumn = function (data, index) {
         var upi = parseInt(data.upi, 10),
-            currentIndex = (typeof index === "function" ? index(): index),
+            currentIndex = (typeof index === "function" ? index() : index),
             columnIndex = parseInt(currentIndex, 10);
 
         openPointSelectorForColumn(columnIndex, upi);
@@ -2178,9 +2186,9 @@ var reportsViewModel = function () {
 
     self.propertySelectClick = function (element) {
         var $searchInputField = $(element).parent().find("input");
-            window.setTimeout(function () { // Delay the focus for drop down transition to finish
-                $searchInputField.focus();
-            }, 50);
+        window.setTimeout(function () { // Delay the focus for drop down transition to finish
+            $searchInputField.focus();
+        }, 50);
     };
 
     self.filteredProps = ko.computed(function () {
