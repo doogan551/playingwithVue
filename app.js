@@ -6,7 +6,7 @@ var logger = require('./helpers/logger')(module);
 logger.info('NODE_ENV:' + process.env.NODE_ENV);
 var express = require('express');
 var app = express();
-var LEX = require('letsencrypt-express').testing();
+var LEX = require('letsencrypt-express');
 var http = require('http');
 var https = require('https');
 var db = require('./helpers/db');

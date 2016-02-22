@@ -12,7 +12,7 @@ window.workspaceManager = (function($) {
     _local.webEndpoint = window.location.origin;
     _local.socketEndPoint = window.location.origin;
     _local.apiEndpoint = _local.webEndpoint + '/api/';
-    console.log(window.location);
+
     //logged in user
     _local.user = ko.observable('');
 
