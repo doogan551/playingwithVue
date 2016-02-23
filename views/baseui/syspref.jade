@@ -4,7 +4,7 @@ html
         meta(name='viewport',content='width=device-width,initial-scale=1')
         title= title
         link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.base.css')
-        link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
+        link(rel='stylesheet', href='/css/lib/font-awesome-4.1.0/css/font-awesome.min.css')
         link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css')
         link(rel='stylesheet', href='/css/lib/fullcalendar.css')
         link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
@@ -15,6 +15,8 @@ html
         script(type='text/javascript', src='/js/lib/json2.js')
         script(type='text/javascript', src='/js/lib/jquery.min.js')
         script(type='text/javascript', src='/js/lib/knockout-2.3.0.js')
+        script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
+        script(type='text/javascript', src='/js/lib/knockout.mapping-2.3.5.js')
         script(type='text/javascript', src='/js/lib/bootstrap-3.0.3.min.js')
         script(type='text/javascript', src='/js/lib/ko.validation.js')
         script(type='text/javascript', src='/js/lib/jqwidgets/jqxcore.js')
@@ -322,211 +324,243 @@ html
 
             // ------ Notifications ---------------------------------------------------------------------------------
             div#notifications(data-bind="visible: section() == 'Notifications'")
-                .notificationHeader
-                    .pull-right
-                        .dropdown
-                            button.btn.btn-primary.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Change Policy
-                                span.caret.caret-spaced
-                            ul.dropdown-menu
+                div(data-bind="with: notificationsViewModel.bindings")
+                    .notificationHeader
+                        .pull-right(data-bind="visible: isEditingPolicy()")
+                            .dropdown
+                                button.btn.btn-primary.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Change Policy
+                                    span.caret.caret-spaced
+                                ul.dropdown-menu
+                                    li(data-bind="foreach: policyList")
+                                        a(href="#", data-bind="text: name, click: $parent.selectPolicy")
+
+                        h2(data-bind="visible: !isEditingPolicy()") Notification Control Center
+                        h2(data-bind="visible: isEditingPolicy()") #[a(href="#", data-bind="click: home") Notify Policies] #[i.fa.fa-caret-right] #[span(data-bind="text: currPolicy.name")]
+
+                    .notificationsContent
+                        .policySelect(data-bind="visible: !isEditingPolicy()")
+                            ul.nav.nav-tabs.nav-tabs-arrow
+                                li.active
+                                    a(href="#notifyPolicies") Notify Policies
                                 li
-                                    a(href="#") WWTP
-                                    a(href="#") Water Plant
-                    h2.hidden Notification Control Center
-                    h2 Notify Policies #[i.fa.fa-caret-right] WWTP
+                                    a(href="#notificationsActivity") Activity
 
+                            .tab-content
+                                #notifyPolicies.tab-pane.active
+                                    .pull-right
+                                        .button.btn.btn-success(data-bind="click: addPolicy") New Policy
+                                    h3 Notify Policies
 
-                .notificationsContent
-                    .policySelect.hidden
-                        ul.nav.nav-tabs.nav-tabs-arrow
-                            li.active
-                                a(href="#notifyPolicies") Notify Policies
-                            li
-                                a(href="#notificationsActivity") Activity
+                                    .policyList(data-bind="foreach: policyList")
+                                        .policy.row
+                                            .col-xs-3
+                                                a(href="#", data-bind="click: $parent.selectPolicy, text: name")
+                                            .col-xs-3 Members: #[span(data-bind="text: members.length")]
+                                            .col-xs-1.pull-right.deleteIcon
+                                                i.fa.fa-times
+                                    .policyList(data-bind="visible: addingPolicy")
+                                        .policy.row
+                                            .col-xs-3
+                                                input(type="text")
 
-                        .tab-content
-                            #notifyPolicies.tab-pane.active
-                                .pull-right
-                                    .button.btn.btn-success New Policy
-                                h3 Notify Policies
+                                #notificationsActivity.tab-pane
+                                    h3 Activity
 
-                                .policyList
-                                    .policy.row
-                                        .col-xs-3
-                                            a(href="#") WWTP
-                                        .col-xs-3 Members: 9
-                                        .col-xs-1.pull-right.deleteIcon
-                                            i.fa.fa-times
+                        .policyEdit(data-bind="visible: isEditingPolicy()")
+                            ul.nav.nav-tabs.nav-tabs-arrow
+                                li.active
+                                    a(href="#policyGeneral") General
+                                li
+                                    a(href="#policyMembers") Members
+                                li
+                                    a(href="#policyAlertConfig") Alert Configurations
+                                li
+                                    a(href="#policySchedule") Schedule
+                                li
+                                    a(href="#policyCalendar") Calendar
+                                li
+                                    a(href="#policyActivity") Activity
 
-                                    .policy.row
-                                        .col-xs-3
-                                            a(href="#") Water Plant
-                                        .col-xs-3 Members: 11
-                                        .col-xs-1.pull-right.deleteIcon
-                                            i.fa.fa-times
-                                    .policy.row
-                                        .col-xs-3
-                                            a(href="#") Lift Stations
-                                        .col-xs-3 Members: 1
-                                        .col-xs-1.pull-right.deleteIcon
-                                            i.fa.fa-times
+                            .tab-content(data-bind="with: currPolicy")
+                                #policyGeneral.tab-pane.active
+                                    h3 General
 
-                            #notificationsActivity.tab-pane
-                                h3 Activity
+                                    .policyList
+                                        .policy.row
+                                            .col-xs-3 Policy Name
+                                            .col-xs-9.policyName(data-bind="css : {editingRow: $parent.isEditingPolicyName}")
+                                                span.inputRow
+                                                    span(data-bind="text: name")
+                                                    a(href="#", data-bind="click: $parent.editPolicyName").pull-right.editPolicy
+                                                        i.fa.fa-pencil-square-o
+                                                span.editRow
+                                                    input.form-control.input-sm(type="text", data-bind="value: $parent.currPolicyName")
+                                                    span.pull-right
+                                                        button.btn.btn-sm.btn-link(data-bind="click: $parent.cancelPolicyNameEdit") Cancel
+                                                        button.btn.btn-sm.btn-success(data-bind="click: $parent.savePolicyName") Save
+                                        .policy.row
+                                            .col-xs-3 Notification Control
+                                            .col-xs-9.policyEnabled(data-bind="css : {editingRow: $parent.isEditingPolicyEnabled}")
+                                                span.inputRow Notifications are #[span(data-bind="text: enabled() === true ? 'Enabled' : 'Disabled'")]
+                                                    a(href="#", data-bind="click: $parent.editPolicyEnabled").pull-right.editPolicy
+                                                        i.fa.fa-pencil-square-o
+                                                span.editRow
+                                                    input.centered(type="checkbox", data-bind="checked: !$parent.currPolicyEnabled")
+                                                    span Disable
+                                                    span.pull-right
+                                                        button.btn.btn-sm.btn-link(data-bind="click: $parent.cancelPolicyEnabledEdit") Cancel
+                                                        button.btn.btn-sm.btn-success(data-bind="click: $parent.savePolicyEnabled") Save
 
-                    .policyEdit.hidden1
-                        ul.nav.nav-tabs.nav-tabs-arrow
-                            li
-                                a(href="#policyGeneral") General
-                            li
-                                a(href="#policyMembers") Members
-                            li
-                                a(href="#policyAlertConfig") Alert Configurations
-                            li
-                                a(href="#policySchedule") Schedule
-                            li.active
-                                a(href="#policyCalendar") Calendar
-                            li
-                                a(href="#policyActivity") Activity
+                                        .policy.row
+                                            .col-xs-3 Throttle Control
+                                            .col-xs-9 ????????
+                                                a(href="#").pull-right.editPolicy
+                                                    i.fa.fa-pencil-square-o
 
-                        .tab-content
-                            #policyGeneral.tab-pane
-                                h3 General
+                                #policyMembers.tab-pane
+                                    h3 Members
+                                        span.dropdown
+                                            button.btn.btn-sm.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Send all members a test message
+                                                span.caret.caret-spaced
+                                            ul.dropdown-menu
+                                                li
+                                                    a(href="#") Email
+                                                    a(href="#") Text Mobile
+                                                    a(href="#") Call Mobile
+                                                    a(href="#") Call Home
+                                                    a(href="#") Call Work
 
-                                .policyList
-                                    .policy.row
-                                        .col-xs-3 Policy Name
-                                        .col-xs-9 WWTP
-                                            .pull-right.editPolicy
-                                                i.fa.fa-pencil-square-o
-                                    .policy.row
-                                        .col-xs-3 Notification Control
-                                        .col-xs-9 Notifications are enabled
-                                            .pull-right.editPolicy
-                                                i.fa.fa-pencil-square-o
-                                    .policy.row
-                                        .col-xs-3 Throttle Control
-                                        .col-xs-9 ????????
-                                            .pull-right.editPolicy
-                                                i.fa.fa-pencil-square-o
+                                    .memberList
+                                        table#memberList.display.table.table-striped(style="width: 100%")
 
-                            #policyMembers.tab-pane
-                                h3 Members
-                                    span.dropdown
-                                        button.btn.btn-sm.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Send all members a test message
-                                            span.caret.caret-spaced
-                                        ul.dropdown-menu
-                                            li
-                                                a(href="#") Email
-                                                a(href="#") Text Mobile
-                                                a(href="#") Call Mobile
-                                                a(href="#") Call Home
-                                                a(href="#") Call Work
+                                #policyAlertConfig.tab-pane
+                                    div(data-bind="visible: currAlertConfig() === null")
+                                        .pull-right
+                                            .button.btn.btn-success New Configuration
+                                        h3 Alert Configurations
 
-                                .memberList
-                                    table#memberList.display.table.table-striped(style="width: 100%")
+                                        .policyList(data-bind="foreach: alertConfigs")
+                                            .policy.row
+                                                .col-xs-6
+                                                    a(href="#", data-bind="text: name, click: $parents[1].editAlertConfig")
+                                                .col-xs-6.policyToolbar
+                                                    a(href="#")
+                                                        i.fa.fa-pencil-square-o
+                                                    a(href="#")
+                                                        i.fa.fa-files-o
+                                                    a(href="#")
+                                                        i.fa.fa-times.deleteIcon
 
-                            #policyAlertConfig.tab-pane.active
-                                //- .pull-right
-                                //-     .button.btn.btn-success New Configuration
-                                //- h3 Alert Configurations
+                                    div(data-bind="visible: currAlertConfig() !== null, with: currAlertConfig")
+                                        a.exitConfig(href="#", data-bind="click: $parents[1].cancelEditAlertConfig")
+                                            i.fa.fa-chevron-left
+                                            span View All
+                                        .pull-right
+                                            .button.btn.btn-sm.btn-default(data-bind="click: $parent.doEditAlertConfig") Edit
+                                        h3 Off-Hours
+                                        .checkbox.isOnCall
+                                            label
+                                                input.checkbox-valign(type="checkbox", data-bind="checked: isOnCall")
+                                                |This configuration is used for On-Call
 
-                                //- .policyList
-                                //-     .policy.row
-                                //-         .col-xs-6
-                                //-             a(href="#") Off-Hours
-                                //-         .col-xs-6.policyToolbar
-                                //-             a(href="#")
-                                //-                 i.fa.fa-pencil-square-o
-                                //-             a(href="#")
-                                //-                 i.fa.fa-files-o
-                                //-             a(href="#")
-                                //-                 i.fa.fa-times.deleteIcon
-                                .pull-right
-                                    .button.btn.btn-sm.btn-default Edit
-                                h3 Off-Hours
-                                .checkbox.isOnCall
-                                    label
-                                        input(type="checkbox")
-                                        |This configuration is used for On-Call
+                                        // ko foreach: groups
+                                        .alertGroup
+                                            .groupTitle(data-bind="text: name")
+                                            .alertSection
+                                                .alertBody
+                                                    .col
+                                                        .sectionIcon
+                                                            i.fa.fa-bell-o
+                                                        .sectionTitle 0 minute(s) after an alarm occurs
 
-                                .alertGroup
-                                    .groupTitle Group 1
-                                    .alertSection
-                                        .alertBody
-                                            .col
-                                                .sectionIcon
-                                                    i.fa.fa-bell-o
-                                                .sectionTitle 0 minute(s) after an alarm occurs
+                                            div(data-bind="foreach: escalations")
+                                                .alertSection
+                                                    .alertBody
+                                                        .leftCol.col
+                                                            .sectionIcon
+                                                                i.fa.fa-male
+                                                            .sectionTitle Alert:
+                                                            .rotationList(data-bind="foreach: members")
+                                                                .member(data-bind="text: name")
+                                                        .rightCol.col
+                                                            .sectionTitle.sectionTitleNoIcon Alert Style: #[span.editable(data-bind="text: alertStyle")]
+                                                            .sectionWait
+                                                                i.fa.fa-clock-o
+                                                                span Wait #[span.editable(data-bind="text: memberAlertDelay")] minutes before alerting the next person in the list
+                                                            .sectionRotate.sectionMultiline
+                                                                i.fa.fa-repeat
+                                                                .checkbox(data-bind="with: rotateConfig")
+                                                                    label
+                                                                        input.checkbox-valign(type="checkbox", data-bind="checked: enabled")
+                                                                        div Rotate the first responder
+                                                                        div Every #[span.editable(data-bind="text: scale")] at #[span.editable(data-bind="text: time")] on #[span.editable(data-bind="text: day")]
+                                                            .sectionRepeat.sectionMultiline
+                                                                i.fa.fa-history
+                                                                .checkbox(data-bind="with: repeatConfig")
+                                                                    label
+                                                                        input.checkbox-valign(type="checkbox", data-bind="checked: enabled")
+                                                                        div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] times.  Wait #[span.editable(data-bind="text: repeatDelay")] minutes after the previous alert completes.
 
-                                    .alertSection
-                                        .alertBody
-                                            .leftCol.col
-                                                .sectionIcon
-                                                    i.fa.fa-male
-                                                .sectionTitle Alert:
-                                                .rotationList
-                                                    .member Adam Eldridge
-                                                    .member Brantley Angell
-                                                    .member Stephen Trent
-                                            .rightCol.col
-                                                .sectionTitle.sectionTitleNoIcon Alert Style: Everyone Sequenced
-                                                .sectionWait
-                                                    i.fa.fa-clock-o
-                                                    |Wait 5 minutes before alerting the next person in the list
-                                                .sectionRotate
-                                                    .checkbox
-                                                        label
-                                                            input(type="checkbox")
-                                                            |Rotate the first responder
-                                                            |Every week at 9AM on Friday
-                                        .alertFooter
-                                            .escalationTimer
-                                                i.fa.fa-arrow-down
-                                                | Escalates after 30 minutes
+                                                    .alertFooter
+                                                        .escalationTimer
+                                                            i.fa.fa-arrow-down
+                                                            | Escalates after #[span.editable(data-bind="text: escalationDelay")] minutes
 
-                            #policyCalendar.tab-pane
-                                h3 Calendar
+                                            .alertSection.alert-no-arrow
+                                                .alertBody
+                                                    .sectionIcon
+                                                        i.fa.fa-hsitory
+                                                    .sectionTitle
+                                                        .checkbox(data-bind="with: repeatConfig")
+                                                            label
+                                                                input.checkbox-valign(type="checkbox", data-bind="checked: enabled")
+                                                                div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] times.  (Use 0 for indefinite repeats)
 
-                                .panel.panel-default
-                                    .panel-heading
-                                        h3.panel-title Legend
-                                    .panel-body
-                                        .legendEntry Normal Business Hours, 8A-5P
+                                        // /ko
 
-                                #calendarDisplay
+                                #policyCalendar.tab-pane
+                                    h3 Calendar
 
-                                .panel.panel-default
-                                    .panel-heading
-                                        h3.panel-title Current Rotation
-                                    .panel-body
-                                        .bodyHeading Off Hours
-                                        .smallRow
-                                            span.dropdown
-                                                button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Adam Eldridge (first responder)
-                                                    span.caret.caret-spaced
-                                                ul.dropdown-menu
-                                                    li
-                                                        a(href="#") Adam Eldridge
-                                                        a(href="#") Johnny Roberts
-                                                        a(href="#") Stephen Trent
+                                    .panel.panel-default
+                                        .panel-heading
+                                            h3.panel-title Legend
+                                        .panel-body
+                                            .legendEntry Normal Business Hours, 8A-5P
 
-                                            span.dropdown
-                                                button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Perry Lyon
-                                                    span.caret.caret-spaced
-                                                ul.dropdown-menu
-                                                    li
-                                                        a(href="#") Fred Trivette
+                                    #calendarDisplay
 
-                                        .bodyHeading Normal Business Hours
-                                        .smallRow
-                                            span.rowTitle Active Group
-                                            span.dropdown
-                                                button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Group 1
-                                                    span.caret.caret-spaced
-                                                ul.dropdown-menu
-                                                    li
-                                                        a(href="#") Group 1
-                                                        a(href="#") Group 2
+                                    .panel.panel-default
+                                        .panel-heading
+                                            h3.panel-title Current Rotation
+                                        .panel-body
+                                            .bodyHeading Off Hours
+                                            .smallRow
+                                                span.dropdown
+                                                    button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Adam Eldridge (first responder)
+                                                        span.caret.caret-spaced
+                                                    ul.dropdown-menu
+                                                        li
+                                                            a(href="#") Adam Eldridge
+                                                            a(href="#") Johnny Roberts
+                                                            a(href="#") Stephen Trent
+
+                                                span.dropdown
+                                                    button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Perry Lyon
+                                                        span.caret.caret-spaced
+                                                    ul.dropdown-menu
+                                                        li
+                                                            a(href="#") Fred Trivette
+
+                                            .bodyHeading Normal Business Hours
+                                            .smallRow
+                                                span.rowTitle Active Group
+                                                span.dropdown
+                                                    button.btn.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Group 1
+                                                        span.caret.caret-spaced
+                                                    ul.dropdown-menu
+                                                        li
+                                                            a(href="#") Group 1
+                                                            a(href="#") Group 2
 
 
             // ------ About -----------------------------------------------------------------------------------------
