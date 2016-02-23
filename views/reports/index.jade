@@ -109,7 +109,7 @@ block content
 												// /ko
 												td.precision
 													// ko if: ($data.canCalculate === true)
-													input.form-control.inputPrecision(data-bind="numericArrowKeysOnly, value: precision", type="number", min="0", max="20", placeholder="...")
+													input.form-control.inputPrecision(data-bind="value: precision, event: { keydown: function (data, event) { event.preventDefault(); }, change: $root.designChanged(true) }", type="number", min="0", max="20", placeholder="...")
 													// /ko
 												td.removecolumn
 													a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove

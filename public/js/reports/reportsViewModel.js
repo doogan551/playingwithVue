@@ -85,16 +85,6 @@ var initKnockout = function () {
             }
         }
     };
-
-    ko.bindingHandlers.numericArrowKeysOnly = {
-        init: function (element, valueAccessor) {
-            $(element).on("keydown", function (event) {
-                if (event.keyCode !== 38 && event.keyCode !== 40) {  // upArrow & downArrow
-                    event.preventDefault();
-                }
-            });
-        }
-    };
 };
 
 var reportsViewModel = function () {
@@ -170,8 +160,7 @@ var reportsViewModel = function () {
 
             if (precision === 0) {
                 str = abs.toFixed(0);
-            }
-            else if (digits && (digits.length > precision)) {
+            } else if (digits && (digits.length > precision)) {
                 str = str.substr(0, parseInt(str.indexOf('.'), 10) + parseInt(precision, 10) + 2);
                 lastNumber = str.charAt(str.length - 1);
                 str = str.substr(0, str.length - 1);
@@ -329,7 +318,7 @@ var reportsViewModel = function () {
                 setColumnPoint = function (selectedPoint) {
                     tempObject.upi = selectedPoint._id;
                     tempObject.valueType = "None";
-                    tempObject.colName = selectedPoint._Name;
+                    tempObject.colName = selectedPoint.Name;
                     tempObject.pointType = selectedPoint["Point Type"].Value;
                     tempObject.canCalculate = columnCanBeCalculated(tempObject);
                     if (tempObject.canCalculate) {
@@ -1015,11 +1004,6 @@ var reportsViewModel = function () {
                 blockUI($tabConfiguration, false);
             });
 
-            $columnsGrid.find("input.form-control.inputPrecision").keydown(function (e) {
-                e.preventDefault();
-                return false;
-            });
-
             $filtersGrid.sortable({
                 appendTo: $filtersTbody,
                 disabled: false,
@@ -1276,7 +1260,11 @@ var reportsViewModel = function () {
                                 case "undecided":
                                 case "null":
                                 case "None":
-                                    result = value;
+                                    if ($.isNumeric(value) === true) {
+                                        result = toFixedComma(value, column.precision);
+                                    } else {
+                                        result = value;
+                                    }
                                     break;
                                 case "DateTime":
                                 case "Timet":
@@ -1615,8 +1603,8 @@ var reportsViewModel = function () {
                     for (i = 0; i < len; i++) {
                         if (!!columns[i].calculation && columns[i].calculation !== "") {
                             htmlFooterString += "<th class='text-right' title='Page Calc (Table Calc)'>";
-                            htmlFooterString += columns[i].calculation + "  " + toFixedComma(columns[i].pageCalc, decimalPrecision);
-                            htmlFooterString += " (" + toFixedComma(columns[i].totalCalc, decimalPrecision) + ")</th>";
+                            htmlFooterString += columns[i].calculation + "  " + toFixedComma(columns[i].pageCalc, columns[i].precision);
+                            htmlFooterString += " (" + toFixedComma(columns[i].totalCalc, columns[i].precision) + ")</th>";
                         } else {
                             htmlFooterString += "<th></th>";
                         }
