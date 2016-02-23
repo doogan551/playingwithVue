@@ -14,7 +14,7 @@ var thumbnailGenerator = (function ($) {
         openWindowPositioned: function() {}
     };
 
-    _internal.webEndpoint = 'https://' + window.location.host;
+    _internal.webEndpoint = window.location.origin;
     _internal.apiEndpoint = _internal.webEndpoint + '/thumbnail/';
 
     _internal.sequences = data.gpl;

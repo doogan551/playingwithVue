@@ -1,7 +1,7 @@
 ﻿//global app reference
 var dorsett = (function() {
     //private
-    var _webendpoint = 'https://' + window.location.host,
+    var _webendpoint = window.location.origin,
         _webendpointURI = _webendpoint + '/api/security/',
         // _socketendpoint = 'http://' + window.location.hostname + ':9376',
         _pointSelector = _webendpoint + '/pointlookup',
