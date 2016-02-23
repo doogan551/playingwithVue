@@ -172,7 +172,7 @@ var reportsViewModel = function () {
                 str = abs.toFixed(0);
             }
             else if (digits && (digits.length > precision)) {
-                str = str.substr(0, str.indexOf('.') + precision + 2);
+                str = str.substr(0, parseInt(str.indexOf('.'), 10) + parseInt(precision, 10) + 2);
                 lastNumber = str.charAt(str.length - 1);
                 str = str.substr(0, str.length - 1);
                 if (lastNumber >= 5) {
