@@ -1395,3 +1395,15 @@ div.scheduleBox {
     top: 0;
   }
 }*/
+/*Notifications and Policies*/
+.returnAlarmChecks, .policyChecks {
+    color: #777;
+}
+
+.notifications-table th:first-child, .notifications-table th:nth-child(2) {
+    width: 7%;
+}
+.notifications-table th:nth-child(3) {
+    width: 20%;
+}
+/*end Notifications*/
