@@ -8092,7 +8092,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -8392,7 +8392,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -8725,7 +8725,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -9070,7 +9070,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -9716,7 +9716,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -10012,7 +10012,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -10332,7 +10332,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -10667,7 +10667,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -10951,7 +10951,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -11875,7 +11875,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -12236,7 +12236,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -12544,7 +12544,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -12924,7 +12924,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -13440,7 +13440,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -13762,7 +13762,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -14097,7 +14097,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -14418,7 +14418,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,

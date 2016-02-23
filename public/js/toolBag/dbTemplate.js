@@ -30,7 +30,7 @@ var conTemplate =   "<div class='tab-pane' id='{_pointType}'>\
                     </div>";
 
 var myViewModel;
-var socket = io.connect('http://localhost:8085');
+var socket = io.connect(window.location.origin);
 
 // Data object returned looks like this:
 // data.ndx        = Int
