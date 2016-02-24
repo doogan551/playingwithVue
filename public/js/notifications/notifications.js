@@ -26,12 +26,12 @@ var policy = {
             active: true,
             name: 'Group 1',
             alertDelay: 0,
-            escalationDelay: 30,
             escalations: [{
                 id: 1, // seeded from _currEscalationID
                 members: [],
                 alertStyle: 'Sequenced', //FirstResponder, Everyone
                 memberAlertDelay: 5,
+                escalationDelay: 30,
                 rotateConfig: { // false/null if unchecked?
                     enabled: true,// if retain the object
                     scale: 'week',
