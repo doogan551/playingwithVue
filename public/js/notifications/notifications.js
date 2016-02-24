@@ -17,15 +17,15 @@ var policy = {
             time: '9:00',
             day: 'Friday'
         },
-        repeatConfig: {
-            enabled: true,
-            repeatCount: 0
-        },
         groups: [{
             id: 1,// seeded from _currGroupID
             active: true,
             name: 'Group 1',
             alertDelay: 0,
+            repeatConfig: {
+                enabled: true,
+                repeatCount: 0
+            },
             escalations: [{
                 id: 1, // seeded from _currEscalationID
                 members: [],
