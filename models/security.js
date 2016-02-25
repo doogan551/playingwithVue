@@ -320,6 +320,8 @@ var Users = {
         password = utils.encrypt(updateData[key]);
         value = key + ".Value";
         updateCriteria.$set[value] = password;
+      } else if (['SMS', 'Voice', 'Email'].indexOf(key) >= 0) {
+        updateCriteria.$set[key] = updateData[key];
       } else if (key != "_id" && key != "User Groups") {
         value = key + ".Value";
         updateCriteria.$set[value] = updateData[key];
@@ -331,6 +333,7 @@ var Users = {
       query: searchCriteria,
       updateObj: updateCriteria
     };
+    logger.info('test', updateCriteria);
     Utility.update(criteria, function(err, result) {
 
       if (err) {

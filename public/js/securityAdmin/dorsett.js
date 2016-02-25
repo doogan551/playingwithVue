@@ -175,7 +175,7 @@ var dorsett = (function() {
                 type: 'post'
             }).done(
                 function(data) {
-                    console.log(data.Users);
+                    // console.log(data.Users);
                     var users = data.Users,
                         i = 0,
                         recordCount = users.length;
@@ -451,10 +451,9 @@ var dorsett = (function() {
                     'System Admin': [false, false],
                     Photo: '',
                     Title: '',
-                    'Contact Info': [{
-                        Type: '',
-                        Value: ''
-                    }],
+                    'Voice': [{"Name":"", "Value":""}],
+                    'SMS': [{"Name":"", "Value":""}],
+                    'Email': [{"Name":"", "Value":""}],
                     Groups: [{
                         groupid: '',
                         'Group Admin': [false, false]
@@ -722,10 +721,10 @@ var dorsett = (function() {
                 alert('Choose a Type and enter a Value.');
                 return false;
             }
-            observable.push(new dorsett.models.contactInfoModel({
+            /*observable.push(new dorsett.models.contactInfoModel({
                 Type: contactInfoDialog.find('select.contactOptions').val(),
                 Value: contactInfoDialog.find('.value').val()
-            }));
+            }));*/
             observable()[observable().length - 1].Value.isModified(true);
             $panel.trigger('create');
             $list.listview('refresh');
@@ -734,29 +733,22 @@ var dorsett = (function() {
             contactInfoDialog.find('.value').val('');
             return true;
         },
-        contactValidationMap: [{
-            type: 'Email',
-            val: {
-                required: true,
-                email: true
+        contactValidationMap: {
+            'Email': {
+                val: {
+                    required: true,
+                    email: true
+                }
+            },
+            'Voice': {
+                val: phoneValidatorObj,
+                mask: '(999) 999-9999'
+            },
+            'SMS': {
+                val: phoneValidatorObj,
+                mask: '(999) 999-9999'
             }
-        }, {
-            type: 'Mobile',
-            val: phoneValidatorObj,
-            mask: '(999) 999-9999'
-        }, {
-            type: 'Pager',
-            val: phoneValidatorObj,
-            mask: '(999) 999-9999'
-        }, {
-            type: 'Home',
-            val: phoneValidatorObj,
-            mask: '(999) 999-9999'
-        }, {
-            type: 'Work',
-            val: phoneValidatorObj,
-            mask: '(999) 999-9999'
-        }],
+        },
         userCount: function(singular, plural) {
             var count = 0,
                 prop;

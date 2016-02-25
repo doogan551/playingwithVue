@@ -36,24 +36,23 @@
         </fieldset>
 
         <fieldset class="border-full">
-            <legend>Contact Information</legend>
+            <legend>Voice</legend>
             <!-- ko ifnot: isEditMode -->
             <ul data-role="listview" data-mini="true" data-icon="delete" class="listview-readonly">
-                <!-- ko foreach: $data['Contact Info'] -->
-                <li data-bind="text: Type() + ': ' + Value() "></li>
+                <!-- ko foreach: $data.Voice -->
+                <li data-bind="text: $data.Value "></li>
                 <!-- /ko -->
-                <!-- ko if: $data['Contact Info']().length == 0 -->
-                <li>No Contact Info</li>
+                <!-- ko if: $data.Voice().length == 0 -->
+                <li>No Voice Info</li>
                 <!-- /ko -->
             </ul>
             <!-- /ko -->
             <!-- ko if: isEditMode -->
             <ul id="contactInfoList" data-role="listview" data-mini="true" class="listview listview-readonly">
-                <!-- ko foreach: $data['Contact Info'] -->
+                <!-- ko foreach: $data.Voice -->
                 <li data-role="fieldcontain">
-                    <label data-bind="text: Type, attr: {for: 'contactField' + $index()}"></label>
-                    <input type="text" data-bind="value: Value, attr: {id: 'contactField' + $index()}, mask: Type(), JMValidationError: Value">
-                    <div class="validationMessage" data-bind="validationMessage: Value"></div>
+                    <input type="text" data-bind="value: $data.Value, attr: {id: 'contactField' + $index()}">
+                    <div class="validationMessage" data-bind="validationMessage: $data.Value"></div>
                     <span class="closeBtn"><a href="#" data-bind="click: dorsett.removeContactInfo" class="ui-icon-nodisc" data-role="button" data-theme="r"
                         data-icon="delete" data-iconpos="notext" data-theme="a" data-corners="true" data-shadow="true"
                         data-iconshadow="true" data-wrapperels="span" title="Remove item"></a></span>
