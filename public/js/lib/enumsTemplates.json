@@ -14562,6 +14562,19 @@
                     "ValueType": 2,
                     "Value": ""
                 },
+                "Controller": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "None",
+                    "eValue": 0
+                },
+                "Control Priority": {
+                    "enum": 39,
+                    "valueType": "Enum",
+                    "reportEnable": true,
+                    "enumsSet": "Default Control Priorities"
+                },
                 "Emergency Pump Down Time": {
                     "ValueType": 13,
                     "Value": 0,
