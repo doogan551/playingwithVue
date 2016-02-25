@@ -4011,7 +4011,7 @@
                 },
                 "Model Type": {
                     "isDisplayable": true,
-                    "isReadOnly": true,
+                    "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "MicroScan 5 UNV",
                     "eValue": 19
@@ -4433,7 +4433,7 @@
                 },
                 "Model Type": {
                     "isDisplayable": true,
-                    "isReadOnly": true,
+                    "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "MS 3 Flash",
                     "eValue": 3
