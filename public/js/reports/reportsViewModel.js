@@ -512,7 +512,7 @@ var reportsViewModel = function () {
                 validColumn = true;
                 if (localArray[i].colName === "Choose Point") {
                     validColumn = false;
-                } else if (self.reportType !== "Property") {
+                } else if (self.reportType === "Totalizer") {
                     if ((i > 0) && (localArray[i].operator === "")) {
                         validColumn = false;
                     }
