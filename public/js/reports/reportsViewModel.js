@@ -93,6 +93,7 @@ var reportsViewModel = function () {
         $direports,
         $tabs,
         $tabConfiguration,
+        $toggleTab,
         $tabViewReport,
         $viewReport,
         $runReportSpinner,
@@ -117,13 +118,14 @@ var reportsViewModel = function () {
         $reportColumns,
         $additionalFilters,
         $columnNames,
+        $configurationContent,
         pointSelectorRef,
         $pointSelectorIframe,
+        $popAction,
         reportData,
         activeDataRequests,
         reportSocket,
         exportEventSet,
-        reportJsonData = {},
         Name = "dorsett.reportUI",
         originalPoint = {},
         pointFilter = {
@@ -141,6 +143,9 @@ var reportsViewModel = function () {
             selectedPointTypes: []
         },
         propertyFields = [],
+        windowUpi,
+        resizeTimer = 400,
+        lastResize = null,
         generateUUID = function () {
             var d = new Date().getTime(),
                 uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -243,7 +248,11 @@ var reportsViewModel = function () {
         },
         updateListOfFilters = function (newArray) {
             self.listOfFilters([]);
-            self.listOfFilters(setFiltersParentChildLogic(newArray));
+            if(self.reportType === "Property") {
+                self.listOfFilters(setFiltersParentChildLogic(newArray));
+            } else {
+                self.listOfFilters(newArray);
+            }
             self.designChanged(true);
             self.refreshData(true);
         },
@@ -269,6 +278,7 @@ var reportsViewModel = function () {
 
                     return answer;
                 };
+
 
             for (i = 0; i < len; i++) {
                 filters[i].beginGroup = (i === 0);
@@ -495,10 +505,20 @@ var reportsViewModel = function () {
         validateColumns = function () {
             var results = [],
                 localArray = $.extend(true, [], self.listOfColumns()),
-                i;
+                i,
+                validColumn;
 
             for (i = 0; i < localArray.length; i++) {
-                if (localArray[i].colName !== "Choose Point") {
+                validColumn = true;
+                if (localArray[i].colName === "Choose Point") {
+                    validColumn = false;
+                } else if (self.reportType !== "Property") {
+                    if ((i > 0) && (localArray[i].operator === "")) {
+                        validColumn = false;
+                    }
+                }
+
+                if (validColumn) {
                     results.push(localArray[i]);
                 }
                 delete results[results.length - 1]["valueList"]; // valuelist is only used in UI
@@ -737,11 +757,13 @@ var reportsViewModel = function () {
                     $tabConfiguration.show();
                     $tabViewReport.removeClass("active");
                     $tabViewReport.hide();
+                    $popAction.show();
                     break;
                 case 2:
                     $tabConfiguration.removeClass("active");
                     $tabConfiguration.hide();
                     $tabViewReport.addClass("active");
+                    $popAction.hide();
                     break;
             }
         },
@@ -768,6 +790,7 @@ var reportsViewModel = function () {
             $direports = $(".direports");
             $tabs = $direports.find(".tabs");
             $tabConfiguration = $direports.find(".tabConfiguration");
+            $toggleTab = $tabConfiguration.find(".toggleTab");
             $tabViewReport = $direports.find(".tabViewReport");
             $viewReport = $direports.find(".viewReport");
             $runReportSpinner = $direports.find(".runReportSpinner");
@@ -793,6 +816,8 @@ var reportsViewModel = function () {
             $columnsTbody = $direports.find('.columnsGrid .sortablecolums');
             $reportColumns = $direports.find("#reportColumns");
             $additionalFilters = $direports.find("#additionalFilters");
+            $configurationContent = $direports.find(".configurationContent");
+            $popAction = $direports.find(".pop.cursorPointer");
         },
         getPointLookupFilterNameValues = function (iFrameContents, nameNumber) {
             var result = "",
@@ -863,6 +888,38 @@ var reportsViewModel = function () {
 
             return pivotedData;
         },
+        adjustDatatableHeightWidth = function () {
+            var heightAdjust = 240,
+                datatableHeight,
+                $dataTablesScrollBody = $tabViewReport.find('.dataTables_scrollBody'),
+                $dataTablesWrapper = $tabViewReport.find('.dataTables_wrapper');
+            $dataTablesScrollBody.css('height', (window.innerHeight - heightAdjust));
+            $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
+            appendFooter();
+            datatableHeight = $dataTablesWrapper.height();
+            if (window.innerHeight < (datatableHeight + 150)) {
+                heightAdjust = (datatableHeight + (2*150)) - window.innerHeight;  // making up for some data wrapping in cells
+                $dataTablesScrollBody.css('height', (window.innerHeight - heightAdjust));
+            }
+        },
+        adjustConfigTabActivePaneHeight = function () {
+            var $activePane = $direports.find(".tabConfiguration .tab-pane.active");
+            if ($activePane.attr("id") === "additionalFilters" || $activePane.attr("id") === "reportColumns") {
+                $activePane.css('height', (window.innerHeight - 200));
+            }
+        },
+        handleResize = function () {
+            lastResize = new Date();
+            setTimeout(function () {
+                if (new Date() - lastResize >= resizeTimer) {
+                    if (self.currentTab() === 2) {
+                        adjustDatatableHeightWidth();
+                    } else {
+                        adjustConfigTabActivePaneHeight();
+                    }
+                }
+            }, resizeTimer);
+        },
         saveReportConfig = function () {
             point._pStatus = 0;  // activate report
             point["Report Config"].columns = validateColumns();
@@ -902,6 +959,10 @@ var reportsViewModel = function () {
                 calculations,
                 durations;
 
+            $(window).resize(function () {
+                handleResize();
+            });
+
             $columnNames.on('click', function (e) {
                 openPointSelectorForColumn();
                 e.preventDefault();
@@ -932,6 +993,7 @@ var reportsViewModel = function () {
                         self.selectPointForColumn(rowTemplate, (self.listOfColumns().length - 1));
                     }
                 }
+                handleResize();
                 $reportColumns.stop().animate({
                     scrollTop: $reportColumns.get(0).scrollHeight
                 }, 700);
@@ -955,6 +1017,7 @@ var reportsViewModel = function () {
                     self.listOfFilters.push(rowTemplate);
                     updateListOfFilters(self.listOfFilters());
                 }
+                handleResize();
                 $additionalFilters.stop().animate({
                     scrollTop: $additionalFilters.get(0).scrollHeight
                 }, 700);
@@ -985,6 +1048,11 @@ var reportsViewModel = function () {
                 };
 
                 self.showPointReview(data);
+            });
+
+            $toggleTab.on('shown.bs.tab', function (event) {
+                //var target = $(this).attr('href');
+                adjustConfigTabActivePaneHeight();
             });
 
             reportSocket.on('pointUpdated', function (data) {
@@ -1057,6 +1125,11 @@ var reportsViewModel = function () {
                 scroll: true,
                 handle: '.handle'
             });
+
+            if (window.top.location.href === window.location.href) {
+                $('.popOut').addClass('hidden');
+                $('.popIn').removeClass('hidden');
+            }
 
             intervals = [
                 {
@@ -1216,7 +1289,7 @@ var reportsViewModel = function () {
             }
             return calc;
         },
-        configureDataTable = function () {
+        configureDataTable = function (destroy, clearData) {
             var aoColumns = [],
                 i,
                 columnsArray = validateColumns(),
@@ -1358,7 +1431,7 @@ var reportsViewModel = function () {
                                 break;
                             case "Property":
                                 $(tdField).addClass("pointInstance");
-                                $(tdField).addClass("col-md-2");
+                                //$(tdField).addClass("col-md-2");
                                 $(tdField).attr('upi', data["Point Instance"].Value);
                                 $(tdField).attr('columnIndex', columnIndex);
                                 break;
@@ -1372,6 +1445,9 @@ var reportsViewModel = function () {
                         $(tdField).addClass("pointInstance");
                         $(tdField).attr('upi', data[columnConfig.colName].PointInst);
                         $(tdField).attr('pointType', pointType);
+                    }
+                    if (columnIndex === 0) {
+                        $(tdField).addClass("firstColumn");
                     }
                 },
                 setTdClasses = function (tdField, columnConfig) {
@@ -1465,10 +1541,12 @@ var reportsViewModel = function () {
                     return calc;
                 };
 
-            if (self.designChanged() && $.fn.DataTable.isDataTable($viewReport)) {
+            if (destroy === true && $.fn.DataTable.isDataTable($viewReport)) {
                 $viewReport.DataTable().destroy();
                 $viewReport.empty();
-                reportJsonData = {};
+                if (clearData === true) {
+                    reportData = {};
+                }
             }
 
             for (i = 0; i < len; i++) {
@@ -1574,21 +1652,32 @@ var reportsViewModel = function () {
                             self.listOfColumns()[column[0]].pageCalc = calc.pageCalc;
                         });
                     },
-                    data: reportJsonData,
+                    data: reportData,
                     columns: aoColumns,
-                    scrollY: "75vh",
-                    scrollCollapse: true,
-                    //paging: false,
-                    //bFilter: false,  // search box
-                    //showColumnMenu: false,
+                    //colReorder: true,
+                    scrollY: (window.innerHeight - 270) + "px",
+                    scrollX:  true,
+                    lengthChange: true,
+                    lengthMenu: [ [10, 15, 25, 50, 75, 100, -1], [10, 15, 25, 50, 75, 100, "All"] ],
+                    //bFiler: false,  // search box
                     //showFilter: false,
-                    pageLength: 17,
-                    bLengthChange: false
+                    pageLength: 15
                 });
             }
 
             $viewReport.on('draw.dt', function () {
                 appendFooter();
+            });
+
+            $viewReport.on('column-reorder.dt', function (event, datatable, columns, blah) {
+                var i,
+                    len = columns.mapping.length,
+                    newSortedArray = [];
+                for (i = 0; i < len; i++) {
+                    newSortedArray.push(columnsArray[columns.mapping[i]]);
+                }
+                columnsArray = newSortedArray;
+                console.log("moved column '" + columns.from + "' to column '" + columns.to + "'");
             });
 
             self.designChanged(false);
@@ -1612,7 +1701,18 @@ var reportsViewModel = function () {
                     htmlFooterString += "</tr></tfoot>";
                     return htmlFooterString;
                 },
-                $footerTable;
+                $footerTable,
+                $tablePagination = $tabViewReport.find(".dataTables_paginate"),
+                $currentDateTimeDiv;
+
+            $currentDateTimeDiv = $tablePagination.find(".reportDisplayFooter");
+            if ($currentDateTimeDiv.length > 0) {
+                $currentDateTimeDiv.text(self.currentTimeStamp);
+            } else {
+                $currentDateTimeDiv = $("<div class='small reportDisplayFooter'>" + self.currentTimeStamp + "</div>");
+                $currentDateTimeDiv.prependTo($tablePagination);
+            }
+
 
             $viewReport.find(".tableFooter").remove();
             $footerTable = $(buildFooterTable());
@@ -1620,13 +1720,15 @@ var reportsViewModel = function () {
         },
         renderReport = function () {
             if (reportData !== undefined && self.currentTab() === 2) {
+                $popAction.show();
                 self.reportResultViewed(self.currentTab() === 2);
                 blockUI($tabViewReport, false);
                 $viewReport.DataTable().clear();
                 $viewReport.DataTable().rows.add(reportData).draw();
                 $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
                 self.refreshData(false);
-                appendFooter();
+                self.currentTimeStamp = moment().format("dddd MMMM DD, YYYY hh:mm:ss a");
+                adjustDatatableHeightWidth();
 
                 if (!exportEventSet) {
                     $tabViewReport.find("a.btn.btn-default.buttons-collection").on('click', function (ev) {
@@ -1634,6 +1736,7 @@ var reportsViewModel = function () {
                             setTimeout(function () {
                                 $direports.find("li.dt-button > a").on('click', function (ev) {  // export buttons clicked
                                     console.log($(this).text() + " button clicked");
+                                    $(this).parent().parent().hide();
                                 });
                             }, 100);
                         }
@@ -1675,6 +1778,8 @@ var reportsViewModel = function () {
 
     self.reportType = "";
 
+    self.currentTimeStamp = "";
+
     self.reportDisplayTitle = ko.observable("");
 
     self.interval = ko.observable("Minute");
@@ -1694,8 +1799,6 @@ var reportsViewModel = function () {
     self.listOfPropertiesLength = 0;
 
     self.propertiesFilter = ko.observable("");
-
-    self.reportDisplayFooter = ko.observable("");
 
     self.truncatedData = ko.observable(false);
 
@@ -1727,6 +1830,7 @@ var reportsViewModel = function () {
         var columns,
             reportConfig;
 
+        windowUpi = "report"; // required or pop-in/pop-out don't work
         exportEventSet = false;
         decimalPrecision = 2;
         activeDataRequests = [];
@@ -1749,7 +1853,6 @@ var reportsViewModel = function () {
             initSocket();
             self.reportDisplayTitle(point.Name);
 
-            self.reportDisplayFooter(moment().format("dddd MMMM DD, YYYY hh:mm:ss a"));
             if (columns) {
                 self.listOfColumns(initColumns(reportConfig.columns));
                 self.listOfFilters(initFilters(reportConfig.filters));
@@ -2015,44 +2118,47 @@ var reportsViewModel = function () {
 
     self.requestReportData = function () {
         var requestObj;
-        if (self.currentTab() !== 2) {
-            requestObj = buildReportDataRequest();
-            tabSwitch(2);
-            if (self.reportResultViewed()) {
-                self.activeDataRequest(true);
-                self.reportResultViewed(false);
-                if (self.designChanged()) {
-                    configureDataTable();
-                }
-                if (requestObj) {
-                    reportData = undefined;
-                    switch (self.reportType) {
-                        case "History":
-                            ajaxPost(requestObj, "/report/historyDataSearch", renderHistoryReport);
-                            //reportSocket.emit("historyDataSearch", {options: requestObj});
-                            break;
-                        case "Totalizer":
-                            ajaxPost(requestObj, "/report/totalizerReport", renderTotalizerReport);
-                            //reportSocket.emit("totalizerReport", {options: requestObj});
-                            break;
-                        case "Property":
-                            ajaxPost(requestObj, "/report/reportSearch", renderPropertyReport);
-                            //reportSocket.emit("reportSearch", {options: requestObj});
-                            break;
-                        default:
-                            console.log(" - - - DEFAULT  viewReport()");
-                            break;
+        if (self.listOfColumns().length > 1) {
+            if (self.currentTab() !== 2) {
+                $popAction.hide();
+                requestObj = buildReportDataRequest();
+                tabSwitch(2);
+                if (self.reportResultViewed()) {
+                    self.activeDataRequest(true);
+                    self.reportResultViewed(false);
+                    if (self.designChanged()) {
+                        configureDataTable(true, true);
+                    }
+                    if (requestObj) {
+                        reportData = undefined;
+                        switch (self.reportType) {
+                            case "History":
+                                ajaxPost(requestObj, "/report/historyDataSearch", renderHistoryReport);
+                                //reportSocket.emit("historyDataSearch", {options: requestObj});
+                                break;
+                            case "Totalizer":
+                                ajaxPost(requestObj, "/report/totalizerReport", renderTotalizerReport);
+                                //reportSocket.emit("totalizerReport", {options: requestObj});
+                                break;
+                            case "Property":
+                                ajaxPost(requestObj, "/report/reportSearch", renderPropertyReport);
+                                //reportSocket.emit("reportSearch", {options: requestObj});
+                                break;
+                            default:
+                                console.log(" - - - DEFAULT  viewReport()");
+                                break;
+                        }
+                    } else {
+                        renderReport();
                     }
                 } else {
                     renderReport();
                 }
-            } else {
-                renderReport();
             }
+            $('html,body').stop().animate({
+                scrollTop: 0
+            }, 700);
         }
-        $('html,body').stop().animate({
-            scrollTop: 0
-        }, 700);
     };
 
     self.clearColumnPoint = function (indexOfColumn) {
@@ -2128,6 +2234,7 @@ var reportsViewModel = function () {
             endDate,
             startDate;
 
+        self.useDuration(true);
         self.selectedDuration(duration.value);
         if (durationIndex > 0) {
             endDate = moment();
@@ -2141,15 +2248,16 @@ var reportsViewModel = function () {
                     filter.value = startDate.unix();
                     filter.date = startDate.unix();
                     filter.time = ('00' + startDate.hours() % 100).slice(-2) + ":" + ('00' + startDate.minutes() % 100).slice(-2);
-                }
-                if (filter.filterName === "End_Date") {
+                } else if (filter.filterName === "End_Date") {
                     filter.value = endDate.unix();
                     filter.date = endDate.unix();
                     filter.time = ('00' + endDate.hours() % 100).slice(-2) + ":" + ('00' + endDate.minutes() % 100).slice(-2);
                 }
             }
         }
+
         updateListOfFilters(filters);
+        updateListOfFilters(filters);  // ugh.  TODO   without this, first dropdown change blanks out start_date input field
         disableStartEndDates(true);
     };
 
@@ -2177,6 +2285,27 @@ var reportsViewModel = function () {
         window.setTimeout(function () { // Delay the focus for drop down transition to finish
             $searchInputField.focus();
         }, 50);
+    };
+
+    self.selectAdditionFiltersTab = function () {
+        $tabConfiguration.find("ul.nav-tabs").find("li.active").removeClass("active");
+        $tabConfiguration.find("ul.nav-tabs").find("li.additionalFilters").addClass("active");
+        $configurationContent.find(".active").removeClass("active");
+        $configurationContent.find("#additionalFilters").addClass("active");
+    };
+
+    self.togglePop = function () {
+        var options = {
+            width: 1024,
+            height: 768
+        };
+        // If we're a pop-out; pop back in
+        if (window.top.location.href === window.location.href) {
+            window.workspaceManager.openWindowPositioned(window.location.href, $reporttitleInput.text(), 'report', 'mainWindow', windowUpi);
+        } else {
+            // Open the window
+            window.workspaceManager.openWindowPositioned(window.location.href, $reporttitleInput.text(), 'report', '', windowUpi, options);
+        }
     };
 
     self.filteredProps = ko.computed(function () {

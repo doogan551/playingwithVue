@@ -16,6 +16,14 @@
 .leftBar li.active {
     background-color: #6b9355;
 }
+.dataTables_wrapper {
+    /*width: 92%;*/
+}
+.reportDisplayFooter {
+    display: inline-block;
+    margin-right: 21px;
+    vertical-align: super;
+}
 .durationCtrl {
     background-color: white;
     border: 1px solid #D0D0D0;
@@ -50,8 +58,8 @@
     -moz-appearance: textfield;
 }
 .workingPane {
-    min-width: 1120px;
-    margin-left: 1px;
+    /*min-width: 1120px;*/
+    /*margin-left: 1px;*/
 }
 .leftBar .tabs li {
     padding: 6px 6px 6px 6px;
@@ -219,6 +227,7 @@ td.filterName {
 }
 .tabConfiguration{
     padding-top: 15px;
+    min-width: 850px;
 }
 .tabConfiguration ul.nav.nav-tabs {
     background-color: rgb(65, 105, 51);
@@ -240,7 +249,7 @@ td.filterName {
     padding-right: 20px;
 }
 .tabConfiguration .tab-pane {
-    height: 70vh;
+    /*height: 70vh;*/
 }
 #reportColumns {
     overflow-y: scroll;
@@ -248,20 +257,26 @@ td.filterName {
 #additionalFilters {
     overflow-y: scroll;
 }
-.configurationContent {
+div.container {
+    /*overflow-y: auto;*/
+}
+div.container-fluid {
+    /*overflow-y: auto;*/
+}
+.viewReport {
+    /*width: 85%;*/
 }
 .viewReport div.dataTables_sizing {
-    height: 37px;
+    /*height: 37px;*/
 }
 .tabViewReport div.dataTables_scrollBody {
-    height: 70vh;
-    width: 68vw;
+    /*height: 70vh;*/
+    /*width: 68vw;*/
 }
 .tabViewReport div.dataTables_filter {
     display: inline-block;
-    float: right;
-}
-.reportButtons {
+    margin-left: 50px;
+    /*float: right;*/
 }
 ul.filterValues.dropdown-menu {
     min-width: 60px;
@@ -296,9 +311,6 @@ input.input.form-control.filterContainer:enabled {
     color: #333;
     margin-top: 10px;
 }
-.btn-primary {
-    margin: 1px;
-}
 .btn-default.dropdown-toggle.operatorButton {
     border: none;
 }
@@ -325,8 +337,6 @@ span.caret.lm10px {
 a.tab {
     color: #ffffff;
 }
-.btn {
-}
 html, body {
     overflow-x: hidden;
     overflow-y: hidden;
@@ -336,10 +346,10 @@ body {
     padding-top: 5px;
     padding-right: 5px;
 }
-.displayIcon {
+.displayDiv {
     display: inline-block;
 }
-.hideIcon {
+.hideDiv {
     display: none;
 }
 .runReportSpinner {
@@ -356,14 +366,26 @@ i.iconLink:hover {
     cursor: hand;
     cursor: pointer;
 }
+.dataTables_length {
+    display: inline-block;
+    margin-left: 50px;
+}
+div.dataTables_wrapper div.dataTables_length select {
+    width: 55px;
+    padding: 3px 3px;
+}
+.firstColumn {
+    min-width: 200px;
+}
 .columnName {
     display: inline-block;
 }
 .columnNameContainer {
-    width: 450px;
+    min-width: 310px;
 }
 .columnTotals {
-    width: 135px;
+    width: 137px;
+    min-width: 135px;
 }
 .columnTotals span {
     color: #565656;
@@ -453,12 +475,12 @@ input.form-control.inputPrecision {
     cursor: pointer;
 }
 .direports .rightPanel {
-    height: 99vh;
-    width: 90vw;
+    /*height: 99vh;*/
+    /*width: 90vw;*/
     overflow-x: hidden;
     overflow-y: hidden;
     margin-left: 117px;
-    margin-top: -5px;
+    /*margin-top: -5px;*/
 }
 .reporttype {
     margin-top: 8px;
@@ -472,9 +494,7 @@ input.form-control.inputPrecision {
     margin-bottom: 0px;
 }
 .reporttitlediv {
-    width: 74%;
-}
-.reportAttribs {
+    /*width: 74%;*/
 }
 .hideCell {
     display: none;
@@ -529,4 +549,37 @@ td.filterCondition.lastConditionInGroup {
 }
 .pointdata button {
     margin-right: 5px;
+}
+.cursorPointer {
+    cursor: pointer;
+}
+.reportButtons {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: -1px;
+    margin-bottom: 46px;
+    width: 320px;
+    /*border: 1px solid #73AD21;*/
+    padding: 1px;
+}
+.reportButtons .btn.btn-primary {
+    margin: 1px;
+}
+.pop {
+    display: -webkit-box;
+    margin-top: -65px;
+    margin-left: 6px;
+}
+.pop .fa {
+    margin-right: 5px;
+}
+.pop .fa-arrow-circle-up {
+    -ms-transform: rotate(45deg); /* IE 9 */
+    -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
+    transform: rotate(45deg);
+}
+.pop .fa-arrow-circle-down {
+    -ms-transform: rotate(45deg); /* IE 9 */
+    -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
+    transform: rotate(45deg);
 }

@@ -5,43 +5,43 @@ block content
 			.leftBar
 				include ./tabLinks
 			.rightPanel
-				.runReportSpinner(data-bind="css: { displayIcon: displayMainSpinner(), hideIcon: !displayMainSpinner()} ", title="Requesting Report Data")
+				.runReportSpinner(data-bind="css: { displayDiv: displayMainSpinner(), hideDiv: !displayMainSpinner()} ", title="Requesting Report Data")
 					i.fa.fa-spinner.fa-spin.fa-3x
 					span.spinnertext Getting Data
 				.tabConfiguration
 					ul.nav.nav-tabs
 						li.attribs.active(role="presentation")
-							a.strong(href="#reportAttribs", data-toggle="tab") Report Attributes
+							a.strong.toggleTab(href="#reportAttribs", data-toggle="tab") Report Attributes
 						li.columns(role="presentation")
-							a.strong(href="#reportColumns", data-toggle="tab") Columns
+							a.strong.toggleTab(href="#reportColumns", data-toggle="tab") Columns
 						// ko if: (reportType === 'Property')
 						li.filterByPoint(role="presentation")
-							a.strong(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
+							a.strong.toggleTab(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
 						// /ko
 						li.additionalFilters(role="presentation")
-							a.strong(href="#additionalFilters", data-toggle="tab") Additional Filters
+							a.strong.toggleTab(href="#additionalFilters", data-toggle="tab") Additional Filters
 					div.configurationContent
 						h4.strong.reportTitle(data-bind="text: reportDisplayTitle")
 						div.tab-content
 							div.reportAttribs#reportAttribs.active.tab-pane
 								.form-group.clearfix.direportgroup
-									h5.col-sm-2.control-label
+									h5.col-xs-2.control-label
 										strong.center-block.pull-right Point Name
-									.col-sm-10
+									.col-xs-10
 										.form-inline
 											input.pointName1.form-control.input-md(required, type="text", placeholder="Point1", style="width:22%")
 											input.pointName2.form-control.input-md(required, type="text", placeholder="Point2", style="width:22%")
 											input.pointName3.form-control.input-md(type="text", placeholder="Point3", style="width:22%")
 											input.pointName4.form-control.input-md(type="text", placeholder="Point4", style="width:22%")
 								.form-group.clearfix.direportgroup
-									h5.col-sm-2.control-label
+									h5.col-xs-2.control-label
 										strong.pull-right Report Title
-									.col-sm-10.reporttitlediv
+									.col-xs-10.reporttitlediv
 										input.form-control.input-md(data-bind="value: reportDisplayTitle")
 								.form-group.clearfix.direportgroup
-									h5.col-sm-2.control-label
+									h5.col-xs-2.control-label
 										strong.pull-right Report Type
-									.col-sm-10.reporttype
+									.col-xs-10.reporttype
 										medium(data-bind="text: reportType")
 							div#reportColumns.tab-pane
 								h4.strong.panel-title
@@ -109,7 +109,7 @@ block content
 												// /ko
 												td.precision
 													// ko if: ($data.canCalculate === true)
-													input.form-control.inputPrecision(data-bind="value: precision, event: { keydown: function (data, event) { event.preventDefault(); }, change: $root.designChanged(true) }", type="number", min="0", max="20", placeholder="...")
+													input.form-control.inputPrecision(data-bind="value: precision, event: { keydown: function (data, event) { event.preventDefault(); }, change: function() { $root.designChanged(true) } }", type="number", min="0", max="20", placeholder="...")
 													// /ko
 												td.removecolumn
 													a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
@@ -207,22 +207,25 @@ block content
 												// /ko
 									// /ko
 							.reportButtons
-								.row.clearfix(style="padding:10px")
-									.col-xs-4
-									.col-xs-8.pull-right
-										.saveReportButton.btn.btn-primary
-											| Save Report
-										.runReportButton.btn.btn-primary(data-bind="enabled: reportResultViewed()")
-											| Run Report
+								.saveReportButton.btn.btn-primary
+									| Save Report
+								.runReportButton.btn.btn-primary(data-bind="enabled: reportResultViewed()")
+									| Run Report
 								.screenMessages
 									.row.well-sm
-										.col-sm-6
+										.col-xs-6
 											.errorMessage.alert-danger
 											.successMessage.alert-success
 				.tabViewReport.well.tab-pane.workingPane
 						.row
 							h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
-							table.table.table-striped.table-hover.table-condensed.viewReport
-							.left.reportDisplayFooter(data-bind="text: reportDisplayFooter")
+							table.table.table-striped.table-bordered.table-responsive.viewReport
+				.pop.popInOutDiv.cursorPointer(data-bind='click: togglePop')
+					.popOut
+						.fa.fa-arrow-circle-up
+						| Pop Out
+					.popIn.hidden
+						.fa.fa-arrow-circle-down
+						| Pop In
 	include footer
 	include modals/dialogScreens
