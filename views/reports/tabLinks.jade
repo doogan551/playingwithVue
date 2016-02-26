@@ -4,6 +4,6 @@ ul.text-left.tabs.list-unstyled
       tab(data-bind="click: reportConfiguration.bind()") Configuration
    li
       tab(data-bind="click: requestReportData.bind()") Run Report
-      i.fa.fa-spinner.fa-spin.fa-1x.runReportTabSpinner(data-bind="css: {displayIcon: displayTabSpinner(), hideIcon: !displayTabSpinner()} ", title="Requesting Report Data")
-      i.fa.fa-check.fa-1x.runReportCheckMark(data-bind="css: {displayIcon: displayTabCheckmark(), hideIcon: !displayTabCheckmark()} ", title="Report is ready")
+      i.fa.fa-spinner.fa-spin.fa-1x.runReportTabSpinner(data-bind="css: {displayDiv: displayTabSpinner(), hideDiv: !displayTabSpinner()} ", title="Requesting Report Data")
+      i.fa.fa-check.fa-1x.runReportCheckMark(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
 

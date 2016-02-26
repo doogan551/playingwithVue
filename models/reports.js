@@ -1022,7 +1022,7 @@ module.exports = Rpt = {
         });
     },
     totalizerReport: function(data, cb) {
-        logger.info(" - totalizerReport() data: " + JSON.stringify(data));
+        //logger.info(" - totalizerReport() data: " + JSON.stringify(data));
         var points = data.upis;
         var reportConfig = data.reportConfig;
         var range = data.range;
