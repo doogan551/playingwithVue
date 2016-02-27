@@ -6,6 +6,7 @@ var dorsett = (function() {
         _socketendpoint = 'http://' + window.location.hostname + ':9376',
         _pointSelector = _webendpoint + '/pointlookup',
         _tabOpen = '',
+        _contactMode = '',
         //function to detach child entities
         DraggableType = function() {
             var _types = {
@@ -707,24 +708,27 @@ var dorsett = (function() {
             }
             return password;
         },
-        openContactInfoDialog: function() {
+        openContactInfoDialog: function(context) {
+            _contactMode = context;
             $('.contactInfoDialog').find('.firstName').text(dorsett.editData['First Name']());
+            $('.contactInfoDialog').find('.contactHeader').text('Add '+context+' Information');
             return true;
         },
         addContactInfo: function() {
+            console.log('_contactMode', _contactMode);
             var $panel = $('#DT_Security_panel'),
                 $list = $('#contactInfoList'),
-                observable = dorsett.editData['Contact Info'],
+                observable = dorsett.editData[_contactMode],
                 contactInfoDialog = $('.contactInfoDialog');
             if (contactInfoDialog.find('select.contactOptions').val() == '' ||
                 contactInfoDialog.find('.value').val() == '') {
                 alert('Choose a Type and enter a Value.');
                 return false;
             }
-            /*observable.push(new dorsett.models.contactInfoModel({
-                Type: contactInfoDialog.find('select.contactOptions').val(),
+            observable.push(ko.mapping.fromJS({
+                Name: contactInfoDialog.find('.name').val(),
                 Value: contactInfoDialog.find('.value').val()
-            }));*/
+            }));
             observable()[observable().length - 1].Value.isModified(true);
             $panel.trigger('create');
             $list.listview('refresh');

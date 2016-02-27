@@ -40,7 +40,7 @@
             <!-- ko ifnot: isEditMode -->
             <ul data-role="listview" data-mini="true" data-icon="delete" class="listview-readonly">
                 <!-- ko foreach: $data.Voice -->
-                <li data-bind="text: $data.Value "></li>
+                <li><span data-bind="text: $data.Name "/>: <span data-bind="text: $data.Value "></li>
                 <!-- /ko -->
                 <!-- ko if: $data.Voice().length == 0 -->
                 <li>No Voice Info</li>
@@ -51,6 +51,7 @@
             <ul id="contactInfoList" data-role="listview" data-mini="true" class="listview listview-readonly">
                 <!-- ko foreach: $data.Voice -->
                 <li data-role="fieldcontain">
+                    <input type="text" data-bind="value: $data.Name, attr: {id: 'contactField' + $index()}">
                     <input type="text" data-bind="value: $data.Value, attr: {id: 'contactField' + $index()}">
                     <div class="validationMessage" data-bind="validationMessage: $data.Value"></div>
                     <span class="closeBtn"><a href="#" data-bind="click: dorsett.removeContactInfo" class="ui-icon-nodisc" data-role="button" data-theme="r"
@@ -59,7 +60,69 @@
                 </li>
                 <!-- /ko -->
                 <li data-icon="plus">
-                    <a href="#contactInfoDialog" data-bind="click: dorsett.openContactInfoDialog" data-rel="popup" data-position-to="window" data-transition="fade" data-mini="true">Add New Contact Information</a>
+                    <a href="#contactInfoDialog" data-bind="click: dorsett.openContactInfoDialog.bind($data, 'Voice')" data-rel="popup" data-position-to="window" data-transition="fade" data-mini="true">Add New Voice Information</a>
+                </li>
+            </ul>
+            <!-- /ko -->
+        </fieldset>
+
+        <fieldset class="border-full">
+            <legend>SMS</legend>
+            <!-- ko ifnot: isEditMode -->
+            <ul data-role="listview" data-mini="true" data-icon="delete" class="listview-readonly">
+                <!-- ko foreach: $data.SMS -->
+                <li><span data-bind="text: $data.Name "/>: <span data-bind="text: $data.Value "></li>
+                <!-- /ko -->
+                <!-- ko if: $data.SMS().length == 0 -->
+                <li>No SMS Info</li>
+                <!-- /ko -->
+            </ul>
+            <!-- /ko -->
+            <!-- ko if: isEditMode -->
+            <ul id="contactInfoList" data-role="listview" data-mini="true" class="listview listview-readonly">
+                <!-- ko foreach: $data.SMS -->
+                <li data-role="fieldcontain">
+                    <input type="text" data-bind="value: $data.Name, attr: {id: 'contactField' + $index()}">
+                    <input type="text" data-bind="value: $data.Value, attr: {id: 'contactField' + $index()}">
+                    <div class="validationMessage" data-bind="validationMessage: $data.Value"></div>
+                    <span class="closeBtn"><a href="#" data-bind="click: dorsett.removeContactInfo" class="ui-icon-nodisc" data-role="button" data-theme="r"
+                        data-icon="delete" data-iconpos="notext" data-theme="a" data-corners="true" data-shadow="true"
+                        data-iconshadow="true" data-wrapperels="span" title="Remove item"></a></span>
+                </li>
+                <!-- /ko -->
+                <li data-icon="plus">
+                    <a href="#contactInfoDialog" data-bind="click: dorsett.openContactInfoDialog" data-rel="popup" data-position-to="window" data-transition="fade" data-mini="true">Add New SMS Information</a>
+                </li>
+            </ul>
+            <!-- /ko -->
+        </fieldset>
+
+        <fieldset class="border-full">
+            <legend>Email</legend>
+            <!-- ko ifnot: isEditMode -->
+            <ul data-role="listview" data-mini="true" data-icon="delete" class="listview-readonly">
+                <!-- ko foreach: $data.Email -->
+                <li><span data-bind="text: $data.Name "/>: <span data-bind="text: $data.Value "></li>
+                <!-- /ko -->
+                <!-- ko if: $data.Email().length == 0 -->
+                <li>No Email Info</li>
+                <!-- /ko -->
+            </ul>
+            <!-- /ko -->
+            <!-- ko if: isEditMode -->
+            <ul id="contactInfoList" data-role="listview" data-mini="true" class="listview listview-readonly">
+                <!-- ko foreach: $data.Email -->
+                <li data-role="fieldcontain">
+                    <input type="text" data-bind="value: $data.Name, attr: {id: 'contactField' + $index()}">
+                    <input type="text" data-bind="value: $data.Value, attr: {id: 'contactField' + $index()}">
+                    <div class="validationMessage" data-bind="validationMessage: $data.Value"></div>
+                    <span class="closeBtn"><a href="#" data-bind="click: dorsett.removeContactInfo" class="ui-icon-nodisc" data-role="button" data-theme="r"
+                        data-icon="delete" data-iconpos="notext" data-theme="a" data-corners="true" data-shadow="true"
+                        data-iconshadow="true" data-wrapperels="span" title="Remove item"></a></span>
+                </li>
+                <!-- /ko -->
+                <li data-icon="plus">
+                    <a href="#contactInfoDialog" data-bind="click: dorsett.openContactInfoDialog" data-rel="popup" data-position-to="window" data-transition="fade" data-mini="true">Add New Email Information</a>
                 </li>
             </ul>
             <!-- /ko -->
