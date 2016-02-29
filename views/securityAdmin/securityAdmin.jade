@@ -114,7 +114,7 @@ html
                     .ui-grid-a
                         .ui-block-a.width100
                             h4
-                                | Add a new contact method for
+                                | Add a new contact method for 
                                 span.firstName
                         .ui-block-a.width100
                             label
@@ -124,6 +124,10 @@ html
                                     | <!-- ko foreach: dorsett.contactValidationMap -->
                                     option(data-bind='value: type, text: type')
                                     | <!-- /ko -->
+                        .ui-block-a.width100
+                            label
+                                | Name
+                                input.name(type='text', data-mini='true')
                         .ui-block-a.width100
                             label
                                 | Value

@@ -312,129 +312,170 @@ var Users = {
     var updateCriteria = {
       $set: {}
     };
-    for (var key in updateData) {
-      if (key == "username") {
-        updateCriteria.$set[key] = updateData[key];
-        updateCriteria.$set["Username.Value"] = updateData[key];
-      } else if (key == "Password") {
-        password = utils.encrypt(updateData[key]);
-        value = key + ".Value";
-        updateCriteria.$set[value] = password;
-      } else if (key != "_id" && key != "User Groups") {
-        value = key + ".Value";
-        updateCriteria.$set[value] = updateData[key];
-      }
-    }
-
-    var criteria = {
+    Utility.getOne({
       collection: usersCollection,
-      query: searchCriteria,
-      updateObj: updateCriteria
-    };
-    Utility.update(criteria, function(err, result) {
+      query: searchCriteria
+    }, function(err, dbUser) {
 
-      if (err) {
-        return cb(err);
-      }
-
-      var deleteSearch = {};
-      deleteSearch["Point Type"] = {};
-      deleteSearch["Point Type"].Value = "User Group";
-
-      var userVar = "Users." + userid;
-      deleteSearch[userVar] = {};
-      deleteSearch[userVar].$exists = true;
-
-      var delCount = 0;
-
-      criteria = {
-        collection: userGroupsCollection,
-        query: deleteSearch
-      };
-      Utility.get(criteria, function(err, delGroups) {
-        var i;
-        var groupsToRemove = [];
-        if (groups.length > 0) {
-          for (i = 0; i < delGroups.length; i++) {
-            for (var j = 0; j < groups.length; j++) {
-              if (groups[j] == delGroups[i])
-                break;
-              if (j == (groups.length - 1))
-                groupsToRemove.push(delGroups[i]);
+      for (var key in updateData) {
+        if (key === 'Contact Info') {
+          var contact = updateData[key];
+          for(var c = 0; c<contact.length; c++){
+            if(['SMS','Voice'].indexOf(contact[c].Type) >= 0){
+              contact[c].Value = contact[c].Value.match(/\d+/g).join('');
             }
           }
-        } else {
-          groupsToRemove = delGroups;
+          var alerts = dbUser.alerts;
+
+          for (var almClass in alerts) {
+            for (var a = 0; a < alerts[almClass].length; a++) {
+              var alert = alerts[almClass][a];
+              var exists = false;
+
+              for (var i = 0; i < contact.length; i++) {
+                if (contact[i].Name === alert.Name) {
+                  alert.Value = contact[i].Value;
+                  exists = true;
+                }
+                if (contact[i].Value === alert.Value) {
+                  alert.Name = contact[i].Name;
+                  exists = true;
+                }
+              }
+              console.log(alert, exists);
+              if (!exists) {
+                alerts[almClass].splice(a, 1);
+                a--;
+              }
+            }
+          }
+
+          updateCriteria.$set.alerts = alerts;
+        }
+        if (key == "username") {
+          updateCriteria.$set[key] = updateData[key];
+          updateCriteria.$set["Username.Value"] = updateData[key];
+        } else if (key == "Password") {
+          password = utils.encrypt(updateData[key]);
+          value = key + ".Value";
+          updateCriteria.$set[value] = password;
+        } else if (key != "_id" && key != "User Groups") {
+          value = key + ".Value";
+          updateCriteria.$set[value] = updateData[key];
+        }
+      }
+
+
+      var criteria = {
+        collection: usersCollection,
+        query: searchCriteria,
+        updateObj: updateCriteria
+      };
+      Utility.update(criteria, function(err, result) {
+
+        if (err) {
+          return cb(err);
         }
 
-        if (groupsToRemove.length > 0) {
-          groupsToRemove.forEach(function(groupToRemove) {
-            async.waterfall([
+        var deleteSearch = {};
+        deleteSearch["Point Type"] = {};
+        deleteSearch["Point Type"].Value = "User Group";
 
-              function(callback) {
-                var delSearch = {
-                  _id: groupToRemove._id
-                };
+        var userVar = "Users." + userid;
+        deleteSearch[userVar] = {};
+        deleteSearch[userVar].$exists = true;
 
-                criteria = {
-                  collection: userGroupsCollection,
-                  query: delSearch
-                };
-                Utility.getOne(criteria, function(err, delGroup) {
-                  delete delGroup.Users[userid];
+        var delCount = 0;
+
+        criteria = {
+          collection: userGroupsCollection,
+          query: deleteSearch
+        };
+        Utility.get(criteria, function(err, delGroups) {
+          var i;
+          var groupsToRemove = [];
+          if (groups.length > 0) {
+            for (i = 0; i < delGroups.length; i++) {
+              for (var j = 0; j < groups.length; j++) {
+                if (groups[j] == delGroups[i])
+                  break;
+                if (j == (groups.length - 1))
+                  groupsToRemove.push(delGroups[i]);
+              }
+            }
+          } else {
+            groupsToRemove = delGroups;
+          }
+
+          if (groupsToRemove.length > 0) {
+            groupsToRemove.forEach(function(groupToRemove) {
+              async.waterfall([
+
+                function(callback) {
+                  var delSearch = {
+                    _id: groupToRemove._id
+                  };
 
                   criteria = {
                     collection: userGroupsCollection,
-                    query: delSearch,
-                    updateObj: delGroup
+                    query: delSearch
+                  };
+                  Utility.getOne(criteria, function(err, delGroup) {
+                    delete delGroup.Users[userid];
+
+                    criteria = {
+                      collection: userGroupsCollection,
+                      query: delSearch,
+                      updateObj: delGroup
+                    };
+                    Utility.update(criteria, function(err, updatedGroup) {
+                      callback(err, delGroup);
+                    });
+                  });
+                },
+                function(delGroup, callback) {
+                  var delGroupSearch = {
+                    "Security": {
+                      $elemMatch: {
+                        "groupId": groupToRemove._id
+                      }
+                    }
+                  };
+                  var updateCriteria = {
+                    $pull: {
+                      "Security": {
+                        "groupId": groupToRemove._id,
+                        "userId": userid
+                      }
+                    }
+                  };
+
+                  criteria = {
+                    collection: pointsCollection,
+                    query: delGroupSearch,
+                    updateObj: updateCriteria,
+                    options: {
+                      multi: true
+                    }
                   };
                   Utility.update(criteria, function(err, updatedGroup) {
                     callback(err, delGroup);
                   });
-                });
-              },
-              function(delGroup, callback) {
-                var delGroupSearch = {
-                  "Security": {
-                    $elemMatch: {
-                      "groupId": groupToRemove._id
-                    }
-                  }
-                };
-                var updateCriteria = {
-                  $pull: {
-                    "Security": {
-                      "groupId": groupToRemove._id,
-                      "userId": userid
-                    }
-                  }
-                };
 
-                criteria = {
-                  collection: pointsCollection,
-                  query: delGroupSearch,
-                  updateObj: updateCriteria,
-                  options: {
-                    multi: true
-                  }
-                };
-                Utility.update(criteria, function(err, updatedGroup) {
-                  callback(err, delGroup);
-                });
-
-              }
-            ], function(err, finalGroup) {
-              delCount++;
-              if (delCount == groupsToRemove.length) {
-                updateUsers(searchCriteria, groups, userid, cb);
-              }
+                }
+              ], function(err, finalGroup) {
+                delCount++;
+                if (delCount == groupsToRemove.length) {
+                  updateUsers(searchCriteria, groups, userid, cb);
+                }
+              });
             });
-          });
-        } else {
-          updateUsers(searchCriteria, groups, userid, cb);
-        }
-      });
+          } else {
+            updateUsers(searchCriteria, groups, userid, cb);
+          }
+        });
 
+      });
     });
 
     function updateUsers(searchCriteria, groups, userid, cb) {

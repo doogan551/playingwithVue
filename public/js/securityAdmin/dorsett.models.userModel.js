@@ -5,19 +5,19 @@ dorsett.models.userModel = function(_data) {
     //make a clone
     var data = ko.utils.parseJson(ko.toJSON(_data)),
         userModel = {
-            _id:null,
-            username:'',
-            Password:'',
+            _id: null,
+            username: '',
+            Password: '',
             'Password Reset': false,
             'Last Login Time': null,
             'Last Activity Time': null,
-            'Auto Logout Duration':null,
-            'First Name':'',
-            'Last Name':'',
-            'System Admin':false,
-            Photo:'',
-            Title:'',
-            'Contact Info':[]
+            'Auto Logout Duration': null,
+            'First Name': '',
+            'Last Name': '',
+            'System Admin': false,
+            Photo: '',
+            Title: '',
+            'Contact Info': []
         },
         mappedModel;
 
@@ -28,7 +28,8 @@ dorsett.models.userModel = function(_data) {
 dorsett.models.contactInfoModel = function(_data) {
     var contactInfoModel = {
             Type: '',
-            Value: ''
+            Value: '',
+            Name: ''
         },
         mappedModel;
     mappedModel = $.extend(contactInfoModel, _data);
@@ -40,44 +41,58 @@ dorsett.models.mappings.User = {
     key: function(_data) {
         return _data._id;
     },
-    'First Name'          : {
-        create : function( options ) {
-            return ko.observable( options.data ).extend( {required : { message: ' *required field' }} );
+    'First Name': {
+        create: function(options) {
+            return ko.observable(options.data).extend({
+                required: {
+                    message: ' *required field'
+                }
+            });
         }
     },
-    'Last Name'          : {
-        create : function( options ) {
-            return ko.observable( options.data ).extend( {required : { message: ' *required field' }} );
+    'Last Name': {
+        create: function(options) {
+            return ko.observable(options.data).extend({
+                required: {
+                    message: ' *required field'
+                }
+            });
         }
     },
-    'Last Login Time'          : {
-        create : function( options ) {
+    'Last Login Time': {
+        create: function(options) {
             var t = new Date(0);
             if (!!!options.data) return 'Never';
-            t.setUTCSeconds(options.data)
+            t.setUTCSeconds(options.data);
             return moment(t).calendar();
         }
     },
-    'Last Activity Time'          : {
-        create : function( options ) {
+    'Last Activity Time': {
+        create: function(options) {
             var t = new Date(0);
             if (!!!options.data) return 'None';
-            t.setUTCSeconds(options.data)
+            t.setUTCSeconds(options.data);
             return moment(t).calendar();
         }
     },
-    Title          : {
-        create : function( options ) {
-            return ko.observable( options.data ).extend( {required : { message: ' *required field' }} );
+    Title: {
+        create: function(options) {
+            return ko.observable(options.data).extend({
+                required: {
+                    message: ' *required field'
+                }
+            });
         }
     },
-    username          : {
-        create : function( options ) {
+    username: {
+        create: function(options) {
             console.log('id', options.parent._id);
-            return ko.observable( options.data ).extend( {
-                required : { message: ' *required field' },
+            return ko.observable(options.data).extend({
+                required: {
+                    message: ' *required field'
+                },
                 validation: {
-                    validator: function (val) {
+                    validator: function(val) {
                         return !!!ko.utils.arrayFirst(dorsett.userData.allData(), function(item) {
                             if (item._id == options.parent._id) return false;
                             return item.username.toLowerCase() == val.toLowerCase();
@@ -85,17 +100,24 @@ dorsett.models.mappings.User = {
                     },
                     message: '*already exists'
                 }
-            } );
+            });
         }
     },
-    Password          : {
-        create : function( options ) {
-            return ko.observable( '').extend({required: { onlyIf: function() { return !!!options.parent._id }, message: 'Password is required. Click the button below to set the password.'}});
+    Password: {
+        create: function(options) {
+            return ko.observable('').extend({
+                required: {
+                    onlyIf: function() {
+                        return !!!options.parent._id;
+                    },
+                    message: 'Password is required. Click the button below to set the password.'
+                }
+            });
         }
     },
-    'Contact Info'    : {
-        create : function( options ) {
-            return new dorsett.models.contactInfoModel( options.data );
+    'Contact Info': {
+        create: function(options) {
+            return new dorsett.models.contactInfoModel(options.data);
         }
     }
 };
@@ -108,16 +130,21 @@ dorsett.models.mappings.ContactInfo = {
             return ko.observable(options.data);
         }
     },
+    Name: {
+        create: function(options) {
+            return ko.observable(options.data);
+        }
+    },
     Value: {
         create: function(options) {
             var i = 0,
                 items = dorsett.contactValidationMap.length;
             for (i; i < items; i++) {
                 if (dorsett.contactValidationMap[i].type == options.parent.Type()) {
-                    return ko.observable( options.data ).extend( dorsett.contactValidationMap[i].val );
+                    return ko.observable(options.data).extend(dorsett.contactValidationMap[i].val);
                 }
             }
-            return ko.observable( options.data );
+            return ko.observable(options.data);
         }
     }
 };
