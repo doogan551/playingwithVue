@@ -274,6 +274,7 @@ module.exports = function socketio(_common) {
 
           zmq.sendCommand(command, function(err, msg) {
             if (!!err) {
+              err = err.ApduErrorMsg || err.msg;
               sock.emit('returnFromLoader', {
                 err: err
               });
