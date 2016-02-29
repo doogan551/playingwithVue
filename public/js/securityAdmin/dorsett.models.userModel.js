@@ -17,9 +17,7 @@ dorsett.models.userModel = function(_data) {
             'System Admin': false,
             Photo: '',
             Title: '',
-            'Voice': [],
-            'SMS': [],
-            'Email': []
+            'Contact Info': []
         },
         mappedModel;
 
@@ -27,34 +25,15 @@ dorsett.models.userModel = function(_data) {
     ko.mapping.fromJS(mappedModel, dorsett.models.mappings.User, this);
 };
 
-dorsett.models.contactVoiceModel = function(_data) {
+dorsett.models.contactInfoModel = function(_data) {
     var contactInfoModel = {
-            Name: '',
-            Value: ''
+            Type: '',
+            Value: '',
+            Name: ''
         },
         mappedModel;
     mappedModel = $.extend(contactInfoModel, _data);
-    ko.mapping.fromJS(mappedModel, dorsett.models.mappings.ContactInfo, 'Voice');
-};
-
-dorsett.models.contactSMSModel = function(_data) {
-    var contactInfoModel = {
-            Name: '',
-            Value: ''
-        },
-        mappedModel;
-    mappedModel = $.extend(contactInfoModel, _data);
-    ko.mapping.fromJS(mappedModel, dorsett.models.mappings.ContactInfo, 'SMS');
-};
-
-dorsett.models.contactEmailModel = function(_data) {
-    var contactInfoModel = {
-            Name: '',
-            Value: ''
-        },
-        mappedModel;
-    mappedModel = $.extend(contactInfoModel, _data);
-    ko.mapping.fromJS(mappedModel, dorsett.models.mappings.ContactInfo, 'Email');
+    ko.mapping.fromJS(mappedModel, dorsett.models.mappings.ContactInfo, this);
 };
 
 dorsett.models.mappings.User = {
@@ -107,6 +86,7 @@ dorsett.models.mappings.User = {
     },
     username: {
         create: function(options) {
+            console.log('id', options.parent._id);
             return ko.observable(options.data).extend({
                 required: {
                     message: ' *required field'
@@ -135,22 +115,9 @@ dorsett.models.mappings.User = {
             });
         }
     },
-    'Voice': {
+    'Contact Info': {
         create: function(options) {
-            return ko.mapping.fromJS(options.data);
-            // return new dorsett.models.contactVoiceModel(options.data);
-        }
-    },
-    'SMS': {
-        create: function(options) {
-            return ko.mapping.fromJS(options.data);
-            // return new dorsett.models.contactSMSModel(options.data);
-        }
-    },
-    'Email': {
-        create: function(options) {
-            return ko.mapping.fromJS(options.data);
-            // return new dorsett.models.contactEmailModel(options.data);
+            return new dorsett.models.contactInfoModel(options.data);
         }
     }
 };
@@ -163,14 +130,21 @@ dorsett.models.mappings.ContactInfo = {
             return ko.observable(options.data);
         }
     },
+    Name: {
+        create: function(options) {
+            return ko.observable(options.data);
+        }
+    },
     Value: {
         create: function(options) {
-            var type = options.parent;
-            if (dorsett.contactValidationMap.hasOwnProperty(type)) {
-                return ko.observable(options.data).extend(dorsett.contactValidationMap[type].val);
-            } else {
-                return ko.observable(options.data);
+            var i = 0,
+                items = dorsett.contactValidationMap.length;
+            for (i; i < items; i++) {
+                if (dorsett.contactValidationMap[i].type == options.parent.Type()) {
+                    return ko.observable(options.data).extend(dorsett.contactValidationMap[i].val);
+                }
             }
+            return ko.observable(options.data);
         }
     }
 };

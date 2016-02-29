@@ -6,7 +6,6 @@ var dorsett = (function() {
         _socketendpoint = 'http://' + window.location.hostname + ':9376',
         _pointSelector = _webendpoint + '/pointlookup',
         _tabOpen = '',
-        _contactMode = '',
         //function to detach child entities
         DraggableType = function() {
             var _types = {
@@ -176,7 +175,7 @@ var dorsett = (function() {
                 type: 'post'
             }).done(
                 function(data) {
-                    // console.log(data.Users);
+                    console.log(data.Users);
                     var users = data.Users,
                         i = 0,
                         recordCount = users.length;
@@ -452,9 +451,11 @@ var dorsett = (function() {
                     'System Admin': [false, false],
                     Photo: '',
                     Title: '',
-                    'Voice': [{"Name":"", "Value":""}],
-                    'SMS': [{"Name":"", "Value":""}],
-                    'Email': [{"Name":"", "Value":""}],
+                    'Contact Info': [{
+                        Type: '',
+                        Value: '',
+                        Name: ''
+                    }],
                     Groups: [{
                         groupid: '',
                         'Group Admin': [false, false]
@@ -708,24 +709,22 @@ var dorsett = (function() {
             }
             return password;
         },
-        openContactInfoDialog: function(context) {
-            _contactMode = context;
+        openContactInfoDialog: function() {
             $('.contactInfoDialog').find('.firstName').text(dorsett.editData['First Name']());
-            $('.contactInfoDialog').find('.contactHeader').text('Add '+context+' Information');
             return true;
         },
         addContactInfo: function() {
-            console.log('_contactMode', _contactMode);
             var $panel = $('#DT_Security_panel'),
                 $list = $('#contactInfoList'),
-                observable = dorsett.editData[_contactMode],
+                observable = dorsett.editData['Contact Info'],
                 contactInfoDialog = $('.contactInfoDialog');
             if (contactInfoDialog.find('select.contactOptions').val() == '' ||
                 contactInfoDialog.find('.value').val() == '') {
                 alert('Choose a Type and enter a Value.');
                 return false;
             }
-            observable.push(ko.mapping.fromJS({
+            observable.push(new dorsett.models.contactInfoModel({
+                Type: contactInfoDialog.find('select.contactOptions').val(),
                 Name: contactInfoDialog.find('.name').val(),
                 Value: contactInfoDialog.find('.value').val()
             }));
@@ -737,22 +736,21 @@ var dorsett = (function() {
             contactInfoDialog.find('.value').val('');
             return true;
         },
-        contactValidationMap: {
-            'Email': {
-                val: {
-                    required: true,
-                    email: true
-                }
-            },
-            'Voice': {
-                val: phoneValidatorObj,
-                mask: '(999) 999-9999'
-            },
-            'SMS': {
-                val: phoneValidatorObj,
-                mask: '(999) 999-9999'
+        contactValidationMap: [{
+            type: 'Email',
+            val: {
+                required: true,
+                email: true
             }
-        },
+        }, {
+            type: 'SMS',
+            val: phoneValidatorObj,
+            mask: '(999) 999-9999'
+        }, {
+            type: 'Voice',
+            val: phoneValidatorObj,
+            mask: '(999) 999-9999'
+        }],
         userCount: function(singular, plural) {
             var count = 0,
                 prop;
