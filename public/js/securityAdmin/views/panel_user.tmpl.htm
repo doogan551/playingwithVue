@@ -40,7 +40,10 @@
             <!-- ko ifnot: isEditMode -->
             <ul data-role="listview" data-mini="true" data-icon="delete" class="listview-readonly">
                 <!-- ko foreach: $data['Contact Info'] -->
-                <li data-bind="text: Type() + ': ' + Value() "></li>
+                <li>
+                    <span data-bind="text: '('+Type() + ') ' + Name() " /><br/>
+                    <span data-bind="text: Value() " />
+                </li>
                 <!-- /ko -->
                 <!-- ko if: $data['Contact Info']().length == 0 -->
                 <li>No Contact Info</li>
@@ -51,7 +54,10 @@
             <ul id="contactInfoList" data-role="listview" data-mini="true" class="listview listview-readonly">
                 <!-- ko foreach: $data['Contact Info'] -->
                 <li data-role="fieldcontain">
-                    <label data-bind="text: Type, attr: {for: 'contactField' + $index()}"></label>
+                    <label data-bind="text: Type, attr: {for: 'contactField' + $index()}"></label><br />
+                    <label data-bind="text: 'Name', attr: {for: 'contactField' + $index()}"></label>
+                    <input type="text" data-bind="value: Name, attr: {id: 'contactField' + $index()}">
+                    <label data-bind="text: 'Type', attr: {for: 'contactField' + $index()}"></label>
                     <input type="text" data-bind="value: Value, attr: {id: 'contactField' + $index()}, mask: Type(), JMValidationError: Value">
                     <div class="validationMessage" data-bind="validationMessage: Value"></div>
                     <span class="closeBtn"><a href="#" data-bind="click: dorsett.removeContactInfo" class="ui-icon-nodisc" data-role="button" data-theme="r"

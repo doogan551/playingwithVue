@@ -46,6 +46,15 @@ var logger = function(moduleName) {
         timestamp: function() {
           return moment().format();
         }
+      }),
+      new winston.transports.Console({
+        handleExceptions: true,
+        json: true,
+        colorize: true,
+        label: label,
+        timestamp: function() {
+          return moment().format();
+        }
       })
     ],
     exitOnError: false

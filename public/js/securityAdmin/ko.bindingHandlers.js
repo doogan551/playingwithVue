@@ -96,10 +96,10 @@ $(function() {
             var $imgElement = $(element),
                 allBindings = allBindingsAccessor(),
                 imageUrl = 'img/users/' + ko.utils.unwrapObservable(valueAccessor());
-            console.log(imageUrl);
+            // console.log(imageUrl);
             $("<img/>")
-                .load(function() { console.log('binding',imageUrl);$imgElement.css({backgroundImage: 'url(' + imageUrl + ')'}) })
-                .error(function() { console.log('binding',!!allBindings.errorImage);if (!!allBindings.errorImage) $imgElement.css({backgroundImage: 'url(' + allBindings.errorImage + ')'}); })
+                .load(function() { /*console.log('binding',imageUrl);*/$imgElement.css({backgroundImage: 'url(' + imageUrl + ')'}); })
+                .error(function() { /*console.log('binding',!!allBindings.errorImage);*/if (!!allBindings.errorImage) $imgElement.css({backgroundImage: 'url(' + allBindings.errorImage + ')'}); })
                 .attr('src', imageUrl)
             ;
         }
@@ -114,7 +114,7 @@ $(function() {
                 $(element).parent().removeClass('input-validation-error');
             }
         }
-    }
+    };
 
     ko.bindingHandlers.JMEnable = {
         update: function(element, valueAccessor) {
