@@ -45,7 +45,7 @@ var policy = {
             }]
         }]
     }],
-    schedules: [{ // layer 1
+    scheduleLayers: [{ // layer 1
         alertConfigs: [],
         schedules: [{// holidays
             holidays: true, // precedence, if layer 2 holiday match, does layer 1 run?
