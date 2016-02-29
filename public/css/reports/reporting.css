@@ -46,7 +46,7 @@
 .durationCtrl.durationDisplay {
     text-align: right;
     padding: 3px 10px 3px 3px;
-    border: none;
+    /*border: none;*/
     outline: none;
 }
 .durationCtrl.durationDisplay > .timeSeg {
@@ -91,6 +91,7 @@
 }
 .tableFooter {
     cursor: default;
+    font-weight: bold;
 }
 .pointInstance {
     cursor: pointer;

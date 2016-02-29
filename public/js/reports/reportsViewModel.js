@@ -502,7 +502,7 @@ var reportsViewModel = function () {
 
             return result;
         },
-        validateColumns = function () {
+        validateColumns = function (cleanup) {
             var results = [],
                 localArray = $.extend(true, [], self.listOfColumns()),
                 i,
@@ -521,7 +521,11 @@ var reportsViewModel = function () {
                 if (validColumn) {
                     results.push(localArray[i]);
                 }
-                delete results[results.length - 1]["valueList"]; // valuelist is only used in UI
+                if (cleanup) {
+                    delete results[results.length - 1]["valueList"];  // valuelist is only used in UI
+                    delete results[results.length - 1]["dataColumnName"]; // dataColumnName is only used in UI
+                    delete results[results.length - 1]["rawValue"]; // rawValue is only used in UI
+                }
             }
 
             return results;
@@ -857,10 +861,14 @@ var reportsViewModel = function () {
 
             for (i = 0; i < lenHistoryData; i++) {
                 historyResults = historyData[i].HistoryResults;
-                tempPivot = {Date: new Date(historyData[i].timestamp * 1000).toLocaleString()};
+                tempPivot = {};
+                tempPivot["Date"] = {};
+                tempPivot["Date"].Value = new Date(historyData[i].timestamp * 1000).toLocaleString();
+                tempPivot["Date"].rawValue = historyData[i].timestamp;
                 for (j = 0; j < historyResults.length; j++) {
-                    //tempPivot[historyResults[j].Name] = (historyResults[j].Value ? historyResults[j].Value : Math.floor(Math.random() * 250) + 1 );
-                    tempPivot[historyResults[j].Name] = historyResults[j].Value;
+                    tempPivot[historyResults[j].Name] = {};
+                    tempPivot[historyResults[j].Name].Value = historyResults[j].Value;
+                    tempPivot[historyResults[j].Name].rawValue = historyResults[j].Value;
                 }
                 pivotedData.push(tempPivot);
             }
@@ -878,9 +886,13 @@ var reportsViewModel = function () {
             if (numberOfColumnsFound > 0 && totalizerData[0].totals) {
                 for (j = 0; j < totalizerData[0].totals.length; j++) {
                     tempPivot = {};
-                    tempPivot["Date"] = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YYYY hh:mm:ss a");
+                    tempPivot["Date"] = {};
+                    tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YYYY hh:mm:ss a");
+                    tempPivot["Date"].rawValue = moment.unix(totalizerData[0].totals[j].range.start);
                     for (i = 0; i < numberOfColumnsFound; i++) {
-                        tempPivot[columnsArray[i + 1].colName + " - " + totalizerData[i].op] = totalizerData[i].totals[j].total;
+                        tempPivot[columnsArray[i + 1].colName + " - " + totalizerData[i].op] = {};
+                        tempPivot[columnsArray[i + 1].colName + " - " + totalizerData[i].op].Value = totalizerData[i].totals[j].total;
+                        tempPivot[columnsArray[i + 1].colName + " - " + totalizerData[i].op].rawValue = totalizerData[i].totals[j].total;
                     }
                     pivotedData.push(tempPivot);
                 }
@@ -895,7 +907,7 @@ var reportsViewModel = function () {
                 $dataTablesWrapper = $tabViewReport.find('.dataTables_wrapper');
             $dataTablesScrollBody.css('height', (window.innerHeight - heightAdjust));
             $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
-            appendFooter();
+            setFooterDateTime();
             datatableHeight = $dataTablesWrapper.height();
             if (window.innerHeight < (datatableHeight + 150)) {
                 heightAdjust = (datatableHeight + (2*150)) - window.innerHeight;  // making up for some data wrapping in cells
@@ -922,7 +934,7 @@ var reportsViewModel = function () {
         },
         saveReportConfig = function () {
             point._pStatus = 0;  // activate report
-            point["Report Config"].columns = validateColumns();
+            point["Report Config"].columns = validateColumns(true);
             point["Report Config"].filters = validateFilters();
             pointFilter.selectedPointTypes = getPointLookupFilterValues(pointSelectorRef);
             pointFilter.name1Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 1);
@@ -1293,136 +1305,6 @@ var reportsViewModel = function () {
             var aoColumns = [],
                 i,
                 columnsArray = validateColumns(),
-                len = columnsArray.length,
-                pointType,
-                generateFieldValue = function (data, column) {
-                    var result = "",
-                        columnName = column.dataColumnName,
-                        valueType = column.valueType,
-                        valueOptions = column.valueOptions,
-                        value;
-                    if (data[columnName] !== undefined) {
-                        if (typeof data[columnName] === 'object') {
-                            value = data[columnName].Value;
-                        } else {
-                            value = data[columnName];
-                        }
-
-                        if (valueOptions !== undefined) {
-                            result = getKeyBasedOnValue(valueOptions, value);
-                            if (result === undefined || result === null) {
-                                result = value;
-                            }
-                        } else {
-                            switch (valueType) {
-                                case "Float":
-                                case "Integer":
-                                case "Unsigned":
-                                    result = toFixedComma(value, column.precision);
-                                    break;
-                                case "String":
-                                    if ($.isNumeric(value) === true) {
-                                        result = toFixedComma(value, column.precision);
-                                    } else {
-                                        result = value;
-                                    }
-                                    break;
-                                case "Bool":
-                                case "BitString":
-                                case "Enum":
-                                case "undecided":
-                                case "null":
-                                case "None":
-                                    if ($.isNumeric(value) === true) {
-                                        result = toFixedComma(value, column.precision);
-                                    } else {
-                                        result = value;
-                                    }
-                                    break;
-                                case "DateTime":
-                                case "Timet":
-                                    if ($.isNumeric(value) === true && value > 0) {
-                                        result = moment.unix(value).format("MM/DD/YYYY hh:mm a");
-                                    } else {
-                                        result = value;
-                                    }
-                                    break;
-                                case "MinSec":
-                                case "HourMin":
-                                case "HourMinSec":
-                                    result = value;
-                                    break;
-                                case "UniquePID":
-                                    if (data[columnName].PointInst !== undefined) {
-                                        if (data[columnName].PointInst > 0) {
-                                            result = data[columnName].PointName;
-                                        } else {
-                                            result = "";
-                                        }
-                                    }
-                                    break;
-                                default:
-                                    result = value;
-                                    break;
-                            }
-                        }
-                    } else {
-                        //console.log(" ERROR -- Data set does NOT contain value for '" + columnName + "'")
-                    }
-                    return result;
-                },
-                getColumnField = function (columnName) {
-                    var name;
-                    switch (self.reportType) {
-                        case "History":
-                        case "Totalizer":
-                            name = columnName;
-                            break;
-                        case "Property":
-                            name = columnName + (columnName !== "Name" ? ".Value" : "");
-                            break;
-                        default:
-                            console.log(" - - - DEFAULT  getColumnField()");
-                            break;
-                    }
-                    return name;
-                },
-                generateCustomHtml = function (tdField, columnConfig, data, columnIndex) {
-                    var $customField,
-                        htmlString,
-                        value;
-                    setTdClasses(tdField, columnConfig);
-                    setTdAttribs(tdField, columnConfig, data, columnIndex);
-                    if (data[columnConfig.colName]) {
-                        switch (columnConfig.valueType) {
-                            case "MinSec":
-                                value = data[columnConfig.colName].Value;
-                                htmlString = '<div class="durationCtrl durationDisplay"><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
-                                $customField = $(htmlString);
-                                $customField.find(".min").html(~~((value % 3600) / 60));
-                                $customField.find(".sec").html(value % 60);
-                                $(tdField).html($customField);
-                                break;
-                            case "HourMin":
-                                value = data[columnConfig.colName].Value;
-                                htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span></div>';
-                                $customField = $(htmlString);
-                                $customField.find(".hr").html(~~(value / 3600));
-                                $customField.find(".min").html(~~((value % 3600) / 60));
-                                $(tdField).html($customField);
-                                break;
-                            case "HourMinSec":
-                                value = data[columnConfig.colName].Value;
-                                htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
-                                $customField = $(htmlString);
-                                $customField.find(".hr").html(~~(value / 3600));
-                                $customField.find(".min").html(~~((value % 3600) / 60));
-                                $customField.find(".sec").html(value % 60);
-                                $(tdField).html($customField);
-                                break;
-                        }
-                    }
-                },
                 setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
                     if (columnConfig.colName === "Name") {
                         switch (self.reportType) {
@@ -1430,34 +1312,55 @@ var reportsViewModel = function () {
                             case "Totalizer":
                                 break;
                             case "Property":
-                                $(tdField).addClass("pointInstance");
-                                //$(tdField).addClass("col-md-2");
-                                $(tdField).attr('upi', data["Point Instance"].Value);
-                                $(tdField).attr('columnIndex', columnIndex);
+                                $(tdField).attr("upi", data["Point Instance"].Value);
+                                $(tdField).attr("columnIndex", columnIndex);
                                 break;
                             default:
                                 console.log(" - - - DEFAULT  setTdAttribs()");
                                 break;
                         }
                     }
+
                     if (data[columnConfig.colName] && data[columnConfig.colName].PointInst) {
+                        var pointType;
                         pointType = window.workspaceManager.config.Utility.pointTypes.getPointTypeNameFromEnum(data[columnConfig.colName].PointType);
                         $(tdField).addClass("pointInstance");
                         $(tdField).attr('upi', data[columnConfig.colName].PointInst);
                         $(tdField).attr('pointType', pointType);
                     }
-                    if (columnIndex === 0) {
-                        $(tdField).addClass("firstColumn");
-                    }
                 },
-                setTdClasses = function (tdField, columnConfig) {
-                    if (columnConfig.valueType === "DateTime") {
-                        $(tdField).addClass("small");
-                    } else {
-                        if (columnConfig.canCalculate === true) {
-                            $(tdField).addClass("text-right");
+                setColumnClasses = function (columnConfig, columnIndex) {
+                    var result = "";
+                    if (columnConfig.colName === "Name") {
+                        switch (self.reportType) {
+                            case "History":
+                            case "Totalizer":
+                                break;
+                            case "Property":
+                                result += "pointInstance ";
+                                break;
+                            default:
+                                console.log(" - - - DEFAULT  setTdAttribs()");
+                                break;
                         }
                     }
+                    switch (columnConfig.valueType) {
+                        case "MinSec":
+                        case "HourMin":
+                        case "HourMinSec":
+                            result += "durationCtrl durationDisplay";
+                            break;
+                    }
+                    if (columnIndex === 0) {
+                        result += "firstColumn ";
+                    }
+                    if (columnConfig.valueType === "DateTime") {
+                        result += "small ";
+                    }
+                    if (columnConfig.canCalculate === true) {
+                        result += "text-right ";
+                    }
+                    return result;
                 },
                 buildColumnObject = function (item, columnIndex) {
                     var result,
@@ -1485,13 +1388,15 @@ var reportsViewModel = function () {
 
                     result = {
                         title: columnTitle,
-                        data: null,
-                        render: function (data, type, row, item) {
-                            return generateFieldValue(data, columnsArray[item.col]);
+                        data: item.dataColumnName,
+                        render: {
+                            _: "Value",
+                            sort: "rawValue",
+                            type: "rawValue"
                         },
-                        className: "",
+                        className: setColumnClasses(columnsArray[columnIndex], columnIndex),
                         fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
-                            generateCustomHtml(nTd, columnsArray[iCol], oData, iCol);
+                            setTdAttribs(nTd, columnsArray[iCol], oData, iCol);
                         },
                         bSortable: true
                     };
@@ -1501,16 +1406,16 @@ var reportsViewModel = function () {
                 getCalcForColumn = function (column, columnDesign, start, end) {
                     var columnData = column.data(),
                         columnDataLen = columnData.length,
-                        columnName = (self.reportType === "Totalizer" ? columnDesign.dataColumnName : columnDesign.colName),
+                        //columnName = (self.reportType === "Totalizer" ? columnDesign.dataColumnName : columnDesign.colName),
                         value,
                         rawValues = [],
-                        calc = {};
-                    i;
+                        calc = {},
+                        i;
                     calc.totalCalc = 0;
                     calc.pageCalc = 0;
 
                     for (i = 0; i < columnDataLen; i++) {
-                        value = columnData[i][columnName];
+                        value = columnData[i].rawValue;
                         value = (typeof value === "object" ? value.Value : value);
                         if ($.isNumeric(value)) {
                             rawValues.push(parseFloat(value));
@@ -1549,7 +1454,7 @@ var reportsViewModel = function () {
                 }
             }
 
-            for (i = 0; i < len; i++) {
+            for (i = 0; i < columnsArray.length; i++) {
                 columnsArray[i].dataColumnName = columnsArray[i].colName;
                 aoColumns.push(buildColumnObject(columnsArray[i], i));
             }
@@ -1562,6 +1467,7 @@ var reportsViewModel = function () {
                         header: true,
                         footer: true
                     },
+                    footer: true,
                     buttons: [
                         {
                             extend: 'collection',
@@ -1630,7 +1536,7 @@ var reportsViewModel = function () {
                             case "Totalizer":
                                 $theads = $(thead).find('th');
                                 $theads.each(function (i, el) {
-                                    $(el).addClass("diSortable");
+                                    //$(el).addClass("diSortable");
                                     $(el).attr("oncontextmenu", "reportsVM.showPointReviewViaIndex(" + i + "); return false;");
                                     $(el).attr("title", "Right mouse click to run PointInspector");
                                 });
@@ -1644,79 +1550,70 @@ var reportsViewModel = function () {
                         }
                     },
                     footerCallback: function (tfoot, data, start, end, display) {
+                        var calcEnabled = false,
+                            $firstColumn;
                         this.api().columns('.calculate').every(function (whatIsThis) {
                             var column = this,
-                                calc = getCalcForColumn(column, columnsArray[column[0]], start, end);
-
-                            self.listOfColumns()[column[0]].totalCalc = calc.totalCalc;
-                            self.listOfColumns()[column[0]].pageCalc = calc.pageCalc;
+                                columnIndex = column[0],
+                                columnConfig = columnsArray[columnIndex],
+                                calc = getCalcForColumn(column, columnConfig, start, end),
+                                $tdFooter = $(tfoot).find("td[colindex='" + columnIndex + "']");
+                            $tdFooter.attr("title", "Page Calc (Table Calc)");
+                            $tdFooter.text(columnConfig.calculation + "  " + toFixedComma(calc.pageCalc, columnConfig.precision) + " (" + toFixedComma(calc.totalCalc, columnConfig.precision) + ")");
+                            calcEnabled = true;
                         });
+
+                        if(calcEnabled) {
+                            $firstColumn = $(tfoot).find("td[colindex='" + 0 + "']");
+                            $firstColumn.text("Calculations:");
+                            $firstColumn.removeClass("small");
+                            $firstColumn.addClass("text-right");
+                        } else {
+                            $(tfoot).parent().parent().addClass("hidden"); // hide the footer block
+                        }
                     },
                     data: reportData,
                     columns: aoColumns,
-                    //colReorder: true,
+                    colReorder: {
+                        fixedColumnsLeft: 1,
+                        realtime: false
+                    },
+                    order: [[ 0, "asc" ]], // always default sort by first column
                     scrollY: (window.innerHeight - 270) + "px",
                     scrollX:  true,
                     lengthChange: true,
                     lengthMenu: [ [10, 15, 25, 50, 75, 100, -1], [10, 15, 25, 50, 75, 100, "All"] ],
                     //bFiler: false,  // search box
-                    //showFilter: false,
                     pageLength: 15
                 });
             }
 
             $viewReport.on('draw.dt', function () {
-                appendFooter();
+                setFooterDateTime();
             });
 
-            $viewReport.on('column-reorder.dt', function (event, datatable, columns, blah) {
-                var i,
-                    len = columns.mapping.length,
-                    newSortedArray = [];
-                for (i = 0; i < len; i++) {
-                    newSortedArray.push(columnsArray[columns.mapping[i]]);
-                }
-                columnsArray = newSortedArray;
-                console.log("moved column '" + columns.from + "' to column '" + columns.to + "'");
+            $viewReport.on('column-reorder.dt', function (event, settings, details) {
+                var swapColumnFrom = $.extend(true, {}, columnsArray[details.from]);  // clone from field
+                columnsArray.splice(details.from, 1);
+                columnsArray.splice(details.to, 0, swapColumnFrom);
+                self.listOfColumns(columnsArray);
+                //$.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
+                $viewReport.DataTable().draw();
+                //console.log("moved column '" + details.from + "' to column '" + details.to + "'");
             });
 
             self.designChanged(false);
         },
-        appendFooter = function () {
-            var buildFooterTable = function () {
-                    var htmlFooterString = "<tfoot class='tableFooter'><tr>",
-                        columns = self.listOfColumns(),
-                        i,
-                        len = columns.length;
+        setFooterDateTime = function () {
+            var $tablePagination = $tabViewReport.find(".dataTables_paginate"),
+                $currentDateTimeDiv = $tablePagination.find(".reportDisplayFooter");
 
-                    for (i = 0; i < len; i++) {
-                        if (!!columns[i].calculation && columns[i].calculation !== "") {
-                            htmlFooterString += "<th class='text-right' title='Page Calc (Table Calc)'>";
-                            htmlFooterString += columns[i].calculation + "  " + toFixedComma(columns[i].pageCalc, columns[i].precision);
-                            htmlFooterString += " (" + toFixedComma(columns[i].totalCalc, columns[i].precision) + ")</th>";
-                        } else {
-                            htmlFooterString += "<th></th>";
-                        }
-                    }
-                    htmlFooterString += "</tr></tfoot>";
-                    return htmlFooterString;
-                },
-                $footerTable,
-                $tablePagination = $tabViewReport.find(".dataTables_paginate"),
-                $currentDateTimeDiv;
-
-            $currentDateTimeDiv = $tablePagination.find(".reportDisplayFooter");
             if ($currentDateTimeDiv.length > 0) {
                 $currentDateTimeDiv.text(self.currentTimeStamp);
             } else {
                 $currentDateTimeDiv = $("<div class='small reportDisplayFooter'>" + self.currentTimeStamp + "</div>");
                 $currentDateTimeDiv.prependTo($tablePagination);
             }
-
-
-            $viewReport.find(".tableFooter").remove();
-            $footerTable = $(buildFooterTable());
-            $viewReport.append($footerTable);
         },
         renderReport = function () {
             if (reportData !== undefined && self.currentTab() === 2) {
@@ -1745,6 +1642,126 @@ var reportsViewModel = function () {
                 }
             }
         },
+        cleanResultData = function (data) {
+            var columnArray = validateColumns(),
+                columnConfig,
+                i,
+                len = data.length,
+                j,
+                columnsLength = columnArray.length,
+                columnName,
+                valueOptions,
+                rawValue,
+                keyBasedValue,
+                htmlString,
+                $customField;
+
+            for (i = 0; i < len; i++) {
+                for (j = 0; j < columnsLength; j++) {
+                    columnConfig = {};
+                    columnConfig = columnArray[j];
+                    columnName = (columnConfig.dataColumnName !== undefined ? columnConfig.dataColumnName : columnConfig.colName);
+                    valueOptions = columnConfig.valueOptions;
+
+                    if (data[i][columnName] === undefined) {  // data was NOT found for this column
+                        data[i][columnName] = {};
+                        data[i][columnName] = data[i][columnName];
+                        data[i][columnName].Value = "";
+                        columnConfig.valueType = "dataNotFound";
+
+                    } else if (typeof data[i][columnName] !== 'object') {
+                        rawValue = data[i][columnName];
+                        data[i][columnName] = {};
+                        data[i][columnName].Value = rawValue;
+                    }
+
+                    rawValue = data[i][columnName].Value;
+                    switch (columnConfig.valueType) {
+                        case "MinSec":
+                            htmlString = '<div class="durationCtrl durationDisplay"><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
+                            $customField = $(htmlString);
+                            $customField.find(".min").html(~~((rawValue % 3600) / 60));
+                            $customField.find(".sec").html(rawValue % 60);
+                            data[i][columnName].Value = $customField.html();
+                            break;
+                        case "HourMin":
+                            htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span></div>';
+                            $customField = $(htmlString);
+                            $customField.find(".hr").html(~~(rawValue / 3600));
+                            $customField.find(".min").html(~~((rawValue % 3600) / 60));
+                            data[i][columnName].Value = $customField.html();
+                            break;
+                        case "HourMinSec":
+                            htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
+                            $customField = $(htmlString);
+                            $customField.find(".hr").html(~~(rawValue / 3600));
+                            $customField.find(".min").html(~~((rawValue % 3600) / 60));
+                            $customField.find(".sec").html(rawValue % 60);
+                            data[i][columnName].Value = $customField.html();
+                            break;
+                        case "Float":
+                        case "Integer":
+                        case "Unsigned":
+                            data[i][columnName].Value = toFixedComma(rawValue, columnConfig.precision);
+                            break;
+                        case "String":
+                            if ($.isNumeric(rawValue) === true) {
+                                data[i][columnName].Value = toFixedComma(rawValue, columnConfig.precision);
+                            } else {
+                                data[i][columnName].Value = rawValue;
+                            }
+                            break;
+                        case "Bool":
+                        case "BitString":
+                        case "Enum":
+                        case "undecided":
+                        case "null":
+                        case "None":
+                            if ($.isNumeric(rawValue) === true) {
+                                data[i][columnName].Value = toFixedComma(rawValue, columnConfig.precision);
+                            } else {
+                                data[i][columnName].Value = rawValue;
+                            }
+                            break;
+                        case "DateTime":
+                        case "Timet":
+                            if ($.isNumeric(rawValue) === true && rawValue > 0) {
+                                data[i][columnName].Value = moment.unix(rawValue).format("MM/DD/YYYY hh:mm a");
+                            } else {
+                                data[i][columnName].Value = rawValue;
+                            }
+                            break;
+                        case "UniquePID":
+                            if (data[i][columnName].PointInst !== undefined) {
+                                if (data[i][columnName].PointInst > 0) {
+                                    data[i][columnName].Value = data[i][columnName].PointName;
+                                    data[i][columnName].rawValue = data[i][columnName].PointName;
+                                } else {
+                                    data[i][columnName].Value = "";
+                                    data[i][columnName].rawValue = "";
+                                }
+                            }
+                            break;
+                        default:
+                            data[i][columnName].Value = rawValue;
+                            break;
+                    }
+
+                    if (valueOptions !== undefined) {
+                        keyBasedValue = getKeyBasedOnValue(valueOptions, rawValue);
+                        if (!!keyBasedValue) {
+                            data[i][columnName].Value = keyBasedValue;
+                        }
+                    }
+
+                    if (!!data[i][columnName].rawValue) {
+                    } else {
+                        data[i][columnName].rawValue = rawValue;
+                    }
+                }
+            }
+            return data;
+        },
         renderHistoryReport = function (data) {
             self.activeDataRequest(false);
             if (data.err === undefined) {
@@ -1768,7 +1785,7 @@ var reportsViewModel = function () {
         renderPropertyReport = function (data) {
             self.activeDataRequest(false);
             if (data.err === undefined) {
-                reportData = data;
+                reportData = cleanResultData(data);
                 self.truncatedData(reportData);
                 renderReport();
             } else {
