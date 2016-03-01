@@ -2,7 +2,7 @@ var LEX = require('letsencrypt-express').testing();
 var http = require('http');
 var https = require('https');
 // NOTE: you could use the old https module if for some reason you don't want to support modern browsers
-// letsencrypt certonly --standalone --agree-tos --domains dorsett-tech.org --email rkendall@dorsett-tech.com
+// letsencrypt certonly --standalone --agree-tos --domains dorsett-tech.org,www.dorsett-tech.org,ydkscada.dorsett-tech.us --email rkendall@dorsett-tech.com
 var lex = LEX.create({
   approveRegistration: function(hostname, cb) {
     console.log('----------', cb);

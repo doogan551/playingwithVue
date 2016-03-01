@@ -65,11 +65,11 @@ if (processFlag === "gpl") {
 		});
 	});
 } else {
-	// importProcess.start();
 	mongo.connect(conn, function(err, db) {
-		fixUpisCollection(db, function(err){
+	importProcess.start();
+		/*fixUpisCollection(db, function(err) {
 			console.log('done', err);
-		});
+		});*/
 	});
 	// testHistory();
 }
@@ -503,61 +503,61 @@ function fixUpisCollection(db, callback) {
 		if (err)
 			return callback(err);
 
-	async.forEachSeries(indexes, function(index, indexCB) {
-		db.ensureIndex('upis', index.index, index.options, function(err, IndexName) {
-			logger.info(IndexName, "err:", err);
-			indexCB(null);
+		async.forEachSeries(indexes, function(index, indexCB) {
+			db.ensureIndex('upis', index.index, index.options, function(err, IndexName) {
+				logger.info(IndexName, "err:", err);
+				indexCB(null);
+			});
+		}, function(err) {
+			logger.info("done with indexing");
 		});
-	}, function(err) {
-		logger.info("done with indexing");
-	});
 
-	db.collection('upis').update({}, {
-		$set: {
-			_pStatus: 1
-		}
-	}, {
-		multi: true
-	}, function(err, result) {
-		if (err) callback(err);
-		db.collection(pointsCollection).find({}, {
-			_id: 1
-		}).toArray(function(err, points) {
+		db.collection('upis').update({}, {
+			$set: {
+				_pStatus: 1
+			}
+		}, {
+			multi: true
+		}, function(err, result) {
 			if (err) callback(err);
-			async.forEach(points, function(point, callback) {
-				var criteria = {
-					collection: 'upis',
-					query: {
-						_id: point._id
-					},
-					sort: [
-						['_id', 'asc']
-					],
-					updateObj: {
-						$set: {
-							_pStatus: 0
+			db.collection(pointsCollection).find({}, {
+				_id: 1
+			}).toArray(function(err, points) {
+				if (err) callback(err);
+				async.forEach(points, function(point, callback) {
+					var criteria = {
+						collection: 'upis',
+						query: {
+							_id: point._id
+						},
+						sort: [
+							['_id', 'asc']
+						],
+						updateObj: {
+							$set: {
+								_pStatus: 0
+							}
+						},
+						options: {
+							'new': true
 						}
-					},
-					options: {
-						'new': true
-					}
-				};
-				Utility.findAndModify(criteria, function(err, result) {
-					if (!!err)
-						logger.info(err);
-					/*else if (!result)
-						logger.info(point._id);
-					else if (result._pStatus !== 0)
-						logger.info(result);*/
-					callback(err);
+					};
+					Utility.findAndModify(criteria, function(err, result) {
+						if (!!err)
+							logger.info(err);
+						/*else if (!result)
+							logger.info(point._id);
+						else if (result._pStatus !== 0)
+							logger.info(result);*/
+						callback(err);
+					});
+				}, function(err) {
+					if (err) logger.info("err", err);
+					logger.info("finished fixUpisCollection");
+					return callback(err);
 				});
-			}, function(err) {
-				if (err) logger.info("err", err);
-				logger.info("finished fixUpisCollection");
-				return callback(err);
 			});
 		});
-	});
 	});
 }
 
