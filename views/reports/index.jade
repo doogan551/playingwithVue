@@ -220,6 +220,9 @@ block content
 						.row
 							h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
 							table.table.table-striped.table-bordered.table-responsive.viewReport
+								tfoot.tableFooter
+									tr(data-bind="foreach: listOfColumns()")
+										td.strong(data-bind="attr: { colindex:  $index() }")
 				.pop.popInOutDiv.cursorPointer(data-bind='click: togglePop')
 					.popOut
 						.fa.fa-arrow-circle-up
