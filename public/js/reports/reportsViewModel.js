@@ -947,13 +947,18 @@ var reportsViewModel = function () {
         },
         getDurationText = function (duration) {
             var answer = "",
-                hour = (duration / 3600),
-                min = (~~((duration % 3600) / 60)),
-                sec = (duration % 60);
+                hour,
+                min,
+                sec;
 
-            answer += (hour > 1 ? toFixedComma(hour, 2) + " hours " : "");
-            answer += (min > 0 ? toFixedComma(min, 2) + " mins " : "");
-            answer += (sec > 0 ? toFixedComma(sec, 2) + " secs" : "");
+            if($.isNumeric(duration)) {
+                hour = (duration / 3600).toFixed(0);
+                min = (~~((duration % 3600) / 60));
+                sec = (duration % 60);
+                answer += (hour > 1 ? toFixedComma(hour, 2) + " hours " : "");
+                answer += (min > 0 ? toFixedComma(min, 2) + " mins " : "");
+                answer += (sec > 0 ? toFixedComma(sec, 2) + " secs" : "");
+            }
 
             return (answer !== "" ? answer : 0);
         },
