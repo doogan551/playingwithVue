@@ -47,7 +47,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         self.selectedFile = ko.observable();
         self.progressMessage = ko.observable('');
         self.progressPercent = ko.observable(0);
-        
+
         $('.progressmsgtxt').text('');
         $('.afterLoad').hide();
         $('.beforeLoad').show();
@@ -88,6 +88,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 fileReader = new FileReader(),
                 callback = function(response) {
                     // console.log("inside callback", response);
+                    console.log('response', self.selectedFile());
+                    self.selectedFile(self.firmwareFiles()[0]);
                     $modalProgress.show();
                     $modalWait.show();
 
@@ -153,8 +155,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             self.progressMessage('');
         });
         $modal.one('shown.bs.modal', function(e) {
-
-
+            console.log('shown', self.modal.isDownloading());
             if (self.modal.isDownloading()) {
 
                 $modalProgress.show();
@@ -168,9 +169,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     $btnSubmit.prop('disabled', true);
                 } else {
                     if (!!data.files.length) {
-                        if (!!self.selectedFile) {
-                            self.selectedFile(data.files[0]);
-                        }
+                        self.selectedFile(data.files[0]);
+                        console.log('selected', self.selectedFile());
                         $btnSubmit.prop('disabled', false);
                         self.firmwareFiles(data.files);
                     } else {
