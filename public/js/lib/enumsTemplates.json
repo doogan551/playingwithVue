@@ -183,64 +183,84 @@
         },
         "Alarm Types": {
             "Return to Normal": {
-                "enum": 2
+                "enum": 2,
+                "cat": 2
             },
             "Low Limit": {
-                "enum": 3
+                "enum": 3,
+                "cat": 1
             },
             "High Limit": {
-                "enum": 4
+                "enum": 4,
+                "cat": 1
             },
             "Offnormal": {
-                "enum": 5
+                "enum": 5,
+                "cat": 1
             },
             "Device Warm Start": {
-                "enum": 6
+                "enum": 6,
+                "cat": 2
             },
             "Device Failure": {
-                "enum": 7
+                "enum": 7,
+                "cat": 1
             },
             "Device Operational": {
-                "enum": 8
+                "enum": 8,
+                "cat": 2
             },
             "Device Stop Scan": {
-                "enum": 9
+                "enum": 9,
+                "cat": 2
             },
             "Device Configuration Started": {
-                "enum": 10
+                "enum": 10,
+                "cat": 2
             },
             "Device Configuration Failed": {
-                "enum": 11
+                "enum": 11,
+                "cat": 2
             },
             "Device Configuration Successful": {
-                "enum": 12
+                "enum": 12,
+                "cat": 2
             },
             "Reliability": {
-                "enum": 17
+                "enum": 17,
+                "cat": 1
             },
             "Run Time Limit": {
-                "enum": 20
+                "enum": 20,
+                "cat": 3
             },
             "Starts Limit": {
-                "enum": 26
+                "enum": 26,
+                "cat": 3
             },
             "Program Halt": {
-                "enum": 36
+                "enum": 36,
+                "cat": 1
             },
             "Device Failed - No COVs": {
-                "enum": 45
+                "enum": 45,
+                "cat": 1
             },
             "Low Warning": {
-                "enum": 47
+                "enum": 47,
+                "cat": 1
             },
             "High Warning": {
-                "enum": 48
+                "enum": 48,
+                "cat": 1
             },
             "Open": {
-                "enum": 49
+                "enum": 49,
+                "cat": 1
             },
             "Closed": {
-                "enum": 50
+                "enum": 50,
+                "cat": 1
             }
         },
         "Alarm States": {
