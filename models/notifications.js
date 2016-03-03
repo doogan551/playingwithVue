@@ -153,18 +153,19 @@ var	enums = Config.Enums,
 	alarmClassRevEnums = revEnums['Alarm Classes'],
 	alarmClassEnums = enums['Alarm Classes'],
 	alarmCategoryEnums = enums['Alarm Categories'],
+	eventCategoryEnum = alarmCategoryEnums.Event.enum,
 	maintenanceCategoryEnum = alarmCategoryEnums.Maintenance.enum,
+	returnCategoryEnum = alarmCategoryEnums.Return.enum,
 	ackStatusEnums = enums['Acknowledge Statuses'],
 	isAcknowledgedEnum = ackStatusEnums.Acknowledged.enum,
 	alarmTypesEnums = enums['Alarm Types'],
 	returnToNormalEnumsObj = (function () {
-		var returnCat = alarmCategoryEnums.Return.enum,
-			obj = {},
+		var obj = {},
 			entry,
 			alarmType;
 		for (alarmType in alarmTypesEnums) {
 			entry = alarmTypesEnums[alarmType];
-			if (entry.cat === returnCat)
+			if (entry.cat === returnCategoryEnum)
 				obj[entry.enum] = alarmType;
 		}
 		return obj;
@@ -278,16 +279,116 @@ var dbAlarmQueueLocked = false,
 					};
 				utility.get(criteria, cb);
 			},
-			dbUpdate: function (data, cb) {
+			dbUpdateThreads: function (data, cb) {
+				actions.utility.log('policies.dbUpdateThreads'); // DEBUG
+
 				// TEST
 				if (selfTest.enabled && !selfTest.useDb.policies) {
 					return cb(null, data);
 				}
 				// end TEST
 
-				// TODO
-				cb(null, data);
+				var updates = [],
+					inserts = {},
+					deletes = {},
+					collection = 'NotifyPolicies',
+					updateThreads = function (updateThreadsCB) {
+						async.each(updates, doUpdate, updateThreadsCB);
+					},
+					insertThreads = function (insertThreadsCB) {
+						async.forEachOf(inserts, doInsert, insertThreadsCB);
+					},
+					deleteThreads = function (deleteThreadsCB) {
+						async.forEachOf(updates, doUpdate, deleteThreadsCB);
+					},
+					doUpdate = function (update, doUpdateCB) {
+						var criteria = {
+								collection: collection,
+								query: {
+									'_id': update.policyId,
+									'threads.id': update.thread.id
+								},
+								updateObj: {
+									'$set': {
+										'threads.$': update.thread
+									}
+								}
+							};
+						utility.update(criteria, doUpdateCB);
+					},
+					doInsert = function (threads, policyId, doInsertCB) {
+						var criteria = {
+								collection: collection,
+								query: {
+									'_id': policyId
+								},
+								updateObj: {
+									'$push': {
+										'threads': threads
+									}
+								}
+							};
+						utility.update(criteria, doInsertCB);
+					},
+					doDelete = function (deleteIds, policyId, doDeleteCB) {
+						var criteria = {
+								collection: collection,
+								query: {
+									'_id': policyId
+								},
+								updateObj: {
+									'$pull': {
+										'threads': {
+											'id': {
+												$in: deleteIds
+											}
+										}
+									}
+								}
+							};
+						utility.update(criteria, doDeleteCB);
+					},
+					getPolicyThreadChanges = function (policy) {
+						var policyId = policy._id,
+							processThread = function (thread) {
+								if (!thread.hasOwnProperty('_state'))
+									return;
 
+								if (thread._state === UPDATED) {
+									updates.push({
+										policyId: policyId,
+										thread: thread
+									});
+								} else if (thread._state === ADDED) {
+									if (!inserts[policyId]) {
+										inserts[policyId] = [];
+									}
+									inserts[policyId].push(thread);
+								} else if ((thread._state === DELETED) && !thread._isNew) {
+									if (!deletes[policyId]) {
+										deletes[policyId] = [];
+									}
+									deletes[policyId].push(thread.id);
+								}
+
+								// Remove all temporary keys from the thread
+								delete thread._state;
+								delete thread._isNew;
+								delete threda._notifyAlarmMutated;
+								delete thread._notifyReturnBeforeDelete;
+							};
+						policy.threads.forEach(processThread);
+					};
+
+				data.policies.forEach(getPolicyThreadChanges);
+
+				async.parallel([
+					updateThreads,
+					insertThreads,
+					deleteThreads
+				], function (err) {
+					cb(err, data);
+				});
 			},
 			process: function (data, cb) {
 				actions.utility.log('policies.process'); // DEBUG
@@ -904,15 +1005,21 @@ var dbAlarmQueueLocked = false,
 				utility.get(query, cb);
 			},
 			dbInsert: function (queueEntries, cb) {
+				var criteria = {
+						collection: 'NotifyAlarmQueue',
+						insertObj: queueEntries
+					};
 				// TEST
 				if (selfTest.enabled && !selfTest.useDb.alarmQueue) {
 					Array.prototype.push.apply(selfTest.alarmQueue, queueEntries);
 					return cb(null);
 				}
 				// end TEST
-				utility.insert(queueEntries, cb);
+				utility.insert(criteria, cb);
 			},
 			dbRemoveAll: function (data, cb) {
+				actions.utility.log('alarmQueue.dbRemoveAll'); // DEBUG
+
 				// TEST
 				if (selfTest.enabled && !selfTest.useDb.alarmQueue) {
 					selfTest.alarmQueue.length = 0;
@@ -947,6 +1054,7 @@ var dbAlarmQueueLocked = false,
 								actions.alarmQueue.processNew(info, policyCB);
 							}
 						} else {
+							actions.utility.log('\tPolicy not found');
 							policyCB();
 						}
 					}
@@ -958,7 +1066,6 @@ var dbAlarmQueueLocked = false,
 
 				// Process the queue
 				async.eachSeries(data.alarmQueue, alarmQueueIteratee, function (err) {
-					// actions.utility.log(data); // DEBUG
 					cb(err, data);
 				});
 			},
@@ -980,6 +1087,7 @@ var dbAlarmQueueLocked = false,
 
 				thread = actions.policies.getActiveThread(policy.threads, queueEntry.upi);
 				if (!!thread) {
+					actions.utility.log('\tFound existing thread');
 					// Add the thread to our info object
 					info.thread = thread;
 
@@ -995,14 +1103,17 @@ var dbAlarmQueueLocked = false,
 					// Get isAcknowledged status
 					actions.policies.isThreadAcknowledged(info, function (err, isAcknowledged) {
 						if (isAcknowledged) {
+							actions.utility.log('\tExisting thread was acknowledged. Creating new thread.');
 							actions.policies.setThreadState(info.thread, DELETED);
 							createNewThread();
 						} else {
+							actions.utility.log('\tExisting thread has not been acknowledged. Mutating existing thread.');
 							actions.policies.mutateThread(info);
 						}
 						return cb(err);
 					});
 				} else {
+					actions.utility.log('\tCreating new thread');
 					createNewThread();
 					return cb();
 				}
@@ -1279,13 +1390,12 @@ var dbAlarmQueueLocked = false,
 			});
 		},
 		processIncomingAlarm: function (alarm) {
-			actions.utility.log('processing incoming alarm');
-			if (!alarm.almNotify) {
+			actions.utility.log('\nINCOMING ALARM!');
+			if (!alarm.almNotify || alarm.msgCat === eventCategoryEnum) {
 				return;
 			}
 
 			function getPoint (cb) {
-				actions.utility.log('getting point');
 				var criteria = {
 						collection: 'points',
 						query: {
@@ -1297,7 +1407,6 @@ var dbAlarmQueueLocked = false,
 				});
 			}
 			function getPointPolicies (point, cb) {
-				actions.utility.log('getting point policies');
 				var info = {
 						point: point,
 						policyIds: [],
@@ -1307,8 +1416,8 @@ var dbAlarmQueueLocked = false,
 					len,
 					policy;
 				// TODO learn how policies are stored on the point
-				if (point.notifyPolicies.length) {
-					actions.policies.get(point.notifyPolicies, function (err, policies) {
+				if (point["Notify Policies"].length) {
+					actions.policies.dbGet(point["Notify Policies"], function (err, policies) {
 						if (err) {
 							cb(err);
 						}
@@ -1326,7 +1435,6 @@ var dbAlarmQueueLocked = false,
 				}
 			}
 			function processPointPolicies (info, cb) {
-				actions.utility.log('processing point policies');
 				if (info.policyIds.length === 0) {
 					cb(null);
 				}
@@ -1362,7 +1470,7 @@ var dbAlarmQueueLocked = false,
 
 				// For now let's assume nothing is immediate
 				queueEntry = {
-					type: NEW,
+					type: alarm.msgCat === returnCategoryEnum ? RETURN:NEW,
 					policyIds: info.policyIds,
 					upi: alarm.upi,
 					alarmId: alarm._id,
@@ -1375,17 +1483,17 @@ var dbAlarmQueueLocked = false,
 					Name2: alarm.Name2,
 					Name3: alarm.Name3,
 					Name4: alarm.Name4,
-					pointType: alarm.pointType,
+					pointType: alarm.PointType,
 					Security: alarm.Security,
 					notifyReturnNormal: getNotifyReturnNormal(info.point['Alarm Messages'])
 				};
 
 				if (dbAlarmQueueLocked) {
-					actions.utility.log('adding alarmQueue entry to tempAlarmQueue');
+					actions.utility.log('Adding to tempAlarmQueue');
 					tempAlarmQueue.push(queueEntry);
 					return cb(null);
 				} else {
-					actions.utility.log('adding alarmQueue entry to db');
+					actions.utility.log('Adding NotifyAlarmQueue');
 					actions.alarmQueue.dbInsert(queueEntry, function (writeResult) {
 						var err = writeResult && writeResult.writeConcernError;
 						if (!!err) {
@@ -1406,6 +1514,7 @@ var dbAlarmQueueLocked = false,
 					// TODO log error?
 					actions.utility.log(err); // DEBUG
 				}
+				actions.utility.log('\nDONE WITH INCOMING ALARM!');
 			});
 		},
 		processImmediate: function () {
@@ -1424,7 +1533,7 @@ function run () {
 			dbAlarmQueueLocked = false;
 		};
 
-	actions.utility.log(['RUNNING CRON JOB, ', date.getHours(), ':', date.getMinutes(), ', ', date.getTime()].join('')); // DEBUG
+	actions.utility.log(['\nRUNNING CRON JOB, ', date.getHours(), ':', date.getMinutes(), ', ', date.getTime()].join('')); // DEBUG
 
 	// Do scheduled task stuff
 
@@ -1468,7 +1577,7 @@ function run () {
 			actions.policies.process,
 			actions.notifications.buildNotifyList,
 			actions.notifications.sendNotifications,
-			actions.policies.dbUpdate,
+			actions.policies.dbUpdateThreads,
 			actions.alarmQueue.dbRemoveAll
 		], function (err) {
 			if (err) {
@@ -1483,8 +1592,7 @@ function run () {
 				if (err) {
 					return logError(err);
 				}
-				actions.utility.log('DONE \n'); // DEBUG
-				// actions.utility.log(data); // DEBUG
+				actions.utility.log('DONE'); // DEBUG
 			});
 		});
 	});
@@ -1506,7 +1614,7 @@ new cronJob('00 * * * * *', run);	// Run notifications once per minute
 /////////////////////////////////// TEST ////////////////////////////////////////
 var selfTest = {
 		enabled: false,
-		opLogConnect: true,
+		opLogConnect: false,
 		dbConnect: false,
 		useDb: {
 			policies: true,
