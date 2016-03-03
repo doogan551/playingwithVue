@@ -126,6 +126,7 @@ var reportsViewModel = function () {
         activeDataRequests,
         reportSocket,
         exportEventSet,
+        totalizerDurationInHours = true,
         Name = "dorsett.reportUI",
         originalPoint = {},
         pointFilter = {
@@ -952,7 +953,7 @@ var reportsViewModel = function () {
             }
             return answer;
         },
-        getDurationText = function (duration, hoursOnly) {
+        getDurationText = function (duration, precision, hoursOnly) {
             var answer = "",
                 hour,
                 min,
@@ -960,14 +961,14 @@ var reportsViewModel = function () {
 
             if($.isNumeric(duration)) {
                 if (hoursOnly) {
-                    answer = (duration / 3600).toFixed(7);
+                    answer = (duration / 3600).toFixed(precision);
                 } else  {
                     hour = (duration / 3600).toFixed(0);
                     min = (~~((duration % 3600) / 60));
                     sec = (duration % 60);
-                    answer += (hour > 1 ? toFixedComma(hour, 2) + " hours " : "");
-                    answer += (min > 0 ? toFixedComma(min, 2) + " mins " : "");
-                    answer += (sec > 0 ? toFixedComma(sec, 2) + " secs" : "");
+                    answer += (hour > 1 ? toFixedComma(hour, precision) + " hours " : "");
+                    answer += (min > 0 ? toFixedComma(min, precision) + " mins " : "");
+                    answer += (sec > 0 ? toFixedComma(sec, precision) + " secs" : "");
                 }
             }
 
@@ -1041,7 +1042,7 @@ var reportsViewModel = function () {
                             tempPivot[columnName].rawValue = "";
                         } else {
                             if (operator === "total" || operator === "runtime" ) {
-                                tempPivot[columnName].Value = (rawValue === 0 ? 0 : getDurationText(rawValue, true));
+                                tempPivot[columnName].Value = (rawValue === 0 ? 0 : getDurationText(rawValue, columnConfig.precision, totalizerDurationInHours));
                             } else {
                                 tempPivot[columnName].Value = toFixedComma(rawValue, columnConfig.precision);
                             }
@@ -1561,7 +1562,9 @@ var reportsViewModel = function () {
                                 item.dataColumnName += " - " + item.operator.toLowerCase();
                                 columnTitle += " - " + item.operator;
                                 if (item.operator.toLowerCase() === "total" || item.operator.toLowerCase() === "runtime" ) {
-                                    columnTitle += " (Hours)";
+                                    if (totalizerDurationInHours) {
+                                        columnTitle += " (Hours)";
+                                    }
                                 }
                             }
                             break;
@@ -1759,8 +1762,8 @@ var reportsViewModel = function () {
                                     break;
                                 case "Totalizer":
                                     if (columnConfig.operator.toLowerCase() === "total" || columnConfig.operator.toLowerCase() === "runtime" ) {
-                                        footerText += "  " + getDurationText(calc.pageCalc, true);
-                                        footerText += " (" + getDurationText(calc.totalCalc, true) + ")";
+                                        footerText += "  " + getDurationText(calc.pageCalc, columnConfig.precision, totalizerDurationInHours);
+                                        footerText += " (" + getDurationText(calc.totalCalc, columnConfig.precision, totalizerDurationInHours) + ")";
                                     } else {
                                         footerText += "  " + toFixedComma(calc.pageCalc, columnConfig.precision);
                                         footerText += " (" + toFixedComma(calc.totalCalc, columnConfig.precision) + ")";
