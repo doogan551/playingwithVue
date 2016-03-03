@@ -618,6 +618,13 @@ var reportsViewModel = function () {
             });
             return result[0];
         },
+        getColumnConfigByOperatorAndUPI = function (op, upi) {
+            var result;
+            result = self.listOfColumns().filter(function (col) {
+                return (col.operator.toLowerCase() === op.toLowerCase() && col.upi === upi);
+            });
+            return result[0];
+        },
         validateFilters = function () {
             var results = [],
                 filters = $.extend(true, [], self.listOfFilters()),
@@ -945,19 +952,23 @@ var reportsViewModel = function () {
             }
             return answer;
         },
-        getDurationText = function (duration) {
+        getDurationText = function (duration, hoursOnly) {
             var answer = "",
                 hour,
                 min,
                 sec;
 
             if($.isNumeric(duration)) {
-                hour = (duration / 3600).toFixed(0);
-                min = (~~((duration % 3600) / 60));
-                sec = (duration % 60);
-                answer += (hour > 1 ? toFixedComma(hour, 2) + " hours " : "");
-                answer += (min > 0 ? toFixedComma(min, 2) + " mins " : "");
-                answer += (sec > 0 ? toFixedComma(sec, 2) + " secs" : "");
+                if (hoursOnly) {
+                    answer = (duration / 3600).toFixed(7);
+                } else  {
+                    hour = (duration / 3600).toFixed(0);
+                    min = (~~((duration % 3600) / 60));
+                    sec = (duration % 60);
+                    answer += (hour > 1 ? toFixedComma(hour, 2) + " hours " : "");
+                    answer += (min > 0 ? toFixedComma(min, 2) + " mins " : "");
+                    answer += (sec > 0 ? toFixedComma(sec, 2) + " secs" : "");
+                }
             }
 
             return (answer !== "" ? answer : 0);
@@ -976,7 +987,7 @@ var reportsViewModel = function () {
                 historyResults = historyData[i].HistoryResults;
                 tempPivot = {};
                 tempPivot["Date"] = {};
-                tempPivot["Date"].Value = new Date(historyData[i].timestamp * 1000).toLocaleString();
+                tempPivot["Date"].Value = moment.unix(historyData[i].timestamp).format("MM/DD/YYYY hh:mm:ss a");
                 tempPivot["Date"].rawValue = historyData[i].timestamp;
                 for (j = 0; j < historyResults.length; j++) {
                     columnName = historyResults[j].Name;
@@ -1006,14 +1017,9 @@ var reportsViewModel = function () {
                 columnName,
                 pivotedData = [],
                 tempPivot,
-                operator,
                 rawValue,
-                durationText,
-                hour,
-                min,
-                sec,
+                operator,
                 numberOfColumnsFound = totalizerData.length,
-                columnsArray = validateColumns(),
                 i,
                 j;
 
@@ -1024,8 +1030,8 @@ var reportsViewModel = function () {
                     tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YYYY hh:mm:ss a");
                     tempPivot["Date"].rawValue = moment.unix(totalizerData[0].totals[j].range.start);
                     for (i = 0; i < numberOfColumnsFound; i++) {
-                        columnConfig = columnsArray[i + 1];
-                        operator = totalizerData[i].op;
+                        operator = totalizerData[i].op.toLowerCase();
+                        columnConfig = getColumnConfigByOperatorAndUPI(operator, totalizerData[i].upi);
                         columnName = columnConfig.colName + " - " + operator;
                         rawValue = totalizerData[i].totals[j].total;
                         tempPivot[columnName] = {};
@@ -1035,8 +1041,7 @@ var reportsViewModel = function () {
                             tempPivot[columnName].rawValue = "";
                         } else {
                             if (operator === "total" || operator === "runtime" ) {
-                                tempPivot[columnName].Value = (rawValue === 0 ? 0 : getDurationText(rawValue));
-                                //tempPivot[columnName].Value = (rawValue === 0 ? 0 : moment.duration(rawValue, "seconds").humanize());
+                                tempPivot[columnName].Value = (rawValue === 0 ? 0 : getDurationText(rawValue, true));
                             } else {
                                 tempPivot[columnName].Value = toFixedComma(rawValue, columnConfig.precision);
                             }
@@ -1554,7 +1559,10 @@ var reportsViewModel = function () {
                             columnTitle = item.colName.replace(/_/g, " ");
                             if (columnIndex !== 0) {
                                 item.dataColumnName += " - " + item.operator.toLowerCase();
-                                columnTitle += " - " + item.operator.toLowerCase();
+                                columnTitle += " - " + item.operator;
+                                if (item.operator.toLowerCase() === "total" || item.operator.toLowerCase() === "runtime" ) {
+                                    columnTitle += " (Hours)";
+                                }
                             }
                             break;
                         case "Property":
@@ -1751,8 +1759,8 @@ var reportsViewModel = function () {
                                     break;
                                 case "Totalizer":
                                     if (columnConfig.operator.toLowerCase() === "total" || columnConfig.operator.toLowerCase() === "runtime" ) {
-                                        footerText += "  " + getDurationText(calc.pageCalc);
-                                        footerText += " (" + getDurationText(calc.totalCalc) + ")";
+                                        footerText += "  " + getDurationText(calc.pageCalc, true);
+                                        footerText += " (" + getDurationText(calc.totalCalc, true) + ")";
                                     } else {
                                         footerText += "  " + toFixedComma(calc.pageCalc, columnConfig.precision);
                                         footerText += " (" + toFixedComma(calc.totalCalc, columnConfig.precision) + ")";
