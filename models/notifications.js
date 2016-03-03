@@ -1279,8 +1279,6 @@ var dbAlarmQueueLocked = false,
 			});
 		},
 		processIncomingAlarm: function (alarm) {
-			return;
-			
 			actions.utility.log('processing incoming alarm');
 			if (!alarm.almNotify) {
 				return;
@@ -1450,7 +1448,7 @@ function run () {
 		data.policiesAckList = {};
 		data.notifyList = [];
 		data.date = date;
-		data.now = date.setSeconds(0);
+		data.now = date.setSeconds(0); // This sets the seconds in our date object to 0, and assigns the corresponding timestamp to data.now
 		// We reserve the 'data' variable name so that anytime you see it you can be sure it is of the form:
 		// {
 		//		policies: [],
@@ -1498,11 +1496,17 @@ module.exports = {
 	processIncomingAlarm: actions.processIncomingAlarm
 };
 
-// new cronJob('00 * * * * *', run);	// Run notifications once per minute
+new cronJob('00 * * * * *', run);	// Run notifications once per minute
+
+
+
+
+
 
 /////////////////////////////////// TEST ////////////////////////////////////////
 var selfTest = {
 		enabled: false,
+		opLogConnect: true,
 		dbConnect: false,
 		useDb: {
 			policies: true,
@@ -1780,14 +1784,21 @@ if (selfTest.enabled) {
 	};
 }
 
+
 // DB connect
 if (selfTest.dbConnect) {
 	var db = require('../helpers/db'),
 		config = require('config'),
 		dbConfig = config.get('Infoscan.dbConfig'),
-		connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
+		socketConfig = config.get('Infoscan.socketConfig'),
+		opLogConnectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', socketConfig.oplogDb].join(''),
+		connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName].join('');
 
-	db.connect(connectionString.join(''), function(err) {
+	if (selfTest.opLogConnect) {
+		var opLogState = require('mongo-oplog')(opLogConnectionString, {ns:'oplog.rs'}).tail();
+	}
+	
+	db.connect(connectionString, function(err) {
 		if (err) {
 			logger.debug(err);
 			return;
