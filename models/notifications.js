@@ -305,7 +305,7 @@ var dbAlarmQueueLocked = false,
 						var criteria = {
 								collection: collection,
 								query: {
-									'_id': update.policyId,
+									'_id': ObjectId(update.policyId),
 									'threads.id': update.thread.id
 								},
 								updateObj: {
@@ -320,11 +320,13 @@ var dbAlarmQueueLocked = false,
 						var criteria = {
 								collection: collection,
 								query: {
-									'_id': policyId
+									'_id': ObjectId(policyId)
 								},
 								updateObj: {
 									'$push': {
-										'threads': threads
+										'threads': {
+											'$each': threads
+										}
 									}
 								}
 							};
@@ -334,7 +336,7 @@ var dbAlarmQueueLocked = false,
 						var criteria = {
 								collection: collection,
 								query: {
-									'_id': policyId
+									'_id': ObjectId(policyId)
 								},
 								updateObj: {
 									'$pull': {
@@ -350,6 +352,8 @@ var dbAlarmQueueLocked = false,
 					},
 					getPolicyThreadChanges = function (policy) {
 						var policyId = policy._id,
+							_numberOfDeletes = 0,
+							_numberOfInserts = 0,
 							processThread = function (thread) {
 								if (!thread.hasOwnProperty('_state'))
 									return;
@@ -364,20 +368,23 @@ var dbAlarmQueueLocked = false,
 										inserts[policyId] = [];
 									}
 									inserts[policyId].push(thread);
+									_numberOfInserts++;
 								} else if ((thread._state === DELETED) && !thread._isNew) {
 									if (!deletes[policyId]) {
 										deletes[policyId] = [];
 									}
 									deletes[policyId].push(thread.id);
+									_numberOfDeletes++;
 								}
 
 								// Remove all temporary keys from the thread
 								delete thread._state;
 								delete thread._isNew;
-								delete threda._notifyAlarmMutated;
+								delete thread._notifyAlarmMutated;
 								delete thread._notifyReturnBeforeDelete;
 							};
 						policy.threads.forEach(processThread);
+						actions.utility.log(['\tPolicy', policy.name, 'thread(s) - #Updates:', updates.length, ', #Inserts:', _numberOfInserts, ', #Deletes:', _numberOfDeletes].join(' '));
 					};
 
 				data.policies.forEach(getPolicyThreadChanges);
@@ -387,6 +394,7 @@ var dbAlarmQueueLocked = false,
 					insertThreads,
 					deleteThreads
 				], function (err) {
+					actions.utility.log('\tFinished');
 					cb(err, data);
 				});
 			},
@@ -753,8 +761,8 @@ var dbAlarmQueueLocked = false,
 						for (var i = 0, len = members.length; i < len; i++) {
 							id = members[i];
 							member = info.data.usersObj[id];
-							memberAlerts = member.alerts[alarmClassRevEnums[queueEntry.almClass]] || member.alerts.Normal;
-							if (member && member.notificationsEnabled && memberAlerts.length) {
+							memberAlerts = (member && member.notificationsEnabled && (member.alerts[alarmClassRevEnums[queueEntry.almClass]] || member.alerts.Normal)) || [];
+							if (memberAlerts.length) {
 								recepients.push(id);
 							}
 						}
@@ -984,7 +992,7 @@ var dbAlarmQueueLocked = false,
 
 				for (i = 0; i < len; i++) {
 					thread = threads[i];
-					if ((thread.upi === upi) && actions.policies.isThreadActive(thread) === true) {
+					if ((thread.trigger.upi === upi) && actions.policies.isThreadActive(thread) === true) {
 						return thread;
 					}
 				}
@@ -1035,7 +1043,7 @@ var dbAlarmQueueLocked = false,
 				utility.remove(criteria, cb);
 			},
 			process: function (data, cb) {
-				actions.utility.log(['alarmQueue.processing ', data.alarmQueue.length, ' items'].join('')); // DEBUG
+				actions.utility.log(['alarmQueue.processing ', data.alarmQueue.length, ' item(s)'].join('')); // DEBUG
 				var policyLookup = actions.policies.getPolicyLookupTable(data.policies);
 				
 				function alarmQueueIteratee (queueEntry, queueCB) {
@@ -1074,6 +1082,7 @@ var dbAlarmQueueLocked = false,
 
 			},
 			processNew: function (info, cb) {
+				actions.utility.log('\tProcessing new alarm from NotifyAlarmQueue');
 				// info is an object with keys: policy, queueEntry, and data
 				var queueEntry = info.queueEntry,
 					policy = info.policy,
@@ -1081,7 +1090,10 @@ var dbAlarmQueueLocked = false,
 					createNewThread = function () {
 						thread = actions.policies.createThread(info);
 						if (!!thread) {
+							actions.utility.log('\tAdded new thread to policy threads array');
 							policy.threads.push(thread);
+						} else {
+							actions.utility.log('\tA thread was not added to the policy threads array; discarding new alarm');
 						}
 					};
 
@@ -1113,12 +1125,13 @@ var dbAlarmQueueLocked = false,
 						return cb(err);
 					});
 				} else {
-					actions.utility.log('\tCreating new thread');
+					actions.utility.log('\tAn existing thread matching the alarm UPI was not found; attempting to create new thread.');
 					createNewThread();
 					return cb();
 				}
 			},
 			processReturn: function (info, cb) {
+				actions.utility.log('\tProcessing new return from NotifyAlarmQueue');
 				// info is an object with keys: policy, queueEntry, and data
 				var queueEntry = info.queueEntry,
 					policy = info.policy,
@@ -1126,6 +1139,7 @@ var dbAlarmQueueLocked = false,
 
 				thread = actions.policies.getActiveThread(policy.threads, queueEntry.upi);
 				if (!!thread) {
+					actions.utility.log('\tFound thread matching return UPI; updating thread');
 					thread.status.isReturnedNormal = true;
 					thread.returnNormal = {
 						timestamp: queueEntry.timestamp,
@@ -1133,14 +1147,19 @@ var dbAlarmQueueLocked = false,
 						msgType: queueEntry.msgType,
 						msgCat: queueEntry.msgCat
 					};
+				} else {
+					actions.utility.log('\tA thread matching the return UPI was not found; discarding return');
 				}
 				return cb();
 			}
 		},
 		notifications: {
 			buildNotifyList: function (data, cb) {
+				actions.utility.log('notifications.buildNotifyList'); // DEBUG
+
 				var policy,
 					thread,
+					_numberOfQueuedItems = 0,
 					notifyQueue,
 					notification,
 					isUpdated,
@@ -1194,7 +1213,7 @@ var dbAlarmQueueLocked = false,
 									klen = thread.notifyQueue.length;
 								}
 							} else {
-								actions.utility.log('type: ' + notification.type + '; nextAction: ' + notification.nextAction);
+								_numberOfQueuedItems++;
 							}
 						}
 
@@ -1203,11 +1222,11 @@ var dbAlarmQueueLocked = false,
 						}
 					}
 				}
-				actions.utility.log(['notifications.buildNotifyList:', data.notifyList.length, 'items'].join(' ')); // DEBUG
+				actions.utility.log('\t' + _numberOfQueuedItems + ' item(s) remain in notify queue'); // DEBUG
 				cb(null, data);
 			},
 			sendNotifications: function (data, cb) {
-				actions.utility.log('notifications.sendNotifications'); // DEBUG
+				actions.utility.log('notifications.sendNotifications', '\t' + data.notifyList.length + ' item(s) for delivery now'); // DEBUG
 				// data.notifyList is of the form:
 				// [{
 				//	notification: {
@@ -1390,7 +1409,7 @@ var dbAlarmQueueLocked = false,
 			});
 		},
 		processIncomingAlarm: function (alarm) {
-			actions.utility.log('\nINCOMING ALARM!');
+			actions.utility.log('\nINCOMING ALARM');
 			if (!alarm.almNotify || alarm.msgCat === eventCategoryEnum) {
 				return;
 			}
@@ -1489,11 +1508,11 @@ var dbAlarmQueueLocked = false,
 				};
 
 				if (dbAlarmQueueLocked) {
-					actions.utility.log('Adding to tempAlarmQueue');
+					actions.utility.log('Adding alarm to tempAlarmQueue');
 					tempAlarmQueue.push(queueEntry);
 					return cb(null);
 				} else {
-					actions.utility.log('Adding NotifyAlarmQueue');
+					actions.utility.log('Adding alarm to NotifyAlarmQueue');
 					actions.alarmQueue.dbInsert(queueEntry, function (writeResult) {
 						var err = writeResult && writeResult.writeConcernError;
 						if (!!err) {
@@ -1514,7 +1533,7 @@ var dbAlarmQueueLocked = false,
 					// TODO log error?
 					actions.utility.log(err); // DEBUG
 				}
-				actions.utility.log('\nDONE WITH INCOMING ALARM!');
+				actions.utility.log('DONE (INCOMING ALARM)');
 			});
 		},
 		processImmediate: function () {
@@ -1613,7 +1632,7 @@ new cronJob('00 * * * * *', run);	// Run notifications once per minute
 
 /////////////////////////////////// TEST ////////////////////////////////////////
 var selfTest = {
-		enabled: false,
+		enabled: true,
 		opLogConnect: false,
 		dbConnect: false,
 		useDb: {
@@ -1850,7 +1869,7 @@ if (selfTest.enabled) {
 			}
 		},
 		dbGetNotifyPolicies: {
-			run: true,
+			run: false,
 			fn: function (cb) {
 				actions.policies.dbGet(["56d75ff6e98d941f89fc6ff5"], function (err, data) {
 					return cb(err, data);
