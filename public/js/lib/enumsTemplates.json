@@ -3924,7 +3924,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "COV Period": {
                     "isDisplayable": true,
@@ -4000,7 +4000,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 2,
-                    "Value": "V1.65"
+                    "Value": "V1.93"
                 },
                 "Inactive Text": {
                     "isDisplayable": true,
