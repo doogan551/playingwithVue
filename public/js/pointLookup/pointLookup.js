@@ -1038,6 +1038,11 @@ window.pointLookup = (function(module, ko, $) {
 
             if (module.MODE == 'select') {
                 if (externalFilterObj) {
+                    var inputCounter = 1;
+                    $searchGrid.parent().parent().find(".toolbar").find(".searchInput").each(function () {
+                        externalFilterObj["filter" + inputCounter++] = $(this).val();
+                    });
+
                     externalFilterObj.name1 = rowData.name1;
                     externalFilterObj.name2 = rowData.name2;
                     externalFilterObj.name3 = rowData.name3;

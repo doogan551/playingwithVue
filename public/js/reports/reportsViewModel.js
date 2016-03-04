@@ -6,7 +6,45 @@ var initKnockout = function () {
     var $startDate,
         initStartDate,
         $endDate,
-        initEndDate;
+        initEndDate,
+        incrementTime = function (incrementUnit, value) {
+        var arr = value.split(':'),
+            hrs = parseInt(arr[0], 10),
+            mins = parseInt(arr[1], 10),
+            wrapped = false;
+
+        switch (true) {
+            case (incrementUnit > 0 && mins < 59):
+            case (incrementUnit < 0 && mins > 0):
+                mins += incrementUnit;
+                break;
+            case (incrementUnit < 0 && mins === 0):
+                if (hrs === 0 ) {
+                    hrs = 24;
+                }
+                mins = 59;
+                wrapped = true;
+                break;
+            case (incrementUnit > 0 && mins >= 59):
+                if (hrs === 23 ) {
+                    hrs = -1;
+                }
+                mins = 0;
+                wrapped = true;
+                break;
+        }
+
+        if (wrapped) { // the increment is wrapping
+            switch (true) {
+                case (incrementUnit > 0 && hrs < 23):
+                case (incrementUnit < 0 && hrs > 0):
+                    hrs += incrementUnit;
+                    break;
+            }
+        }
+
+        return ((hrs < 10 ? '0' : '') + hrs) + ':' + ((mins < 10 ? '0' : '') + mins);
+    };
     ko.bindingHandlers.reportDatePicker = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var options = {
@@ -59,7 +97,7 @@ var initKnockout = function () {
                     doneText: 'Done',
                     autoclose: true,
                     afterDone: function () {
-                        timestamp = $(element).val();
+                        timestamp($(element).val());
                         viewModel.time = $(element).val();
                     }
                 };
@@ -67,7 +105,59 @@ var initKnockout = function () {
             $(element).clockpicker(options);
 
             $(element).change(function (event) {
-                $(element).clockpicker('resetclock');
+                if($(element).val().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
+                    timestamp = $(element).val();
+                    viewModel.time = $(element).val();
+                    $(element).clockpicker('resetClock');
+                    $(element).parent().removeClass("has-error");
+                    $(element).parent().attr("title", "");
+                } else {
+                    $(element).parent().addClass("has-error");
+                    $(element).parent().attr("title", "Error in time format");
+                }
+            });
+
+            $(element).keypress(function (event) {
+                return ($(element).val().length <= 4);
+            });
+
+            $(element).keyup(function (event) {
+                if ($(element).val().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
+                    $(element).parent().removeClass("has-error");
+                    $(element).parent().attr("title", "");
+                    $(element).clockpicker('hide');
+                    $(element).clockpicker('resetClock');
+                    $(element).clockpicker('show');
+                } else {
+                    $(element).parent().addClass("has-error");
+                    $(element).parent().attr("title", "Error in time format");
+                }
+            });
+
+            $(element).keydown(function (event) {
+                var timeValue = $(element).val();
+                if (event.keyCode !== 8 &&  // backspace
+                    event.keyCode !== 186 &&  // :
+                    event.keyCode !== 38 &&  // up
+                    event.keyCode !== 40 &&  // down
+                    !$.isNumeric(event.keyCode)) {
+                    event.preventDefault();
+                } else {
+                    if (timeValue.length === 4 && $.isNumeric(timeValue)) {
+                        if (timeValue.indexOf(":") === -1) {
+                            $(element).val(timeValue.substr(0, 2) + ":" + timeValue.substr(2, 2));
+                        }
+                    }
+
+                    if (event.keyCode === 38) {
+                        $(element).val(incrementTime(1, timeValue));
+                    } else if (event.keyCode === 40) {
+                        $(element).val(incrementTime(-1, timeValue));
+                    }
+                    $(element).clockpicker('hide');
+                    $(element).clockpicker('resetClock');
+                    $(element).clockpicker('show');
+                }
             });
         },
 
@@ -130,10 +220,10 @@ var reportsViewModel = function () {
         Name = "dorsett.reportUI",
         originalPoint = {},
         pointFilter = {
-            name1Filter: '',
-            name2Filter: '',
-            name3Filter: '',
-            name4Filter: '',
+            name1: '',
+            name2: '',
+            name3: '',
+            name4: '',
             selectedPointTypes: []
         },
         pointFilterSearch = {
@@ -143,7 +233,8 @@ var reportsViewModel = function () {
             name4: '',
             selectedPointTypes: []
         },
-        propertyFields = [],
+        filtersPropertyFields = [],
+        columnsPropertyFields = [],
         windowUpi,
         resizeTimer = 400,
         lastResize = null,
@@ -419,7 +510,7 @@ var reportsViewModel = function () {
                     tempObject.calculation = "";
                     tempObject.valueOptions = undefined;
                     if (self.reportType === "Totalizer") {
-                        tempObject.valueList = getTotalizerValueList(tempObject.pointType),
+                        tempObject.valueList = getTotalizerValueList(tempObject.pointType);
                             tempObject.operator = (tempObject.valueList.length === 1 ? tempObject.valueList[0].text : "");
                     } else {
                         if (!!selectedPoint.Value.ValueOptions) {
@@ -435,7 +526,10 @@ var reportsViewModel = function () {
                     if (!!pid) {
                         ajaxPost({pointid: pid}, getPointURL, setColumnPoint);
                     }
-                    pointFilterSearch = filter;
+                    pointFilterSearch.name1 = filter.filter1;
+                    pointFilterSearch.name2 = filter.filter2;
+                    pointFilterSearch.name3 = filter.filter3;
+                    pointFilterSearch.name4 = filter.filter4;
                 },
                 windowOpenedCallback = function () {
                     windowRef.pointLookup.MODE = 'select';
@@ -453,7 +547,7 @@ var reportsViewModel = function () {
                 objIndex = selectObjectIndex,
                 updatedList = self.listOfFilters(),
                 tempObject = updatedList[selectObjectIndex],
-                pointSelectedCallback = function (pid, name, type) {
+                pointSelectedCallback = function (pid, name, type, filter) {
                     if (!!pid) {
                         tempObject.upi = pid;
                         tempObject.valueType = "UniquePID";
@@ -461,10 +555,14 @@ var reportsViewModel = function () {
                         updatedList[objIndex] = tempObject;
                         updateListOfFilters(updatedList);
                     }
+                    pointFilterSearch.name1 = filter.filter1;
+                    pointFilterSearch.name2 = filter.filter2;
+                    pointFilterSearch.name3 = filter.filter3;
+                    pointFilterSearch.name4 = filter.filter4;
                 },
                 windowOpenedCallback = function () {
                     windowRef.pointLookup.MODE = 'select';
-                    windowRef.pointLookup.init(pointSelectedCallback, {});
+                    windowRef.pointLookup.init(pointSelectedCallback, pointFilterSearch);
                 };
 
             windowRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'Select Point Filter', {
@@ -479,8 +577,7 @@ var reportsViewModel = function () {
                     valueType: "",
                     colName: ""
                 },
-                selectedPointTypes = pointFilter.selectedPointTypes,
-                pointSelectedCallback = function (pid, name, type) {
+                pointSelectedCallback = function (pid, name, type, filter) {
                     if (!!pid) {
                         tempObject.upi = pid;
                         tempObject.valueType = "String";
@@ -489,16 +586,9 @@ var reportsViewModel = function () {
                 },
                 windowOpenedCallback = function () {
                     pointSelectorRef.pointLookup.MODE = 'select';
-                    pointSelectorRef.pointLookup.init(pointSelectedCallback, {
-                        name1: point["Report Config"].pointFilter.name1Filter,
-                        //name1FilterOn: (point["Report Config"].pointFilter.name1Filter
-                        name2: point["Report Config"].pointFilter.name2Filter,
-                        name3: point["Report Config"].pointFilter.name3Filter,
-                        name4: point["Report Config"].pointFilter.name4Filter
-                    });
-
-                    if (selectedPointTypes.length > 0) {
-                        pointSelectorRef.window.pointLookup.checkPointTypes(selectedPointTypes);
+                    pointSelectorRef.pointLookup.init(pointSelectedCallback, pointFilter);
+                    if (pointFilter.selectedPointTypes.length > 0) {
+                        pointSelectorRef.window.pointLookup.checkPointTypes(pointFilter.selectedPointTypes);
                     }
                 };
 
@@ -628,15 +718,22 @@ var reportsViewModel = function () {
         },
         validateFilters = function () {
             var results = [],
+                valid,
                 filters = $.extend(true, [], self.listOfFilters()),
                 i;
 
             for (i = 0; i < filters.length; i++) {
                 if (filters[i].filterName !== "") {
+                    valid = true;
                     switch (filters[i].valueType) {
                         case "Timet":
                         case "DateTime":
-                            filters[i].value = getAdjustedDatetime(filters[i]);
+                            if (filter.time.toString().match(/^([0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/)) {
+                                filters[i].value = getAdjustedDatetime(filters[i]);
+                            } else {
+                                valid = false;
+                                filters[i].error = "Invalid Time format";
+                            }
                             break;
                         case "HourMinSec":
                         case "HourMin":
@@ -650,7 +747,10 @@ var reportsViewModel = function () {
                             break;
                     }
                     results.push(filters[i]);
-                    delete results[results.length - 1]["valueList"]; // valuelist is only used in UI
+                    if (valid) {  // clean fields only used during UI
+                        delete results[results.length - 1]["valueList"];
+                        delete results[results.length - 1]["error"];
+                    }
                 }
             }
 
@@ -728,22 +828,35 @@ var reportsViewModel = function () {
         getProperty = function (key) {
             return window.workspaceManager.config.Enums.Properties[key];
         },
-        getEnumProperties = function () {
+        collectEnumProperties = function () {
+            getPointPropertiesForFilters();
+            getPointPropertiesForColumns();
+        },
+        getPointPropertiesForFilters = function () {
             var props = window.workspaceManager.config.Enums.Properties,
+                listOfKeysToSkip = [],
                 prop,
                 key;
 
             for (key in props) {
                 if (props.hasOwnProperty(key)) {
-                    if (props[key].reportEnable === true) {
+                    if (props[key].reportEnable === true && $.inArray(key, listOfKeysToSkip) === -1) {
                         prop = {};
                         prop.name = key;
                         prop.valueType = props[key].valueType;
-                        propertyFields.push(prop);
-                        self.listOfPropertiesLength += 1;
+                        filtersPropertyFields.push(prop);
                     }
                 }
             }
+            self.listOfFilterPropertiesLength = filtersPropertyFields.length;
+        },
+        getPointPropertiesForColumns = function () {
+            var listOfKeysToRemove = ["Name"];
+
+            columnsPropertyFields = filtersPropertyFields.filter(function (enumProp) {
+                return ($.inArray(enumProp.name, listOfKeysToRemove) === -1);
+            });
+            self.listOfColumnPropertiesLength = columnsPropertyFields.length;
         },
         getKeyBasedOnValue = function getKeyValue(obj, value) {
             for (var key in obj) {
@@ -787,19 +900,21 @@ var reportsViewModel = function () {
                 }
 
                 for (key in filters) {
-                    filter = filters[key];
-                    if (!filter.filterName || _.isEmpty(filter)) {
-                        continue;
-                    }
-                    switch (filter.filterName) {
-                        case "Start_Date":
-                            startDate = parseInt(filter.value, 10);
-                            break;
-                        case "End_Date":
-                            endDate = parseInt(filter.value, 10);
-                            break;
-                        default:
-                            break;
+                    if (filters.hasOwnProperty(key)) {
+                        filter = filters[key];
+                        if (!filter.filterName || _.isEmpty(filter)) {
+                            continue;
+                        }
+                        switch (filter.filterName) {
+                            case "Start_Date":
+                                startDate = parseInt(filter.value, 10);
+                                break;
+                            case "End_Date":
+                                endDate = parseInt(filter.value, 10);
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
 
@@ -818,11 +933,7 @@ var reportsViewModel = function () {
                         break;
                 }
 
-                pointFilter.selectedPointTypes = getPointLookupFilterValues(pointSelectorRef);
-                pointFilter.name1Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 1);
-                pointFilter.name2Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 2);
-                pointFilter.name3Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 3);
-                pointFilter.name4Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 4);
+                pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
                 point["Report Config"].pointFilter = pointFilter;
                 point["Report Config"].columns = columns;
                 point["Report Config"].filters = filters;
@@ -852,7 +963,7 @@ var reportsViewModel = function () {
             return result;
         },
         tabSwitch = function (tabNumber) {
-            if ($.isNumeric(tabNumber) === true) {
+            if ($.isNumeric(tabNumber)) {
                 $tabs.find("li").removeClass("active");
                 $tabs.find("li:eq(" + (tabNumber - 1) + ")").addClass("active");
             }
@@ -925,22 +1036,26 @@ var reportsViewModel = function () {
             $configurationContent = $direports.find(".configurationContent");
             $popAction = $direports.find(".pop.cursorPointer");
         },
-        getPointLookupFilterNameValues = function (iFrameContents, nameNumber) {
-            var result = "",
-                $nameInputField,
-                searchPattern = "input[placeholder='Segment " + nameNumber + "']";
+        getPointLookupFilterValues = function (iFrameContents) {
+            var $nameInputField,
+                pf = {
+                    name1: "",
+                    name2: "",
+                    name3: "",
+                    name4: "",
+                    selectedPointTypes: []
+                },
+                inputCounter = 1;
 
-            $nameInputField = iFrameContents.find(searchPattern);
+            iFrameContents.find(".toolbar").find(".searchInput").each(function () {
+                $nameInputField = $(this);
+                pf["name" + inputCounter++] = $nameInputField.val();
+            });
+            pf.selectedPointTypes = getPointLookupSelectedValues(pointSelectorRef);
 
-            if ($nameInputField.attr("disabled") === "disabled") {
-                result = "ISBLANK";
-            } else {
-                result = ($nameInputField[0] ? $nameInputField[0].value : "");
-            }
-
-            return result;
+            return pf;
         },
-        getPointLookupFilterValues = function (pointSelectorReference) {
+        getPointLookupSelectedValues = function (pointSelectorReference) {
             var answer = [],
                 selectedPointTypes,
                 numberOfAllPointTypes;
@@ -999,7 +1114,7 @@ var reportsViewModel = function () {
                     } else {
                         columnConfig = getColumnConfigByColName(columnName);
                         //console.log("[" + i + "] ==>  historyResults[" + j + "].Value = " + historyResults[j].Value);
-                        if ($.isNumeric(historyResults[j].Value) === true) {
+                        if ($.isNumeric(historyResults[j].Value)) {
                             tempPivot[columnName].Value = toFixedComma(historyResults[j].Value, columnConfig.precision);
                             tempPivot[columnName].rawValue = parseFloat(historyResults[j].Value);
                         } else {
@@ -1091,11 +1206,7 @@ var reportsViewModel = function () {
             point._pStatus = 0;  // activate report
             point["Report Config"].columns = validateColumns(true);
             point["Report Config"].filters = validateFilters();
-            pointFilter.selectedPointTypes = getPointLookupFilterValues(pointSelectorRef);
-            pointFilter.name1Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 1);
-            pointFilter.name2Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 2);
-            pointFilter.name3Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 3);
-            pointFilter.name4Filter = getPointLookupFilterNameValues($pointSelectorIframe.contents(), 4);
+            pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
             point["Report Config"].pointFilter = pointFilter;
             //point["Point Refs"] = buildPointRefsArray();
             switch (self.reportType) {
@@ -1112,6 +1223,7 @@ var reportsViewModel = function () {
                     console.log(" - - - DEFAULT  init()");
                     break;
             }
+            point.name1 = $pointName1.val();
             point.name2 = $pointName2.val();
             point.name3 = $pointName3.val();
             point.name4 = $pointName4.val();
@@ -1746,7 +1858,7 @@ var reportsViewModel = function () {
                         var reportColumns = validateColumns(),
                             calcEnabled = false,
                             $firstColumn;
-                        this.api().columns('.calculate').every(function (whatIsThis) {
+                        this.api().columns('.calculate').every(function () {
                             var column = this,
                                 columnIndex = column[0],
                                 columnConfig = reportColumns[columnIndex],
@@ -1804,7 +1916,7 @@ var reportsViewModel = function () {
                     lengthChange: true,
                     lengthMenu: [[10, 15, 25, 50, 75, 100, -1], [10, 15, 25, 50, 75, 100, "All"]],
                     //bFiler: false,  // search box
-                    pageLength: 15
+                    pageLength: self.selectedPageLength()
                 });
             }
 
@@ -1857,6 +1969,7 @@ var reportsViewModel = function () {
                 j,
                 columnsLength = columnArray.length,
                 columnName,
+                columnDataFound,
                 valueOptions,
                 rawValue,
                 keyBasedValue,
@@ -1869,13 +1982,12 @@ var reportsViewModel = function () {
                     columnConfig = columnArray[j];
                     columnName = (columnConfig.dataColumnName !== undefined ? columnConfig.dataColumnName : columnConfig.colName);
                     valueOptions = columnConfig.valueOptions;
+                    columnDataFound = (data[i][columnName] !== undefined);
 
-                    if (data[i][columnName] === undefined) {  // data was NOT found for this column
+                    if (!columnDataFound) {  // data was NOT found for this column
                         data[i][columnName] = {};
                         data[i][columnName] = data[i][columnName];
                         data[i][columnName].Value = "";
-                        columnConfig.valueType = "dataNotFound";
-
                     } else if (typeof data[i][columnName] !== 'object') {
                         rawValue = data[i][columnName];
                         data[i][columnName] = {};
@@ -1883,81 +1995,90 @@ var reportsViewModel = function () {
                     }
 
                     rawValue = data[i][columnName].Value;
-                    switch (columnConfig.valueType) {
-                        case "MinSec":
-                            htmlString = '<div class="durationCtrl durationDisplay"><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
-                            $customField = $(htmlString);
-                            $customField.find(".min").html(~~((rawValue % 3600) / 60));
-                            $customField.find(".sec").html(rawValue % 60);
-                            data[i][columnName].Value = $customField.html();
-                            break;
-                        case "HourMin":
-                            htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span></div>';
-                            $customField = $(htmlString);
-                            $customField.find(".hr").html(~~(rawValue / 3600));
-                            $customField.find(".min").html(~~((rawValue % 3600) / 60));
-                            data[i][columnName].Value = $customField.html();
-                            break;
-                        case "HourMinSec":
-                            htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
-                            $customField = $(htmlString);
-                            $customField.find(".hr").html(~~(rawValue / 3600));
-                            $customField.find(".min").html(~~((rawValue % 3600) / 60));
-                            $customField.find(".sec").html(rawValue % 60);
-                            data[i][columnName].Value = $customField.html();
-                            break;
-                        case "Float":
-                        case "Integer":
-                        case "Unsigned":
-                            data[i][columnName].Value = toFixedComma(rawValue, columnConfig.precision);
-                            break;
-                        case "String":
-                            if ($.isNumeric(rawValue) === true) {
-                                data[i][columnName].Value = toFixedComma(rawValue, columnConfig.precision);
-                            } else {
-                                data[i][columnName].Value = rawValue;
-                            }
-                            break;
-                        case "Bool":
-                        case "BitString":
-                        case "Enum":
-                        case "undecided":
-                        case "null":
-                        case "None":
-                            if ($.isNumeric(rawValue) === true) {
-                                data[i][columnName].Value = toFixedComma(rawValue, columnConfig.precision);
-                            } else {
-                                data[i][columnName].Value = rawValue;
-                            }
-                            break;
-                        case "DateTime":
-                        case "Timet":
-                            if ($.isNumeric(rawValue) === true && rawValue > 0) {
-                                data[i][columnName].Value = moment.unix(rawValue).format("MM/DD/YYYY hh:mm a");
-                            } else {
-                                data[i][columnName].Value = rawValue;
-                            }
-                            break;
-                        case "UniquePID":
-                            if (data[i][columnName].PointInst !== undefined) {
-                                if (data[i][columnName].PointInst > 0) {
-                                    data[i][columnName].Value = data[i][columnName].PointName;
-                                    data[i][columnName].rawValue = data[i][columnName].PointName;
-                                } else {
-                                    data[i][columnName].Value = "";
-                                    data[i][columnName].rawValue = "";
-                                }
-                            }
-                            break;
-                        default:
-                            data[i][columnName].Value = rawValue;
-                            break;
-                    }
 
-                    if (valueOptions !== undefined) {
-                        keyBasedValue = getKeyBasedOnValue(valueOptions, rawValue);
-                        if (!!keyBasedValue) {
-                            data[i][columnName].Value = keyBasedValue;
+                    if (columnDataFound) {
+                        switch (columnConfig.valueType) {
+                            case "MinSec":
+                                htmlString = '<div class="durationCtrl durationDisplay"><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
+                                $customField = $(htmlString);
+                                $customField.find(".min").html(~~((rawValue % 3600) / 60));
+                                $customField.find(".sec").html(rawValue % 60);
+                                data[i][columnName].Value = $customField.html();
+                                break;
+                            case "HourMin":
+                                htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span></div>';
+                                $customField = $(htmlString);
+                                $customField.find(".hr").html(~~(rawValue / 3600));
+                                $customField.find(".min").html(~~((rawValue % 3600) / 60));
+                                data[i][columnName].Value = $customField.html();
+                                break;
+                            case "HourMinSec":
+                                htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
+                                $customField = $(htmlString);
+                                $customField.find(".hr").html(~~(rawValue / 3600));
+                                $customField.find(".min").html(~~((rawValue % 3600) / 60));
+                                $customField.find(".sec").html(rawValue % 60);
+                                data[i][columnName].Value = $customField.html();
+                                break;
+                            case "Float":
+                            case "Integer":
+                            case "Unsigned":
+                                if ($.isNumeric(rawValue)) {
+                                    data[i][columnName].Value = toFixedComma(rawValue, columnConfig.precision);
+                                } else {
+                                    data[i][columnName].Value = rawValue;
+                                }
+                                break;
+                            case "String":
+                                if ($.isNumeric(rawValue)) {
+                                    data[i][columnName].Value = toFixedComma(rawValue, columnConfig.precision);
+                                } else {
+                                    data[i][columnName].Value = rawValue;
+                                }
+                                break;
+                            case "Bool":
+                            case "BitString":
+                            case "Enum":
+                            case "undecided":
+                            case "null":
+                            case "None":
+                                if ($.isNumeric(rawValue)) {
+                                    data[i][columnName].Value = toFixedComma(rawValue, columnConfig.precision);
+                                } else {
+                                    data[i][columnName].Value = rawValue;
+                                }
+                                break;
+                            case "DateTime":
+                            case "Timet":
+                                if ($.isNumeric(rawValue) && rawValue > 0) {
+                                    data[i][columnName].Value = moment.unix(rawValue).format("MM/DD/YYYY hh:mm a");
+                                } else {
+                                    data[i][columnName].Value = rawValue;
+                                }
+                                break;
+                            case "UniquePID":
+                                if (data[i][columnName].PointInst !== undefined) {
+                                    if (data[i][columnName].PointInst > 0) {
+                                        data[i][columnName].Value = data[i][columnName].PointName;
+                                        data[i][columnName].rawValue = data[i][columnName].PointName;
+                                    } else {
+                                        data[i][columnName].Value = "";
+                                        data[i][columnName].rawValue = "";
+                                    }
+                                } else {
+                                    //console.log("data[" + i + "][" + columnName+ "].PointInst is UNDEFINED");
+                                }
+                                break;
+                            default:
+                                data[i][columnName].Value = rawValue;
+                                break;
+                        }
+
+                        if (valueOptions !== undefined) {
+                            keyBasedValue = getKeyBasedOnValue(valueOptions, rawValue);
+                            if (!!keyBasedValue) {
+                                data[i][columnName].Value = keyBasedValue;
+                            }
                         }
                     }
 
@@ -2002,6 +2123,8 @@ var reportsViewModel = function () {
 
     self.reportType = "";
 
+    self.selectedPageLength = ko.observable("25");
+
     self.currentTimeStamp = "";
 
     self.reportDisplayTitle = ko.observable("");
@@ -2020,9 +2143,13 @@ var reportsViewModel = function () {
 
     self.listOfDurations = ko.observableArray([]);
 
-    self.listOfPropertiesLength = 0;
+    self.listOfFilterPropertiesLength = 0;
 
-    self.propertiesFilter = ko.observable("");
+    self.listOfColumnPropertiesLength = 0;
+
+    self.filterPropertiesSearchFilter = ko.observable("-blank-");
+
+    self.columnPropertiesSearchFilter = ko.observable("-blank-");
 
     self.truncatedData = ko.observable(false);
 
@@ -2091,7 +2218,7 @@ var reportsViewModel = function () {
                         break;
                     case "Property":
                         filterOpenPointSelector($filterByPoint);
-                        getEnumProperties();
+                        collectEnumProperties();
                         break;
                     default:
                         console.log(" - - - DEFAULT  init()");
@@ -2146,7 +2273,7 @@ var reportsViewModel = function () {
                         break;
                     case "Property":
                         filterOpenPointSelector($filterByPoint);
-                        getEnumProperties();
+                        collectEnumProperties();
                         point["Report Config"].returnLimit = 4000;
                         self.listOfColumns.push({
                             colName: "Name",
@@ -2170,6 +2297,8 @@ var reportsViewModel = function () {
                 $reporttitleInput.focus();
             }, 1500);
             setReportEvents();
+            self.filterPropertiesSearchFilter(""); // computed props jolt
+            self.columnPropertiesSearchFilter(""); // computed props jolt
         }
     };
 
@@ -2530,15 +2659,26 @@ var reportsViewModel = function () {
         }
     };
 
-    self.filteredProps = ko.computed(function () {
-        var filter = self.propertiesFilter().toLowerCase(),
-            props = propertyFields;
+    self.filterFilteredProps = ko.computed(function () {
+        var fFilter = self.filterPropertiesSearchFilter().toLowerCase();
 
-        if (filter === "") {
-            return props;
+        if (fFilter === "") {
+            return filtersPropertyFields;
         } else {
-            return ko.utils.arrayFilter(props, function (prop) {
-                return prop.name.toLowerCase().indexOf(filter) > -1;
+            return filtersPropertyFields.filter(function (prop) {
+                return prop.name.toLowerCase().indexOf(fFilter) > -1;
+            });
+        }
+    }, self);
+
+    self.columnFilteredProps = ko.computed(function () {
+        var cFilter = self.columnPropertiesSearchFilter().toLowerCase();
+
+        if (cFilter === "") {
+            return columnsPropertyFields;
+        } else {
+            return columnsPropertyFields.filter(function (colProp) {
+                return colProp.name.toLowerCase().indexOf(cFilter) > -1;
             });
         }
     }, self);
@@ -2564,7 +2704,7 @@ function applyBindings() {
         reportsVM.init();
         ko.applyBindings(reportsVM);
     }
-};
+}
 
 $(function () {
     applyBindings();

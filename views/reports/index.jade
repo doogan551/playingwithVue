@@ -64,12 +64,12 @@ block content
 													// ko if: ($parent.reportType === 'Property')
 													.dropdown.availablePropertiesContainer
 														button.btn.btn-default.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}",data-toggle="dropdown")
-															span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfPropertiesLength + ')')")
+															span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
 															span.caret.lm10px
 														ul.enumproperties.dropdown-menu
-															input.form-control.inputSearch(data-bind="textInput: $root.propertiesFilter", type="text", placeholder="Search...")
+															input.form-control.inputSearch(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
 															li(role="separator", class="divider")
-															// ko foreach: $root.filteredProps()
+															// ko foreach: $parent.columnFilteredProps()
 															li
 																a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
 															// /ko
@@ -145,12 +145,12 @@ block content
 													// ko if: ($parent.reportType === 'Property')
 													.dropdown.availablePropertiesContainer
 														button.btn.btn-default.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}",data-toggle="dropdown")
-															span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfPropertiesLength + ')')")
+															span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfFilterPropertiesLength + ')')")
 															span.caret.lm10px
 														ul.enumproperties.dropdown-menu
-															input.form-control.inputSearch(data-bind="textInput: $root.propertiesFilter", type="text", placeholder="Search...")
+															input.form-control.inputSearch(data-bind="textInput: $root.filterPropertiesSearchFilter", type="text", placeholder="Search...")
 															li(role="separator", class="divider")
-															// ko foreach: $root.filteredProps()
+															// ko foreach: $parent.filterFilteredProps()
 															li
 																a(data-bind="click: function(){ $root.selectPropertyFilter($element, $parentContext.$index(), $data) }, text: $data.name")
 															// /ko
