@@ -153,6 +153,7 @@ var	enums = Config.Enums,
 	alarmClassRevEnums = revEnums['Alarm Classes'],
 	alarmClassEnums = enums['Alarm Classes'],
 	alarmCategoryEnums = enums['Alarm Categories'],
+	alarmCategoryRevEnums = revEnums['Alarm Categories'],
 	eventCategoryEnum = alarmCategoryEnums.Event.enum,
 	maintenanceCategoryEnum = alarmCategoryEnums.Maintenance.enum,
 	returnCategoryEnum = alarmCategoryEnums.Return.enum,
@@ -299,7 +300,7 @@ var dbAlarmQueueLocked = false,
 						async.forEachOf(inserts, doInsert, insertThreadsCB);
 					},
 					deleteThreads = function (deleteThreadsCB) {
-						async.forEachOf(updates, doUpdate, deleteThreadsCB);
+						async.forEachOf(deletes, doDelete, deleteThreadsCB);
 					},
 					doUpdate = function (update, doUpdateCB) {
 						var criteria = {
@@ -394,7 +395,6 @@ var dbAlarmQueueLocked = false,
 					insertThreads,
 					deleteThreads
 				], function (err) {
-					actions.utility.log('\tFinished');
 					cb(err, data);
 				});
 			},
@@ -841,6 +841,7 @@ var dbAlarmQueueLocked = false,
 				if (numberOfAlertConfigIds > 0) {
 					return {
 						id: queueEntry.alarmId, // this will server as our unique id for the lifetime of the thread (even if it mutates)
+						notifyReturnNormal: queueEntry.notifyReturnNormal,
 						trigger: {
 							upi: queueEntry.upi,
 							alarmId: queueEntry.alarmId,
@@ -848,7 +849,7 @@ var dbAlarmQueueLocked = false,
 							msgText: queueEntry.msgText,
 							msgType: queueEntry.msgType,
 							almClass: queueEntry.almClass,
-							timestamp: queueEntry.msgTime * 1000,
+							timestamp: queueEntry.timestamp,
 							Name1: queueEntry.Name1,
 							Name2: queueEntry.Name2,
 							Name3: queueEntry.Name3,
@@ -861,12 +862,14 @@ var dbAlarmQueueLocked = false,
 							isReturnedNormal: false,
 							isWaitingReturnNormal: false
 						},
+						config: {
+							notifyReturnNormal: queueEntry.notifyReturnNormal
+						},
 						alertGroups: getAlertGroups(),
 						notifyQueue: [],
 						recepientHistory: [],
-						notifyReturnNormal: queueEntry.notifyReturnNormal,
-						_state: ADDED,
-						_isNew: true
+						_state: ADDED, // Temporary key (removed before the thread is pushed to the db)
+						_isNew: true // Temporary key
 					};
 				}
 				return null;
@@ -901,7 +904,7 @@ var dbAlarmQueueLocked = false,
 				trigger.msgCat = queueEntry.msgCat;
 				trigger.msgType = queueEntry.msgType;
 				trigger.almClass = queueEntry.almClass;
-				trigger.timestamp = queueEntry.msgTime * 1000;
+				trigger.timestamp = queueEntry.timestamp;
 
 				// Reset the status flags
 				status.isAcknowledged = false;
@@ -932,10 +935,10 @@ var dbAlarmQueueLocked = false,
 			isThreadAcknowledged: function (info, cb) {
 				// info is an object with keys policy, thread, data, and sometimes queueEntry
 				var thread = info.thread,
-					id = thread.alarmId,
+					alarmId = thread.trigger.alarmId, // This id is already a Mongo object id
 					policiesAckList = info.data.policiesAckList,
 					query = {
-						_id: id
+						_id: alarmId
 					},
 					fields = {
 						ackStatus: 1
@@ -945,8 +948,8 @@ var dbAlarmQueueLocked = false,
 					return cb(null, true);
 				}
 
-				if (policiesAckList.hasOwnProperty(id)) {
-					return cb(null, policiesAckList[id] === isAcknowledgedEnum);
+				if (policiesAckList.hasOwnProperty(alarmId)) {
+					return cb(null, policiesAckList[alarmId] === isAcknowledgedEnum);
 				}
 
 				// TEST
@@ -964,7 +967,7 @@ var dbAlarmQueueLocked = false,
 						isAcknowledged = (ackStatus === isAcknowledgedEnum);
 					
 					// Save the ack status so we don't search for it again this cycle
-					policiesAckList[id] = ackStatus;
+					policiesAckList[alarmId] = ackStatus;
 					// Update the thread's ackStatus
 					thread.status.isAcknowledged = isAcknowledged;
 
@@ -1082,7 +1085,7 @@ var dbAlarmQueueLocked = false,
 
 			},
 			processNew: function (info, cb) {
-				actions.utility.log('\tProcessing new alarm from NotifyAlarmQueue');
+				actions.utility.log('\tProcessing new alarm entry from NotifyAlarmQueue');
 				// info is an object with keys: policy, queueEntry, and data
 				var queueEntry = info.queueEntry,
 					policy = info.policy,
@@ -1099,7 +1102,7 @@ var dbAlarmQueueLocked = false,
 
 				thread = actions.policies.getActiveThread(policy.threads, queueEntry.upi);
 				if (!!thread) {
-					actions.utility.log('\tFound existing thread');
+					actions.utility.log('\tFound existing thread matching the alarm UPI');
 					// Add the thread to our info object
 					info.thread = thread;
 
@@ -1119,8 +1122,30 @@ var dbAlarmQueueLocked = false,
 							actions.policies.setThreadState(info.thread, DELETED);
 							createNewThread();
 						} else {
-							actions.utility.log('\tExisting thread has not been acknowledged. Mutating existing thread.');
-							actions.policies.mutateThread(info);
+							actions.utility.log('\tExisting thread has not been acknowledged');
+							// This is an existing thread. We have two options:
+							// a) Mutate the thread
+							// b) Update the thread
+							// The difference between an update and a mutate is that a mutate will also notify the thread's 
+							// recepient history (all recepients and all received types [voice, email, sms]), of the
+							// new alarm condition.
+							//
+							// There is one exception when we don't want to do this: if the thread doesn't notify of return to normal
+							// and the new alarm type is the same as the old alarm type, i.e. Open alarm to open alarm
+							// For example, consider this sequence:
+							// Tank level high alarm - Notify peeps
+							// Tank level returns normal - We don't notify (notify return setting tells us not to notify)
+							// Tank level high alarm - So here, we don't need to tell the recepient history the point is in high alarm
+							// again because they've never been notified otherwise.
+
+							// If the alarm category is different (ex: high warning -> high alarm), or if this thread notifies return normal and it has been sent out
+							if ((thread.trigger.msgCat !== queueEntry.msgCat) || (thread.config.notifyReturnNormal && !thread.notifyReturnNormal)) {
+								actions.utility.log('\tMutating existing thread');
+								actions.policies.mutateThread(info);
+							} else {
+								actions.utility.log('\tUpdating existing thread');
+								actions.policies.updateThread(info);
+							}
 						}
 						return cb(err);
 					});
@@ -1131,7 +1156,7 @@ var dbAlarmQueueLocked = false,
 				}
 			},
 			processReturn: function (info, cb) {
-				actions.utility.log('\tProcessing new return from NotifyAlarmQueue');
+				actions.utility.log('\tProcessing new return entry from NotifyAlarmQueue');
 				// info is an object with keys: policy, queueEntry, and data
 				var queueEntry = info.queueEntry,
 					policy = info.policy,
@@ -1139,7 +1164,7 @@ var dbAlarmQueueLocked = false,
 
 				thread = actions.policies.getActiveThread(policy.threads, queueEntry.upi);
 				if (!!thread) {
-					actions.utility.log('\tFound thread matching return UPI; updating thread');
+					actions.utility.log('\tFound thread matching the return UPI; adding & updating thread\'s return normal information.');
 					thread.status.isReturnedNormal = true;
 					thread.returnNormal = {
 						timestamp: queueEntry.timestamp,
@@ -1261,8 +1286,33 @@ var dbAlarmQueueLocked = false,
 					userNotifyList = {},
 					notifyEntry,
 					notification,
+					thread,
 					notifyMsg,
+					key,
 					i,
+					recepientHistoryLookup = (function(){
+						var obj = {},
+							thread,
+							history,
+							recepientHistory,
+							j;
+						for (i = 0; i < len; i++) { // len is initialized above our fn declaration
+							notifyEntry = data.notifyList[i];
+							thread = notifyEntry.thread;
+							recepientHistory = thread.recepientHistory;
+
+							if (!obj[thread.id]) {
+								obj[thread.id] = {};
+							}
+
+							for (j = 0; j < recepientHistory.length; j++) {
+								history = recepientHistory[j];
+								key = [history.userId, history.type, history.info].join('');
+								obj[thread.id][key] = history;
+							}
+						}
+						return obj;
+					})(),
 					getNotifyTypeText = function (type) {
 						var text;
 						if (type === SMS)
@@ -1274,7 +1324,7 @@ var dbAlarmQueueLocked = false,
 						return text;
 					},
 					formatMinutes = function (minutes) {
-						return minutes < 0 ? ('0'+minutes):minutes;
+						return minutes < 10 ? ('0'+minutes):minutes;
 					},
 					formatHours = function (hours) {
 						return hours > 12 ? (hours - 12):hours;
@@ -1291,7 +1341,7 @@ var dbAlarmQueueLocked = false,
 							return ['occurred on', date.getMonth() + '/' + date.getDate()];
 						}
 					},
-					getMsgDate = function (timestamp, type) {
+					getMsgDate = function (timestamp) {
 						var date = new Date(timestamp);
 						return [date.getMonth()+1, '/', date.getDate()].join('');
 					},
@@ -1304,14 +1354,26 @@ var dbAlarmQueueLocked = false,
 					getAorAn = function (text) {
 						return !!~['a', 'e', 'i', 'o', 'u'].indexOf(text.charAt(0)) ? 'an':'a';
 					},
-					getMessage = function (notifyEntry) {
-						var notification = notifyEntry.notification,
-							thread = notifyEntry.thread,
-							trigger = thread.trigger,
+					getReturnNormalMessage = function (timestamp) {
+						return ['It has since returned normal', '(' + getMsgDate(timestamp), getMsgTime(timestamp) + ').'].join();
+					},
+					getMessage = function () {
+						// thread and notification variables were set before this routine was called
+						var trigger = thread.trigger,
 							isNormalAlarmClass = trigger.almClass === alarmClassEnums.Normal.enum,
 							alarmClassText = alarmClassRevEnums[trigger.almClass],
+							notifyingReturnNormal = false,
 							msg = '',
+							timestamp,
 							obj;
+
+						if (!!notification.change && notification.change === 'return') {
+							obj = thread.returnNormal;
+							notifyingReturnNormal = true;
+						} else {
+							obj = trigger;
+						}
+						timestamp = obj.timestamp;
 
 						if (notification.type === VOICE) {
 							if (!isNormalAlarmClass) {
@@ -1319,18 +1381,22 @@ var dbAlarmQueueLocked = false,
 							} else {
 								msg = "Hello, this is a message from info-scan.";
 							}
+							msg = [msg, obj.msgText, 'occurred', getVoiceMsgDate(timestamp), 'at', getMsgTime(timestamp) + '.',].join(' ');
 
-							if (!!notification.change && notification.change === 'return') {
-								obj = thread.returnNormal;
+							if (thread.returnNormal && !notifyingReturnNormal) {
+								msg = [msg + '.', getReturnNormalMessage(thread.returnNormal.timestamp) ,'Thank you and goodbye.'].join(' ');
 							} else {
-								obj = thread.trigger;
+								msg += ' Thank you and goodbye.';
 							}
-							msg = [msg, obj.msgText, 'occurred', getMsgDate(obj.timestamp), 'at', getMsgTime(obj.timestamp) + '.', 'Thank you and goodbye.'].join(' ');
 						} else { // SMS or EMAIL
 							if (!isNormalAlarmClass) {
-								msg = alarmClassRevEnums[trigger.almClass] + ':';
+								msg = alarmClassText + ':';
 							}
-							msg = [msg, trigger.msgText, '(' + getMsgDate(trigger.timestamp), getMsgTime(trigger.timestamp) + ')'].join(' ');
+							msg = [msg, obj.msgText, '(' + getMsgDate(timestamp), getMsgTime(timestamp) + ')'].join(' ');
+							
+							if (thread.returnNormal && !notifyingReturnNormal) {
+								msg += '. ' + getReturnNormalMessage(thread.returnNormal.timestamp);
+							}
 						}
 						return msg;
 					};
@@ -1346,6 +1412,7 @@ var dbAlarmQueueLocked = false,
 					// Keep in mind that notifyEntry.notification is actually a pointer to the notification object on the thread, and any modifications
 					// made to this object will be stored in the db. So best not to modify it to make sure it stays slim and trim.
 					notification = notifyEntry.notification;
+					thread = notifyEntry.thread;
 
 					// We'll also collect notifications by user which can be used to prevent overwhelming the user
 					// with too many pages at one time (ex: we could combine messages or simply tell the user he/she has x new alarms to review)
@@ -1359,6 +1426,16 @@ var dbAlarmQueueLocked = false,
 					// Save our message for the activity log
 					notifyEntry.log = notifyMsg;
 
+					// Add recepient to our recepient history
+					key = [notification.userId, notification.type, notification.info].join('');
+					if (!recepientHistoryLookup[thread.id] || !recepientHistoryLookup[thread.id][key]) {
+						thread.recepientHistory.push({
+							userId: notification.userId,
+							type: notification.type,
+							info: notification.info
+						});
+					}
+
 					actions.utility.log('\t' + getNotifyTypeText(notification.type) + ' ' + notification.info + ': ' + notifyMsg); // DEBUG
 				}
 				cb(null, data);
@@ -1368,7 +1445,7 @@ var dbAlarmQueueLocked = false,
 			getTimestamp: function (info, offset) {
 				// info is an object with keys: policy, thread, data and probably more
 				// info.data.now is in milliseconds; offset is in minutes
-				return (info.data.now + (offset * MSPM));
+				return (parseInt(info.data.now + (offset * MSPM), 10));
 			},
 			log: function () {
 				for (var i = 0; i < arguments.length; i++) {
@@ -1497,7 +1574,7 @@ var dbAlarmQueueLocked = false,
 					msgText: alarm.msgText,
 					msgType: alarm.msgType,
 					almClass: alarm.almClass,
-					timestamp: alarm.msgTime * 1000,
+					timestamp: parseInt(alarm.msgTime * 1000, 10),
 					Name1: alarm.Name1,
 					Name2: alarm.Name2,
 					Name3: alarm.Name3,
@@ -1508,11 +1585,11 @@ var dbAlarmQueueLocked = false,
 				};
 
 				if (dbAlarmQueueLocked) {
-					actions.utility.log('Adding alarm to tempAlarmQueue');
+					actions.utility.log('Adding ' + alarmCategoryRevEnums[alarm.msgCat] + ' to tempAlarmQueue');
 					tempAlarmQueue.push(queueEntry);
 					return cb(null);
 				} else {
-					actions.utility.log('Adding alarm to NotifyAlarmQueue');
+					actions.utility.log('Adding ' + alarmCategoryRevEnums[alarm.msgCat] + ' to NotifyAlarmQueue');
 					actions.alarmQueue.dbInsert(queueEntry, function (writeResult) {
 						var err = writeResult && writeResult.writeConcernError;
 						if (!!err) {
@@ -1552,8 +1629,11 @@ function run () {
 			dbAlarmQueueLocked = false;
 		};
 
-	actions.utility.log(['\nRUNNING CRON JOB, ', date.getHours(), ':', date.getMinutes(), ', ', date.getTime()].join('')); // DEBUG
+	date.setSeconds(0);	// This should match the CRON run interval (i.e. if CRON runs every 30s, setSeconds(30))
+	date.setMilliseconds(0); // This should always be 0
 
+	actions.utility.log(['\nRUNNING CRON JOB, ', date.getHours(), ':', date.getMinutes(), ', ', date.getTime()].join('')); // DEBUG
+	
 	// Do scheduled task stuff
 
 	dbAlarmQueueLocked = true;
@@ -1576,7 +1656,7 @@ function run () {
 		data.policiesAckList = {};
 		data.notifyList = [];
 		data.date = date;
-		data.now = date.setSeconds(0); // This sets the seconds in our date object to 0, and assigns the corresponding timestamp to data.now
+		data.now = date.getTime();
 		// We reserve the 'data' variable name so that anytime you see it you can be sure it is of the form:
 		// {
 		//		policies: [],
@@ -1640,7 +1720,7 @@ var selfTest = {
 			alarmQueue: true,
 			holidays: false,
 			users: false,
-			alarmAcks: false
+			alarmAcks: true
 		},
 		policies: [{
 			_id: "1a5c",
@@ -1722,7 +1802,7 @@ var selfTest = {
 					}, {
 						type: VOICE,
 						info: '1111110001',
-						delay: 3
+						delay: 1
 					}],
 					Emergency: null,
 					Critical: null,
