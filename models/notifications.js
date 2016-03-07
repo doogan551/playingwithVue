@@ -385,7 +385,7 @@ var dbAlarmQueueLocked = false,
 								delete thread._notifyReturnBeforeDelete;
 							};
 						policy.threads.forEach(processThread);
-						actions.utility.log(['\tPolicy', policy.name, 'thread(s) - #Updates:', updates.length, ', #Inserts:', _numberOfInserts, ', #Deletes:', _numberOfDeletes].join(' '));
+						actions.utility.log(['\tPolicy', policy.name, '- #Updates:', updates.length, ', #Inserts:', _numberOfInserts, ', #Deletes:', _numberOfDeletes].join(' '));
 					};
 
 				data.policies.forEach(getPolicyThreadChanges);
@@ -409,6 +409,7 @@ var dbAlarmQueueLocked = false,
 						};
 						actions.policies.processThread(info, threadCB);
 					}
+					actions.utility.log('\tPolicy ' + policy.name + ' - ' + policy.threads.length + ' thread(s)');
 
 					async.each(policy.threads, processThread, function (err) {
 						policyCB(err);
@@ -1046,7 +1047,7 @@ var dbAlarmQueueLocked = false,
 				utility.remove(criteria, cb);
 			},
 			process: function (data, cb) {
-				actions.utility.log(['alarmQueue.processing ', data.alarmQueue.length, ' item(s)'].join('')); // DEBUG
+				actions.utility.log('alarmQueue.processing', '\t' + data.alarmQueue.length + ' item(s) in queue'); // DEBUG
 				var policyLookup = actions.policies.getPolicyLookupTable(data.policies);
 				
 				function alarmQueueIteratee (queueEntry, queueCB) {
@@ -1093,10 +1094,10 @@ var dbAlarmQueueLocked = false,
 					createNewThread = function () {
 						thread = actions.policies.createThread(info);
 						if (!!thread) {
-							actions.utility.log('\tAdded new thread to policy threads array');
+							actions.utility.log('\tAdded new thread to policy ' + policy.name);
 							policy.threads.push(thread);
 						} else {
-							actions.utility.log('\tA thread was not added to the policy threads array; discarding new alarm');
+							actions.utility.log('\tA thread was not added to policy ' + policy.name + '; discarding new alarm');
 						}
 					};
 
@@ -1184,7 +1185,7 @@ var dbAlarmQueueLocked = false,
 
 				var policy,
 					thread,
-					_numberOfQueuedItems = 0,
+					_numberOfQueuedItems,
 					notifyQueue,
 					notification,
 					isUpdated,
@@ -1197,6 +1198,7 @@ var dbAlarmQueueLocked = false,
 
 				for (i = 0, ilen = data.policies.length; i < ilen; i++) {
 					policy = data.policies[i];
+					_numberOfQueuedItems = 0;
 
 					for (j = 0, jlen = policy.threads.length; j < jlen; j++) {
 						thread = policy.threads[j];
@@ -1246,8 +1248,8 @@ var dbAlarmQueueLocked = false,
 							actions.policies.setThreadState(thread, UPDATED);
 						}
 					}
+					actions.utility.log('\tPolicy ' + policy.name + ' - ' + _numberOfQueuedItems + ' item(s) remain in notify queue'); // DEBUG
 				}
-				actions.utility.log('\t' + _numberOfQueuedItems + ' item(s) remain in notify queue'); // DEBUG
 				cb(null, data);
 			},
 			sendNotifications: function (data, cb) {
@@ -1436,7 +1438,7 @@ var dbAlarmQueueLocked = false,
 						});
 					}
 
-					actions.utility.log('\t' + getNotifyTypeText(notification.type) + ' ' + notification.info + ': ' + notifyMsg); // DEBUG
+					actions.utility.log('\tPolicy ' + notifyEntry.policy.name + ' - ' + getNotifyTypeText(notification.type) + ' ' + notification.info + ': ' + notifyMsg); // DEBUG
 				}
 				cb(null, data);
 			}
@@ -1488,6 +1490,7 @@ var dbAlarmQueueLocked = false,
 		processIncomingAlarm: function (alarm) {
 			actions.utility.log('\nINCOMING ALARM');
 			if (!alarm.almNotify || alarm.msgCat === eventCategoryEnum) {
+				actions.utility.log('DISCARDING ALARM', 'DONE');
 				return;
 			}
 
