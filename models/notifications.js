@@ -141,9 +141,10 @@ var async = require('async'),
 	utils = require('../helpers/utils'),
 	calendar = require('../models/calendar'),
 	Config = require('../public/js/lib/config.js'),
+	appConfig = require('config'),
 	cronJob = require('../models/cronjob'),
 	// oplog = require('../socket/oplog.js'),
-	ObjectId = require('mongodb').ObjectID,
+	ObjectID = require('mongodb').ObjectID,
 	logger = require("../helpers/logger")(module);
 
 var alarmsCollection = utils.CONSTANTS("alarmsCollection");
@@ -251,13 +252,13 @@ var dbAlarmQueueLocked = false,
 				// TEST
 				if (selfTest.enabled && !selfTest.useDb.policies) {
 					return cb(null, selfTest.policies.filter(function (policy) {
-						return !!~idList.indexOf(policy._id);
+						return !!~idList.indexOf(policy._id.toHexString());
 					}));
 				}
 				// end TEST
 
 				var objectIdList = idList.map(function (id) {
-						return ObjectId(id);
+						return ObjectID(id);
 					}),
 					criteria = {
 						collection: 'NotifyPolicies',
@@ -306,7 +307,7 @@ var dbAlarmQueueLocked = false,
 						var criteria = {
 								collection: collection,
 								query: {
-									'_id': ObjectId(update.policyId),
+									'_id': new ObjectID(update.policyId),
 									'threads.id': update.thread.id
 								},
 								updateObj: {
@@ -321,7 +322,7 @@ var dbAlarmQueueLocked = false,
 						var criteria = {
 								collection: collection,
 								query: {
-									'_id': ObjectId(policyId)
+									'_id': new ObjectID(policyId)
 								},
 								updateObj: {
 									'$push': {
@@ -337,7 +338,7 @@ var dbAlarmQueueLocked = false,
 						var criteria = {
 								collection: collection,
 								query: {
-									'_id': ObjectId(policyId)
+									'_id': new ObjectID(policyId)
 								},
 								updateObj: {
 									'$pull': {
@@ -352,7 +353,7 @@ var dbAlarmQueueLocked = false,
 						utility.update(criteria, doDeleteCB);
 					},
 					getPolicyThreadChanges = function (policy) {
-						var policyId = policy._id,
+						var policyId = policy._id.toHexString(),
 							_numberOfDeletes = 0,
 							_numberOfInserts = 0,
 							processThread = function (thread) {
@@ -499,7 +500,7 @@ var dbAlarmQueueLocked = false,
 				var len = policies.length,
 					i;
 				for (i = 0; i < len; i++) {
-					if (policies[i]._id === id) {
+					if (policies[i]._id.toHexString() === id) {
 						return policies[i];
 					}
 				}
@@ -512,7 +513,7 @@ var dbAlarmQueueLocked = false,
 					i;
 				for (i = 0; i < len; i++) {
 					policy = policies[i];
-					obj[policy._id] = policy;
+					obj[policy._id.toHexString()] = policy;
 				}
 				return obj;
 			},
@@ -936,10 +937,10 @@ var dbAlarmQueueLocked = false,
 			isThreadAcknowledged: function (info, cb) {
 				// info is an object with keys policy, thread, data, and sometimes queueEntry
 				var thread = info.thread,
-					alarmId = thread.trigger.alarmId, // This id is already a Mongo object id
+					alarmId = thread.trigger.alarmId,
 					policiesAckList = info.data.policiesAckList,
 					query = {
-						_id: alarmId
+						_id: new ObjectID(alarmId)
 					},
 					fields = {
 						ackStatus: 1
@@ -1482,7 +1483,7 @@ var dbAlarmQueueLocked = false,
 					obj = {};
 
 				for (var i = 0, len = users.length; i < len; i++) {
-					obj[users[i]._id] = users[i];
+					obj[users[i]._id.toHexString()] = users[i];
 				}
 				cb(null, obj);
 			});
@@ -1520,11 +1521,13 @@ var dbAlarmQueueLocked = false,
 						if (err) {
 							cb(err);
 						}
+						var policyId;
 						for (i = 0, len = policies.length; i < len; i++) {
 							policy = policies[i];
+							policyId = policy._id.toHexString();
 							if (policy.enabled) {
-								info.policyIds.push(policy._id);
-								info.policies[policy._id] = policy;
+								info.policyIds.push(policyId);
+								info.policies[policyId] = policy;
 							}
 						}
 						return cb(null, info);
@@ -1572,7 +1575,7 @@ var dbAlarmQueueLocked = false,
 					type: alarm.msgCat === returnCategoryEnum ? RETURN:NEW,
 					policyIds: info.policyIds,
 					upi: alarm.upi,
-					alarmId: alarm._id,
+					alarmId: alarm._id.toHexString(),
 					msgCat: alarm.msgCat,
 					msgText: alarm.msgText,
 					msgType: alarm.msgType,
@@ -1706,7 +1709,9 @@ module.exports = {
 	processIncomingAlarm: actions.processIncomingAlarm
 };
 
-new cronJob('00 * * * * *', run);	// Run notifications once per minute
+if (appConfig.runNotifications) {
+	new cronJob('00 * * * * *', run);	// Run notifications once per minute
+}
 
 
 

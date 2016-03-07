@@ -11,7 +11,8 @@ var johnny = {
       'site': 'Johnny',
       'email': 'jroberts@dorsett-tech.com'
     }
-  }
+  },
+  runNotifications: true
 };
 
 johnny.redisConfig = {
