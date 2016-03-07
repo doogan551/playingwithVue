@@ -174,7 +174,7 @@
         <div class="row">
             <div class="lh30 col col-xs-1"><b>1</b></div>
             <div class="lh30 col col-xs-2">If</div>
-            <div class="lh30 col col-xs-4" data-bind="html: logicPoints.point1.PointName() || '<div class=\'text-muted\'>No point selected</div>'"></div>
+            <div class="lh30 col col-xs-4" data-bind="html: logicPoints.point1().PointName()"></div>
             <!-- ko ifnot: isInEditMode -->
             <div class="lh30 col col-xs-2" data-bind="text: data['If Compare 1'].Value"></div>
             <div class="lh30 col col-xs-3" data-bind="text: data['If Value 1'].Value"></div>
@@ -212,7 +212,7 @@
             <div class="lh30 col col-xs-1"><b data-bind="text: $data"></b></div>
             <!-- ko ifnot: $parent.isInEditMode -->
             <div class="lh30 col col-xs-2" data-bind="text: $parent.data['If Result ' + $data].Value"></div>
-            <div class="lh30 col col-xs-4" data-bind="html: $parent.logicPoints['point' + $data].PointName() || '<div class=\'text-muted\'>No point selected</div>'"></div>
+            <div class="lh30 col col-xs-4" data-bind="html: $parent.logicPoints['point' + $data]().PointName()"></div>
             <div class="lh30 col col-xs-2" data-bind="text: $parent.data['If Compare ' + $data].Value"></div>
             <div class="lh30 col col-xs-3" data-bind="text: $parent.data['If Value ' + $data].Value"></div>
             <!-- /ko -->
@@ -226,7 +226,7 @@
                            propertyName: 'If Result ' + $data,
                            disable: $parent.data['If Result ' + $data].isReadOnly" class="form-control input-sm"></select>
             </div>
-            <div class="lh30 col col-xs-4" data-bind="html: $parent.logicPoints['point' + $data].PointName() || '<div class=\'text-muted\'>No point selected</div>'"></div>
+            <div class="lh30 col col-xs-4" data-bind="html: $parent.logicPoints['point' + $data]().PointName()"></div>
             <div class="col col-xs-2">
                 <select data-bind="options: $parent.data['If Compare ' + $data].ValueOptions,
                            optionsText: 'name',

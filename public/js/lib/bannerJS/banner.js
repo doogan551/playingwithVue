@@ -88,7 +88,7 @@
         _internals.$bannerText = _internals.$banner.find('.msg');
         _internals.$bannerText.text(msg);
         if (showCountdown && duration) {
-            _internals.$bannerText.append(' Closing in <span class="countdown"></span>...');
+            // _internals.$bannerText.append(' Closing in <span class="countdown"></span>...');
             countdown(duration);
         }
     }

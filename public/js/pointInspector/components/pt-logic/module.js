@@ -9,6 +9,20 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.apiEndpoint = params.apiEndpoint;
         this.isInEditMode = params.isInEditMode;
 
+        this.getPointName = function(data) {
+            console.log(this);
+            return ko.computed({
+                read: function() {
+                    return this;
+                },
+                write: function() {
+                    return this;
+
+                }
+
+            }, this);
+        };
+
         //define any tab triggers here
         //these are simple booleans for now
         this.tabTriggers = {
@@ -17,13 +31,13 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             permissions: ko.observable(false)
         };
         params.tabTriggers = this.tabTriggers;
-
+        // someObservableOrComputed.extend({ rateLimit: 0 });
         this.logicPoints = {
-            point1: this.utility.getPointRefProperty('Input Point 1').data,
-            point2: this.utility.getPointRefProperty('Input Point 2').data,
-            point3: this.utility.getPointRefProperty('Input Point 3').data,
-            point4: this.utility.getPointRefProperty('Input Point 4').data,
-            point5: this.utility.getPointRefProperty('Input Point 5').data
+            point1: ko.observable(this.utility.getPointRefProperty('Input Point 1').data),
+            point2: ko.observable(this.utility.getPointRefProperty('Input Point 2').data),
+            point3: ko.observable(this.utility.getPointRefProperty('Input Point 3').data),
+            point4: ko.observable(this.utility.getPointRefProperty('Input Point 4').data),
+            point5: ko.observable(this.utility.getPointRefProperty('Input Point 5').data)
         };
         params.initDOM();
     }
@@ -36,5 +50,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     };
 
     // Return component definition
-    return { viewModel: ViewModel, template: view };
+    return {
+        viewModel: ViewModel,
+        template: view
+    };
 });
