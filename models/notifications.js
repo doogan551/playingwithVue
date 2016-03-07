@@ -1489,6 +1489,9 @@ var dbAlarmQueueLocked = false,
 			});
 		},
 		processIncomingAlarm: function (alarm) {
+			if (!appConfig.runNotifications)
+				return;
+			
 			actions.utility.log('\nINCOMING ALARM');
 			if (!alarm.almNotify || alarm.msgCat === eventCategoryEnum) {
 				actions.utility.log('DISCARDING ALARM', 'DONE');
