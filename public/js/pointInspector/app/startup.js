@@ -919,7 +919,7 @@ define([
                 $saveIcon.removeClass(spinClass);
                 $('body').css('overflow', 'auto');
                 if (close) {
-                    setTimeout(window.close, hideAfter + 500);
+                    setTimeout(window.close, 1000);
                 }
             });
         };
