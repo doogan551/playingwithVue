@@ -12,6 +12,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
         var self = this;
         var $modalWait;
         var $modalError;
+        var $modalValue;
 
         var init = function() {
 
@@ -19,6 +20,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
             $modal = $('.modal.networkInfo');
             $modalWait = $('.modalScene.modalWait');
             $modalError = $('.modalScene.modalError');
+            $modalValue = $('.modalScene.modalValue');
             // Resize modal on shown event
             $modal.on('shown.bs.modal', self.sizeModal);
             self.currentTab = $('.devicesTable');
@@ -55,6 +57,8 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                     upi: self.data._id()
                 }, function(result) {
                     $modalWait.hide();
+                    $modalError.hide();
+                    $modalValue.hide();
                     if (!!result.error()) {
                         $modalError.show();
                         self.errorText(result.error());
@@ -63,7 +67,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                         self.NetworkPoints.buildArray(result.value()['Network Points'] || []);
                         self.RouterTable.buildArray(result.value()['Router Table'] || []);
                         self.currentTab.show();
-                        $modal.find('.modalValue').show();
+                        $modalValue.show();
                     }
                 });
             }
@@ -73,7 +77,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
             /*Display the instance number. If found then also display a link with the point name. If not found then try to
             find a Remote Unit point with the Instance property set for this. If found then display a link with the Remote Unit point name.*/
             $.ajax({
-                url: '/api/points/getpointref/instance/' + upi+'/'+self.data._id(),
+                url: '/api/points/getpointref/instance/' + upi + '/' + self.data._id(),
                 contentType: 'application/json',
                 dataType: 'json',
                 type: 'get'
@@ -116,12 +120,13 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                 this.set = function() {
                     var that = this;
                     self.getPointRef(_this.val(), function(err, data) {
+                        console.log(data, _this.val());
                         if (!!data.Name) {
                             that.Value(data.Name);
-                            that.Address(self.config.Utility.pointTypes.getUIEndpoint(data['Point Type'].Value, _this.val()).review.url);
+                            that.Address(self.config.Utility.pointTypes.getUIEndpoint(data['Point Type'].Value, data._id).review.url);
                             that.PointType(data['Point Type'].Value);
                         } else {
-                            that.Value(_this.val().toString());
+                            that.Value(data._id.toString());
                         }
                     });
                 };
