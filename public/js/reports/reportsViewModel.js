@@ -1184,6 +1184,98 @@ var reportsViewModel = function () {
             self.endDate = moment().unix();
             self.startDate = moment().subtract(duration.unit, duration.unitType).unix();
         },
+        formatDataField = function (dataField, columnConfig) {
+            var keyBasedValue,
+                htmlString,
+                $customField,
+                rawValue = dataField.Value;
+
+            dataField.rawValue = rawValue;
+            switch (columnConfig.valueType) {
+                case "MinSec":
+                    htmlString = '<div class="durationCtrl durationDisplay"><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
+                    $customField = $(htmlString);
+                    $customField.find(".min").html(~~((rawValue % 3600) / 60));
+                    $customField.find(".sec").html(rawValue % 60);
+                    dataField.Value = $customField.html();
+                    break;
+                case "HourMin":
+                    htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span></div>';
+                    $customField = $(htmlString);
+                    $customField.find(".hr").html(~~(rawValue / 3600));
+                    $customField.find(".min").html(~~((rawValue % 3600) / 60));
+                    dataField.Value = $customField.html();
+                    break;
+                case "HourMinSec":
+                    htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
+                    $customField = $(htmlString);
+                    $customField.find(".hr").html(~~(rawValue / 3600));
+                    $customField.find(".min").html(~~((rawValue % 3600) / 60));
+                    $customField.find(".sec").html(rawValue % 60);
+                    dataField.Value = $customField.html();
+                    break;
+                case "Float":
+                case "Integer":
+                case "Unsigned":
+                    if ($.isNumeric(rawValue)) {
+                        dataField.Value = toFixedComma(rawValue, columnConfig.precision);
+                    } else {
+                        dataField.Value = rawValue;
+                    }
+                    break;
+                case "String":
+                    if ($.isNumeric(rawValue)) {
+                        dataField.Value = toFixedComma(rawValue, columnConfig.precision);
+                    } else {
+                        dataField.Value = rawValue;
+                    }
+                    break;
+                case "Bool":
+                case "BitString":
+                case "Enum":
+                case "undecided":
+                case "null":
+                case "None":
+                    if ($.isNumeric(rawValue)) {
+                        dataField.Value = toFixedComma(rawValue, columnConfig.precision);
+                    } else {
+                        dataField.Value = rawValue;
+                    }
+                    break;
+                case "DateTime":
+                case "Timet":
+                    if ($.isNumeric(rawValue) && rawValue > 0) {
+                        dataField.Value = moment.unix(rawValue).format("MM/DD/YYYY hh:mm a");
+                    } else {
+                        dataField.Value = rawValue;
+                    }
+                    break;
+                case "UniquePID":
+                    if (dataField.PointInst !== undefined) {
+                        if (dataField.PointInst > 0) {
+                            dataField.Value = dataField.PointName;
+                            dataField.rawValue = dataField.PointName;
+                        } else {
+                            dataField.Value = "";
+                            dataField.rawValue = "";
+                        }
+                    } else {
+                        //console.log("dataField.PointInst is UNDEFINED");
+                    }
+                    break;
+                default:
+                    dataField.Value = rawValue;
+                    break;
+            }
+
+            if (columnConfig.valueOptions !== undefined) {
+                keyBasedValue = getKeyBasedOnValue(columnConfig.valueOptions, rawValue);
+                if (!!keyBasedValue) {
+                    dataField.Value = keyBasedValue;
+                }
+            }
+            return dataField;
+        },
         pivotHistoryData = function (historyData) {
             var columnConfig,
                 columnName,
@@ -1209,13 +1301,7 @@ var reportsViewModel = function () {
                     } else {
                         columnConfig = getColumnConfigByColName(columnName);
                         //console.log("[" + i + "] ==>  historyResults[" + j + "].Value = " + historyResults[j].Value);
-                        if ($.isNumeric(historyResults[j].Value)) {
-                            tempPivot[columnName].Value = toFixedComma(historyResults[j].Value, columnConfig.precision);
-                            tempPivot[columnName].rawValue = parseFloat(historyResults[j].Value);
-                        } else {
-                            tempPivot[columnName].Value = historyResults[j].Value;
-                            tempPivot[columnName].rawValue = historyResults[j].Value;
-                        }
+                        tempPivot[columnName] = formatDataField(historyResults[j], columnConfig);
                     }
                 }
                 pivotedData.push(tempPivot);
@@ -1264,6 +1350,43 @@ var reportsViewModel = function () {
             }
 
             return pivotedData;
+        },
+        cleanResultData = function (data) {
+            var columnArray = validateColumns(),
+                columnConfig,
+                i,
+                len = data.length,
+                j,
+                columnsLength = columnArray.length,
+                columnName,
+                columnDataFound,
+                rawValue;
+
+            for (i = 0; i < len; i++) {
+                for (j = 0; j < columnsLength; j++) {
+                    columnConfig = {};
+                    columnConfig = columnArray[j];
+                    columnName = (columnConfig.dataColumnName !== undefined ? columnConfig.dataColumnName : columnConfig.colName);
+                    columnDataFound = (data[i][columnName] !== undefined);
+
+                    if (!columnDataFound) {  // data was NOT found for this column
+                        data[i][columnName] = {};
+                        data[i][columnName] = data[i][columnName];
+                        data[i][columnName].Value = "";
+                        data[i][columnName].rawValue = "";
+                    } else if (typeof data[i][columnName] !== 'object') {
+                        rawValue = data[i][columnName];
+                        data[i][columnName] = {};
+                        data[i][columnName].Value = rawValue;
+                        data[i][columnName].rawValue = rawValue;
+                    }
+
+                    if (columnDataFound) {
+                        data[i][columnName] = formatDataField(data[i][columnName], columnConfig);
+                    }
+                }
+            }
+            return data;
         },
         adjustDatatableHeightWidth = function () {
             var heightAdjust = 240,
@@ -2085,135 +2208,6 @@ var reportsViewModel = function () {
                     });
                 }
             }
-        },
-        cleanResultData = function (data) {
-            var columnArray = validateColumns(),
-                columnConfig,
-                i,
-                len = data.length,
-                j,
-                columnsLength = columnArray.length,
-                columnName,
-                columnDataFound,
-                valueOptions,
-                rawValue,
-                keyBasedValue,
-                htmlString,
-                $customField;
-
-            for (i = 0; i < len; i++) {
-                for (j = 0; j < columnsLength; j++) {
-                    columnConfig = {};
-                    columnConfig = columnArray[j];
-                    columnName = (columnConfig.dataColumnName !== undefined ? columnConfig.dataColumnName : columnConfig.colName);
-                    valueOptions = columnConfig.valueOptions;
-                    columnDataFound = (data[i][columnName] !== undefined);
-
-                    if (!columnDataFound) {  // data was NOT found for this column
-                        data[i][columnName] = {};
-                        data[i][columnName] = data[i][columnName];
-                        data[i][columnName].Value = "";
-                    } else if (typeof data[i][columnName] !== 'object') {
-                        rawValue = data[i][columnName];
-                        data[i][columnName] = {};
-                        data[i][columnName].Value = rawValue;
-                    }
-
-                    rawValue = data[i][columnName].Value;
-
-                    if (columnDataFound) {
-                        switch (columnConfig.valueType) {
-                            case "MinSec":
-                                htmlString = '<div class="durationCtrl durationDisplay"><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
-                                $customField = $(htmlString);
-                                $customField.find(".min").html(~~((rawValue % 3600) / 60));
-                                $customField.find(".sec").html(rawValue % 60);
-                                data[i][columnName].Value = $customField.html();
-                                break;
-                            case "HourMin":
-                                htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span></div>';
-                                $customField = $(htmlString);
-                                $customField.find(".hr").html(~~(rawValue / 3600));
-                                $customField.find(".min").html(~~((rawValue % 3600) / 60));
-                                data[i][columnName].Value = $customField.html();
-                                break;
-                            case "HourMinSec":
-                                htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
-                                $customField = $(htmlString);
-                                $customField.find(".hr").html(~~(rawValue / 3600));
-                                $customField.find(".min").html(~~((rawValue % 3600) / 60));
-                                $customField.find(".sec").html(rawValue % 60);
-                                data[i][columnName].Value = $customField.html();
-                                break;
-                            case "Float":
-                            case "Integer":
-                            case "Unsigned":
-                                if ($.isNumeric(rawValue)) {
-                                    data[i][columnName].Value = toFixedComma(rawValue, columnConfig.precision);
-                                } else {
-                                    data[i][columnName].Value = rawValue;
-                                }
-                                break;
-                            case "String":
-                                if ($.isNumeric(rawValue)) {
-                                    data[i][columnName].Value = toFixedComma(rawValue, columnConfig.precision);
-                                } else {
-                                    data[i][columnName].Value = rawValue;
-                                }
-                                break;
-                            case "Bool":
-                            case "BitString":
-                            case "Enum":
-                            case "undecided":
-                            case "null":
-                            case "None":
-                                if ($.isNumeric(rawValue)) {
-                                    data[i][columnName].Value = toFixedComma(rawValue, columnConfig.precision);
-                                } else {
-                                    data[i][columnName].Value = rawValue;
-                                }
-                                break;
-                            case "DateTime":
-                            case "Timet":
-                                if ($.isNumeric(rawValue) && rawValue > 0) {
-                                    data[i][columnName].Value = moment.unix(rawValue).format("MM/DD/YYYY hh:mm a");
-                                } else {
-                                    data[i][columnName].Value = rawValue;
-                                }
-                                break;
-                            case "UniquePID":
-                                if (data[i][columnName].PointInst !== undefined) {
-                                    if (data[i][columnName].PointInst > 0) {
-                                        data[i][columnName].Value = data[i][columnName].PointName;
-                                        data[i][columnName].rawValue = data[i][columnName].PointName;
-                                    } else {
-                                        data[i][columnName].Value = "";
-                                        data[i][columnName].rawValue = "";
-                                    }
-                                } else {
-                                    //console.log("data[" + i + "][" + columnName+ "].PointInst is UNDEFINED");
-                                }
-                                break;
-                            default:
-                                data[i][columnName].Value = rawValue;
-                                break;
-                        }
-
-                        if (valueOptions !== undefined) {
-                            keyBasedValue = getKeyBasedOnValue(valueOptions, rawValue);
-                            if (!!keyBasedValue) {
-                                data[i][columnName].Value = keyBasedValue;
-                            }
-                        }
-                    }
-
-                    if (!!data[i][columnName].rawValue) {
-                    } else {
-                        data[i][columnName].rawValue = rawValue;
-                    }
-                }
-            }
-            return data;
         },
         renderHistoryReport = function (data) {
             self.activeDataRequest(false);
