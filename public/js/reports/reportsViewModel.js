@@ -7,48 +7,92 @@ var initKnockout = function () {
         initStartDate,
         $endDate,
         initEndDate,
+        characterAllowedInTimeField = function (event, timeValue, selectionLen) {
+            var keyCode = event.keyCode,
+                shiftKey = event.shiftKey;
+            if (keyCode === 16 || keyCode === 17) {
+                return false;
+            } else {
+                return keyCode === 8 ||  // backspace
+                    keyCode === 13 ||  // CR
+                    keyCode === 35 ||  // end
+                    keyCode === 36 ||  // home
+                    keyCode === 37 ||  // left
+                    keyCode === 38 ||  // up
+                    keyCode === 39 ||  // right
+                    keyCode === 40 ||  // down
+                    keyCode === 46 ||  // del
+                    (keyCode === 186 && shiftKey && timeValue.indexOf(":") === -1) ||  // allow only 1 ":"
+                    (((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 150)) && !shiftKey) &&  // allow numbers
+                    timeValue.length - selectionLen <= 4;
+            }
+        },
         incrementTime = function (incrementUnit, value) {
-        var arr = value.split(':'),
-            hrs = parseInt(arr[0], 10),
-            mins = parseInt(arr[1], 10),
+        var arr,
+            hrs,
+            mins,
+            timeLen = value.length,
             wrapped = false;
 
-        switch (true) {
-            case (incrementUnit > 0 && mins < 59):
-            case (incrementUnit < 0 && mins > 0):
-                mins += incrementUnit;
-                break;
-            case (incrementUnit < 0 && mins === 0):
-                if (hrs === 0 ) {
-                    hrs = 24;
+            if (timeLen > 2) {  // don't allow increment til 3 chars in time field
+                if (value.indexOf(":") > 0) {
+                    arr = value.split(':');
+                } else {
+                    arr = [];
+                    if (timeLen === 5) {  // step on errant text
+                        arr[0] = value.substr(0, 2);
+                        arr[1] = value.substr(3, 2);
+                    } else {
+                        arr[0] = value.substr(0, (timeLen === 4 ? 2 : 1 ));
+                        arr[1] = value.substr(timeLen - 2, 2);
+                    }
                 }
-                mins = 59;
-                wrapped = true;
-                break;
-            case (incrementUnit > 0 && mins >= 59):
-                if (hrs === 23 ) {
-                    hrs = -1;
-                }
-                mins = 0;
-                wrapped = true;
-                break;
-        }
+                hrs = Number.isNaN(parseInt(arr[0], 10)) ? 0 : parseInt(arr[0], 10);
+                mins = Number.isNaN(parseInt(arr[1], 10)) ? 0 : parseInt(arr[1], 10);
 
-        if (wrapped) { // the increment is wrapping
-            switch (true) {
-                case (incrementUnit > 0 && hrs < 23):
-                case (incrementUnit < 0 && hrs > 0):
-                    hrs += incrementUnit;
-                    break;
+                if (hrs > 23) {
+                    hrs = 23;
+                }
+                if (mins > 59) {
+                    mins = 59;
+                }
+
+                if ((incrementUnit > 0 && mins < 59) ||
+                    (incrementUnit < 0 && mins > 0)) {
+                    mins += incrementUnit;
+                } else if ((incrementUnit < 0 && mins === 0)) {
+                    if (hrs === 0 || hrs > 24) {
+                        hrs = 24;
+                    }
+                    mins = 59;
+                    wrapped = true;
+                } else if ((incrementUnit > 0 && mins >= 59)) {
+                    if (hrs >= 23) {
+                        hrs = 0;
+                    }
+                    mins = 0;
+                    wrapped = true;
+                }
+
+                if (wrapped) { // the increment is wrapping
+                    switch (true) {
+                        case (incrementUnit > 0 && hrs < 23):
+                        case (incrementUnit < 0 && hrs > 0):
+                            hrs += incrementUnit;
+                            break;
+                    }
+                }
+
+                return ((hrs < 10 ? '0' : '') + hrs) + ':' + ((mins < 10 ? '0' : '') + mins);
+            } else {
+                return value;
             }
-        }
-
-        return ((hrs < 10 ? '0' : '') + hrs) + ':' + ((mins < 10 ? '0' : '') + mins);
     };
     ko.bindingHandlers.reportDatePicker = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var options = {
-                autoclose: true
+                autoclose: true,
+                clearBtn: true
             };
 
             $(element).datepicker(options).on("changeDate", function (ev) {
@@ -68,6 +112,16 @@ var initKnockout = function () {
                 } else if ($(element).hasClass("endDate")) {  // if enddate changed adjust limits on startdate
                     $dependantDatePicker = $(element).closest('tr').prev().find(".startDate");
                     $dependantDatePicker.datepicker("setEndDate", moment.unix(viewModel.date).format("MM/DD/YYYY"));
+                }
+            });
+
+            $(element).change(function (event) {
+                if (moment(new Date($(element).val())).isValid()) {
+                    $(element).parent().removeClass("has-error");
+                    $(element).parent().attr("title", "");
+                } else {
+                    $(element).parent().addClass("has-error");
+                    $(element).parent().attr("title", "Error in date format");
                 }
             });
 
@@ -95,30 +149,14 @@ var initKnockout = function () {
             var timestamp = valueAccessor(),
                 options = {
                     doneText: 'Done',
-                    autoclose: true,
-                    afterDone: function () {
-                        timestamp($(element).val());
-                        viewModel.time = $(element).val();
-                    }
+                    autoclose: true
                 };
 
             $(element).clockpicker(options);
 
             $(element).change(function (event) {
-                if($(element).val().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
-                    timestamp = $(element).val();
-                    viewModel.time = $(element).val();
-                    $(element).clockpicker('resetClock');
-                    $(element).parent().removeClass("has-error");
-                    $(element).parent().attr("title", "");
-                } else {
-                    $(element).parent().addClass("has-error");
-                    $(element).parent().attr("title", "Error in time format");
-                }
-            });
-
-            $(element).keypress(function (event) {
-                return ($(element).val().length <= 4);
+                timestamp = $(element).val();
+                viewModel.time = $(element).val();
             });
 
             $(element).keyup(function (event) {
@@ -132,31 +170,26 @@ var initKnockout = function () {
                     $(element).parent().addClass("has-error");
                     $(element).parent().attr("title", "Error in time format");
                 }
+                timestamp = $(element).val();
+                viewModel.time = $(element).val();
             });
 
             $(element).keydown(function (event) {
-                var timeValue = $(element).val();
-                if (event.keyCode !== 8 &&  // backspace
-                    event.keyCode !== 186 &&  // :
-                    event.keyCode !== 38 &&  // up
-                    event.keyCode !== 40 &&  // down
-                    !$.isNumeric(event.keyCode)) {
-                    event.preventDefault();
-                } else {
-                    if (timeValue.length === 4 && $.isNumeric(timeValue)) {
-                        if (timeValue.indexOf(":") === -1) {
-                            $(element).val(timeValue.substr(0, 2) + ":" + timeValue.substr(2, 2));
-                        }
-                    }
-
-                    if (event.keyCode === 38) {
+                var timeValue = $(element).val(),
+                    selectionLen = element.selectionEnd - element.selectionStart;
+                if (characterAllowedInTimeField(event, timeValue, selectionLen)) {
+                    if (event.keyCode === 38) { // up arrow
                         $(element).val(incrementTime(1, timeValue));
-                    } else if (event.keyCode === 40) {
+                    } else if (event.keyCode === 40) { // down arrow
                         $(element).val(incrementTime(-1, timeValue));
+                    } else if (event.keyCode === 13) { // CR
+                        $(element).val(incrementTime(0, timeValue));
                     }
                     $(element).clockpicker('hide');
                     $(element).clockpicker('resetClock');
                     $(element).clockpicker('show');
+                } else {
+                    event.preventDefault();
                 }
             });
         },
@@ -488,6 +521,13 @@ var reportsViewModel = function () {
                 // hey hey
             });
         },
+        displayError = function (errorMessage) {
+            var $errorMessageholder = $tabConfiguration.find(".screenMessages").find(".errorMessage");
+            $errorMessageholder.text(errorMessage);
+            setTimeout(function () {
+                $errorMessageholder.text("");
+            }, 6000);  // display error message
+        },
         openPointSelectorForColumn = function (selectObjectIndex, upi, newUrl) {
             var url = newUrl || '/pointLookup',
                 getPointURL = "/api/points/getpoint",
@@ -511,7 +551,8 @@ var reportsViewModel = function () {
                     tempObject.valueOptions = undefined;
                     if (self.reportType === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
-                            tempObject.operator = (tempObject.valueList.length === 1 ? tempObject.valueList[0].text : "");
+                        tempObject.operator = tempObject.valueList[0].text;
+                        //tempObject.operator = (tempObject.valueList.length === 1 ? tempObject.valueList[0].text : "");
                     } else {
                         if (!!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
@@ -678,25 +719,31 @@ var reportsViewModel = function () {
             var results = [],
                 localArray = $.extend(true, [], self.listOfColumns()),
                 i,
-                validColumn;
+                validColumn,
+                push;
 
             for (i = 0; i < localArray.length; i++) {
                 validColumn = true;
+                push = true;
                 if (localArray[i].colName === "Choose Point") {
-                    validColumn = false;
+                    push = false;
                 } else if (self.reportType === "Totalizer") {
-                    if ((i > 0) && (localArray[i].operator === "")) {
-                        validColumn = false;
-                    }
+                    //if ((i > 0) && (localArray[i].operator === "")) {
+                    //    validColumn = false;
+                    //    localArray[i].error = "Must select 'Type' for " + localArray[i].colName + " in Columns configuration."
+                    //} else {
+                    //    localArray[i].error = undefined;
+                    //}
                 }
 
-                if (validColumn) {
+                if (push) {
                     results.push(localArray[i]);
                 }
-                if (cleanup) {
+                if (cleanup && validColumn) {
                     delete results[results.length - 1]["valueList"];  // valuelist is only used in UI
                     delete results[results.length - 1]["dataColumnName"]; // dataColumnName is only used in UI
                     delete results[results.length - 1]["rawValue"]; // rawValue is only used in UI
+                    delete results[results.length - 1]["error"]; // error is only used in UI
                 }
             }
 
@@ -728,11 +775,18 @@ var reportsViewModel = function () {
                     switch (filters[i].valueType) {
                         case "Timet":
                         case "DateTime":
-                            if (filter.time.toString().match(/^([0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/)) {
-                                filters[i].value = getAdjustedDatetime(filters[i]);
+                            if (moment.unix(filters[i].date).isValid()) {
+                                filters[i].error = undefined;
                             } else {
                                 valid = false;
-                                filters[i].error = "Invalid Time format";
+                                filters[i].error = "Invalid Date format in Filters";
+                            }
+                            if (filters[i].time.toString().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
+                                filters[i].value = getAdjustedDatetime(filters[i]);
+                                filters[i].error = undefined;
+                            } else {
+                                valid = false;
+                                filters[i].error = "Invalid Time format in Filters";
                             }
                             break;
                         case "HourMinSec":
@@ -885,79 +939,96 @@ var reportsViewModel = function () {
                 columns = validateColumns(),
                 filters = validateFilters(),
                 filter,
+                activeError = false,
                 key,
                 upis = [],
                 uuid;
 
             if (columns.length > 1) {
                 for (i = 0; i < columns.length; i++) {
-                    if (columns[i].upi > 0) {
-                        upis.push({
-                            upi: parseInt(columns[i].upi, 10),
-                            op: (columns[i].operator).toLowerCase()
-                        })
+                    if (!!columns[i].error) {
+                        displayError(columns[i].error);
+                        activeError = true;
+                    } else {
+                        if (columns[i].upi > 0) {
+                            upis.push({
+                                upi: parseInt(columns[i].upi, 10),
+                                op: (columns[i].operator).toLowerCase()
+                            })
+                        }
                     }
                 }
 
                 for (key in filters) {
                     if (filters.hasOwnProperty(key)) {
                         filter = filters[key];
-                        if (!filter.filterName || _.isEmpty(filter)) {
-                            continue;
-                        }
-                        switch (filter.filterName) {
-                            case "Start_Date":
-                                startDate = parseInt(filter.value, 10);
-                                break;
-                            case "End_Date":
-                                endDate = parseInt(filter.value, 10);
-                                break;
-                            default:
-                                break;
+                        if (!!filter.error) {
+                            displayError(filter.error);
+                            activeError = true;
+                        } else {
+                            if (!filter.filterName || _.isEmpty(filter)) {
+                                continue;
+                            }
+                            if (self.reportType === "Totalizer" || self.reportType === "History") {
+                                switch (filter.filterName) {
+                                    case "Start_Date":
+                                        startDate = parseInt(filter.value, 10);
+                                        break;
+                                    case "End_Date":
+                                        endDate = parseInt(filter.value, 10);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                if (moment(startDate).isValid() && moment(endDate).isValid()) {
+                                    if (startDate > endDate) {
+                                        displayError("'Start Date' has to be earlier than 'End Date' in Filters");
+                                        activeError = true;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
 
-                switch (self.reportType) {
-                    case "History":
-                    case "Totalizer":
-                        point["Report Config"].interval.text = self.interval();
-                        point["Report Config"].interval.value = self.intervalValue();
-                        point["Report Config"].duration.useDuration = self.useDuration();
-                        point["Report Config"].duration.value = self.selectedDuration();
-                        break;
-                    case "Property":
-                        break;
-                    default:
-                        console.log(" - - - DEFAULT  buildReportDataRequest()");
-                        break;
-                }
+                if (!activeError) {
+                    switch (self.reportType) {
+                        case "History":
+                        case "Totalizer":
+                            point["Report Config"].interval.text = self.interval();
+                            point["Report Config"].interval.value = self.intervalValue();
+                            point["Report Config"].duration.useDuration = self.useDuration();
+                            point["Report Config"].duration.value = self.selectedDuration();
+                            break;
+                        case "Property":
+                            break;
+                        default:
+                            console.log(" - - - DEFAULT  buildReportDataRequest()");
+                            break;
+                    }
 
-                pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
-                point["Report Config"].pointFilter = pointFilter;
-                point["Report Config"].columns = columns;
-                point["Report Config"].filters = filters;
+                    pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
+                    point["Report Config"].pointFilter = pointFilter;
+                    point["Report Config"].columns = columns;
+                    point["Report Config"].filters = filters;
 
-                uuid = generateUUID();
-                activeDataRequests.push(uuid);
+                    uuid = generateUUID();
+                    activeDataRequests.push(uuid);
 
-                result = {
-                    requestID: uuid,
-                    upis: upis,
-                    range: {
-                        start: startDate,
-                        end: endDate
-                    },
-                    reportConfig: point["Report Config"],
-                    reportType: point["Report Type"].Value,
-                    sort: ""
+                    result = {
+                        requestID: uuid,
+                        upis: upis,
+                        range: {
+                            start: startDate,
+                            end: endDate
+                        },
+                        reportConfig: point["Report Config"],
+                        reportType: point["Report Type"].Value,
+                        sort: ""
+                    }
                 }
             } else {
-                var $errorMessageholder = $tabConfiguration.find(".screenMessages").find(".errorMessage");
-                $errorMessageholder.text("Column list is blank. Nothing to report on.");
-                setTimeout(function () {
-                    $errorMessageholder.text("");
-                }, 3000);  // display error message
+                displayError("Column list is blank. Nothing to report on.");
             }
 
             return result;
@@ -1188,6 +1259,8 @@ var reportsViewModel = function () {
             var $activePane = $direports.find(".tabConfiguration .tab-pane.active");
             if ($activePane.attr("id") === "additionalFilters" || $activePane.attr("id") === "reportColumns") {
                 $activePane.css('height', (window.innerHeight - 200));
+            } else if ($activePane.attr("id") === "reportAttribs") {
+                $activePane.css('height', (window.innerHeight - 350));
             }
         },
         handleResize = function () {
@@ -1237,7 +1310,8 @@ var reportsViewModel = function () {
         setReportEvents = function () {
             var intervals,
                 calculations,
-                durations;
+                durations,
+                entriesPerPage;
 
             $(window).resize(function () {
                 handleResize();
@@ -1310,14 +1384,11 @@ var reportsViewModel = function () {
                 $screenMessages.find(".successMessage").text(""); // clear messages
                 saveReportConfig();
                 $(this).blur();
-                e.preventDefault();
-                e.stopPropagation();
             });
 
             $runReportButton.on('click', function (e) {
+                $runReportButton.focus();
                 self.requestReportData();
-                e.preventDefault();
-                e.stopPropagation();
             });
 
             $viewReport.on('click', '.pointInstance', function () {
@@ -1365,6 +1436,10 @@ var reportsViewModel = function () {
                 //$.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
                 $viewReport.DataTable().draw("current");
                 //console.log("moved column '" + details.from + "' to column '" + details.to + "'");
+            });
+
+            $viewReport.on( 'length.dt', function ( e, settings, len ) {
+                self.selectedPageLength(len);
             });
 
             $filtersGrid.sortable({
@@ -1496,11 +1571,37 @@ var reportsViewModel = function () {
                 }
             ];
 
+            entriesPerPage = [
+                {
+                    value: "10",
+                    unit: 10,
+                }, {
+                    value: "15",
+                    unit: 15,
+                }, {
+                    value: "25",
+                    unit: 25,
+                }, {
+                    value: "50",
+                    unit: 50,
+                }, {
+                    value: "75",
+                    unit: 75,
+                }, {
+                    value: "100",
+                    unit: 100,
+                }, {
+                    value: "All",
+                    unit: -1,
+                }
+            ];
+
             self.useDuration.subscribe(useDurationChanged, this);
 
             self.listOfIntervals(intervals);
             self.listOfCalculations(calculations);
             self.listOfDurations(durations);
+            self.listOfEntriesPerPage(entriesPerPage);
             checkForColumnCalculations();
             useDurationChanged();
         },
@@ -2143,6 +2244,8 @@ var reportsViewModel = function () {
 
     self.listOfDurations = ko.observableArray([]);
 
+    self.listOfEntriesPerPage = ko.observableArray([]);
+
     self.listOfFilterPropertiesLength = 0;
 
     self.listOfColumnPropertiesLength = 0;
@@ -2297,6 +2400,7 @@ var reportsViewModel = function () {
                 $reporttitleInput.focus();
             }, 1500);
             setReportEvents();
+            adjustConfigTabActivePaneHeight();
             self.filterPropertiesSearchFilter(""); // computed props jolt
             self.columnPropertiesSearchFilter(""); // computed props jolt
         }
@@ -2570,6 +2674,19 @@ var reportsViewModel = function () {
             column = tempArray[indexOfColumn];
         column.calculation = selectedItem;
         updateListOfColumns(tempArray);
+    };
+
+    self.selectNumberOfEntries = function (element, selectedItem) {
+        var tempArray = self.listOfEntriesPerPage(),
+            i;
+
+        for (i = 0; i < tempArray.length; i++) {
+            if (tempArray[i].value === selectedItem) {
+                self.selectedPageLength(tempArray[i].unit);
+                self.designChanged(true);
+                break;
+            }
+        }
     };
 
     self.selectInterval = function (selectedInterval) {
