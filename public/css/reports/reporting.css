@@ -566,6 +566,9 @@ td.filterCondition.lastConditionInGroup {
 .reportButtons .btn.btn-primary {
     margin: 1px;
 }
+.popInOutDiv {
+    width: 75px;
+}
 .pop {
     display: -webkit-box;
     margin-top: -65px;
@@ -584,3 +587,7 @@ td.filterCondition.lastConditionInGroup {
     -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
     transform: rotate(45deg);
 }
+.strikethrough {
+    text-decoration:line-through
+}
+

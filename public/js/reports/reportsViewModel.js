@@ -384,8 +384,14 @@ var reportsViewModel = function () {
             return numberWithCommas(fixedNum);
         },
         numberWithCommas = function (theNumber) {
+            var arr;
             if (theNumber !== null && theNumber !== undefined) {
-                return theNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                if (theNumber.toString().indexOf(".") > 0) {
+                    arr = theNumber.toString().split('.');
+                    return arr[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "." + arr[1];
+                } else {
+                    return theNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                }
             } else {
                 return "";
             }
@@ -922,7 +928,14 @@ var reportsViewModel = function () {
             }
         },
         disableStartEndDates = function (disable) {
-            $filtersGrid.find("input,button,textarea,select").prop("disabled", disable);
+            var $startAndEndDates = $filtersGrid.find("input,button,textarea,select");
+            $startAndEndDates.prop("disabled", disable);
+
+            if (disable) {
+                $startAndEndDates.addClass("strikethrough");
+            } else {
+                $startAndEndDates.removeClass("strikethrough");
+            }
             $direports.find(".durationButton").prop("disabled", !disable);
         },
         useDurationChanged = function () {
@@ -934,8 +947,6 @@ var reportsViewModel = function () {
         buildReportDataRequest = function () {
             var result,
                 i,
-                startDate,
-                endDate,
                 columns = validateColumns(),
                 filters = validateFilters(),
                 filter,
@@ -945,6 +956,7 @@ var reportsViewModel = function () {
                 uuid;
 
             if (columns.length > 1) {
+                // collect UPIs from Columns
                 for (i = 0; i < columns.length; i++) {
                     if (!!columns[i].error) {
                         displayError(columns[i].error);
@@ -959,31 +971,39 @@ var reportsViewModel = function () {
                     }
                 }
 
-                for (key in filters) {
-                    if (filters.hasOwnProperty(key)) {
-                        filter = filters[key];
-                        if (!!filter.error) {
-                            displayError(filter.error);
-                            activeError = true;
-                        } else {
-                            if (!filter.filterName || _.isEmpty(filter)) {
-                                continue;
-                            }
-                            if (self.reportType === "Totalizer" || self.reportType === "History") {
-                                switch (filter.filterName) {
-                                    case "Start_Date":
-                                        startDate = parseInt(filter.value, 10);
-                                        break;
-                                    case "End_Date":
-                                        endDate = parseInt(filter.value, 10);
-                                        break;
-                                    default:
-                                        break;
+                // get Start & End Dates
+                if (self.useDuration()) {
+                    var duration = self.listOfDurations().filter(function (item) {
+                        return item.value === self.selectedDuration();
+                    });
+                    setDatesBasesOnDuration(duration[0]);
+                } else {
+                    for (key in filters) {
+                        if (filters.hasOwnProperty(key)) {
+                            filter = filters[key];
+                            if (!!filter.error) {
+                                displayError(filter.error);
+                                activeError = true;
+                            } else {
+                                if (!filter.filterName || _.isEmpty(filter)) {
+                                    continue;
                                 }
-                                if (moment(startDate).isValid() && moment(endDate).isValid()) {
-                                    if (startDate > endDate) {
-                                        displayError("'Start Date' has to be earlier than 'End Date' in Filters");
-                                        activeError = true;
+                                if (self.reportType === "Totalizer" || self.reportType === "History") {
+                                    switch (filter.filterName) {
+                                        case "Start_Date":
+                                            self.startDate = parseInt(filter.value, 10);
+                                            break;
+                                        case "End_Date":
+                                            self.endDate = parseInt(filter.value, 10);
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                    if (moment(self.startDate).isValid() && moment(self.endDate).isValid()) {
+                                        if (self.startDate > self.endDate) {
+                                            displayError("'Start Date' has to be earlier than 'End Date' in Filters");
+                                            activeError = true;
+                                        }
                                     }
                                 }
                             }
@@ -1019,8 +1039,8 @@ var reportsViewModel = function () {
                         requestID: uuid,
                         upis: upis,
                         range: {
-                            start: startDate,
-                            end: endDate
+                            start: self.startDate,
+                            end: self.endDate
                         },
                         reportConfig: point["Report Config"],
                         reportType: point["Report Type"].Value,
@@ -1159,6 +1179,10 @@ var reportsViewModel = function () {
             }
 
             return (answer !== "" ? answer : 0);
+        },
+        setDatesBasesOnDuration = function (duration) {
+            self.end = moment().unix();
+            self.start = moment().subtract(duration.unit, duration.unitType).unix();
         },
         pivotHistoryData = function (historyData) {
             var columnConfig,
@@ -2228,6 +2252,10 @@ var reportsViewModel = function () {
 
     self.currentTimeStamp = "";
 
+    self.startDate = "";
+
+    self.endDate = "";
+
     self.reportDisplayTitle = ko.observable("");
 
     self.interval = ko.observable("Minute");
@@ -2534,6 +2562,26 @@ var reportsViewModel = function () {
         }
     };
 
+    self.setFiltersStartEndDates = function (start, end) {
+        var startDateFilter,
+            endDateFilter;
+
+        startDateFilter = self.listOfFilters().filter(function (filter) {
+            return filter.filterName === "Start_Date";
+        });
+        endDateFilter = self.listOfFilters().filter(function (filter) {
+            return filter.filterName === "End_Date";
+        });
+
+        startDateFilter[0].value = start;
+        startDateFilter[0].date = start;
+        startDateFilter[0].time = moment.unix(start).hours() + ":" + moment.unix(start).minutes();
+
+        endDateFilter[0].value = end;
+        endDateFilter[0].date = end;
+        endDateFilter[0].time = moment.unix(end).hours() + ":" + moment.unix(end).minutes();
+    };
+
     self.selectPointForColumn = function (data, index) {
         var upi = parseInt(data.upi, 10),
             currentIndex = (typeof index === "function" ? index() : index),
@@ -2694,39 +2742,7 @@ var reportsViewModel = function () {
     };
 
     self.selectDuration = function (durationIndex) {
-        var i,
-            filters = self.listOfFilters(),
-            filter,
-            len = filters.length,
-            duration = self.listOfDurations()[durationIndex],
-            endDate,
-            startDate;
-
-        self.useDuration(true);
-        self.selectedDuration(duration.value);
-        if (durationIndex > 0) {
-            endDate = moment();
-            startDate = moment().subtract(duration.unit, duration.unitType);
-
-            //moment.duration(2, 'seconds');
-            //moment.duration(2, 'minutes');
-            for (i = 0; i < len; i++) {
-                filter = filters[i];
-                if (filter.filterName === "Start_Date") {
-                    filter.value = startDate.unix();
-                    filter.date = startDate.unix();
-                    filter.time = ('00' + startDate.hours() % 100).slice(-2) + ":" + ('00' + startDate.minutes() % 100).slice(-2);
-                } else if (filter.filterName === "End_Date") {
-                    filter.value = endDate.unix();
-                    filter.date = endDate.unix();
-                    filter.time = ('00' + endDate.hours() % 100).slice(-2) + ":" + ('00' + endDate.minutes() % 100).slice(-2);
-                }
-            }
-        }
-
-        updateListOfFilters(filters);
-        updateListOfFilters(filters);  // ugh.  TODO   without this, first dropdown change blanks out start_date input field
-        disableStartEndDates(true);
+        self.selectedDuration(self.listOfDurations()[durationIndex].value);
     };
 
     self.setFilterConfig = function (indexOfCondition, selectedItem, field) {
