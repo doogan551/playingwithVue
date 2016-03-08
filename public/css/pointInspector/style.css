@@ -1427,4 +1427,21 @@ div.scheduleBox {
     text-decoration: underline;
 }
 
+.deviceheaders .vendorID,
+.deviceheaders .apduLength,
+.deviceheaders .changeCount,
+.deviceheaders .noPriority,
+.deviceheaders .offline {
+    width: 60px;
+}
+
+.deviceheaders .networkNumber,
+.deviceheaders .readProp{
+    width: 70px;
+}
+
+.deviceheaders .macAddress{
+    width: 130px;
+}
+
 /* end network info modal*/

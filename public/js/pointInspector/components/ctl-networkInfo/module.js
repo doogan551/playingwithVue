@@ -67,21 +67,21 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
             }).done(function(data) {
                 if (!!data.err) {
                     cb(data.err);
-                } else if (!!data.Name) {
-                    cb(null, data);
                 } else {
-                    cb(null, upi);
+                    cb(null, data);
                 }
             });
         };
 
         self.openPointRef = function(property) {
             var address = this[property].pointRef.Address();
-            var workspace = window.opener.workspaceManager;
-            var win = workspace.openWindowPositioned(address, this[property].pointRef.Value(), this[property].pointRef.PointType(), '', this[property].pointRef.upi(), {
-                width: 1250,
-                height: 750
-            });
+            if (address !== '') {
+                var workspace = window.opener.workspaceManager;
+                var win = workspace.openWindowPositioned(address, this[property].pointRef.Value(), this[property].pointRef.PointType(), '', this[property].pointRef.upi(), {
+                    width: 1250,
+                    height: 750
+                });
+            }
         };
 
         self.compare = function(a, b) {
@@ -103,10 +103,14 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                 this.set = function() {
                     var that = this;
                     self.getPointRef(_this.val(), function(err, data) {
-                        // console.log(data);
-                        that.Value(err || data.Name);
-                        that.Address(self.config.Utility.pointTypes.getUIEndpoint(data['Point Type'].Value, _this.val()).review.url);
-                        that.PointType(data['Point Type'].Value);
+                        // console.log(_this.val());
+                        if (!!data.Name) {
+                            that.Value(data.Name);
+                            that.Address(self.config.Utility.pointTypes.getUIEndpoint(data['Point Type'].Value, _this.val()).review.url);
+                            that.PointType(data['Point Type'].Value);
+                        } else {
+                            that.Value(_this.val().toString());
+                        }
                     });
                 };
             };
@@ -135,10 +139,10 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                     this.pointRef.set();
                     return this.pointRef.Value();
                 };
-                this.style = function() {
-                    return 'instanceLink';
-                };
                 this.pointRef = new pointRef(this);
+                this.style = ko.computed(function() {
+                    return (this.pointRef.PointType() !== '') ? 'instanceLink' : '';
+                }, this);
             };
             this['Network Number'] = function() {
                 this.val = ko.observable(-1);
@@ -403,7 +407,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
         // }
     };*/
 
-    ViewModel.prototype.toggleModal = function() {
+    ViewModel.prototype.toggleNetworkInfo = function() {
         this.showModal(true);
         /*if (this.readOnOpen)
             this.getUpload();*/
