@@ -1403,3 +1403,28 @@ div.scheduleBox {
     top: 0;
   }
 }*/
+
+/* start network info modal*/
+
+.networkInfo th{
+    cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .modal-xl {
+    width: 90%;
+   max-width:1200px;
+  }
+}
+
+.devicesTable table, .pointsTable table, .routerTable table{
+    table-layout: fixed;
+}
+
+.instanceLink {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+}
+
+/* end network info modal*/
