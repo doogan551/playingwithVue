@@ -43,6 +43,23 @@ block content
 										strong.pull-right Report Type
 									.col-xs-10.reporttype
 										medium(data-bind="text: reportType")
+								.form-group.clearfix.direportgroup
+									h5.col-xs-2.control-label
+										strong.pull-right # of entries per Page
+									.col-xs-10.reporttype
+										.dropdown.availableCalculations
+											button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
+												span(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
+												// ko if: (listOfEntriesPerPage().length > 1)
+												span.caret.lm10px
+												// /ko
+											// ko if: (listOfEntriesPerPage().length > 1)
+											ul.calculations.dropdown-menu
+												// ko foreach: listOfEntriesPerPage()
+												li
+													a(data-bind="click: function(){ $root.selectNumberOfEntries($element, $data.value) }, text: $data.value")
+												// /ko
+											// /ko
 							div#reportColumns.tab-pane
 								h4.strong.panel-title
 									table.columnsGrid.small.grid.table
@@ -140,7 +157,7 @@ block content
 												// /ko
 												td.filterName
 													// ko if: ($parent.reportType !== 'Property')
-													span(data-bind="text: filterName")
+													span(data-bind="text: filterName.replace(/_/g, ' ')")
 													// /ko
 													// ko if: ($parent.reportType === 'Property')
 													.dropdown.availablePropertiesContainer
