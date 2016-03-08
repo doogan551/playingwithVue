@@ -1410,11 +1410,19 @@ div.scheduleBox {
     cursor: pointer;
 }
 
+.btnClicked {
+    background-color:  rgb(204,204,204);
+}
+
 @media (min-width: 768px) {
   .modal-xl {
     width: 90%;
    max-width:1200px;
   }
+}
+
+.refreshNetworkInfoBtn {
+    margin-left: 50px;
 }
 
 .devicesTable table, .pointsTable table, .routerTable table{
@@ -1437,6 +1445,10 @@ div.scheduleBox {
 .deviceheaders .networkNumber,
 .deviceheaders .readProp{
     width: 70px;
+}
+
+.deviceheaders .pointType{
+    width: 90px;
 }
 
 .deviceheaders .macAddress{

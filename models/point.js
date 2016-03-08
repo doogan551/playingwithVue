@@ -933,6 +933,47 @@ module.exports = {
       return cb(null, null, point);
     });
   },
+  getPointRefsInstance: function(data, cb) {
+    this.getPointRefsSmall(data, function(err, msg, result) {
+      if (!!err) {
+        return cb(err);
+      } else if (!!result) {
+        return cb(null, null, result);
+      } else {
+        var filterProps = {
+          Name: 1,
+          Value: 1,
+          "Point Type": 1,
+          "Point Refs": 1
+        };
+        var criteria = {
+          collection: 'points',
+          query: {
+            'Instance.Value': parseInt(data.upi, 10),
+            'Point Type.Value': 'Remote Unit',
+            'Point Refs': {
+              $elemMatch: {
+                'PointInst': parseInt(data.device, 10),
+                'PropertyName': 'Device Point'
+              }
+            }
+          },
+          fields: filterProps
+        };
+
+        Utility.getOne(criteria, function(err, point) {
+          if (err) {
+            return cb(err);
+          }
+          if (point === null) {
+            return cb(null, 'No point found.');
+          }
+
+          return cb(null, null, point);
+        });
+      }
+    });
+  },
   findAlarmDisplays: function(data, cb) {
     var criteria = {};
     var firstSearch = {};

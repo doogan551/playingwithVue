@@ -9,22 +9,25 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
     };
 
     function ViewModel(params) {
-        var self = this,
-            init = function() {
+        var self = this;
+        var $modalWait;
+        var $modalError;
 
-                // Save references to our modal
-                $modal = $('.modal.networkInfo');
-                $modalDialog = $modal.find('.modal-dialog');
-                $modalHeader = $modal.find('.modal-header');
-                $modalFooter = $modal.find('.modal-footer');
-                $modalBody = $modal.find('.modal-body');
-                // Resize modal on shown event
-                $modal.on('shown.bs.modal', self.sizeModal);
-                $('.devicesTable').show();
-                $('.pointsTable').hide();
-                $('.routerTable').hide();
-                self.getData();
-            };
+        var init = function() {
+
+            // Save references to our modal
+            $modal = $('.modal.networkInfo');
+            $modalWait = $('.modalScene.modalWait');
+            $modalError = $('.modalScene.modalError');
+            // Resize modal on shown event
+            $modal.on('shown.bs.modal', self.sizeModal);
+            self.currentTab = $('.devicesTable');
+            $('.devicesTable').hide();
+            $('.pointsTable').hide();
+            $('.routerTable').hide();
+            self.isInitialized(true);
+            self.getData();
+        };
 
         self.root = params.rootContext;
         self.apiEndpoint = self.root.apiEndpoint;
@@ -38,29 +41,39 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
         // self.sortOrder = ko.observable();
         self.showModal = ko.observable(false);
         self.errorText = ko.observable('');
+        self.isInitialized = ko.observable(false);
 
         self.deviceProperties = ko.observableArray(['Point Type', 'Point Instance', 'Network Number', 'Vendor ID', 'Max APDU Length', 'Change Count', 'Read Property Only', 'No Priority Array', 'MAC Address']);
         self.pointProperties = ko.observableArray(['Point Type', 'Point Instance', 'Device Instance', 'Poll Period']);
         self.routerProperties = ko.observableArray(['Network Number', 'Port Number', 'Change Count', 'MAC Address']);
 
         self.getData = function() {
-
-            self.point.issueCommand('Network Info', {
-                upi: self.data._id()
-            }, function(result) {
-                self.NetworkDevices.buildArray(result.value()['Network Devices'] || []);
-                self.NetworkPoints.buildArray(result.value()['Network Points'] || []);
-                self.RouterTable.buildArray(result.value()['Router Table'] || []);
-            });
-
-            $modal.find('.modalValue').show();
+            self.currentTab.hide();
+            $modalWait.show();
+            if (!!self.isInitialized()) {
+                self.point.issueCommand('Network Info', {
+                    upi: self.data._id()
+                }, function(result) {
+                    $modalWait.hide();
+                    if (!!result.error()) {
+                        $modalError.show();
+                        self.errorText(result.error());
+                    } else {
+                        self.NetworkDevices.buildArray(result.value()['Network Devices'] || []);
+                        self.NetworkPoints.buildArray(result.value()['Network Points'] || []);
+                        self.RouterTable.buildArray(result.value()['Router Table'] || []);
+                        self.currentTab.show();
+                        $modal.find('.modalValue').show();
+                    }
+                });
+            }
         };
 
         self.getPointRef = function(upi, cb) {
             /*Display the instance number. If found then also display a link with the point name. If not found then try to
             find a Remote Unit point with the Instance property set for this. If found then display a link with the Remote Unit point name.*/
             $.ajax({
-                url: '/api/points/getpointref/small/' + upi,
+                url: '/api/points/getpointref/instance/' + upi+'/'+self.data._id(),
                 contentType: 'application/json',
                 dataType: 'json',
                 type: 'get'
@@ -103,7 +116,6 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                 this.set = function() {
                     var that = this;
                     self.getPointRef(_this.val(), function(err, data) {
-                        // console.log(_this.val());
                         if (!!data.Name) {
                             that.Value(data.Name);
                             that.Address(self.config.Utility.pointTypes.getUIEndpoint(data['Point Type'].Value, _this.val()).review.url);
@@ -201,10 +213,10 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                     this.pointRef.set();
                     return this.pointRef.Value();
                 };
-                this.style = function() {
-                    return 'instanceLink';
-                };
                 this.pointRef = new pointRef(this);
+                this.style = ko.computed(function() {
+                    return (this.pointRef.PointType() !== '') ? 'instanceLink' : '';
+                }, this);
             };
             this['Poll Period'] = function() {
                 this.val = ko.observable(-1);
@@ -355,31 +367,28 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
 
     }
 
-    ViewModel.prototype.refreshData = function() {
-        var self = this;
-    };
-
     ViewModel.prototype.switchTab = function(model, e) {
+        var self = this;
         var btnTxt = $(e.target).text();
         var $deviceTable = $('.devicesTable');
         var $pointTable = $('.pointsTable');
         var $routerTable = $('.routerTable');
 
-        $deviceTable.hide();
-        $pointTable.hide();
-        $routerTable.hide();
-
+        self.currentTab.hide();
+        $(e.target).siblings().removeClass('btnClicked');
         switch (btnTxt) {
             case 'Network Devices':
-                $deviceTable.show();
+                self.currentTab = $deviceTable;
                 break;
             case 'Network Points':
-                $pointTable.show();
+                self.currentTab = $pointTable;
                 break;
             case 'Router Table':
-                $routerTable.show();
+                self.currentTab = $routerTable;
                 break;
         }
+        self.currentTab.show();
+        $(e.target).addClass('btnClicked');
     };
 
     /*ViewModel.prototype.sortDevices = function(model, e) {
@@ -402,6 +411,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
 
     ViewModel.prototype.toggleNetworkInfo = function() {
         this.showModal(true);
+        this.getData();
         /*if (this.readOnOpen)
             this.getUpload();*/
     };

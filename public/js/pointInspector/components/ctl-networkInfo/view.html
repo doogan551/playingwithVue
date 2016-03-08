@@ -8,9 +8,10 @@
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                 <h4 class="modal-title">Network Info</h4>
                 <div>
-                    <div class="btn btn-default btn-xs" data-bind="click:switchTab">Network Devices</div>
+                    <div class="btn btn-default btn-xs btnClicked" data-bind="click:switchTab">Network Devices</div>
                     <div class="btn btn-default btn-xs" data-bind="click:switchTab">Network Points</div>
                     <div class="btn btn-default btn-xs" data-bind="click:switchTab">Router Table</div>
+                    <div class="btn btn-default btn-xs refreshNetworkInfoBtn" data-bind="click:getData">Refresh</div>
 
                     <div class="btn btn-default btn-xs btnPrint pull-right" data-bind="click:printHistory">Print</div>
                 </div>
@@ -27,7 +28,7 @@
                     <div class="modalScene modalError">
                         <h1><i class="fa fa-exclamation-triangle text-warning"></i> Error</h1>
                         <p data-bind="text: errorText"></p>
-                        <p>Close this dialog or <a href="javascript://" data-bind="click: refreshData">try again</a></p>
+                        <p>Close this dialog or <a href="javascript://" data-bind="click: getData">try again</a></p>
                     </div>
                     <!-- Network Info -->
                     <div class="modalScene modalValue">
@@ -36,7 +37,6 @@
                             <table class="grid table table-condensed">
                                 <thead>
                                     <tr class="deviceheaders">
-                                        <th class="pointType" data-bind="click: sortDevices"><div>Point Type<i class="fa"></i></div></th>
                                         <th class="pointInstance" data-bind="click: sortDevices"><div>Point Instance<i class="fa"></i></div></th>
                                         <th class="networkNumber" data-bind="click: sortDevices"><div>Network Number<i class="fa"></i></div></th>
                                         <th class="macAddress" data-bind="click: sortDevices"><div>MAC Address<i class="fa"></i></div></th>
@@ -49,7 +49,6 @@
                                 </thead>
                                 <tbody data-bind="foreach: NetworkDevices.entries">
                                     <tr>
-                                        <td data-bind="text: $data['Point Type'].Value()"></td>
                                         <td data-bind="text: $data['Point Instance'].Value(), css: $data['Point Instance'].style(), click:$parent.openPointRef.bind($data, 'Point Instance')"></td>
                                         <td data-bind="text: $data['Network Number'].Value()"></td>
                                         <td data-bind="text: $data['MAC Address'].Value()"></td>
