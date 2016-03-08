@@ -39,7 +39,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
         self.showModal = ko.observable(false);
         self.errorText = ko.observable('');
 
-        self.deviceProperties = ko.observableArray(['Point Type', 'Point Instance', 'Network Number', 'Vendor ID', 'Max APDU Length', 'Change Count', 'Read Property Only', 'No Priority Array', 'Offline', 'MAC Address']);
+        self.deviceProperties = ko.observableArray(['Point Type', 'Point Instance', 'Network Number', 'Vendor ID', 'Max APDU Length', 'Change Count', 'Read Property Only', 'No Priority Array', 'MAC Address']);
         self.pointProperties = ko.observableArray(['Point Type', 'Point Instance', 'Device Instance', 'Poll Period']);
         self.routerProperties = ko.observableArray(['Network Number', 'Port Number', 'Change Count', 'MAC Address']);
 
@@ -186,13 +186,6 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                     return (!!val) ? 'Yes' : 'No';
                 };
             };
-            this['Offline'] = function() {
-                this.val = ko.observable(-1);
-                this.Value = function() {
-                    var val = this.val();
-                    return (!!val) ? 'Yes' : 'No';
-                };
-            };
             this['MAC Address'] = function() {
                 this.val = ko.observable(-1);
                 this.Value = function() {
@@ -262,7 +255,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
         function NetworkDevices() {
             var _this = this;
             NetworkInfo.call(this);
-            // var props = ['Point Type', 'Point Instance', 'Network Number', 'Vendor ID', 'Max APDU Length', 'Change Count', 'Read Property Only', 'No Priority Array', 'Offline', 'MAC Address'];
+            // var props = ['Point Type', 'Point Instance', 'Network Number', 'Vendor ID', 'Max APDU Length', 'Change Count', 'Read Property Only', 'No Priority Array', 'MAC Address'];
         }
 
         function NetworkPoints() {

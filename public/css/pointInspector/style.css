@@ -1430,8 +1430,7 @@ div.scheduleBox {
 .deviceheaders .vendorID,
 .deviceheaders .apduLength,
 .deviceheaders .changeCount,
-.deviceheaders .noPriority,
-.deviceheaders .offline {
+.deviceheaders .noPriority {
     width: 60px;
 }
 

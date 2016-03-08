@@ -45,7 +45,6 @@
                                         <th class="changeCount" data-bind="click: sortDevices"><div>Change Count<i class="fa"></i></div></th>
                                         <th class="readProp" data-bind="click: sortDevices"><div>Read Property Only<i class="fa"></i></div></th>
                                         <th class="noPriority" data-bind="click: sortDevices"><div>No Priority Array<i class="fa"></i></div></th>
-                                        <th class="offline" data-bind="click: sortDevices"><div>Offline<i class="fa"></i></div></th>
                                     </tr>
                                 </thead>
                                 <tbody data-bind="foreach: NetworkDevices.entries">
@@ -59,7 +58,6 @@
                                         <td data-bind="text: $data['Change Count'].Value()"></td>
                                         <td data-bind="text: $data['Read Property Only'].Value()"></td>
                                         <td data-bind="text: $data['No Priority Array'].Value()"></td>
-                                        <td data-bind="text: $data['Offline'].Value()"></td>
                                     </tr>
                                 </tbody>
                             </table>
