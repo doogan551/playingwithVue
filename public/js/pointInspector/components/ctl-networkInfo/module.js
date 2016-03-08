@@ -126,7 +126,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                             that.Address(self.config.Utility.pointTypes.getUIEndpoint(data['Point Type'].Value, data._id).review.url);
                             that.PointType(data['Point Type'].Value);
                         } else {
-                            that.Value(data._id.toString());
+                            that.Value(_this.val().toString());
                         }
                     });
                 };
