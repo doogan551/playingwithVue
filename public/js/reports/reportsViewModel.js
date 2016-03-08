@@ -1181,8 +1181,8 @@ var reportsViewModel = function () {
             return (answer !== "" ? answer : 0);
         },
         setDatesBasesOnDuration = function (duration) {
-            self.end = moment().unix();
-            self.start = moment().subtract(duration.unit, duration.unitType).unix();
+            self.endDate = moment().unix();
+            self.startDate = moment().subtract(duration.unit, duration.unitType).unix();
         },
         pivotHistoryData = function (historyData) {
             var columnConfig,
