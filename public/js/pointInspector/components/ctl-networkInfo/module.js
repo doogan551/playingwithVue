@@ -28,7 +28,6 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
 
         self.root = params.rootContext;
         self.apiEndpoint = self.root.apiEndpoint;
-        self.config = self.root.utility.config;
         self.point = self.root.point;
         self.utility = self.root.utility;
         self.config = self.utility.config;
@@ -57,15 +56,32 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
             $modal.find('.modalValue').show();
         };
 
-        self.getPointRef = function(upi) {
+        self.getPointRef = function(upi, cb) {
             /*Display the instance number. If found then also display a link with the point name. If not found then try to
             find a Remote Unit point with the Instance property set for this. If found then display a link with the Remote Unit point name.*/
-            console.log('get point ref', upi);
-            return upi;
+            $.ajax({
+                url: '/api/points/getpointref/small/' + upi,
+                contentType: 'application/json',
+                dataType: 'json',
+                type: 'get'
+            }).done(function(data) {
+                if (!!data.err) {
+                    cb(data.err);
+                } else if (!!data.Name) {
+                    cb(null, data);
+                } else {
+                    cb(null, upi);
+                }
+            });
         };
 
         self.openPointRef = function(property) {
-            var address = this[property].pointRef.Value();
+            var address = this[property].pointRef.Address();
+            var workspace = window.opener.workspaceManager;
+            var win = workspace.openWindowPositioned(address, this[property].pointRef.Value(), this[property].pointRef.PointType(), '', this[property].pointRef.upi(), {
+                width: 1250,
+                height: 750
+            });
         };
 
         self.compare = function(a, b) {
@@ -81,8 +97,17 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
         function NetworkInfo() {
             var pointRef = function(_this) {
                 this.Value = ko.observable(0);
+                this.upi = ko.observable(_this.val());
+                this.Address = ko.observable('');
+                this.PointType = ko.observable('');
                 this.set = function() {
-                    this.Value(self.getPointRef(_this.val()));
+                    var that = this;
+                    self.getPointRef(_this.val(), function(err, data) {
+                        // console.log(data);
+                        that.Value(err || data.Name);
+                        that.Address(self.config.Utility.pointTypes.getUIEndpoint(data['Point Type'].Value, _this.val()).review.url);
+                        that.PointType(data['Point Type'].Value);
+                    });
                 };
             };
 
@@ -108,7 +133,10 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                 this.Value = function() {
                     var val = this.val();
                     this.pointRef.set();
-                    return val;
+                    return this.pointRef.Value();
+                };
+                this.style = function() {
+                    return 'instanceLink';
                 };
                 this.pointRef = new pointRef(this);
             };
@@ -166,23 +194,6 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                 this.Value = function() {
                     var val = this.val();
 
-                    /*If the length is 6 then display as IP address: Port number.
-                    Ex.Length = 6, Byte array: [0] = 192, [1] = 168, [2] = 1, [3] = 100, [4] = 186, [5] = 192
-                    MAC Address = [0].[1].[2].[3]: (([4] * 256) + [5]) = 192.168.1.100: 47808
-                    Else
-                    if the length is 0 then display as:
-                        MAC Address = 0.0.0.0: 0
-                    Else
-                    if the length is 1 then display as unsigned integer value.
-                    Ex.Length = 1, Byte array: [0] = 45
-                    MAC Address = 45
-                    Else then display as a hex string.
-                    Ex.Length = 2, Byte array: [0] = 47, [1] = 35
-                    MAC Address = 2 F: 13
-                    Ex.Length = 3, Byte array: [0] = 47, [1] = 35, [2] = 55
-                    MAC Address = 2 F: 13: 37*/
-
-
                     return val;
                 };
             };
@@ -191,7 +202,10 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                 this.Value = function() {
                     var val = this.val();
                     this.pointRef.set();
-                    return val;
+                    return this.pointRef.Value();
+                };
+                this.style = function() {
+                    return 'instanceLink';
                 };
                 this.pointRef = new pointRef(this);
             };

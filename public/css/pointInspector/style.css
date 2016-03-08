@@ -1421,4 +1421,10 @@ div.scheduleBox {
     table-layout: fixed;
 }
 
+.instanceLink {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+}
+
 /* end network info modal*/

@@ -51,7 +51,7 @@
                                 <tbody data-bind="foreach: NetworkDevices.entries">
                                     <tr>
                                         <td data-bind="text: $data['Point Type'].Value()"></td>
-                                        <td data-bind="text: $data['Point Instance'].Value(), click:$parent.openPointRef.bind($data, 'Point Instance')"></td>
+                                        <td data-bind="text: $data['Point Instance'].Value(), css: $data['Point Instance'].style(), click:$parent.openPointRef.bind($data, 'Point Instance')"></td>
                                         <td data-bind="text: $data['Network Number'].Value()"></td>
                                         <td data-bind="text: $data['Vendor ID'].Value()"></td>
                                         <td data-bind="text: $data['Max APDU Length'].Value()"></td>
@@ -82,8 +82,8 @@
                                 <tbody data-bind="foreach: NetworkPoints.entries">
                                     <tr>
                                         <td data-bind="text: $data['Point Type'].Value()"></td>
-                                        <td data-bind="text: $data['Point Instance'].Value()"></td>
-                                        <td data-bind="text: $data['Device Instance'].Value()"></td>
+                                        <td data-bind="text: $data['Point Instance'].Value(), css: $data['Point Instance'].style(), click:$parent.openPointRef.bind($data, 'Point Instance')"></td>
+                                        <td data-bind="text: $data['Device Instance'].Value(), css: $data['Device Instance'].style(), click:$parent.openPointRef.bind($data, 'Device Instance')"></td>
                                         <td data-bind="text: $data['Poll Period'].Value()"></td>
                                     </tr>
                                 </tbody>
