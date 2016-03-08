@@ -33,7 +33,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         var self = this,
             $btn = $(event.target),
             $btnIcon = $btn.find('i.fa'),
-            $modal = $('.modal'),
+            $modal = $('.modal.firmwareLoader'),
             $modalScene,
             $modalError,
             $modalWait,
@@ -47,7 +47,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         self.selectedFile = ko.observable();
         self.progressMessage = ko.observable('');
         self.progressPercent = ko.observable(0);
-
+        console.log(this);
         $('.progressmsgtxt').text('');
         $('.afterLoad').hide();
         $('.beforeLoad').show();
