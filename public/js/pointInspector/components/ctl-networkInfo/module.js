@@ -28,7 +28,6 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
             $('.pointsTable').hide();
             $('.routerTable').hide();
             self.isInitialized(true);
-            self.getData();
         };
 
         self.root = params.rootContext;
@@ -120,7 +119,6 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                 this.set = function() {
                     var that = this;
                     self.getPointRef(_this.val(), function(err, data) {
-                        console.log(data, _this.val());
                         if (!!data.Name) {
                             that.Value(data.Name);
                             that.Address(self.config.Utility.pointTypes.getUIEndpoint(data['Point Type'].Value, data._id).review.url);
