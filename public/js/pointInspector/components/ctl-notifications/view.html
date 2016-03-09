@@ -20,7 +20,7 @@
             <tbody data-bind="foreach: alarmData">
             <tr>
                 <td>
-                    <input type="checkbox" data-bind="checked: ack, enable: $parent.isInEditMode">
+                    <input type="checkbox" data-bind="checked: ack, enable: $parent.checkNotify($data)">
                 </td>
                 <td>
                     <input type="checkbox" data-bind="checked: notify, enable: $parent.isInEditMode">
