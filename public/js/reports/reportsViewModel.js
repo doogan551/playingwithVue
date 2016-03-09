@@ -236,7 +236,6 @@ var reportsViewModel = function () {
         $saveReportButton,
         $runReportButton,
         $filterByPoint,
-        $filtersPanelAnchor,
         $reporttitleInput,
         $reportColumns,
         $additionalFilters,
@@ -618,7 +617,7 @@ var reportsViewModel = function () {
                 width: 1000
             });
         },
-        filterOpenPointSelector = function (target) {
+        filterOpenPointSelector = function () {
             var url = '/pointLookup',
                 tempObject = {
                     upi: 0,
@@ -1118,7 +1117,6 @@ var reportsViewModel = function () {
             $runReportButton = $direports.find(".runReportButton");
             $columnNames = $direports.find(".columnName");
             $filterByPoint = $direports.find("#filterByPoint");
-            $filtersPanelAnchor = $direports.find(".filtersPanelAnchor");
             $pointSelectorIframe = $filterByPoint.find(".pointLookupFrame");
             $reporttitleInput = $direports.find(".reporttitle").find("input");
             $filtersTbody = $direports.find('.filtersGrid tbody');
@@ -1521,7 +1519,7 @@ var reportsViewModel = function () {
                 }, 700);
             });
 
-            $saveReportButton.on('click', function (e) {
+            $saveReportButton.on('click', function () {
                 var $screenMessages = $tabConfiguration.find(".screenMessages");
                 blockUI($tabConfiguration, true, " Saving Report...");
                 $screenMessages.find(".errorMessage").text(""); // clear messages
@@ -1530,7 +1528,7 @@ var reportsViewModel = function () {
                 $(this).blur();
             });
 
-            $runReportButton.on('click', function (e) {
+            $runReportButton.on('click', function () {
                 $runReportButton.focus();
                 self.requestReportData();
             });
@@ -1545,7 +1543,7 @@ var reportsViewModel = function () {
                 self.showPointReview(data);
             });
 
-            $toggleTab.on('shown.bs.tab', function (event) {
+            $toggleTab.on('shown.bs.tab', function () {
                 //var target = $(this).attr('href');
                 adjustConfigTabActivePaneHeight();
             });
@@ -1718,25 +1716,25 @@ var reportsViewModel = function () {
             entriesPerPage = [
                 {
                     value: "10",
-                    unit: 10,
+                    unit: 10
                 }, {
                     value: "15",
-                    unit: 15,
+                    unit: 15
                 }, {
                     value: "25",
-                    unit: 25,
+                    unit: 25
                 }, {
                     value: "50",
-                    unit: 50,
+                    unit: 50
                 }, {
                     value: "75",
-                    unit: 75,
+                    unit: 75
                 }, {
                     value: "100",
-                    unit: 100,
+                    unit: 100
                 }, {
                     value: "All",
-                    unit: -1,
+                    unit: -1
                 }
             ];
 
@@ -2198,10 +2196,10 @@ var reportsViewModel = function () {
                 adjustDatatableHeightWidth();
 
                 if (!exportEventSet) {
-                    $tabViewReport.find("a.btn.btn-default.buttons-collection").on('click', function (ev) {
+                    $tabViewReport.find("a.btn.btn-default.buttons-collection").on('click', function () {
                         if (!exportEventSet) {
                             setTimeout(function () {
-                                $direports.find("li.dt-button > a").on('click', function (ev) {  // export buttons clicked
+                                $direports.find("li.dt-button > a").on('click', function () {  // export buttons clicked
                                     console.log($(this).text() + " button clicked");
                                     $(this).parent().parent().hide();
                                 });
@@ -2257,6 +2255,8 @@ var reportsViewModel = function () {
 
     self.interval = ko.observable("Minute");
 
+    self.canEdit = ko.observable(true);
+
     self.intervalValue = ko.observable(1);
 
     self.useDuration = ko.observable(false);
@@ -2305,7 +2305,7 @@ var reportsViewModel = function () {
         updateListOfFilters(self.listOfFilters());
     };
 
-    self.init = function () {
+    self.init = function (externalConfig) {
         var columns,
             reportConfig;
 
@@ -2406,6 +2406,7 @@ var reportsViewModel = function () {
                         self.listOfColumns.push({
                             colName: "Name",
                             valueType: "String",
+                            precision: 0,
                             calculation: "",
                             canCalculate: false
                         });
@@ -2428,6 +2429,20 @@ var reportsViewModel = function () {
             adjustConfigTabActivePaneHeight();
             self.filterPropertiesSearchFilter(""); // computed props jolt
             self.columnPropertiesSearchFilter(""); // computed props jolt
+
+            if (!!externalConfig) {
+                if (externalConfig.startDate && externalConfig.endDate) {
+                    self.setFiltersStartEndDates(externalConfig.startDate, externalConfig.endDate);
+                } else if (externalConfig.duration) {
+                    self.useDuration(true);
+                    self.selectedDuration(externalConfig.duration);
+                    var duration = self.listOfDurations().filter(function (item) {
+                        return item.value === self.selectedDuration();
+                    });
+                    self.setDatesBasedOnDuration(duration[0]);
+                }
+                self.requestReportData();
+            }
         }
     };
 
@@ -2489,12 +2504,10 @@ var reportsViewModel = function () {
     };
 
     self.conditions = function () {
-        var array = [];
-        array.push(
+        return [
             {text: "AND", value: "$and"},
             {text: "OR", value: "$or"}
-        );
-        return array;
+        ];
     };
 
     self.displayCondition = function (op) {
@@ -2705,10 +2718,9 @@ var reportsViewModel = function () {
 
     self.selectPropertyFilter = function (element, indexOfFilter, selectedItem) {
         var tempArray = self.listOfFilters(),
-            filter = tempArray[indexOfFilter],
             $elementRow = $(element).parent().parent().parent().parent().parent(),
-            $inputField = $elementRow.find(".filterValue").find("input");
-        filter = initializeNewFilter(selectedItem, filter);
+            $inputField = $elementRow.find(".filterValue").find("input");  // in case we need to validate input field
+        tempArray[indexOfFilter] = initializeNewFilter(selectedItem, tempArray[indexOfFilter]);
         updateListOfFilters(tempArray);
     };
 
@@ -2831,16 +2843,20 @@ var reportsViewModel = function () {
     }, self);
 };
 
-function applyBindings() {
+function applyBindings(extConfig) {
     if (window.opener === undefined) {
         window.setTimeout(applyBindings, 2);
     } else {
         reportsVM = new reportsViewModel();
-        reportsVM.init();
+        reportsVM.init(extConfig);
         ko.applyBindings(reportsVM);
     }
 }
 
 $(function () {
-    applyBindings();
+    if (window.location.href.match('pause')) {
+        applyBindings(window.externalConfig);
+    } else {
+        applyBindings();
+    }
 });
