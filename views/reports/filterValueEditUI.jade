@@ -1,4 +1,4 @@
-// ko if: (valueType === "DateTime" || valueType === "Timet")
+// ko if: ((valueType === "DateTime" || valueType === "Timet"))
 div(style="display:inline-block")
    input.input.form-control.filterContainer.dateTimeDate(data-bind="reportDatePicker: date, css: {startDate: (filterName === 'Start_Date'), endDate: (filterName === 'End_Date') }", type="text", required)
 div(style="display:inline-block")
