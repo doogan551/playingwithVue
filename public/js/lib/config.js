@@ -2742,12 +2742,22 @@ var Config = (function(obj) {
 
         "Device Port": function(data) {
             data.propertyObject = (!!data.propertyObject) ? data.propertyObject : obj.Utility.getPropertyObject("Device Port", data.point);
-            var point = data.point, // Shortcut,
-                val = data.propertyObject.Value, // Property value
-                disp = false;
+            var point = data.point,
+                rmuTypes = enumsTemplatesJson.Enums["Remote Unit Model Types"],
+                modbusRemoteUnitTypes = [
+                    rmuTypes["Liebert"].enum,
+                    rmuTypes["Sierra Steam Meter"].enum,
+                    rmuTypes["Siemens Power Meter"].enum,
+                    rmuTypes["Ingersol Rand Intellysis"].enum,
+                    rmuTypes["PowerLogic 3000 Meter"].enum,
+                    rmuTypes["Generic Modbus"].enum,
+                    rmuTypes["PowerTraks 9000"].enum,
+                    rmuTypes["Programmable Modbus"].enum
+                ],
+                val = data.propertyObject.Value; // Property value
 
-            if (val === "Ethernet") disp = true;
-            point["Ethernet IP Port"].isDisplayable = disp;
+            point["Ethernet IP Port"].isDisplayable = (val === "Ethernet") ? true : false;
+            point["Ethernet IP Port"].isReadOnly = (modbusRemoteUnitTypes.indexOf(point._rmuModel) > -1) ? false : true;
             return point;
         },
 
@@ -4048,6 +4058,7 @@ var Config = (function(obj) {
         applyDeviceTypeUplinkPort: function(data) {
             var point = data.point;
 
+            point["Downlink IP Port"].isReadOnly = true;
             if (point["Uplink Port"].Value == "Ethernet") {
                 point["Ethernet Protocol"].isReadOnly = true;
                 point["Ethernet Protocol"].Value = "IP";
@@ -4171,6 +4182,7 @@ var Config = (function(obj) {
         applyDeviceTypeEthernetProtocol: function(data) {
             var point = data.point;
 
+            point["Ethernet IP Port"].isReadOnly = true;
             if (point["Ethernet Protocol"].Value == "None") {
                 point["Ethernet Address"].isDisplayable = false;
                 point["Ethernet IP Port"].isDisplayable = false;
