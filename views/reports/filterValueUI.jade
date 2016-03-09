@@ -1,14 +1,14 @@
-// ko if: (valueType === "DateTime" || valueType === "Timet")
+// ko if: ((valueType === "DateTime" || valueType === "Timet"))
 div(style="display:inline-block")
-   input.input.form-control.filterContainer.dateTimeDate(data-bind="reportDatePicker: date, css: {startDate: (filterName === 'Start_Date'), endDate: (filterName === 'End_Date') }", type="text", required)
+   input.input.form-control.filterContainer.dateTimeDate(data-bind="reportDatePicker: date, enable: $root.canEdit(), css: {startDate: (filterName === 'Start_Date'), endDate: (filterName === 'End_Date') }", type="text", required)
 div(style="display:inline-block")
-   input.input.form-control.filterContainer.dateTimeTime(data-bind="reportTimePicker: time, css: {startDateTime: (filterName === 'Start_Date'), endDateTime: (filterName === 'End_Date') }", type="text", required)
+   input.input.form-control.filterContainer.dateTimeTime(data-bind="reportTimePicker: time, enable: $root.canEdit(), css: {startDateTime: (filterName === 'Start_Date'), endDateTime: (filterName === 'End_Date') }", type="text", required)
 // /ko
 // ko if: (valueType === "Float" || valueType === "Unsigned")
-input.input.form-control.filterContainer(data-bind="value: value", type="number", required)
+input.input.form-control.filterContainer(data-bind="value: value, enable: $root.canEdit()", type="number", required)
 // /ko
 // ko if: (valueType === "String")
-input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
+input.input.form-control.filterContainer(data-bind="value: value, enable: $root.canEdit()", type="text", required)
 // /ko
 // ko if: (valueType === "Enum")
 // ko if: (valueList.length > 0)
@@ -46,13 +46,13 @@ div.pointreference
 // ko if: ((valueType === "HourMinSec") || (valueType === "HourMin") || (valueType === "MinSec"))
 div.durationCtrl
    // ko if: ((valueType === "HourMinSec") || (valueType === "HourMin"))
-   input.hr(data-bind="value: hours", type="number", min="0", max="23")
+   input.hr(data-bind="value: hours, enable: $root.canEdit()", type="number", min="0", max="23")
    span.timeSeg hr
    // /ko
-   input.min(data-bind="value: minutes", type="number", min="0", max="59")
+   input.min(data-bind="value: minutes, enable: $root.canEdit()", type="number", min="0", max="59")
    span.timeSeg min
    // ko if: ((valueType === "HourMinSec") || (valueType === "MinSec"))
-   input.sec(data-bind="value: seconds", type="number", min="0", max="59")
+   input.sec(data-bind="value: seconds, enable: $root.canEdit()", type="number", min="0", max="59")
    span.timeSeg sec
    // /ko
 // /ko

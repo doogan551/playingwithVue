@@ -1651,7 +1651,7 @@ window.pointLookup = (function(module, ko, $) {
             viewModel.grid.name2.filter(externalFilterObj.name2);
             viewModel.grid.name3.filter(externalFilterObj.name3);
             viewModel.grid.name4.filter(externalFilterObj.name4);
-            if (externalFilterObj.selectedPointTypes.length > 0) {
+            if (!!externalFilterObj.selectedPointTypes && externalFilterObj.selectedPointTypes.length > 0) {
                 module.checkPointTypes(externalFilterObj.selectedPointTypes);
             }
         }
