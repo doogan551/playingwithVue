@@ -237,7 +237,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
                         case 1:
                         case 2:
                         case 3:
-                            val = 'Serial Port' + val + 1;
+                            val = 'Serial Port ' + (val + 1);
                             break;
                         case 4:
                             val = 'Ethernet Port';
