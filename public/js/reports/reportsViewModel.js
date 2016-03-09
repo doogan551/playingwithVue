@@ -28,11 +28,11 @@ var initKnockout = function () {
             }
         },
         incrementTime = function (incrementUnit, value) {
-        var arr,
-            hrs,
-            mins,
-            timeLen = value.length,
-            wrapped = false;
+            var arr,
+                hrs,
+                mins,
+                timeLen = value.length,
+                wrapped = false;
 
             if (timeLen > 2) {  // don't allow increment til 3 chars in time field
                 if (value.indexOf(":") > 0) {
@@ -87,7 +87,7 @@ var initKnockout = function () {
             } else {
                 return value;
             }
-    };
+        };
     ko.bindingHandlers.reportDatePicker = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var options = {
@@ -577,6 +577,7 @@ var reportsViewModel = function () {
                     pointFilterSearch.name2 = filter.filter2;
                     pointFilterSearch.name3 = filter.filter3;
                     pointFilterSearch.name4 = filter.filter4;
+                    pointFilterSearch.selectedPointTypes = filter.selectedPointTypes;
                 },
                 windowOpenedCallback = function () {
                     windowRef.pointLookup.MODE = 'select';
@@ -976,7 +977,7 @@ var reportsViewModel = function () {
                     var duration = self.listOfDurations().filter(function (item) {
                         return item.value === self.selectedDuration();
                     });
-                    setDatesBasesOnDuration(duration[0]);
+                    self.setDatesBasedOnDuration(duration[0]);
                 } else {
                     for (key in filters) {
                         if (filters.hasOwnProperty(key)) {
@@ -1165,10 +1166,10 @@ var reportsViewModel = function () {
                 min,
                 sec;
 
-            if($.isNumeric(duration)) {
+            if ($.isNumeric(duration)) {
                 if (hoursOnly) {
                     answer = (duration / 3600).toFixed(precision);
-                } else  {
+                } else {
                     hour = (duration / 3600).toFixed(0);
                     min = (~~((duration % 3600) / 60));
                     sec = (duration % 60);
@@ -1179,10 +1180,6 @@ var reportsViewModel = function () {
             }
 
             return (answer !== "" ? answer : 0);
-        },
-        setDatesBasesOnDuration = function (duration) {
-            self.endDate = moment().unix();
-            self.startDate = moment().subtract(duration.unit, duration.unitType).unix();
         },
         formatDataField = function (dataField, columnConfig) {
             var keyBasedValue,
@@ -1337,7 +1334,7 @@ var reportsViewModel = function () {
                             tempPivot[columnName].Value = "";
                             tempPivot[columnName].rawValue = "";
                         } else {
-                            if (operator === "total" || operator === "runtime" ) {
+                            if (operator === "total" || operator === "runtime") {
                                 tempPivot[columnName].Value = (rawValue === 0 ? 0 : getDurationText(rawValue, columnConfig.precision, totalizerDurationInHours));
                             } else {
                                 tempPivot[columnName].Value = toFixedComma(rawValue, columnConfig.precision);
@@ -1570,9 +1567,9 @@ var reportsViewModel = function () {
                 blockUI($tabConfiguration, false);
             });
 
-            $viewReport.on('draw.dt', function () {
-                setInfoBarDateTime();
-            });
+            //$viewReport.on('draw.dt', function () {
+            //    setInfoBarDateTime();
+            //});
 
             $viewReport.on('column-reorder.dt', function (event, settings, details) {
                 var columnsArray = validateColumns();
@@ -1585,7 +1582,7 @@ var reportsViewModel = function () {
                 //console.log("moved column '" + details.from + "' to column '" + details.to + "'");
             });
 
-            $viewReport.on( 'length.dt', function ( e, settings, len ) {
+            $viewReport.on('length.dt', function (e, settings, len) {
                 self.selectedPageLength(len);
             });
 
@@ -1921,7 +1918,7 @@ var reportsViewModel = function () {
                             if (columnIndex !== 0) {
                                 item.dataColumnName += " - " + item.operator.toLowerCase();
                                 columnTitle += " - " + item.operator;
-                                if (item.operator.toLowerCase() === "total" || item.operator.toLowerCase() === "runtime" ) {
+                                if (item.operator.toLowerCase() === "total" || item.operator.toLowerCase() === "runtime") {
                                     if (totalizerDurationInHours) {
                                         columnTitle += " (Hours)";
                                     }
@@ -2073,6 +2070,9 @@ var reportsViewModel = function () {
                             }
                         }
                     ],
+                    drawCallback: function (settings) {
+                        setInfoBarDateTime();
+                    },
                     headerCallback: function (thead, data, start, end, display) {
                         var reportColumns = validateColumns(),
                             i,
@@ -2121,7 +2121,7 @@ var reportsViewModel = function () {
                                     footerText += " (" + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + ")";
                                     break;
                                 case "Totalizer":
-                                    if (columnConfig.operator.toLowerCase() === "total" || columnConfig.operator.toLowerCase() === "runtime" ) {
+                                    if (columnConfig.operator.toLowerCase() === "total" || columnConfig.operator.toLowerCase() === "runtime") {
                                         footerText += "  " + getDurationText(calc.pageCalc, columnConfig.precision, totalizerDurationInHours);
                                         footerText += " (" + getDurationText(calc.totalCalc, columnConfig.precision, totalizerDurationInHours) + ")";
                                     } else {
@@ -2151,6 +2151,9 @@ var reportsViewModel = function () {
                             $(tfoot).parent().parent().addClass("hidden"); // hide the footer block
                         }
                     },
+                    //initComplete: function (settings, json) {
+                    //    alert('DataTables has finished its initialisation.');
+                    //},
                     data: reportData,
                     columns: aoColumns,
                     colReorder: {
@@ -2554,6 +2557,11 @@ var reportsViewModel = function () {
                 return val;
                 break;
         }
+    };
+
+    self.setDatesBasedOnDuration = function (duration) {
+        self.endDate = moment().unix();
+        self.startDate = moment().subtract(duration.unit, duration.unitType).unix();
     };
 
     self.setFiltersStartEndDates = function (start, end) {
