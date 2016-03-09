@@ -199,6 +199,12 @@ module.exports = {
       _name3: 1,
       _name4: 1
     };
+    var secondSort = {
+      name1: 1,
+      name2: 1,
+      name3: 1,
+      name4: 1
+    };
     var reduceToUserGroups = function() {
       return {
         Security: {
@@ -317,6 +323,8 @@ module.exports = {
       $limit: limit
     }, {
       $project: projection
+    }, {
+      $sort: secondSort
     }];
 
     if (!isSysAdmin) {
@@ -338,7 +346,6 @@ module.exports = {
         if (err) {
           return cb(err, null);
         }
-
         return cb(null, points);
       });
     } else {

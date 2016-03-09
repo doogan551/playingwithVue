@@ -911,7 +911,7 @@ window.pointLookup = (function(module, ko, $) {
         function getMenuItems(item) {
             var _array = [],
                 ofTypeDisplay = item.pointType === "Display",
-                hasWritePermission = userPermissions.systemAdmin || userHasPermission(rowdata.Security, permissionLevels.WRITE);
+                hasWritePermission = userPermissions.systemAdmin || userHasPermission(item.Security, permissionLevels.WRITE);
 
             // Active
             if (item._pStatus == 0) {
