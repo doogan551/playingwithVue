@@ -12,8 +12,8 @@ input.input.form-control.filterContainer(data-bind="value: value, enable: $root.
 // /ko
 // ko if: (valueType === "Enum")
 // ko if: (valueList.length > 0)
-.dropdown.availablefilterValues
-   button.btn.btn-default.dropdown-toggle.filterValueButton(data-toggle="dropdown")
+.dropdown.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
+   button.btn.btn-default.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
       span(data-bind="text: value")
       span.caret.lm10px
    ul.filterValues.dropdown-menu
@@ -23,7 +23,7 @@ input.input.form-control.filterContainer(data-bind="value: value, enable: $root.
       // /ko
 // /ko
 // ko if: (valueList.length === 0)
-input.input.form-control.filterContainer(data-bind="value: value", type="text", required)
+input.input.form-control.filterContainer(data-bind="value: value, enable: $root.canEdit()", type="text", required)
 // /ko
 // /ko
 // ko if: (valueType === "UniquePID")
@@ -33,8 +33,8 @@ div.pointreference
    .pointRef.filterPointName.container-fluid.filterContainer(data-bind="text: ($data.value !== 0 ? $data.value : '- blank -'), click: function(){ $parent.showPointReview($data) }")
 // /ko
 // ko if: (valueType === "Bool")
-.dropdown.availablefilterValues
-   button.btn.btn-default.dropdown-toggle.filterValueButton(data-toggle="dropdown")
+.dropdown.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
+   button.btn.btn-default.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
       span(data-bind="text: $root.displayBool(value)")
       span.caret.lm10px
    ul.filterValues.dropdown-menu

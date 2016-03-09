@@ -265,11 +265,32 @@ var reportsViewModel = function () {
             name4: '',
             selectedPointTypes: []
         },
+        permissionLevels = {
+            READ        : 1,
+            CONTROL     : 2,
+            ACKNOWLEDGE : 4,
+            WRITE       : 8
+        },
         filtersPropertyFields = [],
         columnsPropertyFields = [],
         windowUpi,
         resizeTimer = 400,
         lastResize = null,
+        userCanEdit = function (data, requestedAccessLevel) {
+            var cumulativePermissions = 0,
+                user = window.workspaceManager.user(),
+                groups = user.groups.filter(function (item) {
+                    return !!~data.Security.indexOf(item._id);
+                }),
+                isSystemAdmin = user['System Admin'].Value;
+
+            if (isSystemAdmin) return true;
+
+            for (var i = 0, last = groups.length; i < last; i++) {
+                cumulativePermissions |= groups[i]._pAccess;
+            }
+            return !!(cumulativePermissions & requestedAccessLevel);
+        },
         buildPointRefsArray = function () {
             var columns = validateColumns(),
                 filters = validateFilters(),
@@ -1423,6 +1444,7 @@ var reportsViewModel = function () {
             point["Report Config"].filters = validateFilters();
             pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
             point["Report Config"].pointFilter = pointFilter;
+            point["Report Config"].selectedPageLength = self.selectedPageLength();
             //point["Point Refs"] = buildPointRefsArray();
             switch (self.reportType) {
                 case "History":
@@ -2316,6 +2338,7 @@ var reportsViewModel = function () {
         initKnockout();
 
         if (point) {
+            self.canEdit(userCanEdit(point, permissionLevels.WRITE));
             originalPoint = JSON.parse(JSON.stringify(point));
             windowUpi = point._id; // required or pop-in/pop-out don't work
             if (point["Report Config"] === undefined) {
@@ -2336,6 +2359,7 @@ var reportsViewModel = function () {
                 self.listOfColumns(initColumns(reportConfig.columns));
                 self.listOfFilters(initFilters(reportConfig.filters));
                 pointFilter = (reportConfig.pointFilter ? reportConfig.pointFilter : pointFilter);
+                self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : "25"));
                 switch (self.reportType) {
                     case "History":
                     case "Totalizer":
@@ -2854,9 +2878,7 @@ function applyBindings(extConfig) {
 }
 
 $(function () {
-    if (window.location.href.match('pause')) {
-        applyBindings(window.externalConfig);
-    } else {
+    if (!window.location.href.match('pause')) {
         applyBindings();
     }
 });
