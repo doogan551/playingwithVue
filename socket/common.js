@@ -2070,7 +2070,7 @@ function sendUpdate(dynamic) {
 }
 
 function acknowledgePointAlarms(alarm) {
-  if (alarm.msgCat === Config.Enums['Alarm Categories'].Return.enum && alarm.ackStatus === Config.Enums['Acknowledge Statuses']['Not Acknowledged'].enum) {
+  if (alarm.ackStatus === Config.Enums['Acknowledge Statuses']['Auto Acknowledge'].enum) {
     var now = Math.floor(Date.now() / 1000);
     var upi = alarm.upi;
     var criteria = {
