@@ -14,7 +14,7 @@ html
         link(rel='stylesheet', href='/css/alarmMessageDefinitions/alarmMessageDefinitions.css')
         script(type='text/javascript', src='/js/lib/json2.js')
         script(type='text/javascript', src='/js/lib/jquery.min.js')
-        script(type='text/javascript', src='/js/lib/knockout-2.3.0.js')
+        script(type='text/javascript', src='/js/lib/knockout-2.3.0.debug.js')
         script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
         script(type='text/javascript', src='/js/lib/knockout.mapping-2.3.5.js')
         script(type='text/javascript', src='/js/lib/bootstrap-3.0.3.min.js')
@@ -50,7 +50,7 @@ html
         script(type='text/javascript', src='/js/alarmMessageDefinition/koGrid-2.1.1.js')
         script(type='text/javascript', src='/js/alarmMessageDefinition/ko.bindingHandler.definitionColorPicker.js')
         script(type='text/javascript', src='/js/util/components/colorpicker/diColorPicker.js')
-        script(type="text/javascript" src='/js/lib/DataTables-1.10.10/jquery.dataTables.min.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.10/jquery.dataTables.js')
         script(type="text/javascript" src='/js/lib/DataTables-1.10.10/dataTables.bootstrap.min.js')
         script(type='text/javascript', src='/js/baseui/syspref.js')
         include ../AlarmMessageDefinition/templates.jade
@@ -323,7 +323,7 @@ html
                             // /ko
 
             // ------ Notifications ---------------------------------------------------------------------------------
-            div#notifications(data-bind="visible: section() == 'Notifications'")
+            .notifications(data-bind="visible: section() == 'Notifications'")
                 div(data-bind="with: notificationsViewModel.bindings")
                     .notificationHeader
                         .pull-right(data-bind="visible: isEditingPolicy()")
@@ -358,10 +358,12 @@ html
                                             .col-xs-3 Members: #[span(data-bind="text: members.length")]
                                             .col-xs-1.pull-right.deleteIcon
                                                 i.fa.fa-times
-                                    .policyList(data-bind="visible: addingPolicy")
+                                    .newPolicy(data-bind="visible: isEditingNewPolicy")
                                         .policy.row
                                             .col-xs-3
-                                                input(type="text")
+                                                input(type="text", data-bind="value: newPolicyName")
+                                            .col-xs-9
+                                                btn.btn.btn-sm.btn-success(data-bind="click: doAddNewPolicy") Save and Edit Policy
 
                                 #notificationsActivity.tab-pane
                                     h3 Activity
@@ -418,25 +420,64 @@ html
                                                     i.fa.fa-pencil-square-o
 
                                 #policyMembers.tab-pane
-                                    h3 Members
-                                        span.dropdown
-                                            button.btn.btn-sm.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Send all members a test message
-                                                span.caret.caret-spaced
-                                            ul.dropdown-menu
-                                                li
-                                                    a(href="#") Email
-                                                    a(href="#") Text Mobile
-                                                    a(href="#") Call Mobile
-                                                    a(href="#") Call Home
-                                                    a(href="#") Call Work
+                                    div(data-bind="visible: !$parent.isEditingMember()")
+                                        h3 Members
+                                            span.dropdown
+                                                button.btn.btn-sm.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Send all members a test message
+                                                    span.caret.caret-spaced
+                                                ul.dropdown-menu
+                                                    li
+                                                        a(href="#") Email
+                                                        a(href="#") Text Mobile
+                                                        a(href="#") Call Mobile
+                                                        a(href="#") Call Home
+                                                        a(href="#") Call Work
 
-                                    .memberList
-                                        table#memberList.display.table.table-striped(style="width: 100%")
+                                        .memberList
+                                            table#memberList.display.table.table-striped(style="width: 100%")
+                                            .col-xs-12
+                                                button.btn.btn-sm.btn-primary(data-bind="click: $parent.editPolicyMembers") Edit Members
+
+                                    div(data-bind="visible: $parent.isEditingMember(), with: $parent.currMember")
+                                        a.exitConfig(href="#", data-bind="click: $parents[1].cancelEditMember")
+                                            i.fa.fa-chevron-left
+                                            span View All
+
+                                        .nameHeader
+                                            i.fa.fa-user
+                                            span.memberName(data-bind="text: firstName() + ' ' + lastName()")
+
+                                        ul.nav.nav-tabs.nav-tabs-arrow
+                                            li.active
+                                                a(href="#memberNotifySettings") Notify Settings
+
+                                        .tab-content
+                                            #memberNotifySettings.tab-pane.active
+                                                h3 Alert Notifications
+
+                                                .notificationTable
+                                                    .notificationsEnabled Notifications are #[span.editable Enabled]
+                                                        a.pull-right(href="#")
+                                                            i.fa.fa-pencil-square-o
+
+                                                    .notificationRow
+                                                        .notificationIcon.smsIcon
+                                                            .fa-stack
+                                                                i.fa.fa-envelope-o.fa-stack-2x
+                                                                i.fa.fa-stack-1x.fa-stack-text
+                                                        .notificationAlert
+                                                            div
+                                                                span.editable Immediately
+                                                                span after I receive an alert
+                                                                span.editable text mobile 123-123-1234
+                                                        a.notificationEdit.pull-right(href="#")
+                                                            i.fa.fa-pencil-square-o
+
 
                                 #policyAlertConfig.tab-pane
-                                    div(data-bind="visible: currAlertConfig() === null")
+                                    div(data-bind="visible: $parent.currAlertConfig() === null")
                                         .pull-right
-                                            .button.btn.btn-success New Configuration
+                                            .button.btn.btn-success(data-bind="click: $parent.addConfiguration") New Configuration
                                         h3 Alert Configurations
 
                                         .policyList(data-bind="foreach: alertConfigs")
@@ -450,73 +491,119 @@ html
                                                         i.fa.fa-files-o
                                                     a(href="#")
                                                         i.fa.fa-times.deleteIcon
+                                        .newConfiguration(data-bind="visible: $parent.isEditingNewConfiguration")
+                                            .policy.row
+                                                .col-xs-3
+                                                    input(type="text", data-bind="value: $parent.newConfigurationName")
+                                                .col-xs-9
+                                                    btn.btn.btn-sm.btn-success(data-bind="click: $parent.doAddNewConfiguration") Save and Edit Configuration
 
-                                    div(data-bind="visible: currAlertConfig() !== null, with: currAlertConfig")
+
+                                    div(data-bind="visible: $parent.currAlertConfig() !== null, with: $parent.currAlertConfig")
                                         a.exitConfig(href="#", data-bind="click: $parents[1].cancelEditAlertConfig")
                                             i.fa.fa-chevron-left
                                             span View All
                                         .pull-right
-                                            .button.btn.btn-sm.btn-default(data-bind="click: $parent.doEditAlertConfig") Edit
+                                            .button.btn.btn-sm.btn-default(data-bind="visible: !$parents[1].isEditingAlertConfig(), click: $parents[1].doEditAlertConfig") Edit
+                                            .button.btn.btn-sm.btn-text(data-bind="visible: $parents[1].isEditingAlertConfig(), click: $parents[1].cancelDoEditAlertConfig") Cancel
+                                            .button.btn.btn-sm.btn-success(data-bind="visible: $parents[1].isEditingAlertConfig(), click: $parents[1].saveEditAlertConfig") Save
                                         h3 Off-Hours
                                         .checkbox.isOnCall
                                             label
                                                 input.checkbox-valign(type="checkbox", data-bind="checked: isOnCall")
                                                 |This configuration is used for On-Call
 
-                                        // ko foreach: groups
-                                        .alertGroup
-                                            .groupTitle(data-bind="text: name")
-                                            .alertSection
-                                                .alertBody
-                                                    .col
-                                                        .sectionIcon
-                                                            i.fa.fa-bell-o
-                                                        .sectionTitle 0 minute(s) after an alarm occurs
-
-                                            div(data-bind="foreach: escalations")
+                                        div(data-bind="css: { editing: $parents[1].isEditingAlertConfig() }")
+                                            // ko foreach: groups
+                                            .alertGroup
+                                                .groupTitle
+                                                    i.fa.fa-bars
+                                                    span.groupName(data-bind="text: name, visible: !$parents[2].isEditingAlertConfig()")
+                                                    input.groupName.input-sm.form-control(type="text", data-bind="value: name, visible: $parents[2].isEditingAlertConfig()")
                                                 .alertSection
                                                     .alertBody
-                                                        .leftCol.col
+                                                        .col
                                                             .sectionIcon
-                                                                i.fa.fa-male
-                                                            .sectionTitle Alert:
-                                                            .rotationList(data-bind="foreach: members")
-                                                                .member(data-bind="text: name")
-                                                        .rightCol.col
-                                                            .sectionTitle.sectionTitleNoIcon Alert Style: #[span.editable(data-bind="text: alertStyle")]
-                                                            .sectionWait
-                                                                i.fa.fa-clock-o
-                                                                span Wait #[span.editable(data-bind="text: memberAlertDelay")] minutes before alerting the next person in the list
-                                                            .sectionRotate.sectionMultiline
-                                                                i.fa.fa-repeat
-                                                                .checkbox(data-bind="with: rotateConfig")
-                                                                    label
-                                                                        input.checkbox-valign(type="checkbox", data-bind="checked: enabled")
-                                                                        div Rotate the first responder
-                                                                        div Every #[span.editable(data-bind="text: scale")] at #[span.editable(data-bind="text: time")] on #[span.editable(data-bind="text: day")]
-                                                            .sectionRepeat.sectionMultiline
-                                                                i.fa.fa-history
-                                                                .checkbox(data-bind="with: repeatConfig")
-                                                                    label
-                                                                        input.checkbox-valign(type="checkbox", data-bind="checked: enabled")
-                                                                        div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] times.  Wait #[span.editable(data-bind="text: repeatDelay")] minutes after the previous alert completes.
+                                                                i.fa.fa-bell-o
+                                                            .sectionTitle #[span.editable(data-bind="text: alertDelay")] #[input.input-xs.form-control.input-sm.editableInput(data-bind="value: alertDelay")] minute(s) after an alarm occurs
 
-                                                    .alertFooter
-                                                        .escalationTimer
-                                                            i.fa.fa-arrow-down
-                                                            | Escalates after #[span.editable(data-bind="text: escalationDelay")] minutes
+                                                div(data-bind="foreach: escalations")
+                                                    .alertSection
+                                                        .alertBody
+                                                            .leftCol.col
+                                                                .sectionIcon
+                                                                    i.fa.fa-male
+                                                                .sectionTitle Alert:
+                                                                .rotationList(data-bind="foreach: members")
+                                                                    .member(data-bind="text: name")
+                                                            .rightCol.col
+                                                                .sectionTitle.sectionTitleNoIcon
+                                                                    span.alertStyle Alert Style:
+                                                                    span.editable(data-bind="text: alertStyle")
+                                                                    select.form-control.input-sm.select-sm.editableInput(data-bind="value: alertStyle, options: $parents[3].alertStyles")
+                                                                .sectionWait
+                                                                    i.fa.fa-clock-o
+                                                                    span Wait #[span.editable(data-bind="text: memberAlertDelay")] #[input.input-xs.form-control.input-sm.editableInput(data-bind="value: memberAlertDelay")] minutes before alerting the next person in the list
+                                                                .sectionRotate.sectionMultiline
+                                                                    i.fa.fa-repeat
+                                                                    .checkbox(data-bind="with: rotateConfig")
+                                                                        label
+                                                                            input.checkbox-valign(type="checkbox", data-bind="checked: enabled, disable: !$parents[4].isEditingAlertConfig()")
+                                                                            div Rotate the first responder
+                                                                            div Every #[span(data-bind="text: scale")] at #[span.editable(data-bind="text: time")] #[input.timeInput.form-control.input-sm.editableInput(data-bind="value: time")] on #[span.editable(data-bind="text: day")] #[select.form-control.input-sm.select-sm.editableInput(data-bind="value: day, options: $parents[4].days")]
+                                                                .sectionRepeat.sectionMultiline
+                                                                    i.fa.fa-history
+                                                                    .checkbox(data-bind="with: repeatConfig")
+                                                                        label
+                                                                            input.checkbox-valign(type="checkbox", data-bind="checked: enabled, disable: !$parents[4].isEditingAlertConfig()")
+                                                                            div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] #[input.form-control.input-sm.input-xs.editableInput(data-bind="value: repeatCount")] times.  Wait #[span.editable(data-bind="text: repeatDelay")] #[input.form-control.input-sm.input-xs.editableInput(data-bind="value: repeatDelay")] minutes after the previous alert completes.
 
-                                            .alertSection.alert-no-arrow
-                                                .alertBody
-                                                    .sectionIcon
-                                                        i.fa.fa-hsitory
-                                                    .sectionTitle
-                                                        .checkbox(data-bind="with: repeatConfig")
-                                                            label
-                                                                input.checkbox-valign(type="checkbox", data-bind="checked: enabled")
-                                                                div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] times.  (Use 0 for indefinite repeats)
+                                                        .alertFooter
+                                                            .escalationTimer
+                                                                i.fa.fa-arrow-down
+                                                                | Escalates after #[span.editable(data-bind="text: escalationDelay")] #[input.form-control.input-sm.input-xs.editableInput(data-bind="value: escalationDelay")] minutes
 
-                                        // /ko
+                                                .alertSection.addEscalation.alert-no-arrow(data-bind="visible: $parents[2].isEditingAlertConfig()")
+                                                    a.addGroup.clearFix.centerFlex(href="#",data-bind="click: $parents[2].addEscalation")
+                                                        i.fa.fa-plus-circle.text-success
+                                                        span Add escalation
+
+                                                .alertSection.alert-no-arrow
+                                                    .alertBody.centerFlex
+                                                        .col-xs-1
+                                                            i.fa.fa-history
+                                                        .col-xs-11
+                                                            .checkbox(data-bind="with: repeatConfig")
+                                                                label
+                                                                    input.checkbox-valign(type="checkbox", data-bind="checked: enabled")
+                                                                    div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] times.  (Use 0 for indefinite repeats)
+
+                                            // /ko
+
+                                            .alertGroup.addAlertGroup(data-bind="visible: $parents[1].isEditingAlertConfig()")
+                                                a.addGroup.clearfix(href="#", data-bind="click: $parents[1].addAlertGroup")
+                                                    .col-xs-1
+                                                        i.text-success.fa.fa-plus-circle
+                                                    .col-xs-11
+                                                        .addGroupTitle Add Group
+                                                        .addGroupBody Only one group is active at a time.  If two or more groups are added, the active group is rotated in based on the group rotation settings at the top of this page.
+
+                                #policySchedule.tab-pane
+                                    .pull-right
+                                        .button.btn.btn-sm.btn-success Edit Schedule
+                                    h3 Schedule
+
+                                    .scheduleLayers(data-bind="foreach: scheduleLayers")
+                                        .panel.panel-default.scheduleLayer
+                                            .panel-heading
+                                                h3.panel-title Layer 1
+                                            .panel-body
+                                                .col-xs-4
+                                                    div Alert Configurations
+                                                    .rotationList(data-bind="foreach: alertConfigs")
+                                                        .member(data-bind="text: id")
+                                                .col-xs-8 Test
+
 
                                 #policyCalendar.tab-pane
                                     h3 Calendar
@@ -561,6 +648,29 @@ html
                                                         li
                                                             a(href="#") Group 1
                                                             a(href="#") Group 2
+
+        #notificationsEditMemberModal.notifications.modal.fade(data-bind="with: notificationsViewModel.bindings")
+            .modal-dialog.modal-sm
+                .modal-content
+                    .modal-header
+                        h4.modal-title Manage Members
+                    .modal-body.clearfix.form
+                        //- .col-xs-12
+                        //-     .row
+                        //-         .col-xs-3.centerText Member
+                        .col-xs-12.primaryMemberList(data-bind="foreach: primaryMemberList")
+                            .row
+                                .col-xs-12
+                                    .checkbox.noMargin
+                                        label
+                                            input.checkbox-valign(type="checkbox", data-bind="checked: selected")
+                                            span.primaryMember(data-bind="text: firstName + ' ' + lastName")
+
+                        .col-xs-6.secondaryMemberList
+                    .modal-footer
+                        button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                        button.btn.btn-success.btn-sm(data-bind="click: updateMembers") Update
+
 
 
             // ------ About -----------------------------------------------------------------------------------------
