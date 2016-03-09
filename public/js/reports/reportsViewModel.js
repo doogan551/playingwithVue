@@ -977,7 +977,7 @@ var reportsViewModel = function () {
                     var duration = self.listOfDurations().filter(function (item) {
                         return item.value === self.selectedDuration();
                     });
-                    setDatesBasesOnDuration(duration[0]);
+                    self.setDatesBasedOnDuration(duration[0]);
                 } else {
                     for (key in filters) {
                         if (filters.hasOwnProperty(key)) {
@@ -1180,10 +1180,6 @@ var reportsViewModel = function () {
             }
 
             return (answer !== "" ? answer : 0);
-        },
-        setDatesBasesOnDuration = function (duration) {
-            self.endDate = moment().unix();
-            self.startDate = moment().subtract(duration.unit, duration.unitType).unix();
         },
         formatDataField = function (dataField, columnConfig) {
             var keyBasedValue,
@@ -2561,6 +2557,11 @@ var reportsViewModel = function () {
                 return val;
                 break;
         }
+    };
+
+    self.setDatesBasedOnDuration = function (duration) {
+        self.endDate = moment().unix();
+        self.startDate = moment().subtract(duration.unit, duration.unitType).unix();
     };
 
     self.setFiltersStartEndDates = function (start, end) {
