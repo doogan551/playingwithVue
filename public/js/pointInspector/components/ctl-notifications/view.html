@@ -20,7 +20,7 @@
             <tbody data-bind="foreach: alarmData">
             <tr>
                 <td>
-                    <input type="checkbox" data-bind="checked: ack, enable: $parent.isInEditMode">
+                    <input type="checkbox" data-bind="checked: ack, enable: $parent.checkNotify($data)">
                 </td>
                 <td>
                     <input type="checkbox" data-bind="checked: notify, enable: $parent.isInEditMode">
@@ -74,5 +74,5 @@
     </div>
     <!-- /ko -->
 
-    <!--  ko component: { name: 'ctl-policies', params: { data: data, rootContext: $root } } -->
+    <!--  ko component: { name: 'ctl-policies', params: { data: $root.point.data['Notify Policies'], rootContext: $root } } -->
     <!-- /ko -->

@@ -35,6 +35,7 @@ require(['knockout'], function (ko) {
     ko.components.register('ctl-conversionWizard',  { require: 'components/ctl-conversionWizard/module' });
     ko.components.register('ctl-scheduleEntries',   { require: 'components/ctl-scheduleEntries/module'});
     ko.components.register('ctl-qualityCodeEnable',    { require: 'components/ctl-qualityCodeEnable/module' });
+    ko.components.register('ctl-policies',    { require: 'components/ctl-policies/module' });
     // Point Reviews
     ko.components.register('pt-accumulator',    { require: 'components/pt-accumulator/module' });
     ko.components.register('pt-alarmstatus',    { require: 'components/pt-alarmstatus/module' });

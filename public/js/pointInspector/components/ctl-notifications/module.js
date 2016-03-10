@@ -34,6 +34,10 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 self.buildAlarmArrays();
             }
         });
+
+        self.checkNotify = function(data){
+            return self.isInEditMode() && !data.notify();
+        };
     }
 
     function getAlarmMessages(id) {
@@ -85,7 +89,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 if (alarm.msgId() === msg._id) {
                     if (msg.msgCat === self.Enums['Alarm Categories'].Return.enum) {
                         // in case db is not fixed, this defaults ack/notify all to first return message's properties
-                        if(!self.returnData().length){
+                        if (!self.returnData().length) {
                             self.notifyAll(alarm.notify());
                             self.ackAll(alarm.ack());
                         }
@@ -93,12 +97,18 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                         alarm.ack(self.ackAll());
                         self.returnData.push(alarm);
                     } else {
+                        alarm.notify.subscribe(function(val){
+                            if(!!val){
+                                alarm.ack(true);
+                            }
+                        });
                         self.alarmData.push(alarm);
                     }
                 }
             });
         });
     };
+
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code

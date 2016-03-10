@@ -1,13 +1,11 @@
 <div class="dataField">
   <label>Policies</label>
 </div>
+<!-- ko foreach:policies() -->
 <div class="row">
-  <div class="col col-xs-6 col-sm-3" style="margin-bottom:5px; margin-top:10px">
-    <input class="switch" type="checkbox" data-bind="checked: false, enable: isInEditMode()">
-    <label class="policyChecks">First</label>
-  </div>
-  <div class="col col-xs-6 col-sm-3" style="margin-bottom:5px; margin-top:10px">
-    <input class="switch" type="checkbox" data-bind="checked: false, enable: isInEditMode()">
-    <label class="policyChecks">Second</label>
-  </div>
+    <div class="col col-xs-6 col-sm-3" style="margin-bottom:5px; margin-top:10px">
+      <input class="switch" type="checkbox" data-bind="checked: policyOnPoint, click:$parent.togglePolicy.bind($parent, $data), enable: $root.isInEditMode()">
+      <label class="policyChecks" data-bind="text:$data.name"/>
+    </div>
 </div>
+<!-- /ko -->
