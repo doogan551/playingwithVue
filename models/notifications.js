@@ -68,74 +68,6 @@
 	// }]
 
 
-
-
-
-
-
-
-
-
-
-
-
-/*
-getScheduledTasks = function (callback) {
-	actions.scheduledTasks.getAll(function (err, results) {
-		scheduledTasks = results;
-		callback(err);
-	});
-},
-getPolicies = function (callback) {
-	actions.policies.getAll(function (err, results) {
-		policies = results;
-		callback(err);
-	});
-},
-getAlarmQueue = function (callback) {
-	actions.alarmQueue.getAll(function (err, results) {
-		alarmQueue = results;
-		callback(err);
-	});
-};
-*/
-
-/*
-module.exports = {
-	hasNotifications: function(alarm, cb) {
-		var doSend = false;
-		utility.getOne({
-			collection: 'points',
-			query: {
-				_id: alarm.upi
-			}
-		}, function(err, point) {
-			var pointAlarms = point['Alarm Messages'];
-			for (var i = 0; i < pointAlarms.length; i++) {
-				if (alarm.msgType === pointAlarms[i].msgType && !!pointAlarms[i].notify) {
-					doSend = true;
-				}
-			}
-			return cb(err, doSend);
-		});
-	},
-	checkPolicies: function(alarm, callback) {
-		var policies = [{
-			number: '13364694547',
-			type: 6,
-			ack: true,
-			email: 'rkendall@dorsett-tech.com'
-		}, {
-			number: '13364690900',
-			type: 0,
-			ack: true,
-			email: 'jroberts@dorsett-tech.com'
-		}];
-
-		callback(null, policies);
-	}
-};
-*/
 var async = require('async'),
 	utility = require('../models/utility'),
 	utils = require('../helpers/utils'),
@@ -143,9 +75,12 @@ var async = require('async'),
 	Config = require('../public/js/lib/config.js'),
 	appConfig = require('config'),
 	cronJob = require('../models/cronjob'),
-	// oplog = require('../socket/oplog.js'),
 	ObjectID = require('mongodb').ObjectID,
-	logger = require("../helpers/logger")(module);
+	logger = require('../helpers/logger')(module),
+	mailer = require('../models/mailer'),
+	Notifier = require('../models/notifierutility');
+
+var notifier = new Notifier();
 
 var alarmsCollection = utils.CONSTANTS("alarmsCollection");
 
@@ -181,7 +116,18 @@ var	ADDED = 1,		// Thread states
 	SMS = 1,		// Notification types
     EMAIL = 2,
     VOICE = 3,
-	MSPM = 60000;	// Number of milliseconds per minute
+	MSPM = 60000,	// Number of milliseconds per minute
+	RUNINTERVAL = MSPM;	// How often the CRON task runs
+
+var notifierFnLookup = {};
+notifierFnLookup[SMS] = 'sendText';
+notifierFnLookup[VOICE] = 'sendVoice';
+notifierFnLookup[EMAIL] = 'sendEmail';
+
+var notifyTypeText = {};
+notifyTypeText[SMS] = 'SMS';
+notifyTypeText[VOICE] = 'VOICE';
+notifyTypeText[EMAIL] = 'EMAIL';
 
 var daysOfWeek = ['sun', 'mon', 'tues', 'wed', 'thur', 'fri', 'sat']; // Entries correspond to Date().getDay()
 
@@ -202,7 +148,7 @@ var dbAlarmQueueLocked = false,
 						year: new Date().getFullYear()
 					};
 				calendar.getYear(query, function (err, result) {
-					if (err) {
+					if (!!err) {
 						return cb(err);
 					}
 					var obj = {},
@@ -252,13 +198,13 @@ var dbAlarmQueueLocked = false,
 				// TEST
 				if (selfTest.enabled && !selfTest.useDb.policies) {
 					return cb(null, selfTest.policies.filter(function (policy) {
-						return !!~idList.indexOf(policy._id.toHexString());
+						return !!~idList.indexOf(policy._id);
 					}));
 				}
 				// end TEST
 
 				var objectIdList = idList.map(function (id) {
-						return ObjectID(id);
+						return new ObjectID(id);
 					}),
 					criteria = {
 						collection: 'NotifyPolicies',
@@ -353,7 +299,7 @@ var dbAlarmQueueLocked = false,
 						utility.update(criteria, doDeleteCB);
 					},
 					getPolicyThreadChanges = function (policy) {
-						var policyId = policy._id.toHexString(),
+						var policyId = policy._id,
 							_numberOfDeletes = 0,
 							_numberOfInserts = 0,
 							processThread = function (thread) {
@@ -500,7 +446,7 @@ var dbAlarmQueueLocked = false,
 				var len = policies.length,
 					i;
 				for (i = 0; i < len; i++) {
-					if (policies[i]._id.toHexString() === id) {
+					if (policies[i]._id === id) {
 						return policies[i];
 					}
 				}
@@ -513,7 +459,7 @@ var dbAlarmQueueLocked = false,
 					i;
 				for (i = 0; i < len; i++) {
 					policy = policies[i];
-					obj[policy._id.toHexString()] = policy;
+					obj[policy._id] = policy;
 				}
 				return obj;
 			},
@@ -695,7 +641,7 @@ var dbAlarmQueueLocked = false,
 
 				// Get thread acknowledged status & process accordingly
 				actions.policies.isThreadAcknowledged(info, function (err, isAcknowledged) {
-					if (err) {
+					if (!!err) {
 						return cb(err);
 					}
 
@@ -740,6 +686,8 @@ var dbAlarmQueueLocked = false,
 				var alertConfigIds = actions.policies.getActiveAlertConfigIds(info),
 					numberOfAlertConfigIds = alertConfigIds.length,
 					queueEntry = info.queueEntry,
+					trigger = {},
+					key,
 					getGroupRepeatTime = function (group) {
 						if (!group.repeatConfig.enabled)
 							return 0;
@@ -841,24 +789,14 @@ var dbAlarmQueueLocked = false,
 					};
 
 				if (numberOfAlertConfigIds > 0) {
+					for (key in queueEntry) {
+						trigger[key] = queueEntry[key];
+					}
 					return {
 						id: queueEntry.alarmId, // this will server as our unique id for the lifetime of the thread (even if it mutates)
 						notifyReturnNormal: queueEntry.notifyReturnNormal,
-						trigger: {
-							upi: queueEntry.upi,
-							alarmId: queueEntry.alarmId,
-							msgCat: queueEntry.msgCat,
-							msgText: queueEntry.msgText,
-							msgType: queueEntry.msgType,
-							almClass: queueEntry.almClass,
-							timestamp: queueEntry.timestamp,
-							Name1: queueEntry.Name1,
-							Name2: queueEntry.Name2,
-							Name3: queueEntry.Name3,
-							Name4: queueEntry.Name4,
-							pointType: queueEntry.pointType,
-							Security: queueEntry.Security
-						},
+						trigger: trigger,
+						previousTriggers: [],
 						status: {
 							isAcknowledged: false,
 							isReturnedNormal: false,
@@ -885,10 +823,8 @@ var dbAlarmQueueLocked = false,
 					key;
 
 				if (thread._state !== ADDED) {
+					actions.policies.setThreadState(info.thread, UPDATED);
 					// Copy trigger to previousTriggers array before we update the trigger
-					if (!!!thread.previousTriggers) {
-						thread.previousTriggers = [];
-					}
 					thread.previousTriggers.push({
 						timestamp: trigger.timestamp,
 						alarmId: trigger.alarmId,
@@ -940,7 +876,7 @@ var dbAlarmQueueLocked = false,
 					alarmId = thread.trigger.alarmId,
 					policiesAckList = info.data.policiesAckList,
 					query = {
-						_id: new ObjectID(alarmId)
+						_id: alarmId // alarmId is already a Mongo ObjectID
 					},
 					fields = {
 						ackStatus: 1
@@ -1033,6 +969,11 @@ var dbAlarmQueueLocked = false,
 			dbRemoveAll: function (data, cb) {
 				actions.utility.log('alarmQueue.dbRemoveAll'); // DEBUG
 
+				// If the alarm queue was empty there's nothing for us to do
+				if (!data.alarmQueue.length) {
+					return cb(null, data);
+				}
+				
 				// TEST
 				if (selfTest.enabled && !selfTest.useDb.alarmQueue) {
 					selfTest.alarmQueue.length = 0;
@@ -1040,12 +981,46 @@ var dbAlarmQueueLocked = false,
 					return cb(null, data);
 				}
 				// end TEST
-				
+
 				var criteria = {
 						collection: 'NotifyAlarmQueue',
 						query: {}
 					};
-				utility.remove(criteria, cb);
+
+				// We could just dump the database alarm queue, but the following guarantees we do not miss any alarms 
+				// due to the CRON job firing up. Ex sequence:
+				// 1. CRON runs
+				// 2. An alarm comes in, checks dbAlarmQueueLocked and reads false
+				// 3. CRON sets dbAlarmQueueLocked true and gets alarmQueue
+				// 4. The alarm that came in finishes inserting into the alarmQueue db collection
+				async.waterfall([
+					actions.alarmQueue.dbGetAll,
+					function validate (alarmQueue, validateCB) {
+						if (alarmQueue.length > data.alarmQueue.length) {
+							for (i = data.alarmQueue.length; i < alarmQueue.length; i++) {
+								tempAlarmQueue.push(alarmQueue[i]);
+							}
+						}
+						validateCB(null);
+					},
+					function remove (removeCB) {
+						utility.remove(criteria, removeCB);
+					}
+				], function complete (err) {
+					cb(err, data);
+				});
+			},
+			lock: function (data, cb) {
+				dbAlarmQueueLocked = true;
+				if (cb) {
+					cb(null, data);
+				}
+			},
+			unlock: function (data, cb) {
+				dbAlarmQueueLocked = false;
+				if (cb) {
+					cb(null, data);
+				}
 			},
 			process: function (data, cb) {
 				actions.utility.log('alarmQueue.processing', '\t' + data.alarmQueue.length + ' item(s) in queue'); // DEBUG
@@ -1082,10 +1057,6 @@ var dbAlarmQueueLocked = false,
 					cb(err, data);
 				});
 			},
-			processTempAlarmQueue: function (data, cb) {
-				cb(null, data);
-
-			},
 			processNew: function (info, cb) {
 				actions.utility.log('\tProcessing new alarm entry from NotifyAlarmQueue');
 				// info is an object with keys: policy, queueEntry, and data
@@ -1119,6 +1090,9 @@ var dbAlarmQueueLocked = false,
 
 					// Get isAcknowledged status
 					actions.policies.isThreadAcknowledged(info, function (err, isAcknowledged) {
+						if (!!err)
+							return cb(err);
+
 						if (isAcknowledged) {
 							actions.utility.log('\tExisting thread was acknowledged. Creating new thread.');
 							actions.policies.setThreadState(info.thread, DELETED);
@@ -1149,7 +1123,7 @@ var dbAlarmQueueLocked = false,
 								actions.policies.updateThread(info);
 							}
 						}
-						return cb(err);
+						return cb(null);
 					});
 				} else {
 					actions.utility.log('\tAn existing thread matching the alarm UPI was not found; attempting to create new thread.');
@@ -1178,6 +1152,35 @@ var dbAlarmQueueLocked = false,
 					actions.utility.log('\tA thread matching the return UPI was not found; discarding return');
 				}
 				return cb();
+			},
+			processTempAlarmQueue: function (data, cb) {
+				actions.utility.log('alarmQueue.processTempAlarmQueue', '\t' + tempAlarmQueue.length + ' item(s) in temp queue'); // DEBUG
+
+				var tempAlarmQueueLength = tempAlarmQueue.length;
+
+				if (!tempAlarmQueueLength)
+					return cb(null, data);
+
+				// Save the temp alarm queue to the database & empty the temp alarm queue
+				actions.alarmQueue.dbInsert(tempAlarmQueue, function (err) {
+					if (!!err) {
+						return cb(err);
+					}
+					// We could just clear the tempAlarmQueue but the following guarantees we do not miss any entries @ the 
+					// dbAlarmQueueLocked transition; see comments in actions.alarmQueue.dbRemoveAll for a thorough explanation
+					if (tempAlarmQueue.length > tempAlarmQueueLength) {
+						actions.alarmQueue.dbInsert(tempAlarmQueue.splice(tempAlarmQueueLength, tempAlarmQueue.length), function (err) {
+							if (!!err) {
+								return cb(err);
+							}
+							// Clear the array; this is a better method than "tempAlarmQueue.length = []" (https://davidwalsh.name/empty-array)
+							tempAlarmQueue.length = 0;
+							return cb(null, data);
+						});
+					}
+					tempAlarmQueue.length = 0;
+					return cb(null, data);
+				});
 			}
 		},
 		notifications: {
@@ -1288,9 +1291,10 @@ var dbAlarmQueueLocked = false,
 				var len = data.notifyList.length,
 					userNotifyList = {},
 					notifyEntry,
+					notifyMsg,
+					notifyParams,
 					notification,
 					thread,
-					notifyMsg,
 					key,
 					i,
 					recepientHistoryLookup = (function(){
@@ -1316,16 +1320,6 @@ var dbAlarmQueueLocked = false,
 						}
 						return obj;
 					})(),
-					getNotifyTypeText = function (type) {
-						var text;
-						if (type === SMS)
-							text = 'SMS';
-						else if (type === VOICE)
-							text = 'VOICE';
-						else
-							text = 'EMAIL';
-						return text;
-					},
 					formatMinutes = function (minutes) {
 						return minutes < 10 ? ('0'+minutes):minutes;
 					},
@@ -1339,9 +1333,9 @@ var dbAlarmQueueLocked = false,
 						var date = new Date(timestamp);
 
 						if ((date.getMonth() === data.date.getMonth()) && (date.getDate() === data.date.getDate())) {
-							return 'occurred today';
+							return 'today';
 						} else {
-							return ['occurred on', date.getMonth() + '/' + date.getDate()];
+							return ['on', date.getMonth() + '/' + date.getDate()];
 						}
 					},
 					getMsgDate = function (timestamp) {
@@ -1357,8 +1351,22 @@ var dbAlarmQueueLocked = false,
 					getAorAn = function (text) {
 						return !!~['a', 'e', 'i', 'o', 'u'].indexOf(text.charAt(0)) ? 'an':'a';
 					},
+					getVoiceReturnNormalMessage = function (timestamp) {
+						return ['It returned normal' + getVoiceMsgDate(timestamp), 'at', getMsgTime(timestamp) + '.'].join(' ');
+					},
 					getReturnNormalMessage = function (timestamp) {
-						return ['It has since returned normal', '(' + getMsgDate(timestamp), getMsgTime(timestamp) + ').'].join();
+						return ['It has since returned normal', '(' + getMsgDate(timestamp), getMsgTime(timestamp) + ').'].join('');
+					},
+					getEmailSubject = function () {
+						// thread variables were set before this routine was called
+						var isNormalAlarmClass = thread.trigger.almClass === alarmClassEnums.Normal.enum,
+							alarmClassText = alarmClassRevEnums[thread.trigger.almClass],
+							subject = '';
+
+						if (!isNormalAlarmClass) {
+							subject = alarmClassText + ': ';
+						}
+						return subject + thread.trigger.Name;
 					},
 					getMessage = function () {
 						// thread and notification variables were set before this routine was called
@@ -1386,22 +1394,68 @@ var dbAlarmQueueLocked = false,
 							}
 							msg = [msg, obj.msgText, 'occurred', getVoiceMsgDate(timestamp), 'at', getMsgTime(timestamp) + '.',].join(' ');
 
-							if (thread.returnNormal && !notifyingReturnNormal) {
-								msg = [msg + '.', getReturnNormalMessage(thread.returnNormal.timestamp) ,'Thank you and goodbye.'].join(' ');
-							} else {
-								msg += ' Thank you and goodbye.';
+							if (thread.status.isReturnedNormal && !notifyingReturnNormal) {
+								msg += ' ' + getVoiceReturnNormalMessage(thread.returnNormal.timestamp);
 							}
+							msg += ' Thank you and goodbye.';
 						} else { // SMS or EMAIL
 							if (!isNormalAlarmClass) {
 								msg = alarmClassText + ':';
 							}
 							msg = [msg, obj.msgText, '(' + getMsgDate(timestamp), getMsgTime(timestamp) + ')'].join(' ');
 							
-							if (thread.returnNormal && !notifyingReturnNormal) {
+							if (thread.status.isReturnedNormal && !notifyingReturnNormal) {
 								msg += '. ' + getReturnNormalMessage(thread.returnNormal.timestamp);
 							}
 						}
 						return msg;
+					},
+					createCallback = function (notifyEntry) {
+						var notification = notifyEntry.notification,
+							policy = notifyEntry.policy,
+							trigger = notifyEntry.thread.trigger,
+							userObj = data.usersObj[notification.userId],
+							log = {
+								policyId: policy._id,
+								policyName: policy.name,
+								userId: notification.userId,
+								username: userObj && userObj.username,
+								userFirstName: userObj && userObj['First Name'].Value,
+								userLastName: userObj && userObj['Last Name'].Value,
+
+								upi: trigger.upi,
+								alarmCat: trigger.msgCat,
+								alarmText: trigger.msgText,
+								alarmType: trigger.msgType,
+								alarmId: trigger.alarmId,
+								alarmClass: trigger.almClass,
+								alarmTimestamp: trigger.timestamp,
+
+								Name1: trigger.Name1,
+								Name2: trigger.Name2,
+								Name3: trigger.Name3,
+								Name4: trigger.Name4,
+								Name: trigger.Name,
+								PointType: trigger.PointType,
+								Security: trigger.Security,
+
+								notifyType: notification.type,
+								timestamp: new Date().getTime(),
+								message: notifyEntry.notifyMsg
+							},
+							criteria = {
+								collection: 'NotifyLogs',
+								insertObj: log
+							};
+						
+						return function (err, result) {
+							log.err = err;
+							log.apiResult = result;
+
+							utility.insert(criteria, function (err) {
+								// TODO
+							});
+						};
 					};
 
 				for (i = 0; i < len; i++) {
@@ -1426,8 +1480,8 @@ var dbAlarmQueueLocked = false,
 
 					// Get our notify message
 					notifyMsg = getMessage(notifyEntry);
-					// Save our message for the activity log
-					notifyEntry.log = notifyMsg;
+					// Save our message for the notify log
+					notifyEntry.notifyMsg = notifyMsg;
 
 					// Add recepient to our recepient history
 					key = [notification.userId, notification.type, notification.info].join('');
@@ -1438,8 +1492,20 @@ var dbAlarmQueueLocked = false,
 							info: notification.info
 						});
 					}
+					actions.utility.log('\tPolicy ' + notifyEntry.policy.name + ' - ' + notifyTypeText[notification.type] + ' ' + notification.info + ': ' + notifyMsg); // DEBUG
 
-					actions.utility.log('\tPolicy ' + notifyEntry.policy.name + ' - ' + getNotifyTypeText(notification.type) + ' ' + notification.info + ': ' + notifyMsg); // DEBUG
+					// Send notification
+					if (notification.type === EMAIL) {
+						notifyParams = [{
+							to: notification.info,
+							from: 'infoscan@dorsett-tech.com',
+							subject: getEmailSubject(),
+							text: notifyMsg
+						}, createCallback(notifyEntry)];
+					} else {
+						notifyParams = [notification.info, notifyMsg, createCallback(notifyEntry)];
+					}
+					notifier[notifierFnLookup[notification.type]].apply(notifier, notifyParams);
 				}
 				cb(null, data);
 			}
@@ -1476,14 +1542,14 @@ var dbAlarmQueueLocked = false,
 				};
 
 			utility.get(query, function (err, users) {
-				if (err) {
+				if (!!err) {
 					return cb(err);
 				}
 				var user,
 					obj = {};
 
 				for (var i = 0, len = users.length; i < len; i++) {
-					obj[users[i]._id.toHexString()] = users[i];
+					obj[users[i]._id] = users[i];
 				}
 				cb(null, obj);
 			});
@@ -1491,12 +1557,47 @@ var dbAlarmQueueLocked = false,
 		processIncomingAlarm: function (alarm) {
 			if (!appConfig.runNotifications)
 				return;
-			
-			actions.utility.log('\nINCOMING ALARM');
+
+			var startTime = new Date().getTime(),
+				name = (function () {
+					var str = alarm.Name1;
+					if (alarm.Name2) {
+						str += '_' + alarm.Name2;
+						if (alarm.Name3)
+							str += '_' + alarm.Name3;
+							if (alarm.Name4)
+								str += '_' + alarm.Name4;
+					}
+					return str;
+				})();
+
+			actions.utility.log('\nINCOMING ' + alarmCategoryRevEnums[alarm.msgCat].toUpperCase() + ' - ' + name);
+
 			if (!alarm.almNotify || alarm.msgCat === eventCategoryEnum) {
-				actions.utility.log('DISCARDING ALARM', 'DONE');
+				actions.utility.log('\tDiscarding ' + alarmCategoryRevEnums[alarm.msgCat], 'DONE');
 				return;
 			}
+
+			var dateFloored = new Date();
+			// Floor the dateFloored object
+			dateFloored.setSeconds(0);
+			dateFloored.setMilliseconds(0);
+
+			async.waterfall([
+				getPoint,
+				getNotifyPolicies,
+				getNotifyIdsByUrgency,
+				getQueueEntryObj,
+				processImmediates,
+				insertNotifyAlarmQueue
+			], function (err) {
+				if (!!err) {
+					// TODO log error?
+					actions.utility.log(err); // DEBUG
+				}
+				actions.utility.log('DONE (' + (new Date().getTime()-startTime) + ' ms)');
+			});
+
 
 			function getPoint (cb) {
 				var criteria = {
@@ -1509,28 +1610,29 @@ var dbAlarmQueueLocked = false,
 					cb(err, point);
 				});
 			}
-			function getPointPolicies (point, cb) {
+			function getNotifyPolicies (point, cb) {
 				var info = {
 						point: point,
 						policyIds: [],
-						policies: {}
+						policies: [],
+						policiesObj: {}
 					},
+					notifyPolicies = point["Notify Policies"],
 					i,
 					len,
 					policy;
 				// TODO learn how policies are stored on the point
-				if (point["Notify Policies"].length) {
+				if (notifyPolicies && notifyPolicies.length) {
 					actions.policies.dbGet(point["Notify Policies"], function (err, policies) {
-						if (err) {
+						if (!!err) {
 							cb(err);
 						}
-						var policyId;
 						for (i = 0, len = policies.length; i < len; i++) {
 							policy = policies[i];
-							policyId = policy._id.toHexString();
 							if (policy.enabled) {
-								info.policyIds.push(policyId);
-								info.policies[policyId] = policy;
+								info.policyIds.push(policy._id);
+								info.policiesObj[policy._id] = policy;
+								info.policies.push(policy);
 							}
 						}
 						return cb(null, info);
@@ -1539,13 +1641,73 @@ var dbAlarmQueueLocked = false,
 					return cb(null, info);
 				}
 			}
-			function processPointPolicies (info, cb) {
-				if (info.policyIds.length === 0) {
-					cb(null);
-				}
+			function getNotifyIdsByUrgency (info, cb) {
+				// info is an object with keys: point, policyIds, policies, and policiesObj
+				var policy,
+					getScheduledAlertConfigIdsObj = function (policy) {
+						var alertConfigIdsObj = {},
+							id,
+							i,
+							len;
+						policy.scheduleLayers.forEach(function (scheduleLayer) {
+							len = scheduleLayer.alertConfigs.length;
+							for (i = 0; i < len; i++) {
+								alertConfigIdsObj[scheduleLayer.alertConfigs[i]] = true;
+							}
+						});
+						return alertConfigIdsObj;
+					},
+					isImmediate = function (policyId) {
+						var policy = info.policiesObj[policyId],
+							threadExists = !!actions.policies.getActiveThread(policy.threads, alarm.upi);
 
-				var queueEntry,
-					getNotifyReturnNormal = function (alarmMessages) {
+						// If we already have a thread for this UPI it goes on the queue (otherwise there is a slight 
+						// risk we could screw up the thread in the database if this alarm came in while our
+						// CRON job was running or was about to run)
+						if (threadExists)
+							return false;
+
+						var scheduledAlertConfigIdsObj = getScheduledAlertConfigIdsObj(policy),
+							alertConfig,
+							len, jlen,
+							i, j;
+
+						// Let's walk all of the policy's alert groups and see if any of them have a delay of 0
+						// If any of them do, we'll assume we need to process immediately
+						len = policy.alertConfigs.length;
+						for (i = 0; i < len; i++) {
+							alertConfig = policy.alertConfigs[i];
+							// If this alert configuration isn't in the schedule we should skip it
+							if (!scheduledAlertConfigIdsObj[alertConfig.id])
+								continue;
+
+							jlen = alertConfig.groups.length;
+							for (j = 0; j < jlen; j++) {
+								// Using == compare in case the alertDelay is saved as a string (seen this happen from time to time)
+								if (alertConfig.groups[j].alertDelay == 0) {
+									return true;
+								}
+							}
+						}
+						return false;
+					};
+
+				// Add id arrays to our info object for immediate and delayed (queued) delivery
+				info.immediatePolicyIds = [];
+				info.delayedPolicyIds = [];
+
+				info.policyIds.forEach(function (policyId) {
+					if (isImmediate(policyId)) {
+						info.immediatePolicyIds.push(policyId);
+					} else {
+						info.delayedPolicyIds.push(policyId);
+					}
+				});
+
+				cb(null, info);
+			}
+			function getQueueEntryObj (info, cb) {
+				var getNotifyReturnNormal = function (alarmMessages) {
 						// Maintenance alarms never return normal so we never set the return to normal flag
 						// regardless of the point setting
 						if (alarm.msgCat === maintenanceCategoryEnum) {
@@ -1566,19 +1728,11 @@ var dbAlarmQueueLocked = false,
 						return false; // We shouldn't ever get here
 					};
 
-				// We need to determine if this alarm should notify immediately or if we can add it to
-				// the queue for later processing. By standard practive, 'immediate' notifies are few and far between.
-				// Let's walk all of the policy's alert groups and see if any of them have a delay of 0 (immediate).
-				// If any of them do, we'll do further processing to determine if immediate notify is required.
-
-				// TODO check for immediate
-
-				// For now let's assume nothing is immediate
-				queueEntry = {
+				info.queueEntry = {
 					type: alarm.msgCat === returnCategoryEnum ? RETURN:NEW,
-					policyIds: info.policyIds,
+					policyIds: null, // We'll add this later
 					upi: alarm.upi,
-					alarmId: alarm._id.toHexString(),
+					alarmId: alarm._id,
 					msgCat: alarm.msgCat,
 					msgText: alarm.msgText,
 					msgType: alarm.msgType,
@@ -1588,54 +1742,104 @@ var dbAlarmQueueLocked = false,
 					Name2: alarm.Name2,
 					Name3: alarm.Name3,
 					Name4: alarm.Name4,
+					Name: name,
 					pointType: alarm.PointType,
 					Security: alarm.Security,
 					notifyReturnNormal: getNotifyReturnNormal(info.point['Alarm Messages'])
 				};
+				cb(null, info);
+			}
+			function processImmediates (info, cb) {
+				if (!info.immediatePolicyIds.length)
+					return cb(null, info);
+
+				actions.utility.log('PROCESSING IMMEDIATE ALARM NOTIFICATION');
+
+				info.queueEntry.policyIds = info.immediatePolicyIds;
+
+				async.parallel({
+					holidaysObj: actions.calendar.dbGetHolidaysObj,
+					usersObj: actions.dbGetAllUsersObj
+				}, function complete (err, data) {
+					if (!!err)
+						return cb(err);
+
+					// Remove all existing policy threads so we don't inadvertantly update or delete them
+					info.policies.forEach(function (policy) {
+						policy.threads.length = 0;
+					});
+
+					data.policies = info.policies;
+					data.alarmQueue = [info.queueEntry];
+					data.policiesAckList = {};
+					data.notifyList = [];
+					data.date = dateFloored;
+					
+					data.now = dateFloored.getTime();
+					// If we're currently mid-minute
+					if (new Date().getSeconds() > 0) {
+						// Set our 'now' timestamp to the next closest CRON run. We do this to ensure 
+						// that the next member or escalation delay is AT LEAST as much time as configured.
+						// t0m0s	----------------------
+						// t0m30s	Incoming immediate alarm
+						//			Send notification; the next scheduled notify is 1m later; 'now' is set to 1m,
+						//			so the next notification will actually be 1m30s from here (2m mark)
+						// t1m0s	----------------------
+						// t2m0s	Send notification 
+						data.now += RUNINTERVAL;
+					}
+
+					// Processing tasks
+					async.waterfall([
+						function start (cb) {
+							cb(null, data);
+						},
+						actions.alarmQueue.process,
+						actions.policies.process,
+						actions.notifications.buildNotifyList,
+						actions.notifications.sendNotifications,
+						actions.policies.dbUpdateThreads
+					], function (err) {
+						if (!!err)
+							return cb(err);
+
+						return cb(null, info);
+					});
+				});
+			}
+			function insertNotifyAlarmQueue (info, cb) {
+				if (!info.delayedPolicyIds.length)
+					return cb(null, info);
+
+				info.queueEntry.policyIds = info.delayedPolicyIds;
 
 				if (dbAlarmQueueLocked) {
-					actions.utility.log('Adding ' + alarmCategoryRevEnums[alarm.msgCat] + ' to tempAlarmQueue');
-					tempAlarmQueue.push(queueEntry);
-					return cb(null);
+					actions.utility.log('\tAdding to tempAlarmQueue');
+					tempAlarmQueue.push(info.queueEntry);
+					return cb(null, info);
 				} else {
-					actions.utility.log('Adding ' + alarmCategoryRevEnums[alarm.msgCat] + ' to NotifyAlarmQueue');
-					actions.alarmQueue.dbInsert(queueEntry, function (writeResult) {
-						var err = writeResult && writeResult.writeConcernError;
-						if (!!err) {
-							return cb(err.errmsg);
-						} else {
-							return cb(null);
-						}
+					actions.utility.log('\tAdding to NotifyAlarmQueue');
+					actions.alarmQueue.dbInsert(info.queueEntry, function (err) {
+						if (!!err)
+							return cb(err);
+
+						return cb(null, info);
 					});
 				}
 			}
-
-			async.waterfall([
-				getPoint,
-				getPointPolicies,
-				processPointPolicies
-			], function (err, info) {
-				if (err) {
-					// TODO log error?
-					actions.utility.log(err); // DEBUG
-				}
-				actions.utility.log('DONE (INCOMING ALARM)');
-			});
-		},
-		processImmediate: function () {
-
 		}
 	};
 
 function run () {
 	var date = new Date(),
+		startTime = date.getTime(),
 		logError = function (err) {
 			// TODO
 			logger.debug(err);
 		},
 		terminate = function (err) {
 			logError(err);
-			dbAlarmQueueLocked = false;
+			actions.alarmQueue.unlock();
 		};
 
 	date.setSeconds(0);	// This should match the CRON run interval (i.e. if CRON runs every 30s, setSeconds(30))
@@ -1645,7 +1849,7 @@ function run () {
 	
 	// Do scheduled task stuff
 
-	dbAlarmQueueLocked = true;
+	actions.alarmQueue.lock();
 
 	// Preprocess tasks
 	async.parallel({
@@ -1658,7 +1862,7 @@ function run () {
 				cb(null, data);
 			};
 
-		if (err) {
+		if (!!err) {
 			return terminate(err);
 		}
 
@@ -1686,22 +1890,15 @@ function run () {
 			actions.notifications.buildNotifyList,
 			actions.notifications.sendNotifications,
 			actions.policies.dbUpdateThreads,
-			actions.alarmQueue.dbRemoveAll
+			actions.alarmQueue.dbRemoveAll,
+			actions.alarmQueue.unlock,
+			actions.alarmQueue.processTempAlarmQueue
 		], function (err) {
-			if (err) {
-				return terminate(err);
+			if (!!err) {
+				logError(err);
 			}
-
-			// We're finished processing the alarm queue so unlock it
-			dbAlarmQueueLocked = false;
-
-			// Post-processing
-			actions.alarmQueue.processTempAlarmQueue(data, function (err, data) {
-				if (err) {
-					return logError(err);
-				}
-				actions.utility.log('DONE'); // DEBUG
-			});
+			var executionTime = new Date().getTime() - startTime;
+			actions.utility.log('DONE (' + executionTime + ' ms)'); // DEBUG
 		});
 	});
 }
@@ -1713,7 +1910,10 @@ module.exports = {
 };
 
 if (appConfig.runNotifications) {
-	new cronJob('00 * * * * *', run);	// Run notifications once per minute
+	// Run notifications once per minute; if this ever changes, we need to update RUNINTERVAL
+	// Also, date.setSeconds(0) near the top of 'run' may have to be removed; it's just CYA 
+	// anyway - seconds should always be 0 if the CRON fires and we execute on time
+	new cronJob('00 * * * * *', run);
 }
 
 
@@ -1724,7 +1924,6 @@ if (appConfig.runNotifications) {
 /////////////////////////////////// TEST ////////////////////////////////////////
 var selfTest = {
 		enabled: true,
-		opLogConnect: false,
 		dbConnect: false,
 		useDb: {
 			policies: true,
@@ -1804,21 +2003,28 @@ var selfTest = {
 				alerts: {
 					Normal: [{
 						type: SMS,
-						info: '1111110000',
-						delay: 0
+						info: '13364690900',
+						delay: 30
 					}, {
 						type: EMAIL,
-						info: 'user1@dorsett-tech.com',
-						delay: 1
+						info: 'johnny.dr@gmail.com',
+						delay: 0
 					}, {
 						type: VOICE,
-						info: '1111110001',
-						delay: 1
+						info: '13364690900',
+						delay: 1440
 					}],
 					Emergency: null,
 					Critical: null,
 					Urgent: null
 				},
+				'First Name': {
+					Value: 'Johnny'
+				},
+				'Last Name': {
+					Value: 'Roberts'
+				},
+				username: 'jroberts',
 				notificationsEnabled: true
 			},
 			'2abc': {
@@ -1929,6 +2135,17 @@ if (selfTest.enabled) {
 
 	actions.selfTest = {
 		runNotifications: false,
+		sendEmail: {
+			run: false,
+			fn: function (cb) {
+				notifier.sendEmail({
+					to: 'acgroce5@gmail.com',
+					from: 'infoscan@dorsett-tech.com',
+					subject: 'test',
+					text: 'this is a test'
+				}, cb);
+			}
+		},
 		getActiveAlertConfigIds: {
 			run: false,
 			fn: function () {
@@ -2008,14 +2225,8 @@ if (selfTest.dbConnect) {
 	var db = require('../helpers/db'),
 		config = require('config'),
 		dbConfig = config.get('Infoscan.dbConfig'),
-		socketConfig = config.get('Infoscan.socketConfig'),
-		opLogConnectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', socketConfig.oplogDb].join(''),
 		connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName].join('');
 
-	if (selfTest.opLogConnect) {
-		var opLogState = require('mongo-oplog')(opLogConnectionString, {ns:'oplog.rs'}).tail();
-	}
-	
 	db.connect(connectionString, function(err) {
 		if (err) {
 			logger.debug(err);
