@@ -5,7 +5,6 @@ var NotifierUtility = function() {
   this.Twilio = require('./twilio');
   this.Plivo = require('./plivo');
   this.Mailer = require('./mailer');
-  this.Notifications = require('./notifications');
 };
 
 NotifierUtility.prototype.testText = function(number, message, cb) {
@@ -33,32 +32,27 @@ NotifierUtility.prototype.buildVoiceUrl = function(message, type) {
 };
 
 NotifierUtility.prototype.sendText = function(number, message, cb) {
-  var self = this;
-
-  console.log(number, message);
-  self.Twilio.sendText(number, message, function(err, response) {
+  this.Twilio.sendText(number, message, function(err, response) {
     if (!!err) {
       return cb(err);
     } else {
-      return cb(null);
+      return cb(null, response);
     }
   });
-
 };
 
 NotifierUtility.prototype.sendVoice = function(number, message, cb) {
-  var errors = [];
   this.Twilio.sendVoice(number, message, function(err, response) {
     if (!!err) {
       return cb(err);
     } else {
-      return cb(null);
+      return cb(null, response);
     }
   });
 };
 
-NotifierUtility.prototype.sendEmail = function(email, message, cb) {
-  this.Mailer.sendEmail(email, message, cb);
+NotifierUtility.prototype.sendEmail = function(options, cb) {
+  this.Mailer.sendEmail(options, cb);
 };
 
 NotifierUtility.prototype.sendNotification = function(alarm, cb) {
