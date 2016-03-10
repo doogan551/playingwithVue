@@ -658,9 +658,7 @@ module.exports = Rpt = {
             sortObject = {},
             nameQuery,
             searchCriteria = {
-                $or: [{
-                    $and: []
-                }]
+                $and: []
             },
             returnLimit = utils.converters.convertType(reportConfig.returnLimit),
             parseNameField = function(paramsField, fieldName) {
@@ -695,26 +693,26 @@ module.exports = Rpt = {
             fields["Point Instance.Value"] = 1;
         }
 
-        if (filters && filters.length > 0) {
-            searchCriteria = Rpt.collectFilters(filters);
-        }
-
-        for (var i = 1; i < 5; i++) {
-            key = "name" + i + "Filter";
-            if (pointFilter[key]) {
-                nameQuery = parseNameField(pointFilter[key], ("name" + i));
-                if (nameQuery) {
-                    searchCriteria["$or"][0].$and.push(nameQuery);
-                }
-            }
-        }
-
         if (selectedPointTypes && selectedPointTypes.length > 0) {
-            searchCriteria["$or"][0].$and.push({
+            searchCriteria["$and"].push({
                 "Point Type.Value": {
                     $in: selectedPointTypes
                 }
             });
+        }
+
+        for (var i = 1; i < 5; i++) {
+            key = "name" + i;
+            if (pointFilter[key]) {
+                nameQuery = parseNameField(pointFilter[key], ("name" + i));
+                if (nameQuery) {
+                    searchCriteria["$and"].push(nameQuery);
+                }
+            }
+        }
+
+        if (filters && filters.length > 0) {
+            searchCriteria["$and"].push(Rpt.collectFilters(filters));
         }
 
         if (sort) {
@@ -726,6 +724,7 @@ module.exports = Rpt = {
         if (searchCriteria.length === 0) {
             searchCriteria.$and = [{}];
         }
+        //logger.info(JSON.stringify(searchCriteria));
         //logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
 
         var criteria = {
