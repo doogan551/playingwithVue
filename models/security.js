@@ -33,6 +33,12 @@ var Users = {
       username: username
     };
     var userTemplate = {
+      "alerts": {
+        'Normal': [],
+        'Emergency': [],
+        'Critical': [],
+        'Urgent': []
+      },
       "Auto Logout Duration": {
         "Value": "0"
       },
@@ -66,6 +72,7 @@ var Users = {
       "Last Name": {
         "Value": ""
       },
+      'notificationsEnabled': true,
       "Password": {
         "Value": ""
       },

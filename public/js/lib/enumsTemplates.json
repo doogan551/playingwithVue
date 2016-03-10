@@ -32,6 +32,9 @@
             },
             "Acknowledged": {
                 "enum": 2
+            },
+            "Auto Acknowledge": {
+                "enum": 3
             }
         },
         "Activity Logs": {

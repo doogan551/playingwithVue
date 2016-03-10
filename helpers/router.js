@@ -35,6 +35,7 @@ module.exports = function(controllers) {
   router.use('/api/firmwareloader', controllers.firmwareloader);
   router.use('/api/meters', controllers.history);
   router.use('/api/points', controllers.points);
+  router.use('/api/policies', controllers.policies);
   router.use('/api/reporttemplates', controllers.reporttemplates);
   router.use('/api/security', controllers.security);
   router.use('/api/scripts', controllers.scripts);
