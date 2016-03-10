@@ -658,6 +658,15 @@ var reportsViewModel = function () {
                     if (pointFilter.selectedPointTypes.length > 0) {
                         pointSelectorRef.window.pointLookup.checkPointTypes(pointFilter.selectedPointTypes);
                     }
+                    if (!self.canEdit()) {
+                        var $allInputFields = $pointSelectorIframe.contents().find("input,button,textarea,select"),
+                            $pointTypesListBox = $pointSelectorIframe.contents().find("#pointTypes");
+                        $allInputFields.prop("disabled", true);
+                        // TODO still need to disable the listbox so selections can't change
+                        //$pointTypesListBox.addClass("jqx-disableselect");
+                        //var items = $pointTypesListBox.jqxListBox('getItems');
+                        //$pointTypesListBox.jqxListBox('disableAt', 0 );
+                    }
                 };
 
             pointSelectorRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'filter', {
@@ -2456,6 +2465,7 @@ var reportsViewModel = function () {
 
             if (!!externalConfig) {
                 if (externalConfig.startDate && externalConfig.endDate) {
+                    self.useDuration(false);
                     self.setFiltersStartEndDates(externalConfig.startDate, externalConfig.endDate);
                 } else if (externalConfig.duration) {
                     self.useDuration(true);
@@ -2468,6 +2478,8 @@ var reportsViewModel = function () {
                 self.requestReportData();
             }
         }
+
+        //self.canEdit(false);   // DELETE ME.  ONLY USED for TESTING
     };
 
     self.operators = function (op) {
@@ -2603,7 +2615,9 @@ var reportsViewModel = function () {
 
     self.setFiltersStartEndDates = function (start, end) {
         var startDateFilter,
-            endDateFilter;
+            endDateFilter,
+            hrs,
+            mins;
 
         startDateFilter = self.listOfFilters().filter(function (filter) {
             return filter.filterName === "Start_Date";
@@ -2614,11 +2628,15 @@ var reportsViewModel = function () {
 
         startDateFilter[0].value = start;
         startDateFilter[0].date = start;
-        startDateFilter[0].time = moment.unix(start).hours() + ":" + moment.unix(start).minutes();
+        hrs = moment.unix(start).hours();
+        mins = moment.unix(start).minutes();
+        startDateFilter[0].time = ((hrs < 10 ? '0' : '') + hrs) + ':' + ((mins < 10 ? '0' : '') + mins);
 
         endDateFilter[0].value = end;
         endDateFilter[0].date = end;
-        endDateFilter[0].time = moment.unix(end).hours() + ":" + moment.unix(end).minutes();
+        hrs = moment.unix(end).hours();
+        mins = moment.unix(end).minutes();
+        endDateFilter[0].time = ((hrs < 10 ? '0' : '') + hrs) + ':' + ((mins < 10 ? '0' : '') + mins);
     };
 
     self.selectPointForColumn = function (data, index) {
