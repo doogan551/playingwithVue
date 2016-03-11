@@ -1403,3 +1403,68 @@ div.scheduleBox {
     top: 0;
   }
 }*/
+/*Notifications and Policies*/
+.returnAlarmChecks, .policyChecks {
+    color: #777;
+}
+
+.notifications-table th:first-child, .notifications-table th:nth-child(2) {
+    width: 7%;
+}
+.notifications-table th:nth-child(3) {
+    width: 20%;
+}
+/*end Notifications*/
+
+/* start network info modal*/
+
+.networkInfo th{
+    cursor: pointer;
+}
+
+.btnClicked {
+    background-color:  rgb(204,204,204);
+}
+
+@media (min-width: 768px) {
+  .modal-xl {
+    width: 90%;
+   max-width:1200px;
+  }
+}
+
+.refreshNetworkInfoBtn {
+    margin-left: 50px;
+}
+
+.devicesTable table, .pointsTable table, .routerTable table{
+    table-layout: fixed;
+}
+
+.instanceLink {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+}
+
+.deviceheaders .vendorID,
+.deviceheaders .apduLength,
+.deviceheaders .changeCount,
+.deviceheaders .noPriority {
+    width: 60px;
+}
+
+.deviceheaders .networkNumber,
+.deviceheaders .readProp{
+    width: 70px;
+}
+
+.deviceheaders .pointType{
+    width: 90px;
+}
+
+.deviceheaders .macAddress{
+    width: 130px;
+}
+
+/* end network info modal*/

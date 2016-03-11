@@ -62,24 +62,35 @@ var ActionButton = function (config) {
         _parameter,//not needed for now
         _upi,
 
+        min = 0,
+        max = 10,
+        external,
+
         _getCommandArguments = function () {
             var ret = $.extend(true, {}, _commandArguments);
 
             ret.upi = _upi;
-            ret.value = _parameter;
+            ret.Value = _parameter;
 
             return ret;
         },
         _processPointData = function (response) {
             _pointData = response;
             _validateOptions('upi');
+
+            if (_pointData['Minimum Value']) {
+                external.min = _pointData['Minimum Value'].Value;
+                external.max = _pointData['Maximum Value'].Value;
+            }
         },
         _getPointData = function (upi) {
-            $.ajax({
-                url: '/api/points/' + upi
-            }).done(function (response) {
-                _processPointData(response);
-            });
+            if (!isNaN(upi)) {
+                $.ajax({
+                    url: '/api/points/' + upi
+                }).done(function (response) {
+                    _processPointData(response);
+                });
+            }
         },
         _validateOptions = function (arg) {
             var pointType = _code.pointType;
@@ -89,10 +100,51 @@ var ActionButton = function (config) {
                 //update UI, if 'upi', else 'command'
             }
         },
-
-        sendCommand = function () {
+        _sendCommand = function () {
             console.log('Send Command', _getCommandArguments());
             displays.socket.emit('fieldCommand', _getCommandArguments());
+            displays.$scope.currActionButton = null;
+        },
+
+        sendCommand = function () {
+            var pointType = _pointData['Point Type'].Value,
+                reportType;
+
+            if (pointType.match('Analog')) {
+                $('#actionButtonInput').popup('open');
+            } else if (pointType === 'Report') {
+                reportType = _pointData['Report Type'].Value;
+
+                $('#actionButtonReportInput').popup('open');
+            } else {
+                _sendCommand();
+            }
+        },
+        sendValue = function (value) {
+            _parameter = value;
+            _sendCommand();
+        },
+        openReport = function (type, duration, start, end) {
+            var endPoint;
+
+            endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', _upi);
+            displays.openWindow(endPoint.review.url + '?pause', 'Report', 'Report', '', _upi, {
+                height: 720,
+                width: 1280,
+                callback: function () {
+                    var arg = {};
+
+                    if (type === 'predefined') {
+                        arg.duration = duration;
+                    } else {
+                        arg.startDate = Math.floor(start.getTime()/1000);
+                        arg.endDate = Math.floor(end.getTime()/1000);
+                    }
+
+                    this.applyBindings(arg);
+                }
+            });
+
         },
         setCommand = function (idx) {
             _code = codes[idx];
@@ -118,18 +170,29 @@ var ActionButton = function (config) {
             _getPointData(upi);
         };
 
-    _id = displays.actionButtonCount++;
-    updateConfig(config);
+    if (config.ActionPoint === undefined || config.ActionPoint === 'none') {
+        config.ActionPoint = config.upi;
+    }
 
-    return {
+    _id = displays.actionButtonCount++;
+
+    external = {
         id: _id,
         setUPI: setUPI,
         setCommand: setCommand,
         setParameter: setParameter,
         getPointData: getPointData,
         updateConfig: updateConfig,
-        sendCommand: sendCommand
+        sendCommand: sendCommand,
+        sendValue: sendValue,
+        openReport: openReport,
+        min: min,
+        max: max
     };
+
+    updateConfig(config);
+
+    return external;
 };
 
 displays.DisplayAnimation = function(el, screenObject) {
@@ -509,7 +572,7 @@ displays = $.extend(displays, {
     initSocket: function() {
         var socket;
         if (document.location.href.match('nosocket') === null) {
-            socket = displays.socket = io.connect('http://' + window.location.hostname + ':8085');
+            socket = displays.socket = io.connect('http://' + window.location.hostname);
 
             socket.on('reconnecting', function() {
                 var retries = 0,
@@ -614,7 +677,7 @@ displays = $.extend(displays, {
     },
 
     openWindow: function() {
-        displays.workspaceManager.openWindowPositioned.apply(this, arguments);
+        return displays.workspaceManager.openWindowPositioned.apply(this, arguments);
     },
 
     initScreenObjects: function(config) {
@@ -658,6 +721,8 @@ displays = $.extend(displays, {
                     }
                 }
             };
+
+        displays.$scope = scope;
 
         displays.upiNames = displays.upiNames || {};
 
@@ -742,6 +807,9 @@ displays = $.extend(displays, {
             });
         });
 
+        $('#actionButtonInput').popup();
+        $('#actionButtonReportInput').popup();
+
         $('#leftPanel').hover(
             function() {
                 displays.panels = true;
@@ -780,9 +848,9 @@ displays = $.extend(displays, {
                     clearTimeout(displays.panTimer);
                     if (displays.panMode) {
                         displays.panMode = false;
-                    } else {
-                        //displays.$scope.blur();
-                        displays.$scope.menuClick();
+                    // } else {
+                    //     //displays.$scope.blur();
+                    //     displays.$scope.menuClick();
                     }
                     // console.log('displays.PANMODE OFF!');
                     $('body').css('cursor', 'auto');
@@ -844,9 +912,9 @@ displays = $.extend(displays, {
             switch (whichEventCode) {
                 case 1:
                     leftMouseDown = true;
-                    if (((event.target === $("#displayObjects")[0]) || (event.target === $("#backDrop")[0])) && displays.$scope) {
-                        displays.$scope.blur();
-                    }
+                    // if (((event.target === $("#displayObjects")[0]) || (event.target === $("#backDrop")[0])) && displays.$scope) {
+                    //     displays.$scope.blur();
+                    // }
                     break;
                 case 2:
                     displays.pushPullMode = true;
@@ -1100,7 +1168,8 @@ displays = $.extend(displays, {
                         if (screenObject === 1) {
                             //alert(item['Point Type']);
                             if (item.hasOwnProperty('ActionCode')) { // action button
-                                item.actionButton.sendCommand();
+                                displays.$scope.currActionButton = item;
+                                item._actionButton.sendCommand();
                             } else {
                                 if (item['Point Type'] === 151) {
                                     openGpl(item);
@@ -1262,6 +1331,10 @@ displays = $.extend(displays, {
                 });
 
                 $scope.display = displayJson;
+                $scope.reportDuration = 'None';
+                $scope.reportType = 'predefined';
+                $scope.reportStart = '';
+                $scope.reportEnd = '';
                 $scope.zoom = 100;
                 $scope.panW = 0;
                 $scope.dLeft = (-1 * ($scope.display.Width / 2)) + $scope.panW;
@@ -1272,6 +1345,27 @@ displays = $.extend(displays, {
                 displays.initScreenObjects({
                     $scope: $scope
                 });
+
+                $scope.checkReportRange = function () {
+                    var $button = $('#openReport'),
+                        valid = displays.$scope.reportType === 'predefined' || (displays.$scope.reportType === 'chosen' && displays.$scope.reportStart < displays.$scope.reportEnd);
+
+                    if (valid) {
+                        $button.removeClass('ui-disabled');
+                    } else {
+                        $button.addClass('ui-disabled');
+                    }
+                };
+
+                $scope.sendCommand = function () {
+                    var val = parseFloat($('#actionButtonValue').val());
+                    $scope.currActionButton._actionButton.sendValue(val);
+                };
+
+                $scope.openReport = function () {
+                    var actionButton = $scope.currActionButton._actionButton;
+                    actionButton.openReport($scope.reportType, $scope.reportDuration, $scope.reportStart, $scope.reportEnd);
+                };
 
                 $scope.action = action;
                 $scope.getBGStyle = function(display) {
@@ -1347,6 +1441,11 @@ displays = $.extend(displays, {
                         };
 
                     if (isActionButton) {
+                        displays.$scope.currActionButton = item;
+                        $('#actionButtonValue').attr({
+                            min: item._actionButton.min,
+                            max: item._actionButton.max
+                        });
                         item._actionButton.sendCommand();
                     } else {
                         if (localUPI && !(displays.pointReferenceSoftDeleted(localUPI) && isDisplayObject)) {  // don't get softdeleted display references

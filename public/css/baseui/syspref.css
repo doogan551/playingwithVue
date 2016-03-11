@@ -49,7 +49,7 @@ img {
 }
 
 #navbar {
-    position:absolute;
+    position: fixed;
     top: 0px;
     bottom: 0px;
     height: 100%;
@@ -492,3 +492,371 @@ tr:hover .showOnHover {
     cursor: pointer;
 }
 /* end weather info */
+
+
+
+/* notifications */
+/* blue #1771B3 */
+
+#notifications {
+    color: #666;
+}
+
+#notifications .notificationHeader {
+    margin-bottom: 30px;
+}
+
+#notifications .notificationHeader h2 {
+    font-weight: bold;
+}
+
+#notifications .notificationHeader h2 a {
+    color: #666;
+    text-decoration: none;
+}
+
+#notifications .editable {
+    font-weight: bold;
+}
+
+.caret-spaced {
+    margin-left: 5px !important;
+}
+
+.nav-tabs-arrow > li.active > a:after {
+    display: block;
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #ddd;
+    bottom: 0;
+    position: absolute;
+    z-index: 9999;
+    left: calc(50% - 8px);
+}
+
+.nav-tabs-arrow > li > a:hover {
+    border-color: #fff;
+    border-bottom-color: #ddd;
+    background: none;
+}
+
+.nav-tabs-arrow > li > a:hover:after {
+    display: block;
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #eee;
+    bottom: 0;
+    position: absolute;
+    z-index: 9999;
+    left: calc(50% - 8px);
+}
+
+.nav-tabs-arrow > li > a {
+    font-weight: bold;
+    color: #666;
+    font-size: 1.2em;
+}
+
+.nav-tabs-arrow > li.active > a,
+.nav-tabs-arrow > li.active > a:hover,
+.nav-tabs-arrow > li.active > a:focus {
+    color: #1771B3;
+    border: 1px solid #fff !important;
+    border-bottom: 1px solid #ddd !important;
+}
+
+
+#notifications .tab-content {
+    margin-top: 30px;
+    margin-left: 15px;
+}
+
+#notifications .tab-pane h3 {
+    font-style: italic;
+}
+
+#notifications .editRow {
+    display: none;
+}
+
+#notifications .editingRow .inputRow {
+    display: none;
+}
+
+#notifications .editingRow .editRow {
+    display: block;
+}
+
+#notifications .checkbox-valign {
+    margin-top: 0.2em;
+}
+
+.policyName input {
+    width: auto;
+    height: 24px;
+    display: inline-block;
+}
+
+.policyList {
+    margin-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.policyList .policy {
+    border-bottom: 1px solid #ddd;
+    padding: 20px 0;
+    font-size: 1.2em;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.policyList .policy a {
+    color: #1771B3;
+    font-weight: bold;
+}
+
+.policyEnabled .centered {
+    margin-top: 4px;
+    margin-right: 5px;
+}
+
+#notifications .deleteIcon {
+    color: #CC3333;
+}
+
+.deletePolicy i {
+    font-size: 1.4em;
+}
+
+.editPolicy i {
+    font-size: 1.4em;
+    color: #1771B3;
+}
+
+.policyToolbar {
+    text-align: right;
+}
+
+.policyToolbar i {
+    margin-right: 20px;
+    color: #1771B3;
+    font-size: 1.4em;
+}
+
+
+#policyMembers > h3 > .dropdown {
+    margin-left: 20px;
+}
+
+.fc-event {
+    cursor: pointer;
+}
+
+.legendEntry:before {
+    display: inline-block;
+    content: ' ';
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+    background-color: #7156FB;
+    border-radius: 2px;
+}
+
+.fc {
+    margin-bottom: 30px;
+}
+
+#notifications span.dropdown,
+.smallRow .rowTitle {
+    margin-right: 20px;
+}
+
+.smallRow {
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.smallRow .rowTitle {
+    margin-left: 10px;
+}
+
+.bodyHeading {
+    font-size: 1.2em;
+}
+
+.isOnCall {
+    margin-bottom: 25px;
+}
+
+.exitConfig i {
+    margin-right: 5px;
+}
+
+.alertGroup {
+    border-radius: 3px;
+    background-color: #eee;
+    padding: 15px 20px 25px 20px;
+    margin-bottom: 35px;
+}
+
+.groupTitle {
+    font-size: 1.3em;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+}
+
+.alertGroup .alertSection {
+    position: relative;
+    background-color: #fff;
+    border: 2px solid #ccc;
+    border-top-width: 1px;
+    border-radius: 6px;
+    margin-bottom: 35px;
+}
+
+.alertSection .alertBody {
+    overflow: hidden;
+    font-size: 1.2em;
+    display: flex;
+}
+
+.alertBody > .col,
+.alertFooter {
+    padding: 10px 15px;
+    border-top: 1px solid #ccc;
+}
+
+.alertSection .alertBody .leftCol {
+    width: 35%;
+    float: left;
+    border-right: 1px solid #ccc;
+}
+
+.alertSection .alertBody .rightCol {
+    width: 65%;
+    float: left;
+}
+
+.rightCol > div {
+    margin-bottom: 10px;
+}
+
+.rightCol > .sectionTitleNoIcon {
+    margin-bottom: 15px;
+}
+
+.sectionTitle {
+    margin-left: 40px;
+    padding-top: 5px;
+}
+
+.sectionTitleNoIcon {
+    margin-left: 0;
+}
+
+.sectionIcon {
+    position: absolute;
+    width: 20px;
+    text-align: center;
+    left: 25px;
+}
+
+.alertSection i {
+    font-size: 1.6em;
+    margin-right: 10px;
+}
+
+.sectionMultiline > .checkbox {
+    padding-left: 0;
+    margin-left: 20px;
+    display: inline-block;
+    width: 80%;
+}
+
+.alertGroup .alertSection:before {
+    display: block;
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-top: 11px solid #ccc;
+    bottom: -13px;
+    position: absolute;
+    z-index: 9999;
+    left: 90px;
+}
+
+.alertGroup .alertSection:after {
+    display: block;
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #fff;
+    bottom: -10px;
+    position: absolute;
+    z-index: 9999;
+    left: 91px;
+}
+
+.alertGroup .alert-no-arrow {
+    margin-bottom: 0;
+}
+
+.alertGroup .alert-no-arrow:before,
+.alertGroup .alert-no-arrow:after {
+    display: none;
+}
+
+.rotationList {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: 15px;
+}
+
+.rotationList .member {
+    background-color: #eee;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    padding: 5px;
+    padding-left: 10px;
+    width: 80%;
+}
+
+.rotationList .member:last-child {
+    border-bottom: 1px solid #ccc;
+}
+
+.escalationTimer {
+    font-size: 1.2em;
+}
+
+.escalationTimer i {
+    font-size: 1.2em;
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+/*.policyList .policyTitle,
+.policyList .policyInfo {
+    display: inline-block;
+}
+
+.policyList .policyTitle {
+    width: 20%;
+}
+
+.policyList .policyInfo {
+    width: auto;
+}*/
+
+/* notifications */

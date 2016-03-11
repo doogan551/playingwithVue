@@ -6,6 +6,9 @@ var logger = require('./helpers/logger')(module);
 logger.info('NODE_ENV:' + process.env.NODE_ENV);
 var express = require('express');
 var app = express();
+var LEX = require('letsencrypt-express');
+var http = require('http');
+var https = require('https');
 var db = require('./helpers/db');
 var sockets = require('./helpers/sockets');
 var config = require('config');
@@ -62,6 +65,7 @@ app.use(passport.session());
 
 app.use('/', require('./helpers/router')(_controllers));
 
+
 require('./helpers/mongooseconn.js')(function() {
   db.connect(connectionString.join(''), function(err) {
     if (err) {
@@ -69,11 +73,42 @@ require('./helpers/mongooseconn.js')(function() {
       process.exit(1);
     } else {
       logger.info('mongo connected to', connectionString.join(''));
-      sockets.connect(config, sessionStore, cookieParser, function() {
-        require('./socket/common').socket();
-        app.listen(port, function() {
-          logger.info('listening on port', port);
-          logger.info('server started in', (new Date() - startTime) / 1000, 'seconds');
+      require('./helpers/processes')(function(err) {
+        logger.info('processes', err);
+        require('./helpers/globals').setGlobals(function() {
+          if (!!config.get('Infoscan.letsencrypt').enabled) {
+
+            var lex = LEX.create({
+              configDir: config.get('Infoscan.files').driveLetter + ':' + config.get('Infoscan.letsencrypt').directory,
+              approveRegistration: function(hostname, cb) {
+                cb(null, {
+                  domains: config.get('Infoscan.letsencrypt').domains,
+                  email: 'rkendall@dorsett-tech.com', // 'user@example.com'
+                  agreeTos: true
+                });
+              }
+            });
+
+            http.createServer(LEX.createAcmeResponder(lex, function redirectHttps(req, res) {
+              res.writeHead(301, {
+                "Location": "https://" + req.headers['host'] + req.url
+              });
+              res.end();
+            })).listen(80);
+
+            var httpsServer = https.createServer(lex.httpsOptions, LEX.createAcmeResponder(lex, app));
+            sockets.connect(config, httpsServer, sessionStore, cookieParser, function() {
+              require('./socket/common').socket();
+              httpsServer.listen(443);
+            });
+          } else {
+            var httpServer = http.createServer(app);
+            sockets.connect(config, httpServer, sessionStore, cookieParser, function() {
+              require('./socket/common').socket();
+              httpServer.listen(80);
+            });
+          }
+
         });
       });
     }

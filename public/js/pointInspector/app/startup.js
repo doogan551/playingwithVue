@@ -35,6 +35,8 @@ require(['knockout'], function (ko) {
     ko.components.register('ctl-conversionWizard',  { require: 'components/ctl-conversionWizard/module' });
     ko.components.register('ctl-scheduleEntries',   { require: 'components/ctl-scheduleEntries/module'});
     ko.components.register('ctl-qualityCodeEnable',    { require: 'components/ctl-qualityCodeEnable/module' });
+    ko.components.register('ctl-policies',      { require: 'components/ctl-policies/module' });
+    ko.components.register('ctl-networkInfo',   { require: 'components/ctl-networkInfo/module' });
     // Point Reviews
     ko.components.register('pt-accumulator',    { require: 'components/pt-accumulator/module' });
     ko.components.register('pt-alarmstatus',    { require: 'components/pt-alarmstatus/module' });
@@ -611,7 +613,7 @@ define([
         var modelType = data["Model Type"].eValue();
 
         if(data["Point Type"].eValue() === 8){
-            return (modelType === 13 || modelType === 16 || modelType === 17 || modelType === 18 || modelType === 19);
+            return (modelType === 13 || modelType === 16 || modelType === 17 || modelType === 18 || modelType === 19 || modelType === 20);
         }else if(data["Point Type"].eValue() === 144){
             return (modelType === 3 || modelType === 6);
         }
@@ -774,6 +776,16 @@ define([
                     value           : ko.observable(),
                     error           : ko.observable()
                 }
+            },
+            'Network Info': {
+                commandTX: {
+                    'Command Type'  : 15,
+                    upi             : ''
+                },
+                commandRX: {
+                    value           : ko.observable(),
+                    error           : ko.observable()
+                }
             }
         };
         self.issueCommand = function (commandType, data, callback) {
@@ -919,7 +931,7 @@ define([
                 $saveIcon.removeClass(spinClass);
                 $('body').css('overflow', 'auto');
                 if (close) {
-                    setTimeout(window.close, hideAfter + 500);
+                    setTimeout(window.close, 1000);
                 }
             });
         };
@@ -965,7 +977,7 @@ define([
             return;
         }
         pointInspector.point = new Point(data);
-        pointInspector.socket = io.connect(pointInspector.webEndpoint + ':8085');
+        pointInspector.socket = io.connect(window.location.origin);
         $('.wrapper').show(400, function() {
             // Show animation complete
             // On slower machines the UI gets really choppy if applying multiple animations @ the same time

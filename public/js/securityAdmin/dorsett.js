@@ -1,9 +1,9 @@
 ﻿//global app reference
 var dorsett = (function() {
     //private
-    var _webendpoint = 'http://' + window.location.host,
+    var _webendpoint = window.location.origin,
         _webendpointURI = _webendpoint + '/api/security/',
-        _socketendpoint = 'http://' + window.location.hostname + ':9376',
+        // _socketendpoint = 'http://' + window.location.hostname + ':9376',
         _pointSelector = _webendpoint + '/pointlookup',
         _tabOpen = '',
         //function to detach child entities
@@ -453,7 +453,8 @@ var dorsett = (function() {
                     Title: '',
                     'Contact Info': [{
                         Type: '',
-                        Value: ''
+                        Value: '',
+                        Name: ''
                     }],
                     Groups: [{
                         groupid: '',
@@ -724,6 +725,7 @@ var dorsett = (function() {
             }
             observable.push(new dorsett.models.contactInfoModel({
                 Type: contactInfoDialog.find('select.contactOptions').val(),
+                Name: contactInfoDialog.find('.name').val(),
                 Value: contactInfoDialog.find('.value').val()
             }));
             observable()[observable().length - 1].Value.isModified(true);
@@ -741,19 +743,11 @@ var dorsett = (function() {
                 email: true
             }
         }, {
-            type: 'Mobile',
+            type: 'SMS',
             val: phoneValidatorObj,
             mask: '(999) 999-9999'
         }, {
-            type: 'Pager',
-            val: phoneValidatorObj,
-            mask: '(999) 999-9999'
-        }, {
-            type: 'Home',
-            val: phoneValidatorObj,
-            mask: '(999) 999-9999'
-        }, {
-            type: 'Work',
+            type: 'Voice',
             val: phoneValidatorObj,
             mask: '(999) 999-9999'
         }],

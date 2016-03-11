@@ -3,45 +3,51 @@ var policy = {
     members: [],
     memberGroups: [],
     enabled: true,
+    _currAlertID: 1,
+    _currGroupID: 4,
+    _currEscalationID: 4,
+    _currThreadID: 1,
     alertConfigs: [{
-        _id: 1,
-        _currGroupID: 4,
-        _currEscalationID: 4,
+        id: 1, // seeded from _currAlertID
         name: 'Off-Hours',
         isOnCall: true,
         rotateConfig: { // false/null if only 1?
-            active: true,
+            enabled: true,
             scale: 'week',
             time: '9:00',
             day: 'Friday'
         },
         groups: [{
-            _id: 1,// seeded from _currGroupID
+            id: 1,// seeded from _currGroupID
+            active: true,
             name: 'Group 1',
             alertDelay: 0,
-            escalationDelay: 30,
+            repeatConfig: {
+                enabled: true,
+                repeatCount: 0
+            },
             escalations: [{
-                _id: 1, // seeded from _currEscalationID
+                id: 1, // seeded from _currEscalationID
                 members: [],
                 alertStyle: 'Sequenced', //FirstResponder, Everyone
                 memberAlertDelay: 5,
+                escalationDelay: 30,
                 rotateConfig: { // false/null if unchecked?
-                    active: true,// if retain the object
+                    enabled: true,// if retain the object
                     scale: 'week',
                     time: '9:00',
                     day: 'Friday'
                 },
                 repeatConfig: {
-                    active: true,
+                    enabled: true,
                     repeatCount: 0
                 }
             }]
         }]
     }],
-    schedules: [{ // layer 1
+    scheduleLayers: [{ // layer 1
         alertConfigs: [],
         schedules: [{// holidays
-            configs: [1],// _id from group
             holidays: true, // precedence, if layer 2 holiday match, does layer 1 run?
             days: ['mon', 'tues', 'wed', 'thurs', 'fri'], //'weekdays' will be translated in UI
             startTime: 1700,
@@ -64,16 +70,20 @@ var policy = {
         }]
     }],
     threads: [{
+        id: 1,// on process, update these IDs, then remove these IDs
         triggeringUPI: 12345,
         triggeringAlarm: 'OH NO!',
         initialTimestamp: 123123123,
-        lastNotify: {
+        lastNotify: [{
+            alertConfigID: 1,
             timestamp: 123123123,
             groupID: 1,
             escalationID: 1,
-            method: 'text',// text/phone/email/etc
+            recipients: [], //ids of the members
+            // method: 'text',// text/phone/email/etc
+            groupRepeats: 0,
             escalationRepeats: 0 // increment to check rotateConfig
-        }
+        }]
     }]
 };
 
@@ -105,7 +115,7 @@ var user = {
     onCallConfig: [{ // when cron job cycles on and off call, check users and notify
         type: TEXT,
         info: '1234567890',
-        delay: 0
+        reminder: 0
     }],
     notifyOnAcknowledge: true // if gets notified, add to 'listen to alarm' queue, with action 'alert on acknowledge'
 };
@@ -147,14 +157,32 @@ var actions = {
     // etc
 };
 
-var ACTIVE = 1,
-    RECURRING = 2;
+var NEW = 0,
+    ACTIVE = 1,
+    RECURRING = 2,
+    ACKNOWLEDGE= 3,
+    RETURN = 4;
 
 var notificationEntries = [{
+    type: NEW,
+    policyID: 123123123,
+    triggeringUPI: 12345,
+    triggeringAlarm: 'Oh no',
+    triggerTime: 123123123123
+}, {
+    type: ACKNOWLEDGE,
+    triggeringUPI: 12345,
+    triggerTime: 123123123123
+}, {
+    type: RETURN,
+    triggeringUPI: 12345,
+    triggerTime: 123123123
+}, {
     // active just points to a policy every minute?  config resides on policy
     // in case things change, rather than having static action list
     // also for multiple actions, only want one entry
     type: ACTIVE,
+    triggeringUPI: 12345,
     policyID: 123123123
 }, {
     // recurring resides in collection since they could be long-term actions
@@ -162,6 +190,7 @@ var notificationEntries = [{
     // then rebuild the list?
     type: RECURRING,
     policyID: 123123123,
+    triggeringUPI: 12345,
     // rounded to minute
     // instead of interval/day/hour?  precalculate
     // if downtime, or during ping, 'get all recurring where nextAction <= nowInMinutes'

@@ -32,6 +32,9 @@
             },
             "Acknowledged": {
                 "enum": 2
+            },
+            "Auto Acknowledge": {
+                "enum": 3
             }
         },
         "Activity Logs": {
@@ -183,64 +186,84 @@
         },
         "Alarm Types": {
             "Return to Normal": {
-                "enum": 2
+                "enum": 2,
+                "cat": 2
             },
             "Low Limit": {
-                "enum": 3
+                "enum": 3,
+                "cat": 1
             },
             "High Limit": {
-                "enum": 4
+                "enum": 4,
+                "cat": 1
             },
             "Offnormal": {
-                "enum": 5
+                "enum": 5,
+                "cat": 1
             },
             "Device Warm Start": {
-                "enum": 6
+                "enum": 6,
+                "cat": 2
             },
             "Device Failure": {
-                "enum": 7
+                "enum": 7,
+                "cat": 1
             },
             "Device Operational": {
-                "enum": 8
+                "enum": 8,
+                "cat": 2
             },
             "Device Stop Scan": {
-                "enum": 9
+                "enum": 9,
+                "cat": 2
             },
             "Device Configuration Started": {
-                "enum": 10
+                "enum": 10,
+                "cat": 2
             },
             "Device Configuration Failed": {
-                "enum": 11
+                "enum": 11,
+                "cat": 2
             },
             "Device Configuration Successful": {
-                "enum": 12
+                "enum": 12,
+                "cat": 2
             },
             "Reliability": {
-                "enum": 17
+                "enum": 17,
+                "cat": 1
             },
             "Run Time Limit": {
-                "enum": 20
+                "enum": 20,
+                "cat": 3
             },
             "Starts Limit": {
-                "enum": 26
+                "enum": 26,
+                "cat": 3
             },
             "Program Halt": {
-                "enum": 36
+                "enum": 36,
+                "cat": 1
             },
             "Device Failed - No COVs": {
-                "enum": 45
+                "enum": 45,
+                "cat": 1
             },
             "Low Warning": {
-                "enum": 47
+                "enum": 47,
+                "cat": 1
             },
             "High Warning": {
-                "enum": 48
+                "enum": 48,
+                "cat": 1
             },
             "Open": {
-                "enum": 49
+                "enum": 49,
+                "cat": 1
             },
             "Closed": {
-                "enum": 50
+                "enum": 50,
+                "cat": 1
             }
         },
         "Alarm States": {
@@ -1587,6 +1610,11 @@
                 "reportEnable": true,
                 "enumsSet": "Polarities"
             },
+            "Column Point": {
+                "enum": 131,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
             "Compiled Code": {
                 "enum": 269,
                 "valueType": "Array",
@@ -2214,11 +2242,6 @@
                 "valueType": "Unsigned",
                 "reportEnable": false
             },
-            "History Point": {
-                "enum": 131,
-                "valueType": "UniquePID",
-                "reportEnable": false
-            },
             "High Alarm Limit": {
                 "enum": 79,
                 "valueType": "Float",
@@ -2681,6 +2704,11 @@
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": "Network Types"
+            },
+            "Notify Policies": {
+                "enum": 438,
+                "valueType": "Array",
+                "reportEnable": false
             },
             "Number of Starts": {
                 "enum": 214,
@@ -3919,7 +3947,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "COV Period": {
                     "isDisplayable": true,
@@ -3995,7 +4023,7 @@
                     "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 2,
-                    "Value": "V1.65"
+                    "Value": "V1.93"
                 },
                 "Inactive Text": {
                     "isDisplayable": true,
@@ -4011,7 +4039,7 @@
                 },
                 "Model Type": {
                     "isDisplayable": true,
-                    "isReadOnly": true,
+                    "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "MicroScan 5 UNV",
                     "eValue": 19
@@ -4022,6 +4050,7 @@
                     "ValueType": 4,
                     "Value": 0
                 },
+                "Notify Policies": [],
                 "Point Refs": [{
                     "PropertyName": "Alarm Display Point",
                     "PropertyEnum": 137,
@@ -4433,7 +4462,7 @@
                 },
                 "Model Type": {
                     "isDisplayable": true,
-                    "isReadOnly": true,
+                    "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "MS 3 Flash",
                     "eValue": 3
@@ -4456,6 +4485,7 @@
                         "IP": 4
                     }
                 },
+                "Notify Policies": [],
                 "Point Refs": [{
                     "PropertyName": "Device Point",
                     "PropertyEnum": 139,
@@ -5063,6 +5093,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -5510,6 +5541,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Open Channel": {
                     "isDisplayable": false,
                     "isReadOnly": false,
@@ -5947,6 +5979,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -6271,6 +6304,7 @@
                     "ValueType": 13,
                     "Value": 0
                 },
+                "Notify Policies": [],
                 "Number of Starts": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -6739,6 +6773,7 @@
                     "ValueType": 13,
                     "Value": 0
                 },
+                "Notify Policies": [],
                 "Number of Starts": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -7252,6 +7287,7 @@
                     "ValueType": 12,
                     "Value": 0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -7481,6 +7517,7 @@
                     "ValueType": 1,
                     "Value": 100.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -7698,6 +7735,7 @@
                     "ValueType": 11,
                     "Value": 0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -7984,6 +8022,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -8092,7 +8131,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -8273,6 +8312,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -8392,7 +8432,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -8584,6 +8624,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -8725,7 +8766,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -8923,6 +8964,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -9070,7 +9112,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -9209,6 +9251,7 @@
                     "ValueType": 11,
                     "Value": 0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -9578,6 +9621,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -9716,7 +9760,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -9909,6 +9953,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -10012,7 +10057,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -10218,6 +10263,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -10332,7 +10378,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -10537,6 +10583,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -10667,7 +10714,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -10854,6 +10901,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -10951,7 +10999,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -11112,6 +11160,7 @@
                     "ValueType": 11,
                     "Value": 0
                 },
+                "Notify Policies": [],
                 "Program Error": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -11765,6 +11814,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -11875,7 +11925,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -12122,6 +12172,7 @@
                     "ValueType": 1,
                     "Value": 90.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -12236,7 +12287,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -12436,6 +12487,7 @@
                     "ValueType": 11,
                     "Value": 0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -12544,7 +12596,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -12810,6 +12862,7 @@
                     "ValueType": 1,
                     "Value": 90.0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -12924,7 +12977,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -13299,6 +13352,7 @@
                     "ValueType": 11,
                     "Value": 0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -13440,7 +13494,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -13665,6 +13719,7 @@
                     "ValueType": 11,
                     "Value": 0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -13762,7 +13817,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -13989,6 +14044,7 @@
                     "ValueType": 11,
                     "Value": 0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -14097,7 +14153,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -14310,6 +14366,7 @@
                     "ValueType": 11,
                     "Value": 0
                 },
+                "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -14418,7 +14475,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": false
+                    "Value": true
                 },
                 "Shutdown Enable": {
                     "isDisplayable": true,
@@ -14561,6 +14618,19 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
+                },
+                "Controller": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "None",
+                    "eValue": 0
+                },
+                "Control Priority": {
+                    "enum": 39,
+                    "valueType": "Enum",
+                    "reportEnable": true,
+                    "enumsSet": "Default Control Priorities"
                 },
                 "Emergency Pump Down Time": {
                     "ValueType": 13,

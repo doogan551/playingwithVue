@@ -43,6 +43,8 @@ var gpl = {
     $editVersionModal: $('#editVersionModal'),
     $colorpickerModal: $('#colorpickerModal'),
     $editActionButtonModal: $('#editActionButtonModal'),
+    $editActionButtonValueModal: $('#editActionButtonValueModal'),
+    $actionButtonReportParameterModal: $('#actionButtonReportParameterModal'),
     $useEditVersionButton: $('#useEditVersion'),
     $discardEditVersionButton: $('#discardEditVersion'),
     point: window.gplData.point,
@@ -3676,6 +3678,7 @@ gpl.ActionButton = function (config) {
         _processPointData = function (response) {
             _local.pointData = response;
             _local.pointName = _local.pointData.Name;
+            _local.pointType = response['Point Type'].Value;
             _validateOptions('upi');
         },
         _getPointData = function (upi) {
@@ -3696,28 +3699,96 @@ gpl.ActionButton = function (config) {
             }
         },
 
-        sendCommand = function () {
+        _sendCommand = function () {
             console.log('Send Command', _getCommandArguments());
             gpl.socket.emit('fieldCommand', _getCommandArguments());
         },
-        click = function () {
-            var url,
-                pointType,
-                endPoint;
+        sendCommand = function () {
+            if (_local.pointType.match('Analog')) {
+                $('#actionButtonValue').attr({
+                    min: _local.pointData['Minimum Value'].Value,
+                    max: _local.pointData['Maximum Value'].Value
+                });
+                gpl.$editActionButtonValueModal.modal('show');
+            } else {
+                _sendCommand();
+            }
+        },
+        sendValue = function (value) {
+            _local.parameter = value;
+            _sendCommand();
+        },
+        openWindow = function (queryString, cb) {
+            var pointType = _local.pointType,
+                endPoint,
+                url;
 
+            endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, _local.upi);
+
+            url = endPoint.review.url;
+
+            if (queryString) {
+                url += queryString;
+            }
+
+            gpl.openWindow(url, _local.pointData.Name, pointType, '', _local.upi, {
+                callback: cb
+            });
+        },
+        click = function () {
             if (_local.type === 'control') {
                 sendCommand();
             } else {
                 if (_local.pointData && _local.pointData.message !== 'No Point Found') {
-                    pointType = _local.pointData['Point Type'].Value;
-
-                    endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, _local.upi);
-
-                    url = endPoint.review.url;
-
-                    gpl.openWindow(url, _local.pointData.Name, pointType, '', _local.upi, {});
+                    if (_local.type === 'report') {
+                        gpl.$actionButtonReportParameterModal.modal('show');
+                    } else {
+                        openWindow();
+                    }
                 }
             }
+        },
+        openReport = function (config) {
+            var reportType = config.reportType,
+                duration = config.duration,
+                fromDate = config.fromDate,
+                fromTime = config.fromTime,
+                toDate = config.toDate,
+                toTime = config.toTime,
+                hr,
+                min,
+                reportConfig,
+                startDate,
+                endDate;
+
+            if (reportType === 'predefined') {
+                reportConfig = {
+                    duration: duration
+                };
+            } else {
+                startDate = fromDate;
+                endDate = toDate;
+                hr = fromTime.split(':');
+                min = hr[1];
+                hr = hr[0];
+                startDate.setHours(hr);
+                startDate.setMinutes(min);
+                hr = toTime.split(':');
+                min = hr[1];
+                hr = hr[0];
+                endDate.setHours(hr);
+                endDate.setMinutes(min);
+                reportConfig = {
+                    startDate: Math.floor(startDate.getTime() / 1000),
+                    endDate: Math.floor(endDate.getTime() / 1000)
+                };
+            }
+
+            openWindow('?pause', function () {
+                this.applyBindings(reportConfig);
+            });
+
+            gpl.$actionButtonReportParameterModal.modal('hide');
         },
         setCommand = function (idx) {
             _local.code = codes[idx];
@@ -3810,7 +3881,9 @@ gpl.ActionButton = function (config) {
         postInit: postInit,
         destroy: destroy,
         click: click,
-        sendCommand: sendCommand
+        sendCommand: sendCommand,
+        sendValue: sendValue,
+        openReport: openReport
     });
 
     return _local;
@@ -5182,8 +5255,16 @@ gpl.BlockManager = function (manager) {
             actionButtonText: ko.observable(),
             actionButtonType: ko.observable(),
             actionButtonParameter: ko.observable(),
+            actionButtonValue: ko.observable(),
             actionButtonPointName: ko.observable(),
             actionButtonUpi: ko.observable(),
+            actionButtonPointType: ko.observable(),
+            actionButtonReportType: ko.observable(),
+            reportFromDate: ko.observable(''),
+            reportFromTime: ko.observable(''),
+            reportToDate: ko.observable(''),
+            reportToTime: ko.observable(''),
+            actionButtonReportDuration: ko.observable(),
             selectedReference: ko.observable(),
             gridSize: ko.observable(gpl.gridSize),
             blockReferences: ko.observableArray([]),
@@ -6711,6 +6792,7 @@ gpl.Manager = function () {
             verticalBuffer = 50,
             horizontalBuffer = 50,
             minHeight = 750,
+            minHeightView = 550,
             minWidth = 900,
             width = right + horizontalBuffer,
             height,
@@ -6724,7 +6806,7 @@ gpl.Manager = function () {
             if (gpl.isEdit) {
                 height = (bottom + verticalBuffer > minHeight) ? bottom + verticalBuffer : minHeight;
             } else {
-                height = bottom + verticalBuffer;
+                height = (bottom + verticalBuffer > minHeightView) ? bottom + verticalBuffer : minHeightView;
             }
 
             height += heightOffset;
@@ -7470,9 +7552,31 @@ gpl.Manager = function () {
                 managerSelf.bindings.actionButtonText(text);
                 managerSelf.bindings.actionButtonParameter(parameter);
                 managerSelf.bindings.actionButtonType(type);
+                managerSelf.bindings.actionButtonPointType(editBlock.pointType);
 
 
                 gpl.$editActionButtonModal.modal('show');
+            },
+
+            sendActionButtonValue: function () {
+                var value = parseFloat(managerSelf.bindings.actionButtonValue());
+
+                managerSelf.editBlock.sendValue(value);
+
+                gpl.$editActionButtonValueModal.modal('hide');
+            },
+
+            openReport: function () {
+                var bindings = managerSelf.bindings;
+
+                managerSelf.editBlock.openReport({
+                    reportType: bindings.actionButtonReportType(),
+                    duration: bindings.actionButtonReportDuration(),
+                    fromDate: bindings.reportFromDate(),
+                    fromTime: bindings.reportFromTime(),
+                    toDate: bindings.reportToDate(),
+                    toTime: bindings.reportToTime()
+                });
             },
 
             updateActionButton: function () {
@@ -7507,6 +7611,7 @@ gpl.Manager = function () {
                 gpl.openPointSelector(function (upi, name, pointType) {
                     managerSelf.bindings.actionButtonPointName(name);
                     managerSelf.bindings.actionButtonUpi(upi);
+                    managerSelf.bindings.actionButtonPointType(pointType);
                 }, null, null, null, true);
             },
 
@@ -7707,6 +7812,81 @@ gpl.Manager = function () {
                     // parent.jqxDropDownButton('setContent', getTextElementByColor(event.args.color));
                 });
 
+            }
+        };
+
+        ko.bindingHandlers.numeric = {
+            init: function (element, valueAccessor) {
+                $(element).on("keydown", function (event) {
+                    // Allow: backspace, delete, tab, escape, and enter
+                    if (event.keyCode == 46 || event.keyCode == 8 || event.keyCode == 9 || event.keyCode == 27 || event.keyCode == 13 ||
+                        // Allow: Ctrl+A
+                        (event.keyCode == 65 && event.ctrlKey === true) ||
+                        // Allow: . ,
+                        (event.keyCode == 188 || event.keyCode == 190 || event.keyCode == 110) ||
+                        // Allow: home, end, left, right
+                        (event.keyCode >= 35 && event.keyCode <= 39)) {
+                        // let it happen, don't do anything
+                        return;
+                    }
+                    else {
+                        // Ensure that it is a number and stop the keypress
+                        if (event.shiftKey || (event.keyCode < 48 || event.keyCode > 57) && (event.keyCode < 96 || event.keyCode > 105)) {
+                            event.preventDefault();
+                        }
+                    }
+                });
+            }
+        };
+
+        ko.bindingHandlers.datepicker = {
+            init: function (element, valueAccessor, allBindingsAccessor) {
+                var options = {
+                    autoclose: true,
+                    startView: 'year',
+                    onSelect: function (txt, inst) {
+                        valueAccessor()(new Date(txt));
+                    }
+                };
+                $(element).datepicker(options);
+            },
+            update: function (element, valueAccessor) {
+                var value = ko.utils.unwrapObservable(valueAccessor());
+                $(element).datepicker("setDate", value);
+            }
+        };
+
+        ko.bindingHandlers.clockpicker = {
+            init: function (element, valueAccessor, allBindingsAccessor) {
+            //initialize clockpicker with some optional options
+                var observable = valueAccessor(),
+                    options = {
+                        doneText: 'Done',
+                        autoclose: true,
+                        afterDone: function () {
+                            observable($(element).val());
+                        }
+                    };
+
+                $(element).clockpicker(options);
+
+                $(element).change(function (event) {
+                    $(element).clockpicker('resetclock');
+                });
+            },
+
+            update: function (element, valueAccessor) {
+                var value = ko.utils.unwrapObservable(valueAccessor()),
+                    hr,
+                    min;
+
+                if (typeof value !== 'string') {
+                    hr = ('00' + Math.floor(value / 100)).slice(-2);
+                    min = ('00' + value % 100).slice(-2);
+                    $(element).val(hr + ':' + min);
+                } else {
+                    $(element).val(value);
+                }
             }
         };
     };
@@ -8005,7 +8185,7 @@ gpl.Manager = function () {
 
     managerSelf.initSocket = function () {
         if (!gpl.noSocket) {
-            var socket = io.connect('http://' + window.location.hostname + ':8085');
+            var socket = io.connect(window.location.origin);
 
             managerSelf.socket = gpl.socket = socket;
 
@@ -8166,13 +8346,15 @@ gpl.Manager = function () {
 
                 if ($target.hasClass('actionBtn')) {
                     button = managerSelf.actionButtons[$target.attr('data-actionButtonID')];
+                    managerSelf.editBlock = button;
                     if (gpl.isEdit) {
                         if (button) {
-                            managerSelf.editBlock = button;
                             managerSelf.bindings.editActionButton();
                         }
                     } else {
-                        button.click();
+                        if (button) {
+                            button.click();
+                        }
                     }
                 }
             }

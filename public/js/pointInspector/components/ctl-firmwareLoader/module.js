@@ -17,7 +17,13 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             title: ko.observable(''),
             value: ko.observable(''),
             isDownloading: ko.observable(false),
-            cancel: function() {},
+            cancel: function() {
+                $('.progress-bar').removeClass('progress-bar-danger');
+                $('.progress-bar').removeClass('progress-bar-success');
+                $('.progress-bar').css('width', '0%');
+                $('.progress-bar').text('0%');
+                $('.modal').modal('hide');
+            },
             submit: function() {}
         };
     }
@@ -27,7 +33,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         var self = this,
             $btn = $(event.target),
             $btnIcon = $btn.find('i.fa'),
-            $modal = $('.modal'),
+            $modal = $('.modal.firmwareLoader'),
             $modalScene,
             $modalError,
             $modalWait,
@@ -36,12 +42,13 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             $btnSubmit = $modal.find('.btnSubmit'),
             modal = this.modal,
             uploadFile;
-
+        $modal.modal();
         self.firmwareFiles = ko.observableArray([]);
         self.selectedFile = ko.observable();
-        self.progressMessage = ko.observable();
+        self.progressMessage = ko.observable('');
         self.progressPercent = ko.observable(0);
-
+        console.log(this);
+        $('.progressmsgtxt').text('');
         $('.afterLoad').hide();
         $('.beforeLoad').show();
 
@@ -80,7 +87,9 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 },
                 fileReader = new FileReader(),
                 callback = function(response) {
-                    console.log("inside callback", response);
+                    // console.log("inside callback", response);
+                    console.log('response', self.selectedFile());
+                    self.selectedFile(self.firmwareFiles()[0]);
                     $modalProgress.show();
                     $modalWait.show();
 
@@ -93,19 +102,19 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     } else if (response.err !== undefined) {
                         $('.progress-bar').addClass('progress-bar-danger');
                         $('.progress-bar').css('width', '100%');
-                        self.progressMessage(response.err);
+                        $('.progressmsgtxt').text(response.err);
                         $btnSubmit.prop('disabled', false);
                         self.modal.isDownloading(false);
                     } else {
-                        if (response.msg === 'Done') {
+                        if (response.msg === 'DeviceLoader session Done') {
                             $('.progress-bar').addClass('progress-bar-success');
+                            $('.beforeLoad').hide();
+                            $('.afterLoad').show();
+                            $btnSubmit.prop('disabled', false);
+                            self.modal.isDownloading(false);
                         }
-                        $('.beforeLoad').hide();
-                        $('.afterLoad').show();
                         $modalWait.hide();
-                        self.progressMessage(response.msg);
-                        $btnSubmit.prop('disabled', false);
-                        self.modal.isDownloading(false);
+                        $('.progressmsgtxt').text(response.msg);
                     }
                 };
 
@@ -132,7 +141,6 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         };
 
         self.sendToFirmwareLoader = function(data, callback) {
-            console.log(data);
             self.socket.emit('firmwareLoader', data);
             self.socket.on('returnFromLoader', function(response) {
                 //response = $.parseJSON(response);
@@ -147,8 +155,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             self.progressMessage('');
         });
         $modal.one('shown.bs.modal', function(e) {
-
-
+            console.log('shown', self.modal.isDownloading());
             if (self.modal.isDownloading()) {
 
                 $modalProgress.show();
@@ -160,11 +167,11 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 if (data.err) {
                     console.log(data.err);
                     $btnSubmit.prop('disabled', true);
+                    self.firmwareFiles(['No files found']);
                 } else {
                     if (!!data.files.length) {
-                        if (!!self.selectedFile) {
-                            self.selectedFile(data.files[0]);
-                        }
+                        self.selectedFile(data.files[0]);
+                        console.log('selected', self.selectedFile());
                         $btnSubmit.prop('disabled', false);
                         self.firmwareFiles(data.files);
                     } else {

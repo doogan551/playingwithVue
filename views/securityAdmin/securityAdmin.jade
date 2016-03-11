@@ -109,21 +109,21 @@ html
                     a(href='#', data-role='button', data-theme='g', data-rel='back') All Done
             #contactInfoDialog.contactInfoDialog.ui-corner-all(data-role='popup', data-overlay-theme='a', data-theme='c')
                 .ui-corner-top(data-role='header', data-theme='a')
-                    h1 Add Contact Information
+                    h1.contactHeader
                 .ui-corner-bottom(data-role='content', data-theme='d', style='padding: 15px;')
                     .ui-grid-a
                         .ui-block-a.width100
                             h4
-                                | Add a new contact method for
+                                | Add a new contact method for 
                                 span.firstName
                         .ui-block-a.width100
                             label
                                 | Type
-                                select.contactOptions(data-native-menu='false', data-bind='event: {change: function(data, event) {dorsett.setMask(event, "#contactInfoDialog .value")}}')
-                                    option Select a contact option
-                                    | <!-- ko foreach: dorsett.contactValidationMap -->
-                                    option(data-bind='value: type, text: type')
-                                    | <!-- /ko -->
+                                select.contactOptions(data-bind="options:['SMS', 'Voice', 'Email']" , data-mini='true')
+                        .ui-block-a.width100
+                            label
+                                | Name
+                                input.name(type='text', data-mini='true')
                         .ui-block-a.width100
                             label
                                 | Value

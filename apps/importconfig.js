@@ -6,8 +6,8 @@ module.exports = {
 	//var conn = 'mongodb://10.250.0.10/infoscan';
 	//var conn = 'mongodb://ROBERT4/infoscan';
 	// conn: 'mongodb://localhost/infoscan',
-	conn: 'mongodb://localhost/yadkinville',
-	xmlPath: "//192.168.1.88/D$/InfoAdmin/yville",
+	conn: 'mongodb://localhost/infoscan',
+	xmlPath: "//scada1-v/D$/InfoAdmin/uploads/gpl",
 	// xmlPath: "C:/Users/rob/Documents/MSFC_GPL/MSFC_GPL",
 	ctrlrs: {
 		"Name": "Controllers",
@@ -69,23 +69,17 @@ module.exports = {
 		}]
 	},
 	defaultUser: {
+		"alerts": {
+			'Normal': [],
+			'Emergency': [],
+			'Critical': [],
+			'Urgent': []
+		},
 		"Auto Logout Duration": {
 			"Value": 0
 		},
 		"Contact Info": {
-			"Value": [{
-				"Type": "Home",
-				"Value": "(336) 469-1234"
-			}, {
-				"Type": "Mobile",
-				"Value": "(336) 469-5678"
-			}, {
-				"Type": "Email",
-				"Value": "johndoe@dorsett-tech.com"
-			}, {
-				"Type": "Pager",
-				"Value": "(336) 469-1245"
-			}]
+			"Value": []
 		},
 		"Description": {
 			"Value": ""
@@ -102,6 +96,7 @@ module.exports = {
 		"Last Name": {
 			"Value": "Technologies"
 		},
+		'notificationsEnabled': true,
 		"Password": {
 			// "Value": "$2a$10$kXPCe68hNnuTtMRsHpm2F.wnxoWvyAaiRFLhSqoGgG/Wyu3kP4NEG"
 			"Value": "$2a$10$JTDBjtJyR7r/36yrKzVOjuLh4g4gIlV0UwghIOZk6BveEGPNPMWQ6" // AdminPassword(0)

@@ -65,7 +65,12 @@ if (processFlag === "gpl") {
 		});
 	});
 } else {
+	mongo.connect(conn, function(err, db) {
 	importProcess.start();
+		/*fixUpisCollection(db, function(err) {
+			console.log('done', err);
+		});*/
+	});
 	// testHistory();
 }
 //fixUpisCollection();
@@ -468,7 +473,7 @@ function fixUpisCollection(db, callback) {
 			options: {}
 		}],
 		setupUpis = function(fnCB) {
-			var upisCount = 1918359, //4194302
+			var upisCount = 4194302, //4194302
 				upisArray = [];
 			db.collection('upis').count({}, function(err, count) {
 				if (count < upisCount) {
@@ -494,9 +499,9 @@ function fixUpisCollection(db, callback) {
 				}
 			});
 		};
-	/*setupUpis(function(err) {
+	setupUpis(function(err) {
 		if (err)
-			return callback(err);*/
+			return callback(err);
 
 		async.forEachSeries(indexes, function(index, indexCB) {
 			db.ensureIndex('upis', index.index, index.options, function(err, IndexName) {
@@ -553,7 +558,7 @@ function fixUpisCollection(db, callback) {
 				});
 			});
 		});
-	/*});*/
+	});
 }
 
 function testHistory() {
@@ -1093,7 +1098,7 @@ function updateGPLBlocks(point, callback) {
 			}
 		}
 
-		if(point['Shutdown Point'].Value === 0){
+		if (point['Shutdown Point'].Value === 0) {
 			point['Shutdown Control'].Value = true;
 		}
 
@@ -2010,6 +2015,10 @@ function updateDevices(point, callback) {
 function updateAlarmMessages(point, callback) {
 	//logger.info("updateAlarmMessages");
 	var alarmClasses = ["Emergency", "Critical"];
+	if(point.hasOwnProperty('Alarm Messages')){
+		point['Notify Policies'] = [];
+	}
+
 	if (point["Alarm Class"] !== undefined && alarmClasses.indexOf(point["Alarm Class"].Value) !== -1) {
 
 		for (var i = 0; i < point["Alarm Messages"].length; i++) {
@@ -2549,22 +2558,22 @@ function doGplImport(db, xmlPath, cb) {
 			filedata,
 			c,
 			cleanup = function(str) {
-                if (str.sequence['xd:Dynamics']) {
-                    // console.log('copying dynamics');
-                    str.sequence.dynamic = str.sequence['xd:Dynamics']['xd:Dynamic'];
-                    // console.log(str.sequence['xd:Dynamics']['xd:Dynamic']);
-                    // console.log(str.sequence.dynamic);
-                    delete str.sequence['xd:Dynamics'];
-                }
-                var st = JSON.stringify(str);
-                st = st.replace(/\"(f|F)alse\"/g, 'false');
-                st = st.replace(/\"(t|T)rue\"/g, 'true');
-                st = st.replace(/xp:Value/g, 'value');
-                st = st.replace('Value', 'value');
-                // st = st.replace(/xd:Dynamics/g, 'dynamic');
-                // st = st.replace(/xd:Dynamic/g, 'dynamic');
-                return JSON.parse(st);
-            },
+				if (str.sequence['xd:Dynamics']) {
+					// console.log('copying dynamics');
+					str.sequence.dynamic = str.sequence['xd:Dynamics']['xd:Dynamic'];
+					// console.log(str.sequence['xd:Dynamics']['xd:Dynamic']);
+					// console.log(str.sequence.dynamic);
+					delete str.sequence['xd:Dynamics'];
+				}
+				var st = JSON.stringify(str);
+				st = st.replace(/\"(f|F)alse\"/g, 'false');
+				st = st.replace(/\"(t|T)rue\"/g, 'true');
+				st = st.replace(/xp:Value/g, 'value');
+				st = st.replace('Value', 'value');
+				// st = st.replace(/xd:Dynamics/g, 'dynamic');
+				// st = st.replace(/xd:Dynamic/g, 'dynamic');
+				return JSON.parse(st);
+			},
 			doNext = function() {
 				if (c < max) {
 					filename = xmls[c];

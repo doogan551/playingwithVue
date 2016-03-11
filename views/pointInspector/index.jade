@@ -63,22 +63,11 @@ html(lang="en")
                     // ko if: isInEditMode
                     .btn.btn-link.btn-sm(data-bind="click: toggleEditMode")  Cancel
                     .btn-group
-                        button.btn.btn-success.btn-sm.btnSave(data-bind="click: point.save")
-                            i.fa
+                        button.btn.btn-success.btn-sm.btnSave(data-bind="click: point.saveAndClose")
+                            | Save & Close
+                        button.btn.btn-success.btn-sm.dropdown-toggle(data-bind="click:point.save")
                             | Save
-                        button.btn.btn-success.btn-sm.dropdown-toggle(data-toggle="dropdown")
-                            span.caret
-                        ul.dropdown-menu.pull-right
-                            li
-                                a(href="#", data-bind="click: point.save")
-                                    i.glyphicon.glyphicon-floppy-disk
-                                    = ' '
-                                    | Save
-                            li
-                                a(href="#", data-bind="click: point.saveAndClose")
-                                    i.glyphicon.glyphicon-floppy-remove
-                                    = ' '
-                                    | Save and Close
+                            
                     // /ko
             .chassis(data-bind="component: { name: baseComponent, params: $data }")
             .statusBar(data-bind="component: { name: 'ctl-statusBar', params: $data }")
