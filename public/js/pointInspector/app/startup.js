@@ -613,7 +613,7 @@ define([
         var modelType = data["Model Type"].eValue();
 
         if(data["Point Type"].eValue() === 8){
-            return (modelType === 13 || modelType === 16 || modelType === 17 || modelType === 18 || modelType === 19);
+            return (modelType === 13 || modelType === 16 || modelType === 17 || modelType === 18 || modelType === 19 || modelType === 20);
         }else if(data["Point Type"].eValue() === 144){
             return (modelType === 3 || modelType === 6);
         }

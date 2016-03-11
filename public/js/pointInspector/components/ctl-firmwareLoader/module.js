@@ -167,6 +167,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 if (data.err) {
                     console.log(data.err);
                     $btnSubmit.prop('disabled', true);
+                    self.firmwareFiles(['No files found']);
                 } else {
                     if (!!data.files.length) {
                         self.selectedFile(data.files[0]);
