@@ -37,7 +37,7 @@ module.exports = function(_common) {
                 });
             } else if (jbuf.msg === 'serverup' || jbuf.msg === 'serverdown') {
                 io.sockets.emit('statusUpdate', jbuf.msg);
-                systemStatus = jbuf.msg;
+                _common.systemStatus = jbuf.msg;
             }
         });
         socket.on('close', function(data) {
