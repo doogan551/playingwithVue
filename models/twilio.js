@@ -4,7 +4,8 @@ var config = require('config');
 var logger = require('../helpers/logger')(module);
 var accountSid = config.get('Twilio').accountSid;
 var authToken = config.get('Twilio').authToken;
-var from = config.get('Twilio').phoneNumber;
+var phoneNumbers = config.get('Twilio').phoneNumbers;
+var numberIndex = 0;
 
 var client = require('twilio')(accountSid, authToken);
 
@@ -13,11 +14,15 @@ var notifierUtility = new NotifierUtility();
 // https://api.twilio.com/2010-04-01/Accounts/
 module.exports = {
   sendText: function(toNumber, message, cb) {
+    var fromNumber = phoneNumbers[numberIndex++];
     toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Twilio');
+
+    if (numberIndex > phoneNumbers.length)
+      numberIndex = 0;
 
     client.sendMessage({
       to: toNumber,
-      from: from,
+      from: fromNumber,
       body: message.toString()
     }, cb);
   },
@@ -28,7 +33,7 @@ module.exports = {
 
     client.makeCall({
       to: toNumber,
-      from: from,
+      from: phoneNumbers[0],
       url: url
     }, cb);
   },
