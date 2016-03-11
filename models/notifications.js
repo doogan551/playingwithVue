@@ -116,6 +116,8 @@ var	ADDED = 1,		// Thread states
 	SMS = 1,		// Notification types
     EMAIL = 2,
     VOICE = 3,
+    RECURRING = 1,	// Scheduled task types
+    ONETIME = 2,
 	MSPM = 60000,	// Number of milliseconds per minute
 	RUNINTERVAL = MSPM;	// How often the CRON task runs
 
@@ -185,12 +187,134 @@ var dbAlarmQueueLocked = false,
 				utility.get(query, cb);
 			},
 			dbUpdate: function (data, cb) {
-				// TODO
+				actions.utility.log('actions.scheduledTasks.dbUpdate'); // DEBUG
 
+				var updates = [],
+					deleteIds = [],
+					updateTasks = function (updateCB) {
+						actions.utility.log('\tUpdating '+updates.length+' task(s)');
+						async.each(updates, doUpdate, updateCB);
+					},
+					doUpdate = function (task, doUpdateCB) {
+						var criteria = {
+								collection: 'NotifyScheduledTasks',
+								query: {
+									_id: task._id
+								},
+								updateObj: task
+							};
+						utility.update(criteria, doUpdateCB);
+					},
+					deleteTasks = function (deleteCB) {
+						actions.utility.log('\tDeleting '+deleteIds.length+' task(s)');
+						var criteria = {
+								collection: 'NotifyScheduledTasks',
+								query: {
+									_id: {
+										'$in': deleteIds
+									}
+								}
+							};
+						utility.remove(criteria, deleteCB);
+					};
+
+				data.scheduledTasks.forEach(function (task) {
+					if (task._state === UPDATED) {
+						updates.push(task);
+						delete task._state;
+					}
+					else if (task._state === DELETED)
+						deleteIds.push(task._id);
+				});
+
+				if (!updates.length && !deleteIds.length) {
+					return cb(null, data);
+				}
+				async.parallel([
+					updateTasks,
+					deleteTasks
+				], function (err) {
+					cb(err, data);
+				});
 			},
-			process: function () {
-				// TODO
+			process: function (data, cb) {
+				actions.utility.log('actions.scheduledTasks.process'); // DEBUG
+				var rotateMembers = function (task) {
+						var policy = actions.policies.getPolicy(data.policies, task.policyID),
+							alertConfig = policy && actions.policies.getAlertConfig(policy.alertConfigs, task.config.alertConfigID),
+							group = alertConfig && actions.policies.getGroup(alertConfig.groups, task.config.groupID),
+							escalation = group && actions.policies.getEscalation(group.escalations, task.config.escalationID),
+							members = escalation && escalation.members,
+							memberId;
+						
+						if (!!escalation) {
+							actions.utility.log('\tRotating members');
+							if (members.length) {
+								memberId = members.pop();	// Pop off the last member in the array
+								members.unshift(memberId);	// Put him/her @ the first of the array
+								data.policyConfigUpdates[policy._id] = policy;
+							}
+						} else {
+							actions.utility.log('\tEscalation not found - setting task status to deleted');
+							task._state = DELETED;
+						}
+					},
+					rotateGroup = function (task) {
+						var policy = actions.policies.getPolicy(data.policies, task.policyID),
+							alertConfig = policy && actions.policies.getAlertConfig(policy.alertConfigs, task.config.alertConfigID),
+							groups = alertConfig && alertConfig.groups,
+							done = false,
+							group,
+							len,
+							i;
+						
+						if (!!groups) {
+							actions.utility.log('\tRotating group');
+							for (i = 0, len = groups.length; i < len && !done; i++) {
+								group = groups[i];
+								if (group.active === true) {
+									if (++i >= len) {
+										i = 0;
+									}
+									group.active = false;
+									groups[i].active = true;
+									data.policyConfigUpdates[policy._id] = policy;
+									done = true;
+								}
+							}
+						} else {
+							actions.utility.log('\tGroup not found - setting task status to deleted');
+							task._state = DELETED;
+						}
+					};
 
+				// Create a temporary key-value on our data object to tell us the policies that have
+				// config changes. Our actions.policies.dbUpdateConfigs routine will delete this key
+				// after it's finished
+				data.policyConfigUpdates = {};
+
+				data.scheduledTasks.forEach(function (task) {
+					var nextAction;
+					if (data.now >= task.nextAction) {
+						if (task.type === RECURRING) {
+							nextAction = new Date(task.nextAction);
+							nextAction = nextAction.setDate(nextAction.getDate() + task.interval);
+							task.lastAction = task.nextAction;
+							task.nextAction = nextAction;
+							task._state = UPDATED;
+						} else if (task.type === ONETIME) {
+							task._state = DELETED;
+						}
+
+						if (task.action === 'rotateMembers') {
+							rotateMembers(task);
+						} else if (task.action === 'rotateGroup') {
+							rotateGroup(task);
+						}
+					}
+				});
+
+				cb(null, data);
 			}
 		},
 		policies: {
@@ -223,9 +347,41 @@ var dbAlarmQueueLocked = false,
 				}
 				// end TEST
 				var criteria = {
-						collection: 'NotifyPolicies',
+						collection: 'NotifyPolicies'
 					};
 				utility.get(criteria, cb);
+			},
+			dbUpdateConfigs: function (data, cb) {
+				var numberOfUpdates = Object.keys(data.policyConfigUpdates).length;
+
+				actions.utility.log('actions.policies.dbUpdateConfigs'); // DEBUG
+				actions.utility.log('\tUpdating ' + numberOfUpdates + ' item(s)'); // DEBUG
+				
+				if (numberOfUpdates === 0) {
+					delete data.policyConfigUpdates;
+					return cb (null, data);
+				}
+
+				async.forEachOf(data.policyConfigUpdates, doUpdate, function done (err) {
+					delete data.policyConfigUpdates;
+					return cb (err, data);
+				});
+
+				function doUpdate (policy, policyId, doUpdateCB) {
+					var criteria = {
+							collection: 'NotifyPolicies',
+							query: {
+								_id: new ObjectID(policyId)
+							},
+							updateObj: {
+								$set: {
+									enabled: policy.enabled,
+									alertConfigs: policy.alertConfigs
+								}
+							}
+						};
+					utility.update(criteria, doUpdateCB);
+				}
 			},
 			dbUpdateThreads: function (data, cb) {
 				actions.utility.log('policies.dbUpdateThreads'); // DEBUG
@@ -253,7 +409,7 @@ var dbAlarmQueueLocked = false,
 						var criteria = {
 								collection: collection,
 								query: {
-									'_id': new ObjectID(update.policyId),
+									'_id': update.policyId,
 									'threads.id': update.thread.id
 								},
 								updateObj: {
@@ -268,7 +424,7 @@ var dbAlarmQueueLocked = false,
 						var criteria = {
 								collection: collection,
 								query: {
-									'_id': new ObjectID(policyId)
+									'_id': policyId
 								},
 								updateObj: {
 									'$push': {
@@ -284,7 +440,7 @@ var dbAlarmQueueLocked = false,
 						var criteria = {
 								collection: collection,
 								query: {
-									'_id': new ObjectID(policyId)
+									'_id': policyId
 								},
 								updateObj: {
 									'$pull': {
@@ -368,17 +524,6 @@ var dbAlarmQueueLocked = false,
 					cb(err, data);
 				});
 			},
-			getAlertConfig: function (policy, id) {
-				var alertConfigs = policy.alertConfigs,
-					len = alertConfigs.length,
-					i;
-
-				for (i = 0; i < len; i++) {
-					if (alertConfigs[i].id === id)
-						return alertConfigs[i];
-				}
-				return null;
-			},
 			getActiveAlertConfigIds: function (info) {
 				// info is an object with keys: policy, thread, queueEntry, and data
 				var activeAlertConfigIds = [],
@@ -441,17 +586,6 @@ var dbAlarmQueueLocked = false,
 				});
 				return activeScheduleLayers;
 			},
-			// Not used
-			getPolicy: function (policies, id) {
-				var len = policies.length,
-					i;
-				for (i = 0; i < len; i++) {
-					if (policies[i]._id === id) {
-						return policies[i];
-					}
-				}
-				return null;
-			},
 			getPolicyLookupTable: function (policies) {
 				var obj = {},
 					len = policies.length,
@@ -462,6 +596,39 @@ var dbAlarmQueueLocked = false,
 					obj[policy._id] = policy;
 				}
 				return obj;
+			},
+			getPolicy: function (policies, id) {
+				var len = policies.length,
+					i;
+				for (i = 0; i < len; i++) {
+					// policy._id is a Mongo Object ID which is a weird object thingy. 'id' is a string matching
+					// the policy._id string value. Must do a == compare else this will alwyays be false
+					if (policies[i]._id == id) {
+						return policies[i];
+					}
+				}
+				return null;
+			},
+			getAlertConfig: function (alertConfigs, id) {
+				for (var i = 0, len = alertConfigs.length; i < len; i++) {
+					if (alertConfigs[i].id === id)
+						return alertConfigs[i];
+				}
+				return null;
+			},
+			getGroup: function (groups, id) {
+				for (var i = 0, len = groups.length; i < len; i++) {
+					if (groups[i].id === id)
+						return groups[i];
+				}
+				return null;
+			},
+			getEscalation: function (escalations, id) {
+				for (var i = 0, len = escalations.length; i < len; i++) {
+					if (escalations[i].id === id)
+						return escalations[i];
+				}
+				return null;
 			},
 			// Thread functions
 			processThread: function (info, cb) {
@@ -782,7 +949,7 @@ var dbAlarmQueueLocked = false,
 							};
 
 						for (i = 0; i < numberOfAlertConfigIds; i++) {
-							alertConfig = actions.policies.getAlertConfig(info.policy, alertConfigIds[i]);
+							alertConfig = actions.policies.getAlertConfig(info.policy.alertConfigs, alertConfigIds[i]);
 							groups.push(getAlertGroup(getActiveGroupConfig(alertConfig)));
 						}
 						return groups;
@@ -1848,7 +2015,6 @@ function run () {
 	actions.utility.log(['\nRUNNING CRON JOB, ', date.getHours(), ':', date.getMinutes(), ', ', date.getTime()].join('')); // DEBUG
 	
 	// Do scheduled task stuff
-
 	actions.alarmQueue.lock();
 
 	// Preprocess tasks
@@ -1856,7 +2022,8 @@ function run () {
 		policies: actions.policies.dbGetAll,
 		alarmQueue: actions.alarmQueue.dbGetAll,
 		holidaysObj: actions.calendar.dbGetHolidaysObj,
-		usersObj: actions.dbGetAllUsersObj
+		usersObj: actions.dbGetAllUsersObj,
+		scheduledTasks: actions.scheduledTasks.dbGetAll
 	}, function (err, data) {
 		var start = function (cb) {
 				cb(null, data);
@@ -1885,6 +2052,9 @@ function run () {
 		// Processing tasks
 		async.waterfall([
 			start,
+			actions.scheduledTasks.process,
+			actions.scheduledTasks.dbUpdate,
+			actions.policies.dbUpdateConfigs,
 			actions.alarmQueue.process,
 			actions.policies.process,
 			actions.notifications.buildNotifyList,
@@ -1897,8 +2067,7 @@ function run () {
 			if (!!err) {
 				logError(err);
 			}
-			var executionTime = new Date().getTime() - startTime;
-			actions.utility.log('DONE (' + executionTime + ' ms)'); // DEBUG
+			actions.utility.log('DONE (' + (new Date().getTime() - startTime) + ' ms)'); // DEBUG
 		});
 	});
 }
@@ -1923,19 +2092,20 @@ if (appConfig.runNotifications) {
 
 /////////////////////////////////// TEST ////////////////////////////////////////
 var selfTest = {
-		enabled: true,
+		enabled: false,
 		dbConnect: false,
 		useDb: {
 			policies: true,
+			scheduledTasks: true,
 			alarmQueue: true,
-			holidays: false,
-			users: false,
+			holidays: true,
+			users: true,
 			alarmAcks: true
 		},
 		policies: [{
 			_id: "1a5c",
 			name: 'WWTP',
-			members: ['1abc' , '2abc', '3abc'],
+			members: ['1abc' , '2abc', '3abc', '4abc'],
 			memberGroups: [],
 			enabled: true,
 			_currAlertID: 1,
@@ -1952,7 +2122,7 @@ var selfTest = {
 					day: 'Friday'
 				},
 				groups: [{
-					id: 4,// seeded from _currGroupID
+					id: 1,// seeded from _currGroupID
 					active: true,
 					name: 'Group 1',
 					alertDelay: 1,
@@ -1961,8 +2131,34 @@ var selfTest = {
 						repeatCount: 0
 					},
 					escalations: [{
-						id: 7, // seeded from _currEscalationID
-						members: ['1abc'],
+						id: 1, // seeded from _currEscalationID
+						members: ['1abc', '2abc'],
+						alertStyle: 'Everyone', //FirstResponder, Everyone, Sequenced
+						escalationDelay: 30,
+						memberAlertDelay: 5,
+						rotateConfig: { // false/null if unchecked?
+							enabled: true,// if retain the object
+							scale: 'week',
+							time: '9:00',
+							day: 'Friday'
+						},
+						repeatConfig: {
+							enabled: false,
+							repeatCount: 0
+						}
+					}]
+				}, {
+					id: 2,// seeded from _currGroupID
+					active: false,
+					name: 'Group 1',
+					alertDelay: 1,
+					repeatConfig: {
+						enabled: false,
+						repeatCount: 0
+					},
+					escalations: [{
+						id: 1, // seeded from _currEscalationID
+						members: ['3abc', '4abc'],
 						alertStyle: 'Everyone', //FirstResponder, Everyone, Sequenced
 						escalationDelay: 30,
 						memberAlertDelay: 5,
@@ -2004,11 +2200,11 @@ var selfTest = {
 					Normal: [{
 						type: SMS,
 						info: '13364690900',
-						delay: 30
+						delay: 0
 					}, {
 						type: EMAIL,
 						info: 'johnny.dr@gmail.com',
-						delay: 0
+						delay: 30
 					}, {
 						type: VOICE,
 						info: '13364690900',
@@ -2114,6 +2310,28 @@ var selfTest = {
 			pointType: 3, // binary input
 			notifyReturnNormal: true, // comes from the point
 			Security: []
+		}],
+		scheduledTasks: [{
+			type: RECURRING,
+			action: 'rotateMembers',
+			policyID: "1a5c",
+			nextAction: 1457705102972,
+			interval: 14,
+			config: {
+				alertConfigID: 1,
+				groupID: 1,
+				escalationID: 1
+			}
+		}, {
+			type: RECURRING,
+			action: 'rotateGroup',
+			policyID: "1a5c",
+			nextAction: 1457705102972,
+			interval: 14,
+			config: {
+				alertConfigID: 1,
+				groupID: 1
+			}
 		}]
 	};
 
@@ -2127,6 +2345,7 @@ if (selfTest.enabled) {
 				alarmQueue: selfTest.alarmQueue,
 				usersObj: selfTest.usersObj,
 				holidays: selfTest.holidays,
+				scheduledTasks: selfTest.scheduledTasks,
 				policiesAckList: {},
 				date: new Date(),
 				now: new Date().setSeconds(0)
@@ -2135,6 +2354,29 @@ if (selfTest.enabled) {
 
 	actions.selfTest = {
 		runNotifications: false,
+		template: {
+			run: false,
+			fn: function (cb) {
+				cb(null, 'data');
+			}
+		},
+		processScheduledTasks: {
+			run: false,
+			fn: function (cb) {
+				actions.scheduledTasks.process(testInfo.data, function (err, data) {
+					data.policies.forEach(function (policy) {
+						policy.alertConfigs.forEach(function (alertConfig) {
+							alertConfig.groups.forEach(function (group) {
+								group.escalations.forEach(function (escalation) {
+									actions.utility.log(['policy:'+policy.name, 'alertConfigId:'+alertConfig.id, 'groupId:'+group.id+(group.active?'(active)':''), 'escalationId:'+escalation.id, 'members: ['+escalation.members.join(', ')+']'].join(', '));
+								});
+							});
+						});
+					});
+					cb(null, 'done');
+				});
+			}
+		},
 		sendEmail: {
 			run: false,
 			fn: function (cb) {
@@ -2208,12 +2450,6 @@ if (selfTest.enabled) {
 				actions.policies.process(testInfo.data, function (err, data) {
 					cb(null, data.policies[0].threads);
 				});
-			}
-		},
-		template: {
-			run: false,
-			fn: function (cb) {
-				cb(null, 'data');
 			}
 		}
 	};
