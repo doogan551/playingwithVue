@@ -110,8 +110,6 @@ html
             #contactInfoDialog.contactInfoDialog.ui-corner-all(data-role='popup', data-overlay-theme='a', data-theme='c')
                 .ui-corner-top(data-role='header', data-theme='a')
                     h1.contactHeader
-                    // ko if: console.log($data)
-                    // /ko
                 .ui-corner-bottom(data-role='content', data-theme='d', style='padding: 15px;')
                     .ui-grid-a
                         .ui-block-a.width100
@@ -120,8 +118,8 @@ html
                                 span.firstName
                         .ui-block-a.width100
                             label
-                                | Name
-                                input.name(type='text', data-mini='true')
+                                | Type
+                                select.contactOptions(data-bind="options:['SMS', 'Voice', 'Email']" , data-mini='true')
                         .ui-block-a.width100
                             label
                                 | Name
