@@ -1,7 +1,7 @@
 var johnny = {
   'Infoscan': {
     'dbConfig': {
-      'host': 'SCADA1-V',
+      'host': '192.168.1.88',
       'dbName': 'infoscan'
     },
     'files': {
@@ -11,7 +11,8 @@ var johnny = {
       'site': 'Johnny',
       'email': 'jroberts@dorsett-tech.com'
     }
-  }
+  },
+  runNotifications: false
 };
 
 johnny.redisConfig = {

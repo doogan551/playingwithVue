@@ -510,6 +510,15 @@ tr:hover .showOnHover {
     font-weight: bold;
 }
 
+#notifications .notificationHeader h2 a {
+    color: #666;
+    text-decoration: none;
+}
+
+#notifications .editable {
+    font-weight: bold;
+}
+
 .caret-spaced {
     margin-left: 5px !important;
 }
@@ -572,6 +581,27 @@ tr:hover .showOnHover {
     font-style: italic;
 }
 
+#notifications .editRow {
+    display: none;
+}
+
+#notifications .editingRow .inputRow {
+    display: none;
+}
+
+#notifications .editingRow .editRow {
+    display: block;
+}
+
+#notifications .checkbox-valign {
+    margin-top: 0.2em;
+}
+
+.policyName input {
+    width: auto;
+    height: 24px;
+    display: inline-block;
+}
 
 .policyList {
     margin-top: 20px;
@@ -589,6 +619,11 @@ tr:hover .showOnHover {
 .policyList .policy a {
     color: #1771B3;
     font-weight: bold;
+}
+
+.policyEnabled .centered {
+    margin-top: 4px;
+    margin-right: 5px;
 }
 
 #notifications .deleteIcon {
@@ -659,10 +694,15 @@ tr:hover .showOnHover {
     margin-bottom: 25px;
 }
 
+.exitConfig i {
+    margin-right: 5px;
+}
+
 .alertGroup {
     border-radius: 3px;
     background-color: #eee;
     padding: 15px 20px 25px 20px;
+    margin-bottom: 35px;
 }
 
 .groupTitle {
@@ -676,27 +716,40 @@ tr:hover .showOnHover {
     position: relative;
     background-color: #fff;
     border: 2px solid #ccc;
+    border-top-width: 1px;
     border-radius: 6px;
     margin-bottom: 35px;
 }
 
 .alertSection .alertBody {
     overflow: hidden;
+    font-size: 1.2em;
+    display: flex;
 }
 
 .alertBody > .col,
 .alertFooter {
     padding: 10px 15px;
+    border-top: 1px solid #ccc;
 }
 
 .alertSection .alertBody .leftCol {
-    width: 40%;
+    width: 35%;
     float: left;
+    border-right: 1px solid #ccc;
 }
 
 .alertSection .alertBody .rightCol {
-    width: 60%;
+    width: 65%;
     float: left;
+}
+
+.rightCol > div {
+    margin-bottom: 10px;
+}
+
+.rightCol > .sectionTitleNoIcon {
+    margin-bottom: 15px;
 }
 
 .sectionTitle {
@@ -716,7 +769,15 @@ tr:hover .showOnHover {
 }
 
 .alertSection i {
-    font-size: 2em;
+    font-size: 1.6em;
+    margin-right: 10px;
+}
+
+.sectionMultiline > .checkbox {
+    padding-left: 0;
+    margin-left: 20px;
+    display: inline-block;
+    width: 80%;
 }
 
 .alertGroup .alertSection:before {
@@ -747,6 +808,15 @@ tr:hover .showOnHover {
     left: 91px;
 }
 
+.alertGroup .alert-no-arrow {
+    margin-bottom: 0;
+}
+
+.alertGroup .alert-no-arrow:before,
+.alertGroup .alert-no-arrow:after {
+    display: none;
+}
+
 .rotationList {
     margin-top: 20px;
     margin-bottom: 20px;
@@ -759,7 +829,6 @@ tr:hover .showOnHover {
     border-bottom: none;
     padding: 5px;
     padding-left: 10px;
-    font-size: 1.2em;
     width: 80%;
 }
 

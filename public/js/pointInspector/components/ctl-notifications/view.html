@@ -3,32 +3,76 @@
     </div>
 
     <!-- ko ifnot: gettingData-->
+    <div class="dataField">
+        <label>Alarms</label>
+    </div>
     <div class="table-responsive">
-        <table class="grid table table-condensed">
+        <table class="grid table table-condensed notifications-table">
             <thead>
-            <tr>
-                <th>Ack</th>
-                <th>Notify</th>
-                <th>Type</th>
-                <th>Name</th>
-                <th>Message</th>
-            </tr>
+                <tr>
+                    <th>Ack</th>
+                    <th>Notify</th>
+                    <th>Type</th>
+                    <th>Message</th>
+                </tr>
             </thead>
-            <tbody data-bind="foreach: data">
+
+            <tbody data-bind="foreach: alarmData">
             <tr>
                 <td>
-                    <input type="checkbox" data-bind="checked: ack, enable: $parent.isInEditMode">
+                    <input type="checkbox" data-bind="checked: ack, enable: $parent.checkNotify($data)">
                 </td>
                 <td>
                     <input type="checkbox" data-bind="checked: notify, enable: $parent.isInEditMode">
                 </td>
                 <td data-bind="text: $parent.getMessageById(msgId()).msgTypeName"></td>
-                <td data-bind="text: $parent.getMessageById(msgId()).msgName"></td>
                 <td>
-                    <select class="form-control input-sm" data-bind="value: msgId,options: $parent.getAlarmMessagesByType(msgType()), optionsText: 'msgFormat', optionsValue: '_id', enable: $parent.isInEditMode "><option>Test</option></select>
+                    <select class="form-control input-sm" data-bind="value: msgId,options: $parent.getAlarmMessagesByType(msgType()), optionsText: 'msgFormat', optionsValue: '_id', enable: $parent.isInEditMode "></select>
                 </td>
             </tr>
             </tbody>
         </table>
     </div>
+
+    <div class="dataField">
+        <label>Returns</label>
+    </div>
+    <div class="row returnAlarmChecks">
+        <div class="col col-xs-12 col-sm-4">
+            <input type="checkbox" data-bind="checked: ackAll, enable: $parent.isInEditMode"><label>Acknowledge All Returns</label>
+        </div>
+        <div class="col col-xs-12 col-sm-4">
+            <input type="checkbox" data-bind="checked: notifyAll, enable: $parent.isInEditMode"><label>Notify On All Returns</label>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="grid table table-condensed notifications-table">
+            <thead>
+                <tr>
+                    <th>Ack</th>
+                    <th>Notify</th>
+                    <th>Type</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: returnData">
+            <tr>
+                <td>
+                    <input type="checkbox" data-bind="checked: ack, enable: false">
+                </td>
+                <td>
+                    <input type="checkbox" data-bind="checked: notify, enable: false">
+                </td>
+                <td data-bind="text: $parent.getMessageById(msgId()).msgTypeName"></td>
+                <td>
+                    <select class="form-control input-sm" data-bind="value: msgId,options: $parent.getAlarmMessagesByType(msgType()), optionsText: 'msgFormat', optionsValue: '_id', enable: $parent.isInEditMode "></select>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <!-- /ko -->
+
+    <!--  ko component: { name: 'ctl-policies', params: { data: $root.point.data['Notify Policies'], rootContext: $root } } -->
     <!-- /ko -->

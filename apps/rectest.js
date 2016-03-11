@@ -195,9 +195,13 @@ function testTwilio() {
   var NotifierUtility = require('../models/notifierutility');
   var notifierUtility = new NotifierUtility();
 
-  notifierUtility.sendVoice('13364694547', 'asafsadfafasfawf asfsaf wef wafasf', function(err, response) {
+
+  notifierUtility.sendText('13364694547', 'An alarm has occured in building 4200. Respond with asdf to acknowledge the alarm', function(err, response) {
     console.log(err, response);
   });
+
+  /*var Twilio = require('../models/twilio');
+  Twilio.getCalls();*/
 }
 // testTwilio();
 
@@ -264,294 +268,9 @@ function updateGPL() {
 }
 // updateGPL();
 
-function totalizers() {
-  var History = require('../models/history');
-  var points = [{
-    upi: 28366,
-    op: 'starts'
-  }];
-  var count = points.length;
-  var date = '2//2015 14:00';
-  var range = {
-    start: moment(date, 'MM/DD/YYYY HH:mm').unix(),
-    end: moment(date, 'MM/DD/YYYY HH:mm').add(1 * 60, 'minutes').unix(),
-  };
-  var scale = 45; // time in minutes
-
-  var compare = function(a, b) {
-    return a.timestamp - b.timestamp;
-  };
-
-  var findStarts = function(initial, history) {
-    var totals = [];
-    var previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
-    console.log('i', initial);
-    console.log('h', history);
-    scales.forEach(function(scale, index) {
-
-      var starts = 0;
-      var start = scale.start;
-      var end = (moment().unix() < scale.end) ? moment().unix() : scale.end;
-
-      var matches = history.filter(function(data) {
-        return data.timestamp > start && data.timestamp <= end;
-      });
-
-      for (var i = 0; i < matches.length; i++) {
-        if (previousValue === 0 && matches[i].Value !== 0) {
-          starts++;
-        }
-        previousValue = matches[i].Value;
-      }
-
-      var result = {
-        total: starts,
-        range: {
-          start: start,
-          end: end
-        }
-      };
-
-      totals.push(result);
-    });
-
-    return totals;
-  };
-
-  var findRuntime = function(initial, history) {
-    var totals = [];
-    var previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
-    console.log('i', initial);
-    console.log('h', history);
-    scales.forEach(function(scale, index) {
-
-      var runtime = 0;
-      var start = scale.start;
-      var end = (moment().unix() < scale.end) ? moment().unix() : scale.end;
-
-      var matches = history.filter(function(data) {
-        return data.timestamp > start && data.timestamp <= end;
-      });
-
-      if (!!matches.length) {
-        for (var i = 0; i < matches.length; i++) {
-          if (previousValue !== 0 && matches[i].Value === 0) {
-            runtime += matches[i].timestamp - start;
-          } else if (i === (matches.length - 1) && matches[i].Value !== 0) {
-            runtime += end - start;
-          }
-          if (previousValue === 0 && matches[i].Value !== 0) {
-            start = matches[i].timestamp;
-          }
-          previousValue = matches[i].Value;
-        }
-      } else if (previousValue !== 0) {
-        runtime = end - start;
-      }
-
-      var result = {
-        total: runtime,
-        range: {
-          start: start,
-          end: end
-        }
-      };
-
-      totals.push(result);
-    });
-
-    return totals;
-  };
-
-  var findTotal = function(initial, history) {
-    var totals = [];
-    var value = (initial.Value > history[0].Value) ? 0 : history[0].Value - initial.Value;
-    console.log('i', initial);
-    console.log('h', history);
-
-    scales.forEach(function(scale, index) {
-      var total = 0;
-      var start = scale.start;
-      var end = (moment().unix() < scale.end) ? moment().unix() : scale.end;
-
-      var matches = history.filter(function(data) {
-        return data.timestamp > start && data.timestamp <= end;
-      });
-
-      for (var i = 0; i < matches.length; i++) {
-        if (value <= matches[i].Value) {
-          value = matches[i].Value;
-        } else {
-          total += value;
-          value = matches[i].Value;
-        }
-        if (i === matches.length - 1) {
-          total += value;
-        }
-      }
-      console.log(total);
-      var result = {
-        total: total,
-        range: {
-          start: start,
-          end: end
-        }
-      };
-
-      totals.push(result);
-    });
-
-    return totals;
-  };
-
-  var buildScales = function(range, scale) {
-    var scaleRanges = [];
-    var scaleStart;
-    var scaleEnd;
-    var fixLongerScale = function() {
-      if (scaleEnd > range.end && scaleStart < range.end) {
-        scaleEnd = range.end;
-      }
-    };
-
-    scaleStart = moment.unix(range.start).unix();
-    scaleEnd = moment.unix(range.start).add(scale, 'minutes').unix();
-    fixLongerScale();
-
-    while (scaleEnd <= range.end) {
-      scaleRanges.push({
-        start: scaleStart,
-        end: scaleEnd
-      });
-      scaleStart = moment.unix(scaleStart).add(scale, 'minutes').unix();
-      scaleEnd = moment.unix(scaleEnd).add(scale, 'minutes').unix();
-      fixLongerScale();
-    }
-
-    return scaleRanges;
-  };
-
-
-  var scales = buildScales(range, scale);
-
-  db.connect(connectionString.join(''), function(err) {
-    var getInitialDataMongo = function(point, callback) {
-      var history = [];
-      var criteria = { //find initial data per point
-        collection: 'historydata',
-        query: {
-          timestamp: {
-            $lte: range.start
-          },
-          upi: point.upi
-        },
-        sort: {
-          timestamp: -1
-        },
-        limit: 1
-      };
-      Utility.get(criteria, function(err, initial) {
-        console.log('initial mongo', initial);
-        callback(err, point, initial[0]);
-      });
-    };
-    var getInitialDataSql = function(point, initial, callback) {
-      History.findLatest({
-        upis: [point.upi],
-        range: { // range object gets overwritten in function, pass new obj
-          end: range.start
-        }
-      }, function(err, results) {
-        var latestSql = results[0];
-        console.log('initial sql', latestSql);
-        if (!initial || (!!latestSql && latestSql.timestamp >= initial.timestamp)) {
-          initial = latestSql;
-        }
-        callback(null, point, initial || {});
-      });
-    };
-    var getRangeDataMongo = function(point, initial, callback) {
-      var criteria = {
-        collection: 'historydata',
-        query: {
-          upi: point.upi,
-          $and: [{
-            timestamp: {
-              $gt: range.start
-            }
-          }, {
-            timestamp: {
-              $lte: range.end
-            }
-          }]
-        }
-      };
-
-      Utility.get(criteria, function(err, history) {
-        console.log('mongo history', history);
-        callback(null, point, initial, history);
-      });
-    };
-    var getRangeDataSql = function(point, initial, history, callback) {
-      var exists = false;
-
-      History.findHistory({
-        upis: [point.upi],
-        range: {
-          start: range.start,
-          end: range.end
-        },
-        fx: 'history'
-      }, function(err, results) {
-        console.log('sql history', results);
-        for (var h = 0; h < history.length; h++) {
-          exists = false;
-          for (var r = 0; r < results.length; r++) {
-            if (results[r].timestamp === history[h].timestamp) {
-              exists = true;
-            }
-          }
-          if (!exists) {
-            results.push(history[h]);
-          }
-        }
-
-        callback(null, point, initial, results);
-      });
-    };
-    var buildTotal = function(point, initial, history, callback) {
-      history.sort(compare);
-
-      switch (point.op) {
-        case 'starts':
-          point.totals = findStarts(initial, history);
-          break;
-        case 'runtime':
-          point.totals = findRuntime(initial, history);
-          break;
-        case 'total':
-          point.totals = findTotal(initial, history);
-          break;
-      }
-
-      return callback(null);
-    };
-
-    async.eachSeries(points, function(point, seriesCb) {
-      async.waterfall([async.apply(getInitialDataMongo, point), getInitialDataSql, getRangeDataMongo, getRangeDataSql, buildTotal], seriesCb);
-    }, function(err) {
-      console.log('done', err, JSON.stringify(points));
-    });
-
-  });
-}
-// totalizers();
-
 function testTotalizerModel() {
   var Reports = require('../models/reports');
-  var interval = 'month';
-  var start = moment('10/01/2015', 'MM/DD/YYYY').unix();
-  var end = moment.unix(start).add(5, interval).unix();
+
   var data = {
     upis: [
       /*{
@@ -568,23 +287,87 @@ function testTotalizerModel() {
           }*/
     ],
     range: {
-      'start': start,
-      'end': end
+      'start': 1453352400,
+      'end': 1453356000
     },
     "reportConfig": {
       "returnLimit": 200,
-      "intervalType": {
-        "text": interval,
-        "value": 1
-      }
+      "interval": 60
     }
   };
   db.connect(connectionString.join(''), function(err) {
     Reports.totalizerReport(data, function(err, result) {
-      console.log(err, JSON.stringify(result[0].totals.length));
+      console.log(err, JSON.stringify(result));
     });
   });
 }
+// testTotalizerModel();
+
+function testMail() {
+  var MailListener = require("mail-listener2");
+
+  var mailListener = new MailListener({
+    username: "dorsett.alarms@gmail.com",
+    password: "dorsettgmailpass",
+    host: "imap.gmail.com",
+    port: 993, // imap port 
+    tls: true,
+    tlsOptions: {
+      rejectUnauthorized: false
+    },
+    markSeen: true, // all fetched email willbe marked as seen and not fetched next time 
+    fetchUnreadOnStart: true, // use it only if you want to get all unread email on lib start. Default is `false`, 
+    attachments: false // download attachments as they are encountered to the project directory 
+  });
+
+  mailListener.start(); // start listening 
+
+  // stop listening 
+  //mailListener.stop(); 
+
+  mailListener.on("server:connected", function() {
+    console.log("imapConnected");
+  });
+
+  mailListener.on("server:disconnected", function() {
+    console.log("imapDisconnected");
+  });
+
+  mailListener.on("error", function(err) {
+    console.log(err);
+  });
+
+  mailListener.on("mail", function(mail, seqno, attributes) {
+    // do something with mail object including attachments 
+    console.log(mail.subject, mail.text);
+    // mail processing code goes here 
+  });
+}
+// testMail();
+
+function testCron(fx) {
+  var CronJob = require('../models/cronjob');
+
+  var testFx = function() {
+    console.log(new Date());
+  };
+  var cron = new CronJob('00 * * * * *', testFx);
+
+  new CronJob('30 * * * * *', function() {
+    console.log('second job');
+  });
+
+  var now = Date.now();
+  console.log('starting', new Date());
+  var interval = setInterval(function() {
+    if (Date.now() >= now + (2 * 60 * 1000)) {
+      cron.stop();
+      clearInterval(interval);
+    }
+  }, 1000);
+
+}
+// testCron();
 // testTotalizerModel();
 
 function testInheritance() {

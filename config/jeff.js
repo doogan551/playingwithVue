@@ -10,7 +10,8 @@ var jeff = {
             'site': 'Jeff',
             'email': 'jshore@dorsett-tech.com'
         }
-    }
+    },
+    runNotifications: false
 };
 
 jeff.redisConfig = {

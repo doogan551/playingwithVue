@@ -2,8 +2,12 @@
 var async = require('async');
 var ObjectID = require('mongodb').ObjectID;
 var _ = require('lodash');
+var moment = require('moment');
+var notifications = require('../models/notifications');
 
 // OTHERS
+var NotifierUtility = require('../models/notifierutility');
+var notifierUtility = new NotifierUtility();
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
@@ -59,7 +63,7 @@ module.exports = function(_common) {
                     }
 
                     // unack
-                    if (doc.o.ackStatus === 1 && openAlarms[k].alarmView === "Unacknowledged" && doc.ns === 'infoscan.Alarms') {
+                    if (doc.o.ackStatus === 1 && openAlarms[k].alarmView === "Unacknowledged" && doc.ns === 'infoscan.Alarms' && doc.o.msgCat !== Config.Enums['Alarm Categories'].Return.enum) {
                         io.sockets.connected[openAlarms[k].sockId].emit('newUnackAlarm', {
                             newAlarm: doc.o,
                             reqID: openAlarms[k].data.reqID
@@ -75,6 +79,9 @@ module.exports = function(_common) {
                             reqID: openAlarms[k].data.reqID
                         });
                     }
+                    if (doc.ns === 'infoscan.Alarms') {
+                        common.acknowledgePointAlarms(doc.o);
+                    }
 
                     // active
                     if (openAlarms[k].alarmView === "Active" && doc.ns === 'infoscan.ActiveAlarms') {
@@ -86,6 +93,8 @@ module.exports = function(_common) {
                     }
                 }
             }
+
+            notifications.processIncomingAlarm(doc.o);
 
         } else if (doc.ns === 'infoscan.historydata') {
             // module.exports.updateDashboard(doc.o);

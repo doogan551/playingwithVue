@@ -17,21 +17,21 @@ var policy = {
             time: '9:00',
             day: 'Friday'
         },
-        repeatConfig: {
-            enabled: true,
-            repeatCount: 0
-        },
         groups: [{
             id: 1,// seeded from _currGroupID
             active: true,
             name: 'Group 1',
             alertDelay: 0,
-            escalationDelay: 30,
+            repeatConfig: {
+                enabled: true,
+                repeatCount: 0
+            },
             escalations: [{
                 id: 1, // seeded from _currEscalationID
                 members: [],
                 alertStyle: 'Sequenced', //FirstResponder, Everyone
                 memberAlertDelay: 5,
+                escalationDelay: 30,
                 rotateConfig: { // false/null if unchecked?
                     enabled: true,// if retain the object
                     scale: 'week',
@@ -45,10 +45,9 @@ var policy = {
             }]
         }]
     }],
-    schedules: [{ // layer 1
+    scheduleLayers: [{ // layer 1
         alertConfigs: [],
         schedules: [{// holidays
-            configs: [1],// _id from group
             holidays: true, // precedence, if layer 2 holiday match, does layer 1 run?
             days: ['mon', 'tues', 'wed', 'thurs', 'fri'], //'weekdays' will be translated in UI
             startTime: 1700,

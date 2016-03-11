@@ -7470,6 +7470,7 @@ if (typeof window == 'undefined') {
         EditChanges: Config.EditChanges,
         EditValidation: Config.EditValidation,
         Enums: Config.Enums,
+        revEnums: Config.revEnums,
         Applications: Config.Applications,
         Templates: Config.Templates,
         Utility: Config.Utility,

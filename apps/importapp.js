@@ -2015,6 +2015,10 @@ function updateDevices(point, callback) {
 function updateAlarmMessages(point, callback) {
 	//logger.info("updateAlarmMessages");
 	var alarmClasses = ["Emergency", "Critical"];
+	if(point.hasOwnProperty('Alarm Messages')){
+		point['Notify Policies'] = [];
+	}
+
 	if (point["Alarm Class"] !== undefined && alarmClasses.indexOf(point["Alarm Class"].Value) !== -1) {
 
 		for (var i = 0; i < point["Alarm Messages"].length; i++) {

@@ -453,7 +453,8 @@ var dorsett = (function() {
                     Title: '',
                     'Contact Info': [{
                         Type: '',
-                        Value: ''
+                        Value: '',
+                        Name: ''
                     }],
                     Groups: [{
                         groupid: '',
@@ -724,6 +725,7 @@ var dorsett = (function() {
             }
             observable.push(new dorsett.models.contactInfoModel({
                 Type: contactInfoDialog.find('select.contactOptions').val(),
+                Name: contactInfoDialog.find('.name').val(),
                 Value: contactInfoDialog.find('.value').val()
             }));
             observable()[observable().length - 1].Value.isModified(true);
@@ -741,21 +743,13 @@ var dorsett = (function() {
                 email: true
             }
         }, {
-            type: 'Mobile',
+            type: 'SMS',
             val: phoneValidatorObj,
-            mask: '(999) 999-9999'
+            mask: '9999999999'
         }, {
-            type: 'Pager',
+            type: 'Voice',
             val: phoneValidatorObj,
-            mask: '(999) 999-9999'
-        }, {
-            type: 'Home',
-            val: phoneValidatorObj,
-            mask: '(999) 999-9999'
-        }, {
-            type: 'Work',
-            val: phoneValidatorObj,
-            mask: '(999) 999-9999'
+            mask: '9999999999'
         }],
         userCount: function(singular, plural) {
             var count = 0,

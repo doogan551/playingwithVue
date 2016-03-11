@@ -9,7 +9,8 @@ var stephen = {
         'location': {
             'email': 'strent@dorsett-tech.com'
         }
-    }
+    },
+    runNotifications: false
 };
 
 stephen.redisConfig = {
