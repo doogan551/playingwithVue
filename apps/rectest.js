@@ -368,3 +368,44 @@ function testCron(fx) {
 
 }
 // testCron();
+// testTotalizerModel();
+
+function testInheritance() {
+  var createInherit = function(superClass, subClass) {
+    subClass.prototype = Object.create(superClass.prototype);
+    subClass.prototype.constructor = subClass;
+  };
+
+  function Table() {
+    this.type = 'table';
+  }
+
+  Table.prototype.setType = function(type) {
+    console.log('before', this.type);
+    this.type = type;
+    console.log('after', this.type);
+  };
+
+  Table.prototype.print = function() {
+    console.log(this.type);
+  };
+
+  function Devices() {
+    console.log('Table.call');
+    Table.call(this);
+    this.setType('Rectangle');
+  }
+
+  createInherit(Table, Devices);
+
+  template = {
+    'Point Type': {
+      eValue: 1,
+      Value: function() {
+        console.log('eval', this.eValue);
+      }
+    }
+  };
+  template['Point Type'].Value();
+}
+testInheritance();

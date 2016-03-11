@@ -27,7 +27,13 @@ var Users = {
   },
   newUser: function(data, cb) {
     var username = data.username;
-    var password = utils.encrypt(data.Password);
+    var password;
+
+    if(!!data.oldPassword){
+      password = data.Password;
+    }else{
+      password = utils.encrypt(data.Password);
+    }
 
     var searchCriteria = {
       username: username
@@ -40,22 +46,10 @@ var Users = {
         'Urgent': []
       },
       "Auto Logout Duration": {
-        "Value": "0"
+        "Value": 0
       },
       "Contact Info": {
-        "Value": [{
-          "Type": " Phone",
-          "Value": ""
-        }, {
-          "Type": "Cell Phone",
-          "Value": ""
-        }, {
-          "Type": "Email",
-          "Value": ""
-        }, {
-          "Type": "Pager",
-          "Value": ""
-        }]
+        "Value": []
       },
       "Description": {
         "Value": ""
@@ -81,6 +75,9 @@ var Users = {
       },
       "Photo": {
         "Value": ""
+      },
+      "Session Length": {
+        "Value": 0
       },
       "System Admin": {
         "Value": false
@@ -828,6 +825,7 @@ var updateControllers = function(op, username, callback) {
           }
         }
       };
+      console.log(criteria);
       Utility.update(criteria, function(err, result) {
         callback(err);
       });

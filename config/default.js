@@ -30,6 +30,14 @@ var defaults = {
             'site': 'Dorsett',
             'email': null,
             'timezone': 5
+        },
+        'letsencrypt': {
+            'directory': '/letsencrypt/etc',
+            'enabled': false
+        },
+        'processes': {
+            'zmqProcess': '',
+            'smProcess': ''
         }
     },
     'Twilio': {
@@ -46,6 +54,8 @@ var defaults = {
 };
 
 defaults.Infoscan.files.firmwareLocation = defaults.Infoscan.files.driveLetter + ":/InfoScan/Firmware/";
+defaults.Infoscan.processes.zmqProcess = defaults.Infoscan.files.driveLetter + ":/InfoScan/Server/zmqServer.exe";
+defaults.Infoscan.processes.smProcess = defaults.Infoscan.files.driveLetter + ":/InfoScan/Server/ServerMonitor.exe";
 
 defaults.redisConfig = {
     host: defaults.Infoscan.dbConfig.host,

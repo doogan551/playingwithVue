@@ -911,7 +911,7 @@ window.pointLookup = (function(module, ko, $) {
         function getMenuItems(item) {
             var _array = [],
                 ofTypeDisplay = item.pointType === "Display",
-                hasWritePermission = userPermissions.systemAdmin || userHasPermission(rowdata.Security, permissionLevels.WRITE);
+                hasWritePermission = userPermissions.systemAdmin || userHasPermission(item.Security, permissionLevels.WRITE);
 
             // Active
             if (item._pStatus == 0) {
@@ -1038,11 +1038,17 @@ window.pointLookup = (function(module, ko, $) {
 
             if (module.MODE == 'select') {
                 if (externalFilterObj) {
+                    var inputCounter = 1;
+                    $searchGrid.parent().parent().find(".toolbar").find(".searchInput").each(function () {
+                        externalFilterObj["filter" + inputCounter++] = $(this).val();
+                    });
+
                     externalFilterObj.name1 = rowData.name1;
                     externalFilterObj.name2 = rowData.name2;
                     externalFilterObj.name3 = rowData.name3;
                     externalFilterObj.name4 = rowData.name4;
                     externalFilterObj.pointType = rowData.pointType;
+                    externalFilterObj.selectedPointTypes = window.pointLookup.getCheckedPointTypes();
                 }
                 externalCallback(rowData._id, fullName, pointType, externalFilterObj);
                 window.close();
@@ -1645,6 +1651,9 @@ window.pointLookup = (function(module, ko, $) {
             viewModel.grid.name2.filter(externalFilterObj.name2);
             viewModel.grid.name3.filter(externalFilterObj.name3);
             viewModel.grid.name4.filter(externalFilterObj.name4);
+            if (!!externalFilterObj.selectedPointTypes && externalFilterObj.selectedPointTypes.length > 0) {
+                module.checkPointTypes(externalFilterObj.selectedPointTypes);
+            }
         }
 
         appIsInitialized = true;

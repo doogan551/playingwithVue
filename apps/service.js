@@ -46,7 +46,7 @@ svc.on('uninstall', function() {
 
 if (!!options.uninstall) {
   svc.uninstall();
-} else if (!!optins.install) {
+} else if (!!options.install) {
   svc.install();
 } else if (!!options.start) {
   svc.start();

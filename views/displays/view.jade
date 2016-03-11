@@ -19,9 +19,37 @@ block content
           h1 Enter Value
         .ui-corner-bottom.ui-content(data-role='content', style='padding: 5px;', data-theme='d')
           h3.ui-title
-            label(for="actionButtonValue")
-            input#actionButtonValue(type="number", name="actionButtonValue")
+          label(for="actionButtonValue")
+          input#actionButtonValue(type="number", name="actionButtonValue")
           a(href='#', ng-click="sendCommand()", data-role='button', data-inline='true', data-rel='back', data-transition='flow', data-theme='b') Send Command
+          a(href='#', data-role='button', data-inline='true', data-rel='back', data-theme='c') Cancel
+
+    #actionButtonReportInput.ui-corner-all(data-overlay-theme='a', data-theme='c', data-dismissible='false', style='max-width: 500px;')
+        .ui-corner-top(data-role='header', data-theme='a')
+          h1 Select Report Range
+        .ui-corner-bottom.ui-content(data-role='content', style='padding: 5px;', data-theme='d')
+          label(for="reportPredefined") Pre-Defined Range
+          input#reportPredefined(ng-change="checkReportRange()", ng-model="reportType", type="radio", name="reportType", value="predefined", checked)
+          label(for="reportChoose") Choose Range
+          input#reportChoose(ng-change="checkReportRange()", ng-model="reportType", type="radio", name="reportType", value="chosen")
+          div(ng-show="reportType == 'chosen'")
+            h3.ui-title Report Start
+            input#reportStart(type="text")
+            h3.ui-title Report End
+            input#reportEnd(type="text")
+          div(ng-show="reportType == 'predefined'")
+            h3.ui-title Pre-defined Range
+            select(ng-model='reportDuration')
+              option None
+              option Last 12 hours
+              option Last 24 hours
+              option Last 48 hours
+              option Last 72 hours
+              option Last 7 days
+              option Last month
+              option Last 6 months
+              option Last year
+          a#openReport(href='#', ng-click="openReport()", data-role='button', data-inline='true', data-rel='back', data-transition='flow', data-theme='b') Open Report
           a(href='#', data-role='button', data-inline='true', data-rel='back', data-theme='c') Cancel
 
     //div(class='topBar',style='position: absolute; width: 100%;', data-role='header', data-theme='a')

@@ -2,16 +2,16 @@
  * Created by Chris on 11/29/13.
  */
 
-window.workspaceManager = (function ($) {
+window.workspaceManager = (function($) {
 
-    var _local  = {},
+    var _local = {},
         $body,
         $systemStatus,
         $systemStatusElement;
 
-    _local.webEndpoint      = 'http://' + window.location.hostname + ':' + window.location.port;
-    _local.socketEndPoint   = 'http://' + window.location.hostname + ':8085';
-    _local.apiEndpoint      = _local.webEndpoint + '/api/';
+    _local.webEndpoint = window.location.origin;
+    _local.socketEndPoint = window.location.origin;
+    _local.apiEndpoint = _local.webEndpoint + '/api/';
 
     //logged in user
     _local.user = ko.observable('');
@@ -25,7 +25,7 @@ window.workspaceManager = (function ($) {
 
     _local.appHeight = ko.observable();
 
-    $(window).resize(function () {
+    $(window).resize(function() {
         _local.appHeight($body.height());
     });
 
@@ -40,22 +40,91 @@ window.workspaceManager = (function ($) {
 
     //filters
     _local.workspace.filters = {
-        recent      : {filter: {isRecent: true}, name: 'Recent'},
-        fav         : {filter: {isFav: true}, name: 'Favorites'},
-        open        : {filter: {isOpen: true}, name: 'All Open Windows'},
-        display     : {filter: {type: 'display', isOpen: true}, name: 'Display Windows'},
-        report      : {filter: {type: 'report', isOpen: true}, name: 'Report Windows'},
-        gpl         : {filter: {type: 'sequence', isOpen: true}, name: 'GPL Windows'},
-        alarm       : {filter: {type: 'alarm', isOpen: true}, name: 'Alarm Windows'},
-        activitylog : {filter: {type: 'activitylog', isOpen: true}, name: 'Activity Windows'},
-        trendplot   : {filter: {type: 'trendplot', isOpen: true}, name: 'Trend Plot Windows'},
-        dashboard   : {filter: {type: 'dashboard', isOpen: true}, name: 'Dashboard Windows'},
-        script      : {filter: {type: 'script', isOpen: true}, name: 'Script Windows'},
-        slideShow   : {filter: {type: 'slide show', isOpen: true}, name: 'Slide Show Windows'}
+        recent: {
+            filter: {
+                isRecent: true
+            },
+            name: 'Recent'
+        },
+        fav: {
+            filter: {
+                isFav: true
+            },
+            name: 'Favorites'
+        },
+        open: {
+            filter: {
+                isOpen: true
+            },
+            name: 'All Open Windows'
+        },
+        display: {
+            filter: {
+                type: 'display',
+                isOpen: true
+            },
+            name: 'Display Windows'
+        },
+        report: {
+            filter: {
+                type: 'report',
+                isOpen: true
+            },
+            name: 'Report Windows'
+        },
+        gpl: {
+            filter: {
+                type: 'sequence',
+                isOpen: true
+            },
+            name: 'GPL Windows'
+        },
+        alarm: {
+            filter: {
+                type: 'alarm',
+                isOpen: true
+            },
+            name: 'Alarm Windows'
+        },
+        activitylog: {
+            filter: {
+                type: 'activitylog',
+                isOpen: true
+            },
+            name: 'Activity Windows'
+        },
+        trendplot: {
+            filter: {
+                type: 'trendplot',
+                isOpen: true
+            },
+            name: 'Trend Plot Windows'
+        },
+        dashboard: {
+            filter: {
+                type: 'dashboard',
+                isOpen: true
+            },
+            name: 'Dashboard Windows'
+        },
+        script: {
+            filter: {
+                type: 'script',
+                isOpen: true
+            },
+            name: 'Script Windows'
+        },
+        slideShow: {
+            filter: {
+                type: 'slide show',
+                isOpen: true
+            },
+            name: 'Slide Show Windows'
+        }
     };
 
-    _local.workspace.filteredWindows = ko.computed(function () {
-        return ko.utils.arrayFilter(_local.workspace.windows(), function (win) {
+    _local.workspace.filteredWindows = ko.computed(function() {
+        return ko.utils.arrayFilter(_local.workspace.windows(), function(win) {
             var _filter = _local.workspace.filters[_local.workspace.activeSet()].filter;
             if (!~_local.displayableTypes.indexOf(win.type)) return false;
             for (var prop in _filter) {
@@ -67,33 +136,33 @@ window.workspaceManager = (function ($) {
         });
     });
 
-    _local.workspace.getFilteredWindowsByType = function (type) {
-        return ko.computed(function () {
-            var _windows = ko.utils.arrayFilter(_local.workspace.windows(), function (win) {
-                return win.type == type && win.isOpen() == true;
+    _local.workspace.getFilteredWindowsByType = function(type) {
+        return ko.computed(function() {
+            var _windows = ko.utils.arrayFilter(_local.workspace.windows(), function(win) {
+                return win.type === type && win.isOpen() === true;
             });
             return _windows;
         });
     };
 
     _local.workspace.filteredWindowsByType = {
-        display     : _local.workspace.getFilteredWindowsByType('display'),
-        report      : _local.workspace.getFilteredWindowsByType('report'),
-        sequence    : _local.workspace.getFilteredWindowsByType('sequence'),
-        alarm       : _local.workspace.getFilteredWindowsByType('alarm'),
-        activitylog : _local.workspace.getFilteredWindowsByType('activitylog'),
-        trendplot   : _local.workspace.getFilteredWindowsByType('trendplot'),
-        dashboard   : _local.workspace.getFilteredWindowsByType('dashboard'),
-        script      : _local.workspace.getFilteredWindowsByType('script'),
-        slideShow   : _local.workspace.getFilteredWindowsByType('slide show'),
-        devicetree  : _local.workspace.getFilteredWindowsByType('devicetree')
+        display: _local.workspace.getFilteredWindowsByType('display'),
+        report: _local.workspace.getFilteredWindowsByType('report'),
+        sequence: _local.workspace.getFilteredWindowsByType('sequence'),
+        alarm: _local.workspace.getFilteredWindowsByType('alarm'),
+        activitylog: _local.workspace.getFilteredWindowsByType('activitylog'),
+        trendplot: _local.workspace.getFilteredWindowsByType('trendplot'),
+        dashboard: _local.workspace.getFilteredWindowsByType('dashboard'),
+        script: _local.workspace.getFilteredWindowsByType('script'),
+        slideShow: _local.workspace.getFilteredWindowsByType('slide show'),
+        devicetree: _local.workspace.getFilteredWindowsByType('devicetree')
     };
 
-    _local.workspace.getRecentXPoints = function (x) {
-        return ko.computed(function () {
+    _local.workspace.getRecentXPoints = function(x) {
+        return ko.computed(function() {
             var _points = _local.workspace.windows(),
-                allowedPointTypes = window.Config.Utility.pointTypes.getAllowedPointTypes().map(function (item) {
-                    return item.key.toLowerCase()
+                allowedPointTypes = window.Config.Utility.pointTypes.getAllowedPointTypes().map(function(item) {
+                    return item.key.toLowerCase();
                 }),
                 _filteredPoints = [];
             //dont include utility windows
@@ -104,12 +173,12 @@ window.workspaceManager = (function ($) {
         });
     };
 
-    _local.workspace.isVisible.subscribe(function (val) {
+    _local.workspace.isVisible.subscribe(function(val) {
         var $toggle = $('#workspaceToggle'),
             _work;
         if (val) {
             _local.workspace.$mainWindowCloseBtn.hide();
-            _work = function () {
+            _work = function() {
                 $toggle
                     .removeClass('fa-arrow-up')
                     .addClass('fa-arrow-down')
@@ -117,7 +186,7 @@ window.workspaceManager = (function ($) {
             };
         } else {
             if (!!_local.currentMainWindowOccupant()) _local.workspace.$mainWindowCloseBtn.show();
-            _work = function () {
+            _work = function() {
                 $toggle
                     .removeClass('fa-arrow-down')
                     .addClass('fa-arrow-up')
@@ -128,59 +197,78 @@ window.workspaceManager = (function ($) {
     });
 
     //change active set
-    _local.workspace.showSet = function (set) {
+    _local.workspace.showSet = function(set) {
         _local.workspace.activeSet(set);
     };
 
     //make bold active set
-    _local.workspace.isActiveSet = function (set) {
-        return set == _local.workspace.activeSet() && 'bold';
+    _local.workspace.isActiveSet = function(set) {
+        return set === _local.workspace.activeSet() && 'bold';
     };
 
-    _local.workspace.animateOut = function (item) {
+    _local.workspace.animateOut = function(item) {
         if (item.nodeType === 1) {
-            $(item).fadeOut(250, function () {
+            $(item).fadeOut(250, function() {
                 $(this).remove();
             });
         }
     };
 
-    _local.workspace.animateIn = function (item) {
+    _local.workspace.animateIn = function(item) {
         if (item.nodeType === 1) {
             $(item)
-                .css({marginLeft: 20, opacity: 0})
-                .animate({marginLeft: 0, opacity: 1}, {duration: 500, easing: 'easeInOutQuint'});
+                .css({
+                    marginLeft: 20,
+                    opacity: 0
+                })
+                .animate({
+                    marginLeft: 0,
+                    opacity: 1
+                }, {
+                    duration: 500,
+                    easing: 'easeInOutQuint'
+                });
         }
     };
 
-    _local.workspace.beforeMove = function (elem) {
+    _local.workspace.beforeMove = function(elem) {
         var $elem;
-        if (elem.nodeType == 1) {
+        if (elem.nodeType === 1) {
             $elem = $(elem);
             $elem.data('saveOffsetTop', $elem.offset().top - 91);
             $elem.data('saveOffsetLeft', $elem.offset().left - 157);
         }
     };
 
-    _local.workspace.afterMove = function (elem) {
+    _local.workspace.afterMove = function(elem) {
         var $elem, $container, _offsetTop, _offsetLeft;
-        if (elem.nodeType == 1) {
+        if (elem.nodeType === 1) {
             $elem = $(elem);
             $container = $elem.parent();
             _offsetTop = $elem.data('saveOffsetTop');
             _offsetLeft = $elem.data('saveOffsetLeft');
             if ($elem.offset().top !== _offsetTop || $elem.offset().left !== _offsetLeft) {
                 var $tempElement = $elem.clone();
-                $elem.css({visibility: 'hidden'});
+                $elem.css({
+                    visibility: 'hidden'
+                });
                 $tempElement.css({
                     position: "absolute",
-                    width   : $elem.outerWidth()
+                    width: $elem.outerWidth()
                 });
                 $container.append($tempElement);
                 $tempElement
-                    .css({top: _offsetTop, left: _offsetLeft})
-                    .animate({top: $elem.offset().top - 91, left: $elem.offset().left - 157}, 500, 'easeInOutQuint', function () {
-                        $elem.css({visibility: 'visible'});
+                    .css({
+                        top: _offsetTop,
+                        left: _offsetLeft
+                    })
+                    .animate({
+                        top: $elem.offset().top - 91,
+                        left: $elem.offset().left - 157
+                    }, 500, 'easeInOutQuint', function() {
+                        $elem.css({
+                            visibility: 'visible'
+                        });
                         $tempElement.remove();
                     });
             }
@@ -188,14 +276,14 @@ window.workspaceManager = (function ($) {
     };
 
     //favorites
-    _local.workspace.fav = function (instance) {
+    _local.workspace.fav = function(instance) {
         instance.isFav(true);
     };
-    _local.workspace.unfav = function (instance) {
+    _local.workspace.unfav = function(instance) {
         instance.isFav(false);
     };
 
-    _local.workspace.applyThumbClass = function (_instance) {
+    _local.workspace.applyThumbClass = function(_instance) {
         var _class = '';
         switch (_instance.type) {
             case 'display':
@@ -229,11 +317,11 @@ window.workspaceManager = (function ($) {
         return 'thumbIcon fa fa-2x ' + _class;
     };
 
-    _local.workspace.thumbError = function (data, event) {
+    _local.workspace.thumbError = function(data, event) {
         $(event.target).hide().parent().find('.thumbIcon').show();
     };
 
-    _local.jiggleWindow = function (theWindow, howManyTimes) {
+    _local.jiggleWindow = function(theWindow, howManyTimes) {
         var backDrop = theWindow.document.getElementById('backDrop'),
             originalBgColor,
             newBgColor,
@@ -241,23 +329,23 @@ window.workspaceManager = (function ($) {
             moveByPixels = 3;
 
         if (backDrop) {
-            function shadeRGBColor (color, percent) {
-                var f=color.split(","),
-                    t=percent<0?0:255,
-                    p=percent<0?percent*-1:percent,
-                    R=parseInt(f[0].slice(4)),
-                    G=parseInt(f[1]),
-                    B=parseInt(f[2]);
-                return "rgb("+(Math.round((t-R)*p)+R)+","+(Math.round((t-G)*p)+G)+","+(Math.round((t-B)*p)+B)+")";
-            };
+            function shadeRGBColor(color, percent) {
+                var f = color.split(","),
+                    t = percent < 0 ? 0 : 255,
+                    p = percent < 0 ? percent * -1 : percent,
+                    R = parseInt(f[0].slice(4), 10),
+                    G = parseInt(f[1], 10),
+                    B = parseInt(f[2], 10);
+                return "rgb(" + (Math.round((t - R) * p) + R) + "," + (Math.round((t - G) * p) + G) + "," + (Math.round((t - B) * p) + B) + ")";
+            }
 
-            function cancelJiggling () {
+            function cancelJiggling() {
                 clearTimeout(timeout);
                 backDrop.style.backgroundColor = originalBgColor;
                 theWindow.jiggling = false;
-            };
+            }
 
-            function doJiggle () {
+            function doJiggle() {
                 backDrop.style.backgroundColor = (backDrop.style.backgroundColor === originalBgColor) ? newBgColor : originalBgColor;
                 moveByPixels = moveByPixels > 0 ? -moveByPixels : moveByPixels;
                 theWindow.moveBy(moveByPixels, moveByPixels);
@@ -266,12 +354,12 @@ window.workspaceManager = (function ($) {
                     timeout = setTimeout(doJiggle, 500); // .5 secs
                 } else {
                     cancelJiggling();
-                };
-            };
+                }
+            }
 
-            howManyTimes = parseInt(howManyTimes);
+            howManyTimes = parseInt(howManyTimes, 10);
             if (isNaN(howManyTimes)) {
-                howManyTimes = 120;  // default amount of times
+                howManyTimes = 120; // default amount of times
             }
             if (!theWindow.jiggling) {
                 originalBgColor = backDrop.style.backgroundColor;
@@ -284,11 +372,11 @@ window.workspaceManager = (function ($) {
         }
     };
 
-    _local.init = function () {
+    _local.init = function() {
         var _username,
             $login = $('#login');
 
-        $body   = $('body');
+        $body = $('body');
         $systemStatusElement = $('.systemStatus');
         $systemStatus = {
             init: false,
@@ -298,11 +386,13 @@ window.workspaceManager = (function ($) {
             setStatus: function(status) {
                 var $led = this.led;
                 //reset
-                $led.removeClass('led-red led-orange led-yellow led-green led-blue')
+                $led.removeClass('led-red led-orange led-yellow led-green led-blue');
 
                 switch (status) {
                     case 'connecting':
-                        this.timer = setInterval(function() {$led.toggleClass('led-yellow')}, 500);
+                        this.timer = setInterval(function() {
+                            $led.toggleClass('led-yellow');
+                        }, 500);
                         this.status.text('Connecting...');
                         break;
                     case 'serverup':
@@ -321,7 +411,7 @@ window.workspaceManager = (function ($) {
             window.opener.location.replace(window.location);
             window.close();
         } else if (window.top !== window.self) {
-            window.top.location.replace(window.location)
+            window.top.location.replace(window.location);
         }
         //get user cookie
         _username = _local.readCookie('username');
@@ -332,22 +422,22 @@ window.workspaceManager = (function ($) {
             _local.load();
             return;
         } else {
-            $login.show()
+            $login.show();
             _local.login.isLogIn(true);
         }
         //bind login screen
         ko.applyBindingsWithValidation(_local.login, document.getElementById('login'), {
-            registerExtenders : true,
+            registerExtenders: true,
             messagesOnModified: true,
-            insertMessages    : false,
-            decorateElement   : true,
-            errorElementClass : 'input-validation-error',
-            errorMessageClass : 'error'
+            insertMessages: false,
+            decorateElement: true,
+            errorElementClass: 'input-validation-error',
+            errorMessageClass: 'error'
         });
         $('#user').focus();
-        $login.find('.form-group input').keyup(function (event) {
-            if (event.keyCode == 13) {
-                if(_local.login.isLogIn())
+        $login.find('.form-group input').keyup(function(event) {
+            if (event.keyCode === 13) {
+                if (_local.login.isLogIn())
                     _local.login.signIn();
                 else
                     _local.login.passwordReset();
@@ -355,7 +445,7 @@ window.workspaceManager = (function ($) {
         });
     };
 
-    _local.load = function () {
+    _local.load = function() {
         var $app = $('#appContainer'),
             $login = $('#login'),
             thumbnailTemp = {
@@ -398,7 +488,7 @@ window.workspaceManager = (function ($) {
             console.log(data);
             if (data.name === 'controllers') {
                 _local.getSystemEnum('controllers', _local.refreshUserCtlr);
-            } else if(data.name === 'Preferences'){
+            } else if (data.name === 'Preferences') {
                 _local.getSystemEnum('telemetry');
             } else {
                 _local.getSystemEnum(data.name);
@@ -434,7 +524,7 @@ window.workspaceManager = (function ($) {
         //get stored data
         _local.restoreWorkspace();
         //set unload handler for child windows
-        window.onbeforeunload = function () {
+        window.onbeforeunload = function() {
             var _ref,
                 _windows = _local.workspace.windows();
 
@@ -450,12 +540,12 @@ window.workspaceManager = (function ($) {
         //set event listeners
         _local.initializeEventListeners();
         //start window monitor
-        setTimeout(function () {
+        setTimeout(function() {
             _local.timer(_local.windowMonitor, 1000);
         }, 5000);
     };
 
-    _local.toggleWorkspace = function () {
+    _local.toggleWorkspace = function() {
         if (_local.workspace.isVisible()) {
             _local.hideWorkspace();
         } else {
@@ -463,68 +553,81 @@ window.workspaceManager = (function ($) {
         }
     };
 
-    _local.showWorkspace = function (suppressAnimation) {
+    _local.showWorkspace = function(suppressAnimation) {
         _local.workspace.isVisible(true);
         if (suppressAnimation) {
             _local.$workspace
                 .show()
-                .css({top: 50});
+                .css({
+                    top: 50
+                });
             return;
         }
         if ($.support.transition) {
             _local.$workspace
                 .show()
-                .transition({y: 0}, 250, 'easeOutQuint');
+                .transition({
+                    y: 0
+                }, 250, 'easeOutQuint');
         } else {
             _local.$workspace
                 .show()
-                .animate({top: 50}, {duration: 250, easing: 'easeOutQuint'});
+                .animate({
+                    top: 50
+                }, {
+                    duration: 250,
+                    easing: 'easeOutQuint'
+                });
         }
     };
 
-    _local.hideWorkspace = function (suppressAnimation) {
+    _local.hideWorkspace = function(suppressAnimation) {
         _local.workspace.isVisible(false);
         if (suppressAnimation) {
             _local.$workspace
                 .hide()
-                .css({top: $(window).height()});
+                .css({
+                    top: $(window).height()
+                });
             return;
         }
         if ($.support.transition) {
-            _local.$workspace.transition({y: $(window).height()}, 250, 'easeInQuint',
-                function () {
+            _local.$workspace.transition({
+                    y: $(window).height()
+                }, 250, 'easeInQuint',
+                function() {
                     _local.$workspace.hide();
                 }
             );
         } else {
-            _local.$workspace.animate({top: $(window).height()},
-                {
-                    duration: 250,
-                    easing  : 'easeInQuint',
-                    complete: function () {
-                        _local.$workspace.hide();
-                    }
+            _local.$workspace.animate({
+                top: $(window).height()
+            }, {
+                duration: 250,
+                easing: 'easeInQuint',
+                complete: function() {
+                    _local.$workspace.hide();
                 }
-            );
+            });
         }
     };
 
-    _local.showDisplays = function () {
+    _local.showDisplays = function() {
         _local.workspace.showSet('display');
         _local.showWorkspace();
     };
 
-    _local.showGPLs = function () {
+    _local.showGPLs = function() {
         _local.workspace.showSet('gpl');
         _local.showWorkspace();
     };
 
-    _local.showAlarms = function () {
+    _local.showAlarms = function() {
         _local.workspace.showSet('alarm');
         _local.showWorkspace();
     };
 
-    _local.showActivities = function () {
+    _local.showActivities = function() {
         _local.workspace.showSet('activitylog');
         _local.showWorkspace();
     };
@@ -539,97 +642,120 @@ window.workspaceManager = (function ($) {
         _local.showWorkspace();
     };
 
-    _local.showScripts = function () {
+    _local.showScripts = function() {
         _local.workspace.showSet('script');
         _local.showWorkspace();
     };
 
-    _local.showReports = function () {
+    _local.showReports = function() {
         _local.workspace.showSet('report');
         _local.showWorkspace();
     };
 
-    _local.showSlideShows = function () {
+    _local.showSlideShows = function() {
         _local.workspace.showSet('slideShow');
         _local.showWorkspace();
     };
 
-    _local.showDeviceTree = function () {
+    _local.showDeviceTree = function() {
         _local.workspace.showSet('devicetree');
         _local.showWorkspace();
     };
 
-    _local.showNavigator = function () {
+    _local.showNavigator = function() {
         var $navBackground = $('#navigatorWrapper'),
             $navWindow = $('#navigatorWindow'),
             _navWindow = document.getElementById('navigator'),
             _topDestination = 50,
             _bottomDestination = 25;
         $navWindow
-            .css({opacity: 0, top: _topDestination + 100, bottom: _bottomDestination - 100})
+            .css({
+                opacity: 0,
+                top: _topDestination + 100,
+                bottom: _bottomDestination - 100
+            })
             .show();
         $navBackground
             .css('opacity', 0)
             .show();
         if ($.support.transition) {
-            $navBackground.transition({opacity: 1}, 200, 'snap',
-                function () {
-                    $navWindow.transition({opacity: 1, y: -100}, 300, 'snap',
-                        function () {
+            $navBackground.transition({
+                    opacity: 1
+                }, 200, 'snap',
+                function() {
+                    $navWindow.transition({
+                            opacity: 1,
+                            y: -100
+                        }, 300, 'snap',
+                        function() {
                             _navWindow.contentWindow.pointLookup.refreshUI();
                         });
                 }
             );
         } else {
-            $navBackground.animate({opacity: 1}, {duration: 200, easing: 'easeInQuint', complete: function () {
-                $navWindow
-                    .animate({opacity: 1, top: _topDestination, bottom: _bottomDestination}, {duration: 300, easing: 'easeOutQuint', complete: function () {
-                        _navWindow.contentWindow.pointLookup.refreshUI();
-                    }});
-            }});
+            $navBackground.animate({
+                opacity: 1
+            }, {
+                duration: 200,
+                easing: 'easeInQuint',
+                complete: function() {
+                    $navWindow
+                        .animate({
+                            opacity: 1,
+                            top: _topDestination,
+                            bottom: _bottomDestination
+                        }, {
+                            duration: 300,
+                            easing: 'easeOutQuint',
+                            complete: function() {
+                                _navWindow.contentWindow.pointLookup.refreshUI();
+                            }
+                        });
+                }
+            });
         }
     };
 
-    _local.showNavigatorFiltered = function (filter) {
+    _local.showNavigatorFiltered = function(filter) {
         var _navWindow = document.getElementById('navigator'),
             _filter = [],
             uniqueId;
 
-        if (filter == 'Alarm') {
+        if (filter === 'Alarm') {
             //alarms won't use navigator so we'll do something different
             uniqueId = _local.createUniqueId();
             _local.openWindow('/alarms?' + uniqueId, 'Recent Alarms', 'alarm', 'mainWindow', 'alarm' + uniqueId);
             return;
         }
-        if (filter == 'Activity') {
+        if (filter === 'Activity') {
             //alarms won't use navigator so we'll do something different
             _local.openWindow('/activityLogs', 'Activity Log', 'activitylog', 'mainWindow', 'activitylog');
             return;
         }
-        if (filter == 'Trend Plot') {
+        if (filter === 'Trend Plot') {
             uniqueId = _local.createUniqueId();
             _local.openWindow('/trendPlots?' + uniqueId, 'Trend Plot', 'trendplot', 'mainWindow', 'trendplot' + uniqueId);
             return;
         }
-        if(filter == 'Dashboard') {
+        if (filter === 'Dashboard') {
             uniqueId = _local.createUniqueId();
             _local.openWindow('/dashboard', 'Dashboard', 'dashboard', 'mainWindow', 'dashboard');
             return;
         }
-        if (filter == 'Point Involvement') {
+        if (filter === 'Point Involvement') {
             //Point Involvement won't use navigator so we'll do something different
             uniqueId = _local.createUniqueId();
             _local.openWindow('/report/cr/pointInvolvement?' + uniqueId, 'Point Involvement', 'pointInvolvement', 'mainWindow', 'pointInvolvement' + uniqueId);
             return;
         }
-        if (filter == 'Device Tree') {
+        if (filter === 'Device Tree') {
             //Device Tree won't use navigator so we'll do something different
             uniqueId = _local.createUniqueId();
             _local.openWindow('/devicetree?' + uniqueId, 'Device Tree', 'devicetree', 'mainWindow', 'devicetree' + uniqueId);
             return;
         }
 
-        if (typeof filter == 'object') {
+        if (typeof filter === 'object') {
             switch (_local.workspace.activeSet()) {
                 case 'display':
                     _filter.push('Display');
@@ -671,42 +797,59 @@ window.workspaceManager = (function ($) {
 
         _navWindow.contentWindow &&
             _navWindow.contentWindow.pointLookup &&
-                _navWindow.contentWindow.pointLookup.checkPointTypes(_filter);
+            _navWindow.contentWindow.pointLookup.checkPointTypes(_filter);
         _local.showNavigator();
     };
 
-    _local.hideNavigator = function () {
+    _local.hideNavigator = function() {
         var $navBackground = $('#navigatorWrapper'),
             $navWindow = $('#navigatorWindow');
 
         if ($.support.transition) {
-            $navWindow.transition({opacity: 0, y: 100}, 200, 'easeOutExpo', function () {
+            $navWindow.transition({
+                opacity: 0,
+                y: 100
+            }, 200, 'easeOutExpo', function() {
                 $navWindow.hide();
-                $navBackground.transition({opacity: 0}, 300, 'easeOutExpo', function () {
-                    $navBackground.hide()
+                $navBackground.transition({
+                    opacity: 0
+                }, 300, 'easeOutExpo', function() {
+                    $navBackground.hide();
                 });
             });
         } else {
             $navWindow
-                .animate({opacity: 0}, {duration: 200, easing: 'easeInQuint', complete: function () {
-                    $navWindow.hide()
-                }});
+                .animate({
+                    opacity: 0
+                }, {
+                    duration: 200,
+                    easing: 'easeInQuint',
+                    complete: function() {
+                        $navWindow.hide();
+                    }
+                });
             $navBackground
                 .delay(100)
-                .animate({opacity: 0}, {duration: 300, easing: 'easeInQuint', complete: function () {
-                    $navBackground.hide()
-                }});
+                .animate({
+                    opacity: 0
+                }, {
+                    duration: 300,
+                    easing: 'easeInQuint',
+                    complete: function() {
+                        $navBackground.hide();
+                    }
+                });
         }
     };
 
-    _local.focusWindow = function (upi) {
+    _local.focusWindow = function(upi) {
         var _target,
-            _window = ko.utils.arrayFirst(_local.workspace.windows(), function (item) {
+            _window = ko.utils.arrayFirst(_local.workspace.windows(), function(item) {
                 return item.upi() === upi;
             });
 
         if (_window) {
-            _target = (_window.target() === 'mainWindow' || _window.isOpen() === false) ? 'mainWindow':'';
+            _target = (_window.target() === 'mainWindow' || _window.isOpen() === false) ? 'mainWindow' : '';
             _local.openWindow(_window.url, _window.title(), _window.type, _target, upi, _window.width(), _window.height());
         }
     };
@@ -726,25 +869,25 @@ window.workspaceManager = (function ($) {
      *          callback    - executed after window has loaded
      */
     _local.openWindowPositioned = function(url, title, type, target, uniqueId, options) {
-        var workspaceLeft   = typeof window.screenLeft == 'undefined'   ? screen.left   : window.screenLeft,
-            workspaceTop    = typeof window.screenTop == 'undefined'    ? screen.top    : window.screenTop,
-            workspaceWidth  = window.innerWidth                         ? window.innerWidth :
-                                  document.documentElement.clientWidth  ? document.documentElement.clientWidth  :
-                                      screen.width,
-            workspaceHeight = window.innerHeight                        ? window.innerHeight :
-                                  document.documentElement.clientHeight ? document.documentElement.clientHeight :
-                                      screen.height,
-            settings        = {
-                width   : 800,
-                height  : 600,
+        var workspaceLeft = typeof window.screenLeft === 'undefined' ? screen.left : window.screenLeft,
+            workspaceTop = typeof window.screenTop === 'undefined' ? screen.top : window.screenTop,
+            workspaceWidth = window.innerWidth ? window.innerWidth :
+            document.documentElement.clientWidth ? document.documentElement.clientWidth :
+            screen.width,
+            workspaceHeight = window.innerHeight ? window.innerHeight :
+            document.documentElement.clientHeight ? document.documentElement.clientHeight :
+            screen.height,
+            settings = {
+                width: 800,
+                height: 600,
                 callback: function() {}
             };
 
 
         if (options) $.extend(settings, options);
 
-        settings.top    = settings.top || (workspaceHeight / 2) - (settings.height / 2) + workspaceTop;
-        settings.left   = settings.left || (workspaceWidth / 2) - (settings.width / 2) + workspaceLeft;
+        settings.top = settings.top || (workspaceHeight / 2) - (settings.height / 2) + workspaceTop;
+        settings.left = settings.left || (workspaceWidth / 2) - (settings.width / 2) + workspaceLeft;
 
         return _local.openWindow(url, title, type, target, uniqueId, settings.width, settings.height, settings.callback, settings.top, settings.left);
     };
@@ -763,14 +906,14 @@ window.workspaceManager = (function ($) {
      * @param top       - top coordinates in pixels (not applicable if target is 'mainWindow')
      * @param left      - left coordinates in pixels (not applicable if target is 'mainWindow')
      */
-    _local.openWindow = function (url, title, type, target, upi, width, height, callback, top, left) {
+    _local.openWindow = function(url, title, type, target, upi, width, height, callback, top, left) {
         var _qualifiedURL = _local.qualifyURL(url),
             _newWindowRef,
             _oldWindowRef,
             _target = (target === 'mainWindow' ? 'mainWindow' : 'pid_' + upi),
             _windows = _local.workspace.windows(),
-            _recent = ko.utils.arrayFirst(_windows, function (item) {
-                return item.upi() == upi;
+            _recent = ko.utils.arrayFirst(_windows, function(item) {
+                return item.upi() === upi;
             }),
             _width = width || 800,
             _height = height || 500,
@@ -787,8 +930,8 @@ window.workspaceManager = (function ($) {
         }
         _newWindowRef = _local.getWindowReference('', _target, _width, _height, _left, _top);
         frame = _local.getFrame(_newWindowRef);
-        if ( _local.newWindowOkToOpen(_newWindowRef.location.href, _qualifiedURL)) {
-            if (_target == 'mainWindow') {
+        if (_local.newWindowOkToOpen(_newWindowRef.location.href, _qualifiedURL)) {
+            if (_target === 'mainWindow') {
                 _local.addEvent(frame || _newWindowRef, 'load', function() {
                     var frameWindow = this.contentWindow;
                     frameWindow.opener = window;
@@ -827,7 +970,7 @@ window.workspaceManager = (function ($) {
                 }
             }
 
-            _windows = _windows.filter(function (item) {
+            _windows = _windows.filter(function(item) {
                 return item.upi() != _recent.upi();
             });
         }
@@ -840,11 +983,11 @@ window.workspaceManager = (function ($) {
         return _newWindowRef;
     };
 
-    _local.newWindowOkToOpen = function (currentURLofTarget, newURLofTarget) {
+    _local.newWindowOkToOpen = function(currentURLofTarget, newURLofTarget) {
         function diffInFirstString(a, b) {
             var diff = [];
-            if(a && b) {
-                for ( var i = 0; i < a.length; i++) {
+            if (a && b) {
+                for (var i = 0; i < a.length; i++) {
                     if (b.length > i) {
                         if (a[i] !== b[i]) {
                             diff.push(a[i]);
@@ -853,7 +996,7 @@ window.workspaceManager = (function ($) {
                         diff.push(a[i]);
                     }
                 }
-            } else if(!b && a) {
+            } else if (!b && a) {
                 diff.push(a);
             }
             return diff.join("");
@@ -869,13 +1012,13 @@ window.workspaceManager = (function ($) {
         return true;
     };
 
-    _local.close = function (upi) {
+    _local.close = function(upi) {
         var _instance;
-        if (typeof upi == 'object') {
+        if (typeof upi === 'object') {
             _instance = upi;
         } else {
-            _instance = ko.utils.arrayFirst(_local.workspace.windows(), function (item) {
-                return item.upi() == upi;
+            _instance = ko.utils.arrayFirst(_local.workspace.windows(), function(item) {
+                return item.upi() === upi;
             });
         }
         if (!!_instance) {
@@ -899,7 +1042,7 @@ window.workspaceManager = (function ($) {
             filter = _local.workspace.activeSet();
         }
 
-        ko.utils.arrayFilter(_local.workspace.windows(), function (win) {
+        ko.utils.arrayFilter(_local.workspace.windows(), function(win) {
             var _filter = _local.workspace.filters[filter].filter;
             for (var prop in _filter) {
                 if (ko.unwrap(win[prop]) !== _filter[prop]) {
@@ -907,9 +1050,9 @@ window.workspaceManager = (function ($) {
                 }
             }
             _ref = win.ref();
-            if(_ref) {
+            if (_ref) {
                 console.log(_ref);
-                if (_ref.name == 'mainWindow') {
+                if (_ref.name === 'mainWindow') {
                     _local.closeMainWindow(true);
                 } else if (!!_ref && !_ref.closed) {
                     _ref.close();
@@ -922,7 +1065,7 @@ window.workspaceManager = (function ($) {
         });
     };
 
-    _local.closeMainWindow = function (preserveState) {
+    _local.closeMainWindow = function(preserveState) {
         var _mainWindowInstance = _local.currentMainWindowOccupant(),
             _next;
         if (!_mainWindowInstance) return;
@@ -945,11 +1088,11 @@ window.workspaceManager = (function ($) {
         }
     };
 
-    _local.getWindowReference = function (url, name, width, height, left, top) {
+    _local.getWindowReference = function(url, name, width, height, left, top) {
         return window.open(url, name, 'width=' + width + ', height=' + height + ', resizable=1,scrollbars=1, left=' + left + ', top=' + top);
     };
 
-    _local.persistWorkspace = function () {
+    _local.persistWorkspace = function() {
         var _window = {},
             _workspace = [],
             _windows = _local.workspace.windows();
@@ -962,11 +1105,11 @@ window.workspaceManager = (function ($) {
         store.set('workspace_' + _local.user()._id, _workspace);
     };
 
-    _local.loadWorkspace = function () {
+    _local.loadWorkspace = function() {
         return store.get('workspace_' + _local.user()._id) || [];
     };
 
-    _local.restoreWorkspace = function () {
+    _local.restoreWorkspace = function() {
         var _windows = _local.loadWorkspace(),
             _mainOccupied = false,
             _instance,
@@ -988,33 +1131,32 @@ window.workspaceManager = (function ($) {
         }
     };
 
-    _local.getLastMainWindow = function () {
+    _local.getLastMainWindow = function() {
         var _instance,
             i,
             len = _local.workspace.windows().length;
         for (i = 0; i < len; i++) {
             _instance = _local.workspace.windows()[i];
-            if (_instance.target() == 'mainWindow' && _instance.isOpen()) {
+            if (_instance.target() === 'mainWindow' && _instance.isOpen()) {
                 return _instance;
             }
         }
         return null;
     };
 
-    _local.currentMainWindowOccupant = function () {
-        return ko.utils.arrayFirst(_local.workspace.windows(), function (item) {
-            return !!item.ref() && item.ref().name == 'mainWindow' && _local.removeHash(_local.workspace.mainWindow.contentWindow.location.href) == _local.removeHash(item.url);
-        })
+    _local.currentMainWindowOccupant = function() {
+        return ko.utils.arrayFirst(_local.workspace.windows(), function(item) {
+            return !!item.ref() && item.ref().name === 'mainWindow' && _local.removeHash(_local.workspace.mainWindow.contentWindow.location.href) === _local.removeHash(item.url);
+        });
     };
 
-    _local.timer = function (func, wait) {
-        var _interval = function (w) {
-            return function () {
+    _local.timer = function(func, wait) {
+        var _interval = function(w) {
+            return function() {
                 setTimeout(_interval, w);
                 try {
                     func.call(null);
-                }
-                catch (e) {
+                } catch (e) {
                     //throw e.toString();
                 }
             };
@@ -1022,34 +1164,34 @@ window.workspaceManager = (function ($) {
         setTimeout(_interval, wait);
     };
 
-    _local.windowMonitor = function () {
+    _local.windowMonitor = function() {
         for (var _i = 0, _len = _local.workspace.windows().length; _i < _len; _i++) {
             var _instance = _local.workspace.windows()[_i];
             if (!!_instance.ref() && _instance.target() !== 'mainWindow' && _instance.ref().closed) _local.close(_instance.upi());
         }
     };
 
-    _local.Instance = function (url, target, type, title, upi, width, height, isFav, thumb, ref, isRecent) {
-        var _self       = this;
-        _self.url       = _local.qualifyURL(url);
-        _self.target    = ko.observable(target);
-        _self.type      = type;
-        _self.title     = ko.observable(title);
-        _self.upi       = ko.observable(upi);
-        _self.width     = ko.observable(width);
-        _self.height    = ko.observable(height);
-        _self.isFav     = ko.observable(isFav);
-        _self.thumb     = ko.observable(thumb);
-        _self.ref       = ko.observable(ref);
-        _self.isRecent  = ko.observable(isRecent);
-        _self.isOpen    = ko.observable(false);
+    _local.Instance = function(url, target, type, title, upi, width, height, isFav, thumb, ref, isRecent) {
+        var _self = this;
+        _self.url = _local.qualifyURL(url);
+        _self.target = ko.observable(target);
+        _self.type = type;
+        _self.title = ko.observable(title);
+        _self.upi = ko.observable(upi);
+        _self.width = ko.observable(width);
+        _self.height = ko.observable(height);
+        _self.isFav = ko.observable(isFav);
+        _self.thumb = ko.observable(thumb);
+        _self.ref = ko.observable(ref);
+        _self.isRecent = ko.observable(isRecent);
+        _self.isOpen = ko.observable(false);
     };
 
-    _local.qualifyURL = function (url) {
+    _local.qualifyURL = function(url) {
         var _qualifyingAnchor = document.createElement('a'),
             _qualifiedURL;
-        _qualifyingAnchor.href  = url;
-        _qualifiedURL           = _qualifyingAnchor.href;
+        _qualifyingAnchor.href = url;
+        _qualifiedURL = _qualifyingAnchor.href;
         return _qualifiedURL;
     };
     _local.removeHash = function(url) {
@@ -1059,35 +1201,57 @@ window.workspaceManager = (function ($) {
         return Math.random().toString(36).slice(2);
     };
 
-    _local.initializeEventListeners = function () {
+    _local.initializeEventListeners = function() {
         //set thumb listeners
-        _local.$workspace.on('mouseenter', '.thumb', function (e) {
+        _local.$workspace.on('mouseenter', '.thumb', function(e) {
             var $thumb = $(this),
                 $controls = $thumb.find('.thumbControls');
             $controls.data('right', -($controls.outerWidth()));
-            $controls.animate({right: 0}, {duration: 150, easing: 'easeOutQuint'});
+            $controls.animate({
+                right: 0
+            }, {
+                duration: 150,
+                easing: 'easeOutQuint'
+            });
         });
-        _local.$workspace.on('mouseleave', '.thumb', function (e) {
-            var $thumb      = $(this),
-                $controls   = $thumb.find('.thumbControls');
-            $controls.stop(true, true).animate({right: $controls.data('right')}, {duration: 150, easing: 'easeInQuint'});
+        _local.$workspace.on('mouseleave', '.thumb', function(e) {
+            var $thumb = $(this),
+                $controls = $thumb.find('.thumbControls');
+            $controls.stop(true, true).animate({
+                right: $controls.data('right')
+            }, {
+                duration: 150,
+                easing: 'easeInQuint'
+            });
         });
         //_local.addEvent(_local.workspace.mainWindow, 'load', function(){ _local.workspace.mainWindow.contentWindow.openWindow = _local.openWindow; });
     };
-    _local.loadNavigator = function () {
+    _local.loadNavigator = function() {
         var _nav = window.open('/pointlookup', 'navigator');
-        _local.addEvent(document.getElementById('navigator'), 'load', function () {
+        _local.addEvent(document.getElementById('navigator'), 'load', function() {
             _nav.pointLookup.init();
         });
     };
 
     _local.login = {
-        username     : ko.observable('').extend({required: {message: 'Please enter a valid username'}}),
-        password     : ko.observable('').extend({required: {message: 'Please enter a password'}}),
-        rememberMe   : ko.observable(false),
-        errorMessage : ko.observable(''),
-        isLogIn      : ko.observable(false),
-        oldPassword  : ko.observable('').extend({required: {message: 'Please enter the current password'}}),
+        username: ko.observable('').extend({
+            required: {
+                message: 'Please enter a valid username'
+            }
+        }),
+        password: ko.observable('').extend({
+            required: {
+                message: 'Please enter a password'
+            }
+        }),
+        rememberMe: ko.observable(false),
+        errorMessage: ko.observable(''),
+        isLogIn: ko.observable(false),
+        oldPassword: ko.observable('').extend({
+            required: {
+                message: 'Please enter the current password'
+            }
+        }),
         newPassword1: ko.observable('').extend({
             required: {
                 message: 'Please enter a valid new password'
@@ -1114,7 +1278,7 @@ window.workspaceManager = (function ($) {
                 params: _local
             }
         }),
-        signIn       : function () {
+        signIn: function() {
             var $btnSignIn = $('button.signIn');
 
             $btnSignIn.focus();
@@ -1129,20 +1293,23 @@ window.workspaceManager = (function ($) {
                 return;
             }
             $btnSignIn.attr('disabled', 'disabled');
-            $.ajax(
-                {
-                    url        : _local.webEndpoint + '/authenticate',
-                    contentType: 'application/json',
-                    dataType   : 'json',
-                    type       : 'post',
-                    data       : (ko.toJSON({ username: this.username(), password: this.password(), 'remember-me': this.rememberMe().toString()}))
-                }
-            ).done(
-                function (data) {
+            console.log(_local);
+            $.ajax({
+                url: _local.webEndpoint + '/authenticate',
+                contentType: 'application/json',
+                dataType: 'json',
+                type: 'post',
+                data: (ko.toJSON({
+                    username: this.username(),
+                    password: this.password(),
+                    'remember-me': this.rememberMe().toString()
+                }))
+            }).done(
+                function(data) {
                     var $login = $('#login'),
                         sessionId;
                     $btnSignIn.removeAttr('disabled');
-                    if(!!data.resetPass){
+                    if (!!data.resetPass) {
                         _local.login.errorMessage(data.message);
                         _local.login.isLogIn(false);
                         $('#oldPassword').focus();
@@ -1166,22 +1333,32 @@ window.workspaceManager = (function ($) {
                             $login
                                 .css('overflow', 'hidden')
                                 .find('fieldset')
-                                .transition({y: 1000}, 350, 'easeInExpo',
-                                function () {
-                                    $login.transition({opacity: 0, y: 51}, 500, 'snap');
-                                    _local.load();
-                                }
-                            );
+                                .transition({
+                                        y: 1000
+                                    }, 350, 'easeInExpo',
+                                    function() {
+                                        $login.transition({
+                                            opacity: 0,
+                                            y: 51
+                                        }, 500, 'snap');
+                                        _local.load();
+                                    }
+                                );
                         } else {
                             $login
                                 .css('overflow', 'hidden')
                                 .find('fieldset')
-                                .animate({top: 1000}, 500, 'easeInExpo',
-                                function () {
-                                    $login.animate({opacity: 0, top: 51}, 500, 'easeInExpo');
-                                    _local.load();
-                                }
-                            );
+                                .animate({
+                                        top: 1000
+                                    }, 500, 'easeInExpo',
+                                    function() {
+                                        $login.animate({
+                                            opacity: 0,
+                                            top: 51
+                                        }, 500, 'easeInExpo');
+                                        _local.load();
+                                    }
+                                );
                         }
                     }
                 }
@@ -1236,7 +1413,7 @@ window.workspaceManager = (function ($) {
                 }, 60 * 1000);
             }
         },
-        passwordReset: function () {
+        passwordReset: function() {
             var $btnResetPass = $('button.resetPass');
 
             $btnResetPass.focus();
@@ -1256,16 +1433,18 @@ window.workspaceManager = (function ($) {
             }
             $btnResetPass.attr('disabled', 'disabled');
 
-            $.ajax(
-                {
-                    url        : _local.webEndpoint + '/reset-password',
-                    contentType: 'application/json',
-                    dataType   : 'json',
-                    type       : 'post',
-                    data       : (ko.toJSON({ username: this.username(), oldPass: this.oldPassword(), newPass: this.newPassword1()}))
-                }
-            ).done(
-                function (data) {
+            $.ajax({
+                url: _local.webEndpoint + '/reset-password',
+                contentType: 'application/json',
+                dataType: 'json',
+                type: 'post',
+                data: (ko.toJSON({
+                    username: this.username(),
+                    oldPass: this.oldPassword(),
+                    newPass: this.newPassword1()
+                }))
+            }).done(
+                function(data) {
                     console.log(data);
                     var $login = $('#login'),
                         sessionId;
@@ -1289,15 +1468,15 @@ window.workspaceManager = (function ($) {
         }
     };
 
-    _local.login.animate = ko.computed(function () {
+    _local.login.animate = ko.computed(function() {
         var $errMsg = $('#login').find('.errorMessage'),
             _vm = this;
         if (!!_vm.errorMessage()) {
             _vm.timer && clearTimeout(_vm.timer);
-            _vm.timer = setTimeout(function () {
+            _vm.timer = setTimeout(function() {
                 $errMsg
                     .removeClass('flipInX')
-                    .fadeOut(500, function () {
+                    .fadeOut(500, function() {
                         _vm.errorMessage('');
                     });
             }, 3000);
@@ -1306,30 +1485,35 @@ window.workspaceManager = (function ($) {
         return '';
     }, _local.login);
 
-    _local.loginValidation = ko.validation.group([_local.login.username, _local.login.password], { deep: false });
-    _local.passResetValidation = ko.validation.group([_local.login.oldPassword, _local.login.newPassword1, _local.login.newPassword2], { deep: false });
+    _local.loginValidation = ko.validation.group([_local.login.username, _local.login.password], {
+        deep: false
+    });
+    _local.passResetValidation = ko.validation.group([_local.login.oldPassword, _local.login.newPassword1, _local.login.newPassword2], {
+        deep: false
+    });
 
-    _local.getSystemEnum = function (enumType, callback) {
-        return $.ajax(
-            {
-                url        : _local.apiEndpoint + 'system/' + enumType,
-                contentType: 'application/json',
-                dataType   : 'json',
-                type       : 'get'
-            }
-        ).done(
-            function (data) {
+    _local.getSystemEnum = function(enumType, callback) {
+        return $.ajax({
+            url: _local.apiEndpoint + 'system/' + enumType,
+            contentType: 'application/json',
+            dataType: 'json',
+            type: 'get'
+        }).done(
+            function(data) {
                 var c = 0,
                     len = data.length,
                     row,
                     _object = {},
-                    _array = [{name: 'None', value: 0}],
+                    _array = [{
+                        name: 'None',
+                        value: 0
+                    }],
                     _setQCData = function(qc, object) {
-                        var QC  = 'Quality Code',
+                        var QC = 'Quality Code',
                             QCL = 'Quality Code Label',
                             QCC = 'Quality Code Font HTML Color';
 
-                        if(object) {
+                        if (object) {
                             object[qc[QCL]] = {
                                 code: qc[QC],
                                 color: qc[QCC]
@@ -1348,7 +1532,7 @@ window.workspaceManager = (function ($) {
                             DESC = 'Description',
                             ISUSER = 'isUser';
 
-                        if(object) {
+                        if (object) {
                             _object[ct[ID]] = {
                                 name: ct[NAME],
                                 description: ct[DESC],
@@ -1365,7 +1549,7 @@ window.workspaceManager = (function ($) {
                         var LEVEL = 'Priority Level',
                             TEXT = 'Priority Text';
 
-                        if(object) {
+                        if (object) {
                             object[pl[LEVEL]] = pl[TEXT];
                         } else {
                             return {
@@ -1379,7 +1563,7 @@ window.workspaceManager = (function ($) {
                     _object[0] = 'None';
                     for (c; c < len; c++) {
                         row = data[c];
-                        _setPLData(row, _object);//_object[row['Priority Level']] = row;
+                        _setPLData(row, _object); //_object[row['Priority Level']] = row;
                         _array.push(_setPLData(row));
                     }
                 } else if (enumType === 'controllers') {
@@ -1390,24 +1574,27 @@ window.workspaceManager = (function ($) {
                     };
                     for (c; c < len; c++) {
                         row = data[c];
-                        _setCTData(row, _object);//_object[row['Controller ID']] = row;
+                        _setCTData(row, _object); //_object[row['Controller ID']] = row;
                         _array.push(_setCTData(row));
                     }
                 } else if (enumType === 'qualityCodes') {
-                    _array = [];//.length = 0; // Clear the default contents
+                    _array = []; //.length = 0; // Clear the default contents
                     data = data.Entries || [];
-                    len  = data.length;
+                    len = data.length;
 
                     for (c; c < len; c++) {
                         row = data[c];
                         _array.push(_setQCData(row));
-                        _setQCData(row, _object);//_object[row[QCL]] = _getQCData(row);
+                        _setQCData(row, _object); //_object[row[QCL]] = _getQCData(row);
                     }
                 } else if (enumType === 'telemetry') {
-                    _array = [];//.length = 0; // Clear the default contents
+                    _array = []; //.length = 0; // Clear the default contents
 
-                    for(var prop in data){
-                        _array.push({name:prop, value:data[prop]});
+                    for (var prop in data) {
+                        _array.push({
+                            name: prop,
+                            value: data[prop]
+                        });
                     }
                     _object = data;
                 }
@@ -1417,7 +1604,7 @@ window.workspaceManager = (function ($) {
                 if (callback) callback(_array);
             }
         ).fail(
-            function (jqXHR, textStatus) {
+            function(jqXHR, textStatus) {
                 console.log('Get system enum (' + enumType + ') failed', jqXHR, textStatus);
                 // Set an empty array/object for code looking @ systemEnums[enumType]
                 // TODO Try again or alert the user and stop
@@ -1427,7 +1614,7 @@ window.workspaceManager = (function ($) {
         );
     };
 
-    _local.addEvent = function (element, event, fn) {
+    _local.addEvent = function(element, event, fn) {
         if (element.addEventListener) {
             element.addEventListener(event, fn, false);
         } else if (element.attachEvent) {
@@ -1435,7 +1622,7 @@ window.workspaceManager = (function ($) {
         }
     };
 
-    _local.removeEvent = function (element, event, fn) {
+    _local.removeEvent = function(element, event, fn) {
         if (element.removeEventListener) {
             element.removeEventListener(event, fn, false);
         } else if (element.detachEvent) {
@@ -1443,18 +1630,18 @@ window.workspaceManager = (function ($) {
         }
     };
 
-    _local.readCookie = function (name) {
+    _local.readCookie = function(name) {
         var nameEQ = name + "=";
         var ca = document.cookie.split(';');
         for (var i = 0; i < ca.length; i++) {
             var c = ca[i];
-            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
         }
         return null;
     };
 
-    _local.createCookie = function (name, value, days) {
+    _local.createCookie = function(name, value, days) {
         var date = new Date(),
             expires = '; expires=' + date.toGMTString();
         if (days) {
@@ -1484,7 +1671,7 @@ window.workspaceManager = (function ($) {
                 gen.nextCapture();
             };
 
-        if(!_local.thumbnailWindowRef) {
+        if (!_local.thumbnailWindowRef) {
             _local.thumbnailWindowRef = _local.openWindowPositioned(window.location.origin + '/thumbnail/' + upi, 'Capture Thumbnail', '', 'thumbnailframe', 'thumbnailframe', {
                 callback: init,
                 width: 10,
@@ -1506,21 +1693,21 @@ window.workspaceManager = (function ($) {
      *          cancelClass     - [optional] Bootstrap button class to apply; defaults to 'btn-default'
      *          callback        - [optional] Executed after confirmation is dismissed; called with a single boolean argument (true=ok, false=cancel)
      */
-    _local.showConfirmation = function (_options) {
-        var options       = _options || {},
-            content       = '<div id="confirm" data-backdrop="static" data-keyboard="false" class="modal fade"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"></div><div class="modal-body"></div><div class="modal-footer"><button type="button" class="btn btn-default cancel">Cancel</button><button type="button" class="btn btn-primary ok">OK</button></div></div></div></div>',
-            target        = options.targetDocument || document,
-            $target       = $(target),
-            $preConfirm   = $target.find('#confirm'),
-            $confirm      = $preConfirm.length ? $preConfirm : $target.find('body').append(content) ? $target.find('#confirm') : $(),
-            $modalHeader  = $confirm.find('.modal-header'),
-            $modalBody    = $confirm.find('.modal-body'),
-            $okBtn        = $confirm.find('.btn.ok'),
-            $cancelBtn    = $confirm.find('.btn.cancel'),
+    _local.showConfirmation = function(_options) {
+        var options = _options || {},
+            content = '<div id="confirm" data-backdrop="static" data-keyboard="false" class="modal fade"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"></div><div class="modal-body"></div><div class="modal-footer"><button type="button" class="btn btn-default cancel">Cancel</button><button type="button" class="btn btn-primary ok">OK</button></div></div></div></div>',
+            target = options.targetDocument || document,
+            $target = $(target),
+            $preConfirm = $target.find('#confirm'),
+            $confirm = $preConfirm.length ? $preConfirm : $target.find('body').append(content) ? $target.find('#confirm') : $(),
+            $modalHeader = $confirm.find('.modal-header'),
+            $modalBody = $confirm.find('.modal-body'),
+            $okBtn = $confirm.find('.btn.ok'),
+            $cancelBtn = $confirm.find('.btn.cancel'),
             btnClassNames = ['btn-default', 'btn-primary', 'btn-success', 'btn-info', 'btn-warning', 'btn-danger'],
-            okClass       = btnClassNames.indexOf(options.okClass) > -1 ? options.okClass : 'btn-primary',
-            cancelClass   = btnClassNames.indexOf(options.cancelClass) > -1 ? options.cancelClass : 'btn-default',
-            callback = function (result) {
+            okClass = btnClassNames.indexOf(options.okClass) > -1 ? options.okClass : 'btn-primary',
+            cancelClass = btnClassNames.indexOf(options.cancelClass) > -1 ? options.cancelClass : 'btn-default',
+            callback = function(result) {
                 // Remove button event handlers
                 $okBtn.off();
                 $cancelBtn.off();
@@ -1534,8 +1721,12 @@ window.workspaceManager = (function ($) {
             };
 
         // Remove previoulsy attached handlers and attach click handlers to our ok/cancel buttons
-        $okBtn.off().on('click', function () { callback(true) });
-        $cancelBtn.off().on('click', function () { callback(false) });
+        $okBtn.off().on('click', function() {
+            callback(true);
+        });
+        $cancelBtn.off().on('click', function() {
+            callback(false);
+        });
 
         // Add the confirmation title or hide if unused
         if (options.title) {
@@ -1564,7 +1755,7 @@ window.workspaceManager = (function ($) {
     /**
      * @param sound - string indicating what sound byte to play. Available sounds stored in _local.sounds
      */
-    _local.playSound = function (sound) {
+    _local.playSound = function(sound) {
         sound = _local.sounds[sound];
         if (!sound) {
             return;
@@ -1577,16 +1768,17 @@ window.workspaceManager = (function ($) {
         "use strict";
         var _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
-        var _utf8_encode = function (string) {
-            var utftext = "", c, n;
+        var _utf8_encode = function(string) {
+            var utftext = "",
+                c, n;
 
-            string = string.replace(/\r\n/g,"\n");
+            string = string.replace(/\r\n/g, "\n");
 
             for (n = 0; n < string.length; n++) {
                 c = string.charCodeAt(n);
                 if (c < 128) {
                     utftext += String.fromCharCode(c);
-                } else if((c > 127) && (c < 2048)) {
+                } else if ((c > 127) && (c < 2048)) {
                     utftext += String.fromCharCode((c >> 6) | 192);
                     utftext += String.fromCharCode((c & 63) | 128);
                 } else {
@@ -1598,20 +1790,24 @@ window.workspaceManager = (function ($) {
             return utftext;
         };
 
-        var _utf8_decode = function (utftext) {
-            var string = "", i = 0, c = 0, c1 = 0, c2 = 0;
-            while ( i < utftext.length ) {
+        var _utf8_decode = function(utftext) {
+            var string = "",
+                i = 0,
+                c = 0,
+                c1 = 0,
+                c2 = 0;
+            while (i < utftext.length) {
                 c = utftext.charCodeAt(i);
                 if (c < 128) {
                     string += String.fromCharCode(c);
                     i++;
-                } else if((c > 191) && (c < 224)) {
-                    c1 = utftext.charCodeAt(i+1);
+                } else if ((c > 191) && (c < 224)) {
+                    c1 = utftext.charCodeAt(i + 1);
                     string += String.fromCharCode(((c & 31) << 6) | (c1 & 63));
                     i += 2;
                 } else {
-                    c1 = utftext.charCodeAt(i+1);
-                    c2 = utftext.charCodeAt(i+2);
+                    c1 = utftext.charCodeAt(i + 1);
+                    c2 = utftext.charCodeAt(i + 2);
                     string += String.fromCharCode(((c & 15) << 12) | ((c1 & 63) << 6) | (c2 & 63));
                     i += 3;
                 }
@@ -1619,8 +1815,9 @@ window.workspaceManager = (function ($) {
             return string;
         };
 
-        var encode = function (input) {
-            var output = "", chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
+        var encode = function(input) {
+            var output = "",
+                chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
             console.log(input);
             input = _utf8_encode(input);
             while (i < input.length) {
@@ -1647,8 +1844,9 @@ window.workspaceManager = (function ($) {
             return output;
         };
 
-        var decode = function (input) {
-            var output = "", chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
+        var decode = function(input) {
+            var output = "",
+                chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
             input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
             while (i < input.length) {
                 enc1 = _keyStr.indexOf(input.charAt(i++));
@@ -1680,20 +1878,26 @@ window.workspaceManager = (function ($) {
 
 
     return {
-        init                : _local.init,
-        showConfirmation    : _local.showConfirmation,
-        captureThumbnail    : _local.captureThumbnail,
-        playSound           : _local.playSound,
-        focusWindow         : _local.focusWindow,
-        openWindow          : _local.openWindow,
+        init: _local.init,
+        showConfirmation: _local.showConfirmation,
+        captureThumbnail: _local.captureThumbnail,
+        playSound: _local.playSound,
+        focusWindow: _local.focusWindow,
+        openWindow: _local.openWindow,
         openWindowPositioned: _local.openWindowPositioned,
-        user                : function() { return JSON.parse(JSON.stringify(_local.user())) },
-        windows             : _local.workspace.windows,
-        config              : window.Config,
-        systemEnums         : _local.systemEnums,
-        systemEnumObjects   : _local.systemEnumObjects,
-        sessionId           : function() { return store.get('sessionId') },
-        socket              : function() { return _local.socket }
+        user: function() {
+            return JSON.parse(JSON.stringify(_local.user()));
+        },
+        windows: _local.workspace.windows,
+        config: window.Config,
+        systemEnums: _local.systemEnums,
+        systemEnumObjects: _local.systemEnumObjects,
+        sessionId: function() {
+            return store.get('sessionId');
+        },
+        socket: function() {
+            return _local.socket;
+        }
     };
 })(jQuery);
 
@@ -1702,9 +1906,10 @@ $(workspaceManager.init);
 
 
 //ko utility functions
-ko.observableArray.fn.filterByProperty = function (propName, matchValue) {
-    return ko.computed(function () {
-        var allItems = this(), matchingItems = [];
+ko.observableArray.fn.filterByProperty = function(propName, matchValue) {
+    return ko.computed(function() {
+        var allItems = this(),
+            matchingItems = [];
         for (var i = 0; i < allItems.length; i++) {
             var current = allItems[i];
             if (ko.unwrap(current[propName]) === matchValue)
@@ -1715,16 +1920,17 @@ ko.observableArray.fn.filterByProperty = function (propName, matchValue) {
 };
 
 //{prop:'', val''}
-ko.observableArray.fn.filterByProperties = function (filters) {
-    return ko.computed(function () {
-        var allItems = this(), matchingItems = [];
+ko.observableArray.fn.filterByProperties = function(filters) {
+    return ko.computed(function() {
+        var allItems = this(),
+            matchingItems = [];
         for (var i = 0; i < allItems.length; i++) {
             var current = allItems[i];
             for (var j = 0; j < filters.length; j++) {
                 if (ko.unwrap(current[filters[j].prop]) !== filters[j].val) {
                     break;
                 }
-                if (j == filters.length - 1) matchingItems.push(current);
+                if (j === filters.length - 1) matchingItems.push(current);
             }
         }
         return matchingItems;
@@ -1732,19 +1938,19 @@ ko.observableArray.fn.filterByProperties = function (filters) {
 };
 
 ko.bindingHandlers.setMaxHeight = {
-    update: function (element, valueAccessor, allBindingsAccessor) {
-        var $element                = $(element),
-            value                   = valueAccessor(),
-            allBindings             = allBindingsAccessor(),
-            height                  = ko.utils.unwrapObservable(value),
-            reduceBy                = allBindings.reduceBy || 0,
-            reduceByOffsetElement   = allBindings.reduceByOffsetElement,
-            elementOffset           = 0,
+    update: function(element, valueAccessor, allBindingsAccessor) {
+        var $element = $(element),
+            value = valueAccessor(),
+            allBindings = allBindingsAccessor(),
+            height = ko.utils.unwrapObservable(value),
+            reduceBy = allBindings.reduceBy || 0,
+            reduceByOffsetElement = allBindings.reduceByOffsetElement,
+            elementOffset = 0,
             $offsetElement;
 
         if (typeof reduceByOffsetElement != 'undefined') {
             $offsetElement = $(reduceByOffsetElement);
-            $element.add($element.parentsUntil($offsetElement)).each(function () {
+            $element.add($element.parentsUntil($offsetElement)).each(function() {
                 elementOffset += $(this).position().top;
             });
         }
@@ -1758,27 +1964,27 @@ ko.bindingHandlers.fadeInText = {
         $(element).fadeOut(100, function() {
             ko.bindingHandlers.text.update(element, valueAccessor);
             $(element).fadeIn('fast');
-       });
+        });
     }
 };
 
 ko.bindingHandlers.dataSrc = {
     update: function(element, valueAccessor) {
-        var upi         = valueAccessor()(),
-            $element    = $(element),
-            $bg         = $element.parent(),
-            $icon       = $bg.find('.thumbIcon');
+        var upi = valueAccessor()(),
+            $element = $(element),
+            $bg = $element.parent(),
+            $icon = $bg.find('.thumbIcon');
 
         $.ajax({
-            url     : '/img/thumbs/' + upi + '.txt',
-            dataType: 'text',
-            type    : 'get'
-        })
+                url: '/img/thumbs/' + upi + '.txt',
+                dataType: 'text',
+                type: 'get'
+            })
             .done(
                 function(file) {
-                    var data    = file.split('||'),
+                    var data = file.split('||'),
                         bgColor = data[0],
-                        image   = data[1];
+                        image = data[1];
                     $element.attr('src', image);
                     if (bgColor != 'undefined') $bg.css('background-color', bgColor);
                 }

@@ -5,7 +5,10 @@ html
         link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.base.css')
         link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.flat.css')
         link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
+        link(rel='stylesheet', href='/css/lib/jquery-ui-dark.css')
+        link(rel='stylesheet', href='/css/lib/jquery-clockpicker.css')
         link(rel='stylesheet', href='/css/lib/bootstrap.darkly.css')
+
         //- link(rel='stylesheet', href='/css/lib/bootstrap.bootswatch.darkly.min.css')
 
         //- link(rel='stylesheet', href='/less/lib-bootstrap/bootstrap')
@@ -206,6 +209,10 @@ html
                                             input(type="radio", name="actionButtonType", value="link", data-bind="checked: actionButtonType")
                                 .noBoldControls.spacedRadio
                                     .radio
+                                        label Link to Report
+                                            input(type="radio", name="actionButtonType", value="report", data-bind="checked: actionButtonType")
+                                .noBoldControls.spacedRadio
+                                    .radio
                                         label Control point
                                             input(type="radio", name="actionButtonType", value="control", data-bind="checked: actionButtonType")
 
@@ -238,6 +245,52 @@ html
                     .modal-footer
                         button.btn.btn-default.btn-sm(data-dismiss="modal") Close
                         button.btn.btn-primary.btn-sm(data-bind="click: sendActionButtonValue") Send Command
+
+        #actionButtonReportParameterModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
+            .modal-dialog
+                .modal-content
+                    .modal-header
+                        h3.panel-title Enter Report Parameters
+                    .modal-body.clearfix
+                        .form-group.noBoldControls.form-inline
+                            .col-xs-4
+                                input#reportTypePredefined(type="radio", value="predefined", name="reportType", data-bind="checked: actionButtonReportType")
+                                label(for="reportTypePredefined") Predefined Range
+                            .col-xs-8
+                                input#reportTypeCustom(type="radio", value="custom", name="reportType", data-bind="checked: actionButtonReportType")
+                                label(for="reportTypeCustom") Custom Range
+
+                            .col-xs-12.bm10px(data-bind="visible: actionButtonReportType() === 'predefined'")
+                                select.form-control.select-sm.input-sm(data-bind="value: actionButtonReportDuration")
+                                    option None
+                                    option Last 12 hours
+                                    option Last 24 hours
+                                    option Last 48 hours
+                                    option Last 72 hours
+                                    option Last 7 days
+                                    option Last month
+                                    option Last 6 months
+                                    option Last year
+
+                            .col-xs-12.form-inline.shortInputs(data-bind="visible: actionButtonReportType() === 'custom'")
+                                .row.bm10px
+                                    .col-xs-6
+                                        label From Date
+                                        input.input-sm.form-control(data-bind="datepicker: reportFromDate")
+                                    .col-xs-6
+                                        label From Time
+                                        input.input-sm.form-control(data-bind="clockpicker: reportFromTime")
+                                .row
+                                    .col-xs-6
+                                        label From Date
+                                        input.input-sm.form-control(data-bind="datepicker: reportToDate")
+                                    .col-xs-6
+                                        label From Time
+                                        input.input-sm.form-control(data-bind="clockpicker: reportToTime")
+
+                    .modal-footer
+                        button.btn.btn-default.btn-sm(data-dismiss="modal") Close
+                        button.btn.btn-primary.btn-sm(data-bind="click: openReport") Open Report
 
 
         #editInputOutput.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
@@ -335,6 +388,7 @@ html
         script(src='/js/lib/jquery.blockUI.js')
         script(src='/js/lib/bootstrap3.min.js')
         script(src='/js/lib/jquery-ui.js')
+        script(src='/js/lib/jquery-clockpicker.min.js')
         script(src='/js/lib/fabric.js')
         script(src='/js/lib/socket.io.js')
         script(src='/js/lib/knockout-3.2.0.js')

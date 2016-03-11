@@ -11,10 +11,11 @@ dorsett.models.userModel = function(_data) {
             'Password Reset': false,
             'Last Login Time': null,
             'Last Activity Time': null,
-            'Auto Logout Duration': null,
+            'Auto Logout Duration':0,
             'First Name': '',
             'Last Name': '',
             'System Admin': false,
+            'Session Length': 0,
             Photo: '',
             Title: '',
             'Contact Info': []

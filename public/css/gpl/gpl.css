@@ -25,6 +25,9 @@ body {
     top: 0;
     width: 77px;
 }
+.datepicker {
+    z-index: 3000 !important;
+}
 .mask {
     position: absolute;
     left: 0;
@@ -133,6 +136,10 @@ body {
 
 .mr5 {
     margin-right: 5px;
+}
+
+.shortInputs .input-sm {
+    height: 24px;
 }
 
 .zoomSection {

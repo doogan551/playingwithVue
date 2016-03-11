@@ -32,7 +32,7 @@ module.exports = {
 		var criteria = {
 			collection: 'Users',
 			query: {
-				username: username
+				username: {"$regex": new RegExp(['^', username, '$'].join(''), 'i')}
 			}
 		};
 

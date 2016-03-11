@@ -78,15 +78,19 @@ var ActionButton = function (config) {
             _pointData = response;
             _validateOptions('upi');
 
-            external.min = _pointData['Minimum Value'].Value;
-            external.max = _pointData['Maximum Value'].Value;
+            if (_pointData['Minimum Value']) {
+                external.min = _pointData['Minimum Value'].Value;
+                external.max = _pointData['Maximum Value'].Value;
+            }
         },
         _getPointData = function (upi) {
-            $.ajax({
-                url: '/api/points/' + upi
-            }).done(function (response) {
-                _processPointData(response);
-            });
+            if (!isNaN(upi)) {
+                $.ajax({
+                    url: '/api/points/' + upi
+                }).done(function (response) {
+                    _processPointData(response);
+                });
+            }
         },
         _validateOptions = function (arg) {
             var pointType = _code.pointType;
@@ -103,8 +107,15 @@ var ActionButton = function (config) {
         },
 
         sendCommand = function () {
-            if (_pointData['Point Type'].Value.match('Analog')) {
+            var pointType = _pointData['Point Type'].Value,
+                reportType;
+
+            if (pointType.match('Analog')) {
                 $('#actionButtonInput').popup('open');
+            } else if (pointType === 'Report') {
+                reportType = _pointData['Report Type'].Value;
+
+                $('#actionButtonReportInput').popup('open');
             } else {
                 _sendCommand();
             }
@@ -112,6 +123,28 @@ var ActionButton = function (config) {
         sendValue = function (value) {
             _parameter = value;
             _sendCommand();
+        },
+        openReport = function (type, duration, start, end) {
+            var endPoint;
+
+            endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', _upi);
+            displays.openWindow(endPoint.review.url + '?pause', 'Report', 'Report', '', _upi, {
+                height: 720,
+                width: 1280,
+                callback: function () {
+                    var arg = {};
+
+                    if (type === 'predefined') {
+                        arg.duration = duration;
+                    } else {
+                        arg.startDate = Math.floor(start.getTime()/1000);
+                        arg.endDate = Math.floor(end.getTime()/1000);
+                    }
+
+                    this.applyBindings(arg);
+                }
+            });
+
         },
         setCommand = function (idx) {
             _code = codes[idx];
@@ -137,7 +170,7 @@ var ActionButton = function (config) {
             _getPointData(upi);
         };
 
-    if (config.ActionPoint === undefined) {
+    if (config.ActionPoint === undefined || config.ActionPoint === 'none') {
         config.ActionPoint = config.upi;
     }
 
@@ -152,6 +185,7 @@ var ActionButton = function (config) {
         updateConfig: updateConfig,
         sendCommand: sendCommand,
         sendValue: sendValue,
+        openReport: openReport,
         min: min,
         max: max
     };
@@ -538,7 +572,7 @@ displays = $.extend(displays, {
     initSocket: function() {
         var socket;
         if (document.location.href.match('nosocket') === null) {
-            socket = displays.socket = io.connect('http://' + window.location.hostname + ':8085');
+            socket = displays.socket = io.connect('http://' + window.location.hostname);
 
             socket.on('reconnecting', function() {
                 var retries = 0,
@@ -643,7 +677,7 @@ displays = $.extend(displays, {
     },
 
     openWindow: function() {
-        displays.workspaceManager.openWindowPositioned.apply(this, arguments);
+        return displays.workspaceManager.openWindowPositioned.apply(this, arguments);
     },
 
     initScreenObjects: function(config) {
@@ -774,6 +808,7 @@ displays = $.extend(displays, {
         });
 
         $('#actionButtonInput').popup();
+        $('#actionButtonReportInput').popup();
 
         $('#leftPanel').hover(
             function() {
@@ -813,9 +848,9 @@ displays = $.extend(displays, {
                     clearTimeout(displays.panTimer);
                     if (displays.panMode) {
                         displays.panMode = false;
-                    } else {
-                        //displays.$scope.blur();
-                        displays.$scope.menuClick();
+                    // } else {
+                    //     //displays.$scope.blur();
+                    //     displays.$scope.menuClick();
                     }
                     // console.log('displays.PANMODE OFF!');
                     $('body').css('cursor', 'auto');
@@ -1296,6 +1331,10 @@ displays = $.extend(displays, {
                 });
 
                 $scope.display = displayJson;
+                $scope.reportDuration = 'None';
+                $scope.reportType = 'predefined';
+                $scope.reportStart = '';
+                $scope.reportEnd = '';
                 $scope.zoom = 100;
                 $scope.panW = 0;
                 $scope.dLeft = (-1 * ($scope.display.Width / 2)) + $scope.panW;
@@ -1307,9 +1346,25 @@ displays = $.extend(displays, {
                     $scope: $scope
                 });
 
+                $scope.checkReportRange = function () {
+                    var $button = $('#openReport'),
+                        valid = displays.$scope.reportType === 'predefined' || (displays.$scope.reportType === 'chosen' && displays.$scope.reportStart < displays.$scope.reportEnd);
+
+                    if (valid) {
+                        $button.removeClass('ui-disabled');
+                    } else {
+                        $button.addClass('ui-disabled');
+                    }
+                };
+
                 $scope.sendCommand = function () {
                     var val = parseFloat($('#actionButtonValue').val());
                     $scope.currActionButton._actionButton.sendValue(val);
+                };
+
+                $scope.openReport = function () {
+                    var actionButton = $scope.currActionButton._actionButton;
+                    actionButton.openReport($scope.reportType, $scope.reportDuration, $scope.reportStart, $scope.reportEnd);
                 };
 
                 $scope.action = action;

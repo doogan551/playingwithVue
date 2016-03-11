@@ -1,13 +1,21 @@
 doctype html
-html(xmlns:ng="http://angularjs.org", id="ng-app")
+html(xmlns:ng="https://angularjs.org", id="ng-app")
   head
     title Display Viewer
     meta(name='viewport', content='width=device-width, initial-scale=1')
     link(rel='stylesheet', href='/css/displays/jquery.mobile.structure-1.3.2.css')
     link(rel='stylesheet', href='/css/displays/jquery.mobile.theme-1.3.2.css')
+    link(rel='stylesheet', href='/css/lib/jquery.datetimepicker.css')
     script(src='/js/lib/jquery-1.10.2.min.js')
+    script.
+        $(document).on("mobileinit", function () {
+            $.mobile.hashListeningEnabled = false;
+            $.mobile.pushStateEnabled = false;
+            $.mobile.changePage.defaults.changeHash = false;
+        });
     script(src='/js/lib/jquery.mobile-1.3.2.js')
     script(src='/js/lib/jquery-ui-1.10.3.custom.min.js')
+    script(src='/js/lib/jquery.datetimepicker.full.js')
     script(src="/js/lib/socket.io.js")
   body(id="displayCtrl", ng-controller="DisplayCtrl", oncontextmenu="return false;")
     #container
