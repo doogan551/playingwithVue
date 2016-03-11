@@ -411,6 +411,8 @@ var Config = (function(obj) {
                         case "Fan Control Point":
                         case "Lights Control Point":
                             return filterPointTypes('enumControl');
+                        case "Column Point":
+                            return filterPointTypes('value');
                         // Begin Lift Station point properties
                         case "High Level Float Point":
                         case "Lag Level Float Point":

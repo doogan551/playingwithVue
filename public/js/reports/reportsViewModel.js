@@ -291,6 +291,13 @@ var reportsViewModel = function () {
             }
             return !!(cumulativePermissions & requestedAccessLevel);
         },
+        getPointRef = function (upi) {
+            var answer = point["Point Refs"].filter(function (pointRef) {
+                return (pointRef.Value === upi);
+            });
+
+            return answer;
+        },
         upiInPointRefs = function (upi) {
             var answer = point["Point Refs"].filter(function (pointRef) {
                 return (pointRef.Value === upi);
@@ -301,9 +308,6 @@ var reportsViewModel = function () {
         pointReferenceSoftDeleted = function (upi) {
             var answer = false,
                 pointRef;
-
-            return false; // TODO DELETE ME
-            // ***************************************
 
             if (!!upi && upi > 0) {
                 pointRef = point["Point Refs"].filter(function (pointRef) {
@@ -319,7 +323,6 @@ var reportsViewModel = function () {
             return answer;
         },
         pointReferenceHardDeleted = function (upi) {
-            return false; // TODO DELETE ME
             return (!!upi && upi > 0 && !upiInPointRefs(upi));
         },
         buildPointRefsArray = function () {
@@ -342,7 +345,7 @@ var reportsViewModel = function () {
                             if (existingPointRef.length === 0) {
                                 pointRef = {};
                                 pointRef.PropertyEnum = window.workspaceManager.config.Enums.Properties["Qualifier Point"].enum;
-                                pointRef.PropertyName = "Qualifier Point";
+                                pointRef.PropertyName = "Column Point";
                                 pointRef.Value = column.upi;
                                 pointRef.AppIndex = i;
                                 pointRef.isDisplayable = true;
@@ -585,9 +588,9 @@ var reportsViewModel = function () {
             }, 6000);  // display error message
         },
         openPointSelectorForColumn = function (selectObjectIndex, upi, newUrl) {
-            var url = newUrl || '/pointLookup',
+            var url = newUrl || '/pointlookup/' + encodeURI("Report") + '/' + encodeURI("Column Point") + "?mode=select",
                 getPointURL = "/api/points/getpoint",
-                windowRef,
+                windowRef, //
                 objIndex = selectObjectIndex,
                 updatedList = self.listOfColumns(),
                 tempObject = updatedList[selectObjectIndex],
@@ -640,7 +643,7 @@ var reportsViewModel = function () {
             });
         },
         openPointSelectorForFilter = function (selectObjectIndex, upi, newUrl) {
-            var url = newUrl || '/pointLookup',
+            var url = newUrl || '/pointlookup/' + encodeURI("Report") + '/' + encodeURI(self.listOfFilters()[selectObjectIndex].filterName) + "?mode=select",
                 windowRef,
                 objIndex = selectObjectIndex,
                 updatedList = self.listOfFilters(),
@@ -852,12 +855,16 @@ var reportsViewModel = function () {
                                 valid = false;
                                 filters[i].error = "Invalid Date format in Filters";
                             }
-                            if (filters[i].time.toString().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
-                                filters[i].value = getAdjustedDatetime(filters[i]);
-                                filters[i].error = undefined;
-                            } else {
-                                valid = false;
-                                filters[i].error = "Invalid Time format in Filters";
+                            if (parseInt(filters[i].time, 10) === 0) {
+                                filters[i].time = "00:00";
+                            } else  {
+                                if (filters[i].time.toString().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
+                                    filters[i].value = getAdjustedDatetime(filters[i]);
+                                    filters[i].error = undefined;
+                                } else {
+                                    valid = false;
+                                    filters[i].error = "Invalid Time format in Filters";
+                                }
                             }
                             break;
                         case "HourMinSec":
@@ -886,6 +893,7 @@ var reportsViewModel = function () {
         initFilters = function (theFilters) {
             var result = [],
                 i,
+                pointRef,
                 len = theFilters.length;
 
             for (i = 0; i < len; i++) {
@@ -894,6 +902,14 @@ var reportsViewModel = function () {
                         console.log("softdeleted theFilters[" + i + "].upi = " + theFilters[i].upi);
                         theFilters[i].softDeleted = true;
                     }
+                    if (!!theFilters[i].upi && theFilters[i].upi > 0) {
+                        pointRef = getPointRef(theFilters[i].upi);
+                        if (pointRef.length > 1) {
+                            // found more than one reference in Point Ref array for UPI, sup wit dat?
+                        }
+                        theFilters[i].value = pointRef[0].PointName;
+                    }
+
                     result.push(theFilters[i]);
                     result[i].valueList = getValueList(result[i].filterName, result[i].filterName);
                 } else {
@@ -906,12 +922,20 @@ var reportsViewModel = function () {
         initColumns = function (theColumns) {
             var result = [],
                 i,
+                pointRef,
                 len = theColumns.length;
             for (i = 0; i < len; i++) {
                 if (!pointReferenceHardDeleted(theColumns[i].upi)) {
                     if (pointReferenceSoftDeleted(theColumns[i].upi)) {
                         console.log("softdeleted theColumns[" + i + "].upi = " + theColumns[i].upi);
                         theColumns[i].softDeleted = true;
+                    }
+                    if (!!theColumns[i].upi && theColumns[i].upi > 0) {
+                        pointRef = getPointRef(theColumns[i].upi);
+                        if (pointRef.length > 1) {
+                            // found more than one reference in Point Ref array for UPI, sup wit dat?
+                        }
+                        theColumns[i].colName = pointRef[0].PointName;
                     }
                     result.push(theColumns[i]);
                     switch (self.reportType) {

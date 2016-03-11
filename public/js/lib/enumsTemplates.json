@@ -1587,6 +1587,11 @@
                 "reportEnable": true,
                 "enumsSet": "Polarities"
             },
+            "Column Point": {
+                "enum": 131,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
             "Compiled Code": {
                 "enum": 269,
                 "valueType": "Array",
@@ -2212,11 +2217,6 @@
             "Height": {
                 "enum": 324,
                 "valueType": "Unsigned",
-                "reportEnable": false
-            },
-            "History Point": {
-                "enum": 131,
-                "valueType": "UniquePID",
                 "reportEnable": false
             },
             "High Alarm Limit": {
