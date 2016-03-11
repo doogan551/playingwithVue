@@ -745,11 +745,11 @@ var dorsett = (function() {
         }, {
             type: 'SMS',
             val: phoneValidatorObj,
-            mask: '(999) 999-9999'
+            mask: '9999999999'
         }, {
             type: 'Voice',
             val: phoneValidatorObj,
-            mask: '(999) 999-9999'
+            mask: '9999999999'
         }],
         userCount: function(singular, plural) {
             var count = 0,
