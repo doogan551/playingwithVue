@@ -291,6 +291,37 @@ var reportsViewModel = function () {
             }
             return !!(cumulativePermissions & requestedAccessLevel);
         },
+        upiInPointRefs = function (upi) {
+            var answer = point["Point Refs"].filter(function (pointRef) {
+                return (pointRef.Value === upi);
+            });
+
+            return (answer.length > 0);
+        },
+        pointReferenceSoftDeleted = function (upi) {
+            var answer = false,
+                pointRef;
+
+            return false; // TODO DELETE ME
+            // ***************************************
+
+            if (!!upi && upi > 0) {
+                pointRef = point["Point Refs"].filter(function (pointRef) {
+                    return (pointRef.Value === upi);
+                });
+                if (pointRef.length > 0) {
+                    if (pointRef[0].PointInst === 0) {
+                        answer = true;
+                    }
+                }
+            }
+
+            return answer;
+        },
+        pointReferenceHardDeleted = function (upi) {
+            return false; // TODO DELETE ME
+            return (!!upi && upi > 0 && !upiInPointRefs(upi));
+        },
         buildPointRefsArray = function () {
             var columns = validateColumns(),
                 filters = validateFilters(),
@@ -319,8 +350,7 @@ var reportsViewModel = function () {
                                 pointRef.PointName = column.colName;
                                 pointRef.PointType = window.workspaceManager.config.Enums["Point Types"][column.pointType].enum;
                                 pointRef.PointInst = column.upi;
-                                pointRef.DevInst = 0;
-
+                                pointRef.DevInst = column.upi;
                                 pointRefArray.push(pointRef);
                             }
                         }
@@ -342,10 +372,10 @@ var reportsViewModel = function () {
                                 pointRef.AppIndex = i;
                                 pointRef.isDisplayable = true;
                                 pointRef.isReadOnly = false;
-                                pointRef.PointName = filter.colName;
-                                pointRef.PointType = "";
+                                pointRef.PointName = filter.value;
+                                pointRef.PointType = window.workspaceManager.config.Enums["Point Types"][filter.pointType].enum;
                                 pointRef.PointInst = filter.upi;
-                                pointRef.DevInst = 0;
+                                pointRef.DevInst = filter.upi;
 
                                 pointRefArray.push(pointRef);
                             }
@@ -620,6 +650,10 @@ var reportsViewModel = function () {
                         tempObject.upi = pid;
                         tempObject.valueType = "UniquePID";
                         tempObject.value = name;
+                        tempObject.pointType = type;
+                        if (!!tempObject.softDeleted) {
+                            delete tempObject.softDeleted;
+                        }
                         updatedList[objIndex] = tempObject;
                         updateListOfFilters(updatedList);
                     }
@@ -780,6 +814,7 @@ var reportsViewModel = function () {
                     delete results[results.length - 1]["dataColumnName"]; // dataColumnName is only used in UI
                     delete results[results.length - 1]["rawValue"]; // rawValue is only used in UI
                     delete results[results.length - 1]["error"]; // error is only used in UI
+                    delete results[results.length - 1]["softDeleted"]; // error is only used in UI
                 }
             }
 
@@ -799,7 +834,7 @@ var reportsViewModel = function () {
             });
             return result[0];
         },
-        validateFilters = function () {
+        validateFilters = function (cleanup) {
             var results = [],
                 valid,
                 filters = $.extend(true, [], self.listOfFilters()),
@@ -837,9 +872,11 @@ var reportsViewModel = function () {
                             break;
                     }
                     results.push(filters[i]);
-                    if (valid) {  // clean fields only used during UI
+                    if (cleanup && valid) {  // clean fields only used during UI
                         delete results[results.length - 1]["valueList"];
                         delete results[results.length - 1]["error"];
+                        delete results[results.length - 1]["softDeleted"];
+                        cleanup
                     }
                 }
             }
@@ -852,8 +889,16 @@ var reportsViewModel = function () {
                 len = theFilters.length;
 
             for (i = 0; i < len; i++) {
-                result.push(theFilters[i]);
-                result[i].valueList = getValueList(result[i].filterName, result[i].filterName);
+                if (!pointReferenceHardDeleted(theFilters[i].upi)) {
+                    if (pointReferenceSoftDeleted(theFilters[i].upi)) {
+                        console.log("softdeleted theFilters[" + i + "].upi = " + theFilters[i].upi);
+                        theFilters[i].softDeleted = true;
+                    }
+                    result.push(theFilters[i]);
+                    result[i].valueList = getValueList(result[i].filterName, result[i].filterName);
+                } else {
+                    console.log("point being referenced doesn't exist in local Point Refs array  theFilters[" + i + "].upi = " + theFilters[i].upi);
+                }
             }
 
             return result;
@@ -863,20 +908,28 @@ var reportsViewModel = function () {
                 i,
                 len = theColumns.length;
             for (i = 0; i < len; i++) {
-                switch (self.reportType) {
-                    case "History":
-                    case "Property":
-                        result = theColumns;
-                        result[i].canCalculate = columnCanBeCalculated(result[i]);
-                        break;
-                    case "Totalizer":
-                        result.push(theColumns[i]);
-                        result[i].valueList = getTotalizerValueList(result[i].pointType);
-                        result[i].canCalculate = true;
-                        break;
-                    default:
-                        console.log(" - - - DEFAULT  initColumns()");
-                        break;
+                if (!pointReferenceHardDeleted(theColumns[i].upi)) {
+                    if (pointReferenceSoftDeleted(theColumns[i].upi)) {
+                        console.log("softdeleted theColumns[" + i + "].upi = " + theColumns[i].upi);
+                        theColumns[i].softDeleted = true;
+                    }
+                    result.push(theColumns[i]);
+                    switch (self.reportType) {
+                        case "Property":
+                            result[i].canCalculate = columnCanBeCalculated(result[i]);
+                            break;
+                        case "History":
+                        case "Totalizer":
+                            result[i].valueList = getTotalizerValueList(result[i].pointType);
+                            result[i].canCalculate = true;
+                            break;
+                        default:
+                            console.log(" - - - DEFAULT  initColumns()");
+                            break;
+                    }
+                } else {
+                    // point being referenced doesn't exist in local Point Refs array
+                    console.log("point being referenced doesn't exist in local Point Refs array  theColumns[" + i + "].upi = " + theColumns[i].upi);
                 }
             }
             return result;
@@ -1450,11 +1503,11 @@ var reportsViewModel = function () {
         saveReportConfig = function () {
             point._pStatus = 0;  // activate report
             point["Report Config"].columns = validateColumns(true);
-            point["Report Config"].filters = validateFilters();
+            point["Report Config"].filters = validateFilters(true);
             pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
             point["Report Config"].pointFilter = pointFilter;
             point["Report Config"].selectedPageLength = self.selectedPageLength();
-            //point["Point Refs"] = buildPointRefsArray();
+            point["Point Refs"] = buildPointRefsArray();
             switch (self.reportType) {
                 case "History":
                 case "Totalizer":
@@ -1932,6 +1985,9 @@ var reportsViewModel = function () {
                     if (columnConfig.canCalculate === true) {
                         result += "text-right ";
                     }
+                    if (!!columnConfig.softDeleted) {
+                        result += "softDeleted";
+                    }
                     return result;
                 },
                 buildColumnObject = function (item, columnIndex) {
@@ -1961,6 +2017,10 @@ var reportsViewModel = function () {
                             columnTitle = "Default";
                             console.log(" - - - DEFAULT  configureDataTable()");
                             break;
+                    }
+
+                    if (!!item.softDeleted) {
+                        columnTitle = "[Deleted] " + columnTitle;
                     }
 
                     result = {
@@ -2349,7 +2409,7 @@ var reportsViewModel = function () {
         if (point) {
             self.canEdit(userCanEdit(point, permissionLevels.WRITE));
             originalPoint = JSON.parse(JSON.stringify(point));
-            windowUpi = point._id; // required or pop-in/pop-out don't work
+            windowUpi = point._id; // required or pop-in/pop-out will not work
             if (point["Report Config"] === undefined) {
                 point["Report Config"] = {};
             }
@@ -2728,6 +2788,9 @@ var reportsViewModel = function () {
         column.valueType = "String";
         column.operator = "";
         column.upi = 0;
+        if (!!column.softDeleted) {
+            delete column.softDeleted;
+        }
         updateListOfColumns(tempArray);
     };
 
@@ -2743,6 +2806,9 @@ var reportsViewModel = function () {
             filter = tempArray[indexOfColumn];
 
         filter.value = setDefaultValue(filter.valueType);
+        if (!!filter.softDeleted) {
+            delete filter.softDeleted;
+        }
         filter.upi = 0;
         updateListOfFilters(tempArray);
     };

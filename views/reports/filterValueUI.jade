@@ -27,9 +27,12 @@ input.input.form-control.filterContainer(data-bind="value: value, enable: $root.
 // /ko
 // /ko
 // ko if: (valueType === "UniquePID")
-div.pointreference
+div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
    button.btn.btn-danger.btn-xs.fa.fa-times(data-bind="click: function(){ $parent.clearFilterPoint($index()) }, tooltip: { title: 'Clear' }")
    button.btn.btn-info.btn-xs.fa.fa-pencil(data-bind="click: function(){ $parent.selectPointForFilter($data, $index) }, tooltip: { title: 'Edit' }")
+   // ko if: (!!$data.softDeleted)
+   span [Deleted]&nbsp;
+   // /ko
    .pointRef.filterPointName.container-fluid.filterContainer(data-bind="text: ($data.value !== 0 ? $data.value : '- blank -'), click: function(){ $parent.showPointReview($data) }")
 // /ko
 // ko if: (valueType === "Bool")

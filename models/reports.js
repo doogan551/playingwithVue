@@ -721,8 +721,8 @@ module.exports = Rpt = {
             }
         }
 
-        if (searchCriteria.length === 0) {
-            searchCriteria.$and = [{}];
+        if (searchCriteria["$and"].length === 0) {
+            searchCriteria = {};
         }
         //logger.info(JSON.stringify(searchCriteria));
         //logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));

@@ -71,12 +71,15 @@ block content
 												th.medium.strong.precisionColumn(style="display:none") Precision
 										tbody.sortablecolums(data-bind="foreach: listOfColumns()")
 											tr.pointdata(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
-												td.columnNameContainer
+												td.columnNameContainer(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
 													.handle
 													// ko if: ($parent.reportType !== 'Property')
 													// ko if: ($root.canEdit())
 													button.btn.btn-danger.btn-xs.fa.fa-times(data-bind="click: function(){ $parent.clearColumnPoint($index()) }, tooltip: { title: 'Clear' }")
 													button.btn.btn-info.btn-xs.fa.fa-pencil(data-bind="click: function(){ $parent.selectPointForColumn($data, $index) }, tooltip: { title: 'Edit' }")
+													// /ko
+													// ko if: (!!$data.softDeleted)
+													span [Deleted]&nbsp;
 													// /ko
 													.columnName(data-bind="text: colName, click: function(){ $parent.showPointReview($data) }")
 													// /ko

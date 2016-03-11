@@ -398,6 +398,9 @@ div.dataTables_wrapper div.dataTables_length select {
     display: inline-block;
     margin-left: 4px;
 }
+.filterValue .pointreference {
+    width: 400px;
+}
 .pointreference {
     margin-top: 9px;
 }
@@ -589,5 +592,8 @@ td.filterCondition.lastConditionInGroup {
 }
 .strikethrough {
     text-decoration:line-through
+}
+.softDeleted {
+    color: red;
 }
 

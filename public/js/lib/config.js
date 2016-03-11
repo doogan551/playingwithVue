@@ -1176,7 +1176,7 @@ var Config = (function(obj) {
             var point = data.point,
                 updateIsDisplayable = false;
 
-            if (data.propertyObject.Value !== 0) {
+            if (data.propertyObject.PointInst !== 0) {
                 point._devModel = data.refPoint._devModel;
             } else {
                 point._devModel = enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"];
@@ -1818,7 +1818,7 @@ var Config = (function(obj) {
                 propertyObject = data.propertyObject,
                 updateIsDisplayable = false;
 
-            if (propertyObject.Value !== 0) {
+            if (propertyObject.PointInst !== 0) {
                 if (propertyObject.DevInst !== obj.Utility.getPropertyObject("Device Point", point).PointInst) {
                     data.ok = false;
                     data.result = data.property + " must be on same Device.";
