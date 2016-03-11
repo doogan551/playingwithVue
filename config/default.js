@@ -35,7 +35,7 @@ var defaults = {
     'Twilio': {
         'accountSid': 'AC0fc63c36f70cccee175fc2427d8ec2be',
         'authToken': '4da6ed7c8aee56285e2b25b8441a6d39',
-        'phoneNumber': '+18556887778'
+        'phoneNumbers': ['+18556887778', '+13367702223']
     },
     'Plivo': {
         'authId': 'MAOTAYY2RKNJU5MMQWZT',
