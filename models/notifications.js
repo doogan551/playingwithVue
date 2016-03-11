@@ -609,6 +609,18 @@ var dbAlarmQueueLocked = false,
 						}
 						return obj;
 					},
+					getUserAlerts = function (user, alarmClassName) {
+						var alerts = [];
+						// If user has alert preferences defined for this alarm class
+						if (user.alerts[alarmClassName].length) {
+							alerts = user.alerts[alarmClassName];
+						}
+						// Nope; if user has default alert preferences (Normal class serves as default)
+						else if (user.alerts.Normal.length) {
+							alerts = user.alerts.Normal;
+						}
+						return alerts;
+					},
 					addNotifications = function (userIds) {
 						var len = userIds.length,
 							alarmClassName = alarmClassRevEnums[thread.trigger.almClass],
@@ -625,7 +637,11 @@ var dbAlarmQueueLocked = false,
 						for (i = 0; i < len; i++) {
 							userId = userIds[i];
 							user = info.data.usersObj[userId];
-							userAlerts = (user && user.alerts[alarmClassName] || user.alerts.Normal) || [];
+
+							if (!!!user)
+								continue;
+
+							userAlerts = getUserAlerts(user, alarmClassName);
 
 							for (j = 0, jlen = userAlerts.length; j < jlen; j++) {
 								userAlert = userAlerts[j];
@@ -2141,9 +2157,9 @@ var selfTest = {
 						info: 'johnny.dr@gmail.com',
 						delay: 30
 					}],
-					Emergency: null,
-					Critical: null,
-					Urgent: null
+					Emergency: [],
+					Critical: [],
+					Urgent: []
 				},
 				'First Name': {
 					Value: 'Johnny'
@@ -2170,9 +2186,9 @@ var selfTest = {
 						info: '2222220001',
 						delay: 20
 					}],
-					Emergency: null,
-					Critical: null,
-					Urgent: null
+					Emergency: [],
+					Critical: [],
+					Urgent: []
 				},
 				notificationsEnabled: true
 			},
@@ -2192,9 +2208,9 @@ var selfTest = {
 						info: '3333330001',
 						delay: 30
 					}],
-					Emergency: null,
-					Critical: null,
-					Urgent: null
+					Emergency: [],
+					Critical: [],
+					Urgent: []
 				},
 				notificationsEnabled: true
 			},
@@ -2214,9 +2230,9 @@ var selfTest = {
 						info: '4444440001',
 						delay: 40
 					}],
-					Emergency: null,
-					Critical: null,
-					Urgent: null
+					Emergency: [],
+					Critical: [],
+					Urgent: []
 				},
 				notificationsEnabled: true
 			}
