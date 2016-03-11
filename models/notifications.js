@@ -1,73 +1,3 @@
-// threads: [{
-	//     id: 123123123,
-	//     trigger: {
-	//         upi: 12345,
-	//         alarmId: 123123123,
-	//         msgCat: 1,
-	//         msgType: 1,
-	//         msgText: '',
-	//         timestamp: 123123123,
-	//         almClass: 1
-	//     },
-	//     returnNormal: { // only present if status.isReturnedNormal is true
-	//         message: '',
-	//         timestamp: 123123123
-	//     },
-	//     status: {
-	//         isAcknowledged: false,
-	//         isReturnedNormal: false,
-	//         isWaitingReturnNormal: false
-	//     },
-	//     notifyQueue: [{
-	//         userId: 123456789,
-	//         nextAction: 1231231234,
-	//         type: SMS,
-	//         info: '3366792126'
-	//     }, {
-	//         userId: 123456789,
-	//         nextAction: 1212121,
-	//         type: VOICE,
-	//         info: '3366792126'
-	//     }],
-	//     alertGroups: [{
-	//         counter: 0,
-	//         repeatTime: 0,
-	//         repeatConfig: {
-	//             enabled: true,
-	//             repeatCount: 0
-	//         },
-	//         escalations: [{
-	//             counter: 0,
-	//             lastAction: 0,
-	//             nextAction: 0,
-	//             recepients: [], // list of user id's
-	//             alertStyle: 'Sequenced',
-	//             recepientIndex: 0,
-	//             recepientAlertDelay: 0,
-	//             escalationDelay: 0,
-	//             repeatConfig: {
-	//                 enabled: false,
-	//                 count: 0
-	//             }
-	//         }]
-	//     }],
-	//     recepientHistory: [{
-	//         userId: 12c45a9f7,
-	//         type: SMS,
-	//         info: 3366792126
-	//     }, {
-	//         userId: 12c45a9f7,
-	//         type: EMAIL,
-	//         info: support@dorsett-tech.com
-	//     }, {
-	//         userId: 321a35b21,
-	//         type: SMS,
-	//         info: 3366792122
-	//     }],
-	//     notifyReturnNormal: false
-	// }]
-
-
 var async = require('async'),
 	utility = require('../models/utility'),
 	utils = require('../helpers/utils'),
@@ -108,17 +38,17 @@ var	enums = Config.Enums,
 		return obj;
 	})();
 
-var	ADDED = 1,		// Thread states
+var	ADDED = 1,			// Thread states
 	UPDATED = 2,
 	DELETED = 3,
-	NEW = 1,		// Queue entry types
-	RETURN = 2,
-	SMS = 1,		// Notification types
-    EMAIL = 2,
-    VOICE = 3,
-    RECURRING = 1,	// Scheduled task types
-    ONETIME = 2,
-	MSPM = 60000,	// Number of milliseconds per minute
+	NEW = 'NEW',		// Queue entry types
+	RETURN = 'RETURN',
+	SMS = 'SMS',		// Notification types
+    EMAIL = 'EMAIL',
+    VOICE = 'VOICE',
+    RECURRING = 'RECURRING',	// Scheduled task types
+    ONETIME = 'ONETIME',
+	MSPM = 60000,		// Number of milliseconds per minute
 	RUNINTERVAL = MSPM;	// How often the CRON task runs
 
 var notifierFnLookup = {};
@@ -409,7 +339,7 @@ var dbAlarmQueueLocked = false,
 						var criteria = {
 								collection: collection,
 								query: {
-									'_id': update.policyId,
+									'_id': new ObjectID(update.policyId),
 									'threads.id': update.thread.id
 								},
 								updateObj: {
@@ -424,7 +354,7 @@ var dbAlarmQueueLocked = false,
 						var criteria = {
 								collection: collection,
 								query: {
-									'_id': policyId
+									'_id': new ObjectID(policyId)
 								},
 								updateObj: {
 									'$push': {
@@ -440,7 +370,7 @@ var dbAlarmQueueLocked = false,
 						var criteria = {
 								collection: collection,
 								query: {
-									'_id': policyId
+									'_id': new ObjectID(policyId)
 								},
 								updateObj: {
 									'$pull': {
@@ -702,7 +632,8 @@ var dbAlarmQueueLocked = false,
 								key = [userId, userAlert.type, userAlert.info].join('');
 								
 								// If we don't already have a notification like this queued up
-								if (!notifyLookup.hasOwnProperty(key)) {
+								// If the thread is brand new we always queue up all the user's desired alerts
+								if (!notifyLookup.hasOwnProperty(key) || thread._state === ADDED) {
 									notification = {
 										userId: userId,
 										nextAction: actions.utility.getTimestamp(info, userAlert.delay),
@@ -2202,13 +2133,13 @@ var selfTest = {
 						info: '13364690900',
 						delay: 0
 					}, {
+						type: SMS,
+						info: '13364690900',
+						delay: 1
+					}, {
 						type: EMAIL,
 						info: 'johnny.dr@gmail.com',
 						delay: 30
-					}, {
-						type: VOICE,
-						info: '13364690900',
-						delay: 1440
 					}],
 					Emergency: null,
 					Critical: null,
