@@ -535,6 +535,30 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Integer Registers":
               case "Real Registers":
               case "Point Registers":
+              // Lift station point props
+              case "Pump Control Mode":
+              case "Pump Select Mode":
+              case "Pump Sequence Delay":
+              case "Max Pump Off Time":
+              case "Max Pump Run Time":
+              case "Light Control Point":
+              case "Light Output Configuration":
+              case "Horn Control Point":
+              case "Horn Output Configuration":
+              case "Auxiliary Control Point":
+              case "Auxiliary Output Configuration":
+              case "High Level Float Point":
+              case "Lag Level Float Point":
+              case "Lead Level Float Point":
+              case "Off Level Float Point":
+              case "Low Level Float Point":
+              case "Level Sensor Point":
+              case "High Level Setpoint":
+              case "Lag Level Setpoint":
+              case "Lead Level Setpoint":
+              case "Off Level Setpoint":
+              case "Low Level Setpoint":
+              case "Emergency Pump Down Time":
                 downloadPoint = true;
                 break;
 
@@ -586,6 +610,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Port 4 Protocol":
               case "Time Zone":
               case "VAV Channel":
+              case "Pump Control Mode": // Lift station point prop
                 configRequired = true;
                 break;
 
