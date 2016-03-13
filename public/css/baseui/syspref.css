@@ -585,11 +585,13 @@ tr:hover .showOnHover {
     display: none;
 }
 
-.notifications .editingRow .inputRow {
+.notifications .editingRow .inputRow,
+.notifications .editing .inputRow {
     display: none;
 }
 
-.notifications .editingRow .editRow {
+.notifications .editingRow .editRow,
+.notifications .editing .editRow {
     display: block;
 }
 
@@ -719,6 +721,17 @@ tr:hover .showOnHover {
     margin-bottom: 35px;
 }
 
+.addAlertConfig {
+    margin-top: -20px;
+    display: block;
+    margin-left: 15px;
+    width: 100%;
+}
+
+.addAlertConfig .btn {
+    width: 75%;
+}
+
 .addAlertGroup {
     padding: 0 !important;
 }
@@ -844,11 +857,11 @@ tr:hover .showOnHover {
     width: 70px !important;
 }
 
-.editing .alertGroup .editable {
-    display: none;
+.editing .editable {
+    display: none !important;
 }
 
-.editing .alertGroup .editableInput {
+.editing .editableInput {
     display: inline-block !important;
 }
 
@@ -920,6 +933,12 @@ tr:hover .showOnHover {
     border-bottom: 1px solid #ccc;
 }
 
+.manageAlertConfigMembers {
+    width: 75%;
+    margin-top: -40px;
+    margin-left: 15px;
+}
+
 .escalationTimer {
     font-size: 1.2em;
 }
@@ -946,17 +965,26 @@ tr:hover .showOnHover {
     position: absolute;
 }
 
-.notificationTable .notificationsEnabled {
-    padding-bottom: 20px;
-    border-bottom: 1px solid #ccc;
+.notificationTableContainer {
+    margin-bottom: 15px;
 }
 
-.notificationTable > div {
+.notificationTable {
+    border-top: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+
+.notificationTable > .notificationRow {
     margin: 10px;
 }
 
 .notificationTable > div .fa-pencil-square-o {
     font-size: 1.4em;
+}
+
+.notificationsEnabled {
+    margin-bottom: 10px;
+    font-size: 1.2em;
 }
 
 .notificationIcon {
@@ -965,8 +993,21 @@ tr:hover .showOnHover {
     display: inline-block;
 }
 
+.notificationRowHeader {
+    font-size: 1.4em;
+}
+
 .notificationAlert {
     display: inline-block;
+}
+
+.alternativeNotification {
+    color: #c00;
+    font-style: italic;
+}
+
+.notificationAlert span {
+    margin-right: 5px;
 }
 
 .scheduleLayers .scheduleLayer:first-child {
@@ -989,6 +1030,7 @@ tr:hover .showOnHover {
 
 .scheduleLayers .scheduleLayer .panel-body {
     padding: 0;
+    display: flex;
 }
 
 .scheduleLayers .scheduleLayer .panel-body > div {
@@ -997,6 +1039,33 @@ tr:hover .showOnHover {
 
 .scheduleLayers .scheduleLayer .panel-body > div:first-child {
     border-right: 1px solid #ccc;
+}
+
+.schedule {
+    font-size: 1.1em;
+    margin-bottom: 15px;
+}
+
+.schedule span,
+.schedule input {
+    margin-right: 10px !important;
+}
+
+.schedule .checkbox-valign {
+    margin-top: 0.5em;
+}
+
+.schedule .input-sm {
+    width: 60px;
+}
+
+.daySelect li {
+    margin-bottom: 5px;
+}
+
+.daySelect input {
+    margin-right: 10px !important;
+    margin-left: 10px !important;
 }
 
 .smsIcon .fa-stack-text {
