@@ -2148,7 +2148,6 @@ var notificationsViewModel = function() {
                     _currAlertID: 1,
                     _currGroupID: 1,
                     _currEscalationID: 1,
-                    _currThreadID: 1,
                     alertConfigs: [],
                     scheduleLayers: [],
                     threads: []
@@ -2342,11 +2341,12 @@ var notificationsViewModel = function() {
     };
 
     self.unTranslateMembers = function (policy) {
-        self.forEachArray(policy.members, function (member, idx) {
-            policy.members[idx] = member.id;
+        var rawPolicy = $.extend(true, {}, policy);
+        self.forEachArray(rawPolicy.members, function (member, idx) {
+            rawPolicy.members[idx] = member.id;
         });
 
-        return policy;
+        return rawPolicy;
     };
 
     self.buildPolicy = function (policy) {
@@ -2725,7 +2725,7 @@ var notificationsViewModel = function() {
             self.bindings.isEditingNewPolicy(true);
         },
         doAddNewPolicy: function () {
-            var newPolicy = $.extend(true, {}, self.templates.policy),
+            var newPolicy = self.getTemplate('policy'),
                 name = self.bindings.newPolicyName();
 
             // validation
@@ -2734,6 +2734,7 @@ var notificationsViewModel = function() {
             self.bindings.isEditingNewPolicy(false);
             ko.viewmodel.updateFromModel(self.bindings.currPolicy, newPolicy);
             self.bindings.selectPolicy(newPolicy);
+            self.dirty(true);
         },
         editPolicyName: function () {
             self.bindings.currPolicyName(self.bindings.currPolicy.name());
