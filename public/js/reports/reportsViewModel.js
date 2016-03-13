@@ -344,7 +344,7 @@ var reportsViewModel = function () {
 
                             if (existingPointRef.length === 0) {
                                 pointRef = {};
-                                pointRef.PropertyEnum = window.workspaceManager.config.Enums.Properties["Qualifier Point"].enum;
+                                pointRef.PropertyEnum = window.workspaceManager.config.Enums.Properties["Column Point"].enum;
                                 pointRef.PropertyName = "Column Point";
                                 pointRef.Value = column.upi;
                                 pointRef.AppIndex = i;
@@ -1402,6 +1402,9 @@ var reportsViewModel = function () {
                         tempPivot[columnName].rawValue = "";
                     } else {
                         columnConfig = getColumnConfigByColName(columnName);
+                        if (columnConfig === undefined) {
+                            console.log("ERROR: columnConfig is undefined for columnName = " + columnName);
+                        }
                         //console.log("[" + i + "] ==>  historyResults[" + j + "].Value = " + historyResults[j].Value);
                         tempPivot[columnName] = formatDataField(historyResults[j], columnConfig);
                     }
@@ -1491,17 +1494,15 @@ var reportsViewModel = function () {
             return data;
         },
         adjustDatatableHeightWidth = function () {
-            var heightAdjust = 240,
-                datatableHeight,
+            var infoscanHeader = 60,
+                adjustHeight,
                 $dataTablesScrollBody = $tabViewReport.find('.dataTables_scrollBody'),
                 $dataTablesWrapper = $tabViewReport.find('.dataTables_wrapper');
-            $dataTablesScrollBody.css('height', (window.innerHeight - heightAdjust));
             $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
             setInfoBarDateTime();
-            datatableHeight = $dataTablesWrapper.height();
-            if (window.innerHeight < (datatableHeight + 150)) {
-                heightAdjust = (datatableHeight + (2 * 150)) - window.innerHeight;  // making up for some data wrapping in cells
-                $dataTablesScrollBody.css('height', (window.innerHeight - heightAdjust));
+            if (window.innerHeight < ($dataTablesWrapper.height() + infoscanHeader)) {
+                adjustHeight = $dataTablesScrollBody.height() - (($dataTablesWrapper.height() + infoscanHeader) - window.innerHeight);
+                $dataTablesScrollBody.css('height', adjustHeight);
             }
         },
         adjustConfigTabActivePaneHeight = function () {
