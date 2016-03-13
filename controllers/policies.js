@@ -17,4 +17,17 @@ router.get('/get', function(req, res) {
   });
 });
 
+// NEW
+router.post('/save', function(req, res) {
+  var data = _.merge(req.params, req.body);
+  data.user = req.user;
+
+  Policies.save(data, function(err, points) {
+    if (err) return utils.sendResponse(res, {
+      err: err
+    });
+    return utils.sendResponse(res, points);
+  });
+});
+
 module.exports = router;

@@ -2140,6 +2140,7 @@ var notificationsViewModel = function() {
                     securityGroup: ''
                 },
                 'policy': {
+                    _id: 1,
                     name: '',
                     members: [],
                     memberGroups: [],
@@ -2340,6 +2341,14 @@ var notificationsViewModel = function() {
         return ret;
     };
 
+    self.unTranslateMembers = function (policy) {
+        self.forEachArray(policy.members, function (member, idx) {
+            policy.members[idx] = member.id;
+        });
+
+        return policy;
+    };
+
     self.buildPolicy = function (policy) {
         policy.members = self.translateMembers(policy.members);
 
@@ -2368,6 +2377,15 @@ var notificationsViewModel = function() {
     };
 
     self.save = function () {
+        self.forEachArray(self.bindings.policyList(), function (policy, idx) {
+            var data = self.unTranslateMembers(policy);
+            $.post('/api/policies/save', {
+                data: data
+            }).complete(function (response) {
+                console.log('Saved policy', policy.name);
+            });
+        });
+
         self.dirty(false);
     };
 
@@ -2450,6 +2468,16 @@ var notificationsViewModel = function() {
         });
 
         return contact;
+    };
+
+    self.savePolicy = function () {
+        self.forEachArray(self.bindings.policyList(), function (policy, idx) {
+            if (policy._id === self.bindings.currPolicy._id()) {
+                ko.viewmodel.updateFromModel(self.bindings.policyList()[idx], ko.toJS(self.bindings.currPolicy));
+            }
+        });
+
+        self.dirty(true);
     };
 
     self.bindings = {
@@ -2536,6 +2564,7 @@ var notificationsViewModel = function() {
             self.bindings.currPolicy.alertConfigs.remove(function (item) {
                 return item.id() === config.id();
             });
+            self.dirty(true);
             //needs validation
         },
 
@@ -2547,6 +2576,10 @@ var notificationsViewModel = function() {
 
             if (hr > 12) {
                 hr -= 12;
+            }
+
+            if (hr === 0) {
+                hr = 12;
             }
 
             return hr + ' ' + ampm;
@@ -2579,6 +2612,7 @@ var notificationsViewModel = function() {
                 layerIndex = context.$parentContext.$index();
 
             self.bindings.currPolicy.scheduleLayers()[layerIndex].schedules.splice(scheduleIndex, 1);
+            self.dirty(true);
         },
 
         addSchedule: function (scheduleLayer) {
@@ -2587,6 +2621,11 @@ var notificationsViewModel = function() {
 
         addScheduleLayer: function () {
             self.bindings.currPolicy.scheduleLayers.push(ko.viewmodel.fromModel(self.getTemplate('scheduleLayer')));
+        },
+
+        deleteScheduleLayer: function (layer, idx) {
+            layer.scheduleLayers.splice(idx(), 1);
+            self.dirty(true);
         },
 
         editSchedule: function () {
@@ -2601,6 +2640,8 @@ var notificationsViewModel = function() {
         saveSchedule: function () {
             self._currPolicy = ko.toJS(self.bindings.currPolicy);
             self.bindings.isEditingSchedule(false);
+
+            self.savePolicy();
         },
 
         editAlertConfigMembers: function (escalation) {
@@ -2660,13 +2701,14 @@ var notificationsViewModel = function() {
 
         saveAlertNotifications: function () {
             self.bindings.isEditingAlertNotifications(false);
-            self.dirty(true);
+            self.savePolicy();
         },
 
         updateMembers: function () {
             if (self.memberCb) {
                 self.memberCb();
                 self.memberCb = null;
+                self.savePolicy();
             }
             self.$modal.modal('hide');
         },
@@ -2700,7 +2742,7 @@ var notificationsViewModel = function() {
         savePolicyName: function () {
             self.bindings.currPolicy.name(self.bindings.currPolicyName());
             self.bindings.isEditingPolicyName(false);
-            self.dirty(true);
+            self.savePolicy();
         },
         cancelPolicyNameEdit: function () {
             self.bindings.isEditingPolicyName(false);
@@ -2718,7 +2760,7 @@ var notificationsViewModel = function() {
         savePolicyEnabled: function () {
             self.bindings.currPolicy.enabled(!self.bindings.currPolicyEnabled());
             self.bindings.isEditingPolicyEnabled(false);
-            self.dirty(true);
+            self.savePolicy();
         },
         cancelPolicyEnabledEdit: function () {
             self.bindings.isEditingPolicyEnabled(false);
@@ -2735,6 +2777,7 @@ var notificationsViewModel = function() {
             self.bindings.currPolicy.alertConfigs.push(ko.viewmodel.fromModel(configurationTemplate));
             self.bindings.currAlertConfig(self.bindings.currPolicy.alertConfigs.slice(-1)[0]);
             self.bindings.isEditingNewConfiguration(false);
+            self.savePolicy();
         },
 
         editAlertConfig: function (alertConfig) {
@@ -2755,21 +2798,48 @@ var notificationsViewModel = function() {
             self.bindings.isEditingAlertConfig(false);
         },
         saveEditAlertConfig: function () {
+            var id = self.bindings.currAlertConfig().id();
+
+            self.forEachArray(self.bindings.currPolicy.alertConfigs(), function (config) {
+                if (config.id() === id) {
+                    ko.viewmodel.updateFromModel(config, ko.toJS(self.bindings.currAlertConfig));
+                    // ko.viewmodel.updateFromModel(self.bindings.currPolicy.alertConfigs)
+                    return false;
+                }
+            });
+
+            self._originalAlertConfig = ko.toJS(self.bindings.currAlertConfig);
+
+            self.savePolicy();
+
             self.bindings.isEditingAlertConfig(false);
-            self.dirty(true);
         },
 
         addAlertGroup: function () {
             self.bindings.currAlertConfig().groups.push(ko.viewmodel.fromModel(self.getTemplate('group')));
         },
 
+        deleteAlertGroup: function (alertConfig, idx) {
+            alertConfig.groups.splice(idx, 1);
+            self.dirty(true);
+        },
+
         addEscalation: function (group) {
             group.escalations.push(ko.viewmodel.fromModel(self.getTemplate('escalation')));
         },
 
+        deleteEscalation: function (group, idx) {
+            group.escalations.splice(idx, 1);
+        },
+
         home: function () {
+            // self.forEachArray(self.bindings.policyList(), function (policy, idx) {
+            //     if (policy._id === self.bindings.currPolicy._id()) {
+            //         ko.viewmodel.updateFromModel(self.bindings.policyList()[idx], ko.toJS(self.bindings.currPolicy));
+            //     }
+            // });
             self.clearEdits(true);
-            ko.viewmodel.updateFromModel(self.bindings.currPolicy, self.templates.policy);// check for unsaved changes?
+            // ko.viewmodel.updateFromModel(self.bindings.currPolicy, self.templates.policy);// check for unsaved changes?
         }
     };
 

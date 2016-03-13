@@ -424,16 +424,16 @@ html
                                 #policyMembers.tab-pane
                                     div(data-bind="visible: !$parent.isEditingMember()")
                                         h3 Members
-                                            span.dropdown
-                                                button.btn.btn-sm.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Send all members a test message
-                                                    span.caret.caret-spaced
-                                                ul.dropdown-menu
-                                                    li
-                                                        a(href="#") Email
-                                                        a(href="#") Text Mobile
-                                                        a(href="#") Call Mobile
-                                                        a(href="#") Call Home
-                                                        a(href="#") Call Work
+                                            //- span.dropdown
+                                            //-     button.btn.btn-sm.btn-default.dropdown-toggle(type="button", data-toggle="dropdown", aria-haspopup="true", aria-expanded="true") Send all members a test message
+                                            //-         span.caret.caret-spaced
+                                            //-     ul.dropdown-menu
+                                            //-         li
+                                            //-             a(href="#") Email
+                                            //-             a(href="#") Text Mobile
+                                            //-             a(href="#") Call Mobile
+                                            //-             a(href="#") Call Home
+                                            //-             a(href="#") Call Work
 
                                         .memberList
                                             table#memberList.display.table.table-striped(style="width: 100%")
@@ -500,7 +500,7 @@ html
                                                     btn.btn.btn-sm.btn-success(data-bind="click: $parent.doAddNewConfiguration") Save and Edit Configuration
 
 
-                                    div(data-bind="visible: $parent.currAlertConfig() !== null, with: $parent.currAlertConfig")
+                                    div(data-bind="css: { editing: $parent.isEditingAlertConfig() }, visible: $parent.currAlertConfig() !== null, with: $parent.currAlertConfig")
                                         a.exitConfig(href="#", data-bind="click: $parents[1].cancelEditAlertConfig")
                                             i.fa.fa-chevron-left
                                             span View All
@@ -508,16 +508,19 @@ html
                                             .button.btn.btn-sm.btn-default(data-bind="visible: !$parents[1].isEditingAlertConfig(), click: $parents[1].doEditAlertConfig") Edit
                                             .button.btn.btn-sm.btn-text(data-bind="visible: $parents[1].isEditingAlertConfig(), click: $parents[1].cancelDoEditAlertConfig") Cancel
                                             .button.btn.btn-sm.btn-success(data-bind="visible: $parents[1].isEditingAlertConfig(), click: $parents[1].saveEditAlertConfig") Save
-                                        h3 Off-Hours
-                                        .checkbox.isOnCall
+                                        h3(data-bind="text: name")
+                                        .checkbox.isOnCall.editRow
                                             label
                                                 input.checkbox-valign(type="checkbox", data-bind="checked: isOnCall")
                                                 |This configuration is used for On-Call
 
-                                        div(data-bind="css: { editing: $parents[1].isEditingAlertConfig() }")
+                                        div(data-bind="")
                                             // ko foreach: groups
                                             .alertGroup
                                                 .groupTitle
+                                                    .pull-right.editableInput
+                                                        a(href="#", data-bind="click: function () { $parents[2].deleteAlertGroup($parent, $index); }")
+                                                            i.fa.fa-times.deleteIcon
                                                     i.fa.fa-bars
                                                     span.groupName(data-bind="text: name, visible: !$parents[2].isEditingAlertConfig()")
                                                     input.groupName.input-sm.form-control(type="text", data-bind="value: name, visible: $parents[2].isEditingAlertConfig()")
@@ -539,6 +542,9 @@ html
                                                                     .member(data-bind="text: $parents[4].getUserName($data)")
                                                                 button.editableInput.btn.btn-sm.btn-xs.btn-default.manageAlertConfigMembers(data-bind="click: $parents[3].editAlertConfigMembers") Manage Members
                                                             .rightCol.col
+                                                                .pull-right.editableInput
+                                                                    a(href="#", data-bind="click: function () { $parents[3].deleteEscalation($parent, $index); }")
+                                                                        i.fa.fa-times.deleteIcon
                                                                 .sectionTitle.sectionTitleNoIcon
                                                                     span.alertStyle Alert Style:
                                                                     span.editable(data-bind="text: alertStyle")
@@ -600,6 +606,9 @@ html
                                     .scheduleLayers(data-bind="foreach: scheduleLayers")
                                         .panel.panel-default.scheduleLayer
                                             .panel-heading
+                                                .pull-right.editableInput
+                                                    a(href="#", data-bind="click: function () { $parents[1].deleteScheduleLayer($parent, $index); }")
+                                                        i.fa.fa-times.deleteIcon
                                                 h3.panel-title(data-bind="text: 'Layer ' + (parseInt($index()) + 1)")
                                             .panel-body
                                                 .col-xs-4
