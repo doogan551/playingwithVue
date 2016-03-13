@@ -498,24 +498,24 @@ tr:hover .showOnHover {
 /* notifications */
 /* blue #1771B3 */
 
-#notifications {
+.notifications {
     color: #666;
 }
 
-#notifications .notificationHeader {
+.notifications .notificationHeader {
     margin-bottom: 30px;
 }
 
-#notifications .notificationHeader h2 {
+.notifications .notificationHeader h2 {
     font-weight: bold;
 }
 
-#notifications .notificationHeader h2 a {
+.notifications .notificationHeader h2 a {
     color: #666;
     text-decoration: none;
 }
 
-#notifications .editable {
+.notifications .editable {
     font-weight: bold;
 }
 
@@ -533,7 +533,7 @@ tr:hover .showOnHover {
     border-bottom: 8px solid #ddd;
     bottom: 0;
     position: absolute;
-    z-index: 9999;
+    z-index: 1000;
     left: calc(50% - 8px);
 }
 
@@ -572,35 +572,51 @@ tr:hover .showOnHover {
 }
 
 
-#notifications .tab-content {
+.notifications .tab-content {
     margin-top: 30px;
     margin-left: 15px;
 }
 
-#notifications .tab-pane h3 {
+.notifications .tab-pane h3 {
     font-style: italic;
 }
 
-#notifications .editRow {
+.notifications .editRow {
     display: none;
 }
 
-#notifications .editingRow .inputRow {
+.notifications .editingRow .inputRow,
+.notifications .editing .inputRow {
     display: none;
 }
 
-#notifications .editingRow .editRow {
+.notifications .editingRow .editRow,
+.notifications .editing .editRow {
     display: block;
 }
 
-#notifications .checkbox-valign {
+.notifications .checkbox-valign,
+.modal .checkbox-valign {
     margin-top: 0.2em;
 }
 
-.policyName input {
+.centerText {
+    text-align: center;
+}
+
+.noMargin {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.notifications .input-sm {
     width: auto;
     height: 24px;
     display: inline-block;
+}
+
+.input-xs {
+    width: 40px !important;
 }
 
 .policyList {
@@ -608,7 +624,7 @@ tr:hover .showOnHover {
     border-top: 1px solid #ddd;
 }
 
-.policyList .policy {
+.policy {
     border-bottom: 1px solid #ddd;
     padding: 20px 0;
     font-size: 1.2em;
@@ -616,7 +632,7 @@ tr:hover .showOnHover {
     margin-right: 0;
 }
 
-.policyList .policy a {
+.policy a {
     color: #1771B3;
     font-weight: bold;
 }
@@ -626,7 +642,7 @@ tr:hover .showOnHover {
     margin-right: 5px;
 }
 
-#notifications .deleteIcon {
+.notifications .deleteIcon {
     color: #CC3333;
 }
 
@@ -650,7 +666,7 @@ tr:hover .showOnHover {
 }
 
 
-#policyMembers > h3 > .dropdown {
+#policyMembers h3 > .dropdown {
     margin-left: 20px;
 }
 
@@ -672,7 +688,7 @@ tr:hover .showOnHover {
     margin-bottom: 30px;
 }
 
-#notifications span.dropdown,
+.notifications span.dropdown,
 .smallRow .rowTitle {
     margin-right: 20px;
 }
@@ -705,11 +721,71 @@ tr:hover .showOnHover {
     margin-bottom: 35px;
 }
 
+.addAlertConfig {
+    margin-top: -20px;
+    display: block;
+    margin-left: 15px;
+    width: 100%;
+}
+
+.addAlertConfig .btn {
+    width: 75%;
+}
+
+.addAlertGroup {
+    padding: 0 !important;
+}
+
+.addEscalation {
+    margin-bottom: 25px !important;
+}
+
+.centerFlex {
+    display: flex !important;
+    align-items: center;
+}
+
+.alertGroup .addGroup {
+    border-radius: 3px;
+    display: block;
+    padding: 15px;
+    color: #666;
+    border: 1px solid #eee;
+    text-decoration: none;
+}
+
+.alertGroup .addGroup:hover {
+    border-color: #5cb85c;
+}
+
+.alertGroup .addGroup i {
+    font-size: 2em;
+}
+
+.alertGroup .addGroup .addGroupTitle {
+    font-size: 1.4em;
+}
+
+.alertGroup .select-sm {
+    padding: 2px 5px;
+}
+
 .groupTitle {
     font-size: 1.3em;
     font-weight: bold;
     text-transform: uppercase;
     margin-bottom: 15px;
+}
+
+.groupTitle i {
+    margin-right: 10px;
+}
+
+.groupTitle input {
+    font-size: 1em;
+    font-weight: bold;
+    text-transform: uppercase;
+    height: 30px !important;
 }
 
 .alertGroup .alertSection {
@@ -731,6 +807,7 @@ tr:hover .showOnHover {
 .alertFooter {
     padding: 10px 15px;
     border-top: 1px solid #ccc;
+    width: 100%;
 }
 
 .alertSection .alertBody .leftCol {
@@ -761,11 +838,31 @@ tr:hover .showOnHover {
     margin-left: 0;
 }
 
+.sectionTitle .alertStyle {
+    margin-right: 10px;
+}
+
 .sectionIcon {
     position: absolute;
     width: 20px;
     text-align: center;
     left: 25px;
+}
+
+.editableInput {
+    display: none !important;
+}
+
+.timeInput {
+    width: 70px !important;
+}
+
+.editing .editable {
+    display: none !important;
+}
+
+.editing .editableInput {
+    display: inline-block !important;
 }
 
 .alertSection i {
@@ -836,6 +933,12 @@ tr:hover .showOnHover {
     border-bottom: 1px solid #ccc;
 }
 
+.manageAlertConfigMembers {
+    width: 75%;
+    margin-top: -40px;
+    margin-left: 15px;
+}
+
 .escalationTimer {
     font-size: 1.2em;
 }
@@ -846,6 +949,128 @@ tr:hover .showOnHover {
     margin-left: 10px;
 }
 
+.nameHeader {
+    position: relative;
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+.nameHeader i {
+    font-size: 4em;
+}
+
+.nameHeader .memberName {
+    font-size: 1.4em;
+    margin-left: 30px;
+    position: absolute;
+}
+
+.notificationTableContainer {
+    margin-bottom: 15px;
+}
+
+.notificationTable {
+    border-top: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+
+.notificationTable > .notificationRow {
+    margin: 10px;
+}
+
+.notificationTable > div .fa-pencil-square-o {
+    font-size: 1.4em;
+}
+
+.notificationsEnabled {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.notificationIcon {
+    font-size: 0.8em;
+    width: 30px;
+    display: inline-block;
+}
+
+.notificationRowHeader {
+    font-size: 1.4em;
+}
+
+.notificationAlert {
+    display: inline-block;
+}
+
+.alternativeNotification {
+    color: #c00;
+    font-style: italic;
+}
+
+.notificationAlert span {
+    margin-right: 5px;
+}
+
+.scheduleLayers .scheduleLayer:first-child {
+    margin-top: 40px;
+}
+
+#policySchedule .scheduleLayer .panel-heading .panel-title {
+    font-style: normal;
+    font-weight: bold;
+}
+
+.scheduleLayer:nth-child(odd) .panel-heading {
+    background-color: #FDA46E;
+}
+
+.scheduleLayer:nth-child(even) .panel-heading {
+    background-color: #8666FB;
+    color: #fff;
+}
+
+.scheduleLayers .scheduleLayer .panel-body {
+    padding: 0;
+    display: flex;
+}
+
+.scheduleLayers .scheduleLayer .panel-body > div {
+    padding: 15px;
+}
+
+.scheduleLayers .scheduleLayer .panel-body > div:first-child {
+    border-right: 1px solid #ccc;
+}
+
+.schedule {
+    font-size: 1.1em;
+    margin-bottom: 15px;
+}
+
+.schedule span,
+.schedule input {
+    margin-right: 10px !important;
+}
+
+.schedule .checkbox-valign {
+    margin-top: 0.5em;
+}
+
+.schedule .input-sm {
+    width: 60px;
+}
+
+.daySelect li {
+    margin-bottom: 5px;
+}
+
+.daySelect input {
+    margin-right: 10px !important;
+    margin-left: 10px !important;
+}
+
+.smsIcon .fa-stack-text {
+    font-size: 0.8em;
+}
 /*.policyList .policyTitle,
 .policyList .policyInfo {
     display: inline-block;
