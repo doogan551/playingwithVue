@@ -34,6 +34,10 @@ body {
 #page {
 	overflow:hidden;
 }
+.ui-header .ui-title {
+    margin-left: 15%;
+    margin-right: 15%;
+}
 #page .ui-panel-closed {
 	visibility:visible;
 	-webkit-backface-visibility:visible;

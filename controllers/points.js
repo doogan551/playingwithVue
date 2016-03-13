@@ -149,6 +149,25 @@ router.get('/getpointref/small/:upi', function(req, res) {
     return utils.sendResponse(res, point);
   });
 });
+// New
+router.get('/getpointref/instance/:upi/:device', function(req, res) {
+  var data = _.merge(req.params, req.body, req.query);
+  data.user = req.user;
+
+  Point.getPointRefsInstance(data, function(err, message, point) {
+    if (err) {
+      return utils.sendResponse(res, {
+        err: err
+      });
+    }
+    if (message) {
+      return utils.sendResponse(res, {
+        message: message
+      });
+    }
+    return utils.sendResponse(res, point);
+  });
+});
 // Checked
 router.post('/findalarmdisplays', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);

@@ -1,0 +1,124 @@
+<div data-bind="click: toggleNetworkInfo" class="btn btn-default btn-xs btnViewNtwInfo"><i class="fa fa-cloud"></i> Network Info</div>
+
+<!-- Modal -->
+<div class="modal fade bs-example-modal-sm networkInfo" tabindex="-1" data-backdrop="static" data-bind="modal: showModal" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Network Info</h4>
+                <div>
+                    <div class="btn btn-default btn-xs btnClicked" data-bind="click:switchTab">Network Devices</div>
+                    <div class="btn btn-default btn-xs" data-bind="click:switchTab">Network Points</div>
+                    <div class="btn btn-default btn-xs" data-bind="click:switchTab">Router Table</div>
+                    <div class="btn btn-default btn-xs refreshNetworkInfoBtn" data-bind="click:getData">Refresh</div>
+
+                    <div class="btn btn-default btn-xs btnPrint pull-right" data-bind="click:printHistory">Print</div>
+                </div>
+            </div>
+            
+            <div class="modal-body container-fluid">
+                <div>
+                	<!-- Getting -->
+                    <div class="modalScene modalWait">
+                        <p>Retrieving Network Info...</p>
+                        <h1><i class="fa fa-refresh fa-spin"></i></h1>
+                    </div>
+                    <!-- Error -->
+                    <div class="modalScene modalError">
+                        <h1><i class="fa fa-exclamation-triangle text-warning"></i> Error</h1>
+                        <p data-bind="text: errorText"></p>
+                        <p>Close this dialog or <a href="javascript://" data-bind="click: getData">try again</a></p>
+                    </div>
+                    <!-- Network Info -->
+                    <div class="modalScene modalValue">
+                        <div class="devicesTable">
+                            <label>Network Devices</label>
+                            <table class="grid table table-condensed">
+                                <thead>
+                                    <tr class="deviceheaders">
+                                        <th class="pointInstance" data-bind="click: sortDevices"><div>Point Instance<i class="fa"></i></div></th>
+                                        <th class="networkNumber" data-bind="click: sortDevices"><div>Network Number<i class="fa"></i></div></th>
+                                        <th class="macAddress" data-bind="click: sortDevices"><div>MAC Address<i class="fa"></i></div></th>
+                                        <th class="vendorID" data-bind="click: sortDevices"><div>Vendor ID<i class="fa"></i></div></th>
+                                        <th class="apduLength" data-bind="click: sortDevices"><div>Max APDU Length<i class="fa"></i></div></th>
+                                        <th class="changeCount" data-bind="click: sortDevices"><div>Change Count<i class="fa"></i></div></th>
+                                        <th class="readProp" data-bind="click: sortDevices"><div>Read Property Only<i class="fa"></i></div></th>
+                                        <th class="noPriority" data-bind="click: sortDevices"><div>No Priority Array<i class="fa"></i></div></th>
+                                    </tr>
+                                </thead>
+                                <tbody data-bind="foreach: NetworkDevices.entries">
+                                    <tr>
+                                        <td data-bind="text: $data['Point Instance'].Value(), css: $data['Point Instance'].style(), click:$parent.openPointRef.bind($data, 'Point Instance')"></td>
+                                        <td data-bind="text: $data['Network Number'].Value()"></td>
+                                        <td data-bind="text: $data['MAC Address'].Value()"></td>
+                                        <td data-bind="text: $data['Vendor ID'].Value()"></td>
+                                        <td data-bind="text: $data['Max APDU Length'].Value()"></td>
+                                        <td data-bind="text: $data['Change Count'].Value()"></td>
+                                        <td data-bind="text: $data['Read Property Only'].Value()"></td>
+                                        <td data-bind="text: $data['No Priority Array'].Value()"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <!-- ko if: NetworkDevices.entries().length == 0 -->
+                            <span>No Network Devices Available</span>
+                            <!-- /ko -->
+                        </div>
+
+                        <div class="pointsTable">
+                            <label>Network Points</label>
+                            <table class="grid table table-condensed">
+                                <thead>
+                                    <tr class="pointheaders">
+                                        <th data-bind="click: sortPoints"><div>Point Type<i class="fa"></i></div></th>
+                                        <th data-bind="click: sortPoints"><div>Point Instance<i class="fa"></i></div></th>
+                                        <th data-bind="click: sortPoints"><div>Device Instance<i class="fa"></i></div></th>
+                                        <th data-bind="click: sortPoints"><div>Poll Period<i class="fa"></i></div></th>
+                                    </tr>
+                                </thead>
+                                <tbody data-bind="foreach: NetworkPoints.entries">
+                                    <tr>
+                                        <td data-bind="text: $data['Point Type'].Value()"></td>
+                                        <td data-bind="text: $data['Point Instance'].Value(), css: $data['Point Instance'].style(), click:$parent.openPointRef.bind($data, 'Point Instance')"></td>
+                                        <td data-bind="text: $data['Device Instance'].Value(), css: $data['Device Instance'].style(), click:$parent.openPointRef.bind($data, 'Device Instance')"></td>
+                                        <td data-bind="text: $data['Poll Period'].Value()"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <!-- ko if: NetworkPoints.entries().length == 0 -->
+                            <span>No Network Points Available</span>
+                            <!-- /ko -->
+                        </div>
+
+                        <div class="routerTable">
+                            <label>Router Table</label>
+                            <table class="grid table table-condensed">
+                                <thead>
+                                    <tr class="routerheaders">
+                                        <th data-bind="click: sortRouter"><div>Network Number<i class="fa"></i></div></th>
+                                        <th data-bind="click: sortRouter"><div>Port Number<i class="fa"></i></div></th>
+                                        <th data-bind="click: sortRouter"><div>MAC Address<i class="fa"></i></div></th>
+                                        <th data-bind="click: sortRouter"><div>Change Count<i class="fa"></i></div></th>
+                                    </tr>
+                                </thead>
+                                <tbody data-bind="foreach: RouterTable.entries">
+                                    <tr>
+                                        <td data-bind="text: $data['Network Number'].Value()"></td>
+                                        <td data-bind="text: $data['Port Number'].Value()"></td>
+                                        <td data-bind="text: $data['MAC Address'].Value()"></td>
+                                        <td data-bind="text: $data['Change Count'].Value()"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <!-- ko if: RouterTable.entries().length == 0 -->
+                            <span>No Routers Available</span>
+                            <!-- /ko -->
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /ko -->

@@ -411,6 +411,8 @@ var Config = (function(obj) {
                         case "Fan Control Point":
                         case "Lights Control Point":
                             return filterPointTypes('enumControl');
+                        case "Column Point":
+                            return filterPointTypes('value');
                         // Begin Lift Station point properties
                         case "High Level Float Point":
                         case "Lag Level Float Point":
@@ -1176,7 +1178,7 @@ var Config = (function(obj) {
             var point = data.point,
                 updateIsDisplayable = false;
 
-            if (data.propertyObject.Value !== 0) {
+            if (data.propertyObject.PointInst !== 0) {
                 point._devModel = data.refPoint._devModel;
             } else {
                 point._devModel = enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"];
@@ -1818,7 +1820,7 @@ var Config = (function(obj) {
                 propertyObject = data.propertyObject,
                 updateIsDisplayable = false;
 
-            if (propertyObject.Value !== 0) {
+            if (propertyObject.PointInst !== 0) {
                 if (propertyObject.DevInst !== obj.Utility.getPropertyObject("Device Point", point).PointInst) {
                     data.ok = false;
                     data.result = data.property + " must be on same Device.";
@@ -2742,12 +2744,22 @@ var Config = (function(obj) {
 
         "Device Port": function(data) {
             data.propertyObject = (!!data.propertyObject) ? data.propertyObject : obj.Utility.getPropertyObject("Device Port", data.point);
-            var point = data.point, // Shortcut,
-                val = data.propertyObject.Value, // Property value
-                disp = false;
+            var point = data.point,
+                rmuTypes = enumsTemplatesJson.Enums["Remote Unit Model Types"],
+                modbusRemoteUnitTypes = [
+                    rmuTypes["Liebert"].enum,
+                    rmuTypes["Sierra Steam Meter"].enum,
+                    rmuTypes["Siemens Power Meter"].enum,
+                    rmuTypes["Ingersol Rand Intellysis"].enum,
+                    rmuTypes["PowerLogic 3000 Meter"].enum,
+                    rmuTypes["Generic Modbus"].enum,
+                    rmuTypes["PowerTraks 9000"].enum,
+                    rmuTypes["Programmable Modbus"].enum
+                ],
+                val = data.propertyObject.Value; // Property value
 
-            if (val === "Ethernet") disp = true;
-            point["Ethernet IP Port"].isDisplayable = disp;
+            point["Ethernet IP Port"].isDisplayable = (val === "Ethernet") ? true : false;
+            point["Ethernet IP Port"].isReadOnly = (modbusRemoteUnitTypes.indexOf(point._rmuModel) > -1) ? false : true;
             return point;
         },
 
@@ -4048,6 +4060,7 @@ var Config = (function(obj) {
         applyDeviceTypeUplinkPort: function(data) {
             var point = data.point;
 
+            point["Downlink IP Port"].isReadOnly = true;
             if (point["Uplink Port"].Value == "Ethernet") {
                 point["Ethernet Protocol"].isReadOnly = true;
                 point["Ethernet Protocol"].Value = "IP";
@@ -4171,6 +4184,7 @@ var Config = (function(obj) {
         applyDeviceTypeEthernetProtocol: function(data) {
             var point = data.point;
 
+            point["Ethernet IP Port"].isReadOnly = true;
             if (point["Ethernet Protocol"].Value == "None") {
                 point["Ethernet Address"].isDisplayable = false;
                 point["Ethernet IP Port"].isDisplayable = false;

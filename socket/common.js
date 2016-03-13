@@ -37,16 +37,16 @@ var socket = function() {
     }
   }, function(err, codes) {
     common.qualityCodes = codes.Entries;
+    Utility.getOne({
+      collection: 'SystemInfo',
+      query: {
+        Name: 'Control Priorities'
+      }
+    }, function(err, priorities) {
+      common.controlPriorities = priorities.Entries;
+      loader();
+    });
   });
-  Utility.getOne({
-    collection: 'SystemInfo',
-    query: {
-      Name: 'Control Priorities'
-    }
-  }, function(err, priorities) {
-    common.controlPriorities = priorities.Entries;
-  });
-  loader();
 };
 
 var loader = function() {
@@ -408,6 +408,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Digital Heat 3 Start Load":
               case "Digital Heat 3 Stop Load":
               case "Default Value":
+              case "Delay Time":
               case "Demand Enable":
               case "Demand Interval":
               case "Disable Limit Fault":

@@ -26,7 +26,7 @@ var alarmsCollection = utils.CONSTANTS("alarmsCollection");
 var activityLogCollection = utils.CONSTANTS("activityLogCollection");
 var qualityCodes = [];
 var actLogsEnums = Config.Enums["Activity Logs"];
-var controllerPriorities = [];
+var controlPriorities = [];
 var eventEmitter = new events.EventEmitter();
 
 var openDisplays = [];
@@ -39,6 +39,7 @@ module.exports = function socketio(_common) {
   io = _common.sockets.get().io;
   openDisplays = _common.openDisplays;
   openAlarms = _common.openAlarms;
+  controlPriorities = _common.controlPriorities;
 
   io.sockets.on('connection', function(sock) {
     logger.info('socket connected');
@@ -49,8 +50,8 @@ module.exports = function socketio(_common) {
     user = sock.request.user;
     // Checked
     sock.on('getStatus', function() {
-      // sock.emit('statusUpdate', systemStatus);
-      logger.info('system  status not gotten');
+      sock.emit('statusUpdate', _common.systemStatus || 'serverdown');
+      logger.info('system  status', _common.systemStatus);
     });
 
     //socket function called from client to let server know a new display is open
@@ -190,9 +191,9 @@ module.exports = function socketio(_common) {
           }
           logData.log = "Control to " + logData.newValue.Value;
           if (jsonData.hasOwnProperty("Priority")) {
-            for (i = 0; i < controllerPriorities.length; i++) {
-              if (controllerPriorities[i]["Priority Level"] === jsonData.Priority) {
-                logData.log += " at priority " + controllerPriorities[i]["Priority Text"];
+            for (i = 0; i < controlPriorities.length; i++) {
+              if (controlPriorities[i]["Priority Level"] === jsonData.Priority) {
+                logData.log += " at priority " + controlPriorities[i]["Priority Text"];
               }
             }
 
@@ -203,9 +204,9 @@ module.exports = function socketio(_common) {
           };
           logData.log = 'Value reset to ' + logData.newValue.Value;
         } else {
-          for (i = 0; i < controllerPriorities.length; i++) {
-            if (controllerPriorities[i]["Priority Level"] === jsonData.Priority) {
-              logData.log = "Control relinquished at priority " + controllerPriorities[i]["Priority Text"];
+          for (i = 0; i < controlPriorities.length; i++) {
+            if (controlPriorities[i]["Priority Level"] === jsonData.Priority) {
+              logData.log = "Control relinquished at priority " + controlPriorities[i]["Priority Text"];
             }
           }
         }
@@ -274,6 +275,7 @@ module.exports = function socketio(_common) {
 
           zmq.sendCommand(command, function(err, msg) {
             if (!!err) {
+              err = err.ApduErrorMsg || err.msg;
               sock.emit('returnFromLoader', {
                 err: err
               });

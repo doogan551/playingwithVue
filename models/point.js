@@ -199,6 +199,12 @@ module.exports = {
       _name3: 1,
       _name4: 1
     };
+    var secondSort = {
+      name1: 1,
+      name2: 1,
+      name3: 1,
+      name4: 1
+    };
     var reduceToUserGroups = function() {
       return {
         Security: {
@@ -317,6 +323,8 @@ module.exports = {
       $limit: limit
     }, {
       $project: projection
+    }, {
+      $sort: secondSort
     }];
 
     if (!isSysAdmin) {
@@ -338,7 +346,6 @@ module.exports = {
         if (err) {
           return cb(err, null);
         }
-
         return cb(null, points);
       });
     } else {
@@ -764,6 +771,25 @@ module.exports = {
       }, callback);
     }
 
+    function setIpPort(point, cb) {
+      var criteria = {
+        collection: 'SystemInfo',
+        query: {
+          Name: 'Preferences'
+        }
+      };
+
+      Utility.getOne(criteria, function(err, prefs) {
+        var ipPort = prefs['IP Port'];
+        if (point['Point Type'].Value === 'Device') {
+          point['Ethernet IP Port'].Value = ipPort;
+          point['Downlink IP Port'].Value = ipPort;
+        } else if (point['Point Type'].Value === 'Remote Unit' && [5, 9, 10, 11, 12, 13, 14, 16].indexOf(point['Model Type'].eValue) < 0) {
+          point['Ethernet IP Port'].Value = ipPort;
+        }
+        return cb();
+      });
+    }
 
     function fixPoint(upiObj, template, isClone, callback) {
       template.Name = Name;
@@ -789,60 +815,65 @@ module.exports = {
       }
       console.log("isClone", isClone);
       if (!isClone) {
-        if (template["Point Type"].Value === "Sensor") {
-          template["Sensor Type"].Value = (subType) ? subType.Value : "Input";
-          template["Sensor Type"].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
-        } else if (template["Point Type"].Value === "Report") {
-          template["Report Type"].Value = (subType) ? subType.Value : "Property";
-          template["Report Type"].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
-        }
-
-        template._parentUpi = parentUpi;
-
-        criteria = {
-          collection: 'AlarmDefs',
-          query: {
-            isSystemMessage: true
-          },
-          fields: {
-            msgType: 1
+        // update device template here
+        // get telemetry ip port and set ethernet ip port and downlink ip port
+        // rmu - model type nin[5, 9, 10, 11, 12, 13, 14, 16] set ethernet ip port
+        setIpPort(template, function() {
+          if (template["Point Type"].Value === "Sensor") {
+            template["Sensor Type"].Value = (subType) ? subType.Value : "Input";
+            template["Sensor Type"].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
+          } else if (template["Point Type"].Value === "Report") {
+            template["Report Type"].Value = (subType) ? subType.Value : "Property";
+            template["Report Type"].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
           }
-        };
 
-        Utility.get(criteria, function(err, alarmDefs) {
-          if (err) {
-            return callback(err);
-          }
-          if (template["Alarm Messages"] !== undefined) {
-            for (var i = 0; i < template["Alarm Messages"].length; i++) {
-              for (var j = 0; j < alarmDefs.length; j++) {
-                if (template["Alarm Messages"][i].msgType === alarmDefs[j].msgType) {
-                  template["Alarm Messages"][i].msgId = alarmDefs[j]._id;
-                }
-              }
-            }
-          }
+          template._parentUpi = parentUpi;
 
           criteria = {
-            collection: 'SystemInfo',
+            collection: 'AlarmDefs',
             query: {
-              Name: 'Preferences'
+              isSystemMessage: true
             },
             fields: {
-              "Quality Code Default Mask": 1,
-              _id: 0
+              msgType: 1
             }
           };
 
-          Utility.getOne(criteria, function(err, defaultQualityCodeMask) {
+          Utility.get(criteria, function(err, alarmDefs) {
             if (err) {
               return callback(err);
             }
-            if (template["Quality Code Enable"] !== undefined) {
-              template["Quality Code Enable"].Value = defaultQualityCodeMask["Quality Code Default Mask"];
+            if (template["Alarm Messages"] !== undefined) {
+              for (var i = 0; i < template["Alarm Messages"].length; i++) {
+                for (var j = 0; j < alarmDefs.length; j++) {
+                  if (template["Alarm Messages"][i].msgType === alarmDefs[j].msgType) {
+                    template["Alarm Messages"][i].msgId = alarmDefs[j]._id;
+                  }
+                }
+              }
             }
-            addTemplateToDB(template, callback);
 
+            criteria = {
+              collection: 'SystemInfo',
+              query: {
+                Name: 'Preferences'
+              },
+              fields: {
+                "Quality Code Default Mask": 1,
+                _id: 0
+              }
+            };
+
+            Utility.getOne(criteria, function(err, defaultQualityCodeMask) {
+              if (err) {
+                return callback(err);
+              }
+              if (template["Quality Code Enable"] !== undefined) {
+                template["Quality Code Enable"].Value = defaultQualityCodeMask["Quality Code Default Mask"];
+              }
+              addTemplateToDB(template, callback);
+
+            });
           });
         });
       } else {
@@ -907,6 +938,47 @@ module.exports = {
       }
 
       return cb(null, null, point);
+    });
+  },
+  getPointRefsInstance: function(data, cb) {
+    this.getPointRefsSmall(data, function(err, msg, result) {
+      if (!!err) {
+        return cb(err);
+      } else if (!!result) {
+        return cb(null, null, result);
+      } else {
+        var filterProps = {
+          Name: 1,
+          Value: 1,
+          "Point Type": 1,
+          "Point Refs": 1
+        };
+        var criteria = {
+          collection: 'points',
+          query: {
+            'Instance.Value': parseInt(data.upi, 10),
+            'Point Type.Value': 'Remote Unit',
+            'Point Refs': {
+              $elemMatch: {
+                'PointInst': parseInt(data.device, 10),
+                'PropertyName': 'Device Point'
+              }
+            }
+          },
+          fields: filterProps
+        };
+
+        Utility.getOne(criteria, function(err, point) {
+          if (err) {
+            return cb(err);
+          }
+          if (point === null) {
+            return cb(null, 'No point found.');
+          }
+
+          return cb(null, null, point);
+        });
+      }
     });
   },
   findAlarmDisplays: function(data, cb) {
