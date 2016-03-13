@@ -2043,7 +2043,7 @@ var weatherViewModel = function() {
 
 // Notifications screen -------------------------------------------------------
 var notificationsViewModel = function() {
-    var _webendpoint = 'http://' + window.location.host,
+    var _webendpoint = window.location.protocol + '//' + window.location.host,
         _webendpointURI = _webendpoint + '/api/security/',
         Member = function (data, dt) {
             var ret = {
