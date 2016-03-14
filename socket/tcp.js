@@ -15,11 +15,11 @@ module.exports = function(_common) {
     var tcp = common.sockets.get().tcp;
 
     tcp.on('connection', function(socket) {
-        logger.info("connected tcpServer");
+        // logger.info("connected tcpServer");
         socket.setEncoding('utf8');
 
         socket.on('data', function(buf) {
-            logger.info(buf);
+            // logger.info(buf);
             var jbuf = JSON.parse(buf);
 
             if (jbuf.msg == 'newtod') {
@@ -32,7 +32,7 @@ module.exports = function(_common) {
                 runScheduleEntry(jbuf.point, function(err) {
                     err = (err) ? err : "Success";
                     writeToLogs(dateString + ' -  ToD Schedule - ' + point._id + ' - ' + nameString + ' - ' + err + "\n", function(err) {
-                        logger.info(err);
+                        // logger.info(err);
                     });
                 });
             } else if (jbuf.msg === 'serverup' || jbuf.msg === 'serverdown') {

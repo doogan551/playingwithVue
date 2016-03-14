@@ -358,13 +358,14 @@ html
                                             .col-xs-3
                                                 a(href="#", data-bind="click: $parent.selectPolicy, text: name")
                                             .col-xs-3 Members: #[span(data-bind="text: members.length")]
-                                            .col-xs-1.pull-right.deleteIcon
-                                                i.fa.fa-times
+                                            .col-xs-1.pull-right
+                                                a(href="#", data-bind="click: $parent.deletePolicy")
+                                                    i.fa.fa-times.deleteIcon
                                     .newPolicy(data-bind="visible: isEditingNewPolicy")
                                         .policy.row
-                                            .col-xs-3
+                                            .col-xs-4
                                                 input(type="text", data-bind="value: newPolicyName")
-                                            .col-xs-9
+                                            .col-xs-8
                                                 btn.btn.btn-sm.btn-success(data-bind="click: doAddNewPolicy") Save and Edit Policy
 
                                 #notificationsActivity.tab-pane
@@ -475,6 +476,29 @@ html
                                                 // ko template: { name: 'notificationTableTpl', data: {alerts: alerts.Urgent, name: 'Urgent'}}
                                                 // /ko
 
+                                                h3 Options
+                                                .notificationTable
+                                                    .notificationRow
+                                                        .checkbox
+                                                            label
+                                                                input.checkbox-valign(type="checkbox", data-bind="disable: !$parents[1].isEditingAlertNotifications(), checked: notificationOptions.Emergency")
+                                                                |Use different notify settings for Emergency alarms
+                                                    .notificationRow
+                                                        .checkbox
+                                                            label
+                                                                input.checkbox-valign(type="checkbox", data-bind="disable: !$parents[1].isEditingAlertNotifications(), checked: notificationOptions.Critical")
+                                                                |Use different notify settings for Critical alarms
+                                                    .notificationRow
+                                                        .checkbox
+                                                            label
+                                                                input.checkbox-valign(type="checkbox", data-bind="disable: !$parents[1].isEditingAlertNotifications(), checked: notificationOptions.Urgent")
+                                                                |Use different notify settings for Urgent alarms
+                                                    .notificationRow
+                                                        .checkbox
+                                                            label
+                                                                input.checkbox-valign(type="checkbox", data-bind="disable: !$parents[1].isEditingAlertNotifications(), checked: notificationOptions.notifyOnAck")
+                                                                |Notify me when someone else acknowledges an alarm that I have been alerted about
+
                                 #policyAlertConfig.tab-pane
                                     div(data-bind="visible: $parent.currAlertConfig() === null")
                                         .pull-right
@@ -584,7 +608,7 @@ html
                                                             .checkbox(data-bind="with: repeatConfig")
                                                                 label
                                                                     input.checkbox-valign(type="checkbox", data-bind="checked: enabled")
-                                                                    div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] times.  (Use 0 for indefinite repeats)
+                                                                    div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] #[input.input-sm.form-control.input-xs.editableInput(data-bind="value: repeatCount")] times.  (Use 0 for indefinite repeats)
 
                                             // /ko
 
