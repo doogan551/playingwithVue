@@ -2095,7 +2095,7 @@ var notificationsViewModel = function() {
                 'alertNotification': {
                     info: null,
                     type: null,
-                    delay: 0
+                    delay: 1
                 },
                 'alertConfig': {
                     id: 0,

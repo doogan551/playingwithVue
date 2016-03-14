@@ -476,6 +476,29 @@ html
                                                 // ko template: { name: 'notificationTableTpl', data: {alerts: alerts.Urgent, name: 'Urgent'}}
                                                 // /ko
 
+                                                h3 Options
+                                                .notificationTable
+                                                    .notificationRow
+                                                        .checkbox
+                                                            label
+                                                                input.checkbox-valign(type="checkbox", data-bind="disable: !$parents[1].isEditingAlertNotifications(), checked: notificationOptions.Emergency")
+                                                                |Use different notify settings for Emergency alarms
+                                                    .notificationRow
+                                                        .checkbox
+                                                            label
+                                                                input.checkbox-valign(type="checkbox", data-bind="disable: !$parents[1].isEditingAlertNotifications(), checked: notificationOptions.Critical")
+                                                                |Use different notify settings for Critical alarms
+                                                    .notificationRow
+                                                        .checkbox
+                                                            label
+                                                                input.checkbox-valign(type="checkbox", data-bind="disable: !$parents[1].isEditingAlertNotifications(), checked: notificationOptions.Urgent")
+                                                                |Use different notify settings for Urgent alarms
+                                                    .notificationRow
+                                                        .checkbox
+                                                            label
+                                                                input.checkbox-valign(type="checkbox", data-bind="disable: !$parents[1].isEditingAlertNotifications(), checked: notificationOptions.notifyOnAck")
+                                                                |Notify me when someone else acknowledges an alarm that I have been alerted about
+
                                 #policyAlertConfig.tab-pane
                                     div(data-bind="visible: $parent.currAlertConfig() === null")
                                         .pull-right
