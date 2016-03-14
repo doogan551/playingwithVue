@@ -69,6 +69,7 @@ block content
 												th.medium.strong.calculateColumn(style="display:none") Calculate
 												th.medium.strong.typeColumn(style="display:none") Type
 												th.medium.strong.precisionColumn(style="display:none") Precision
+												th.medium.strong
 										tbody.sortablecolums(data-bind="foreach: listOfColumns()")
 											tr.pointdata(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
 												td.columnNameContainer(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
@@ -158,7 +159,7 @@ block content
 													.handle
 												td(data-bind="css: {filterCondition: ($parent.listOfFilters().length > 1), childCondition: childLogic === true, firstConditionInGroup: beginGroup === true, lastConditionInGroup: endGroup === true} ")
 													.dropdown.availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
-														button.btn.btn-default.dropdown-toggle.conditionButton(data-toggle="dropdown")
+														button.btn.btn-default.dropdown-toggle.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}", data-toggle="dropdown")
 															span(data-bind="text: $root.displayCondition(condition)")
 														ul.operators.dropdown-menu
 															// ko foreach: $root.conditions()
