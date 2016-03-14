@@ -697,7 +697,7 @@ var dbAlarmQueueLocked = false,
 						if (alertGroup.counter && now >= alertGroup.repeatTimestamp) {
 							resetEscalations = true;
 							if (--alertGroup.counter) {
-								alertGroup.repeatTimestamp = actions.thread.getTimestamp(info, alertGroup.repeatConfig.repeatTime);
+								alertGroup.repeatTimestamp = actions.utility.getTimestamp(info, alertGroup.repeatConfig.repeatTime);
 							}
 							isUpdated = true;
 						}
