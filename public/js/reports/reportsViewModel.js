@@ -1289,6 +1289,7 @@ var reportsViewModel = function () {
         formatDataField = function (dataField, columnConfig) {
             var keyBasedValue,
                 htmlString,
+                temp,
                 $customField,
                 rawValue = dataField.Value;
 
@@ -1333,6 +1334,9 @@ var reportsViewModel = function () {
                     }
                     break;
                 case "Bool":
+                    temp = dataField.Value.toString().toLowerCase();
+                    dataField.Value = temp[0].toUpperCase() + temp.substring(1);
+                    break;
                 case "BitString":
                 case "Enum":
                 case "undecided":
@@ -1392,7 +1396,7 @@ var reportsViewModel = function () {
                 historyResults = historyData[i].HistoryResults;
                 tempPivot = {};
                 tempPivot["Date"] = {};
-                tempPivot["Date"].Value = moment.unix(historyData[i].timestamp).format("MM/DD/YYYY hh:mm:ss a");
+                tempPivot["Date"].Value = moment.unix(historyData[i].timestamp).format("ddd MM/DD/YYYY hh:mm:ss a");
                 tempPivot["Date"].rawValue = historyData[i].timestamp;
                 for (j = 0; j < historyResults.length; j++) {
                     columnName = historyResults[j].Name;
@@ -1429,7 +1433,7 @@ var reportsViewModel = function () {
                 for (j = 0; j < totalizerData[0].totals.length; j++) {
                     tempPivot = {};
                     tempPivot["Date"] = {};
-                    tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YYYY hh:mm:ss a");
+                    tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("ddd MM/DD/YYYY hh:mm:ss a");
                     tempPivot["Date"].rawValue = moment.unix(totalizerData[0].totals[j].range.start);
                     for (i = 0; i < numberOfColumnsFound; i++) {
                         operator = totalizerData[i].op.toLowerCase();
