@@ -1497,7 +1497,7 @@ var reportsViewModel = function () {
             }
             return data;
         },
-        adjustDatatableHeightWidth = function () {
+        adjustDatatableHeight = function () {
             var infoscanHeader = 60,
                 adjustHeight,
                 $dataTablesScrollBody = $tabViewReport.find('.dataTables_scrollBody'),
@@ -1520,7 +1520,7 @@ var reportsViewModel = function () {
             setTimeout(function () {
                 if (new Date() - lastResize >= resizeTimer) {
                     if (self.currentTab() === 2) {
-                        adjustDatatableHeightWidth();
+                        adjustDatatableHeight();
                     } else {
                         adjustConfigTabActivePaneHeight();
                     }
@@ -2260,13 +2260,13 @@ var reportsViewModel = function () {
                         realtime: false
                     },
                     order: [[0, "asc"]], // always default sort by first column
-                    scrollY: (window.innerHeight - 270) + "px",
+                    scrollY: true,
                     scrollX: true,
                     scrollCollapse: true,
                     lengthChange: true,
                     lengthMenu: [[10, 15, 25, 50, 75, 100, -1], [10, 15, 25, 50, 75, 100, "All"]],
                     //bFiler: false,  // search box
-                    pageLength: self.selectedPageLength()
+                    pageLength: parseInt(self.selectedPageLength(), 10)
                 });
             }
 
@@ -2294,7 +2294,7 @@ var reportsViewModel = function () {
                 $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
                 self.refreshData(false);
                 self.currentTimeStamp = moment().format("dddd MMMM DD, YYYY hh:mm:ss a");
-                adjustDatatableHeightWidth();
+                adjustDatatableHeight();
 
                 if (!exportEventSet) {
                     $tabViewReport.find("a.btn.btn-default.buttons-collection").on('click', function () {
