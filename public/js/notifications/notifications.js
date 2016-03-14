@@ -204,5 +204,6 @@ var notificationEntries = [{
     config: {
         groupID: 1,
         escalationID: 1
+        alertConfigID
     }
 }];

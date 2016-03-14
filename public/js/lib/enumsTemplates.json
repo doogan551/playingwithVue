@@ -873,14 +873,6 @@
                 "enum": 4
             }
         },
-        "Pump Select Modes": {
-            "Alternating": {
-                "enum": 0
-            },
-            "Lowest Runtime": {
-                "enum": 1
-            }
-        },
         "Quality Code Enable Bits": {
             "Override": {
                 "enum": 1
@@ -3080,8 +3072,7 @@
             "Pump Select Mode": {
                 "enum": 420,
                 "valueType": "Enum",
-                "reportEnable": false,
-                "enumSet": "Pump Select Modes"
+                "reportEnable": false
             },
             "Pump Sequence Delay": {
                 "enum": 415,
@@ -14627,10 +14618,11 @@
                     "eValue": 0
                 },
                 "Control Priority": {
-                    "enum": 39,
-                    "valueType": "Enum",
-                    "reportEnable": true,
-                    "enumsSet": "Default Control Priorities"
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Level 16",
+                    "eValue": 16
                 },
                 "Emergency Pump Down Time": {
                     "ValueType": 13,

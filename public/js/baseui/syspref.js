@@ -2043,413 +2043,199 @@ var weatherViewModel = function() {
 
 // Notifications screen -------------------------------------------------------
 var notificationsViewModel = function() {
-    var self = {
-        displayName: 'Notifications',
-        dirty: ko.observable(false),
-        hasError: ko.observable(false),
-        policyTemplate: {
-            name: '',
-            members: [],
-            memberGroups: [],
-            enabled: true,
-            _currAlertID: 1,
-            _currGroupID: 1,
-            _currEscalationID: 1,
-            _currThreadID: 1,
-            alertConfigs: [],
-            schedules: [],
-            threads: [],
+    var _webendpoint = window.location.protocol + '//' + window.location.host,
+        _webendpointURI = _webendpoint + '/api/security/',
+        Member = function (data, dt) {
+            var ret = {
+                    id: data._id,
+                    firstName: data['First Name'].Value,
+                    lastName: data['Last Name'].Value,
+                    contactInfo: data['Contact Info'].Value,
+                    securityGroup: null,
+                    alerts: data.alerts,
+                    notificationsEnabled: data.notificationsEnabled,
+                    notificationOptions: data.notificationOptions || self.getTemplate('notificationOptions')
+                };
 
-            //unsaved properties
-            currAlertConfig: null
+            return ret;
         },
+        self = {
+            displayName: 'Notifications',
+            dirty: ko.observable(false),
+            hasError: ko.observable(false),
+            $modal: $('#notificationsEditMemberModal'),
+            iconLookup: {
+                SMS: 'comment',
+                Email: 'envelope-o',
+                Voice: 'phone'
+            },
+            alertTypeLookup: {
+                SMS: 'text',
+                Email: 'email',
+                Voice: 'call'
+            },
+            templates: {
+                'schedule': {
+                    holidays: false,
+                    days: [],
+                    allDay: false,
+                    startTime: null,
+                    endTime: null
+                },
+                'scheduleLayer': {
+                    alertConfigs: [],
+                    schedules: []
+                },
+                'notificationOptions': {
+                    Emergency: false,
+                    Critical: false,
+                    Urgent: false,
+                    notifyOnAck: false
+                },
+                'alertNotification': {
+                    info: null,
+                    type: null,
+                    delay: 0
+                },
+                'alertConfig': {
+                    id: 0,
+                    isOnCall: false,
+                    name: '',
+                    groups: [],
+                    repeatConfig: {},
+                    rotateConfig: {}
+                },
+                'group': {
+                    active: false,
+                    alertDelay: 0,
+                    id: 0,
+                    name: '',
+                    repeatConfig: {},
+                    escalations: []
+                },
+                'escalation': {
+                    alertStyle: 'Everyone Sequenced',
+                    escalationDelay: 0,
+                    id: 0,
+                    memberAlertDelay: 0,
+                    members: [],
+                    repeatConfig: {},
+                    rotateConfig: {}
+                },
+                'repeatConfig': {
+                    enabled: false,
+                    repeatCount: 0,
+                    repeatDelay: 0
+                },
+                'rotateConfig': {
+                    day: 'Friday',
+                    enabled: false,
+                    scale: 'week',
+                    time: '9:00'
+                },
+                'member': {
+                    firstName: '',
+                    id: 0,
+                    lastName: '',
+                    securityGroup: ''
+                },
+                'policy': {
+                    _id: 1,
+                    name: '',
+                    members: [],
+                    memberGroups: [],
+                    enabled: true,
+                    _currAlertID: 1,
+                    _currGroupID: 1,
+                    _currEscalationID: 1,
+                    alertConfigs: [],
+                    scheduleLayers: [],
+                    threads: []
+                }
+            },
 
-        policies: [{
-            name: 'WWTP',
-            members: [{
-                id: 1,
-                firstName: 'Adam',
-                lastName: 'Eldridge',
-                securityGroup: 'WWTP'
-            }, {
-                id: 2,
-                firstName: 'Brantley',
-                lastName: 'Angell',
-                securityGroup: 'WWTP'
-            }, {
-                id: 3,
-                firstName: 'Jeff',
-                lastName: 'Shore',
-                securityGroup: null
-            }, {
-                id: 4,
-                firstName: 'Johnny',
-                lastName: 'Roberts',
-                securityGroup: null
-            }, {
-                id: 5,
-                firstName: 'Stephen',
-                lastName: 'Trent',
-                securityGroup: null
-            }],
-            memberGroups: [],
-            enabled: true,
-            _currAlertID: 1,
-            _currGroupID: 4,
-            _currEscalationID: 3,
-            _currThreadID: 1,
-            alertConfigs: [{
-                id: 1, // seeded from _currAlertID
-                name: 'Off-Hours',
-                isOnCall: true,
-                rotateConfig: { // false/null if only 1?
-                    enabled: true,
-                    scale: 'week',
-                    time: '9:00',
-                    day: 'Friday'
-                },
-                repeatConfig: {
-                    enabled: true,
-                    repeatCount: 0,
-                    repeatDelay: 0
-                },
-                groups: [{
-                    id: 1,// seeded from _currGroupID
-                    active: true,
-                    name: 'Group 1',
-                    alertDelay: 0,
-                    repeatConfig: {
-                        enabled: true,
-                        repeatCount: 0
+            forEachArray: function (arr, fn) {
+                var c,
+                    list = arr || [],
+                    len = list.length,
+                    errorFree = true;
+
+                for (c = 0; c < len && errorFree; c++) {
+                    errorFree = fn(list[c], c);
+                    if (errorFree === undefined) {
+                        errorFree = true;
+                    }
+                }
+
+                return errorFree;
+            },
+
+            getTemplate: function (template) {
+                var tpl = $.extend(true, {}, self.templates[template]),
+                    copyProperties = ['repeatConfig', 'rotateConfig'],
+                    idProperties = {
+                        alertConfig: '_currAlertID',
+                        group: '_currGroupID',
+                        escalation: '_currEscalationID'
                     },
-                    escalations: [{
-                        id: 1, // seeded from _currEscalationID
-                        members: [{//build before binding
-                            name: 'Brantley Angell'
-                        }, {
-                            name: 'Stephen Trent'
-                        }, {
-                            name: 'Johnny Roberts'
-                        }],
-                        alertStyle: 'Everyone Sequenced', //FirstResponder, Everyone
-                        memberAlertDelay: 5,
-                        escalationDelay: 30,
-                        rotateConfig: { // false/null if unchecked?
-                            enabled: true,// if retain the object
-                            scale: 'week',
-                            time: '9:00AM',
-                            day: 'Friday'
-                        },
-                        repeatConfig: {
-                            enabled: true,
-                            repeatCount: 3,
-                            repeatDelay: 5
-                        }
-                    }, {
-                        id: 2, // seeded from _currEscalationID
-                        members: [{//build before binding
-                            name: 'Perry Lyon'
-                        }, {
-                            name: 'Patrick Umbarger'
-                        }],
-                        alertStyle: 'First Responder Only', //FirstResponder, Everyone
-                        memberAlertDelay: 5,
-                        escalationDelay: 15,
-                        rotateConfig: { // false/null if unchecked?
-                            enabled: false,// if retain the object
-                            scale: 'week',
-                            time: '9:00AM',
-                            day: 'Friday'
-                        },
-                        repeatConfig: {
-                            enabled: true,
-                            repeatCount: 3,
-                            repeatDelay: 5
-                        }
-                    }]
-                }, {
-                    id: 2,// seeded from _currGroupID
-                    active: true,
-                    name: 'Group 2',
-                    alertDelay: 0,
-                    repeatConfig: {
-                        enabled: true,
-                        repeatCount: 0
-                    },
-                    escalations: [{
-                        id: 1, // seeded from _currEscalationID
-                        members: [{//build before binding
-                            name: 'Stephen Trent'
-                        }, {
-                            name: 'Johnny Roberts'
-                        }],
-                        alertStyle: 'Everyone Sequenced', //FirstResponder, Everyone
-                        memberAlertDelay: 5,
-                        escalationDelay: 30,
-                        rotateConfig: { // false/null if unchecked?
-                            enabled: true,// if retain the object
-                            scale: 'week',
-                            time: '8:00AM',
-                            day: 'Friday'
-                        },
-                        repeatConfig: {
-                            enabled: true,
-                            repeatCount: 3,
-                            repeatDelay: 5
-                        }
-                    }, {
-                        id: 2, // seeded from _currEscalationID
-                        members: [{//build before binding
-                            name: 'Perry Lyon'
-                        }, {
-                            name: 'Patrick Umbarger'
-                        }],
-                        alertStyle: 'First Responder Only', //FirstResponder, Everyone
-                        memberAlertDelay: 5,
-                        escalationDelay: 15,
-                        rotateConfig: { // false/null if unchecked?
-                            enabled: false,// if retain the object
-                            scale: 'week',
-                            time: '9:00AM',
-                            day: 'Friday'
-                        },
-                        repeatConfig: {
-                            enabled: true,
-                            repeatCount: 3,
-                            repeatDelay: 5
-                        }
-                    }]
-                }]
-            }],
-            schedules: [{ // layer 1
-                alertConfigs: [],
-                schedules: [{// holidays
-                    configs: [1],// _id from group
-                    holidays: true, // precedence, if layer 2 holiday match, does layer 1 run?
-                    days: ['mon', 'tues', 'wed', 'thurs', 'fri'], //'weekdays' will be translated in UI
-                    startTime: 1700,
-                    endTime: 800,
-                    allDay: false
-                }, {
-                    holidays: false,
-                    days: ['sat', 'sun'],
-                    startTime: null,
-                    endTime: null,
-                    allDay: true
-                }],
-                temporarySchedules: [{
-                    days: [],
-                    startTime: 1700,
-                    endTime: 800,
-                    allDay: false,
-                    startDate: '8-1-2016',
-                    endDate: '8-2-2016'
-                }]
-            }],
-            threads: []
-        }, {
-            name: 'Water Plant',
-            members: [{
-                id: 3,
-                firstName: 'Jeff',
-                lastName: 'Shore',
-                securityGroup: null
-            }, {
-                id: 4,
-                firstName: 'Johnny',
-                lastName: 'Roberts',
-                securityGroup: null
-            }, {
-                id: 5,
-                firstName: 'Stephen',
-                lastName: 'Trent',
-                securityGroup: null
-            }],
-            memberGroups: [],
-            enabled: false,
-            _currAlertID: 1,
-            _currGroupID: 4,
-            _currEscalationID: 3,
-            _currThreadID: 1,
-            alertConfigs: [{
-                id: 1, // seeded from _currAlertID
-                name: 'Off-Hours',
-                isOnCall: true,
-                rotateConfig: { // false/null if only 1?
-                    enabled: true,
-                    scale: 'week',
-                    time: '9:00',
-                    day: 'Friday'
-                },
-                repeatConfig: {
-                    enabled: true,
-                    repeatCount: 0,
-                    repeatDelay: 0
-                },
-                groups: [{
-                    id: 1,// seeded from _currGroupID
-                    active: true,
-                    name: 'Group 1',
-                    alertDelay: 0,
-                    escalations: [{
-                        id: 1, // seeded from _currEscalationID
-                        members: [{//build before binding
-                            name: 'Brantley Angell'
-                        }, {
-                            name: 'Stephen Trent'
-                        }, {
-                            name: 'Johnny Roberts'
-                        }],
-                        alertStyle: 'Everyone Sequenced', //FirstResponder, Everyone
-                        memberAlertDelay: 5,
-                        escalationDelay: 30,
-                        rotateConfig: { // false/null if unchecked?
-                            enabled: true,// if retain the object
-                            scale: 'week',
-                            time: '9:00AM',
-                            day: 'Friday'
-                        },
-                        repeatConfig: {
-                            enabled: true,
-                            repeatCount: 3,
-                            repeatDelay: 5
-                        }
-                    }, {
-                        id: 2, // seeded from _currEscalationID
-                        members: [{//build before binding
-                            name: 'Perry Lyon'
-                        }, {
-                            name: 'Patrick Umbarger'
-                        }],
-                        alertStyle: 'First Responder Only', //FirstResponder, Everyone
-                        memberAlertDelay: 5,
-                        escalationDelay: 15,
-                        rotateConfig: { // false/null if unchecked?
-                            enabled: false,// if retain the object
-                            scale: 'week',
-                            time: '9:00AM',
-                            day: 'Friday'
-                        },
-                        repeatConfig: {
-                            enabled: true,
-                            repeatCount: 3,
-                            repeatDelay: 5
-                        }
-                    }]
-                }, {
-                    id: 2,// seeded from _currGroupID
-                    active: true,
-                    name: 'Group 2',
-                    alertDelay: 0,
-                    escalations: [{
-                        id: 1, // seeded from _currEscalationID
-                        members: [{//build before binding
-                            name: 'Stephen Trent'
-                        }, {
-                            name: 'Johnny Roberts'
-                        }],
-                        alertStyle: 'Everyone Sequenced', //FirstResponder, Everyone
-                        memberAlertDelay: 5,
-                        escalationDelay: 30,
-                        rotateConfig: { // false/null if unchecked?
-                            enabled: true,// if retain the object
-                            scale: 'week',
-                            time: '8:00AM',
-                            day: 'Friday'
-                        },
-                        repeatConfig: {
-                            enabled: true,
-                            repeatCount: 3,
-                            repeatDelay: 5
-                        }
-                    }, {
-                        id: 2, // seeded from _currEscalationID
-                        members: [{//build before binding
-                            name: 'Perry Lyon'
-                        }, {
-                            name: 'Patrick Umbarger'
-                        }],
-                        alertStyle: 'First Responder Only', //FirstResponder, Everyone
-                        memberAlertDelay: 5,
-                        escalationDelay: 15,
-                        rotateConfig: { // false/null if unchecked?
-                            enabled: false,// if retain the object
-                            scale: 'week',
-                            time: '9:00AM',
-                            day: 'Friday'
-                        },
-                        repeatConfig: {
-                            enabled: true,
-                            repeatCount: 3,
-                            repeatDelay: 5
-                        }
-                    }]
-                }]
-            }],
-            schedules: [{ // layer 1
-                alertConfigs: [],
-                schedules: [{// holidays
-                    configs: [1],// _id from group
-                    holidays: true, // precedence, if layer 2 holiday match, does layer 1 run?
-                    days: ['mon', 'tues', 'wed', 'thurs', 'fri'], //'weekdays' will be translated in UI
-                    startTime: 1700,
-                    endTime: 800,
-                    allDay: false
-                }, {
-                    holidays: false,
-                    days: ['sat', 'sun'],
-                    startTime: null,
-                    endTime: null,
-                    allDay: true
-                }],
-                temporarySchedules: [{
-                    days: [],
-                    startTime: 1700,
-                    endTime: 800,
-                    allDay: false,
-                    startDate: '8-1-2016',
-                    endDate: '8-2-2016'
-                }]
-            }],
-            threads: []
-        }]
-    };
+                    newID,
+                    idProperty;
+
+                copyProperties.forEach(function (property) {
+                    if (tpl.hasOwnProperty(property)) {
+                        tpl[property] = self.getTemplate(property);
+                    }
+                });
+
+                if (idProperties[template]) {
+                    idProperty = self.bindings.currPolicy[idProperties[template]];
+
+                    newID = idProperty() + 1;
+                    idProperty(newID);
+
+                    tpl.id = newID;
+                }
+
+                return tpl;
+            },
+            policies: []
+        };
 
     self.init = function () {
         var columns = [{
-                data: 'firstName',
-                title: 'First Name'
+                data: 'firstName()',
+                title: 'First Name',
+                className: 'firstName',
+                render: function (data, type, full, meta) {
+                    return '<a href="#">' + data + '</a>';
+                }
             }, {
                 data: 'lastName()',
-                title: 'Last Name'
+                title: 'Last Name',
+                className: 'lastName'
             }, {
                 data: 'securityGroup()',
-                title: 'Member By Way Of Security Group'
+                title: 'Member By Way Of Security Group',
+                className: 'securityGroup'
             }],
-            Member = function (data, dt) {
-                var that = this;
-
-                this.id = data.id;
-                this.firstName = ko.observable(data.firstName);
-                this.lastName = ko.observable(data.lastName);
-
-                $.each( [ 'firstName', 'lastName' ], function (i, prop) {
-                    that[ prop ].subscribe( function (val) {
-                        // Find the row in the DataTable and invalidate it, which will
-                        // cause DataTables to re-read the data
-                        var rowIdx = dt.column( 0 ).data().indexOf( that.id );
-                        dt.row( rowIdx ).invalidate();
-                    } );
-                } );
-            },
             initMemberDataTable = function () {
-                var members = self.bindings.currPolicy.members;
+                var members = self.bindings.currPolicy.members,
+                    $memberList = $('#memberList');
 
-                self.memberDT = $('#memberList').DataTable({
+                self.memberDT = $memberList.DataTable({
                     columns: columns,
                     paging: false,
                     searching: false,
                     bInfo: false
+                });
+
+                $memberList.on('click', '.firstName', function (event) {
+                    var rowIdx = self.memberDT.cell(this).index().row,
+                        member = self.memberDT.rows(rowIdx).data()[0];
+
+                    self.editMember(member);
+
+                    event.preventDefault();
                 });
 
                 members.subscribe(function (members) {
@@ -2457,33 +2243,11 @@ var notificationsViewModel = function() {
                     self.memberDT.rows.add(members);
                     self.memberDT.draw();
                 });
-
-                // members.subscribe(function (changes) {
-                //     changes.forEach(function (change) {
-                //         if (change.status === 'added') {
-                //             console.log('added', change);
-                //             self.memberDT.row.add(change).draw();
-                //         } else if (change.status === 'deleted') {
-                //             var rowIdx = self.memberDT.column(0).data().indexOf(deletedItem.id);
-                //             self.memberDT.row(rowIdx).remove().draw();
-                //         }
-                //     });
-                // });
-
-                // ko.mapping.fromJS(ko.toJS(members), {
-                //         key: function (data) {
-                //             return ko.utils.unwrapObservable(data.id);
-                //         },
-                //         create: function (options) {
-                //             return new Member(options.data, self.memberDT);
-                //         }
-                //     }, members
-                // );
             };
 
         initMemberDataTable();
 
-        self.$tabs = $('.notificationsContent .nav a').click(function (e) {
+        self.$tabs = $('.notificationsContent').on('click', '.nav a', function (e) {
             e.preventDefault();
             $(this).tab('show');
         });
@@ -2554,36 +2318,424 @@ var notificationsViewModel = function() {
                 }
             ]
         });
+
+        $.getJSON('/api/policies/get').done(function (response) {
+            self.buildPolicies(response);
+        });
+    };
+
+    self.translateMember = function (id) {
+        return self.userLookup[id];
+    };
+
+    self.translateMembers = function (arr) {
+        var c,
+            len = arr.length,
+            ret = [];
+
+        for(c=0; c<len; c++) {
+            ret.push(self.translateMember(arr[c]));
+        }
+
+        return ret;
+    };
+
+    self.unTranslateMembers = function (policy) {
+        var rawPolicy = $.extend(true, {}, policy);
+        self.forEachArray(rawPolicy.members, function (member, idx) {
+            rawPolicy.members[idx] = member.id;
+        });
+
+        return rawPolicy;
+    };
+
+    self.buildPolicy = function (policy) {
+        policy.members = self.translateMembers(policy.members);
+
+        // self.forEachArray(policy.alertConfigs, function (alertConfig) {
+        //     self.forEachArray(alertConfig.groups, function (group) {
+        //         self.forEachArray(group.escalations, function (escalation) {
+        //             escalation.members = self.translateMembers(escalation.members);
+        //         });
+        //     });
+        // });
+
+    };
+
+    self.buildPolicies = function (policies) {
+        var c,
+            len = policies.length;
+
+        for(c=0; c<len; c++) {
+            self.buildPolicy(policies[c]);
+        }
+
+        self.bindings.policyList(policies);
     };
 
     self.cancel = function () {
     };
 
     self.save = function () {
+        self.forEachArray(self.bindings.policyList(), function (policy, idx) {
+            var data = self.unTranslateMembers(policy);
+            $.post('/api/policies/save', {
+                data: data
+            }).complete(function (response) {
+                console.log('Saved policy', policy.name);
+            });
+        });
+
         self.dirty(false);
     };
 
+    self.clearEdits = function (resetAll) {
+        var binding;
+
+        for (binding in self.bindings) {
+            if (binding.match('isEditing')) {
+                if (binding !== 'isEditingPolicy' || resetAll) {
+                    self.bindings[binding](false);
+                }
+            }
+        }
+    };
+
+    self.editMember = function (member) {
+        self._originalMember = ko.toJS(member);
+        self.bindings.currMember(member);
+        self.bindings.isEditingMember(true);
+    };
+
+    self.editMembers = function (primary, secondary) {
+        var c,
+            cc,
+            len = secondary.length,
+            plen = primary.length,
+            found = false;
+
+        for(c=0; c<plen; c++) {
+            primary[c].selected = false;
+            found = false;
+
+            for(cc=0; cc<len && !found; cc++) {
+                 if (primary[c].id === secondary[cc].id) {
+                    primary[c].selected = true;
+                    found = true;
+                }
+            }
+        }
+
+        self.bindings.primaryMemberList(primary);
+        self.bindings.chosenMembers(secondary);
+        self.$modal.modal('show');
+    };
+
+    self.updateAlertConfigMembers = function () {
+        var arr = ko.toJS(self.bindings.primaryMemberList()),
+            newMembers = [];
+
+        arr.forEach(function (member) {
+            if (member.selected) {
+                newMembers.push(member.id);
+            }
+        });
+
+        ko.viewmodel.updateFromModel(self._currEscalation.members, newMembers);
+    };
+
+    self.updatePolicyMembers = function () {
+        var arr = ko.toJS(self.bindings.primaryMemberList()),
+            newMembers = [];
+
+        arr.forEach(function (member) {
+            if (member.selected) {
+                newMembers.push(member);
+            }
+        });
+
+        ko.viewmodel.updateFromModel(self.bindings.currPolicy.members, newMembers);
+    };
+
+    self.getContact = function (alert) {
+        var contact,
+            info = ko.toJS(alert).info;
+        self.forEachArray(self.bindings.currMember().contactInfo(), function (contactInfo) {
+            if (contactInfo.Value() === info) {
+                contact = contactInfo;
+                return false;
+            }
+        });
+
+        return contact;
+    };
+
+    self.savePolicy = function () {
+        self.forEachArray(self.bindings.policyList(), function (policy, idx) {
+            if (policy._id === self.bindings.currPolicy._id()) {
+                ko.viewmodel.updateFromModel(self.bindings.policyList()[idx], ko.toJS(self.bindings.currPolicy));
+            }
+        });
+
+        self.dirty(true);
+    };
 
     self.bindings = {
-        currPolicy: ko.viewmodel.fromModel(self.policyTemplate),
+        currPolicy: ko.viewmodel.fromModel(self.templates.policy),
+        currAlertConfig: ko.observable(),
         policyList: ko.observableArray(self.policies),
-        addingPolicy: ko.observable(false),
+
+        alertStyles: ['First Responder Only', 'Everyone Sequenced', 'Everyone at the same time'],
+        days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+        shortDays: ['mon', 'tues', 'wed', 'thur', 'fri', 'sat', 'sun'],
+
+        isEditingNewPolicy: ko.observable(false),
+        isEditingNewConfiguration: ko.observable(false),
         isEditingPolicy: ko.observable(false),
         isEditingPolicyName: ko.observable(false),
         isEditingPolicyEnabled: ko.observable(false),
+        isEditingAlertConfig: ko.observable(false),
+        isEditingMember: ko.observable(false),
+        isEditingAlertNotifications: ko.observable(false),
+        isEditingSchedule: ko.observable(false),
 
+        newPolicyName: ko.observable(),
+        newConfigurationName: ko.observable(),
         currPolicyName: ko.observable(),
         currPolicyEnabled: ko.observable(),
+        currMember: ko.observable(),
 
-        selectPolicy: function (policy, event) {
-            self.bindings.currPolicy.currAlertConfig(null);
+        primaryMemberList: ko.observableArray(),
+        chosenMembers: ko.observableArray(),
+
+        dayMonday: ko.observable(false),
+        dayTuesday: ko.observable(false),
+        dayWednesday: ko.observable(false),
+        dayThursday: ko.observable(false),
+        dayFriday: ko.observable(false),
+        daySaturday: ko.observable(false),
+        daySunday: ko.observable(false),
+        dayHolidays: ko.observable(false),
+
+        editDays: function (schedule) {
+            self.forEachArray(self.bindings.days, function (day, idx) {
+                self.bindings['day' + day](false);
+            });
+
+            self.forEachArray(schedule.days(), function (day) {
+                var idx = self.bindings.shortDays.indexOf(day);
+
+                self.bindings['day' + self.bindings.days[idx]](true);
+            });
+
+            self.bindings.dayHolidays(schedule.holidays());
+
+            self._currSchedule = schedule;
+
+            $('#notificationsEditDaysModal').modal('show');
+        },
+
+        updateDays: function () {
+            var ret = [];
+            self.forEachArray(self.bindings.days, function (day, idx) {
+                if (self.bindings['day' + day]()) {
+                    ret.push(self.bindings.shortDays[idx]);
+                }
+            });
+
+            self._currSchedule.holidays(self.bindings.dayHolidays());
+
+            self._currSchedule.days(ret);
+
+            $('#notificationsEditDaysModal').modal('hide');
+        },
+
+        getUserName: function (id) {
+            var user = self.translateMember(id);
+
+            return user.firstName + ' ' + user.lastName;
+        },
+
+        addAlertConfig: function (layer) {
+            layer.$parent.alertConfigs.push(layer.$data.id());
+        },
+
+        deleteAlertConfig: function (config) {
+            self.bindings.currPolicy.alertConfigs.remove(function (item) {
+                return item.id() === config.id();
+            });
+            self.dirty(true);
+            //needs validation
+        },
+
+        convertTime: function (scheduleTime) {
+            var ret,
+                fullTime = scheduleTime(),
+                hr = fullTime/100,
+                ampm = hr > 12 ? 'PM' : 'AM';
+
+            if (hr > 12) {
+                hr -= 12;
+            }
+
+            if (hr === 0) {
+                hr = 12;
+            }
+
+            return hr + ' ' + ampm;
+        },
+
+        convertDate: function (scheduleDays) {
+            var days = scheduleDays().join(''),
+                weekdays = 'montueswedthurfri',
+                weekends = 'satsun';
+
+            if (days === weekdays) {
+                days = 'Weekdays';
+            } else  if (days === weekends) {
+                days = 'Weekends';
+            } else if (days === weekdays + weekends) {
+                days = 'Everyday';
+            } else {
+                if (scheduleDays().length > 0) {
+                    days = scheduleDays().join(', ');
+                } else {
+                    days = 'None';
+                }
+            }
+
+            return days;
+        },
+
+        deleteSchedule: function (context) {
+            var scheduleIndex = context.$index(),
+                layerIndex = context.$parentContext.$index();
+
+            self.bindings.currPolicy.scheduleLayers()[layerIndex].schedules.splice(scheduleIndex, 1);
+            self.dirty(true);
+        },
+
+        addSchedule: function (scheduleLayer) {
+            scheduleLayer.schedules.push(ko.viewmodel.fromModel(self.getTemplate('schedule')));
+        },
+
+        addScheduleLayer: function () {
+            self.bindings.currPolicy.scheduleLayers.push(ko.viewmodel.fromModel(self.getTemplate('scheduleLayer')));
+        },
+
+        deleteScheduleLayer: function (layer, idx) {
+            layer.scheduleLayers.splice(idx(), 1);
+            self.dirty(true);
+        },
+
+        editSchedule: function () {
+            self.bindings.isEditingSchedule(true);
+        },
+
+        cancelEditSchedule: function () {
+            ko.viewmodel.updateFromModel(self.bindings.currPolicy.scheduleLayers, self._currPolicy.scheduleLayers);
+            self.bindings.isEditingSchedule(false);
+        },
+
+        saveSchedule: function () {
+            self._currPolicy = ko.toJS(self.bindings.currPolicy);
+            self.bindings.isEditingSchedule(false);
+
+            self.savePolicy();
+        },
+
+        editAlertConfigMembers: function (escalation) {
+            console.log(arguments);
+            self.memberCb = self.updateAlertConfigMembers;
+            self._currEscalation = escalation;
+            self.editMembers(ko.toJS(self.bindings.currPolicy.members()), self.translateMembers(escalation.members()));
+        },
+
+        editPolicyMembers: function () {
+            self.memberCb = self.updatePolicyMembers;
+            self.editMembers(self.users, ko.toJS(self.bindings.currPolicy.members()));
+        },
+
+        getAlertIcon: function (type) {
+            return 'fa-' + self.iconLookup[type()];
+        },
+
+        getAlertType: function (contactInfo) {
+            var contact = self.getContact({info: contactInfo()});
+
+            return contact.Type;
+        },
+
+        addNewAlert: function (data) {
+            var alert = self.getTemplate('alertNotification'),
+                firstContact = self.bindings.currMember().contactInfo()[0];
+
+            alert.info = firstContact.Value();
+            alert.type = firstContact.Type();
+
+            self.bindings.currMember().alerts[data.name].push(ko.viewmodel.fromModel(alert));
+        },
+
+        getContactString: function (contact) {
+            var type = self.alertTypeLookup[contact.Type()],
+                val = contact.Value(),
+                name = contact.Name();
+
+            return [type, name, 'at', val].join(' ');
+        },
+
+        getContactAlertString: function (alert) {
+            var contact = self.getContact(alert);
+
+            return self.bindings.getContactString(contact);
+        },
+
+        editAlertNotifications: function () {
+            self.bindings.isEditingAlertNotifications(true);
+        },
+
+        cancelEditAlertNotifications: function () {
+            self.bindings.isEditingAlertNotifications(false);
+            ko.viewmodel.updateFromModel(self.bindings.currMember().alerts, self._originalMember.alerts);
+        },
+
+        saveAlertNotifications: function () {
+            self.bindings.isEditingAlertNotifications(false);
+            self.savePolicy();
+        },
+
+        updateMembers: function () {
+            if (self.memberCb) {
+                self.memberCb();
+                self.memberCb = null;
+                self.savePolicy();
+            }
+            self.$modal.modal('hide');
+        },
+
+        selectPolicy: function (policy) {
+            self.bindings.currAlertConfig(null);
+            self.bindings.isEditingMember(false);
+            self._currPolicy = ko.toJS(policy);
             ko.viewmodel.updateFromModel(self.bindings.currPolicy, policy);
             self.bindings.isEditingPolicy(true);
         },
         addPolicy: function () {
-            self.bindings.addPolicy(true);
+            self.bindings.newPolicyName('');
+            self.bindings.isEditingNewPolicy(true);
         },
+        doAddNewPolicy: function () {
+            var newPolicy = self.getTemplate('policy'),
+                name = self.bindings.newPolicyName();
 
+            // validation
+            newPolicy.name = name;
+            self.bindings.policyList.push(newPolicy);
+            self.bindings.isEditingNewPolicy(false);
+            ko.viewmodel.updateFromModel(self.bindings.currPolicy, newPolicy);
+            self.bindings.selectPolicy(newPolicy);
+            self.dirty(true);
+        },
         editPolicyName: function () {
             self.bindings.currPolicyName(self.bindings.currPolicy.name());
             self.bindings.isEditingPolicyName(true);
@@ -2591,9 +2743,15 @@ var notificationsViewModel = function() {
         savePolicyName: function () {
             self.bindings.currPolicy.name(self.bindings.currPolicyName());
             self.bindings.isEditingPolicyName(false);
+            self.savePolicy();
         },
         cancelPolicyNameEdit: function () {
             self.bindings.isEditingPolicyName(false);
+        },
+
+        cancelEditMember: function () {
+            self.bindings.currMember(null);
+            self.bindings.isEditingMember(false);
         },
 
         editPolicyEnabled: function () {
@@ -2603,23 +2761,175 @@ var notificationsViewModel = function() {
         savePolicyEnabled: function () {
             self.bindings.currPolicy.enabled(!self.bindings.currPolicyEnabled());
             self.bindings.isEditingPolicyEnabled(false);
+            self.savePolicy();
         },
         cancelPolicyEnabledEdit: function () {
             self.bindings.isEditingPolicyEnabled(false);
         },
 
-        editAlertConfig: function (alertConfig, event) {
-            self.bindings.currPolicy.currAlertConfig(alertConfig);
+        addConfiguration: function () {
+            self.bindings.newConfigurationName('');
+            self.bindings.isEditingNewConfiguration(true);
+        },
+        doAddNewConfiguration: function () {
+            var configurationTemplate = self.getTemplate('alertConfig');
+
+            configurationTemplate.name = self.bindings.newConfigurationName();
+            self.bindings.currPolicy.alertConfigs.push(ko.viewmodel.fromModel(configurationTemplate));
+            self.bindings.currAlertConfig(self.bindings.currPolicy.alertConfigs.slice(-1)[0]);
+            self.bindings.isEditingNewConfiguration(false);
+            self.savePolicy();
+        },
+
+        editAlertConfig: function (alertConfig) {
+            self.bindings.currAlertConfig(alertConfig);
         },
         cancelEditAlertConfig: function () {
-            self.bindings.currPolicy.currAlertConfig(null);
+            self.bindings.cancelDoEditAlertConfig();
+            self.bindings.currAlertConfig(null);
         },
-        doEditAlertConfig: function () {
 
+        doEditAlertConfig: function () {
+            self._originalAlertConfig = ko.toJS(self.bindings.currAlertConfig);
+
+            self.bindings.isEditingAlertConfig(true);
         },
+        cancelDoEditAlertConfig: function () {
+            ko.viewmodel.updateFromModel(self.bindings.currAlertConfig, self._originalAlertConfig);
+            self.bindings.isEditingAlertConfig(false);
+        },
+        saveEditAlertConfig: function () {
+            var id = self.bindings.currAlertConfig().id();
+
+            self.forEachArray(self.bindings.currPolicy.alertConfigs(), function (config) {
+                if (config.id() === id) {
+                    ko.viewmodel.updateFromModel(config, ko.toJS(self.bindings.currAlertConfig));
+                    // ko.viewmodel.updateFromModel(self.bindings.currPolicy.alertConfigs)
+                    return false;
+                }
+            });
+
+            self._originalAlertConfig = ko.toJS(self.bindings.currAlertConfig);
+
+            self.savePolicy();
+
+            self.bindings.isEditingAlertConfig(false);
+        },
+
+        addAlertGroup: function () {
+            self.bindings.currAlertConfig().groups.push(ko.viewmodel.fromModel(self.getTemplate('group')));
+        },
+
+        deleteAlertGroup: function (alertConfig, idx) {
+            alertConfig.groups.splice(idx, 1);
+            self.dirty(true);
+        },
+
+        addEscalation: function (group) {
+            group.escalations.push(ko.viewmodel.fromModel(self.getTemplate('escalation')));
+        },
+
+        deleteEscalation: function (group, idx) {
+            group.escalations.splice(idx, 1);
+        },
+
         home: function () {
-            self.bindings.isEditingPolicy(false);
-            ko.viewmodel.updateFromModel(self.bindings.currPolicy, self.policyTemplate);// check for unsaved changes?
+            // self.forEachArray(self.bindings.policyList(), function (policy, idx) {
+            //     if (policy._id === self.bindings.currPolicy._id()) {
+            //         ko.viewmodel.updateFromModel(self.bindings.policyList()[idx], ko.toJS(self.bindings.currPolicy));
+            //     }
+            // });
+            self.clearEdits(true);
+            // ko.viewmodel.updateFromModel(self.bindings.currPolicy, self.templates.policy);// check for unsaved changes?
+        }
+    };
+
+    $.ajax({
+        url: _webendpointURI + 'groups/getallgroups',
+        contentType: 'application/json',
+        dataType: 'json',
+        type: 'post'
+    }).done(function (data){
+        self.groups = data;
+    });
+
+    $.ajax({
+        url: _webendpointURI + 'users/getallusers',
+        contentType: 'application/json',
+        dataType: 'json',
+        type: 'post'
+    }).done(function (data){
+        var c,
+            users = data.Users,
+            len = users.length,
+            member;
+
+        self.users = [];
+        self.userLookup = {};
+
+        for (c=0; c<len; c++) {
+            member = new Member(users[c]);
+            self.users.push(member);
+            self.userLookup[member.id] = member;
+        }
+    });
+
+    $('body').on('shown.bs.dropdown', '.daySelect input', function (e) {
+
+    });
+
+    ko.bindingHandlers.alertConfigName = {
+        init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+            var $element = $(element),
+                configID = valueAccessor(),
+                alertConfig,
+                alertConfigs = bindingContext.$parents[1].alertConfigs(),
+                c,
+                len = alertConfigs.length,
+                done = false;
+
+            for(c=0; c<len && !done; c++) {
+                if (alertConfigs[c].id() === configID) {
+                    alertConfig = alertConfigs[c];
+                    done = true;
+                }
+            }
+
+            $element.html(alertConfig.name());
+        }
+    };
+
+    ko.bindingHandlers.timepicker = {
+        init: function (element, valueAccessor, allBindingsAccessor) {
+            //initialize timepicker with some optional options
+            var observable = valueAccessor(),
+                options = {
+                    doneText: 'Done',
+                    autoclose: true,
+                    afterDone: function () {
+                        observable($(element).val());
+                    }
+                };
+
+            $(element).clockpicker(options);
+
+            $(element).change(function (event) {
+                $(element).clockpicker('resetclock');
+            });
+        },
+
+        update: function (element, valueAccessor) {
+            var value = ko.utils.unwrapObservable(valueAccessor()),
+                hr,
+                min;
+
+            if (typeof value !== 'string') {
+                hr = ('00' + Math.floor(value / 100)).slice(-2);
+                min = ('00' + value % 100).slice(-2);
+                $(element).val(hr + ':' + min);
+            } else {
+                $(element).val(value);
+            }
         }
     };
 
