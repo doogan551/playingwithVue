@@ -12,7 +12,7 @@ var johnny = {
       'email': 'jroberts@dorsett-tech.com'
     }
   },
-  runNotifications: true
+  runNotifications: false
 };
 
 johnny.redisConfig = {

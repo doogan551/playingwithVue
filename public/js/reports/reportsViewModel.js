@@ -344,7 +344,7 @@ var reportsViewModel = function () {
 
                             if (existingPointRef.length === 0) {
                                 pointRef = {};
-                                pointRef.PropertyEnum = window.workspaceManager.config.Enums.Properties["Qualifier Point"].enum;
+                                pointRef.PropertyEnum = window.workspaceManager.config.Enums.Properties["Column Point"].enum;
                                 pointRef.PropertyName = "Column Point";
                                 pointRef.Value = column.upi;
                                 pointRef.AppIndex = i;
@@ -1402,6 +1402,9 @@ var reportsViewModel = function () {
                         tempPivot[columnName].rawValue = "";
                     } else {
                         columnConfig = getColumnConfigByColName(columnName);
+                        if (columnConfig === undefined) {
+                            console.log("ERROR: columnConfig is undefined for columnName = " + columnName);
+                        }
                         //console.log("[" + i + "] ==>  historyResults[" + j + "].Value = " + historyResults[j].Value);
                         tempPivot[columnName] = formatDataField(historyResults[j], columnConfig);
                     }
@@ -1491,18 +1494,14 @@ var reportsViewModel = function () {
             return data;
         },
         adjustDatatableHeightWidth = function () {
-            var heightAdjust = 240,
-                datatableHeight,
+            var infoscanHeader = 60,
+                adjustHeight,
                 $dataTablesScrollBody = $tabViewReport.find('.dataTables_scrollBody'),
                 $dataTablesWrapper = $tabViewReport.find('.dataTables_wrapper');
-            $dataTablesScrollBody.css('height', (window.innerHeight - heightAdjust));
             $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
             setInfoBarDateTime();
-            datatableHeight = $dataTablesWrapper.height();
-            if (window.innerHeight < (datatableHeight + 150)) {
-                heightAdjust = (datatableHeight + (2 * 150)) - window.innerHeight;  // making up for some data wrapping in cells
-                $dataTablesScrollBody.css('height', (window.innerHeight - heightAdjust));
-            }
+            adjustHeight = $dataTablesScrollBody.height() - (($dataTablesWrapper.height() + infoscanHeader) - window.innerHeight);
+            $dataTablesScrollBody.css('height', adjustHeight);
         },
         adjustConfigTabActivePaneHeight = function () {
             var $activePane = $direports.find(".tabConfiguration .tab-pane.active");
@@ -1855,89 +1854,50 @@ var reportsViewModel = function () {
             checkForColumnCalculations();
             useDurationChanged();
         },
-        getVariance = function (columnData, start, end) {
+        getVariance = function (columnData) {
             var i,
-                meanCalc = getColumnMean(columnData, start, end),
+                meanCalc = getColumnMean(columnData),
                 squaredTotalResults = [],
-                squaredPageResults = [],
                 squaredTotal = 0,
-                squaredPage = 0,
-                sum = {
-                    totalCalc: 0,
-                    pageCalc: 0
-                },
-                variance = {
-                    totalCalc: 0,
-                    pageCalc: 0
-                };
+                sum = 0,
+                variance = 0;
 
             for (i = 0; i < columnData.length; i++) {
-                squaredTotal = Math.pow((columnData[i] - meanCalc.totalCalc), 2);
-                sum.totalCalc += squaredTotal;
+                squaredTotal = Math.pow((columnData[i] - meanCalc), 2);
+                sum += squaredTotal;
                 squaredTotalResults.push(squaredTotal);
-                if (i >= start && i < end) {
-                    squaredPage = Math.pow((columnData[i] - meanCalc.pageCalc), 2);
-                    sum.pageCalc += squaredPage;
-                    squaredPageResults.push(squaredPage);
-                }
             }
 
             if (squaredTotalResults.length > 0) {
-                variance.totalCalc = sum.totalCalc / squaredTotalResults.length;
-            }
-            if ((end - start) > 0) {
-                variance.pageCalc = sum.pageCalc / (end - start);
+                variance = sum / squaredTotalResults.length;
             }
 
             return variance;
         },
-        getColumnStandardDeviation = function (columnData, start, end) {
-            var variance = getVariance(columnData, start, end),
-                calc = {
-                    totalCalc: 0,
-                    pageCalc: 0
-                };
-
-            calc.totalCalc = Math.sqrt(variance.totalCalc);
-            calc.pageCalc = Math.sqrt(variance.pageCalc);
-
-            return calc;
+        getColumnStandardDeviation = function (columnData) {
+            return Math.sqrt(getVariance(columnData));
         },
-        getColumnMean = function (columnData, start, end) {
+        getColumnMean = function (columnData) {
             var i,
-                calc = {
-                    totalCalc: 0,
-                    pageCalc: 0
-                };
+                theMean = 0,
+                sumOfData = 0;
 
             for (i = 0; i < columnData.length; i++) {
-                calc.totalCalc += columnData[i];
-                if (i >= start && i < end) {
-                    calc.pageCalc += columnData[i];
-                }
+                sumOfData += columnData[i];
             }
             if (columnData.length > 0) {
-                calc.totalCalc = calc.totalCalc / columnData.length;
+                theMean = sumOfData / columnData.length;
             }
-            if (end - start > 0) {
-                calc.pageCalc = calc.pageCalc / (end - start);
-            }
-            return calc;
+            return theMean;
         },
-        getColumnSum = function (columnData, start, end) {
+        getColumnSum = function (columnData) {
             var i,
-                calc = {
-                    totalCalc: 0,
-                    pageCalc: 0
-                };
+                theSum = 0;
 
             for (i = 0; i < columnData.length; i++) {
-                calc.totalCalc += columnData[i];
-                if (i >= start && i < end) {
-                    calc.pageCalc += columnData[i];
-                }
+                theSum += columnData[i];
             }
-            return calc;
+            return theSum;
         },
         configureDataTable = function (destroy, clearData) {
             var aoColumns = [],
@@ -2064,44 +2024,55 @@ var reportsViewModel = function () {
 
                     return result;
                 },
-                getCalcForColumn = function (column, columnDesign, start, end) {
-                    var columnData = column.data(),
-                        columnDataLen = columnData.length,
-                    //columnName = (self.reportType === "Totalizer" ? columnDesign.dataColumnName : columnDesign.colName),
-                        value,
-                        rawValues = [],
-                        calc = {},
-                        i;
-                    calc.totalCalc = 0;
-                    calc.pageCalc = 0;
+                getCalcForColumn = function (currentPageData, allData, columnDesign) {
+                    var value,
+                        allRawValues,
+                        currentPageRawValues = [],
+                        calc = {
+                            totalCalc: 0,
+                            pageCalc: 0
+                        },
+                        sameDataSet = (currentPageData.length === allData.length),
+                        getRawData = function (dataSet) {
+                            var tempDataSet = [];
+                            for (var i = 0; i < dataSet.length; i++) {
+                                value = dataSet[i].rawValue;
+                                value = (typeof value === "object" ? value.Value : value);
+                                if ($.isNumeric(value)) {
+                                    tempDataSet.push(parseFloat(value));
+                                } else {
+                                    tempDataSet.push(0);
+                                }
+                            }
+                            return tempDataSet;
+                        };
 
-                    for (i = 0; i < columnDataLen; i++) {
-                        value = columnData[i].rawValue;
-                        value = (typeof value === "object" ? value.Value : value);
-                        if ($.isNumeric(value)) {
-                            rawValues.push(parseFloat(value));
-                        } else {
-                            rawValues.push(0);
-                        }
+                    allRawValues = getRawData(allData);
+
+                    if (!sameDataSet) {
+                        currentPageRawValues = getRawData(currentPageData);
                     }
 
                     switch (columnDesign.calculation.toLowerCase()) {
                         case "mean":
-                            calc = getColumnMean(rawValues, start, end);
+                            calc.totalCalc = getColumnMean(allRawValues);
+                            calc.pageCalc = (!sameDataSet ? getColumnMean(currentPageRawValues) : calc.totalCalc);
                             break;
                         case "max":
-                            calc.totalCalc = Math.max.apply(Math, rawValues);
-                            calc.pageCalc = Math.max.apply(Math, rawValues.slice(start, end));
+                            calc.totalCalc = Math.max.apply(Math, allRawValues);
+                            calc.pageCalc = (!sameDataSet ? Math.max.apply(Math, currentPageRawValues) : calc.totalCalc);
                             break;
                         case "min":
-                            calc.totalCalc = Math.min.apply(Math, rawValues);
-                            calc.pageCalc = Math.min.apply(Math, rawValues.slice(start, end));
+                            calc.totalCalc = Math.min.apply(Math, allRawValues);
+                            calc.pageCalc = (!sameDataSet ? Math.min.apply(Math, currentPageRawValues) : calc.totalCalc);
                             break;
                         case "sum":
-                            calc = getColumnSum(rawValues, start, end);
+                            calc.totalCalc = getColumnSum(allRawValues);
+                            calc.pageCalc = (!sameDataSet ? getColumnSum(currentPageRawValues) : calc.totalCalc);
                             break;
                         case "std dev":
-                            calc = getColumnStandardDeviation(rawValues, start, end);
+                            calc.totalCalc = getColumnStandardDeviation(allRawValues);
+                            calc.pageCalc = (!sameDataSet ? getColumnMean(currentPageRawValues) : calc.totalCalc);
                             break;
                     }
                     return calc;
@@ -2216,16 +2187,28 @@ var reportsViewModel = function () {
                         }
                     },
                     footerCallback: function (tfoot, data, start, end, display) {
-                        var reportColumns = validateColumns(),
-                            calcEnabled = false,
-                            $firstColumn;
-                        this.api().columns('.calculate').every(function () {
-                            var column = this,
-                                columnIndex = column[0],
-                                columnConfig = reportColumns[columnIndex],
-                                calc = getCalcForColumn(column, columnConfig, start, end),
-                                footerText = columnConfig.calculation,
-                                $tdFooter = $(tfoot).find("td[colindex='" + columnIndex + "']");
+                        var api = this.api(),
+                            reportColumns = validateColumns(),
+                            $firstColumn,
+                            columnIndexesToCalc = api.columns('.calculate')[0],
+                            i,
+                            columnIndex,
+                            currentPageData,
+                            allData,
+                            numberOfColumnsToCalculate = columnIndexesToCalc.length,
+                            columnConfig,
+                            calc,
+                            footerText,
+                            $tdFooter;
+
+                        for (i = 0; i < numberOfColumnsToCalculate; i++) {
+                            columnIndex = columnIndexesToCalc[i];
+                            columnConfig = reportColumns[columnIndex];
+                            currentPageData = api.column(columnIndex, { page: 'current'}).data();
+                            allData = api.column(columnIndex).data();
+                            calc = getCalcForColumn(currentPageData, allData, columnConfig);
+                            footerText = columnConfig.calculation;
+                            $tdFooter = $(tfoot).find("td[colindex='" + columnIndex + "']");
                             $tdFooter.attr("title", "Page Calc (Table Calc)");
 
                             switch (self.reportType) {
@@ -2252,15 +2235,14 @@ var reportsViewModel = function () {
                             }
 
                             $tdFooter.text(footerText);
-                            calcEnabled = true;
-                        });
+                        }
 
-                        if (calcEnabled) {
+                        if (numberOfColumnsToCalculate > 0) {
                             $firstColumn = $(tfoot).find("td[colindex='" + 0 + "']");
                             $firstColumn.text("Calculations:");
                             $firstColumn.removeClass("small");
                             $firstColumn.addClass("text-right");
-                        } else {
+                        } else { // if none of the columns were calculated hide the Verbiage
                             $(tfoot).parent().parent().addClass("hidden"); // hide the footer block
                         }
                     },

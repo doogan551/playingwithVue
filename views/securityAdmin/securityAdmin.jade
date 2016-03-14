@@ -119,7 +119,10 @@ html
                         .ui-block-a.width100
                             label
                                 | Type
-                                select.contactOptions(data-bind="options:['SMS', 'Voice', 'Email']" , data-mini='true')
+                                select.contactOptions(data-mini='true')
+                                    option(value="SMS") SMS
+                                    option(value="Email") Email
+                                    option(value="Voice") Voice
                         .ui-block-a.width100
                             label
                                 | Name

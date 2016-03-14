@@ -50,7 +50,7 @@ var defaults = {
         'authToken': 'NmFkN2M0MWVjYjI4YTQ2ZmZkMDVkOTRiNGI5ODA4',
         'phoneNumber': '16623384486'
     },
-    runNotifications: false
+    runNotifications: true
 };
 
 defaults.Infoscan.files.firmwareLocation = defaults.Infoscan.files.driveLetter + ":/InfoScan/Firmware/";

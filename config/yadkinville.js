@@ -15,7 +15,7 @@ var yadkinville = {
     },
     'letsencrypt': {
       'enabled': true,
-      'domains': ['dorsett-tech.org', 'www.dorsett-tech.org']
+      'domains': ['yadkinvillenc.dtscada.com']
     }
   }
 };

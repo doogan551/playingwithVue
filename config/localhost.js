@@ -9,7 +9,8 @@ var localhost = {
     'location': {
       'site': 'localhost'
     }
-  }
+  },
+  runNotifications: false
 };
 
 localhost.redisConfig = {
