@@ -2102,7 +2102,6 @@ var notificationsViewModel = function() {
                     isOnCall: false,
                     name: '',
                     groups: [],
-                    repeatConfig: {},
                     rotateConfig: {}
                 },
                 'group': {
@@ -2377,12 +2376,31 @@ var notificationsViewModel = function() {
         self.bindings.policyList(policies);
     };
 
+    self.prepPolicyForSave = function (policy) {
+        self.forEachArray(policy.alertConfigs, function (config) {
+            var foundActive = false;
+
+            self.forEachArray(config.groups, function (group, idx) {
+                if (group.active) {
+                    foundActive = true;
+                }
+            });
+
+            if (!foundActive) {
+                config.groups[0].active = true;
+            }
+        });
+    };
+
     self.cancel = function () {
     };
 
     self.save = function () {
         self.forEachArray(self.bindings.policyList(), function (policy, idx) {
             var data = self.unTranslateMembers(policy);
+
+            self.prepPolicyForSave(data);
+
             $.ajax({
                 url: '/api/policies/save',
                 data: JSON.stringify(data),
@@ -2529,7 +2547,16 @@ var notificationsViewModel = function() {
         currAlertConfig: ko.observable(),
         policyList: ko.observableArray(self.policies),
 
-        alertStyles: ['First Responder Only', 'Everyone Sequenced', 'Everyone at the same time'],
+        alertStyles: [{
+            text: 'First Responder Only',
+            value: 'FirstResponder'
+        }, {
+            text: 'Everyone Sequenced',
+            value: 'Sequenced'
+        }, {
+            text: 'Everyone at the same time',
+            value: 'Everyone'
+        }],
         days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
         shortDays: ['mon', 'tues', 'wed', 'thur', 'fri', 'sat', 'sun'],
 
@@ -2592,6 +2619,17 @@ var notificationsViewModel = function() {
             self._currSchedule.days(ret);
 
             $('#notificationsEditDaysModal').modal('hide');
+        },
+
+        getAlertStyleText: function (value) {
+            var ret;
+            self.forEachArray(self.bindings.alertStyles, function (style) {
+                if (style.value === value) {
+                    ret = style.text;
+                }
+            });
+
+            return ret;
         },
 
         getUserName: function (id) {
@@ -2718,6 +2756,10 @@ var notificationsViewModel = function() {
             alert.type = firstContact.Type();
 
             self.bindings.currMember().alerts[data.name].push(ko.viewmodel.fromModel(alert));
+        },
+
+        deleteAlert: function (alertType, idx) {
+            alertType.alerts.splice(idx(), 1);
         },
 
         getContactString: function (contact) {
