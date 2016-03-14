@@ -608,7 +608,7 @@ html
                                                             .checkbox(data-bind="with: repeatConfig")
                                                                 label
                                                                     input.checkbox-valign(type="checkbox", data-bind="checked: enabled")
-                                                                    div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] times.  (Use 0 for indefinite repeats)
+                                                                    div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] #[input.input-sm.form-control.input-xs.editableInput(data-bind="value: repeatCount")] times.  (Use 0 for indefinite repeats)
 
                                             // /ko
 

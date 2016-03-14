@@ -2353,13 +2353,16 @@ var notificationsViewModel = function() {
     self.buildPolicy = function (policy) {
         policy.members = self.translateMembers(policy.members);
 
-        // self.forEachArray(policy.alertConfigs, function (alertConfig) {
-        //     self.forEachArray(alertConfig.groups, function (group) {
-        //         self.forEachArray(group.escalations, function (escalation) {
-        //             escalation.members = self.translateMembers(escalation.members);
-        //         });
-        //     });
-        // });
+
+        self.forEachArray(policy.alertConfigs, function (alertConfig) {
+            alertConfig.groups = alertConfig.groups || [];
+            self.forEachArray(alertConfig.groups, function (group) {
+                group.escalations = group.escalations || [];
+                self.forEachArray(group.escalations, function (escalation) {
+                    escalation.members = escalation.members || [];
+                });
+            });
+        });
 
     };
 
