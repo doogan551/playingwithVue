@@ -2385,12 +2385,16 @@ var notificationsViewModel = function() {
             var data = self.unTranslateMembers(policy);
             $.ajax({
                 url: '/api/policies/save',
-                data: data,
+                data: JSON.stringify(data),
                 type: 'POST',
-                dataType: 'json'
+                dataType: 'json',
+                contentType: 'application/json'
             }).done(function (response) {
                 if (policy._new === true) {
                     delete policy._new;
+                    if (policy._id === self.bindings.currPolicy._id()) {
+                        self.bindings.currPolicy._id(response.id);
+                    }
                     policy._id = response.id;
                 }
                 console.log('Saved policy', policy.name);
@@ -2494,6 +2498,30 @@ var notificationsViewModel = function() {
         });
 
         self.dirty(true);
+    };
+
+    self.saveUser = function (user) {
+        var data = {
+            userid: user.id,
+            'Update Data': {
+                alerts: user.alerts,
+                notificationsEnabled: user.notificationsEnabled
+            }
+        };
+        $.ajax({
+            url: '/api/security/users/updateuser',
+            type: 'post',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function (returnData) {
+                if (returnData.err) {
+                    console.log(returnData.err);
+                } else if (returnData) {
+                    console.log(JSON.stringify(returnData));
+                }
+            }
+        });
     };
 
     self.bindings = {
@@ -2715,8 +2743,10 @@ var notificationsViewModel = function() {
             ko.viewmodel.updateFromModel(self.bindings.currMember().alerts, self._originalMember.alerts);
         },
 
-        saveAlertNotifications: function () {
+        saveAlertNotifications: function (user) {
             self.bindings.isEditingAlertNotifications(false);
+            self.saveUser(ko.toJS(user));
+
             self.savePolicy();
         },
 

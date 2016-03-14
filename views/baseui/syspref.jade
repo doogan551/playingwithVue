@@ -462,7 +462,7 @@ html
                                                     .button.btn.btn-sm.btn-success(data-bind="visible: $parents[1].isEditingAlertNotifications(), click: $parents[1].saveAlertNotifications") Save
                                                 h3 Alert Notifications
 
-                                                .notificationsEnabled Notifications are #[span.editable(data-bind="text: notificationsEnabled() ? 'Enabled' : 'Disabled'")] #[span.editableInput #[label(for="notificationsEnabled") Enabled] #[input#notificationsEnabled.checkbox-valign(type="checkbox")]]
+                                                .notificationsEnabled Notifications are #[span.editable(data-bind="text: notificationsEnabled() ? 'Enabled' : 'Disabled'")] #[span.editableInput #[label(for="notificationsEnabled", data-bind="text: notificationsEnabled() ? 'Enabled' : 'Disabled'")] #[input#notificationsEnabled.checkbox-valign(type="checkbox", data-bind="checked: notificationsEnabled")]]
 
                                                 // ko template: { name: 'notificationTableTpl', data: {alerts: alerts.Normal, name: 'Normal'}}
                                                 // /ko
@@ -533,9 +533,9 @@ html
                                             .button.btn.btn-sm.btn-text(data-bind="visible: $parents[1].isEditingAlertConfig(), click: $parents[1].cancelDoEditAlertConfig") Cancel
                                             .button.btn.btn-sm.btn-success(data-bind="visible: $parents[1].isEditingAlertConfig(), click: $parents[1].saveEditAlertConfig") Save
                                         h3(data-bind="text: name")
-                                        .checkbox.isOnCall.editRow
+                                        .checkbox.isOnCall
                                             label
-                                                input.checkbox-valign(type="checkbox", data-bind="checked: isOnCall")
+                                                input.checkbox-valign(type="checkbox", data-bind="checked: isOnCall, disable: !$parents[1].isEditingAlertConfig()")
                                                 |This configuration is used for On-Call
 
                                         div(data-bind="")
