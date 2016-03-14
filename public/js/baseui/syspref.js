@@ -2107,7 +2107,7 @@ var notificationsViewModel = function() {
                 },
                 'group': {
                     active: false,
-                    alertDelay: 0,
+                    alertDelay: 1,
                     id: 0,
                     name: '',
                     repeatConfig: {},
@@ -2115,9 +2115,9 @@ var notificationsViewModel = function() {
                 },
                 'escalation': {
                     alertStyle: 'Everyone Sequenced',
-                    escalationDelay: 0,
+                    escalationDelay: 5,
                     id: 0,
-                    memberAlertDelay: 0,
+                    memberAlertDelay: 5,
                     members: [],
                     repeatConfig: {},
                     rotateConfig: {}
@@ -2125,7 +2125,7 @@ var notificationsViewModel = function() {
                 'repeatConfig': {
                     enabled: false,
                     repeatCount: 0,
-                    repeatDelay: 0
+                    repeatDelay: 5
                 },
                 'rotateConfig': {
                     day: 'Friday',
@@ -2141,6 +2141,7 @@ var notificationsViewModel = function() {
                 },
                 'policy': {
                     _id: 1,
+                    _new: true,
                     name: '',
                     members: [],
                     memberGroups: [],
@@ -2379,9 +2380,16 @@ var notificationsViewModel = function() {
     self.save = function () {
         self.forEachArray(self.bindings.policyList(), function (policy, idx) {
             var data = self.unTranslateMembers(policy);
-            $.post('/api/policies/save', {
-                data: data
-            }).complete(function (response) {
+            $.ajax({
+                url: '/api/policies/save',
+                data: data,
+                type: 'POST',
+                dataType: 'json'
+            }).done(function (response) {
+                if (policy._new === true) {
+                    delete policy._new;
+                    policy._id = response.id;
+                }
                 console.log('Saved policy', policy.name);
             });
         });
@@ -2455,6 +2463,11 @@ var notificationsViewModel = function() {
         });
 
         ko.viewmodel.updateFromModel(self.bindings.currPolicy.members, newMembers);
+        self.forEachArray(self.bindings.policyList(), function (policy) {
+            if (policy._id === self.bindings.currPolicy._id()) {
+                policy.members = newMembers;
+            }
+        });
     };
 
     self.getContact = function (alert) {
@@ -2713,6 +2726,33 @@ var notificationsViewModel = function() {
             self.$modal.modal('hide');
         },
 
+        doDeletePolicy: function (id, cb) {
+            $.ajax({
+                url: '/api/policies/delete',
+                data: {
+                    _id: id
+                },
+                type: 'POST',
+                dataType: 'json'
+            }).done(function (response) {
+                 console.log('Deleted');
+                cb();
+            });
+        },
+
+        deletePolicy: function (policy) {
+            self.forEachArray(self.bindings.policyList(), function (boundPolicy, idx) {
+                if (boundPolicy._id === policy._id) {
+                    if (policy._new === true) {
+                        self.bindings.policyList.splice(idx, 1);
+                    } else {
+                        self.bindings.doDeletePolicy(policy._id, function () {
+                            self.bindings.policyList.splice(idx, 1);
+                        });
+                    }
+                }
+            });
+        },
         selectPolicy: function (policy) {
             self.bindings.currAlertConfig(null);
             self.bindings.isEditingMember(false);

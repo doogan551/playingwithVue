@@ -887,7 +887,7 @@ tr:hover .showOnHover {
     border-top: 11px solid #ccc;
     bottom: -13px;
     position: absolute;
-    z-index: 9999;
+    z-index: 999;
     left: 90px;
 }
 
@@ -901,7 +901,7 @@ tr:hover .showOnHover {
     border-top: 10px solid #fff;
     bottom: -10px;
     position: absolute;
-    z-index: 9999;
+    z-index: 999;
     left: 91px;
 }
 
