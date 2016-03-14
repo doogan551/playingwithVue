@@ -2102,7 +2102,6 @@ var notificationsViewModel = function() {
                     isOnCall: false,
                     name: '',
                     groups: [],
-                    repeatConfig: {},
                     rotateConfig: {}
                 },
                 'group': {
@@ -2377,20 +2376,43 @@ var notificationsViewModel = function() {
         self.bindings.policyList(policies);
     };
 
+    self.prepPolicyForSave = function (policy) {
+        self.forEachArray(policy.alertConfigs, function (config) {
+            var foundActive = false;
+
+            self.forEachArray(config.groups, function (group, idx) {
+                if (group.active) {
+                    foundActive = true;
+                }
+            });
+
+            if (!foundActive && config.groups.length > 0) {
+                config.groups[0].active = true;
+            }
+        });
+    };
+
     self.cancel = function () {
     };
 
     self.save = function () {
         self.forEachArray(self.bindings.policyList(), function (policy, idx) {
             var data = self.unTranslateMembers(policy);
+
+            self.prepPolicyForSave(data);
+
             $.ajax({
                 url: '/api/policies/save',
-                data: data,
+                data: JSON.stringify(data),
                 type: 'POST',
-                dataType: 'json'
+                dataType: 'json',
+                contentType: 'application/json'
             }).done(function (response) {
                 if (policy._new === true) {
                     delete policy._new;
+                    if (policy._id === self.bindings.currPolicy._id()) {
+                        self.bindings.currPolicy._id(response.id);
+                    }
                     policy._id = response.id;
                 }
                 console.log('Saved policy', policy.name);
@@ -2496,12 +2518,45 @@ var notificationsViewModel = function() {
         self.dirty(true);
     };
 
+    self.saveUser = function (user) {
+        var data = {
+            userid: user.id,
+            'Update Data': {
+                alerts: user.alerts,
+                notificationsEnabled: user.notificationsEnabled
+            }
+        };
+        $.ajax({
+            url: '/api/security/users/updateuser',
+            type: 'post',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function (returnData) {
+                if (returnData.err) {
+                    console.log(returnData.err);
+                } else if (returnData) {
+                    console.log(JSON.stringify(returnData));
+                }
+            }
+        });
+    };
+
     self.bindings = {
         currPolicy: ko.viewmodel.fromModel(self.templates.policy),
         currAlertConfig: ko.observable(),
         policyList: ko.observableArray(self.policies),
 
-        alertStyles: ['First Responder Only', 'Everyone Sequenced', 'Everyone at the same time'],
+        alertStyles: [{
+            text: 'First Responder Only',
+            value: 'FirstResponder'
+        }, {
+            text: 'Everyone Sequenced',
+            value: 'Sequenced'
+        }, {
+            text: 'Everyone at the same time',
+            value: 'Everyone'
+        }],
         days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
         shortDays: ['mon', 'tues', 'wed', 'thur', 'fri', 'sat', 'sun'],
 
@@ -2564,6 +2619,17 @@ var notificationsViewModel = function() {
             self._currSchedule.days(ret);
 
             $('#notificationsEditDaysModal').modal('hide');
+        },
+
+        getAlertStyleText: function (value) {
+            var ret;
+            self.forEachArray(self.bindings.alertStyles, function (style) {
+                if (style.value === value) {
+                    ret = style.text;
+                }
+            });
+
+            return ret;
         },
 
         getUserName: function (id) {
@@ -2692,6 +2758,10 @@ var notificationsViewModel = function() {
             self.bindings.currMember().alerts[data.name].push(ko.viewmodel.fromModel(alert));
         },
 
+        deleteAlert: function (alertType, idx) {
+            alertType.alerts.splice(idx(), 1);
+        },
+
         getContactString: function (contact) {
             var type = self.alertTypeLookup[contact.Type()],
                 val = contact.Value(),
@@ -2715,8 +2785,10 @@ var notificationsViewModel = function() {
             ko.viewmodel.updateFromModel(self.bindings.currMember().alerts, self._originalMember.alerts);
         },
 
-        saveAlertNotifications: function () {
+        saveAlertNotifications: function (user) {
             self.bindings.isEditingAlertNotifications(false);
+            self.saveUser(ko.toJS(user));
+
             self.savePolicy();
         },
 

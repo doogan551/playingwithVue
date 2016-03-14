@@ -450,7 +450,6 @@ var dbAlarmQueueLocked = false,
 				}
 
 				async.each(data.policies, processPolicy, function (err) {
-					// actions.utility.log(data); // DEBUG
 					cb(err, data);
 				});
 			},
@@ -541,21 +540,24 @@ var dbAlarmQueueLocked = false,
 			},
 			getAlertConfig: function (alertConfigs, id) {
 				for (var i = 0, len = alertConfigs.length; i < len; i++) {
-					if (alertConfigs[i].id === id)
+					// Use == compare because IDK if id is a string or number
+					if (alertConfigs[i].id == id)
 						return alertConfigs[i];
 				}
 				return null;
 			},
 			getGroup: function (groups, id) {
 				for (var i = 0, len = groups.length; i < len; i++) {
-					if (groups[i].id === id)
+					// Use == compare because IDK if id is a string or number
+					if (groups[i].id == id)
 						return groups[i];
 				}
 				return null;
 			},
 			getEscalation: function (escalations, id) {
 				for (var i = 0, len = escalations.length; i < len; i++) {
-					if (escalations[i].id === id)
+					// Use == compare because IDK if id is a string or number
+					if (escalations[i].id == id)
 						return escalations[i];
 				}
 				return null;
@@ -680,7 +682,7 @@ var dbAlarmQueueLocked = false,
 						}
 
 						if (escalation.counter > 0) {
-							escalation.nextAction += actions.utility.getTimestamp(info, escalation.recepientAlertDelay);
+							escalation.nextAction = actions.utility.getTimestamp(info, escalation.recepientAlertDelay);
 						} else if (escalation.reset) {
 							escalation.reset = false;
 							escalation.counter = actions.policies.getThreadCounter(escalation.repeatConfig);
@@ -694,12 +696,12 @@ var dbAlarmQueueLocked = false,
 						var resetEscalations = false;
 
 						// If the alert group is ready to repeat
-						if (alertGroup.counter && now >= alertGroup.repeatTimestamp) {
-							resetEscalations = true;
+						if ((alertGroup.counter > 0) && now >= alertGroup.repeatTimestamp) {
 							if (--alertGroup.counter) {
+								resetEscalations = true;
 								alertGroup.repeatTimestamp = actions.utility.getTimestamp(info, alertGroup.repeatConfig.repeatTime);
+								isUpdated = true;
 							}
-							isUpdated = true;
 						}
 
 						alertGroup.escalations.forEach(function (escalation, index) {
@@ -718,7 +720,7 @@ var dbAlarmQueueLocked = false,
 								}
 							}
 							// Process if counter is non-zero (escalation NOT finished), and it's time to process it
-							if (escalation.counter && (escalation.nextAction >= now)) {
+							if ((escalation.counter > 0) && (now >= escalation.nextAction)) {
 								processEscalation(escalation);
 							}
 						});
@@ -808,11 +810,11 @@ var dbAlarmQueueLocked = false,
 
 						var escalations = group.escalations,
 							len = escalations.length,
-							time = group.alertDelay,
+							time = parseInt(group.alertDelay, 10),
 							i;
 
 						for (i = 0; i < len; i++) {
-							time += escalations[i].escalationDelay;
+							time += parseInt(escalations[i].escalationDelay, 10);
 						}
 						return time;
 					},
@@ -835,7 +837,7 @@ var dbAlarmQueueLocked = false,
 					getEscalations = function (group) {
 						var escalations = [],
 							len = group.escalations.length,
-							time = group.alertDelay,
+							time = parseInt(group.alertDelay, 10),
 							i,
 							recepients,
 							groupEscalation;
@@ -851,14 +853,14 @@ var dbAlarmQueueLocked = false,
 									recepients: recepients,
 									alertStyle: groupEscalation.alertStyle,
 									recepientIndex: 0,
-									recepientAlertDelay: groupEscalation.memberAlertDelay,
-									escalationDelay: groupEscalation.escalationDelay, // minutes
+									recepientAlertDelay: parseInt(groupEscalation.memberAlertDelay, 10),
+									escalationDelay: parseInt(groupEscalation.escalationDelay, 10), // minutes
 									repeatConfig: groupEscalation.repeatConfig,
 									reverseEscalationDelay: time - group.alertDelay, // minutes
 									reset: false,
 									resetTimestamp: 0 // ms
 								});
-								time += groupEscalation.escalationDelay;
+								time += parseInt(groupEscalation.escalationDelay, 10);
 							}
 						}
 						return escalations;
@@ -885,7 +887,7 @@ var dbAlarmQueueLocked = false,
 								// Get the initial repeat time
 								repeatTime = getGroupRepeatTime(group); // minutes
 								// Add the non-initial repeat time to the repeatConfig object (repeats do not include the initial alert delay)
-								group.repeatConfig.repeatTime = repeatTime - group.alertDelay; // minutes
+								group.repeatConfig.repeatTime = repeatTime - parseInt(group.alertDelay, 10); // minutes
 								// Add the group
 								return {
 									counter: actions.policies.getThreadCounter(group.repeatConfig, true),
@@ -897,7 +899,11 @@ var dbAlarmQueueLocked = false,
 
 						for (i = 0; i < numberOfAlertConfigIds; i++) {
 							alertConfig = actions.policies.getAlertConfig(info.policy.alertConfigs, alertConfigIds[i]);
-							groups.push(getAlertGroup(getActiveGroupConfig(alertConfig)));
+							activeAlertGroup = getActiveGroupConfig(alertConfig);
+							// We should always have an active alert group but just in case
+							if (!!activeAlertGroup) {
+								groups.push(getAlertGroup(activeAlertGroup));
+							}
 						}
 						return groups;
 					};
@@ -906,6 +912,9 @@ var dbAlarmQueueLocked = false,
 					for (key in queueEntry) {
 						trigger[key] = queueEntry[key];
 					}
+					delete trigger.type; // Delete the queue type from trigger (NEW/RETURN)
+					delete trigger.policyIds; // Delete the policyIds array list from trigger
+
 					return {
 						id: queueEntry.alarmId, // this will server as our unique id for the lifetime of the thread (even if it mutates)
 						notifyReturnNormal: queueEntry.notifyReturnNormal,
@@ -1028,7 +1037,7 @@ var dbAlarmQueueLocked = false,
 			},
 			getThreadCounter: function (repeatConfig, isGroupConfig) {
 				var counter = 1,
-					repeatCount = repeatConfig.repeatCount;
+					repeatCount = parseInt(repeatConfig.repeatCount, 10);
 				
 				if (repeatConfig.enabled) {
 					// Group repeats are treated differently than escalation repeats (0 = repeat forever)
@@ -1366,7 +1375,7 @@ var dbAlarmQueueLocked = false,
 							actions.policies.setThreadState(thread, UPDATED);
 						}
 					}
-					actions.utility.log('\tPolicy ' + policy.name + ' - ' + _numberOfQueuedItems + ' item(s) remain in notify queue'); // DEBUG
+					actions.utility.log('\tPolicy ' + policy.name + ' - ' + _numberOfQueuedItems + ' item(s) in notify queue'); // DEBUG
 				}
 				cb(null, data);
 			},
@@ -1429,7 +1438,7 @@ var dbAlarmQueueLocked = false,
 							for (j = 0; j < recepientHistory.length; j++) {
 								history = recepientHistory[j];
 								key = [history.userId, history.type, history.info].join('');
-								obj[thread.id][key] = history;
+								obj[thread.id][key] = true;
 							}
 						}
 						return obj;
@@ -1599,13 +1608,18 @@ var dbAlarmQueueLocked = false,
 
 					// Add recepient to our recepient history
 					key = [notification.userId, notification.type, notification.info].join('');
-					if (!recepientHistoryLookup[thread.id] || !recepientHistoryLookup[thread.id][key]) {
+					if (!recepientHistoryLookup[thread.id]) {
+						recepientHistoryLookup[thread.id] = {};
+					}
+					if (!recepientHistoryLookup[thread.id][key]) {
+						recepientHistoryLookup[thread.id][key] = true;
 						thread.recepientHistory.push({
 							userId: notification.userId,
 							type: notification.type,
 							info: notification.info
 						});
 					}
+
 					actions.utility.log('\tPolicy ' + notifyEntry.policy.name + ' - ' + notifyTypeText[notification.type] + ' ' + notification.info + ': ' + notifyMsg); // DEBUG
 
 					// Send notification
