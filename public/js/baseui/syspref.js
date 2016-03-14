@@ -2386,7 +2386,7 @@ var notificationsViewModel = function() {
                 }
             });
 
-            if (!foundActive) {
+            if (!foundActive && config.groups.length > 0) {
                 config.groups[0].active = true;
             }
         });
