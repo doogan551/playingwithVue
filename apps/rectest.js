@@ -408,4 +408,40 @@ function testInheritance() {
   };
   template['Point Type'].Value();
 }
-testInheritance();
+// testInheritance();
+
+function setUpNotifications() {
+  var pointNames = ['Booster_Pump 1_Control', 'Booster_Pump 2_Control', 'Booster_Pump 2_VFD Speed', 'Booster_Pump Station_Pressure', 'Booster_Pumps_Not Running_Alarm', 'Booster Sta_Chem Pump 1_Status', 'Booster Sta_Chem Pump 2_Status', 'Booster Sta_Chem Pump 3_Status', 'Booster Sta_Chem Pump 4_Status', 'Booster Sta_Discharge_Pressure', 'Booster Sta_Intrusion_Switch_Alarm', 'Booster Sta_Low_Suction_Alarm', 'Booster Sta_PH', 'Booster Sta_Power_Fail_Alarm', 'Booster Sta_Pump 1_Fail_Alarm', 'Booster Sta_Pump 2_Fail_Alarm', 'Booster Sta_Res Disch_Flow', 'Booster Sta_Reservoir_Flow', 'Booster Sta_Suction_Pressure', 'Chlorine_Feed', 'Clear_Water_Level', 'Combined_Effluent_Turbidity', 'Filter1_Effluent_Flow', 'Filter1_Effluent_Turbidity', 'Filter1_Finish H2O_Loss of Head', 'Filter2_Effluent_Flow', 'Filter2_Effluent_Turbidity', 'Filter2_Finish H2O_Loss of Head', 'Filter3_Effluent_Flow', 'Filter3_Effluent_Turbidity', 'Filter3_Finish H2O_Loss of Head', 'Finish_Pump 1_100 HP_Control', 'Finish_Pump 2_75 HP_Control', 'Finish_Pump 3_200 HP_Control', 'Finished_Water_Flow', 'Finished_Water_Turbidity', 'Finished_Water_pH', 'High_Service_Pressure', 'Mixed_Water_pH', 'Post_Chlorine', 'Raw_Water_Flow', 'Raw_Water_Pump 1_Control', 'Raw_Water_Pump 2_Control', 'Raw_Water_Turbidity', 'Reservior_Water_Level', 'Reservoir_Power_Fail_Alarm', 'Settled_DefNameSeg2_Turbidity', 'Sulfur_Feed', 'Sweep_Flow', 'Water_Tank_AltValve_Control', 'Water_Tank1_Intrusion', 'Water_Tank1_Level', 'Water_Tank2_Level_psi', 'Yadkinville_xTalk01 1_MSC20_Water Tank'];
+  var policyId = '56e84ff459e9a4c00c2e5f49';
+
+  db.connect(connectionString.join(''), function(err) {
+    var criteria = {
+      collection: 'points',
+      query: {
+        Name: {
+          $in: pointNames
+        }
+      }
+    };
+    Utility.iterateCursor(criteria, function(err, doc, cb) {
+      var msgs = doc['Alarm Messages'];
+      doc['Notify Policies'] = [policyId];
+      for (var i = 0; i < msgs.length; i++) {
+        msgs[i].ack = true;
+        msgs[i].notify = true;
+      }
+      Utility.update({
+        collection: 'points',
+        query: {
+          _id: parseInt(doc._id, 10)
+        },
+        updateObj: doc
+      }, function(err, result) {
+        cb(err);
+      });
+    }, function(err, count) {
+      console.log(err, count, 'done');
+    });
+  });
+}
+setUpNotifications();

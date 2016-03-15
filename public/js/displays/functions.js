@@ -51,10 +51,10 @@ var ActionButton = function (config) {
             'Command Type'  : 7,
             upi             : '',
             Value           : '',
-            Controller      : '',
-            Relinquish      : '',
+            Controller      : displays.workspaceManager.user().controllerId,
+            Relinquish      : 0,
             Priority        : '',
-            Wait            : ''
+            Wait            : 0
         },
         _id,
         _pointData,
@@ -71,12 +71,32 @@ var ActionButton = function (config) {
 
             ret.upi = _upi;
             ret.Value = _parameter;
+            ret.logData.newValue.Value = _parameter;
 
             return ret;
         },
         _processPointData = function (response) {
             _pointData = response;
             _validateOptions('upi');
+
+            _commandArguments.logData = {
+                user: displays.workspaceManager.user(),
+                point: {
+                    _id: _pointData._id,
+                    Security: _pointData.Security,
+                    Name: _pointData.Name,
+                    name1: _pointData.name1,
+                    name2: _pointData.name2,
+                    name3: _pointData.name3,
+                    name4: _pointData.name4,
+                    "Point Type": {
+                        eValue: _pointData["Point Type"].eValue
+                    }
+                },
+                newValue: {
+                    Value: ''
+                }
+            };
 
             if (_pointData['Minimum Value']) {
                 external.min = _pointData['Minimum Value'].Value;
@@ -102,7 +122,7 @@ var ActionButton = function (config) {
         },
         _sendCommand = function () {
             console.log('Send Command', _getCommandArguments());
-            displays.socket.emit('fieldCommand', _getCommandArguments());
+            displays.socket.emit('fieldCommand', JSON.stringify(_getCommandArguments()));
             displays.$scope.currActionButton = null;
         },
 
@@ -112,6 +132,10 @@ var ActionButton = function (config) {
 
             if (pointType.match('Analog')) {
                 $('#actionButtonInput').popup('open');
+                $('#actionButtonValue').attr({
+                    min: external.min,
+                    max: external.max
+                });
             } else if (pointType === 'Report') {
                 reportType = _pointData['Report Type'].Value;
 
@@ -572,7 +596,7 @@ displays = $.extend(displays, {
     initSocket: function() {
         var socket;
         if (document.location.href.match('nosocket') === null) {
-            socket = displays.socket = io.connect('http://' + window.location.hostname);
+            socket = displays.socket = io.connect(window.location.protocol + '//' + window.location.hostname);
 
             socket.on('reconnecting', function() {
                 var retries = 0,
@@ -778,7 +802,7 @@ displays = $.extend(displays, {
     showTip: function(upi) {
         if (displays.isEdit !== true) {
             displays.tip = true;
-            $('#tip').html(displays.upiNames[upi] || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')
+            $('#tip').html(typeof upi === 'string' ? upi : (displays.upiNames[upi] || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'))
                 .show();
         }
     },
@@ -1117,8 +1141,15 @@ displays = $.extend(displays, {
         });
 
         $('#display').on('mouseenter mouseleave', '.sc_ob', function(event) {
+            var upi,
+                idx;
             if (event.type === 'mouseenter') {
-                displays.showTip($(this).data('upi'));
+                upi = $(this).data('upi');
+                idx = $(this).data('scr-idx');
+                if (!upi && displayJson['Screen Objects'][idx] && displayJson['Screen Objects'][idx]._actionButton !== undefined) {
+                    upi = displayJson['Screen Objects'][idx]._actionButton.getPointData().Name;
+                }
+                displays.showTip(upi);
             } else {
                 displays.hideTip();
             }
