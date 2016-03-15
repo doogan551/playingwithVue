@@ -51,10 +51,10 @@ var ActionButton = function (config) {
             'Command Type'  : 7,
             upi             : '',
             Value           : '',
-            Controller      : '',
-            Relinquish      : '',
+            Controller      : displays.workspaceManager.user().controllerId,
+            Relinquish      : 0,
             Priority        : '',
-            Wait            : ''
+            Wait            : 0
         },
         _id,
         _pointData,
