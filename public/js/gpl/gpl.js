@@ -3638,9 +3638,9 @@ gpl.ActionButton = function (config) {
             upi: '',
             Value: '',
             Controller      : gpl.workspaceManager.user().controllerId,
-            Relinquish: '',
+            Relinquish: 0,
             Priority: '',
-            Wait: ''
+            Wait: 0
         },
 
         _local = {},
