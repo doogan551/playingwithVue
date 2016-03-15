@@ -562,6 +562,21 @@ var dbAlarmQueueLocked = false,
 				}
 				return null;
 			},
+			getUserAlerts: function (user, alarmClassName) {
+				var alerts = [];
+				
+				if (!!user) {
+					// If user has alert preferences defined for this alarm class
+					if (user.alerts[alarmClassName].length) {
+						alerts = user.alerts[alarmClassName];
+					}
+					// Nope; if user has default alert preferences (Normal class serves as default)
+					else if (user.alerts.Normal.length) {
+						alerts = user.alerts.Normal;
+					}
+				}
+				return alerts;
+			},
 			// Thread functions
 			processThread: function (info, cb) {
 				// info is an object with keys: policy, thread, data
@@ -611,18 +626,6 @@ var dbAlarmQueueLocked = false,
 						}
 						return obj;
 					},
-					getUserAlerts = function (user, alarmClassName) {
-						var alerts = [];
-						// If user has alert preferences defined for this alarm class
-						if (user.alerts[alarmClassName].length) {
-							alerts = user.alerts[alarmClassName];
-						}
-						// Nope; if user has default alert preferences (Normal class serves as default)
-						else if (user.alerts.Normal.length) {
-							alerts = user.alerts.Normal;
-						}
-						return alerts;
-					},
 					addNotifications = function (userIds) {
 						var len = userIds.length,
 							alarmClassName = alarmClassRevEnums[thread.trigger.almClass],
@@ -630,7 +633,6 @@ var dbAlarmQueueLocked = false,
 							j,
 							jlen,
 							userId,
-							user,
 							userAlerts,
 							userAlert,
 							key,
@@ -638,12 +640,8 @@ var dbAlarmQueueLocked = false,
 
 						for (i = 0; i < len; i++) {
 							userId = userIds[i];
-							user = info.data.usersObj[userId];
 
-							if (!!!user)
-								continue;
-
-							userAlerts = getUserAlerts(user, alarmClassName);
+							userAlerts = actions.policies.getUserAlerts(info.data.usersObj[userId], alarmClassName);
 
 							for (j = 0, jlen = userAlerts.length; j < jlen; j++) {
 								userAlert = userAlerts[j];
@@ -822,12 +820,11 @@ var dbAlarmQueueLocked = false,
 						// members is an array of user ids
 						var recepients = [],
 							id,
-							member,
-							memberAlerts;
+							memberAlerts,
+							alarmClassName = alarmClassRevEnums[queueEntry.almClass];
 						for (var i = 0, len = members.length; i < len; i++) {
 							id = members[i];
-							member = info.data.usersObj[id];
-							memberAlerts = (member && member.notificationsEnabled && (member.alerts[alarmClassRevEnums[queueEntry.almClass]] || member.alerts.Normal)) || [];
+							memberAlerts = actions.policies.getUserAlerts(info.data.usersObj[id], alarmClassName);
 							if (memberAlerts.length) {
 								recepients.push(id);
 							}
