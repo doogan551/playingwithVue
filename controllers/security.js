@@ -285,12 +285,12 @@ router.post('/users/newuser', function(req, res, next) {
     return utils.sendResponse(res, newUser);
   });
 });
-// NOT CHECKED
+// CHECKED
 router.post('/users/updateuser', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Security.Users.udpateUser(data, function(err, newUser) {
+  Security.Users.updateUser(data, function(err, newUser) {
     if (err) {
       return utils.sendResponse(res, {
         err: err

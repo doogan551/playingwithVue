@@ -3800,7 +3800,7 @@
                     {
                         "PropertyName": "Column Point",
                         "PropertyEnum": 131,
-                        "AppIndex": 2,
+                        "AppIndex": 1,
                         "isDisplayable": true,
                         "isReadOnly": false,
                         "Value": 0,

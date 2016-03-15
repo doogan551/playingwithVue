@@ -2,12 +2,12 @@ var async = require('async'),
 	utility = require('../models/utility'),
 	utils = require('../helpers/utils'),
 	calendar = require('../models/calendar'),
+	siteConfig = require('config'),
 	Config = require('../public/js/lib/config.js'),
 	appConfig = require('config'),
 	cronJob = require('../models/cronjob'),
 	ObjectID = require('mongodb').ObjectID,
 	logger = require('../helpers/logger')(module),
-	mailer = require('../models/mailer'),
 	Notifier = require('../models/notifierutility');
 
 var notifier = new Notifier();
@@ -117,7 +117,7 @@ var dbAlarmQueueLocked = false,
 				utility.get(query, cb);
 			},
 			dbUpdate: function (data, cb) {
-				actions.utility.log('actions.scheduledTasks.dbUpdate'); // DEBUG
+				actions.utility.log('actions.scheduledTasks.dbUpdate');
 
 				var updates = [],
 					deleteIds = [],
@@ -168,7 +168,7 @@ var dbAlarmQueueLocked = false,
 				});
 			},
 			process: function (data, cb) {
-				actions.utility.log('actions.scheduledTasks.process'); // DEBUG
+				actions.utility.log('actions.scheduledTasks.process');
 				var rotateMembers = function (task) {
 						var policy = actions.policies.getPolicy(data.policies, task.policyID),
 							alertConfig = policy && actions.policies.getAlertConfig(policy.alertConfigs, task.config.alertConfigID),
@@ -284,8 +284,8 @@ var dbAlarmQueueLocked = false,
 			dbUpdateConfigs: function (data, cb) {
 				var numberOfUpdates = Object.keys(data.policyConfigUpdates).length;
 
-				actions.utility.log('actions.policies.dbUpdateConfigs'); // DEBUG
-				actions.utility.log('\tUpdating ' + numberOfUpdates + ' item(s)'); // DEBUG
+				actions.utility.log('actions.policies.dbUpdateConfigs');
+				actions.utility.log('\tUpdating ' + numberOfUpdates + ' item(s)');
 				
 				if (numberOfUpdates === 0) {
 					delete data.policyConfigUpdates;
@@ -314,7 +314,7 @@ var dbAlarmQueueLocked = false,
 				}
 			},
 			dbUpdateThreads: function (data, cb) {
-				actions.utility.log('policies.dbUpdateThreads'); // DEBUG
+				actions.utility.log('policies.dbUpdateThreads');
 
 				// TEST
 				if (selfTest.enabled && !selfTest.useDb.policies) {
@@ -432,7 +432,7 @@ var dbAlarmQueueLocked = false,
 				});
 			},
 			process: function (data, cb) {
-				actions.utility.log('policies.process'); // DEBUG
+				actions.utility.log('policies.process');
 				function processPolicy (policy, policyCB) {
 					function processThread (thread, threadCB) {
 						var info = {
@@ -450,7 +450,6 @@ var dbAlarmQueueLocked = false,
 				}
 
 				async.each(data.policies, processPolicy, function (err) {
-					// actions.utility.log(data); // DEBUG
 					cb(err, data);
 				});
 			},
@@ -541,21 +540,24 @@ var dbAlarmQueueLocked = false,
 			},
 			getAlertConfig: function (alertConfigs, id) {
 				for (var i = 0, len = alertConfigs.length; i < len; i++) {
-					if (alertConfigs[i].id === id)
+					// Use == compare because IDK if id is a string or number
+					if (alertConfigs[i].id == id)
 						return alertConfigs[i];
 				}
 				return null;
 			},
 			getGroup: function (groups, id) {
 				for (var i = 0, len = groups.length; i < len; i++) {
-					if (groups[i].id === id)
+					// Use == compare because IDK if id is a string or number
+					if (groups[i].id == id)
 						return groups[i];
 				}
 				return null;
 			},
 			getEscalation: function (escalations, id) {
 				for (var i = 0, len = escalations.length; i < len; i++) {
-					if (escalations[i].id === id)
+					// Use == compare because IDK if id is a string or number
+					if (escalations[i].id == id)
 						return escalations[i];
 				}
 				return null;
@@ -680,7 +682,7 @@ var dbAlarmQueueLocked = false,
 						}
 
 						if (escalation.counter > 0) {
-							escalation.nextAction += actions.utility.getTimestamp(info, escalation.recepientAlertDelay);
+							escalation.nextAction = actions.utility.getTimestamp(info, escalation.recepientAlertDelay);
 						} else if (escalation.reset) {
 							escalation.reset = false;
 							escalation.counter = actions.policies.getThreadCounter(escalation.repeatConfig);
@@ -694,12 +696,12 @@ var dbAlarmQueueLocked = false,
 						var resetEscalations = false;
 
 						// If the alert group is ready to repeat
-						if (alertGroup.counter && now >= alertGroup.repeatTimestamp) {
-							resetEscalations = true;
+						if ((alertGroup.counter > 0) && now >= alertGroup.repeatTimestamp) {
 							if (--alertGroup.counter) {
+								resetEscalations = true;
 								alertGroup.repeatTimestamp = actions.utility.getTimestamp(info, alertGroup.repeatConfig.repeatTime);
+								isUpdated = true;
 							}
-							isUpdated = true;
 						}
 
 						alertGroup.escalations.forEach(function (escalation, index) {
@@ -718,7 +720,7 @@ var dbAlarmQueueLocked = false,
 								}
 							}
 							// Process if counter is non-zero (escalation NOT finished), and it's time to process it
-							if (escalation.counter && (escalation.nextAction >= now)) {
+							if ((escalation.counter > 0) && (now >= escalation.nextAction)) {
 								processEscalation(escalation);
 							}
 						});
@@ -808,11 +810,11 @@ var dbAlarmQueueLocked = false,
 
 						var escalations = group.escalations,
 							len = escalations.length,
-							time = group.alertDelay,
+							time = parseInt(group.alertDelay, 10),
 							i;
 
 						for (i = 0; i < len; i++) {
-							time += escalations[i].escalationDelay;
+							time += parseInt(escalations[i].escalationDelay, 10);
 						}
 						return time;
 					},
@@ -835,7 +837,7 @@ var dbAlarmQueueLocked = false,
 					getEscalations = function (group) {
 						var escalations = [],
 							len = group.escalations.length,
-							time = group.alertDelay,
+							time = parseInt(group.alertDelay, 10),
 							i,
 							recepients,
 							groupEscalation;
@@ -851,14 +853,14 @@ var dbAlarmQueueLocked = false,
 									recepients: recepients,
 									alertStyle: groupEscalation.alertStyle,
 									recepientIndex: 0,
-									recepientAlertDelay: groupEscalation.memberAlertDelay,
-									escalationDelay: groupEscalation.escalationDelay, // minutes
+									recepientAlertDelay: parseInt(groupEscalation.memberAlertDelay, 10),
+									escalationDelay: parseInt(groupEscalation.escalationDelay, 10), // minutes
 									repeatConfig: groupEscalation.repeatConfig,
 									reverseEscalationDelay: time - group.alertDelay, // minutes
 									reset: false,
 									resetTimestamp: 0 // ms
 								});
-								time += groupEscalation.escalationDelay;
+								time += parseInt(groupEscalation.escalationDelay, 10);
 							}
 						}
 						return escalations;
@@ -885,7 +887,7 @@ var dbAlarmQueueLocked = false,
 								// Get the initial repeat time
 								repeatTime = getGroupRepeatTime(group); // minutes
 								// Add the non-initial repeat time to the repeatConfig object (repeats do not include the initial alert delay)
-								group.repeatConfig.repeatTime = repeatTime - group.alertDelay; // minutes
+								group.repeatConfig.repeatTime = repeatTime - parseInt(group.alertDelay, 10); // minutes
 								// Add the group
 								return {
 									counter: actions.policies.getThreadCounter(group.repeatConfig, true),
@@ -897,7 +899,11 @@ var dbAlarmQueueLocked = false,
 
 						for (i = 0; i < numberOfAlertConfigIds; i++) {
 							alertConfig = actions.policies.getAlertConfig(info.policy.alertConfigs, alertConfigIds[i]);
-							groups.push(getAlertGroup(getActiveGroupConfig(alertConfig)));
+							activeAlertGroup = getActiveGroupConfig(alertConfig);
+							// We should always have an active alert group but just in case
+							if (!!activeAlertGroup) {
+								groups.push(getAlertGroup(activeAlertGroup));
+							}
 						}
 						return groups;
 					};
@@ -906,6 +912,9 @@ var dbAlarmQueueLocked = false,
 					for (key in queueEntry) {
 						trigger[key] = queueEntry[key];
 					}
+					delete trigger.type; // Delete the queue type from trigger (NEW/RETURN)
+					delete trigger.policyIds; // Delete the policyIds array list from trigger
+
 					return {
 						id: queueEntry.alarmId, // this will server as our unique id for the lifetime of the thread (even if it mutates)
 						notifyReturnNormal: queueEntry.notifyReturnNormal,
@@ -1028,7 +1037,7 @@ var dbAlarmQueueLocked = false,
 			},
 			getThreadCounter: function (repeatConfig, isGroupConfig) {
 				var counter = 1,
-					repeatCount = repeatConfig.repeatCount;
+					repeatCount = parseInt(repeatConfig.repeatCount, 10);
 				
 				if (repeatConfig.enabled) {
 					// Group repeats are treated differently than escalation repeats (0 = repeat forever)
@@ -1081,7 +1090,7 @@ var dbAlarmQueueLocked = false,
 				utility.insert(criteria, cb);
 			},
 			dbRemoveAll: function (data, cb) {
-				actions.utility.log('alarmQueue.dbRemoveAll'); // DEBUG
+				actions.utility.log('alarmQueue.dbRemoveAll');
 
 				// If the alarm queue was empty there's nothing for us to do
 				if (!data.alarmQueue.length) {
@@ -1137,7 +1146,7 @@ var dbAlarmQueueLocked = false,
 				}
 			},
 			process: function (data, cb) {
-				actions.utility.log('alarmQueue.processing', '\t' + data.alarmQueue.length + ' item(s) in queue'); // DEBUG
+				actions.utility.log('alarmQueue.processing', '\t' + data.alarmQueue.length + ' item(s) in queue');
 				var policyLookup = actions.policies.getPolicyLookupTable(data.policies);
 				
 				function alarmQueueIteratee (queueEntry, queueCB) {
@@ -1268,7 +1277,7 @@ var dbAlarmQueueLocked = false,
 				return cb();
 			},
 			processTempAlarmQueue: function (data, cb) {
-				actions.utility.log('alarmQueue.processTempAlarmQueue', '\t' + tempAlarmQueue.length + ' item(s) in temp queue'); // DEBUG
+				actions.utility.log('alarmQueue.processTempAlarmQueue', '\t' + tempAlarmQueue.length + ' item(s) in temp queue');
 
 				var tempAlarmQueueLength = tempAlarmQueue.length;
 
@@ -1299,7 +1308,7 @@ var dbAlarmQueueLocked = false,
 		},
 		notifications: {
 			buildNotifyList: function (data, cb) {
-				actions.utility.log('notifications.buildNotifyList'); // DEBUG
+				actions.utility.log('notifications.buildNotifyList');
 
 				var policy,
 					thread,
@@ -1366,12 +1375,12 @@ var dbAlarmQueueLocked = false,
 							actions.policies.setThreadState(thread, UPDATED);
 						}
 					}
-					actions.utility.log('\tPolicy ' + policy.name + ' - ' + _numberOfQueuedItems + ' item(s) remain in notify queue'); // DEBUG
+					actions.utility.log('\tPolicy ' + policy.name + ' - ' + _numberOfQueuedItems + ' item(s) in notify queue');
 				}
 				cb(null, data);
 			},
 			sendNotifications: function (data, cb) {
-				actions.utility.log('notifications.sendNotifications', '\t' + data.notifyList.length + ' item(s) for delivery now'); // DEBUG
+				actions.utility.log('notifications.sendNotifications', '\t' + data.notifyList.length + ' item(s) for delivery now');
 				// data.notifyList is of the form:
 				// [{
 				//	notification: {
@@ -1411,6 +1420,7 @@ var dbAlarmQueueLocked = false,
 					thread,
 					key,
 					i,
+					to,
 					recepientHistoryLookup = (function(){
 						var obj = {},
 							thread,
@@ -1429,7 +1439,7 @@ var dbAlarmQueueLocked = false,
 							for (j = 0; j < recepientHistory.length; j++) {
 								history = recepientHistory[j];
 								key = [history.userId, history.type, history.info].join('');
-								obj[thread.id][key] = history;
+								obj[thread.id][key] = true;
 							}
 						}
 						return obj;
@@ -1567,7 +1577,8 @@ var dbAlarmQueueLocked = false,
 							log.apiResult = result;
 
 							utility.insert(criteria, function (err) {
-								// TODO
+								if (!!err)
+									actions.utility.sendError(err);
 							});
 						};
 					};
@@ -1583,6 +1594,7 @@ var dbAlarmQueueLocked = false,
 					// Keep in mind that notifyEntry.notification is actually a pointer to the notification object on the thread, and any modifications
 					// made to this object will be stored in the db. So best not to modify it to make sure it stays slim and trim.
 					notification = notifyEntry.notification;
+					to = notification.info;
 					thread = notifyEntry.thread;
 
 					// We'll also collect notifications by user which can be used to prevent overwhelming the user
@@ -1599,25 +1611,30 @@ var dbAlarmQueueLocked = false,
 
 					// Add recepient to our recepient history
 					key = [notification.userId, notification.type, notification.info].join('');
-					if (!recepientHistoryLookup[thread.id] || !recepientHistoryLookup[thread.id][key]) {
+					if (!recepientHistoryLookup[thread.id]) {
+						recepientHistoryLookup[thread.id] = {};
+					}
+					if (!recepientHistoryLookup[thread.id][key]) {
+						recepientHistoryLookup[thread.id][key] = true;
 						thread.recepientHistory.push({
 							userId: notification.userId,
 							type: notification.type,
 							info: notification.info
 						});
 					}
-					actions.utility.log('\tPolicy ' + notifyEntry.policy.name + ' - ' + notifyTypeText[notification.type] + ' ' + notification.info + ': ' + notifyMsg); // DEBUG
+
+					actions.utility.log('\tPolicy ' + notifyEntry.policy.name + ' - ' + notifyTypeText[notification.type] + ' ' + notification.info + ': ' + notifyMsg);
 
 					// Send notification
 					if (notification.type === EMAIL) {
 						notifyParams = [{
-							to: notification.info,
+							to: to,
 							from: 'infoscan@dorsett-tech.com',
 							subject: getEmailSubject(),
 							text: notifyMsg
 						}, createCallback(notifyEntry)];
 					} else {
-						notifyParams = [notification.info, notifyMsg, createCallback(notifyEntry)];
+						notifyParams = [(to.length === 10) ? '1' + to : to, notifyMsg, createCallback(notifyEntry)];
 					}
 					notifier[notifierFnLookup[notification.type]].apply(notifier, notifyParams);
 				}
@@ -1631,9 +1648,24 @@ var dbAlarmQueueLocked = false,
 				return (parseInt(info.data.now + (offset * MSPM), 10));
 			},
 			log: function () {
-				for (var i = 0; i < arguments.length; i++) {
-					console.log(arguments[i]);
-				}
+				// for (var i = 0; i < arguments.length; i++) {
+				//	console.log(arguments[i]);
+				// }
+			},
+			sendError: function (err) {
+				var text = [
+						'Site: ' + siteConfig.get('Infoscan.location').site,
+						'Timestamp: ' + new Date().getTime(),
+						'Error: ' + JSON.stringify(err)
+					].join('\n');
+				
+				notifier.sendEmail({
+					from: 'infoscan@dorsett-tech.com',
+					to: 'johnny.dr@gmail.com',
+					subject: 'Notifications error at customer site!',
+					text: text
+				});
+				notifier.sendText('13364690900', 'Notifications error @ customer site. Check gmail for details.', function (){});
 			}
 		},
 		dbGetAllUsersObj: function (cb) {
@@ -1706,8 +1738,7 @@ var dbAlarmQueueLocked = false,
 				insertNotifyAlarmQueue
 			], function (err) {
 				if (!!err) {
-					// TODO log error?
-					actions.utility.log(err); // DEBUG
+					actions.utility.sendError(err);
 				}
 				actions.utility.log('DONE (' + (new Date().getTime()-startTime) + ' ms)');
 			});
@@ -1735,7 +1766,7 @@ var dbAlarmQueueLocked = false,
 					i,
 					len,
 					policy;
-				// TODO learn how policies are stored on the point
+				
 				if (notifyPolicies && notifyPolicies.length) {
 					actions.policies.dbGet(point["Notify Policies"], function (err, policies) {
 						if (!!err) {
@@ -1798,7 +1829,7 @@ var dbAlarmQueueLocked = false,
 							jlen = alertConfig.groups.length;
 							for (j = 0; j < jlen; j++) {
 								// Using == compare in case the alertDelay is saved as a string (seen this happen from time to time)
-								if (alertConfig.groups[j].alertDelay == 0) {
+								if (parseInt(alertConfig.groups[j].alertDelay, 10) === 0) {
 									return true;
 								}
 							}
@@ -1947,19 +1978,15 @@ var dbAlarmQueueLocked = false,
 function run () {
 	var date = new Date(),
 		startTime = date.getTime(),
-		logError = function (err) {
-			// TODO
-			logger.debug(err);
-		},
 		terminate = function (err) {
-			logError(err);
 			actions.alarmQueue.unlock();
+			actions.utility.sendError(err);
 		};
 
 	date.setSeconds(0);	// This should match the CRON run interval (i.e. if CRON runs every 30s, setSeconds(30))
 	date.setMilliseconds(0); // This should always be 0
 
-	actions.utility.log(['\nRUNNING CRON JOB, ', date.getHours(), ':', date.getMinutes(), ', ', date.getTime()].join('')); // DEBUG
+	actions.utility.log(['\nRUNNING CRON JOB, ', date.getHours(), ':', date.getMinutes(), ', ', date.getTime()].join(''));
 	
 	// Do scheduled task stuff
 	actions.alarmQueue.lock();
@@ -1972,13 +1999,13 @@ function run () {
 		usersObj: actions.dbGetAllUsersObj,
 		scheduledTasks: actions.scheduledTasks.dbGetAll
 	}, function (err, data) {
-		var start = function (cb) {
-				cb(null, data);
-			};
-
 		if (!!err) {
 			return terminate(err);
 		}
+
+		var start = function (cb) {
+				cb(null, data);
+			};
 
 		data.policiesAckList = {};
 		data.notifyList = [];
@@ -2010,11 +2037,11 @@ function run () {
 			actions.alarmQueue.dbRemoveAll,
 			actions.alarmQueue.unlock,
 			actions.alarmQueue.processTempAlarmQueue
-		], function (err) {
+		], function (err, data) {
 			if (!!err) {
-				logError(err);
+				actions.utility.sendError(err);
 			}
-			actions.utility.log('DONE (' + (new Date().getTime() - startTime) + ' ms)'); // DEBUG
+			actions.utility.log('DONE (' + (new Date().getTime() - startTime) + ' ms)');
 		});
 	});
 }

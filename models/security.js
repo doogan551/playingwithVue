@@ -363,6 +363,8 @@ var Users = {
           password = utils.encrypt(updateData[key]);
           value = key + ".Value";
           updateCriteria.$set[value] = password;
+        } else if (key == 'notificationsEnabled' || key == 'alerts') {
+          updateCriteria.$set[key] = updateData[key];
         } else if (key != "_id" && key != "User Groups") {
           value = key + ".Value";
           updateCriteria.$set[value] = updateData[key];
