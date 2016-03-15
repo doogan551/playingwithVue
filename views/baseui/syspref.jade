@@ -462,7 +462,7 @@ html
                                                     .button.btn.btn-sm.btn-success(data-bind="visible: $parents[1].isEditingAlertNotifications(), click: $parents[1].saveAlertNotifications") Save
                                                 h3 Alert Notifications
 
-                                                .notificationsEnabled Notifications are #[span.editable(data-bind="text: notificationsEnabled() ? 'Enabled' : 'Disabled'")] #[span.editableInput #[label(for="notificationsEnabled") Enabled] #[input#notificationsEnabled.checkbox-valign(type="checkbox")]]
+                                                .notificationsEnabled Notifications are #[span.editable(data-bind="text: notificationsEnabled() ? 'Enabled' : 'Disabled'")] #[span.editableInput #[label(for="notificationsEnabled", data-bind="text: notificationsEnabled() ? 'Enabled' : 'Disabled'")] #[input#notificationsEnabled.checkbox-valign(type="checkbox", data-bind="checked: notificationsEnabled")]]
 
                                                 // ko template: { name: 'notificationTableTpl', data: {alerts: alerts.Normal, name: 'Normal'}}
                                                 // /ko
@@ -533,9 +533,9 @@ html
                                             .button.btn.btn-sm.btn-text(data-bind="visible: $parents[1].isEditingAlertConfig(), click: $parents[1].cancelDoEditAlertConfig") Cancel
                                             .button.btn.btn-sm.btn-success(data-bind="visible: $parents[1].isEditingAlertConfig(), click: $parents[1].saveEditAlertConfig") Save
                                         h3(data-bind="text: name")
-                                        .checkbox.isOnCall.editRow
+                                        .checkbox.isOnCall
                                             label
-                                                input.checkbox-valign(type="checkbox", data-bind="checked: isOnCall")
+                                                input.checkbox-valign(type="checkbox", data-bind="checked: isOnCall, disable: !$parents[1].isEditingAlertConfig()")
                                                 |This configuration is used for On-Call
 
                                         div(data-bind="")
@@ -571,12 +571,12 @@ html
                                                                         i.fa.fa-times.deleteIcon
                                                                 .sectionTitle.sectionTitleNoIcon
                                                                     span.alertStyle Alert Style:
-                                                                    span.editable(data-bind="text: alertStyle")
-                                                                    select.form-control.input-sm.select-sm.editableInput(data-bind="value: alertStyle, options: $parents[3].alertStyles")
-                                                                .sectionWait
+                                                                    span.editable(data-bind="text: $parents[3].getAlertStyleText(alertStyle())")
+                                                                    select.form-control.input-sm.select-sm.editableInput(data-bind="value: alertStyle, options: $parents[3].alertStyles, optionsText: 'text', optionsValue: 'value'")
+                                                                .sectionWait(data-bind="visible: alertStyle() === 'Sequenced'")
                                                                     i.fa.fa-clock-o
                                                                     span Wait #[span.editable(data-bind="text: memberAlertDelay")] #[input.input-xs.form-control.input-sm.editableInput(data-bind="value: memberAlertDelay")] minutes before alerting the next person in the list
-                                                                .sectionRotate.sectionMultiline
+                                                                .sectionRotate.sectionMultiline(data-bind="visible: alertStyle() === 'FirstResponder' || alertStyle() === 'Sequenced'")
                                                                     i.fa.fa-repeat
                                                                     .checkbox(data-bind="with: rotateConfig")
                                                                         label
@@ -588,7 +588,7 @@ html
                                                                     .checkbox(data-bind="with: repeatConfig")
                                                                         label
                                                                             input.checkbox-valign(type="checkbox", data-bind="checked: enabled, disable: !$parents[4].isEditingAlertConfig()")
-                                                                            div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] #[input.form-control.input-sm.input-xs.editableInput(data-bind="value: repeatCount")] times.  Wait #[span.editable(data-bind="text: repeatDelay")] #[input.form-control.input-sm.input-xs.editableInput(data-bind="value: repeatDelay")] minutes after the previous alert completes.
+                                                                            div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] #[input.form-control.input-sm.input-xs.editableInput(data-bind="value: repeatCount")] times.  Wait #[span.editable(data-bind="text: $parent.memberAlertDelay")] #[input.form-control.input-sm.input-xs.editableInput(data-bind="value: $parent.memberAlertDelay")] minutes after the previous alert completes.
 
                                                         .alertFooter
                                                             .escalationTimer
@@ -838,6 +838,10 @@ html
                                 span minute(s) after I receive an alert
                                 span.editable(data-bind="text: $parents[3].getContactAlertString($data)")
                                 select.editableInput(data-bind="value: info, options: $parents[1].contactInfo, optionsText: function (item) {return $parents[3].getContactString(item);}, optionsValue: function (item) { return item.Value;}")
+                        span.pull-right.editableInput
+                            a(href="#", data-bind="click: function () { $parents[3].deleteAlert($parent, $index); }")
+                                i.fa.fa-times.deleteIcon
+
                 button.btn.btn-sm.btn-xs.btn-success(data-bind="visible: $parents[2].isEditingAlertNotifications, click: $parents[2].addNewAlert") Add New Alert
 
                         //- a.notificationEdit.pull-right(href="#")

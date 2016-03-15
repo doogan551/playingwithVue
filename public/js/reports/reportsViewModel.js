@@ -1289,6 +1289,7 @@ var reportsViewModel = function () {
         formatDataField = function (dataField, columnConfig) {
             var keyBasedValue,
                 htmlString,
+                temp,
                 $customField,
                 rawValue = dataField.Value;
 
@@ -1333,6 +1334,9 @@ var reportsViewModel = function () {
                     }
                     break;
                 case "Bool":
+                    temp = dataField.Value.toString().toLowerCase();
+                    dataField.Value = temp[0].toUpperCase() + temp.substring(1);
+                    break;
                 case "BitString":
                 case "Enum":
                 case "undecided":
@@ -1392,7 +1396,7 @@ var reportsViewModel = function () {
                 historyResults = historyData[i].HistoryResults;
                 tempPivot = {};
                 tempPivot["Date"] = {};
-                tempPivot["Date"].Value = moment.unix(historyData[i].timestamp).format("MM/DD/YYYY hh:mm:ss a");
+                tempPivot["Date"].Value = moment.unix(historyData[i].timestamp).format("ddd MM/DD/YYYY hh:mm:ss a");
                 tempPivot["Date"].rawValue = historyData[i].timestamp;
                 for (j = 0; j < historyResults.length; j++) {
                     columnName = historyResults[j].Name;
@@ -1429,7 +1433,7 @@ var reportsViewModel = function () {
                 for (j = 0; j < totalizerData[0].totals.length; j++) {
                     tempPivot = {};
                     tempPivot["Date"] = {};
-                    tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YYYY hh:mm:ss a");
+                    tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("ddd MM/DD/YYYY hh:mm:ss a");
                     tempPivot["Date"].rawValue = moment.unix(totalizerData[0].totals[j].range.start);
                     for (i = 0; i < numberOfColumnsFound; i++) {
                         operator = totalizerData[i].op.toLowerCase();
@@ -1493,7 +1497,7 @@ var reportsViewModel = function () {
             }
             return data;
         },
-        adjustDatatableHeightWidth = function () {
+        adjustDatatableHeight = function () {
             var infoscanHeader = 60,
                 adjustHeight,
                 $dataTablesScrollBody = $tabViewReport.find('.dataTables_scrollBody'),
@@ -1516,7 +1520,7 @@ var reportsViewModel = function () {
             setTimeout(function () {
                 if (new Date() - lastResize >= resizeTimer) {
                     if (self.currentTab() === 2) {
-                        adjustDatatableHeightWidth();
+                        adjustDatatableHeight();
                     } else {
                         adjustConfigTabActivePaneHeight();
                     }
@@ -2256,13 +2260,13 @@ var reportsViewModel = function () {
                         realtime: false
                     },
                     order: [[0, "asc"]], // always default sort by first column
-                    scrollY: (window.innerHeight - 270) + "px",
+                    scrollY: true,
                     scrollX: true,
                     scrollCollapse: true,
                     lengthChange: true,
                     lengthMenu: [[10, 15, 25, 50, 75, 100, -1], [10, 15, 25, 50, 75, 100, "All"]],
                     //bFiler: false,  // search box
-                    pageLength: self.selectedPageLength()
+                    pageLength: parseInt(self.selectedPageLength(), 10)
                 });
             }
 
@@ -2290,7 +2294,7 @@ var reportsViewModel = function () {
                 $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
                 self.refreshData(false);
                 self.currentTimeStamp = moment().format("dddd MMMM DD, YYYY hh:mm:ss a");
-                adjustDatatableHeightWidth();
+                adjustDatatableHeight();
 
                 if (!exportEventSet) {
                     $tabViewReport.find("a.btn.btn-default.buttons-collection").on('click', function () {

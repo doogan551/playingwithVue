@@ -3777,13 +3777,6 @@
         },
         "Points": {
             "Report": {
-                "Report Interval": {
-                    "isDisplayable": false,
-                    "isReadOnly": true,
-                    "ValueType": 5,
-                    "Value": "Minute",
-                    "eValue": 0
-                },
                 "Report Type": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -3791,18 +3784,32 @@
                     "Value": "Property",
                     "eValue": 0
                 },
-                "Point Refs": [{
-                    "PropertyName": "Qualifier Point",
-                    "PropertyEnum": 130,
-                    "AppIndex": 1,
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "Value": 0,
-                    "PointName": "",
-                    "PointType": 0,
-                    "PointInst": 0,
-                    "DevInst": 0
-                }]
+                "Point Refs": [
+                    {
+                        "PropertyName": "Qualifier Point",
+                        "PropertyEnum": 130,
+                        "AppIndex": 1,
+                        "isDisplayable": true,
+                        "isReadOnly": false,
+                        "Value": 0,
+                        "PointName": "",
+                        "PointType": 0,
+                        "PointInst": 0,
+                        "DevInst": 0
+                    },
+                    {
+                        "PropertyName": "Column Point",
+                        "PropertyEnum": 131,
+                        "AppIndex": 1,
+                        "isDisplayable": true,
+                        "isReadOnly": false,
+                        "Value": 0,
+                        "PointName": "",
+                        "PointType": 0,
+                        "PointInst": 0,
+                        "DevInst": 0
+                    }
+                ]
             },
 
             "Display": {
