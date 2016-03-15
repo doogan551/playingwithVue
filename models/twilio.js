@@ -17,7 +17,7 @@ module.exports = {
     var fromNumber = phoneNumbers[numberIndex++];
     toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Twilio');
 
-    if (numberIndex > phoneNumbers.length)
+    if (numberIndex >= phoneNumbers.length)
       numberIndex = 0;
 
     client.sendMessage({
