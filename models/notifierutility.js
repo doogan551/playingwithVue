@@ -33,75 +33,23 @@ NotifierUtility.prototype.buildVoiceUrl = function(message, type) {
 
 NotifierUtility.prototype.sendText = function(number, message, cb) {
   this.Twilio.sendText(number, message, function(err, response) {
-    if (!!err) {
-      return cb(err);
-    } else {
-      return cb(null, response);
-    }
+    if (cb)
+      return cb(err, response);
   });
 };
 
 NotifierUtility.prototype.sendVoice = function(number, message, cb) {
   this.Twilio.sendVoice(number, message, function(err, response) {
-    if (!!err) {
-      return cb(err);
-    } else {
-      return cb(null, response);
-    }
+    if (cb)
+      return cb(err, response);
   });
 };
 
 NotifierUtility.prototype.sendEmail = function(options, cb) {
-  this.Mailer.sendEmail(options, cb);
-};
-
-NotifierUtility.prototype.sendNotification = function(alarm, cb) {
-  var self = this;
-
-  if (!!alarm.almNotify) {
-    self.Notifications.checkPolicies(alarm, function(err, notifications) {
-      async.each(notifications, function(notification, callback) {
-        async.waterfall([function(wfcb) {
-          if (notification.type & 1) { //voice
-            self.sendVoice(notification.number, self.makeMessage(alarm, notification), wfcb);
-          } else {
-            wfcb(null);
-          }
-        }, function(wfcb) {
-          if (notification.type & 2) { // sms
-            self.sendText(notification.number, self.makeMessage(alarm, notification), wfcb);
-          } else {
-            wfcb(null);
-          }
-        }, function(wfcb) {
-          if (notification.type & 4) { // email
-            self.sendEmail(notification.email, self.makeMessage(alarm, notification), wfcb);
-          } else {
-            wfcb(null);
-          }
-        }], callback);
-      }, cb);
-    });
-  } else {
-    return cb();
-  }
-};
-
-NotifierUtility.prototype.makeMessage = function(alarm, notification) {
-  var makeAckString = function() {
-    var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    var string = '';
-    for (var i = 0; i < 4; i++) {
-      string += chars[Math.floor(Math.random() * chars.length)];
-    }
-    return string;
-  };
-  var message = 'Alarm: "' + alarm.msgText + '" at ' + moment.unix(alarm.msgTime).format('MM/DD/YYYY HH:mm:ss') + '.';
-  if (!!notification.ack) {
-    message += ' Reply with ' + makeAckString() + ' to acknowledge';
-    //update alarm
-  }
-  return message;
+  this.Mailer.sendEmail(options, function(err, response) {
+    if (cb)
+      cb(err, response);
+  });
 };
 
 module.exports = NotifierUtility;

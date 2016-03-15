@@ -2,12 +2,12 @@ var async = require('async'),
 	utility = require('../models/utility'),
 	utils = require('../helpers/utils'),
 	calendar = require('../models/calendar'),
+	siteConfig = require('config'),
 	Config = require('../public/js/lib/config.js'),
 	appConfig = require('config'),
 	cronJob = require('../models/cronjob'),
 	ObjectID = require('mongodb').ObjectID,
 	logger = require('../helpers/logger')(module),
-	mailer = require('../models/mailer'),
 	Notifier = require('../models/notifierutility');
 
 var notifier = new Notifier();
@@ -117,7 +117,7 @@ var dbAlarmQueueLocked = false,
 				utility.get(query, cb);
 			},
 			dbUpdate: function (data, cb) {
-				actions.utility.log('actions.scheduledTasks.dbUpdate'); // DEBUG
+				actions.utility.log('actions.scheduledTasks.dbUpdate');
 
 				var updates = [],
 					deleteIds = [],
@@ -168,7 +168,7 @@ var dbAlarmQueueLocked = false,
 				});
 			},
 			process: function (data, cb) {
-				actions.utility.log('actions.scheduledTasks.process'); // DEBUG
+				actions.utility.log('actions.scheduledTasks.process');
 				var rotateMembers = function (task) {
 						var policy = actions.policies.getPolicy(data.policies, task.policyID),
 							alertConfig = policy && actions.policies.getAlertConfig(policy.alertConfigs, task.config.alertConfigID),
@@ -284,8 +284,8 @@ var dbAlarmQueueLocked = false,
 			dbUpdateConfigs: function (data, cb) {
 				var numberOfUpdates = Object.keys(data.policyConfigUpdates).length;
 
-				actions.utility.log('actions.policies.dbUpdateConfigs'); // DEBUG
-				actions.utility.log('\tUpdating ' + numberOfUpdates + ' item(s)'); // DEBUG
+				actions.utility.log('actions.policies.dbUpdateConfigs');
+				actions.utility.log('\tUpdating ' + numberOfUpdates + ' item(s)');
 				
 				if (numberOfUpdates === 0) {
 					delete data.policyConfigUpdates;
@@ -314,7 +314,7 @@ var dbAlarmQueueLocked = false,
 				}
 			},
 			dbUpdateThreads: function (data, cb) {
-				actions.utility.log('policies.dbUpdateThreads'); // DEBUG
+				actions.utility.log('policies.dbUpdateThreads');
 
 				// TEST
 				if (selfTest.enabled && !selfTest.useDb.policies) {
@@ -432,7 +432,7 @@ var dbAlarmQueueLocked = false,
 				});
 			},
 			process: function (data, cb) {
-				actions.utility.log('policies.process'); // DEBUG
+				actions.utility.log('policies.process');
 				function processPolicy (policy, policyCB) {
 					function processThread (thread, threadCB) {
 						var info = {
@@ -1090,7 +1090,7 @@ var dbAlarmQueueLocked = false,
 				utility.insert(criteria, cb);
 			},
 			dbRemoveAll: function (data, cb) {
-				actions.utility.log('alarmQueue.dbRemoveAll'); // DEBUG
+				actions.utility.log('alarmQueue.dbRemoveAll');
 
 				// If the alarm queue was empty there's nothing for us to do
 				if (!data.alarmQueue.length) {
@@ -1146,7 +1146,7 @@ var dbAlarmQueueLocked = false,
 				}
 			},
 			process: function (data, cb) {
-				actions.utility.log('alarmQueue.processing', '\t' + data.alarmQueue.length + ' item(s) in queue'); // DEBUG
+				actions.utility.log('alarmQueue.processing', '\t' + data.alarmQueue.length + ' item(s) in queue');
 				var policyLookup = actions.policies.getPolicyLookupTable(data.policies);
 				
 				function alarmQueueIteratee (queueEntry, queueCB) {
@@ -1277,7 +1277,7 @@ var dbAlarmQueueLocked = false,
 				return cb();
 			},
 			processTempAlarmQueue: function (data, cb) {
-				actions.utility.log('alarmQueue.processTempAlarmQueue', '\t' + tempAlarmQueue.length + ' item(s) in temp queue'); // DEBUG
+				actions.utility.log('alarmQueue.processTempAlarmQueue', '\t' + tempAlarmQueue.length + ' item(s) in temp queue');
 
 				var tempAlarmQueueLength = tempAlarmQueue.length;
 
@@ -1308,7 +1308,7 @@ var dbAlarmQueueLocked = false,
 		},
 		notifications: {
 			buildNotifyList: function (data, cb) {
-				actions.utility.log('notifications.buildNotifyList'); // DEBUG
+				actions.utility.log('notifications.buildNotifyList');
 
 				var policy,
 					thread,
@@ -1375,12 +1375,12 @@ var dbAlarmQueueLocked = false,
 							actions.policies.setThreadState(thread, UPDATED);
 						}
 					}
-					actions.utility.log('\tPolicy ' + policy.name + ' - ' + _numberOfQueuedItems + ' item(s) in notify queue'); // DEBUG
+					actions.utility.log('\tPolicy ' + policy.name + ' - ' + _numberOfQueuedItems + ' item(s) in notify queue');
 				}
 				cb(null, data);
 			},
 			sendNotifications: function (data, cb) {
-				actions.utility.log('notifications.sendNotifications', '\t' + data.notifyList.length + ' item(s) for delivery now'); // DEBUG
+				actions.utility.log('notifications.sendNotifications', '\t' + data.notifyList.length + ' item(s) for delivery now');
 				// data.notifyList is of the form:
 				// [{
 				//	notification: {
@@ -1420,6 +1420,7 @@ var dbAlarmQueueLocked = false,
 					thread,
 					key,
 					i,
+					to,
 					recepientHistoryLookup = (function(){
 						var obj = {},
 							thread,
@@ -1576,7 +1577,8 @@ var dbAlarmQueueLocked = false,
 							log.apiResult = result;
 
 							utility.insert(criteria, function (err) {
-								// TODO
+								if (!!err)
+									actions.utility.sendError(err);
 							});
 						};
 					};
@@ -1592,6 +1594,7 @@ var dbAlarmQueueLocked = false,
 					// Keep in mind that notifyEntry.notification is actually a pointer to the notification object on the thread, and any modifications
 					// made to this object will be stored in the db. So best not to modify it to make sure it stays slim and trim.
 					notification = notifyEntry.notification;
+					to = notification.info;
 					thread = notifyEntry.thread;
 
 					// We'll also collect notifications by user which can be used to prevent overwhelming the user
@@ -1620,18 +1623,18 @@ var dbAlarmQueueLocked = false,
 						});
 					}
 
-					actions.utility.log('\tPolicy ' + notifyEntry.policy.name + ' - ' + notifyTypeText[notification.type] + ' ' + notification.info + ': ' + notifyMsg); // DEBUG
+					actions.utility.log('\tPolicy ' + notifyEntry.policy.name + ' - ' + notifyTypeText[notification.type] + ' ' + notification.info + ': ' + notifyMsg);
 
 					// Send notification
 					if (notification.type === EMAIL) {
 						notifyParams = [{
-							to: notification.info,
+							to: to,
 							from: 'infoscan@dorsett-tech.com',
 							subject: getEmailSubject(),
 							text: notifyMsg
 						}, createCallback(notifyEntry)];
 					} else {
-						notifyParams = [notification.info, notifyMsg, createCallback(notifyEntry)];
+						notifyParams = [(to.length === 10) ? '1' + to : to, notifyMsg, createCallback(notifyEntry)];
 					}
 					notifier[notifierFnLookup[notification.type]].apply(notifier, notifyParams);
 				}
@@ -1645,9 +1648,24 @@ var dbAlarmQueueLocked = false,
 				return (parseInt(info.data.now + (offset * MSPM), 10));
 			},
 			log: function () {
-				for (var i = 0; i < arguments.length; i++) {
-					console.log(arguments[i]);
-				}
+				// for (var i = 0; i < arguments.length; i++) {
+				//	console.log(arguments[i]);
+				// }
+			},
+			sendError: function (err) {
+				var text = [
+						'Site: ' + siteConfig.get('Infoscan.location').site,
+						'Timestamp: ' + new Date().getTime(),
+						'Error: ' + JSON.stringify(err)
+					].join('\n');
+				
+				notifier.sendEmail({
+					from: 'infoscan@dorsett-tech.com',
+					to: 'johnny.dr@gmail.com',
+					subject: 'Notifications error at customer site!',
+					text: text
+				});
+				notifier.sendText('13364690900', 'Notifications error @ customer site. Check gmail for details.', function (){});
 			}
 		},
 		dbGetAllUsersObj: function (cb) {
@@ -1720,8 +1738,7 @@ var dbAlarmQueueLocked = false,
 				insertNotifyAlarmQueue
 			], function (err) {
 				if (!!err) {
-					// TODO log error?
-					actions.utility.log(err); // DEBUG
+					actions.utility.sendError(err);
 				}
 				actions.utility.log('DONE (' + (new Date().getTime()-startTime) + ' ms)');
 			});
@@ -1749,7 +1766,7 @@ var dbAlarmQueueLocked = false,
 					i,
 					len,
 					policy;
-				// TODO learn how policies are stored on the point
+				
 				if (notifyPolicies && notifyPolicies.length) {
 					actions.policies.dbGet(point["Notify Policies"], function (err, policies) {
 						if (!!err) {
@@ -1812,7 +1829,7 @@ var dbAlarmQueueLocked = false,
 							jlen = alertConfig.groups.length;
 							for (j = 0; j < jlen; j++) {
 								// Using == compare in case the alertDelay is saved as a string (seen this happen from time to time)
-								if (alertConfig.groups[j].alertDelay == 0) {
+								if (parseInt(alertConfig.groups[j].alertDelay, 10) === 0) {
 									return true;
 								}
 							}
@@ -1961,19 +1978,15 @@ var dbAlarmQueueLocked = false,
 function run () {
 	var date = new Date(),
 		startTime = date.getTime(),
-		logError = function (err) {
-			// TODO
-			logger.debug(err);
-		},
 		terminate = function (err) {
-			logError(err);
 			actions.alarmQueue.unlock();
+			actions.utility.sendError(err);
 		};
 
 	date.setSeconds(0);	// This should match the CRON run interval (i.e. if CRON runs every 30s, setSeconds(30))
 	date.setMilliseconds(0); // This should always be 0
 
-	actions.utility.log(['\nRUNNING CRON JOB, ', date.getHours(), ':', date.getMinutes(), ', ', date.getTime()].join('')); // DEBUG
+	actions.utility.log(['\nRUNNING CRON JOB, ', date.getHours(), ':', date.getMinutes(), ', ', date.getTime()].join(''));
 	
 	// Do scheduled task stuff
 	actions.alarmQueue.lock();
@@ -1986,13 +1999,13 @@ function run () {
 		usersObj: actions.dbGetAllUsersObj,
 		scheduledTasks: actions.scheduledTasks.dbGetAll
 	}, function (err, data) {
-		var start = function (cb) {
-				cb(null, data);
-			};
-
 		if (!!err) {
 			return terminate(err);
 		}
+
+		var start = function (cb) {
+				cb(null, data);
+			};
 
 		data.policiesAckList = {};
 		data.notifyList = [];
@@ -2024,11 +2037,11 @@ function run () {
 			actions.alarmQueue.dbRemoveAll,
 			actions.alarmQueue.unlock,
 			actions.alarmQueue.processTempAlarmQueue
-		], function (err) {
+		], function (err, data) {
 			if (!!err) {
-				logError(err);
+				actions.utility.sendError(err);
 			}
-			actions.utility.log('DONE (' + (new Date().getTime() - startTime) + ' ms)'); // DEBUG
+			actions.utility.log('DONE (' + (new Date().getTime() - startTime) + ' ms)');
 		});
 	});
 }

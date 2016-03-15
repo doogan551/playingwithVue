@@ -383,6 +383,9 @@ div.dataTables_wrapper div.dataTables_length select {
 .firstColumn {
     min-width: 200px;
 }
+.firstColumn.datetime {
+    min-width: 120px;
+}
 .columnName {
     display: inline-block;
 }
@@ -513,12 +516,10 @@ input.form-control.inputPrecision {
     cursor: pointer;
 }
 .direports .rightPanel {
-    /*height: 99vh;*/
-    /*width: 90vw;*/
     overflow-x: hidden;
     overflow-y: hidden;
-    margin-left: 117px;
-    /*margin-top: -5px;*/
+    margin-left: 120px;
+    margin-right: -50px;
 }
 .reporttype {
     margin-top: 8px;
