@@ -71,12 +71,32 @@ var ActionButton = function (config) {
 
             ret.upi = _upi;
             ret.Value = _parameter;
+            ret.logData.newValue.Value = _parameter;
 
             return ret;
         },
         _processPointData = function (response) {
             _pointData = response;
             _validateOptions('upi');
+
+            _commandArguments.logData = {
+                user: displays.workspaceManager.user(),
+                point: {
+                    _id: _pointData._id,
+                    Security: _pointData.Security,
+                    Name: _pointData.Name,
+                    name1: _pointData.name1,
+                    name2: _pointData.name2,
+                    name3: _pointData.name3,
+                    name4: _pointData.name4,
+                    "Point Type": {
+                        eValue: _pointData["Point Type"].eValue
+                    }
+                },
+                newValue: {
+                    Value: ''
+                }
+            };
 
             if (_pointData['Minimum Value']) {
                 external.min = _pointData['Minimum Value'].Value;
