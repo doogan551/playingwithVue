@@ -3701,7 +3701,7 @@ gpl.ActionButton = function (config) {
 
         _sendCommand = function () {
             console.log('Send Command', _getCommandArguments());
-            gpl.socket.emit('fieldCommand', _getCommandArguments());
+            gpl.socket.emit('fieldCommand', JSON.stringify(_getCommandArguments()));
         },
         sendCommand = function () {
             if (_local.pointType.match('Analog')) {

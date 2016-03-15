@@ -102,7 +102,7 @@ var ActionButton = function (config) {
         },
         _sendCommand = function () {
             console.log('Send Command', _getCommandArguments());
-            displays.socket.emit('fieldCommand', _getCommandArguments());
+            displays.socket.emit('fieldCommand', JSON.stringify(_getCommandArguments()));
             displays.$scope.currActionButton = null;
         },
 
