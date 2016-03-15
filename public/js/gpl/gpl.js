@@ -3672,6 +3672,7 @@ gpl.ActionButton = function (config) {
 
             ret.upi = _local.upi;
             ret.Value = _local.parameter;
+            ret.newValue.Value = _local.parameter;
 
             return ret;
         },
@@ -3679,6 +3680,26 @@ gpl.ActionButton = function (config) {
             _local.pointData = response;
             _local.pointName = _local.pointData.Name;
             _local.pointType = response['Point Type'].Value;
+
+            _commandArguments.logData = {
+                user: displays.workspaceManager.user(),
+                point: {
+                    _id: response._id,
+                    Security: response.Security,
+                    Name: response.Name,
+                    name1: response.name1,
+                    name2: response.name2,
+                    name3: response.name3,
+                    name4: response.name4,
+                    "Point Type": {
+                        eValue: response["Point Type"].eValue
+                    }
+                },
+                newValue: {
+                    Value: ''
+                }
+            };
+
             _validateOptions('upi');
         },
         _getPointData = function (upi) {
@@ -3701,7 +3722,7 @@ gpl.ActionButton = function (config) {
 
         _sendCommand = function () {
             console.log('Send Command', _getCommandArguments());
-            gpl.socket.emit('fieldCommand', _getCommandArguments());
+            gpl.socket.emit('fieldCommand', JSON.stringify(_getCommandArguments()));
         },
         sendCommand = function () {
             if (_local.pointType.match('Analog')) {
