@@ -51,7 +51,7 @@ var ActionButton = function (config) {
             'Command Type'  : 7,
             upi             : '',
             Value           : '',
-            Controller      : '',
+            Controller      : displays.workspaceManager.user().controllerId,
             Relinquish      : '',
             Priority        : '',
             Wait            : ''
