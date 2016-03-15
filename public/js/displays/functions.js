@@ -576,7 +576,7 @@ displays = $.extend(displays, {
     initSocket: function() {
         var socket;
         if (document.location.href.match('nosocket') === null) {
-            socket = displays.socket = io.connect('http://' + window.location.hostname);
+            socket = displays.socket = io.connect(window.location.protocol + '//' + window.location.hostname);
 
             socket.on('reconnecting', function() {
                 var retries = 0,
