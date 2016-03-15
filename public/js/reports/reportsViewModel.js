@@ -1396,7 +1396,7 @@ var reportsViewModel = function () {
                 historyResults = historyData[i].HistoryResults;
                 tempPivot = {};
                 tempPivot["Date"] = {};
-                tempPivot["Date"].Value = moment.unix(historyData[i].timestamp).format("ddd MM/DD/YYYY hh:mm:ss a");
+                tempPivot["Date"].Value = moment.unix(historyData[i].timestamp).format("MM/DD/YYYY hh:mm:ss a");
                 tempPivot["Date"].rawValue = historyData[i].timestamp;
                 for (j = 0; j < historyResults.length; j++) {
                     columnName = historyResults[j].Name;
@@ -1433,7 +1433,7 @@ var reportsViewModel = function () {
                 for (j = 0; j < totalizerData[0].totals.length; j++) {
                     tempPivot = {};
                     tempPivot["Date"] = {};
-                    tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("ddd MM/DD/YYYY hh:mm:ss a");
+                    tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YYYY hh:mm:ss a");
                     tempPivot["Date"].rawValue = moment.unix(totalizerData[0].totals[j].range.start);
                     for (i = 0; i < numberOfColumnsFound; i++) {
                         operator = totalizerData[i].op.toLowerCase();
@@ -1910,13 +1910,21 @@ var reportsViewModel = function () {
                 setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
                     switch (self.reportType) {
                         case "History":
-                            if (columnConfig.units) {
-                                $(tdField).attr('title', columnConfig.units);
+                            if (columnIndex === 0 && columnConfig.dataColumnName === "Date") {
+                                $(tdField).attr('title', moment.unix(data[columnConfig.dataColumnName].rawValue).format("dddd"));
+                            } else {
+                                if (columnConfig.units) {
+                                    $(tdField).attr('title', columnConfig.units);
+                                }
                             }
                             break;
                         case "Totalizer":
-                            if (data[columnConfig.dataColumnName] && data[columnConfig.dataColumnName].rawValue) {
-                                $(tdField).attr('title', (data[columnConfig.dataColumnName].rawValue ? data[columnConfig.dataColumnName].rawValue : ""));
+                            if (columnIndex === 0 && columnConfig.dataColumnName === "Date") {
+                                $(tdField).attr('title', moment.unix(data[columnConfig.dataColumnName].rawValue).format("dddd"));
+                            } else {
+                                //if (data[columnConfig.dataColumnName] && data[columnConfig.dataColumnName].rawValue) {
+                                //    $(tdField).attr('title', (data[columnConfig.dataColumnName].rawValue ? data[columnConfig.dataColumnName].rawValue : ""));
+                                //}
                             }
                             break;
                         case "Property":
@@ -1968,7 +1976,7 @@ var reportsViewModel = function () {
                         result += "firstColumn ";
                     }
                     if (columnConfig.valueType === "DateTime") {
-                        result += "small ";
+                        result += "small datetime ";
                     }
                     if (columnConfig.canCalculate === true) {
                         result += "text-right ";
@@ -2018,6 +2026,7 @@ var reportsViewModel = function () {
                             _: "Value",
                             sort: "rawValue",
                             type: "rawValue"
+                            //filter: "filterValue"
                         },
                         className: setColumnClasses(columnsArray[columnIndex], columnIndex),
                         fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
