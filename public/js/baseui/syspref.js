@@ -2841,7 +2841,7 @@ var notificationsViewModel = function() {
 
         deletePolicy: function (policy) {
             self.forEachArray(self.bindings.policyList(), function (boundPolicy, idx) {
-                if (boundPolicy._id() === policy._id) {
+                if (boundPolicy._id() === policy._id()) {
                     if (policy._new()) {
                         self.bindings.policyList.splice(idx, 1);
                     } else {
