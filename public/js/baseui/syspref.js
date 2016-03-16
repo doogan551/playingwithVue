@@ -2341,7 +2341,7 @@ var notificationsViewModel = function() {
     };
 
     self.unTranslateMembers = function (policy) {
-        var rawPolicy = $.extend(true, {}, policy);
+        var rawPolicy = ko.toJS(policy);
         self.forEachArray(rawPolicy.members, function (member, idx) {
             rawPolicy.members[idx] = member.id;
         });
@@ -2371,9 +2371,8 @@ var notificationsViewModel = function() {
 
         for(c=0; c<len; c++) {
             self.buildPolicy(policies[c]);
+            self.bindings.policyList.push(ko.viewmodel.fromModel(policies[c]));
         }
-
-        self.bindings.policyList(policies);
     };
 
     self.prepPolicyForSave = function (policy) {
@@ -2489,8 +2488,8 @@ var notificationsViewModel = function() {
 
         ko.viewmodel.updateFromModel(self.bindings.currPolicy.members, newMembers);
         self.forEachArray(self.bindings.policyList(), function (policy) {
-            if (policy._id === self.bindings.currPolicy._id()) {
-                policy.members = newMembers;
+            if (policy._id() === self.bindings.currPolicy._id()) {
+                policy.members(newMembers);
             }
         });
     };
@@ -2510,7 +2509,7 @@ var notificationsViewModel = function() {
 
     self.savePolicy = function () {
         self.forEachArray(self.bindings.policyList(), function (policy, idx) {
-            if (policy._id === self.bindings.currPolicy._id()) {
+            if (policy._id() === self.bindings.currPolicy._id()) {
                 ko.viewmodel.updateFromModel(self.bindings.policyList()[idx], ko.toJS(self.bindings.currPolicy));
             }
         });
@@ -2546,7 +2545,7 @@ var notificationsViewModel = function() {
     self.bindings = {
         currPolicy: ko.viewmodel.fromModel(self.templates.policy),
         currAlertConfig: ko.observable(),
-        policyList: ko.observableArray(self.policies),
+        policyList: ko.observableArray(),
 
         alertStyles: [{
             text: 'First Responder Only',
@@ -2835,18 +2834,18 @@ var notificationsViewModel = function() {
                 type: 'POST',
                 dataType: 'json'
             }).done(function (response) {
-                 console.log('Deleted');
+                console.log('Deleted');
                 cb();
             });
         },
 
         deletePolicy: function (policy) {
             self.forEachArray(self.bindings.policyList(), function (boundPolicy, idx) {
-                if (boundPolicy._id === policy._id) {
-                    if (policy._new === true) {
+                if (boundPolicy._id() === policy._id) {
+                    if (policy._new()) {
                         self.bindings.policyList.splice(idx, 1);
                     } else {
-                        self.bindings.doDeletePolicy(policy._id, function () {
+                        self.bindings.doDeletePolicy(policy._id(), function () {
                             self.bindings.policyList.splice(idx, 1);
                         });
                     }
@@ -2854,10 +2853,11 @@ var notificationsViewModel = function() {
             });
         },
         selectPolicy: function (policy) {
+            var rawPolicy = ko.toJS(policy);
             self.bindings.currAlertConfig(null);
             self.bindings.isEditingMember(false);
             self._currPolicy = ko.toJS(policy);
-            ko.viewmodel.updateFromModel(self.bindings.currPolicy, policy);
+            ko.viewmodel.updateFromModel(self.bindings.currPolicy, rawPolicy);
             self.bindings.isEditingPolicy(true);
         },
         addPolicy: function () {
@@ -2870,7 +2870,7 @@ var notificationsViewModel = function() {
 
             // validation
             newPolicy.name = name;
-            self.bindings.policyList.push(newPolicy);
+            self.bindings.policyList.push(ko.viewmodel.fromModel(newPolicy));
             self.bindings.isEditingNewPolicy(false);
             ko.viewmodel.updateFromModel(self.bindings.currPolicy, newPolicy);
             self.bindings.selectPolicy(newPolicy);

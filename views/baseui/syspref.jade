@@ -359,7 +359,7 @@ html
                                         .policy.row
                                             .col-xs-3
                                                 a(href="#", data-bind="click: $parent.selectPolicy, text: name")
-                                            .col-xs-3 Members: #[span(data-bind="text: members.length")]
+                                            .col-xs-3 Members: #[span(data-bind="text: members().length")]
                                             .col-xs-1.pull-right
                                                 a(href="#", data-bind="click: $parent.deletePolicy")
                                                     i.fa.fa-times.deleteIcon
