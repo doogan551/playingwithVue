@@ -165,7 +165,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
 
   Utility.getOne({
     collection: 'points',
-    criteria: {
+    query: {
       _id: newPoint._id
     },
     fields: {

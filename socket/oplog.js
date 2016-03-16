@@ -371,7 +371,7 @@ module.exports.updateDashboard = function(doc, callback) {
 
 function addActiveAlarm(alarmId, callback) {
     Utility.getOne({
-            criteria: {
+            query: {
                 _id: alarmId
             },
             collection: 'Alarms'
@@ -515,7 +515,7 @@ function getChangedVals(id, callback) {
         "Quality Code Enable": 1
     };
     Utility.getOne({
-        criteria: {
+        query: {
             _id: parseInt(id, 10)
         },
         fields: fields,

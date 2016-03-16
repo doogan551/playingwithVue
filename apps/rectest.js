@@ -471,8 +471,11 @@ function fixPointInst() {
                 _id: ref.Value
               }
             }, function(err, point) {
-              
-              Config.EditChanges.applyUniquePIDLogic({point: doc, refPoint: point}, index);
+
+              Config.EditChanges.applyUniquePIDLogic({
+                point: doc,
+                refPoint: point
+              }, index);
               Utility.update({
                 collection: 'points',
                 query: {
@@ -493,4 +496,57 @@ function fixPointInst() {
       });
   });
 }
-fixPointInst();
+// fixPointInst();
+
+function fixUsers() {
+  db.connect(connectionString.join(''), function(err) {
+    var criteria = {
+      collection: 'Users',
+      query: {}
+    };
+    Utility.iterateCursor(criteria, function(err, doc, cb) {
+      var alerts = doc.alerts;
+
+      for (var prop in alerts) {
+        var cat = alerts[prop];
+        for (var i = 0; i < cat.length; i++) {
+          if (cat[i].hasOwnProperty('info')) {
+            cat[i].Value = cat[i].info;
+            cat[i].Type = cat[i].type;
+            delete cat[i].info;
+            delete cat[i].type;
+          }
+        }
+      }
+      if (!doc.hasOwnProperty('notificationOptions')) {
+        doc['notificationOptions'] = {
+          "Emergency": false,
+          "Critical": false,
+          "Urgent": false,
+          "notifyOnAck": false
+        };
+      }
+      if (!doc.hasOwnProperty('notificationsEnabled')) {
+        doc['notificationsEnabled'] = false;
+      }
+      if (!doc.hasOwnProperty('alerts')) {
+        doc['alerts'] = {
+          'Normal': [],
+          'Emergency': [],
+          'Critical': [],
+          'Urgent': []
+        };
+      }
+      Utility.update({
+        collection: 'Users',
+        query: {
+          _id: doc._id
+        },
+        updateObj: doc
+      }, cb);
+    }, function(err, count) {
+      console.log('done', err, count);
+    });
+  });
+}
+fixUsers();
