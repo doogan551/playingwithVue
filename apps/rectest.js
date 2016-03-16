@@ -191,20 +191,6 @@ function addProperties() {
 }
 // addProperties();
 
-function testTwilio() {
-  var NotifierUtility = require('../models/notifierutility');
-  var notifierUtility = new NotifierUtility();
-
-
-  notifierUtility.sendText('13364694547', 'An alarm has occured in building 4200. Respond with asdf to acknowledge the alarm', function(err, response) {
-    console.log(err, response);
-  });
-
-  /*var Twilio = require('../models/twilio');
-  Twilio.getCalls();*/
-}
-// testTwilio();
-
 function updateGPL() {
   var count = 0;
   var pointTypes = ["Alarm Status", "Analog Selector", "Average", "Binary Selector", "Comparator", "Delay", "Digital Logic", "Economizer", "Enthalpy", "Logic", "Math", "Multiplexer", "Proportional", "Ramp", "Select Value", "Setpoint Adjust", "Totalizer"];
@@ -301,73 +287,6 @@ function testTotalizerModel() {
     });
   });
 }
-// testTotalizerModel();
-
-function testMail() {
-  var MailListener = require("mail-listener2");
-
-  var mailListener = new MailListener({
-    username: "dorsett.alarms@gmail.com",
-    password: "dorsettgmailpass",
-    host: "imap.gmail.com",
-    port: 993, // imap port 
-    tls: true,
-    tlsOptions: {
-      rejectUnauthorized: false
-    },
-    markSeen: true, // all fetched email willbe marked as seen and not fetched next time 
-    fetchUnreadOnStart: true, // use it only if you want to get all unread email on lib start. Default is `false`, 
-    attachments: false // download attachments as they are encountered to the project directory 
-  });
-
-  mailListener.start(); // start listening 
-
-  // stop listening 
-  //mailListener.stop(); 
-
-  mailListener.on("server:connected", function() {
-    console.log("imapConnected");
-  });
-
-  mailListener.on("server:disconnected", function() {
-    console.log("imapDisconnected");
-  });
-
-  mailListener.on("error", function(err) {
-    console.log(err);
-  });
-
-  mailListener.on("mail", function(mail, seqno, attributes) {
-    // do something with mail object including attachments 
-    console.log(mail.subject, mail.text);
-    // mail processing code goes here 
-  });
-}
-// testMail();
-
-function testCron(fx) {
-  var CronJob = require('../models/cronjob');
-
-  var testFx = function() {
-    console.log(new Date());
-  };
-  var cron = new CronJob('00 * * * * *', testFx);
-
-  new CronJob('30 * * * * *', function() {
-    console.log('second job');
-  });
-
-  var now = Date.now();
-  console.log('starting', new Date());
-  var interval = setInterval(function() {
-    if (Date.now() >= now + (2 * 60 * 1000)) {
-      cron.stop();
-      clearInterval(interval);
-    }
-  }, 1000);
-
-}
-// testCron();
 // testTotalizerModel();
 
 function testInheritance() {
@@ -549,4 +468,4 @@ function fixUsers() {
     });
   });
 }
-fixUsers();
+// fixUsers();
