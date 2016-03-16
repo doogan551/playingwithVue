@@ -66,18 +66,10 @@
             </div>
             <hr>
             <div class="row">
-                <div class="col col-sm-6 col-xs-12">
-                    <div class="dataField">
-                        <label>Controller</label>
-                        <span class="lh30" data-bind="text: data.Controller.Value()"></span>
-                    </div>
-                </div>
-                <div class="col col-sm-6 col-xs-12">
-                    <div class="dataField">
-                        <label>Control Priority</label>
-                        <span class="lh30" data-bind="text: data['Control Priority'].Value()"></span>
-                    </div>
-                </div>
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Controller', data: data, columnClasses: 'col col-sm-6 col-xs-12', enumSetName: 'Controller', rootContext: $root } } -->
+                <!-- /ko -->
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Control Priority', data: data, columnClasses: 'col col-sm-6 col-xs-12', enumSetName: 'Control Priority', rootContext: $root } } -->
+                <!-- /ko -->
             </div>
             <hr>
             <div class="row">
