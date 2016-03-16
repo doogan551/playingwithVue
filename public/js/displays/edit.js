@@ -801,12 +801,25 @@ displays = $.extend(displays, {
         displays.isEdit = true;
 
         displayApp.controller('EditItemCtrl', function($scope, $http) {
-            $scope.editItem = {};
-
             $scope.updateEditItem = displays.updateEditItem = function(item) {
+                var $el = $('#actionButtonValue');
+
                 if ($scope.editItem._idx === item._idx) {// is update
                     if (item.hasOwnProperty('ActionCode')) { // is action button
                         item._actionButton.updateConfig(item, true);
+                        if (item._actionButton.options) {
+                            setTimeout(function () {
+                                var itemVal = item.ActionParm;
+                                $el.html('');
+                                $.each(item._actionButton.options, function (idx, val) {
+                                    var selected = '';
+                                    if (val.value === itemVal) {
+                                        selected = ' selected';
+                                    }
+                                    $el.append('<option value="' + val.value + '"' + selected + '>' + val.name + '</option>');
+                                });
+                            }, 10);
+                        }
                     }
                 }
 
@@ -1037,6 +1050,7 @@ displays = $.extend(displays, {
 
             $scope.priorities = displays.workspaceManager.systemEnums.controlpriorities;
 
+
             $('#editDisplay').hide();
 
             document.title = displayJson.Name;
@@ -1117,14 +1131,20 @@ displays = $.extend(displays, {
             $scope.cleanActionButtons = function (disp) {
                 var c,
                     objects = disp['Screen Objects'],
-                    obj;
+                    obj,
+                    button;
 
                 for (c = 0; c < objects.length; c++) {
                     obj = objects[c];
-                    if (obj._actionButton) {
-                        obj.upi = obj._actionButton.upi;
-                        if (obj._actionButton.value) {
-                            obj.value = obj._actionButton.value;
+                    button = obj._actionButton;
+                    if (button) {
+                        obj.upi = button.upi;
+                        // if (button.value) {
+                        //     obj.value = button.value && button.value.value;
+                        // }
+                        obj.ActionPriority = parseInt(button.ActionPriority, 10);
+                        if (obj.ActionParm !== undefined) {
+                            obj.ActionParm = parseFloat(obj.ActionParm);
                         }
                         delete obj._actionButton;
                     }

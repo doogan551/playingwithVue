@@ -2093,8 +2093,8 @@ var notificationsViewModel = function() {
                     notifyOnAck: false
                 },
                 'alertNotification': {
-                    info: null,
-                    type: null,
+                    Value: null,
+                    Type: null,
                     delay: 1
                 },
                 'alertConfig': {
@@ -2496,9 +2496,9 @@ var notificationsViewModel = function() {
 
     self.getContact = function (alert) {
         var contact,
-            info = ko.toJS(alert).info;
+            value = ko.toJS(alert).Value;
         self.forEachArray(self.bindings.currMember().contactInfo(), function (contactInfo) {
-            if (contactInfo.Value() === info) {
+            if (contactInfo.Value() === value) {
                 contact = contactInfo;
                 return false;
             }
@@ -2756,7 +2756,7 @@ var notificationsViewModel = function() {
         },
 
         getAlertType: function (contactInfo) {
-            var contact = self.getContact({info: contactInfo()});
+            var contact = self.getContact({Value: contactInfo()});
 
             return contact.Type;
         },
@@ -2766,8 +2766,8 @@ var notificationsViewModel = function() {
                 firstContact = self.bindings.currMember().contactInfo()[0],
                 alerts = self.bindings.currMember().alerts[data.name];
 
-            alert.info = firstContact.Value();
-            alert.type = firstContact.Type();
+            alert.Value = firstContact.Value();
+            alert.Type = firstContact.Type();
 
             if (alerts().length === 0) {
                 alert.delay = 0;

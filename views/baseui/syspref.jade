@@ -834,7 +834,7 @@ html
                     .notificationRow
                         .notificationIcon.smsIcon
                             .fa-stack
-                                i.fa.fa-stack-2x(data-bind="css: $parents[3].getAlertIcon($parents[3].getAlertType(info))")
+                                i.fa.fa-stack-2x(data-bind="css: $parents[3].getAlertIcon($parents[3].getAlertType(Value))")
                                 i.fa.fa-stack-1x.fa-stack-text
                         .notificationAlert
                             div
@@ -842,7 +842,7 @@ html
                                 input.form-control.input-sm.input-xs.editableInput(data-bind="disable: $index() === 0, value: delay")
                                 span minute(s) after I receive an alert
                                 span.editable(data-bind="text: $parents[3].getContactAlertString($data)")
-                                select.editableInput(data-bind="value: info, options: $parents[1].contactInfo, optionsText: function (item) {return $parents[3].getContactString(item);}, optionsValue: function (item) { return item.Value;}")
+                                select.editableInput(data-bind="value: Value, options: $parents[1].contactInfo, optionsText: function (item) {return $parents[3].getContactString(item);}, optionsValue: function (item) { return item.Value;}")
                         span.pull-right.editableInput
                             a(href="#", data-bind="click: function () { $parents[3].deleteAlert($parent, $index); }")
                                 i.fa.fa-times.deleteIcon
