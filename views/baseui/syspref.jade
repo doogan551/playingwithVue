@@ -534,7 +534,9 @@ html
                                             .button.btn.btn-sm.btn-default(data-bind="visible: !$parents[1].isEditingAlertConfig(), click: $parents[1].doEditAlertConfig") Edit
                                             .button.btn.btn-sm.btn-text(data-bind="visible: $parents[1].isEditingAlertConfig(), click: $parents[1].cancelDoEditAlertConfig") Cancel
                                             .button.btn.btn-sm.btn-success(data-bind="visible: $parents[1].isEditingAlertConfig(), click: $parents[1].saveEditAlertConfig") Save
-                                        h3(data-bind="text: name")
+                                        h3.editable(data-bind="text: name")
+                                        h3.editRow
+                                            input.alertConfigName.editRow(type="text", data-bind="value: name")
                                         .checkbox.isOnCall
                                             label
                                                 input.checkbox-valign(type="checkbox", data-bind="checked: isOnCall, disable: !$parents[1].isEditingAlertConfig()")
@@ -837,7 +839,7 @@ html
                         .notificationAlert
                             div
                                 span.editable(data-bind="text: delay")
-                                input.form-control.input-sm.input-xs.editableInput(data-bind="value: delay")
+                                input.form-control.input-sm.input-xs.editableInput(data-bind="disable: $index() === 0, value: delay")
                                 span minute(s) after I receive an alert
                                 span.editable(data-bind="text: $parents[3].getContactAlertString($data)")
                                 select.editableInput(data-bind="value: info, options: $parents[1].contactInfo, optionsText: function (item) {return $parents[3].getContactString(item);}, optionsValue: function (item) { return item.Value;}")

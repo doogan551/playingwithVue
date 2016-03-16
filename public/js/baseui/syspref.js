@@ -2597,7 +2597,9 @@ var notificationsViewModel = function() {
             self.forEachArray(schedule.days(), function (day) {
                 var idx = self.bindings.shortDays.indexOf(day);
 
-                self.bindings['day' + self.bindings.days[idx]](true);
+                if (idx !== -1) {
+                    self.bindings['day' + self.bindings.days[idx]](true);
+                }
             });
 
             self.bindings.dayHolidays(schedule.holidays());
@@ -2616,6 +2618,10 @@ var notificationsViewModel = function() {
             });
 
             self._currSchedule.holidays(self.bindings.dayHolidays());
+
+            if (self.bindings.dayHolidays()) {
+                ret.push('Holidays');
+            }
 
             self._currSchedule.days(ret);
 
@@ -2669,15 +2675,22 @@ var notificationsViewModel = function() {
         },
 
         convertDate: function (scheduleDays) {
-            var days = scheduleDays().join(''),
+            var _days = scheduleDays().join(''),
+                days,
                 weekdays = 'montueswedthurfri',
                 weekends = 'satsun';
 
-            if (days === weekdays) {
+            if (_days.match(weekdays)) {
                 days = 'Weekdays';
-            } else  if (days === weekends) {
+                if (_days.match('Holidays')) {
+                    days += ', Holidays';
+                }
+            } else if (_days.match(weekends)) {
                 days = 'Weekends';
-            } else if (days === weekdays + weekends) {
+                if (_days.match('Holidays')) {
+                    days += ', Holidays';
+                }
+            } else if (_days.match(weekdays + weekends)) {
                 days = 'Everyday';
             } else {
                 if (scheduleDays().length > 0) {
@@ -2751,16 +2764,27 @@ var notificationsViewModel = function() {
 
         addNewAlert: function (data) {
             var alert = self.getTemplate('alertNotification'),
-                firstContact = self.bindings.currMember().contactInfo()[0];
+                firstContact = self.bindings.currMember().contactInfo()[0],
+                alerts = self.bindings.currMember().alerts[data.name];
 
             alert.info = firstContact.Value();
             alert.type = firstContact.Type();
+
+            if (alerts().length === 0) {
+                alert.delay = 0;
+            }
 
             self.bindings.currMember().alerts[data.name].push(ko.viewmodel.fromModel(alert));
         },
 
         deleteAlert: function (alertType, idx) {
-            alertType.alerts.splice(idx(), 1);
+            var _idx = idx();
+
+            alertType.alerts.splice(_idx, 1);
+
+            if (_idx === 0) {//deleted first one
+                alertType.alerts()[0].delay(0);
+            }
         },
 
         getContactString: function (contact) {
@@ -2894,6 +2918,7 @@ var notificationsViewModel = function() {
             self.bindings.currPolicy.alertConfigs.push(ko.viewmodel.fromModel(configurationTemplate));
             self.bindings.currAlertConfig(self.bindings.currPolicy.alertConfigs.slice(-1)[0]);
             self.bindings.isEditingNewConfiguration(false);
+            self.bindings.isEditingAlertConfig(true);
             self.savePolicy();
         },
 
