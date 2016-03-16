@@ -237,7 +237,7 @@ module.exports = function socketio(_common) {
           insertObj: logData
         }, function(err, result) {});
       }
-
+      logger.info('fieldCommand', data);
       zmq.sendCommand(data, function(err, msg) {
         if (!!err) {
           err = err.ApduErrorMsg || err.msg;

@@ -786,7 +786,7 @@
                 "enum": 4
             }
         },
-        "Program Change Request": {
+        "Program Change Requests": {
             "None": {
                 "enum": 0
             },
@@ -3035,7 +3035,7 @@
                 "enum": 273,
                 "valueType": "Enum",
                 "reportEnable": true,
-                "enumsSet": "Program Change Request"
+                "enumsSet": "Program Change Requests"
             },
             "Program Error": {
                 "enum": 272,

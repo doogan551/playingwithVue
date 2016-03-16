@@ -1659,7 +1659,7 @@ function updateReferences(db, point, mainCallback) {
 					} else {
 						prop = pointRef.PropertyName;
 					}
-
+					prop = index;
 					refPoint = Config.EditChanges.applyUniquePIDLogic({
 						point: point,
 						refPoint: refPoint
