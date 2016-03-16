@@ -2407,14 +2407,14 @@ var notificationsViewModel = function() {
                 dataType: 'json',
                 contentType: 'application/json'
             }).done(function (response) {
-                if (policy._new === true) {
+                if (policy._new && policy._new() === true) {
                     delete policy._new;
-                    if (policy._id === self.bindings.currPolicy._id()) {
+                    if (policy._id() === self.bindings.currPolicy._id()) {
                         self.bindings.currPolicy._id(response.id);
                     }
-                    policy._id = response.id;
+                    policy._id(response.id);
                 }
-                console.log('Saved policy', policy.name);
+                console.log('Saved policy', policy.name());
             });
         });
 
@@ -2842,7 +2842,7 @@ var notificationsViewModel = function() {
         deletePolicy: function (policy) {
             self.forEachArray(self.bindings.policyList(), function (boundPolicy, idx) {
                 if (boundPolicy._id() === policy._id()) {
-                    if (policy._new()) {
+                    if (policy._new && policy._new()) {
                         self.bindings.policyList.splice(idx, 1);
                     } else {
                         self.bindings.doDeletePolicy(policy._id(), function () {
