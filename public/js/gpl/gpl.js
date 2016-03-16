@@ -3640,7 +3640,8 @@ gpl.ActionButton = function (config) {
             Controller      : gpl.workspaceManager.user().controllerId,
             Relinquish: 0,
             Priority: '',
-            Wait: 0
+            Wait: 0,
+            OvrTime: 0
         },
 
         _local = {},

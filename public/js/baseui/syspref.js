@@ -2523,6 +2523,7 @@ var notificationsViewModel = function() {
             userid: user.id,
             'Update Data': {
                 alerts: user.alerts,
+                notificationOptions: user.notificationOptions,
                 notificationsEnabled: user.notificationsEnabled
             }
         };
@@ -2534,9 +2535,9 @@ var notificationsViewModel = function() {
             data: JSON.stringify(data),
             success: function (returnData) {
                 if (returnData.err) {
-                    console.log(returnData.err);
-                } else if (returnData) {
-                    console.log(JSON.stringify(returnData));
+                    console.log('Error saving user', returnData.err);
+                } else {
+                    console.log('Saved user');
                 }
             }
         });
@@ -2654,7 +2655,7 @@ var notificationsViewModel = function() {
             var ret,
                 fullTime = scheduleTime(),
                 hr = fullTime/100,
-                ampm = hr > 12 ? 'PM' : 'AM';
+                ampm = hr >= 12 ? 'PM' : 'AM';
 
             if (hr > 12) {
                 hr -= 12;
@@ -3022,7 +3023,10 @@ var notificationsViewModel = function() {
                     doneText: 'Done',
                     autoclose: true,
                     afterDone: function () {
-                        observable($(element).val());
+                        var time = $(element).val().split(':'),
+                            hr = parseInt(time[0], 10),
+                            min = parseInt(time[1], 10);
+                        observable(hr * 100 + min);
                     }
                 };
 
@@ -3047,6 +3051,7 @@ var notificationsViewModel = function() {
             }
         }
     };
+
 
     return self;
 };

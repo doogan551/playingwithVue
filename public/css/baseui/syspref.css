@@ -933,6 +933,10 @@ tr:hover .showOnHover {
     border-bottom: 1px solid #ccc;
 }
 
+.editing .member {
+    cursor: move;
+}
+
 .manageAlertConfigMembers {
     width: 75%;
     margin-top: -40px;

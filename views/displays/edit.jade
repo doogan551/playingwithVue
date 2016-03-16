@@ -218,7 +218,7 @@ block panels
       h4(style="width: 275px;top:0px;") Action Button Properties
       div(style='overflow:hidden;')
         div(style='float: left; width: 195px;padding-right:2px; ')
-          select#actionCode(data-mini='true', data-native-menu='true')
+          //- select#actionCode(data-mini='true', data-native-menu='true')
             //- option(value='0') No Action (useless)
             //- option(value='1') History Log Plot – No longer supported
             //- option(value='2') History Log Report
@@ -238,10 +238,16 @@ block panels
             //- option(value='16') Data Report
             option Command Point
 
+        h4 Control Priority
+        select#actionButtonPriority(ng-model="editItem._actionButton.priority", ng-options="priority.name for priority in priorities")
+
+        div(ng-show="editItem._actionButton.isBinary || editItem._actionButton.isMultistate")
+            select(ng-model="editItem._actionButton.value", ng-options="option.name for option in editItem._actionButton.options")
+
           //- div(ng-show="editItem['ActionCode'] > 6 && editItem['ActionCode'] < 13")
-          div
-            label(for='ActionParmText') Parameter
-            input#ActionParmText(ng-model="editItem.ActionParm", type='text', value='editItem["ActionParm"]')
+          //- div
+          //-   label(for='ActionParmText') Parameter
+          //-   input#ActionParmText(ng-model="editItem.ActionParm", type='text', value='editItem["ActionParm"]')
           //- below for reports
           //- select#actionParm(ng-model='editItem["ActionParm"]', data-mini='true', data-native-menu='true')
           //-   option(value='0') None

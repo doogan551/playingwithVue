@@ -16,9 +16,11 @@ html
         script(type='text/javascript', src='/js/lib/json2.js')
         script(type='text/javascript', src='/js/lib/jquery.min.js')
         script(type='text/javascript', src='/js/lib/jquery-clockpicker.min.js')
+        script(type='text/javascript', src='/js/lib/jquery-ui.js')
         script(type='text/javascript', src='/js/lib/knockout-2.3.0.js')
         script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
         script(type='text/javascript', src='/js/lib/knockout.mapping-2.3.5.js')
+        script(type='text/javascript', src='/js/lib/knockout-sortable.js')
         script(type='text/javascript', src='/js/lib/bootstrap-3.0.3.min.js')
         script(type='text/javascript', src='/js/lib/ko.validation.js')
         script(type='text/javascript', src='/js/lib/jqwidgets/jqxcore.js')
@@ -562,8 +564,9 @@ html
                                                                 .sectionIcon
                                                                     i.fa.fa-male
                                                                 .sectionTitle Alert:
-                                                                .rotationList(data-bind="foreach: members")
-                                                                    .member(data-bind="text: $parents[4].getUserName($data)")
+                                                                .rotationList(data-bind="sortable: { data: members, isEnabled: $parents[3].isEditingAlertConfig }")
+                                                                    .member
+                                                                        span(data-bind="text: $parents[4].getUserName($data)")
                                                                 button.editableInput.btn.btn-sm.btn-xs.btn-default.manageAlertConfigMembers(data-bind="click: $parents[3].editAlertConfigMembers") Manage Members
                                                             .rightCol.col
                                                                 .pull-right.editableInput

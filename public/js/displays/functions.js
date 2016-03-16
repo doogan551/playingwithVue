@@ -54,29 +54,54 @@ var ActionButton = function (config) {
             Controller      : displays.workspaceManager.user().controllerId,
             Relinquish      : 0,
             Priority        : '',
-            Wait            : 0
+            Wait            : 0,
+            OvrTime         : 0
         },
         _id,
         _pointData,
         _code,
-        _parameter,//not needed for now
         _upi,
 
         min = 0,
         max = 10,
         external,
+        priority,
 
         _getCommandArguments = function () {
-            var ret = $.extend(true, {}, _commandArguments);
+            var ret = $.extend(true, {}, _commandArguments),
+                val = external.value;
 
-            ret.upi = _upi;
-            ret.Value = _parameter;
-            ret.logData.newValue.Value = _parameter;
+            if (typeof val === 'object') {
+                val = val.value;
+            }
+
+            ret.upi = external.upi;
+            ret.Value = val;
+            ret.logData.newValue.Value = val;
+            ret.priority = external.priority;
 
             return ret;
         },
         _processPointData = function (response) {
+            var transformOptions = function () {
+                var options = response.Value.ValueOptions,
+                    ret = [];
+
+                for (var option in options) {
+                    ret.push({
+                        name: option,
+                        value: options[option]
+                    });
+                }
+
+                if (external.value === undefined) {
+                    external.value = ret[0].name;
+                }
+
+                return ret;
+            };
             _pointData = response;
+            external.upi = response._id;
             _validateOptions('upi');
 
             _commandArguments.logData = {
@@ -101,6 +126,22 @@ var ActionButton = function (config) {
             if (_pointData['Minimum Value']) {
                 external.min = _pointData['Minimum Value'].Value;
                 external.max = _pointData['Maximum Value'].Value;
+            }
+
+            if (_pointData['Point Type'].Value.match('Binary')) {
+                external.isBinary = true;
+                external.options = transformOptions();
+            }
+
+            if (_pointData['Point Type'].Value.match('MultiState')) {
+                external.isMultistate = true;
+                external.options = transformOptions();
+            }
+
+            if (displays.editMode) {
+                setTimeout(function () {
+                    displays.EditItemCtrl.$apply();
+                },1);
             }
         },
         _getPointData = function (upi) {
@@ -145,7 +186,7 @@ var ActionButton = function (config) {
             }
         },
         sendValue = function (value) {
-            _parameter = value;
+            external.value = value;
             _sendCommand();
         },
         openReport = function (type, duration, start, end) {
@@ -175,26 +216,34 @@ var ActionButton = function (config) {
             _validateOptions('command');
         },
         setParameter = function (parameter) {
-            _parameter = parameter;
+            external.value = parameter;
         },
         getPointData = function () {
             return _pointData;
         },
-        updateConfig = function (newCfg) {
+        updateConfig = function (newCfg, fromPointSelect) {
             _code = newCfg.ActionCode;
-            _parameter = newCfg.ActionParm;
-            if (_upi !== newCfg.ActionPoint) {
-                _getPointData(newCfg.ActionPoint);
+            if (newCfg.ActionParm !== undefined) {
+                external.value = newCfg.ActionParm;
             }
-            _upi = newCfg.ActionPoint;
+            if (fromPointSelect) {
+                if (_upi !== newCfg.upi) {
+                    _getPointData(newCfg.upi);
+                }
+            } else {
+                if (external.upi !== newCfg.ActionPoint) {
+                    _getPointData(newCfg.ActionPoint);
+                }
+            }
             _commandArguments.Priority = newCfg.ActionPriority;
+            external.priority = config.priority || displays.workspaceManager.systemEnums.controlpriorities[0];
         },
         setUPI = function (upi) {
-            _upi = upi;
+            external.upi = upi;
             _getPointData(upi);
         };
 
-    if (config.ActionPoint === undefined || config.ActionPoint === 'none') {
+    if (config.ActionPoint === undefined || config.ActionPoint === 'none' || config.upi !== undefined) {
         config.ActionPoint = config.upi;
     }
 
@@ -210,8 +259,13 @@ var ActionButton = function (config) {
         sendCommand: sendCommand,
         sendValue: sendValue,
         openReport: openReport,
+        upi: upi,
         min: min,
-        max: max
+        max: max,
+        priority: priority,
+        isBinary: false,
+        isMultistate: false,
+        value: config.value
     };
 
     updateConfig(config);

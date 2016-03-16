@@ -806,7 +806,7 @@ displays = $.extend(displays, {
             $scope.updateEditItem = displays.updateEditItem = function(item) {
                 if ($scope.editItem._idx === item._idx) {// is update
                     if (item.hasOwnProperty('ActionCode')) { // is action button
-                        item._actionButton.updateConfig(item);
+                        item._actionButton.updateConfig(item, true);
                     }
                 }
 
@@ -1035,6 +1035,8 @@ displays = $.extend(displays, {
             $scope.serverImageBrowser = new diFileBrowser();
             displays.popUpWindowActive = false;
 
+            $scope.priorities = displays.workspaceManager.systemEnums.controlpriorities;
+
             $('#editDisplay').hide();
 
             document.title = displayJson.Name;
@@ -1120,6 +1122,10 @@ displays = $.extend(displays, {
                 for (c = 0; c < objects.length; c++) {
                     obj = objects[c];
                     if (obj._actionButton) {
+                        obj.upi = obj._actionButton.upi;
+                        if (obj._actionButton.value) {
+                            obj.value = obj._actionButton.value;
+                        }
                         delete obj._actionButton;
                     }
                 }

@@ -67,6 +67,12 @@ var Users = {
         "Value": ""
       },
       'notificationsEnabled': true,
+      'notificationOptions': {
+        "Emergency": false,
+        "Critical": false,
+        "Urgent": false,
+        "notifyOnAck": false
+      },
       "Password": {
         "Value": ""
       },
@@ -363,7 +369,7 @@ var Users = {
           password = utils.encrypt(updateData[key]);
           value = key + ".Value";
           updateCriteria.$set[value] = password;
-        } else if (key == 'notificationsEnabled' || key == 'alerts') {
+        } else if (key == 'notificationsEnabled' || key == 'alerts' || key == 'notificationOptions') {
           updateCriteria.$set[key] = updateData[key];
         } else if (key != "_id" && key != "User Groups") {
           value = key + ".Value";
