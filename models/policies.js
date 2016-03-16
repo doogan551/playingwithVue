@@ -9,7 +9,7 @@ var Policies = function() {
     };
     Utility.get(criteria, cb);
   };
-  this.save = function (data, cb) {
+  this.save = function(data, cb) {
     var criteria = {
       collection: 'NotifyPolicies',
       query: {
@@ -24,14 +24,31 @@ var Policies = function() {
     };
     Utility.update(criteria, cb);
   };
-  this.delete = function (data, cb) {
+  this.delete = function(data, cb) {
     var criteria = {
       collection: 'NotifyPolicies',
       query: {
         _id: data._id
       }
     };
-    Utility.remove(criteria, cb);
+    var updatePoints = function(err) {
+      if (err) {
+        return cb(err);
+      }
+      var criteria = {
+        collection: 'points',
+        query: {
+          'Notify Policies': data._id.toString()
+        },
+        updateObj: {
+          $pull: {
+            'Notify Policies': data._id.toString()
+          }
+        }
+      };
+      Utility.update(criteria, cb);
+    };
+    Utility.remove(criteria, updatePoints);
   };
 };
 

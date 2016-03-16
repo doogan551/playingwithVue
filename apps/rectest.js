@@ -461,8 +461,9 @@ function fixPointInst() {
     };
     Utility.iterateCursor(criteria, function(err, doc, cb) {
         var refs = doc['Point Refs'];
-
-        async.each(refs, function(ref, callback) {
+        var index = -1;
+        async.eachSeries(refs, function(ref, callback) {
+          index++;
           if (ref.Value !== ref.PointInst) {
             Utility.getOne({
               collection: 'points',
@@ -470,8 +471,8 @@ function fixPointInst() {
                 _id: ref.Value
               }
             }, function(err, point) {
-              ref.PointInst = ref.Value;
-              ref.PointName = point.Name
+              
+              Config.EditChanges.applyUniquePIDLogic({point: doc, refPoint: point}, index);
               Utility.update({
                 collection: 'points',
                 query: {
@@ -491,6 +492,5 @@ function fixPointInst() {
         console.log(err, count, 'done');
       });
   });
-});
 }
 fixPointInst();
