@@ -60,25 +60,24 @@ var ActionButton = function (config) {
         _id,
         _pointData,
         _code,
-        _upi,
+        noPointFound,
 
         min = 0,
         max = 10,
         external,
-        priority,
 
         _getCommandArguments = function () {
             var ret = $.extend(true, {}, _commandArguments),
-                val = external.value;
+                val = external.ActionParm;
 
             if (typeof val === 'object') {
                 val = val.value;
             }
 
-            ret.upi = external.upi;
+            ret.upi = external.ActionPoint;
             ret.Value = val;
             ret.logData.newValue.Value = val;
-            ret.priority = external.priority;
+            ret.Priority = external.ActionPriority;
 
             return ret;
         },
@@ -94,54 +93,71 @@ var ActionButton = function (config) {
                     });
                 }
 
-                if (external.value === undefined) {
-                    external.value = ret[0].name;
+                if (external.ActionParm === undefined) {
+                    external.ActionParm = ret[0].value;
                 }
 
                 return ret;
             };
             _pointData = response;
-            external.upi = response._id;
-            _validateOptions('upi');
 
-            _commandArguments.logData = {
-                user: displays.workspaceManager.user(),
-                point: {
-                    _id: _pointData._id,
-                    Security: _pointData.Security,
-                    Name: _pointData.Name,
-                    name1: _pointData.name1,
-                    name2: _pointData.name2,
-                    name3: _pointData.name3,
-                    name4: _pointData.name4,
-                    "Point Type": {
-                        eValue: _pointData["Point Type"].eValue
+            if (response.message !== 'No Point Found') {
+                noPointFound = false;
+                external.ActionPoint = response._id;
+                config.ActionPoint = response._id;
+                _validateOptions('upi');
+
+                _commandArguments.logData = {
+                    user: displays.workspaceManager.user(),
+                    point: {
+                        _id: _pointData._id,
+                        Security: _pointData.Security,
+                        Name: _pointData.Name,
+                        name1: _pointData.name1,
+                        name2: _pointData.name2,
+                        name3: _pointData.name3,
+                        name4: _pointData.name4,
+                        "Point Type": {
+                            eValue: _pointData["Point Type"].eValue
+                        }
+                    },
+                    newValue: {
+                        Value: ''
                     }
-                },
-                newValue: {
-                    Value: ''
+                };
+
+                if (_pointData['Minimum Value']) {
+                    external.min = _pointData['Minimum Value'].Value;
+                    external.max = _pointData['Maximum Value'].Value;
                 }
-            };
 
-            if (_pointData['Minimum Value']) {
-                external.min = _pointData['Minimum Value'].Value;
-                external.max = _pointData['Maximum Value'].Value;
-            }
+                if (_pointData['Point Type'].Value.match('Binary')) {
+                    external.isBinary = true;
+                    external.options = transformOptions();
+                }
 
-            if (_pointData['Point Type'].Value.match('Binary')) {
-                external.isBinary = true;
-                external.options = transformOptions();
-            }
+                if (_pointData['Point Type'].Value.match('MultiState')) {
+                    external.isMultistate = true;
+                    external.options = transformOptions();
+                }
 
-            if (_pointData['Point Type'].Value.match('MultiState')) {
-                external.isMultistate = true;
-                external.options = transformOptions();
-            }
+                if (displays.editMode) {
+                    setTimeout(function () {
+                        displays.EditItemCtrl.$apply();
+                    },1);
+                }
+            } else {
+                noPointFound = true;
 
-            if (displays.editMode) {
-                setTimeout(function () {
-                    displays.EditItemCtrl.$apply();
-                },1);
+                _pointData = {
+                    Name: 'No Point Found'
+                };
+
+                 _commandArguments.logData = {
+                    newValue: {
+                        Value: ''
+                    }
+                };
             }
         },
         _getPointData = function (upi) {
@@ -168,32 +184,34 @@ var ActionButton = function (config) {
         },
 
         sendCommand = function () {
-            var pointType = _pointData['Point Type'].Value,
-                reportType;
+            if (!noPointFound) {
+                var pointType = _pointData['Point Type'].Value,
+                    reportType;
 
-            if (pointType.match('Analog')) {
-                $('#actionButtonInput').popup('open');
-                $('#actionButtonValue').attr({
-                    min: external.min,
-                    max: external.max
-                });
-            } else if (pointType === 'Report') {
-                reportType = _pointData['Report Type'].Value;
+                if (pointType.match('Analog')) {
+                    $('#actionButtonInput').popup('open');
+                    $('#actionButtonValue').attr({
+                        min: external.min,
+                        max: external.max
+                    });
+                } else if (pointType === 'Report') {
+                    reportType = _pointData['Report Type'].Value;
 
-                $('#actionButtonReportInput').popup('open');
-            } else {
-                _sendCommand();
+                    $('#actionButtonReportInput').popup('open');
+                } else {
+                    _sendCommand();
+                }
             }
         },
         sendValue = function (value) {
-            external.value = value;
+            external.ActionParm = value;
             _sendCommand();
         },
         openReport = function (type, duration, start, end) {
             var endPoint;
 
-            endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', _upi);
-            displays.openWindow(endPoint.review.url + '?pause', 'Report', 'Report', '', _upi, {
+            endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', external.ActionPoint);
+            displays.openWindow(endPoint.review.url + '?pause', 'Report', 'Report', '', external.ActionPoint, {
                 height: 720,
                 width: 1280,
                 callback: function () {
@@ -216,7 +234,7 @@ var ActionButton = function (config) {
             _validateOptions('command');
         },
         setParameter = function (parameter) {
-            external.value = parameter;
+            external.ActionParm = parameter;
         },
         getPointData = function () {
             return _pointData;
@@ -224,28 +242,28 @@ var ActionButton = function (config) {
         updateConfig = function (newCfg, fromPointSelect) {
             _code = newCfg.ActionCode;
             if (newCfg.ActionParm !== undefined) {
-                external.value = newCfg.ActionParm;
+                external.ActionParm = newCfg.ActionParm;
             }
             if (fromPointSelect) {
-                if (_upi !== newCfg.upi) {
+                if (external.ActionPoint !== newCfg.upi) {
                     _getPointData(newCfg.upi);
                 }
             } else {
-                if (external.upi !== newCfg.ActionPoint) {
+                if (external.ActionPoint !== newCfg.ActionPoint) {
                     _getPointData(newCfg.ActionPoint);
                 }
             }
             _commandArguments.Priority = newCfg.ActionPriority;
-            external.priority = config.priority || displays.workspaceManager.systemEnums.controlpriorities[0];
+            external.ActionPriority = displays.workspaceManager.systemEnums.controlpriorities[+config.ActionPriority || 0].value;
         },
         setUPI = function (upi) {
-            external.upi = upi;
+            external.ActionPoint = upi;
             _getPointData(upi);
         };
 
-    if (config.ActionPoint === undefined || config.ActionPoint === 'none' || config.upi !== undefined) {
-        config.ActionPoint = config.upi;
-    }
+    // if (config.ActionPoint === undefined || config.ActionPoint === 'none' || config.upi !== undefined) {
+    //     config.ActionPoint = config.upi;
+    // }
 
     _id = displays.actionButtonCount++;
 
@@ -259,13 +277,14 @@ var ActionButton = function (config) {
         sendCommand: sendCommand,
         sendValue: sendValue,
         openReport: openReport,
-        upi: upi,
+        _getCommandArguments: _getCommandArguments,
+        ActionPoint: null,
         min: min,
         max: max,
-        priority: priority,
+        ActionPriority: null,
         isBinary: false,
         isMultistate: false,
-        value: config.value
+        ActionParm: (config.ActionParm !== undefined) ? parseFloat(config.ActionParm) : config.ActionParm
     };
 
     updateConfig(config);
@@ -1200,7 +1219,7 @@ displays = $.extend(displays, {
             if (event.type === 'mouseenter') {
                 upi = $(this).data('upi');
                 idx = $(this).data('scr-idx');
-                if (!upi && displayJson['Screen Objects'][idx] && displayJson['Screen Objects'][idx]._actionButton !== undefined) {
+                if ((!upi || upi === 'undefined') && displayJson['Screen Objects'][idx] && displayJson['Screen Objects'][idx]._actionButton !== undefined) {
                     upi = displayJson['Screen Objects'][idx]._actionButton.getPointData().Name;
                 }
                 displays.showTip(upi);
