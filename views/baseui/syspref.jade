@@ -8,6 +8,7 @@ html
         link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css')
         link(rel='stylesheet', href='/css/lib/fullcalendar.css')
         link(rel='stylesheet', href='/css/lib/jquery-clockpicker.css')
+        link(rel='stylesheet', href='/css/lib/jquery.toast.min.css')
         link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.10/dataTables.bootstrap.min.css')
         // syspref.css must follow after bootstrap.min.css so we can override bootstrap themes
@@ -17,6 +18,7 @@ html
         script(type='text/javascript', src='/js/lib/jquery.min.js')
         script(type='text/javascript', src='/js/lib/jquery-clockpicker.min.js')
         script(type='text/javascript', src='/js/lib/jquery-ui.js')
+        script(type='text/javascript', src='/js/lib/jquery.toast.min.js')
         script(type='text/javascript', src='/js/lib/knockout-2.3.0.js')
         script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
         script(type='text/javascript', src='/js/lib/knockout.mapping-2.3.5.js')
@@ -587,7 +589,7 @@ html
                                                                         label
                                                                             input.checkbox-valign(type="checkbox", data-bind="checked: enabled, disable: !$parents[4].isEditingAlertConfig()")
                                                                             div Rotate the first responder
-                                                                            div Every #[span(data-bind="text: scale")] at #[span.editable(data-bind="text: time")] #[input.timeInput.form-control.input-sm.editableInput(data-bind="value: time")] on #[span.editable(data-bind="text: day")] #[select.form-control.input-sm.select-sm.editableInput(data-bind="value: day, options: $parents[4].days")]
+                                                                            div Every #[span.editable(data-bind="text: scale")]  #[input.input-xs.form-control.input-sm.editableInput(type="text", data-bind="value: scale")] week at #[span.editable(data-bind="text: $parents[4].convertTime(time)")] #[input.timeInput.form-control.input-sm.editableInput(data-bind="timepicker: time")] on #[span.editable(data-bind="text: day")] #[select.form-control.input-sm.select-sm.editableInput(data-bind="value: day, options: $parents[4].days")]
                                                                 .sectionRepeat.sectionMultiline
                                                                     i.fa.fa-history
                                                                     .checkbox(data-bind="with: repeatConfig")
