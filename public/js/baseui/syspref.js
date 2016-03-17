@@ -2674,32 +2674,33 @@ var notificationsViewModel = function() {
         },
 
         convertDate: function (scheduleDays) {
-            var _days = scheduleDays().join(''),
-                days,
-                weekdays = 'montueswedthurfri',
-                weekends = 'satsun';
+            var _days = scheduleDays().join(';'),
+                days = [],
+                weekdays = 'mon;tues;wed;thur;fri',
+                weekends = 'sat;sun',
+                special = false;
 
             if (_days.match(weekdays)) {
-                days = 'Weekdays';
-                if (_days.match('Holidays')) {
-                    days += ', Holidays';
-                }
-            } else if (_days.match(weekends)) {
-                days = 'Weekends';
-                if (_days.match('Holidays')) {
-                    days += ', Holidays';
-                }
-            } else if (_days.match(weekdays + weekends)) {
-                days = 'Everyday';
-            } else {
-                if (scheduleDays().length > 0) {
-                    days = scheduleDays().join(', ');
-                } else {
-                    days = 'None';
-                }
+                days.push('Weekdays');
+                _days = _days.replace(weekdays, '');
             }
 
-            return days;
+            if (_days.match(weekends)) {
+                days.push('Weekends');
+                _days = _days.replace(weekends, '');
+            }
+
+            if (_days.length > 0) {
+                days = days.concat(_days.split(';'));
+            } else {
+                days.push('None');
+            }
+
+            days = days.filter(function (el, idx, arr) {
+                return el !== '';
+            });
+
+            return days.join(',');
         },
 
         deleteSchedule: function (context) {
