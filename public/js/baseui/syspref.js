@@ -2542,6 +2542,28 @@ var notificationsViewModel = function() {
         });
     };
 
+    self.checkAlertConfigNames = function (id, name, configs) {
+        var duplicate = false;
+
+        self.forEachArray(configs, function (config) {
+            if (config.name() === name && (id !== undefined && id !== config.id())) {
+                duplicate = true;
+                return false;
+            }
+        });
+
+        if (duplicate) {
+            $.toast({
+                heading: 'Error',
+                text: 'Duplicate Alert Config Name',
+                position: 'top-center',
+                stack: false
+            });
+        }
+
+        return duplicate;
+    };
+
     self.bindings = {
         currPolicy: ko.viewmodel.fromModel(self.templates.policy),
         currAlertConfig: ko.observable(),
@@ -2674,32 +2696,33 @@ var notificationsViewModel = function() {
         },
 
         convertDate: function (scheduleDays) {
-            var _days = scheduleDays().join(''),
-                days,
-                weekdays = 'montueswedthurfri',
-                weekends = 'satsun';
+            var _days = scheduleDays().join(';'),
+                days = [],
+                weekdays = 'mon;tues;wed;thur;fri',
+                weekends = 'sat;sun',
+                special = false;
 
             if (_days.match(weekdays)) {
-                days = 'Weekdays';
-                if (_days.match('Holidays')) {
-                    days += ', Holidays';
-                }
-            } else if (_days.match(weekends)) {
-                days = 'Weekends';
-                if (_days.match('Holidays')) {
-                    days += ', Holidays';
-                }
-            } else if (_days.match(weekdays + weekends)) {
-                days = 'Everyday';
-            } else {
-                if (scheduleDays().length > 0) {
-                    days = scheduleDays().join(', ');
-                } else {
-                    days = 'None';
-                }
+                days.push('Weekdays');
+                _days = _days.replace(weekdays, '');
             }
 
-            return days;
+            if (_days.match(weekends)) {
+                days.push('Weekends');
+                _days = _days.replace(weekends, '');
+            }
+
+            if (_days.length > 0) {
+                days = days.concat(_days.split(';'));
+            } else {
+                days.push('None');
+            }
+
+            days = days.filter(function (el, idx, arr) {
+                return el !== '';
+            });
+
+            return days.join(',');
         },
 
         deleteSchedule: function (context) {
@@ -2912,14 +2935,19 @@ var notificationsViewModel = function() {
             self.bindings.isEditingNewConfiguration(true);
         },
         doAddNewConfiguration: function () {
-            var configurationTemplate = self.getTemplate('alertConfig');
+            var configurationTemplate = self.getTemplate('alertConfig'),
+                duplicate;
 
-            configurationTemplate.name = self.bindings.newConfigurationName();
-            self.bindings.currPolicy.alertConfigs.push(ko.viewmodel.fromModel(configurationTemplate));
-            self.bindings.currAlertConfig(self.bindings.currPolicy.alertConfigs.slice(-1)[0]);
-            self.bindings.isEditingNewConfiguration(false);
-            self.bindings.isEditingAlertConfig(true);
-            self.savePolicy();
+            duplicate = self.checkAlertConfigNames(null, self.bindings.newConfigurationName(), self.bindings.currPolicy.alertConfigs());
+
+            if (!duplicate) {
+                configurationTemplate.name = self.bindings.newConfigurationName();
+                self.bindings.currPolicy.alertConfigs.push(ko.viewmodel.fromModel(configurationTemplate));
+                self.bindings.currAlertConfig(ko.viewmodel.fromModel(ko.toJS(self.bindings.currPolicy.alertConfigs.slice(-1)[0])));
+                self.bindings.isEditingNewConfiguration(false);
+                self.bindings.isEditingAlertConfig(true);
+                self.savePolicy();
+            }
         },
 
         editAlertConfig: function (alertConfig) {
@@ -2940,21 +2968,26 @@ var notificationsViewModel = function() {
             self.bindings.isEditingAlertConfig(false);
         },
         saveEditAlertConfig: function () {
-            var id = self.bindings.currAlertConfig().id();
+            var id = self.bindings.currAlertConfig().id(),
+                duplicate;
 
-            self.forEachArray(self.bindings.currPolicy.alertConfigs(), function (config) {
-                if (config.id() === id) {
-                    ko.viewmodel.updateFromModel(config, ko.toJS(self.bindings.currAlertConfig));
-                    // ko.viewmodel.updateFromModel(self.bindings.currPolicy.alertConfigs)
-                    return false;
-                }
-            });
+            duplicate = self.checkAlertConfigNames(self.bindings.currAlertConfig().id(), self.bindings.currAlertConfig().name(), self.bindings.currPolicy.alertConfigs());
 
-            self._originalAlertConfig = ko.toJS(self.bindings.currAlertConfig);
+            if (!duplicate) {
+                self.forEachArray(self.bindings.currPolicy.alertConfigs(), function (config) {
+                    if (config.id() === id) {
+                        ko.viewmodel.updateFromModel(config, ko.toJS(self.bindings.currAlertConfig));
+                        // ko.viewmodel.updateFromModel(self.bindings.currPolicy.alertConfigs)
+                        return false;
+                    }
+                });
 
-            self.savePolicy();
+                self._originalAlertConfig = ko.toJS(self.bindings.currAlertConfig);
 
-            self.bindings.isEditingAlertConfig(false);
+                self.savePolicy();
+
+                self.bindings.isEditingAlertConfig(false);
+            }
         },
 
         addAlertGroup: function () {

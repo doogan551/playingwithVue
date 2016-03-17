@@ -3683,7 +3683,7 @@ gpl.ActionButton = function (config) {
             _local.pointType = response['Point Type'].Value;
 
             _commandArguments.logData = {
-                user: displays.workspaceManager.user(),
+                user: gpl.workspaceManager.user(),
                 point: {
                     _id: response._id,
                     Security: response.Security,
