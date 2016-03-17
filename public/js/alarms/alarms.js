@@ -112,6 +112,7 @@ var AlarmManager = function (conf) {
         ACK_IN_PROGRESS = 1.5,
         ACK_DONE = 2,
         ACK_ERROR = -1,
+        AUTO_ACK = 3,
         ACK_TIMEOUT = 5000,
         GETTING_DATA_TIMEOUT = 15000,
         FILTER_CHANGE_DELAY = 300,
@@ -2826,7 +2827,7 @@ var AlarmManager = function (conf) {
         for (i = 0; i < len; i++) {
             alarm = alarms[i];
 
-            if (alarm.isSelected() && (alarm.ackStatus() !== ACK_NONE) && (alarm.ackStatus() !== ACK_DONE)) {
+            if (alarm.isSelected() && (alarm.ackStatus() !== ACK_NONE) && (alarm.ackStatus() !== ACK_DONE) && (alarm.ackStatus() !== AUTO_ACK)) {
                 return true;
             }
         }
