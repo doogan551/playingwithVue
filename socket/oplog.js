@@ -94,7 +94,9 @@ module.exports = function(_common) {
                 }
             }
 
-            notifications.processIncomingAlarm(doc.o);
+            if (doc.ns === 'infoscan.Alarms') {
+                notifications.processIncomingAlarm(doc.o);
+            }
 
         } else if (doc.ns === 'infoscan.historydata') {
             // module.exports.updateDashboard(doc.o);

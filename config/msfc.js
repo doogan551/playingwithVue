@@ -14,7 +14,8 @@ var msfc = {
       'email': 'rkendall@dorsett-tech.com'
 
     }
-  }
+  },
+  runNotifications: false
 };
 
 msfc.redisConfig = {

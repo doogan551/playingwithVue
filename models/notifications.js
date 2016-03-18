@@ -56,11 +56,6 @@ notifierFnLookup[SMS] = 'sendText';
 notifierFnLookup[VOICE] = 'sendVoice';
 notifierFnLookup[EMAIL] = 'sendEmail';
 
-var notifyTypeText = {};
-notifyTypeText[SMS] = 'SMS';
-notifyTypeText[VOICE] = 'VOICE';
-notifyTypeText[EMAIL] = 'EMAIL';
-
 var daysOfWeek = ['sun', 'mon', 'tues', 'wed', 'thur', 'fri', 'sat']; // Entries correspond to Date().getDay()
 
 var dbAlarmQueueLocked = false,
@@ -388,6 +383,7 @@ var dbAlarmQueueLocked = false,
 						var policyId = policy._id,
 							_numberOfDeletes = 0,
 							_numberOfInserts = 0,
+							_numberOfUpdates = 0,
 							processThread = function (thread) {
 								if (!thread.hasOwnProperty('_state'))
 									return;
@@ -397,6 +393,7 @@ var dbAlarmQueueLocked = false,
 										policyId: policyId,
 										thread: thread
 									});
+									_numberOfUpdates++;
 								} else if (thread._state === ADDED) {
 									if (!inserts[policyId]) {
 										inserts[policyId] = [];
@@ -418,7 +415,7 @@ var dbAlarmQueueLocked = false,
 								delete thread._notifyReturnBeforeDelete;
 							};
 						policy.threads.forEach(processThread);
-						actions.utility.log(['\tPolicy', policy.name, '- #Updates:', updates.length, ', #Inserts:', _numberOfInserts, ', #Deletes:', _numberOfDeletes].join(' '));
+						actions.utility.log(['\tPolicy', policy.name, '- #Updates:', _numberOfUpdates, ', #Inserts:', _numberOfInserts, ', #Deletes:', _numberOfDeletes].join(' '));
 					};
 
 				data.policies.forEach(getPolicyThreadChanges);
@@ -566,13 +563,21 @@ var dbAlarmQueueLocked = false,
 				var alerts = [];
 				
 				if (!!user) {
-					// If user has alert preferences defined for this alarm class
-					if (user.alerts[alarmClassName].length) {
-						alerts = user.alerts[alarmClassName];
-					}
-					// Nope; if user has default alert preferences (Normal class serves as default)
-					else if (user.alerts.Normal.length) {
-						alerts = user.alerts.Normal;
+					if (user.notificationsEnabled) {
+						// If user has alert preferences defined for this alarm class
+						// notificationOptions is of the form: {
+						//   Emergency : false,
+						//   Critical : false,
+						//   Urgent : false,
+						//   notifyOnAck : false
+						// }
+						if (user.notificationOptions[alarmClassName] === true) {
+							alerts = user.alerts[alarmClassName];
+						}
+						// Normal class serves as default
+						else {
+							alerts = user.alerts.Normal;
+						}
 					}
 				}
 				return alerts;
@@ -597,7 +602,7 @@ var dbAlarmQueueLocked = false,
 						// already been notified
 						for (i = 0; i < recepientHistoryLength; i++) {
 							history = thread.recepientHistory[i];
-							key = [history.userId, history.type, history.info].join('');
+							key = [history.userId, history.Type, history.Value].join('');
 							
 							// We'll only alert the user of the alarm state change if they
 							// don't already have a notification of this type in the queue,
@@ -606,8 +611,8 @@ var dbAlarmQueueLocked = false,
 								thread.notifyQueue.push({
 									userId: history.userId,
 									nextAction: now,
-									type: history.type, // email, voice, sms
-									info: history.info, // phone number or email
+									Type: history.Type, // email, voice, sms
+									Value: history.Value, // phone number or email
 									change: change
 								});
 								isUpdated = true;
@@ -621,7 +626,7 @@ var dbAlarmQueueLocked = false,
 							obj = {};
 						for (var i = 0, len = notifyQueue.length; i < len; i++) {
 							notify = notifyQueue[i];
-							key = [notify.userId, notify.type, notify.info].join('');
+							key = [notify.userId, notify.Type, notify.Value].join('');
 							obj[key] = notify;
 						}
 						return obj;
@@ -645,7 +650,7 @@ var dbAlarmQueueLocked = false,
 
 							for (j = 0, jlen = userAlerts.length; j < jlen; j++) {
 								userAlert = userAlerts[j];
-								key = [userId, userAlert.type, userAlert.info].join('');
+								key = [userId, userAlert.Type, userAlert.Value].join('');
 								
 								// If we don't already have a notification like this queued up
 								// If the thread is brand new we always queue up all the user's desired alerts
@@ -653,8 +658,8 @@ var dbAlarmQueueLocked = false,
 									notification = {
 										userId: userId,
 										nextAction: actions.utility.getTimestamp(info, userAlert.delay),
-										type: userAlert.type, // email, voice, sms
-										info: userAlert.info // phone number or email
+										Type: userAlert.Type, // email, voice, sms
+										Value: userAlert.Value // phone number or email
 									};
 									thread.notifyQueue.push(notification);
 									notifyLookup[key] = notification;
@@ -664,20 +669,21 @@ var dbAlarmQueueLocked = false,
 						}
 					},
 					processEscalation = function (escalation) {
+						var recepients;
 						if (escalation.alertStyle === 'Everyone') {
-							addNotifications(escalation.recepients);
+							recepients = escalation.recepients;
 							escalation.counter--;
 						} else if (escalation.alertStyle === 'FirstResponder') {
-							addNotifications([escalation.recepients[0]]);
+							recepients = [escalation.recepients[0]];
 							escalation.counter--;
 						} else {	// Sequenced
-							addNotifications([escalation.recepients[escalation.recepientIndex]]);
-							
+							recepients = [escalation.recepients[escalation.recepientIndex]];
 							if (++escalation.recepientIndex >= escalation.recepients.length) {
 								escalation.counter--;
 								escalation.recepientIndex = 0;
 							}
 						}
+						addNotifications(recepients);
 
 						if (escalation.counter > 0) {
 							escalation.nextAction = actions.utility.getTimestamp(info, escalation.recepientAlertDelay);
@@ -909,8 +915,10 @@ var dbAlarmQueueLocked = false,
 					for (key in queueEntry) {
 						trigger[key] = queueEntry[key];
 					}
-					delete trigger.type; // Delete the queue type from trigger (NEW/RETURN)
-					delete trigger.policyIds; // Delete the policyIds array list from trigger
+					delete trigger.type; // Delete the queue type (NEW/RETURN) copied from the queue entry
+					delete trigger.policyIds; // Delete the policyIds array list copied from the queue entry
+					delete trigger._id; // Delete the _id copied from the queue entry
+					delete trigger.notifyReturnNormal; // Delete the notifyReturnNormal flag copied from the queue entry
 
 					return {
 						id: queueEntry.alarmId, // this will server as our unique id for the lifetime of the thread (even if it mutates)
@@ -996,7 +1004,7 @@ var dbAlarmQueueLocked = false,
 					alarmId = thread.trigger.alarmId,
 					policiesAckList = info.data.policiesAckList,
 					query = {
-						_id: alarmId // alarmId is already a Mongo ObjectID
+						_id: new ObjectID(alarmId)
 					},
 					fields = {
 						ackStatus: 1
@@ -1435,7 +1443,7 @@ var dbAlarmQueueLocked = false,
 
 							for (j = 0; j < recepientHistory.length; j++) {
 								history = recepientHistory[j];
-								key = [history.userId, history.type, history.info].join('');
+								key = [history.userId, history.Type, history.Value].join('');
 								obj[thread.id][key] = true;
 							}
 						}
@@ -1507,7 +1515,7 @@ var dbAlarmQueueLocked = false,
 						}
 						timestamp = obj.timestamp;
 
-						if (notification.type === VOICE) {
+						if (notification.Type === VOICE) {
 							if (!isNormalAlarmClass) {
 								msg = ["Hello, this is" + getAorAn(alarmClassText) + alarmClassText + "message from info-scan."].join(' ');
 							} else {
@@ -1537,7 +1545,7 @@ var dbAlarmQueueLocked = false,
 							trigger = notifyEntry.thread.trigger,
 							userObj = data.usersObj[notification.userId],
 							log = {
-								policyId: policy._id,
+								policyId: policy._id.toString(),
 								policyName: policy.name,
 								userId: notification.userId,
 								username: userObj && userObj.username,
@@ -1560,7 +1568,7 @@ var dbAlarmQueueLocked = false,
 								PointType: trigger.PointType,
 								Security: trigger.Security,
 
-								notifyType: notification.type,
+								notifyType: notification.Type,
 								timestamp: new Date().getTime(),
 								message: notifyEntry.notifyMsg
 							},
@@ -1584,14 +1592,14 @@ var dbAlarmQueueLocked = false,
 					notifyEntry = data.notifyList[i];
 					// Each notifyEntry is of the form
 					// {
-					//	notification: {}, // Has keys: userId, nextAction, type, info
+					//	notification: {}, // Has keys: userId, nextAction, type, Value
 					//	policy: {},
 					//	thread: {}
 					// }
 					// Keep in mind that notifyEntry.notification is actually a pointer to the notification object on the thread, and any modifications
 					// made to this object will be stored in the db. So best not to modify it to make sure it stays slim and trim.
 					notification = notifyEntry.notification;
-					to = notification.info;
+					to = notification.Value;
 					thread = notifyEntry.thread;
 
 					// We'll also collect notifications by user which can be used to prevent overwhelming the user
@@ -1607,7 +1615,7 @@ var dbAlarmQueueLocked = false,
 					notifyEntry.notifyMsg = notifyMsg;
 
 					// Add recepient to our recepient history
-					key = [notification.userId, notification.type, notification.info].join('');
+					key = [notification.userId, notification.Type, notification.Value].join('');
 					if (!recepientHistoryLookup[thread.id]) {
 						recepientHistoryLookup[thread.id] = {};
 					}
@@ -1615,15 +1623,15 @@ var dbAlarmQueueLocked = false,
 						recepientHistoryLookup[thread.id][key] = true;
 						thread.recepientHistory.push({
 							userId: notification.userId,
-							type: notification.type,
-							info: notification.info
+							Type: notification.Type,
+							Value: notification.Value
 						});
 					}
 
-					actions.utility.log('\tPolicy ' + notifyEntry.policy.name + ' - ' + notifyTypeText[notification.type] + ' ' + notification.info + ': ' + notifyMsg);
+					actions.utility.log('\tPolicy ' + notifyEntry.policy.name + ' - ' + notification.Type + ' ' + notification.Value + ': ' + notifyMsg);
 
 					// Send notification
-					if (notification.type === EMAIL) {
+					if (notification.Type === EMAIL) {
 						notifyParams = [{
 							to: to,
 							from: 'infoscan@dorsett-tech.com',
@@ -1633,7 +1641,7 @@ var dbAlarmQueueLocked = false,
 					} else {
 						notifyParams = [(to.length === 10) ? '1' + to : to, notifyMsg, createCallback(notifyEntry)];
 					}
-					notifier[notifierFnLookup[notification.type]].apply(notifier, notifyParams);
+					notifier[notifierFnLookup[notification.Type]].apply(notifier, notifyParams);
 				}
 				cb(null, data);
 			}
@@ -1673,15 +1681,7 @@ var dbAlarmQueueLocked = false,
 			// end TEST
 
 			var query = {
-					collection: 'Users',
-					fields: {
-						'First Name': true,
-						'Last Name': true,
-						'username': true,
-						'alerts': true,
-						'notificationsEnabled': true,
-						'notifyOnAcknowledge': true
-					}
+					collection: 'Users'
 				};
 
 			utility.get(query, function (err, users) {
@@ -1874,7 +1874,7 @@ var dbAlarmQueueLocked = false,
 					type: alarm.msgCat === returnCategoryEnum ? RETURN:NEW,
 					policyIds: null, // We'll add this later
 					upi: alarm.upi,
-					alarmId: alarm._id,
+					alarmId: alarm._id.toString(),
 					msgCat: alarm.msgCat,
 					msgText: alarm.msgText,
 					msgType: alarm.msgType,
@@ -1975,6 +1975,7 @@ var dbAlarmQueueLocked = false,
 function run () {
 	var date = new Date(),
 		startTime = date.getTime(),
+		startMessage = ['RUNNING CRON JOB, ', date.getHours(), ':', date.getMinutes(), ', ', date.getTime()].join('');
 		terminate = function (err) {
 			actions.alarmQueue.unlock();
 			actions.utility.sendError(err);
@@ -1983,7 +1984,8 @@ function run () {
 	date.setSeconds(0);	// This should match the CRON run interval (i.e. if CRON runs every 30s, setSeconds(30))
 	date.setMilliseconds(0); // This should always be 0
 
-	actions.utility.log(['\nRUNNING CRON JOB, ', date.getHours(), ':', date.getMinutes(), ', ', date.getTime()].join(''));
+	actions.utility.log('\n' + startMessage);
+	logger.info(startMessage);
 	
 	// Do scheduled task stuff
 	actions.alarmQueue.lock();
@@ -2169,16 +2171,16 @@ var selfTest = {
 				_id: '1abc',
 				alerts: {
 					Normal: [{
-						type: SMS,
-						info: '13364690900',
+						Type: SMS,
+						Value: '13364690900',
 						delay: 0
 					}, {
-						type: SMS,
-						info: '13364690900',
+						Type: SMS,
+						Value: '13364690900',
 						delay: 1
 					}, {
-						type: EMAIL,
-						info: 'johnny.dr@gmail.com',
+						Type: EMAIL,
+						Value: 'johnny.dr@gmail.com',
 						delay: 30
 					}],
 					Emergency: [],
@@ -2198,16 +2200,16 @@ var selfTest = {
 				_id: '2abc',
 				alerts: {
 					Normal: [{
-						type: SMS,
-						info: '2222220000',
+						Type: SMS,
+						Value: '2222220000',
 						delay: 0
 					}, {
-						type: EMAIL,
-						info: 'user2@dorsett-tech.com',
+						Type: EMAIL,
+						Value: 'user2@dorsett-tech.com',
 						delay: 2
 					}, {
-						type: VOICE,
-						info: '2222220001',
+						Type: VOICE,
+						Value: '2222220001',
 						delay: 20
 					}],
 					Emergency: [],
@@ -2220,16 +2222,16 @@ var selfTest = {
 				_id: '3abc',
 				alerts: {
 					Normal: [{
-						type: SMS,
-						info: '3333330000',
+						Type: SMS,
+						Value: '3333330000',
 						delay: 0
 					}, {
-						type: EMAIL,
-						info: 'user3@dorsett-tech.com',
+						Type: EMAIL,
+						Value: 'user3@dorsett-tech.com',
 						delay: 3
 					}, {
-						type: VOICE,
-						info: '3333330001',
+						Type: VOICE,
+						Value: '3333330001',
 						delay: 30
 					}],
 					Emergency: [],
@@ -2242,16 +2244,16 @@ var selfTest = {
 				_id: '4abc',
 				alerts: {
 					Normal: [{
-						type: SMS,
-						info: '4444440000',
+						Type: SMS,
+						Value: '4444440000',
 						delay: 0
 					}, {
-						type: EMAIL,
-						info: 'user4@dorsett-tech.com',
+						Type: EMAIL,
+						Value: 'user4@dorsett-tech.com',
 						delay: 4
 					}, {
-						type: VOICE,
-						info: '4444440001',
+						Type: VOICE,
+						Value: '4444440001',
 						delay: 40
 					}],
 					Emergency: [],
