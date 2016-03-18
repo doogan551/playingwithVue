@@ -30,7 +30,7 @@ router.post('/getTrendLimits', function(req, res, next) {
       });
     }
 
-    return utils.sendResponse(res, limits[0]);
+    return utils.sendResponse(res, limits);
   });
 });
 

@@ -91,6 +91,9 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
             Array.prototype.push.apply(_array, trendData);
             return sortArray.call(_array, 'timestamp', sortOrder);
         }, self);
+        self.startTime.subscribe(function(val){
+            console.log(val);
+        });
 
         self.reqType.subscribe(function(type) {
             var $uploadBtn = $('.btnUpload'),
@@ -209,7 +212,6 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
         var $modal = $('.modal.viewTrend'),
             $modalTime = $modal.find('.modalTime'),
             $modalValue = $modal.find('.modalValue');
-        var formatString = 'MMM Do, YYYY - HH:mm:ss';
         // requires jquery-migrate to function properly
         //$modalValue.printElement();
         /*$modalTime.hide('fast', function() {
@@ -218,26 +220,11 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
 
         var w = window.open();
         var html = '<label>' + this.point.data.Name() + '</label>';
-        var dates = $modalValue.find('.viewTrendPrettyDate');
 
-        dates.each(function(index, dateRow) {
-            var date = $(dateRow).attr('timestamp');
-            var prettyDate = $(dateRow).text();
-            var newDate = moment.unix(date).format(formatString);
-            console.log(date, newDate, $(dateRow).text().replace(prettyDate, newDate), $(dateRow).text());
-            $(dateRow).text($(dateRow).text().replace(prettyDate, newDate));
-        });
         html += $modalValue.html();
 
         $(w.document.body).html(html);
         w.print();
-
-        dates.each(function(index, dateRow) {
-            var date = $(dateRow).attr('timestamp');
-            var newDate = moment.unix(date).format(formatString);
-            var prettyDate = moment.unix(date).calendar();
-            $(dateRow).text($(dateRow).text().replace(newDate, prettyDate));
-        });
         w.close();
     };
 
@@ -391,7 +378,7 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
                 var trendEntry = response[i],
                     sf = trendEntry['status flags'] | trendEntry.statusflags;
                 trendEntry.valueString = getValue((trendEntry.hasOwnProperty('value')) ? trendEntry.value : trendEntry.Value);
-                trendEntry.prettyTime = moment.unix(trendEntry.timestamp).calendar();
+                trendEntry.prettyTime = moment.unix(trendEntry.timestamp).format('MM/DD/YY - HH:mm:ss');
                 trendEntry.inAlarm = sf & sfEnums['In Alarm']['enum'];
                 trendEntry.inFault = sf & sfEnums['In Fault']['enum'];
                 trendEntry.oos = sf & sfEnums['Out of Service']['enum'];
