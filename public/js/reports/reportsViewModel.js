@@ -948,6 +948,9 @@ var reportsViewModel = function () {
                 pointRef,
                 len = theColumns.length;
             for (i = 0; i < len; i++) {
+                if (theColumns[i].colDisplayName === undefined) { // TODO: remove once YDK reports have been opened and saved
+                    theColumns[i].colDisplayName = theColumns[i].colName;
+                }
                 if (!pointReferenceHardDeleted(theColumns[i].upi)) {
                     if (pointReferenceSoftDeleted(theColumns[i].upi)) {
                         console.log("softdeleted theColumns[" + i + "].upi = " + theColumns[i].upi);
