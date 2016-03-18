@@ -733,6 +733,7 @@ var dorsett = (function() {
             $list.listview('refresh');
             contactInfoDialog.find('select.contactOptions').val('')
                 .selectmenu('refresh', true);
+            contactInfoDialog.find('.name').val('');
             contactInfoDialog.find('.value').val('');
             return true;
         },

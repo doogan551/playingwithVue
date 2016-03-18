@@ -68,53 +68,6 @@ module.exports = {
 			"isUser": false
 		}]
 	},
-	defaultUser: {
-		"alerts": {
-			'Normal': [],
-			'Emergency': [],
-			'Critical': [],
-			'Urgent': []
-		},
-		"Auto Logout Duration": {
-			"Value": 0
-		},
-		"Contact Info": {
-			"Value": []
-		},
-		"Description": {
-			"Value": ""
-		},
-		"First Name": {
-			"Value": "Dorsett"
-		},
-		"Last Activity Time": {
-			"Value": 0
-		},
-		"Last Login Time": {
-			"Value": 0
-		},
-		"Last Name": {
-			"Value": "Technologies"
-		},
-		'notificationsEnabled': true,
-		"Password": {
-			// "Value": "$2a$10$kXPCe68hNnuTtMRsHpm2F.wnxoWvyAaiRFLhSqoGgG/Wyu3kP4NEG"
-			"Value": "$2a$10$JTDBjtJyR7r/36yrKzVOjuLh4g4gIlV0UwghIOZk6BveEGPNPMWQ6" // AdminPassword(0)
-		},
-		"Password Reset": {
-			"Value": false
-		},
-		"Photo": {
-			"Value": "dorsett-tech.png"
-		},
-		"System Admin": {
-			"Value": true
-		},
-		"Title": {
-			"Value": "Administrator"
-		},
-		"username": "Admin"
-	},
 	cannedReports: [{
 		"_id": 1,
 		"Name": "Point Involvement",

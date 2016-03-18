@@ -276,14 +276,15 @@ function updatePoint(db, point, cb) {
 	});
 }
 
-function addDefaultUser(db, callback) {
+function addDefaultUser(db, cb) {
+	return cb();
 	var user = importconfig.defaultUser,
 		ctrlrs = importconfig.ctrlrs;
 	db.collection('Users').insert(user, function(err, result) {
 		db.collection(systemInfoCollection).insert(ctrlrs, function(err, result) {
 
 			updateControllers(db, "add", user.username, function(err) {
-				callback(err);
+				cb(err);
 			});
 		});
 	});
@@ -1659,7 +1660,7 @@ function updateReferences(db, point, mainCallback) {
 					} else {
 						prop = pointRef.PropertyName;
 					}
-
+					prop = index;
 					refPoint = Config.EditChanges.applyUniquePIDLogic({
 						point: point,
 						refPoint: refPoint

@@ -209,6 +209,7 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
         var $modal = $('.modal.viewTrend'),
             $modalTime = $modal.find('.modalTime'),
             $modalValue = $modal.find('.modalValue');
+        var formatString = 'MMM Do, YYYY - HH:mm:ss';
         // requires jquery-migrate to function properly
         //$modalValue.printElement();
         /*$modalTime.hide('fast', function() {
@@ -216,10 +217,27 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
         });*/
 
         var w = window.open();
-        var html = $modalValue.html();
+        var html = '<label>' + this.point.data.Name() + '</label>';
+        var dates = $modalValue.find('.viewTrendPrettyDate');
+
+        dates.each(function(index, dateRow) {
+            var date = $(dateRow).attr('timestamp');
+            var prettyDate = $(dateRow).text();
+            var newDate = moment.unix(date).format(formatString);
+            console.log(date, newDate, $(dateRow).text().replace(prettyDate, newDate), $(dateRow).text());
+            $(dateRow).text($(dateRow).text().replace(prettyDate, newDate));
+        });
+        html += $modalValue.html();
 
         $(w.document.body).html(html);
         w.print();
+
+        dates.each(function(index, dateRow) {
+            var date = $(dateRow).attr('timestamp');
+            var newDate = moment.unix(date).format(formatString);
+            var prettyDate = moment.unix(date).calendar();
+            $(dateRow).text($(dateRow).text().replace(newDate, prettyDate));
+        });
         w.close();
     };
 
@@ -300,7 +318,7 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
             } else {
                 data.error = ko.observable('');
                 data.value = ko.observable(data);
-            self.loadView(data, 'history');
+                self.loadView(data, 'history');
             }
         });
     };

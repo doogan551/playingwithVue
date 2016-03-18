@@ -2093,8 +2093,8 @@ var notificationsViewModel = function() {
                     notifyOnAck: false
                 },
                 'alertNotification': {
-                    info: null,
-                    type: null,
+                    Value: null,
+                    Type: null,
                     delay: 1
                 },
                 'alertConfig': {
@@ -2341,7 +2341,7 @@ var notificationsViewModel = function() {
     };
 
     self.unTranslateMembers = function (policy) {
-        var rawPolicy = $.extend(true, {}, policy);
+        var rawPolicy = ko.toJS(policy);
         self.forEachArray(rawPolicy.members, function (member, idx) {
             rawPolicy.members[idx] = member.id;
         });
@@ -2371,9 +2371,8 @@ var notificationsViewModel = function() {
 
         for(c=0; c<len; c++) {
             self.buildPolicy(policies[c]);
+            self.bindings.policyList.push(ko.viewmodel.fromModel(policies[c]));
         }
-
-        self.bindings.policyList(policies);
     };
 
     self.prepPolicyForSave = function (policy) {
@@ -2408,14 +2407,14 @@ var notificationsViewModel = function() {
                 dataType: 'json',
                 contentType: 'application/json'
             }).done(function (response) {
-                if (policy._new === true) {
+                if (policy._new && policy._new() === true) {
                     delete policy._new;
-                    if (policy._id === self.bindings.currPolicy._id()) {
+                    if (policy._id() === self.bindings.currPolicy._id()) {
                         self.bindings.currPolicy._id(response.id);
                     }
-                    policy._id = response.id;
+                    policy._id(response.id);
                 }
-                console.log('Saved policy', policy.name);
+                console.log('Saved policy', policy.name());
             });
         });
 
@@ -2489,17 +2488,17 @@ var notificationsViewModel = function() {
 
         ko.viewmodel.updateFromModel(self.bindings.currPolicy.members, newMembers);
         self.forEachArray(self.bindings.policyList(), function (policy) {
-            if (policy._id === self.bindings.currPolicy._id()) {
-                policy.members = newMembers;
+            if (policy._id() === self.bindings.currPolicy._id()) {
+                policy.members(newMembers);
             }
         });
     };
 
     self.getContact = function (alert) {
         var contact,
-            info = ko.toJS(alert).info;
+            value = ko.toJS(alert).Value;
         self.forEachArray(self.bindings.currMember().contactInfo(), function (contactInfo) {
-            if (contactInfo.Value() === info) {
+            if (contactInfo.Value() === value) {
                 contact = contactInfo;
                 return false;
             }
@@ -2510,7 +2509,7 @@ var notificationsViewModel = function() {
 
     self.savePolicy = function () {
         self.forEachArray(self.bindings.policyList(), function (policy, idx) {
-            if (policy._id === self.bindings.currPolicy._id()) {
+            if (policy._id() === self.bindings.currPolicy._id()) {
                 ko.viewmodel.updateFromModel(self.bindings.policyList()[idx], ko.toJS(self.bindings.currPolicy));
             }
         });
@@ -2523,6 +2522,7 @@ var notificationsViewModel = function() {
             userid: user.id,
             'Update Data': {
                 alerts: user.alerts,
+                notificationOptions: user.notificationOptions,
                 notificationsEnabled: user.notificationsEnabled
             }
         };
@@ -2534,18 +2534,40 @@ var notificationsViewModel = function() {
             data: JSON.stringify(data),
             success: function (returnData) {
                 if (returnData.err) {
-                    console.log(returnData.err);
-                } else if (returnData) {
-                    console.log(JSON.stringify(returnData));
+                    console.log('Error saving user', returnData.err);
+                } else {
+                    console.log('Saved user');
                 }
             }
         });
     };
 
+    self.checkAlertConfigNames = function (id, name, configs) {
+        var duplicate = false;
+
+        self.forEachArray(configs, function (config) {
+            if (config.name() === name && (id !== undefined && id !== config.id())) {
+                duplicate = true;
+                return false;
+            }
+        });
+
+        if (duplicate) {
+            $.toast({
+                heading: 'Error',
+                text: 'Duplicate Alert Config Name',
+                position: 'top-center',
+                stack: false
+            });
+        }
+
+        return duplicate;
+    };
+
     self.bindings = {
         currPolicy: ko.viewmodel.fromModel(self.templates.policy),
         currAlertConfig: ko.observable(),
-        policyList: ko.observableArray(self.policies),
+        policyList: ko.observableArray(),
 
         alertStyles: [{
             text: 'First Responder Only',
@@ -2596,7 +2618,9 @@ var notificationsViewModel = function() {
             self.forEachArray(schedule.days(), function (day) {
                 var idx = self.bindings.shortDays.indexOf(day);
 
-                self.bindings['day' + self.bindings.days[idx]](true);
+                if (idx !== -1) {
+                    self.bindings['day' + self.bindings.days[idx]](true);
+                }
             });
 
             self.bindings.dayHolidays(schedule.holidays());
@@ -2615,6 +2639,10 @@ var notificationsViewModel = function() {
             });
 
             self._currSchedule.holidays(self.bindings.dayHolidays());
+
+            if (self.bindings.dayHolidays()) {
+                ret.push('Holidays');
+            }
 
             self._currSchedule.days(ret);
 
@@ -2646,6 +2674,7 @@ var notificationsViewModel = function() {
             self.bindings.currPolicy.alertConfigs.remove(function (item) {
                 return item.id() === config.id();
             });
+            self.savePolicy();
             self.dirty(true);
             //needs validation
         },
@@ -2654,7 +2683,7 @@ var notificationsViewModel = function() {
             var ret,
                 fullTime = scheduleTime(),
                 hr = fullTime/100,
-                ampm = hr > 12 ? 'PM' : 'AM';
+                ampm = hr >= 12 ? 'PM' : 'AM';
 
             if (hr > 12) {
                 hr -= 12;
@@ -2668,25 +2697,33 @@ var notificationsViewModel = function() {
         },
 
         convertDate: function (scheduleDays) {
-            var days = scheduleDays().join(''),
-                weekdays = 'montueswedthurfri',
-                weekends = 'satsun';
+            var _days = scheduleDays().join(';'),
+                days = [],
+                weekdays = 'mon;tues;wed;thur;fri',
+                weekends = 'sat;sun',
+                special = false;
 
-            if (days === weekdays) {
-                days = 'Weekdays';
-            } else  if (days === weekends) {
-                days = 'Weekends';
-            } else if (days === weekdays + weekends) {
-                days = 'Everyday';
-            } else {
-                if (scheduleDays().length > 0) {
-                    days = scheduleDays().join(', ');
-                } else {
-                    days = 'None';
-                }
+            if (_days.match(weekdays)) {
+                days.push('Weekdays');
+                _days = _days.replace(weekdays, '');
             }
 
-            return days;
+            if (_days.match(weekends)) {
+                days.push('Weekends');
+                _days = _days.replace(weekends, '');
+            }
+
+            if (_days.length > 0) {
+                days = days.concat(_days.split(';'));
+            } else {
+                days.push('None');
+            }
+
+            days = days.filter(function (el, idx, arr) {
+                return el !== '';
+            });
+
+            return days.join(',');
         },
 
         deleteSchedule: function (context) {
@@ -2743,23 +2780,34 @@ var notificationsViewModel = function() {
         },
 
         getAlertType: function (contactInfo) {
-            var contact = self.getContact({info: contactInfo()});
+            var contact = self.getContact({Value: contactInfo()});
 
             return contact.Type;
         },
 
         addNewAlert: function (data) {
             var alert = self.getTemplate('alertNotification'),
-                firstContact = self.bindings.currMember().contactInfo()[0];
+                firstContact = self.bindings.currMember().contactInfo()[0],
+                alerts = self.bindings.currMember().alerts[data.name];
 
-            alert.info = firstContact.Value();
-            alert.type = firstContact.Type();
+            alert.Value = firstContact.Value();
+            alert.Type = firstContact.Type();
+
+            if (alerts().length === 0) {
+                alert.delay = 0;
+            }
 
             self.bindings.currMember().alerts[data.name].push(ko.viewmodel.fromModel(alert));
         },
 
         deleteAlert: function (alertType, idx) {
-            alertType.alerts.splice(idx(), 1);
+            var _idx = idx();
+
+            alertType.alerts.splice(_idx, 1);
+
+            if (_idx === 0) {//deleted first one
+                alertType.alerts()[0].delay(0);
+            }
         },
 
         getContactString: function (contact) {
@@ -2781,6 +2829,7 @@ var notificationsViewModel = function() {
         },
 
         cancelEditAlertNotifications: function () {
+            self.bindings.currMember(ko.viewmodel.fromModel(self._originalMember));
             self.bindings.isEditingAlertNotifications(false);
             ko.viewmodel.updateFromModel(self.bindings.currMember().alerts, self._originalMember.alerts);
         },
@@ -2810,18 +2859,18 @@ var notificationsViewModel = function() {
                 type: 'POST',
                 dataType: 'json'
             }).done(function (response) {
-                 console.log('Deleted');
+                console.log('Deleted');
                 cb();
             });
         },
 
         deletePolicy: function (policy) {
             self.forEachArray(self.bindings.policyList(), function (boundPolicy, idx) {
-                if (boundPolicy._id === policy._id) {
-                    if (policy._new === true) {
+                if (boundPolicy._id() === policy._id()) {
+                    if (policy._new && policy._new()) {
                         self.bindings.policyList.splice(idx, 1);
                     } else {
-                        self.bindings.doDeletePolicy(policy._id, function () {
+                        self.bindings.doDeletePolicy(policy._id(), function () {
                             self.bindings.policyList.splice(idx, 1);
                         });
                     }
@@ -2829,10 +2878,11 @@ var notificationsViewModel = function() {
             });
         },
         selectPolicy: function (policy) {
+            var rawPolicy = ko.toJS(policy);
             self.bindings.currAlertConfig(null);
             self.bindings.isEditingMember(false);
             self._currPolicy = ko.toJS(policy);
-            ko.viewmodel.updateFromModel(self.bindings.currPolicy, policy);
+            ko.viewmodel.updateFromModel(self.bindings.currPolicy, rawPolicy);
             self.bindings.isEditingPolicy(true);
         },
         addPolicy: function () {
@@ -2845,7 +2895,7 @@ var notificationsViewModel = function() {
 
             // validation
             newPolicy.name = name;
-            self.bindings.policyList.push(newPolicy);
+            self.bindings.policyList.push(ko.viewmodel.fromModel(newPolicy));
             self.bindings.isEditingNewPolicy(false);
             ko.viewmodel.updateFromModel(self.bindings.currPolicy, newPolicy);
             self.bindings.selectPolicy(newPolicy);
@@ -2887,13 +2937,19 @@ var notificationsViewModel = function() {
             self.bindings.isEditingNewConfiguration(true);
         },
         doAddNewConfiguration: function () {
-            var configurationTemplate = self.getTemplate('alertConfig');
+            var configurationTemplate = self.getTemplate('alertConfig'),
+                duplicate;
 
-            configurationTemplate.name = self.bindings.newConfigurationName();
-            self.bindings.currPolicy.alertConfigs.push(ko.viewmodel.fromModel(configurationTemplate));
-            self.bindings.currAlertConfig(self.bindings.currPolicy.alertConfigs.slice(-1)[0]);
-            self.bindings.isEditingNewConfiguration(false);
-            self.savePolicy();
+            duplicate = self.checkAlertConfigNames(null, self.bindings.newConfigurationName(), self.bindings.currPolicy.alertConfigs());
+
+            if (!duplicate) {
+                configurationTemplate.name = self.bindings.newConfigurationName();
+                self.bindings.currPolicy.alertConfigs.push(ko.viewmodel.fromModel(configurationTemplate));
+                self.bindings.currAlertConfig(ko.viewmodel.fromModel(ko.toJS(self.bindings.currPolicy.alertConfigs.slice(-1)[0])));
+                self.bindings.isEditingNewConfiguration(false);
+                self.bindings.isEditingAlertConfig(true);
+                self.savePolicy();
+            }
         },
 
         editAlertConfig: function (alertConfig) {
@@ -2914,21 +2970,26 @@ var notificationsViewModel = function() {
             self.bindings.isEditingAlertConfig(false);
         },
         saveEditAlertConfig: function () {
-            var id = self.bindings.currAlertConfig().id();
+            var id = self.bindings.currAlertConfig().id(),
+                duplicate;
 
-            self.forEachArray(self.bindings.currPolicy.alertConfigs(), function (config) {
-                if (config.id() === id) {
-                    ko.viewmodel.updateFromModel(config, ko.toJS(self.bindings.currAlertConfig));
-                    // ko.viewmodel.updateFromModel(self.bindings.currPolicy.alertConfigs)
-                    return false;
-                }
-            });
+            duplicate = self.checkAlertConfigNames(self.bindings.currAlertConfig().id(), self.bindings.currAlertConfig().name(), self.bindings.currPolicy.alertConfigs());
 
-            self._originalAlertConfig = ko.toJS(self.bindings.currAlertConfig);
+            if (!duplicate) {
+                self.forEachArray(self.bindings.currPolicy.alertConfigs(), function (config) {
+                    if (config.id() === id) {
+                        ko.viewmodel.updateFromModel(config, ko.toJS(self.bindings.currAlertConfig));
+                        // ko.viewmodel.updateFromModel(self.bindings.currPolicy.alertConfigs)
+                        return false;
+                    }
+                });
 
-            self.savePolicy();
+                self._originalAlertConfig = ko.toJS(self.bindings.currAlertConfig);
 
-            self.bindings.isEditingAlertConfig(false);
+                self.savePolicy();
+
+                self.bindings.isEditingAlertConfig(false);
+            }
         },
 
         addAlertGroup: function () {
@@ -2936,7 +2997,7 @@ var notificationsViewModel = function() {
         },
 
         deleteAlertGroup: function (alertConfig, idx) {
-            alertConfig.groups.splice(idx, 1);
+            alertConfig.groups.splice(idx(), 1);
             self.dirty(true);
         },
 
@@ -2945,7 +3006,7 @@ var notificationsViewModel = function() {
         },
 
         deleteEscalation: function (group, idx) {
-            group.escalations.splice(idx, 1);
+            group.escalations.splice(idx(), 1);
         },
 
         home: function () {
@@ -3022,7 +3083,10 @@ var notificationsViewModel = function() {
                     doneText: 'Done',
                     autoclose: true,
                     afterDone: function () {
-                        observable($(element).val());
+                        var time = $(element).val().split(':'),
+                            hr = parseInt(time[0], 10),
+                            min = parseInt(time[1], 10);
+                        observable(hr * 100 + min);
                     }
                 };
 
@@ -3047,6 +3111,7 @@ var notificationsViewModel = function() {
             }
         }
     };
+
 
     return self;
 };

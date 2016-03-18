@@ -3640,7 +3640,8 @@ gpl.ActionButton = function (config) {
             Controller      : gpl.workspaceManager.user().controllerId,
             Relinquish: 0,
             Priority: '',
-            Wait: 0
+            Wait: 0,
+            OvrTime: 0
         },
 
         _local = {},
@@ -3682,7 +3683,7 @@ gpl.ActionButton = function (config) {
             _local.pointType = response['Point Type'].Value;
 
             _commandArguments.logData = {
-                user: displays.workspaceManager.user(),
+                user: gpl.workspaceManager.user(),
                 point: {
                     _id: response._id,
                     Security: response.Security,

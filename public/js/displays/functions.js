@@ -54,53 +54,110 @@ var ActionButton = function (config) {
             Controller      : displays.workspaceManager.user().controllerId,
             Relinquish      : 0,
             Priority        : '',
-            Wait            : 0
+            Wait            : 0,
+            OvrTime         : 0
         },
         _id,
         _pointData,
         _code,
-        _parameter,//not needed for now
-        _upi,
+        noPointFound,
 
         min = 0,
         max = 10,
         external,
 
         _getCommandArguments = function () {
-            var ret = $.extend(true, {}, _commandArguments);
+            var ret = $.extend(true, {}, _commandArguments),
+                val = external.ActionParm;
 
-            ret.upi = _upi;
-            ret.Value = _parameter;
-            ret.logData.newValue.Value = _parameter;
+            if (typeof val === 'object') {
+                val = val.value;
+            }
+
+            ret.upi = external.ActionPoint;
+            ret.Value = val;
+            ret.logData.newValue.Value = val;
+            ret.Priority = external.ActionPriority;
 
             return ret;
         },
         _processPointData = function (response) {
-            _pointData = response;
-            _validateOptions('upi');
+            var transformOptions = function () {
+                var options = response.Value.ValueOptions,
+                    ret = [];
 
-            _commandArguments.logData = {
-                user: displays.workspaceManager.user(),
-                point: {
-                    _id: _pointData._id,
-                    Security: _pointData.Security,
-                    Name: _pointData.Name,
-                    name1: _pointData.name1,
-                    name2: _pointData.name2,
-                    name3: _pointData.name3,
-                    name4: _pointData.name4,
-                    "Point Type": {
-                        eValue: _pointData["Point Type"].eValue
-                    }
-                },
-                newValue: {
-                    Value: ''
+                for (var option in options) {
+                    ret.push({
+                        name: option,
+                        value: options[option]
+                    });
                 }
-            };
 
-            if (_pointData['Minimum Value']) {
-                external.min = _pointData['Minimum Value'].Value;
-                external.max = _pointData['Maximum Value'].Value;
+                if (external.ActionParm === undefined) {
+                    external.ActionParm = ret[0].value;
+                }
+
+                return ret;
+            };
+            _pointData = response;
+
+            if (response.message !== 'No Point Found') {
+                noPointFound = false;
+                external.ActionPoint = response._id;
+                config.ActionPoint = response._id;
+                _validateOptions('upi');
+
+                _commandArguments.logData = {
+                    user: displays.workspaceManager.user(),
+                    point: {
+                        _id: _pointData._id,
+                        Security: _pointData.Security,
+                        Name: _pointData.Name,
+                        name1: _pointData.name1,
+                        name2: _pointData.name2,
+                        name3: _pointData.name3,
+                        name4: _pointData.name4,
+                        "Point Type": {
+                            eValue: _pointData["Point Type"].eValue
+                        }
+                    },
+                    newValue: {
+                        Value: ''
+                    }
+                };
+
+                if (_pointData['Minimum Value']) {
+                    external.min = _pointData['Minimum Value'].Value;
+                    external.max = _pointData['Maximum Value'].Value;
+                }
+
+                if (_pointData['Point Type'].Value.match('Binary')) {
+                    external.isBinary = true;
+                    external.options = transformOptions();
+                }
+
+                if (_pointData['Point Type'].Value.match('MultiState')) {
+                    external.isMultistate = true;
+                    external.options = transformOptions();
+                }
+
+                if (displays.editMode) {
+                    setTimeout(function () {
+                        displays.EditItemCtrl.$apply();
+                    },1);
+                }
+            } else {
+                noPointFound = true;
+
+                _pointData = {
+                    Name: 'No Point Found'
+                };
+
+                 _commandArguments.logData = {
+                    newValue: {
+                        Value: ''
+                    }
+                };
             }
         },
         _getPointData = function (upi) {
@@ -127,32 +184,34 @@ var ActionButton = function (config) {
         },
 
         sendCommand = function () {
-            var pointType = _pointData['Point Type'].Value,
-                reportType;
+            if (!noPointFound) {
+                var pointType = _pointData['Point Type'].Value,
+                    reportType;
 
-            if (pointType.match('Analog')) {
-                $('#actionButtonInput').popup('open');
-                $('#actionButtonValue').attr({
-                    min: external.min,
-                    max: external.max
-                });
-            } else if (pointType === 'Report') {
-                reportType = _pointData['Report Type'].Value;
+                if (pointType.match('Analog')) {
+                    $('#actionButtonInput').popup('open');
+                    $('#actionButtonValue').attr({
+                        min: external.min,
+                        max: external.max
+                    });
+                } else if (pointType === 'Report') {
+                    reportType = _pointData['Report Type'].Value;
 
-                $('#actionButtonReportInput').popup('open');
-            } else {
-                _sendCommand();
+                    $('#actionButtonReportInput').popup('open');
+                } else {
+                    _sendCommand();
+                }
             }
         },
         sendValue = function (value) {
-            _parameter = value;
+            external.ActionParm = value;
             _sendCommand();
         },
         openReport = function (type, duration, start, end) {
             var endPoint;
 
-            endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', _upi);
-            displays.openWindow(endPoint.review.url + '?pause', 'Report', 'Report', '', _upi, {
+            endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', external.ActionPoint);
+            displays.openWindow(endPoint.review.url + '?pause', 'Report', 'Report', '', external.ActionPoint, {
                 height: 720,
                 width: 1280,
                 callback: function () {
@@ -175,28 +234,36 @@ var ActionButton = function (config) {
             _validateOptions('command');
         },
         setParameter = function (parameter) {
-            _parameter = parameter;
+            external.ActionParm = parameter;
         },
         getPointData = function () {
             return _pointData;
         },
-        updateConfig = function (newCfg) {
+        updateConfig = function (newCfg, fromPointSelect) {
             _code = newCfg.ActionCode;
-            _parameter = newCfg.ActionParm;
-            if (_upi !== newCfg.ActionPoint) {
-                _getPointData(newCfg.ActionPoint);
+            if (newCfg.ActionParm !== undefined) {
+                external.ActionParm = newCfg.ActionParm;
             }
-            _upi = newCfg.ActionPoint;
+            if (fromPointSelect) {
+                if (external.ActionPoint !== newCfg.upi) {
+                    _getPointData(newCfg.upi);
+                }
+            } else {
+                if (external.ActionPoint !== newCfg.ActionPoint) {
+                    _getPointData(newCfg.ActionPoint);
+                }
+            }
             _commandArguments.Priority = newCfg.ActionPriority;
+            external.ActionPriority = displays.workspaceManager.systemEnums.controlpriorities[+config.ActionPriority || 0].value;
         },
         setUPI = function (upi) {
-            _upi = upi;
+            external.ActionPoint = upi;
             _getPointData(upi);
         };
 
-    if (config.ActionPoint === undefined || config.ActionPoint === 'none') {
-        config.ActionPoint = config.upi;
-    }
+    // if (config.ActionPoint === undefined || config.ActionPoint === 'none' || config.upi !== undefined) {
+    //     config.ActionPoint = config.upi;
+    // }
 
     _id = displays.actionButtonCount++;
 
@@ -210,8 +277,14 @@ var ActionButton = function (config) {
         sendCommand: sendCommand,
         sendValue: sendValue,
         openReport: openReport,
+        _getCommandArguments: _getCommandArguments,
+        ActionPoint: null,
         min: min,
-        max: max
+        max: max,
+        ActionPriority: null,
+        isBinary: false,
+        isMultistate: false,
+        ActionParm: (config.ActionParm !== undefined) ? parseFloat(config.ActionParm) : config.ActionParm
     };
 
     updateConfig(config);
@@ -1146,7 +1219,7 @@ displays = $.extend(displays, {
             if (event.type === 'mouseenter') {
                 upi = $(this).data('upi');
                 idx = $(this).data('scr-idx');
-                if (!upi && displayJson['Screen Objects'][idx] && displayJson['Screen Objects'][idx]._actionButton !== undefined) {
+                if ((!upi || upi === 'undefined') && displayJson['Screen Objects'][idx] && displayJson['Screen Objects'][idx]._actionButton !== undefined) {
                     upi = displayJson['Screen Objects'][idx]._actionButton.getPointData().Name;
                 }
                 displays.showTip(upi);

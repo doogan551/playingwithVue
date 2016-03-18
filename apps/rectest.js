@@ -191,20 +191,6 @@ function addProperties() {
 }
 // addProperties();
 
-function testTwilio() {
-  var NotifierUtility = require('../models/notifierutility');
-  var notifierUtility = new NotifierUtility();
-
-
-  notifierUtility.sendText('13364694547', 'An alarm has occured in building 4200. Respond with asdf to acknowledge the alarm', function(err, response) {
-    console.log(err, response);
-  });
-
-  /*var Twilio = require('../models/twilio');
-  Twilio.getCalls();*/
-}
-// testTwilio();
-
 function updateGPL() {
   var count = 0;
   var pointTypes = ["Alarm Status", "Analog Selector", "Average", "Binary Selector", "Comparator", "Delay", "Digital Logic", "Economizer", "Enthalpy", "Logic", "Math", "Multiplexer", "Proportional", "Ramp", "Select Value", "Setpoint Adjust", "Totalizer"];
@@ -303,73 +289,6 @@ function testTotalizerModel() {
 }
 // testTotalizerModel();
 
-function testMail() {
-  var MailListener = require("mail-listener2");
-
-  var mailListener = new MailListener({
-    username: "dorsett.alarms@gmail.com",
-    password: "dorsettgmailpass",
-    host: "imap.gmail.com",
-    port: 993, // imap port 
-    tls: true,
-    tlsOptions: {
-      rejectUnauthorized: false
-    },
-    markSeen: true, // all fetched email willbe marked as seen and not fetched next time 
-    fetchUnreadOnStart: true, // use it only if you want to get all unread email on lib start. Default is `false`, 
-    attachments: false // download attachments as they are encountered to the project directory 
-  });
-
-  mailListener.start(); // start listening 
-
-  // stop listening 
-  //mailListener.stop(); 
-
-  mailListener.on("server:connected", function() {
-    console.log("imapConnected");
-  });
-
-  mailListener.on("server:disconnected", function() {
-    console.log("imapDisconnected");
-  });
-
-  mailListener.on("error", function(err) {
-    console.log(err);
-  });
-
-  mailListener.on("mail", function(mail, seqno, attributes) {
-    // do something with mail object including attachments 
-    console.log(mail.subject, mail.text);
-    // mail processing code goes here 
-  });
-}
-// testMail();
-
-function testCron(fx) {
-  var CronJob = require('../models/cronjob');
-
-  var testFx = function() {
-    console.log(new Date());
-  };
-  var cron = new CronJob('00 * * * * *', testFx);
-
-  new CronJob('30 * * * * *', function() {
-    console.log('second job');
-  });
-
-  var now = Date.now();
-  console.log('starting', new Date());
-  var interval = setInterval(function() {
-    if (Date.now() >= now + (2 * 60 * 1000)) {
-      cron.stop();
-      clearInterval(interval);
-    }
-  }, 1000);
-
-}
-// testCron();
-// testTotalizerModel();
-
 function testInheritance() {
   var createInherit = function(superClass, subClass) {
     subClass.prototype = Object.create(superClass.prototype);
@@ -412,14 +331,17 @@ function testInheritance() {
 
 function setUpNotifications() {
   var pointNames = ['Booster_Pump 1_Control', 'Booster_Pump 2_Control', 'Booster_Pump 2_VFD Speed', 'Booster_Pump Station_Pressure', 'Booster_Pumps_Not Running_Alarm', 'Booster Sta_Chem Pump 1_Status', 'Booster Sta_Chem Pump 2_Status', 'Booster Sta_Chem Pump 3_Status', 'Booster Sta_Chem Pump 4_Status', 'Booster Sta_Discharge_Pressure', 'Booster Sta_Intrusion_Switch_Alarm', 'Booster Sta_Low_Suction_Alarm', 'Booster Sta_PH', 'Booster Sta_Power_Fail_Alarm', 'Booster Sta_Pump 1_Fail_Alarm', 'Booster Sta_Pump 2_Fail_Alarm', 'Booster Sta_Res Disch_Flow', 'Booster Sta_Reservoir_Flow', 'Booster Sta_Suction_Pressure', 'Chlorine_Feed', 'Clear_Water_Level', 'Combined_Effluent_Turbidity', 'Filter1_Effluent_Flow', 'Filter1_Effluent_Turbidity', 'Filter1_Finish H2O_Loss of Head', 'Filter2_Effluent_Flow', 'Filter2_Effluent_Turbidity', 'Filter2_Finish H2O_Loss of Head', 'Filter3_Effluent_Flow', 'Filter3_Effluent_Turbidity', 'Filter3_Finish H2O_Loss of Head', 'Finish_Pump 1_100 HP_Control', 'Finish_Pump 2_75 HP_Control', 'Finish_Pump 3_200 HP_Control', 'Finished_Water_Flow', 'Finished_Water_Turbidity', 'Finished_Water_pH', 'High_Service_Pressure', 'Mixed_Water_pH', 'Post_Chlorine', 'Raw_Water_Flow', 'Raw_Water_Pump 1_Control', 'Raw_Water_Pump 2_Control', 'Raw_Water_Turbidity', 'Reservior_Water_Level', 'Reservoir_Power_Fail_Alarm', 'Settled_DefNameSeg2_Turbidity', 'Sulfur_Feed', 'Sweep_Flow', 'Water_Tank_AltValve_Control', 'Water_Tank1_Intrusion', 'Water_Tank1_Level', 'Water_Tank2_Level_psi', 'Yadkinville_xTalk01 1_MSC20_Water Tank'];
-  var policyId = '56e84ff459e9a4c00c2e5f49';
+  var policyId = '56e883c634fa375416c1c0ec';
 
   db.connect(connectionString.join(''), function(err) {
     var criteria = {
       collection: 'points',
       query: {
-        Name: {
+        /*Name: {
           $in: pointNames
+        }*/
+        'Notify Policies': {
+          $size: 1
         }
       }
     };
@@ -444,4 +366,106 @@ function setUpNotifications() {
     });
   });
 }
-setUpNotifications();
+// setUpNotifications();
+
+function fixPointInst() {
+  db.connect(connectionString.join(''), function(err) {
+    var criteria = {
+      collection: 'points',
+      query: {
+        'Point Type.Value': {
+          $in: ['Display', 'Program']
+        }
+      }
+    };
+    Utility.iterateCursor(criteria, function(err, doc, cb) {
+        var refs = doc['Point Refs'];
+        var index = -1;
+        async.eachSeries(refs, function(ref, callback) {
+          index++;
+          if (ref.Value !== ref.PointInst) {
+            Utility.getOne({
+              collection: 'points',
+              query: {
+                _id: ref.Value
+              }
+            }, function(err, point) {
+
+              Config.EditChanges.applyUniquePIDLogic({
+                point: doc,
+                refPoint: point
+              }, index);
+              Utility.update({
+                collection: 'points',
+                query: {
+                  _id: parseInt(doc._id, 10)
+                },
+                updateObj: doc
+              }, callback);
+            });
+          } else {
+            callback();
+          }
+
+        }, cb);
+
+      },
+      function(err, count) {
+        console.log(err, count, 'done');
+      });
+  });
+}
+// fixPointInst();
+
+function fixUsers() {
+  db.connect(connectionString.join(''), function(err) {
+    var criteria = {
+      collection: 'Users',
+      query: {}
+    };
+    Utility.iterateCursor(criteria, function(err, doc, cb) {
+      var alerts = doc.alerts;
+
+      for (var prop in alerts) {
+        var cat = alerts[prop];
+        for (var i = 0; i < cat.length; i++) {
+          if (cat[i].hasOwnProperty('info')) {
+            cat[i].Value = cat[i].info;
+            cat[i].Type = cat[i].type;
+            delete cat[i].info;
+            delete cat[i].type;
+          }
+        }
+      }
+      if (!doc.hasOwnProperty('notificationOptions')) {
+        doc['notificationOptions'] = {
+          "Emergency": false,
+          "Critical": false,
+          "Urgent": false,
+          "notifyOnAck": false
+        };
+      }
+      if (!doc.hasOwnProperty('notificationsEnabled')) {
+        doc['notificationsEnabled'] = false;
+      }
+      if (!doc.hasOwnProperty('alerts')) {
+        doc['alerts'] = {
+          'Normal': [],
+          'Emergency': [],
+          'Critical': [],
+          'Urgent': []
+        };
+      }
+      Utility.update({
+        collection: 'Users',
+        query: {
+          _id: doc._id
+        },
+        updateObj: doc
+      }, cb);
+    }, function(err, count) {
+      console.log('done', err, count);
+    });
+  });
+}
+// fixUsers();

@@ -8,6 +8,7 @@ html
         link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css')
         link(rel='stylesheet', href='/css/lib/fullcalendar.css')
         link(rel='stylesheet', href='/css/lib/jquery-clockpicker.css')
+        link(rel='stylesheet', href='/css/lib/jquery.toast.min.css')
         link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.10/dataTables.bootstrap.min.css')
         // syspref.css must follow after bootstrap.min.css so we can override bootstrap themes
@@ -16,9 +17,12 @@ html
         script(type='text/javascript', src='/js/lib/json2.js')
         script(type='text/javascript', src='/js/lib/jquery.min.js')
         script(type='text/javascript', src='/js/lib/jquery-clockpicker.min.js')
+        script(type='text/javascript', src='/js/lib/jquery-ui.js')
+        script(type='text/javascript', src='/js/lib/jquery.toast.min.js')
         script(type='text/javascript', src='/js/lib/knockout-2.3.0.js')
         script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
         script(type='text/javascript', src='/js/lib/knockout.mapping-2.3.5.js')
+        script(type='text/javascript', src='/js/lib/knockout-sortable.js')
         script(type='text/javascript', src='/js/lib/bootstrap-3.0.3.min.js')
         script(type='text/javascript', src='/js/lib/ko.validation.js')
         script(type='text/javascript', src='/js/lib/jqwidgets/jqxcore.js')
@@ -357,7 +361,7 @@ html
                                         .policy.row
                                             .col-xs-3
                                                 a(href="#", data-bind="click: $parent.selectPolicy, text: name")
-                                            .col-xs-3 Members: #[span(data-bind="text: members.length")]
+                                            .col-xs-3 Members: #[span(data-bind="text: members().length")]
                                             .col-xs-1.pull-right
                                                 a(href="#", data-bind="click: $parent.deletePolicy")
                                                     i.fa.fa-times.deleteIcon
@@ -532,7 +536,9 @@ html
                                             .button.btn.btn-sm.btn-default(data-bind="visible: !$parents[1].isEditingAlertConfig(), click: $parents[1].doEditAlertConfig") Edit
                                             .button.btn.btn-sm.btn-text(data-bind="visible: $parents[1].isEditingAlertConfig(), click: $parents[1].cancelDoEditAlertConfig") Cancel
                                             .button.btn.btn-sm.btn-success(data-bind="visible: $parents[1].isEditingAlertConfig(), click: $parents[1].saveEditAlertConfig") Save
-                                        h3(data-bind="text: name")
+                                        h3.editable(data-bind="text: name")
+                                        h3.editRow
+                                            input.alertConfigName.editRow(type="text", data-bind="value: name")
                                         .checkbox.isOnCall
                                             label
                                                 input.checkbox-valign(type="checkbox", data-bind="checked: isOnCall, disable: !$parents[1].isEditingAlertConfig()")
@@ -562,8 +568,9 @@ html
                                                                 .sectionIcon
                                                                     i.fa.fa-male
                                                                 .sectionTitle Alert:
-                                                                .rotationList(data-bind="foreach: members")
-                                                                    .member(data-bind="text: $parents[4].getUserName($data)")
+                                                                .rotationList(data-bind="sortable: { data: members, isEnabled: $parents[3].isEditingAlertConfig }")
+                                                                    .member
+                                                                        span(data-bind="text: $parents[4].getUserName($data)")
                                                                 button.editableInput.btn.btn-sm.btn-xs.btn-default.manageAlertConfigMembers(data-bind="click: $parents[3].editAlertConfigMembers") Manage Members
                                                             .rightCol.col
                                                                 .pull-right.editableInput
@@ -582,7 +589,7 @@ html
                                                                         label
                                                                             input.checkbox-valign(type="checkbox", data-bind="checked: enabled, disable: !$parents[4].isEditingAlertConfig()")
                                                                             div Rotate the first responder
-                                                                            div Every #[span(data-bind="text: scale")] at #[span.editable(data-bind="text: time")] #[input.timeInput.form-control.input-sm.editableInput(data-bind="value: time")] on #[span.editable(data-bind="text: day")] #[select.form-control.input-sm.select-sm.editableInput(data-bind="value: day, options: $parents[4].days")]
+                                                                            div Every #[span.editable(data-bind="text: scale")]  #[input.input-xs.form-control.input-sm.editableInput(type="text", data-bind="value: scale")] week at #[span.editable(data-bind="text: $parents[4].convertTime(time)")] #[input.timeInput.form-control.input-sm.editableInput(data-bind="timepicker: time")] on #[span.editable(data-bind="text: day")] #[select.form-control.input-sm.select-sm.editableInput(data-bind="value: day, options: $parents[4].days")]
                                                                 .sectionRepeat.sectionMultiline
                                                                     i.fa.fa-history
                                                                     .checkbox(data-bind="with: repeatConfig")
@@ -608,7 +615,8 @@ html
                                                             .checkbox(data-bind="with: repeatConfig")
                                                                 label
                                                                     input.checkbox-valign(type="checkbox", data-bind="checked: enabled")
-                                                                    div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] #[input.input-sm.form-control.input-xs.editableInput(data-bind="value: repeatCount")] times.  (Use 0 for indefinite repeats)
+                                                                    div.inputRow If not acknowledged repeat this alert #[span.editable(data-bind="text: repeatCount() === 0 ? 'indefinitely' : repeatCount() + ' times'")]
+                                                                    div.editRow If not acknowledged, repeat this alert #[input.input-sm.form-control.input-xs.editableInput(data-bind="value: repeatCount")] times.  (Use 0 for indefinite repeats)
 
                                             // /ko
 
@@ -829,15 +837,15 @@ html
                     .notificationRow
                         .notificationIcon.smsIcon
                             .fa-stack
-                                i.fa.fa-stack-2x(data-bind="css: $parents[3].getAlertIcon($parents[3].getAlertType(info))")
+                                i.fa.fa-stack-2x(data-bind="css: $parents[3].getAlertIcon($parents[3].getAlertType(Value))")
                                 i.fa.fa-stack-1x.fa-stack-text
                         .notificationAlert
                             div
                                 span.editable(data-bind="text: delay")
-                                input.form-control.input-sm.input-xs.editableInput(data-bind="value: delay")
+                                input.form-control.input-sm.input-xs.editableInput(data-bind="disable: $index() === 0, value: delay")
                                 span minute(s) after I receive an alert
                                 span.editable(data-bind="text: $parents[3].getContactAlertString($data)")
-                                select.editableInput(data-bind="value: info, options: $parents[1].contactInfo, optionsText: function (item) {return $parents[3].getContactString(item);}, optionsValue: function (item) { return item.Value;}")
+                                select.editableInput(data-bind="value: Value, options: $parents[1].contactInfo, optionsText: function (item) {return $parents[3].getContactString(item);}, optionsValue: function (item) { return item.Value;}")
                         span.pull-right.editableInput
                             a(href="#", data-bind="click: function () { $parents[3].deleteAlert($parent, $index); }")
                                 i.fa.fa-times.deleteIcon
