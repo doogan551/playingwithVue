@@ -384,7 +384,7 @@ div.dataTables_wrapper div.dataTables_length select {
     min-width: 200px;
 }
 .firstColumn.datetime {
-    min-width: 120px;
+    min-width: 60px;
 }
 .columnName {
     display: inline-block;
@@ -428,6 +428,10 @@ input.form-control.inputPrecision {
 .inputSearch {
     margin-left: 6px;
     width: 215px;
+}
+.columnDisplayName {
+    width: 281px;
+    display: inline-block;
 }
 .columnsGrid .handle {
     background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGElEQVQIW2NkYGBIA+JZQMzACCJgAIUDACENAQR6zKpeAAAAAElFTkSuQmCC) repeat;
