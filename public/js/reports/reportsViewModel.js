@@ -1378,7 +1378,7 @@ var reportsViewModel = function () {
                 case "DateTime":
                 case "Timet":
                     if ($.isNumeric(rawValue) && rawValue > 0) {
-                        dataField.Value = moment.unix(rawValue).format("MM/DD/YY HH:MM");
+                        dataField.Value = moment.unix(rawValue).format("MM/DD/YY HH:mm");
                     } else {
                         dataField.Value = rawValue;
                     }
@@ -1423,7 +1423,7 @@ var reportsViewModel = function () {
                 historyResults = historyData[i].HistoryResults;
                 tempPivot = {};
                 tempPivot["Date"] = {};
-                tempPivot["Date"].Value = moment.unix(historyData[i].timestamp).format("MM/DD/YY HH:MM");
+                tempPivot["Date"].Value = moment.unix(historyData[i].timestamp).format("MM/DD/YY HH:mm");
                 tempPivot["Date"].rawValue = historyData[i].timestamp;
                 for (j = 0; j < historyResults.length; j++) {
                     columnName = historyResults[j].Name;
@@ -1460,7 +1460,7 @@ var reportsViewModel = function () {
                 for (j = 0; j < totalizerData[0].totals.length; j++) {
                     tempPivot = {};
                     tempPivot["Date"] = {};
-                    tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YY HH:MM");
+                    tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YY HH:mm");
                     tempPivot["Date"].rawValue = moment.unix(totalizerData[0].totals[j].range.start);
                     for (i = 0; i < numberOfColumnsFound; i++) {
                         operator = totalizerData[i].op.toLowerCase();
