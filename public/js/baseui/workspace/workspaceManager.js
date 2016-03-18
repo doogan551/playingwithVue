@@ -1415,6 +1415,7 @@ window.workspaceManager = (function($) {
         },
         passwordReset: function() {
             var $btnResetPass = $('button.resetPass');
+            var self = this;
 
             $btnResetPass.focus();
 
@@ -1454,6 +1455,9 @@ window.workspaceManager = (function($) {
                         _local.login.isLogIn(true);
                         _local.login.username('');
                         _local.login.password('');
+                        _local.login.oldPassword('');
+                        _local.login.newPassword1('');
+                        _local.login.newPassword2('');
                         $('#user').focus();
                         _local.loginValidation.showAllMessages(false);
                         return;

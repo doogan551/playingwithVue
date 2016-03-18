@@ -1022,9 +1022,9 @@ function addPoint(point, user, options, callback) {
       query: searchQuery,
       updateObj: updateObj
     }, function(err, freeName) {
-      if (err)
+      if (err) {
         callback(err);
-      else {
+      } else {
         point._id = searchQuery._id;
         logData.point._id = searchQuery._id;
         if (!!options && options.from === "updateSchedules") {
@@ -1032,9 +1032,11 @@ function addPoint(point, user, options, callback) {
             msg: "success"
           }, point);
         }
+        var logObj = utils.buildActivityLog(logData);
+
         Utility.insert({
           collection: activityLogCollection,
-          insertObj: logData
+          insertObj: logObj
         }, function(err, result) {
           callback({
             msg: "success"
