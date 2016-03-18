@@ -2674,6 +2674,7 @@ var notificationsViewModel = function() {
             self.bindings.currPolicy.alertConfigs.remove(function (item) {
                 return item.id() === config.id();
             });
+            self.savePolicy();
             self.dirty(true);
             //needs validation
         },
@@ -2828,6 +2829,7 @@ var notificationsViewModel = function() {
         },
 
         cancelEditAlertNotifications: function () {
+            self.bindings.currMember(ko.viewmodel.fromModel(self._originalMember));
             self.bindings.isEditingAlertNotifications(false);
             ko.viewmodel.updateFromModel(self.bindings.currMember().alerts, self._originalMember.alerts);
         },
@@ -2995,7 +2997,7 @@ var notificationsViewModel = function() {
         },
 
         deleteAlertGroup: function (alertConfig, idx) {
-            alertConfig.groups.splice(idx, 1);
+            alertConfig.groups.splice(idx(), 1);
             self.dirty(true);
         },
 
@@ -3004,7 +3006,7 @@ var notificationsViewModel = function() {
         },
 
         deleteEscalation: function (group, idx) {
-            group.escalations.splice(idx, 1);
+            group.escalations.splice(idx(), 1);
         },
 
         home: function () {
