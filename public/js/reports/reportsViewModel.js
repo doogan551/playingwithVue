@@ -425,8 +425,9 @@ var reportsViewModel = function () {
                 });
             return uuid;
         },
-        toFixed = function (number, precision) {
-            var abs = Math.abs(parseFloat(number, 10)),
+        toFixed = function (number, p) {
+            var precision = parseInt(p, 10),
+                abs = Math.abs(parseFloat(number, 10)),
                 str = abs.toString(),
                 digits = str.split('.')[1],
                 negative = number < 0,
