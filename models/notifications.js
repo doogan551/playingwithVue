@@ -44,8 +44,8 @@ var	ADDED = 1,			// Thread states
 	NEW = 'NEW',		// Queue entry types
 	RETURN = 'RETURN',
 	SMS = 'SMS',		// Notification types
-    EMAIL = 'EMAIL',
-    VOICE = 'VOICE',
+    EMAIL = 'Email',
+    VOICE = 'Voice',
     RECURRING = 'RECURRING',	// Scheduled task types
     ONETIME = 'ONETIME',
 	MSPM = 60000,		// Number of milliseconds per minute
@@ -428,6 +428,33 @@ var dbAlarmQueueLocked = false,
 					cb(err, data);
 				});
 			},
+			dbRemoveThreads: function (idList, cb) {
+				var criteria = {
+						collection: collection,
+						query: {},
+						updateObj: {
+							'$set': {
+								'threads': []
+							}
+						}
+					},
+					removeThreads = function (policyId, removeThreadsCB) {
+						var criteria = {
+								collection: collection,
+								query: {
+									_id: new ObjectID(policyId)
+								},
+								updateObj: {
+									'$set': {
+										'threads': []
+									}
+								}
+							};
+						utility.update(criteria, removeThreadsCB);
+					};
+
+				async.forEach(idList, removeThreads, cb);
+			},
 			process: function (data, cb) {
 				actions.utility.log('policies.process');
 				function processPolicy (policy, policyCB) {
@@ -589,9 +616,20 @@ var dbAlarmQueueLocked = false,
 					isUpdated = false,
 					recepientHistoryLength = thread.recepientHistory.length,
 					now = info.data.now,
-					notifyLookup = null,
 					doNotifyReturnNormal = false,
 					doNotifyAlarmMutated = false,
+					notifyLookup = (function () {
+						var notifyQueue = thread.notifyQueue,
+							key,
+							notify,
+							obj = {};
+						for (var i = 0, len = notifyQueue.length; i < len; i++) {
+							notify = notifyQueue[i];
+							key = [notify.userId, notify.Type, notify.Value].join('');
+							obj[key] = notify;
+						}
+						return obj;
+					})(),
 					notifyAlarmStateChange = function (change) {
 						var i,
 							history,
@@ -618,18 +656,6 @@ var dbAlarmQueueLocked = false,
 								isUpdated = true;
 							}
 						}
-					},
-					getNotifyLookup = function () {
-						var notifyQueue = thread.notifyQueue,
-							key,
-							notify,
-							obj = {};
-						for (var i = 0, len = notifyQueue.length; i < len; i++) {
-							notify = notifyQueue[i];
-							key = [notify.userId, notify.Type, notify.Value].join('');
-							obj[key] = notify;
-						}
-						return obj;
 					},
 					addNotifications = function (userIds) {
 						var len = userIds.length,
@@ -737,14 +763,12 @@ var dbAlarmQueueLocked = false,
 				// Return if waiting for normal
 				if (thread.status.isWaitingReturnNormal) {
 					if (thread.status.isReturnedNormal) {
-						doNotifyReturnNormal = true;
+						notifyAlarmStateChange('return');
 						actions.policies.setThreadState(thread, DELETED);
 						thread._notifyReturnBeforeDelete = true;
 					}
 					return cb();
 				}
-
-				notifyLookup = getNotifyLookup();
 
 				// See if we need to notify recepients of a return to normal condition
 				if (thread.notifyReturnNormal && thread.status.isReturnedNormal) {

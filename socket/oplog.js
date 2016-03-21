@@ -269,7 +269,7 @@ module.exports = function(_common) {
                     _id: doc.o2._id
                 }
             }, function(err, historyPoint) {
-                module.exports.updateDashboard(historyPoint);
+                // module.exports.updateDashboard(historyPoint);
             });
         }
 

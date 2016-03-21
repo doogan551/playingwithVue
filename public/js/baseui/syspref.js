@@ -2127,10 +2127,10 @@ var notificationsViewModel = function() {
                     repeatDelay: 5
                 },
                 'rotateConfig': {
-                    day: 'Friday',
+                    day: 'Monday',
                     enabled: false,
-                    scale: 'week',
-                    time: '9:00'
+                    scale: 1,
+                    time: 800
                 },
                 'member': {
                     firstName: '',
@@ -2201,7 +2201,7 @@ var notificationsViewModel = function() {
             policies: []
         };
 
-    self.init = function () {
+    self.init = function (reset) {
         var columns = [{
                 data: 'firstName()',
                 title: 'First Name',
@@ -2319,9 +2319,14 @@ var notificationsViewModel = function() {
             ]
         });
 
-        $.getJSON('/api/policies/get').done(function (response) {
-            self.buildPolicies(response);
-        });
+        if (!reset) {
+            $.getJSON('/api/policies/get').done(function (response) {
+                self._rawPolicies = response;
+                self.buildPolicies(response);
+            });
+        } else {
+            self.buildPolicies(self._rawPolicies);
+        }
     };
 
     self.translateMember = function (id) {
@@ -2369,6 +2374,8 @@ var notificationsViewModel = function() {
         var c,
             len = policies.length;
 
+        self.bindings.policyList.removeAll();
+
         for(c=0; c<len; c++) {
             self.buildPolicy(policies[c]);
             self.bindings.policyList.push(ko.viewmodel.fromModel(policies[c]));
@@ -2392,6 +2399,9 @@ var notificationsViewModel = function() {
     };
 
     self.cancel = function () {
+        self.dirty(false);
+        self.bindings.home();
+        self.init(true);
     };
 
     self.save = function () {
@@ -2518,14 +2528,22 @@ var notificationsViewModel = function() {
     };
 
     self.saveUser = function (user) {
-        var data = {
-            userid: user.id,
-            'Update Data': {
-                alerts: user.alerts,
-                notificationOptions: user.notificationOptions,
-                notificationsEnabled: user.notificationsEnabled
-            }
-        };
+        var me = this,
+            data = {
+                userid: user.id,
+                'Update Data': {
+                    alerts: user.alerts,
+                    notificationOptions: user.notificationOptions,
+                    notificationsEnabled: user.notificationsEnabled
+                }
+            };
+
+        for (var alertType in user.alerts) {
+            user.alerts[alertType].forEach(function (alert, idx, list) {
+                list[idx] = ko.toJS(me.getContact(alert));
+            });
+        }
+
         $.ajax({
             url: '/api/security/users/updateuser',
             type: 'post',
@@ -2711,6 +2729,11 @@ var notificationsViewModel = function() {
             if (_days.match(weekends)) {
                 days.push('Weekends');
                 _days = _days.replace(weekends, '');
+            }
+
+            if (_days.match('Holidays')) {
+                days.push('Holidays');
+                _days = _days.replace('Holidays', '');
             }
 
             if (_days.length > 0) {

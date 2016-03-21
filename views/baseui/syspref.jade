@@ -544,6 +544,9 @@ html
                                                 input.checkbox-valign(type="checkbox", data-bind="checked: isOnCall, disable: !$parents[1].isEditingAlertConfig()")
                                                 |This configuration is used for On-Call
 
+                                        .rotateGroups(data-bind="visible: groups().length > 1, with: rotateConfig")
+                                            span #[i.fa.fa-repeat] Rotate the active group every #[span.editable(data-bind="text: scale")]  #[input.input-xs.form-control.input-sm.editableInput(type="text", data-bind="value: scale")] week at #[span.editable(data-bind="text: $parents[2].convertTime(time)")] #[input.timeInput.form-control.input-sm.editableInput(data-bind="timepicker: time")] on #[span.editable(data-bind="text: day")] #[select.form-control.input-sm.select-sm.editableInput(data-bind="value: day, options: $parents[2].days")]
+
                                         div(data-bind="")
                                             // ko foreach: groups
                                             .alertGroup
@@ -845,7 +848,7 @@ html
                                 input.form-control.input-sm.input-xs.editableInput(data-bind="disable: $index() === 0, value: delay")
                                 span minute(s) after I receive an alert
                                 span.editable(data-bind="text: $parents[3].getContactAlertString($data)")
-                                select.editableInput(data-bind="value: Value, options: $parents[1].contactInfo, optionsText: function (item) {return $parents[3].getContactString(item);}, optionsValue: function (item) { return item.Value;}")
+                                select.editableInput(data-bind="value: Value, options: $parents[1].contactInfo, optionsText: function (item) {return $parents[3].getContactString(item);}, optionsValue: function (item) { return item.Value(); } ")
                         span.pull-right.editableInput
                             a(href="#", data-bind="click: function () { $parents[3].deleteAlert($parent, $index); }")
                                 i.fa.fa-times.deleteIcon
