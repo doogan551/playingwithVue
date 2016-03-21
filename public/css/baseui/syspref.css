@@ -714,6 +714,10 @@ tr:hover .showOnHover {
     margin-right: 5px;
 }
 
+.rotateGroups {
+    margin-bottom: 15px;
+}
+
 .alertGroup {
     border-radius: 3px;
     background-color: #eee;
