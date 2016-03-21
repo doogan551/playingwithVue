@@ -137,7 +137,7 @@ var Policies = function () {
         Utility.remove(criteria, updatePoints);
     };
 
-    this.processRotateConfig = function (data, config, task) {
+    this.processRotateConfig = function (data, config, task, cb) {
         var criteria = {
                 collection: 'NotifyScheduledTasks',
                 query: {
@@ -182,8 +182,9 @@ var Policies = function () {
                     if (last) {
                         nextMinute = moment().seconds(0).milliseconds(0).add(1, 'm');
                         nextAction = moment(last);
-                        console.log('Previous Action', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
-                        console.log();
+                        nextAction.seconds(0).milliseconds(0);
+                        // console.log('Previous Action', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
+                        // console.log();
                         nextAction.add(config.scale, 'w');
                         while(nextAction.isBefore(now)) {
                             //do rotate
@@ -201,13 +202,19 @@ var Policies = function () {
 
                     nextAction.day(config.day);
 
-                    if (nextAction.isBefore(moment())) {
+                    taskTemplate.type = 'RECURRING';
+
+                    nextAction.hour(config.time / 100).minute(config.time % 100).seconds(0).milliseconds(0);
+
+                    if (nextAction.isBefore(now)) {
                         nextAction.add(1, 'w');
                     }
-
-                    nextAction.hour(config.time / 100).minute(config.time % 100).seconds(0);
                     console.log();
                     console.log('Next Action:', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
+
+                    taskTemplate.nextAction = nextAction.valueOf();
+                    taskList.push(taskTemplate);
+                    cb(taskList);
                 };
 
             if (err) {
@@ -248,30 +255,84 @@ var Policies = function () {
         });
     };
 
+
+
     this.processScheduledTasks = function (policy, cb) {
-        var self = this;
+        var self = this,
+            policyID = policy._id.toString(),
+            count = 0,
+            newTasks = [],
+            insertTasks = function () {
+                var criteria = {
+                    collection: 'NotifyScheduledTasks',
+                    insertObj: newTasks
+                };
+
+                console.log('Inserting for policy', policyID);
+                Utility.insert(criteria, function (err, points) {
+                    if (err) {
+                        console.log('Insert err', JSON.stringify(err));
+                    }
+
+                    console.log('Done with policy', policyID);
+                });
+            },
+            deleteTasks = function (callback) {
+                var criteria = {
+                    collection: 'NotifyScheduledTasks',
+                    query: {
+                        policyID: policyID
+                    }
+                };
+
+                console.log('Deleting from policy', typeof policyID, policyID);
+                Utility.remove(criteria, function (err) {
+                    if (err) {
+                        console.log('Remove err', JSON.stringify(err));
+                    }
+
+                    console.log('Deleted from policy', policyID);
+                    callback();
+                });
+            },
+            handleTaskList = function (tasks) {
+                // console.log('handling tasks');
+                newTasks = newTasks.concat(tasks);
+                count--;
+                if (count === 0) {
+                    console.log('done', newTasks);
+                    deleteTasks(insertTasks);
+                }
+            };
 
         _.each(policy.alertConfigs, function (alertConfig) {
             var data = {
-                    policyID: policy._id,
+                    policyID: policyID,
                     alertConfigID: alertConfig.id,
                     groupID: null,
                     escalationID: null
                 };
 
-            self.processRotateConfig(data, alertConfig.rotateConfig, 'rotateGroup');
+            if (alertConfig.groups.length > 1) {
+                count++;
+                self.processRotateConfig(data, alertConfig.rotateConfig, 'rotateGroup', handleTaskList);
+            }
 
             _.each(alertConfig.groups, function (group) {
                 _.each(group.escalations, function (escalation) {
                     var rotateConfig = escalation.rotateConfig,
                         data = {
-                            policyID: policy._id,
+                            policyID: policyID,
                             alertConfigID: alertConfig.id,
                             groupID: group.id,
                             escalationID: escalation.id
                         };
 
-                    self.processRotateConfig(data, rotateConfig, 'rotateMembers');
+                    // if (rotateConfig.enabled) {
+                        // console.log('sending rotateConfig');
+                        count++;
+                        self.processRotateConfig(data, rotateConfig, 'rotateMembers', handleTaskList);
+                    // }
                 });
             });
         });

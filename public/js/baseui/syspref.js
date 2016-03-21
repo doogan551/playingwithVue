@@ -2127,10 +2127,10 @@ var notificationsViewModel = function() {
                     repeatDelay: 5
                 },
                 'rotateConfig': {
-                    day: 'Friday',
+                    day: 'Monday',
                     enabled: false,
-                    scale: 'week',
-                    time: '9:00'
+                    scale: 1,
+                    time: 800
                 },
                 'member': {
                     firstName: '',
@@ -2711,6 +2711,11 @@ var notificationsViewModel = function() {
             if (_days.match(weekends)) {
                 days.push('Weekends');
                 _days = _days.replace(weekends, '');
+            }
+
+            if (_days.match('Holidays')) {
+                days.push('Holidays');
+                _days = _days.replace('Holidays', '');
             }
 
             if (_days.length > 0) {
