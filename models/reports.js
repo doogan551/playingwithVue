@@ -1282,8 +1282,7 @@ var buildIntervals = function(range, interval) {
     intervalStart = moment.unix(range.start).unix();
     intervalEnd = moment.unix(range.start).add(intervalValue, intervalType).unix();
     fixLongerInterval();
-
-    while (intervalEnd <= range.end && intervalEnd * 1000 <= Date.now()) {
+    while (intervalEnd <= range.end && intervalEnd <= moment().add(intervalValue, intervalType).startOf(intervalType).unix()) {
         intervalRanges.push({
             start: intervalStart,
             end: intervalEnd
