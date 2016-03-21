@@ -2201,7 +2201,7 @@ var notificationsViewModel = function() {
             policies: []
         };
 
-    self.init = function () {
+    self.init = function (reset) {
         var columns = [{
                 data: 'firstName()',
                 title: 'First Name',
@@ -2319,9 +2319,14 @@ var notificationsViewModel = function() {
             ]
         });
 
-        $.getJSON('/api/policies/get').done(function (response) {
-            self.buildPolicies(response);
-        });
+        if (!reset) {
+            $.getJSON('/api/policies/get').done(function (response) {
+                self._rawPolicies = response;
+                self.buildPolicies(response);
+            });
+        } else {
+            self.buildPolicies(self._rawPolicies);
+        }
     };
 
     self.translateMember = function (id) {
@@ -2369,6 +2374,8 @@ var notificationsViewModel = function() {
         var c,
             len = policies.length;
 
+        self.bindings.policyList.removeAll();
+
         for(c=0; c<len; c++) {
             self.buildPolicy(policies[c]);
             self.bindings.policyList.push(ko.viewmodel.fromModel(policies[c]));
@@ -2392,6 +2399,9 @@ var notificationsViewModel = function() {
     };
 
     self.cancel = function () {
+        self.dirty(false);
+        self.bindings.home();
+        self.init(true);
     };
 
     self.save = function () {
