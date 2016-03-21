@@ -111,9 +111,11 @@ common.getRecentAlarms = getRecentAlarms;
 common.getUnacknowledged = getUnacknowledged;
 common.sendUpdate = sendUpdate;
 common.acknowledgePointAlarms = acknowledgePointAlarms;
+common.addPoint = addPoint;
 
 module.exports = {
-  socket: socket
+  socket: socket,
+  common: common
 };
 
 // is this still necessary?
@@ -535,7 +537,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Integer Registers":
               case "Real Registers":
               case "Point Registers":
-              // Lift station point props
+                // Lift station point props
               case "Pump Control Mode":
               case "Pump Select Mode":
               case "Pump Sequence Delay":
@@ -2130,4 +2132,67 @@ function acknowledgePointAlarms(alarm) {
       }
     });
   }
+}
+
+function addPoint(point, user, options, callback) {
+  var logData = {
+    user: user,
+    timestamp: Date.now(),
+    point: point,
+    activity: actLogsEnums["Point Add"].enum,
+    log: "Point added"
+  };
+
+
+  updateCfgRequired(point, function(err) {
+    if (err)
+      callback(err);
+
+    point._pStatus = 0;
+    point["Point Instance"].Value = point._id;
+
+    var searchQuery = {};
+    var updateObj = {};
+
+    if (!point.Security)
+      point.Security = [];
+
+    //strip activity log and then insert act msg into db
+
+    searchQuery._id = point._id;
+    delete point._id;
+    updateObj = point;
+    updateObj._actvAlmId = ObjectID(updateObj._actvAlmId);
+    // updateObj._curAlmId = ObjectID(updateObj._curAlmId);
+
+
+    Utility.update({
+      collection: pointsCollection,
+      query: searchQuery,
+      updateObj: updateObj
+    }, function(err, freeName) {
+      if (err) {
+        callback(err);
+      } else {
+        point._id = searchQuery._id;
+        logData.point._id = searchQuery._id;
+        if (!!options && options.from === "updateSchedules") {
+          return callback({
+            msg: "success"
+          }, point);
+        }
+        var logObj = utils.buildActivityLog(logData);
+
+        Utility.insert({
+          collection: activityLogCollection,
+          insertObj: logObj
+        }, function(err, result) {
+          callback({
+            msg: "success"
+          }, point);
+        });
+      }
+    });
+
+  });
 }

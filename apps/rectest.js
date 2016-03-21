@@ -469,3 +469,60 @@ function fixUsers() {
   });
 }
 // fixUsers();
+
+function createMathBlocks() {
+  var Point = require('../models/point');
+  var socketCommon = require('../socket/common').common;
+  var criteria = {
+    collection: 'points',
+    query: {
+      _id: 81
+    }
+  };
+  db.connect(connectionString.join(''), function(err) {
+    Utility.getOne(criteria, function(err, report) {
+      async.eachSeries(report['Point Refs'], function(column, cb) {
+        // logger.info('working on', column.Value, column.PointName);
+        async.waterfall([function(wfcb) {
+          criteria.query._id = column.Value;
+          Utility.getOne(criteria, wfcb);
+        }, function(refPoint, wfcb) {
+          // logger.info(refPoint.Name);
+          Point.initPoint({
+            name1: refPoint.name1,
+            name2: refPoint.name2,
+            name3: refPoint.name3,
+            name4: 'Run Time',
+            pointType: 'Math',
+            targetUpi: 92
+          }, function(err, cloned) {
+            // logger.info(err, cloned);
+            cloned['Point Refs'][0] = refPoint['Point Refs'][0];
+            cloned['Point Refs'][4].Value = refPoint._id;
+            cloned['Point Refs'][4] = Config.EditChanges.applyUniquePIDLogic({
+              point: cloned,
+              refPoint: refPoint
+            }, 4)['Point Refs'][4];
+            // logger.info(cloned['Point Refs']);
+            socketCommon.addPoint(cloned, {}, {}, function(err, result) {
+              // logger.info('cloned added', err);
+              wfcb(null, refPoint);
+            });
+          }, function(refPoint, wfcb) {
+            refPoint['Trend Interval'].Value = 1;
+            Utility.update({
+              collection: 'points',
+              query: {
+                _id: refPoint._id
+              },
+              updateObj: refPoint
+            }, wfcb);
+          });
+        }], cb);
+      }, function(err) {
+        logger.info('done', err);
+      });
+    });
+  });
+}
+createMathBlocks();

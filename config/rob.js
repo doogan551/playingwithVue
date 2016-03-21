@@ -1,7 +1,7 @@
 var rob = {
   'Infoscan': {
     'dbConfig': {
-      'host': 'localhost',
+      'host': 'scada1-v',
       'dbName': 'infoscan'
     },
     'zmqConfig': {
