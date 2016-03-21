@@ -1119,8 +1119,12 @@ module.exports = Rpt = {
         var findTotal = function(initial, history) {
             var totals = [];
             var value = 0;
-            if (!!history.length && initial.hasOwnProperty('Value')) {
-                value = (initial.Value > history[0].Value) ? 0 : history[0].Value - initial.Value;
+            if (!!history.length) {
+                if (initial.hasOwnProperty('Value')) {
+                    value = (initial.Value > history[0].Value) ? 0 : history[0].Value - initial.Value;
+                }else{
+                    value = history[0].Value;
+                }
             } else {
                 value = 0;
             }
