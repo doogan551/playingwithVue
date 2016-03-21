@@ -2518,14 +2518,22 @@ var notificationsViewModel = function() {
     };
 
     self.saveUser = function (user) {
-        var data = {
-            userid: user.id,
-            'Update Data': {
-                alerts: user.alerts,
-                notificationOptions: user.notificationOptions,
-                notificationsEnabled: user.notificationsEnabled
-            }
-        };
+        var me = this,
+            data = {
+                userid: user.id,
+                'Update Data': {
+                    alerts: user.alerts,
+                    notificationOptions: user.notificationOptions,
+                    notificationsEnabled: user.notificationsEnabled
+                }
+            };
+
+        for (var alertType in user.alerts) {
+            user.alerts[alertType].forEach(function (alert, idx, list) {
+                list[idx] = ko.toJS(me.getContact(alert));
+            });
+        }
+
         $.ajax({
             url: '/api/security/users/updateuser',
             type: 'post',
