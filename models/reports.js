@@ -1027,7 +1027,6 @@ module.exports = Rpt = {
         var range = data.range;
         var intervalOptions = reportConfig.interval;
 
-
         var compare = function(a, b) {
             return a.timestamp - b.timestamp;
         };
@@ -1130,23 +1129,19 @@ module.exports = Rpt = {
                 var total = 0;
                 var start = interval.start;
                 var end = (moment().unix() < interval.end) ? moment().unix() : interval.end;
-
                 var matches = history.filter(function(data) {
                     return data.timestamp > start && data.timestamp <= end;
                 });
 
                 for (var i = 0; i < matches.length; i++) {
-                    if (value <= matches[i].Value) {
+                    if (matches[i].Value >= value) {
+                        total += matches[i].Value - value;
                         value = matches[i].Value;
                     } else {
-                        total += value;
-                        value = matches[i].Value;
-                    }
-                    if (i === matches.length - 1) {
-                        total += value;
+                        value = 0;
+                        total += matches[i].Value - value;
                     }
                 }
-
                 var result = {
                     total: total,
                     range: {
@@ -1288,7 +1283,7 @@ var buildIntervals = function(range, interval) {
     intervalEnd = moment.unix(range.start).add(intervalValue, intervalType).unix();
     fixLongerInterval();
 
-    while (intervalEnd <= range.end) {
+    while (intervalEnd <= range.end && intervalEnd * 1000 <= Date.now()) {
         intervalRanges.push({
             start: intervalStart,
             end: intervalEnd
