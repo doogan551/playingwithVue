@@ -65,7 +65,10 @@ block content
 									table.columnsGrid.small.grid.table
 										thead
 											tr.strong
-												th.medium.strong Name
+												th.medium.strong Column Key
+												// ko if: (reportType !== 'Property')
+												th.medium.strong Display Name
+												// /ko
 												th.medium.strong.calculateColumn(style="display:none") Calculate
 												th.medium.strong.typeColumn(style="display:none") Type
 												th.medium.strong.precisionColumn(style="display:none") Precision
@@ -97,6 +100,10 @@ block content
 																a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
 															// /ko
 													// /ko
+												// ko if: ($parent.reportType !== 'Property')
+												td.displayName
+													input.form-control.columnDisplayName(data-bind="value: colDisplayName, enable: $parent.canEdit(), event: { change: function() { $parent.designChanged(true) } };", type="text", required)
+												// /ko
 												td.columnTotals
 													// ko if: ($data.canCalculate)
 													// ko if: ($root.canEdit())
