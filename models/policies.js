@@ -3,6 +3,7 @@ var logger = require('../helpers/logger')(module);
 var ObjectID = require('mongodb').ObjectID;
 var _ = require('lodash');
 var moment = require('moment');
+var logger = require('../helpers/logger')(module);
 
 var Policies = function () {
     this.get = function (data, cb) {
@@ -177,7 +178,7 @@ var Policies = function () {
                 setLastAction = function (last) {
                     var nextMinute;
 
-                    console.log();
+                    // console.log();
 
                     if (last) {
                         nextMinute = moment().seconds(0).milliseconds(0).add(1, 'm');
@@ -191,7 +192,7 @@ var Policies = function () {
                             taskTemplate.nextAction = nextAction.valueOf();
                             taskTemplate.type = 'ONETIME';
                             taskList.push(JSON.parse(JSON.stringify(taskTemplate)));
-                            console.log('Run Task--added', config.scale, 'week', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
+                            // console.log('Run Task--added', config.scale, 'week', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
                             nextAction.add(config.scale, 'w');
                         }
                     } else {
@@ -209,8 +210,8 @@ var Policies = function () {
                     if (nextAction.isBefore(now)) {
                         nextAction.add(1, 'w');
                     }
-                    console.log();
-                    console.log('Next Action:', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
+                    // console.log();
+                    // console.log('Next Action:', nextAction.format('dddd, MMMM Do YYYY, h:mm:ss a'));
 
                     taskTemplate.nextAction = nextAction.valueOf();
                     taskList.push(taskTemplate);
@@ -218,14 +219,14 @@ var Policies = function () {
                 };
 
             if (err) {
-                console.log(err);
+                logger.debug(err);
             }
 
-            console.log('------');
+            // console.log('------');
 
-            console.log(config);
+            // console.log(config);
 
-            console.log(docs.length, 'found');
+            // console.log(docs.length, 'found');
 
             if (docs.length === 0) {
                 //no deletes needed
@@ -268,13 +269,13 @@ var Policies = function () {
                     insertObj: newTasks
                 };
 
-                console.log('Inserting for policy', policyID);
+                // console.log('Inserting for policy', policyID);
                 Utility.insert(criteria, function (err, points) {
                     if (err) {
-                        console.log('Insert err', JSON.stringify(err));
+                        logger.debug('Insert err', JSON.stringify(err));
                     }
 
-                    console.log('Done with policy', policyID);
+                    // console.log('Done with policy', policyID);
                 });
             },
             deleteTasks = function (callback) {
@@ -285,13 +286,13 @@ var Policies = function () {
                     }
                 };
 
-                console.log('Deleting from policy', typeof policyID, policyID);
+                // console.log('Deleting from policy', typeof policyID, policyID);
                 Utility.remove(criteria, function (err) {
                     if (err) {
-                        console.log('Remove err', JSON.stringify(err));
+                        logger.debug('Remove err', JSON.stringify(err));
                     }
 
-                    console.log('Deleted from policy', policyID);
+                    // console.log('Deleted from policy', policyID);
                     callback();
                 });
             },
@@ -300,7 +301,7 @@ var Policies = function () {
                 newTasks = newTasks.concat(tasks);
                 count--;
                 if (count === 0) {
-                    console.log('done', newTasks);
+                    // console.log('done', newTasks);
                     deleteTasks(insertTasks);
                 }
             };
@@ -328,11 +329,10 @@ var Policies = function () {
                             escalationID: escalation.id
                         };
 
-                    // if (rotateConfig.enabled) {
-                        // console.log('sending rotateConfig');
+                    if (rotateConfig.enabled && escalation.alertStyle !== 'Everyone') {
                         count++;
                         self.processRotateConfig(data, rotateConfig, 'rotateMembers', handleTaskList);
-                    // }
+                    }
                 });
             });
         });
