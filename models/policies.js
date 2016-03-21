@@ -263,6 +263,7 @@ var Policies = function () {
             policyID = policy._id.toString(),
             count = 0,
             newTasks = [],
+            found = false,
             insertTasks = function () {
                 var criteria = {
                     collection: 'NotifyScheduledTasks',
@@ -274,6 +275,8 @@ var Policies = function () {
                     if (err) {
                         logger.debug('Insert err', JSON.stringify(err));
                     }
+
+                    cb();
 
                     // console.log('Done with policy', policyID);
                 });
@@ -293,7 +296,11 @@ var Policies = function () {
                     }
 
                     // console.log('Deleted from policy', policyID);
-                    callback();
+                    if (callback) {
+                        callback();
+                    } else {
+                        cb();
+                    }
                 });
             },
             handleTaskList = function (tasks) {
@@ -316,6 +323,7 @@ var Policies = function () {
 
             if (alertConfig.groups.length > 1) {
                 count++;
+                found = true;
                 self.processRotateConfig(data, alertConfig.rotateConfig, 'rotateGroup', handleTaskList);
             }
 
@@ -330,6 +338,7 @@ var Policies = function () {
                         };
 
                     if (rotateConfig.enabled && escalation.alertStyle !== 'Everyone') {
+                        found = true;
                         count++;
                         self.processRotateConfig(data, rotateConfig, 'rotateMembers', handleTaskList);
                     }
@@ -337,7 +346,9 @@ var Policies = function () {
             });
         });
 
-        cb();
+        if (!found) {
+            deleteTasks(cb);
+        }
     };
 };
 
