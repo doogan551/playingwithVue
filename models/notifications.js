@@ -1712,6 +1712,7 @@ var dbAlarmQueueLocked = false,
 			});
 		},
 		processIncomingAlarm: function (alarm) {
+			logger.info('INCOMING ' + alarmCategoryRevEnums[alarm.msgCat].toUpperCase() + ' - ' + JSON.stringify(alarm));
 			if (!appConfig.runNotifications)
 				return;
 

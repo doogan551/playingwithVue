@@ -1,3 +1,6 @@
+var zmq = require('../helpers/zmq');
+var cronJob = require('../models/cronjob');
+
 var cmd = {
     "Command Type": 7,
     "upi": 3004,
