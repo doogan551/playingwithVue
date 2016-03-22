@@ -1738,7 +1738,7 @@ var dbAlarmQueueLocked = false,
 					return str;
 				})();
 
-			actions.utility.log('\nINCOMING ' + alarmCategoryRevEnums[alarm.msgCat].toUpperCase() + ' - ' + name);
+			logger.info('INCOMING ' + alarmCategoryRevEnums[alarm.msgCat].toUpperCase() + ' - ' + name);
 
 			if (!alarm.almNotify || alarm.msgCat === eventCategoryEnum) {
 				actions.utility.log('\tDiscarding ' + alarmCategoryRevEnums[alarm.msgCat], 'DONE');

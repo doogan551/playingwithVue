@@ -2118,6 +2118,7 @@ function acknowledgePointAlarms(alarm) {
         multi: true
       }
     };
+    logger.info('acknowledgePointAlarms', JSON.stringify(criteria));
     Utility.update(criteria, function(err, result) {
       if (err) {
         logger.error(err);
