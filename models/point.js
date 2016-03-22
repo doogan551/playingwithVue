@@ -890,7 +890,9 @@ module.exports = {
           }
           addTemplateToDB(template, callback);
         }
-        template['Control Array'] = [];
+        if (['Analog Output', 'Analog Value', 'Binary Output', 'Binary Value'].indexOf(template['Point Type'].Value) >= 0) {
+          template['Control Array'] = [];
+        }
       }
 
     }

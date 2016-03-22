@@ -5,7 +5,7 @@ var rob = {
       'dbName': 'infoscan'
     },
     'zmqConfig': {
-      'server': 'scada1-v',
+      'server': 'localhost',
     },
     'files': {
       'driveLetter': 'C'
