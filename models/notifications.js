@@ -428,32 +428,21 @@ var dbAlarmQueueLocked = false,
 					cb(err, data);
 				});
 			},
-			dbRemoveThreads: function (idList, cb) {
+			dbRemoveThreads: function (policyId, cb) {
+				actions.utility.log('policies.dbRemoveThreads');
+				actions.utility.log('\tRemoving threads for policy id: ' + policyId);
 				var criteria = {
-						collection: collection,
-						query: {},
+						collection: 'NotifyPolicies',
+						query: {
+							_id: new ObjectID(policyId)
+						},
 						updateObj: {
 							'$set': {
 								'threads': []
 							}
 						}
-					},
-					removeThreads = function (policyId, removeThreadsCB) {
-						var criteria = {
-								collection: collection,
-								query: {
-									_id: new ObjectID(policyId)
-								},
-								updateObj: {
-									'$set': {
-										'threads': []
-									}
-								}
-							};
-						utility.update(criteria, removeThreadsCB);
 					};
-
-				async.forEach(idList, removeThreads, cb);
+				utility.update(criteria, cb);
 			},
 			process: function (data, cb) {
 				actions.utility.log('policies.process');
@@ -1682,8 +1671,9 @@ var dbAlarmQueueLocked = false,
 				// }
 			},
 			sendError: function (err) {
-				var text = [
-						'Site: ' + siteConfig.get('Infoscan.location').site,
+				var siteName = siteConfig.get('Infoscan.location').site,
+					text = [
+						'Site: ' + siteName,
 						'Timestamp: ' + new Date().getTime(),
 						'Error: ' + JSON.stringify(err)
 					].join('\n');
@@ -1691,7 +1681,7 @@ var dbAlarmQueueLocked = false,
 				notifier.sendEmail({
 					from: 'infoscan@dorsett-tech.com',
 					to: 'johnny.dr@gmail.com',
-					subject: 'Notifications error at customer site!',
+					subject: 'Notifications error at customer site (' + siteName + ')',
 					text: text
 				});
 				notifier.sendText('13364690900', 'Notifications error @ customer site. Check gmail for details.', function (){});
@@ -1722,6 +1712,7 @@ var dbAlarmQueueLocked = false,
 			});
 		},
 		processIncomingAlarm: function (alarm) {
+			logger.info('INCOMING ' + alarmCategoryRevEnums[alarm.msgCat].toUpperCase() + ' - ' + JSON.stringify(alarm));
 			if (!appConfig.runNotifications)
 				return;
 
@@ -1738,7 +1729,7 @@ var dbAlarmQueueLocked = false,
 					return str;
 				})();
 
-			actions.utility.log('\nINCOMING ' + alarmCategoryRevEnums[alarm.msgCat].toUpperCase() + ' - ' + name);
+			logger.info('INCOMING ' + alarmCategoryRevEnums[alarm.msgCat].toUpperCase() + ' - ' + name);
 
 			if (!alarm.almNotify || alarm.msgCat === eventCategoryEnum) {
 				actions.utility.log('\tDiscarding ' + alarmCategoryRevEnums[alarm.msgCat], 'DONE');
@@ -2072,6 +2063,7 @@ function run () {
 module.exports = {
 	run: run,
 	actions: actions,
+	removeThreads: actions.policies.dbRemoveThreads,
 	processIncomingAlarm: actions.processIncomingAlarm
 };
 
@@ -2355,6 +2347,14 @@ if (selfTest.enabled) {
 			run: false,
 			fn: function (cb) {
 				cb(null, 'data');
+			}
+		},
+		removeThreads: {
+			run: true,
+			fn: function (cb) {
+				actions.policies.dbRemoveThreads('56e6f8b37dec812412e840a1', function (err) {
+					cb(err, 'data');
+				});
 			}
 		},
 		processScheduledTasks: {

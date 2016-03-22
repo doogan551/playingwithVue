@@ -322,6 +322,7 @@ module.exports = Rpt = {
         // make timestamps as normal then convert to new id. find all between min/max and any that match
         //timestamps = buildTimestamps(startTime, endTime, interval, offset);
         timestamps = makeTimestamps(buildIntervals(data.range, intervalOptions));
+
         searchCriteria = {
             upi: {
                 $in: justUpis
@@ -360,7 +361,7 @@ module.exports = Rpt = {
                 query: searchCriteria,
                 collection: 'points',
                 sort: {
-                    timestamp: 1
+                    timestamp: -1
                 }
             };
             Utility.get(criteria, function(err, histPoints) {
@@ -432,7 +433,7 @@ module.exports = Rpt = {
                                             },
                                             collection: historyCollection,
                                             sort: {
-                                                timestamp: 1
+                                                timestamp: -1
                                             },
                                             limit: 1
                                         };
@@ -443,6 +444,7 @@ module.exports = Rpt = {
                                                     end: ts
                                                 }
                                             }, function(err, results) {
+                                                console.log(criteria, nextOldest);
                                                 if (!!results.length) {
                                                     if ((!!nextOldest.length && nextOldest[0].timestamp < results[0].timestamp) || !nextOldest.length) {
                                                         nextOldest = results;

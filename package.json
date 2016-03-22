@@ -1,6 +1,6 @@
 {
   "name": "infoscan-test",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "infoscan",
   "main": "app.js",
   "dependencies": {
