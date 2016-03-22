@@ -4,6 +4,7 @@ var ObjectID = require('mongodb').ObjectID;
 var _ = require('lodash');
 var moment = require('moment');
 var logger = require('../helpers/logger')(module);
+var notifications = require('../models/notifications');
 
 var Policies = function () {
     this.get = function (data, cb) {
@@ -90,6 +91,10 @@ var Policies = function () {
         };
 
         data = convertStrings(data);
+
+        if (data.enabled === false) {
+            notifications.removeThreads(data._id);
+        }
 
         if (data._new === true) { //typeof data._id === 'string' && data._id.length === 24) {
             //new policy

@@ -2543,12 +2543,13 @@ var notificationsViewModel = function() {
                     notificationOptions: user.notificationOptions,
                     notificationsEnabled: user.notificationsEnabled
                 }
+            },
+            processUser = function (alert, idx, list) {
+                list[idx] = ko.toJS(me.getContact(alert));
             };
 
         for (var alertType in user.alerts) {
-            user.alerts[alertType].forEach(function (alert, idx, list) {
-                list[idx] = ko.toJS(me.getContact(alert));
-            });
+            user.alerts[alertType].forEach(processUser);
         }
 
         $.ajax({
