@@ -17,7 +17,6 @@ var Policies = function () {
         var newID;
         var callback = function (err, points) {
             cb(err, {
-                points: points,
                 id: newID.toString()
             });
         };

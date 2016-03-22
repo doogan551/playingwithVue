@@ -2359,13 +2359,20 @@ var notificationsViewModel = function() {
 
 
         self.forEachArray(policy.alertConfigs, function (alertConfig) {
+            var newGroups = [];
             alertConfig.groups = alertConfig.groups || [];
             self.forEachArray(alertConfig.groups, function (group) {
                 group.escalations = group.escalations || [];
                 self.forEachArray(group.escalations, function (escalation) {
                     escalation.members = escalation.members || [];
                 });
+                if (group.active) {
+                    newGroups.unshift(group);
+                } else {
+                    newGroups.push(group);
+                }
             });
+            alertConfig.groups = newGroups;
         });
 
     };
@@ -2739,7 +2746,9 @@ var notificationsViewModel = function() {
             if (_days.length > 0) {
                 days = days.concat(_days.split(';'));
             } else {
-                days.push('None');
+                if (days.length === 0) {
+                    days.push('None');
+                }
             }
 
             days = days.filter(function (el, idx, arr) {
