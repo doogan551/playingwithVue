@@ -1124,7 +1124,7 @@ module.exports = Rpt = {
             if (!!history.length) {
                 if (initial.hasOwnProperty('Value')) {
                     value = (initial.Value > history[0].Value) ? 0 : history[0].Value - initial.Value;
-                }else{
+                } else {
                     value = history[0].Value;
                 }
             } else {
@@ -1144,8 +1144,8 @@ module.exports = Rpt = {
                         total += matches[i].Value - value;
                         value = matches[i].Value;
                     } else {
-                        value = 0;
-                        total += matches[i].Value - value;
+                        total += matches[i].Value;
+                        value = matches[i].Value;
                     }
                 }
                 var result = {
