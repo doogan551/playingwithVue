@@ -14,12 +14,26 @@ var Policies = function () {
         };
         Utility.get(criteria, cb);
     };
-    this.save = function (data, cb) {
+    this.save = function (rawData, cb) {
+        var data;
         var newID;
         var callback = function (err, points) {
-            cb(err, {
-                id: newID.toString()
-            });
+            var complete = function (removeErr) {
+                if (removeErr) {
+                    logger.debug('Error removing threads for policy:', newID, removeErr);
+                }
+
+                cb(err, {
+                    id: newID.toString()
+                });
+            };
+
+            if (data.enabled === false) {
+                notifications.removeThreads(data._id, complete);
+            } else {
+                complete();
+            }
+
         };
         var convertStrings = function (obj) {
             var key,
@@ -90,11 +104,7 @@ var Policies = function () {
             Utility.update(criteria, callback);
         };
 
-        data = convertStrings(data);
-
-        if (data.enabled === false) {
-            notifications.removeThreads(data._id);
-        }
+        data = convertStrings(rawData);
 
         if (data._new === true) { //typeof data._id === 'string' && data._id.length === 24) {
             //new policy
