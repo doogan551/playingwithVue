@@ -2633,9 +2633,7 @@ var reportsViewModel = function () {
             case "Enum":
             case "undecided":
                 opArray.push({text: "=", value: "EqualTo"},
-                }, {
                     {text: "!=", value: "NotEqualTo"});
-                });
                 break;
             case "String":
                 opArray.push(
@@ -2757,7 +2755,7 @@ var reportsViewModel = function () {
         self.startDate = moment().subtract(duration.unit, duration.unitType).unix();
     };
 
-    self.setFiltersStartEndDates = function(start, end) {
+    self.setFiltersStartEndDates = function (start, end) {
         var startDateFilter,
             endDateFilter,
             hrs,
@@ -2885,7 +2883,7 @@ var reportsViewModel = function () {
         updateListOfColumns(tempArray);
     };
 
-    self.clearFilterPoint = function(indexOfColumn) {
+    self.clearFilterPoint = function (indexOfColumn) {
         var tempArray = self.listOfFilters(),
             filter = tempArray[indexOfColumn];
 
@@ -2897,7 +2895,7 @@ var reportsViewModel = function () {
         updateListOfFilters(tempArray);
     };
 
-    self.selectPropertyColumn = function(element, indexOfColumn, selectedItem) {
+    self.selectPropertyColumn = function (element, indexOfColumn, selectedItem) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn],
             prop = getProperty(selectedItem.name);
@@ -2931,7 +2929,7 @@ var reportsViewModel = function () {
         updateListOfColumns(tempArray);
     };
 
-    self.selectNumberOfEntries = function(element, selectedItem) {
+    self.selectNumberOfEntries = function (element, selectedItem) {
         var tempArray = self.listOfEntriesPerPage(),
             i;
 
@@ -2945,7 +2943,7 @@ var reportsViewModel = function () {
         }
     };
 
-    self.selectInterval = function(selectedInterval) {
+    self.selectInterval = function (selectedInterval) {
         self.interval(selectedInterval);
     };
 
