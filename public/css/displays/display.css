@@ -31,6 +31,9 @@ body {
 	padding-left:4px;
 	padding-right:4px;
 }
+.ui-controlgroup-horizontal.ui-mini .ui-btn-inner {
+    height: auto;
+}
 #page {
 	overflow:hidden;
 }

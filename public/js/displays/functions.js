@@ -105,7 +105,10 @@ var ActionButton = function (config) {
                 noPointFound = false;
                 external.ActionPoint = response._id;
                 config.ActionPoint = response._id;
+                // config.upi = response._id;
                 _validateOptions('upi');
+
+                displays.upiNames[response.upi] = response.Name;
 
                 _commandArguments.logData = {
                     user: displays.workspaceManager.user(),
@@ -139,6 +142,10 @@ var ActionButton = function (config) {
                 if (_pointData['Point Type'].Value.match('MultiState')) {
                     external.isMultistate = true;
                     external.options = transformOptions();
+                }
+
+                if (_pointData['Point Type'].Value.match('Report')) {
+                    external.isReport = true;
                 }
 
                 if (displays.editMode) {
@@ -196,8 +203,8 @@ var ActionButton = function (config) {
                     });
                 } else if (pointType === 'Report') {
                     reportType = _pointData['Report Type'].Value;
-
-                    $('#actionButtonReportInput').popup('open');
+                    $('#reportChooseRange').modal('show');
+                    // $('#actionButtonReportInput').popup('open');
                 } else {
                     _sendCommand();
                 }
@@ -284,6 +291,7 @@ var ActionButton = function (config) {
         ActionPriority: null,
         isBinary: false,
         isMultistate: false,
+        isReport: false,
         ActionParm: (config.ActionParm !== undefined) ? parseFloat(config.ActionParm) : config.ActionParm
     };
 
@@ -906,6 +914,58 @@ displays = $.extend(displays, {
 
         $('#actionButtonInput').popup();
         $('#actionButtonReportInput').popup();
+
+        $('#reportRange').daterangepicker({
+            // startDate : durationInfo().startDate,
+            // endDate : durationInfo().endDate,
+            maxDate: moment(),
+            // chosenLabel: durationInfo().selectedRange,
+            alwaysShowCalendars: true,
+            autoApply: false,
+            autoUpdateInput: false,
+            timePicker: false,
+            //timePicker24Hour: true,
+            ranges: {
+                'Today': [ moment() , moment() ],
+                'Yesterday': [ moment().subtract(1, 'days'), moment().subtract(1, 'days') ],
+                'Last 7 Days': [ moment().subtract(6, 'days'), moment() ],
+                'Last Week': [ moment().subtract(1, 'weeks').startOf('week'), moment().subtract(1, 'weeks').endOf('week') ],
+                'Last 4 Weeks': [ moment().subtract(4, 'weeks'), moment() ],
+                'Last Month': [ moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month') ],
+                'This Year': [ moment().startOf('year'), moment() ],
+                'Last Year': [ moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year') ]
+            }
+        });
+
+        $('#reportRange').on('apply.daterangepicker', function (ev, picker) {
+            var pickerInfo = {};
+            pickerInfo.startDate = picker.startDate;
+            pickerInfo.endDate = picker.endDate;
+            pickerInfo.duration = picker.endDate.unix() - picker.startDate.unix();
+            pickerInfo.selectedRange = picker.chosenLabel;
+            // if (ko.isObservable(durationInfo)) {
+            //     durationInfo(pickerInfo);
+            // } else {
+            //     durationInfo = pickerInfo;
+            // }
+            $(this).val(pickerInfo.startDate.format('MM/DD/YYYY') + ' - ' + pickerInfo.endDate.format('MM/DD/YYYY'));
+            $(this).attr("title", pickerInfo.selectedRange);
+        });
+
+        $('#reportRange').on('hide.daterangepicker', function(ev, picker) {
+            var pickerInfo = {};
+            pickerInfo.startDate = picker.startDate;
+            pickerInfo.endDate = picker.endDate;
+            pickerInfo.duration = picker.endDate.diff(picker.startDate);
+            pickerInfo.selectedRange = picker.chosenLabel;
+            // if (ko.isObservable(durationInfo)) {
+            //     durationInfo(pickerInfo);
+            // } else {
+            //     durationInfo = pickerInfo;
+            // }
+            $(this).val(pickerInfo.startDate.format('MM/DD/YYYY') + ' - ' + pickerInfo.endDate.format('MM/DD/YYYY'));
+            $(this).attr("title", pickerInfo.selectedRange);
+        });
 
         $('#leftPanel').hover(
             function() {

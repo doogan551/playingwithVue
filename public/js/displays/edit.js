@@ -827,6 +827,10 @@ displays = $.extend(displays, {
                 displays.updateAnimItem(item);
             };
 
+            $scope.editReportRange = function () {
+                $('#reportChooseRange').modal('show');
+            };
+
             $scope.updateAnimItem = displays.updateAnimItem = function(item) {
                 var elsToShow;
 
