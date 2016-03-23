@@ -88,6 +88,59 @@ var initKnockout = function () {
                 return value;
             }
         };
+
+    ko.bindingHandlers.reportDateRangePicker = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            var durationInfo = valueAccessor(),
+                getPickerData = function (element, picker) {
+                    var pickerInfo = {};
+                    pickerInfo.startDate = picker.startDate;
+                    pickerInfo.endDate = picker.endDate;
+                    pickerInfo.duration = picker.endDate.diff(picker.startDate);
+                    pickerInfo.selectedRange = picker.chosenLabel;
+                    if (ko.isObservable(durationInfo)) {
+                        durationInfo(pickerInfo);
+                    } else {
+                        durationInfo = pickerInfo;
+                    }
+                    element.val(pickerInfo.startDate.format('MM/DD/YYYY') + ' - ' + pickerInfo.endDate.format('MM/DD/YYYY'));
+                    element.attr("title", pickerInfo.selectedRange);
+                };
+            $(element).attr("title", (durationInfo().selectedRange !== "" ? durationInfo().selectedRange : "Start & End Dates"));
+            $(element).val(durationInfo().startDate.format('MM/DD/YYYY') + ' - ' + durationInfo().endDate.format('MM/DD/YYYY'));
+
+            $(element).daterangepicker({
+                startDate : durationInfo().startDate,
+                endDate : durationInfo().endDate,
+                maxDate: moment(),
+                chosenLabel: durationInfo().selectedRange,
+                alwaysShowCalendars: true,
+                autoApply: false,
+                autoUpdateInput: false,
+                timePicker: false,
+                //timePicker24Hour: true,
+                ranges: {
+                    'Today': [ moment() , moment() ],
+                    'Yesterday': [ moment().subtract(1, 'days'), moment().subtract(1, 'days') ],
+                    'Last 7 Days': [ moment().subtract(6, 'days'), moment() ],
+                    'Last Week': [ moment().subtract(1, 'weeks').startOf('week'), moment().subtract(1, 'weeks').endOf('week') ],
+                    'Last 4 Weeks': [ moment().subtract(4, 'weeks'), moment() ],
+                    'Last Month': [ moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month') ],
+                    'This Year': [ moment().startOf('year'), moment() ],
+                    'Last Year': [ moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year') ]
+                }
+            });
+
+            $(element).on('apply.daterangepicker', function (ev, picker) {
+                getPickerData($(this), picker);
+            });
+
+            $(element).on('hide.daterangepicker', function(ev, picker) {
+                getPickerData($(this), picker);
+            });
+        }
+    };
+
     ko.bindingHandlers.reportDatePicker = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             var options = {
@@ -105,6 +158,8 @@ var initKnockout = function () {
                         viewModel.date = val;
                     }
                 }
+
+                $(element).datepicker("setEndDate", moment().format("MM/DD/YYYY"));  // nothing greater than today.
 
                 if ($(element).hasClass("startDate")) { // if startdate changed adjust limits on Enddate
                     $dependantDatePicker = $(element).closest('tr').next().find(".endDate");
@@ -155,8 +210,11 @@ var initKnockout = function () {
             $(element).clockpicker(options);
 
             $(element).change(function (event) {
-                timestamp = $(element).val();
-                viewModel.time = $(element).val();
+                if (ko.isObservable(timestamp)) {
+                    timestamp($(element).val());
+                } else {
+                    timestamp = $(element).val();
+                }
             });
 
             $(element).keyup(function (event) {
@@ -170,8 +228,11 @@ var initKnockout = function () {
                     $(element).parent().addClass("has-error");
                     $(element).parent().attr("title", "Error in time format");
                 }
-                timestamp = $(element).val();
-                viewModel.time = $(element).val();
+                if (ko.isObservable(timestamp)) {
+                    timestamp($(element).val());
+                } else {
+                    timestamp = $(element).val();
+                }
             });
 
             $(element).keydown(function (event) {
@@ -209,7 +270,7 @@ var initKnockout = function () {
         }
     };
 
-    ko.bindingHandlers.reportPrecisionInput = {
+    ko.bindingHandlers.reportPrecisionInput = { // TODO
 
     };
 };
@@ -222,8 +283,7 @@ var reportsViewModel = function () {
         $tabConfiguration,
         $tabViewReport,
         $viewReport,
-        $runReportSpinner,
-        $runReportTabSpinner,
+        $rightPanel,
         $spinnertext,
         $pointName1,
         $pointName2,
@@ -289,6 +349,13 @@ var reportsViewModel = function () {
                 cumulativePermissions |= groups[i]._pAccess;
             }
             return !!(cumulativePermissions & requestedAccessLevel);
+        },
+        mergePersistedPointRefArrary = function () {
+            var result = [];
+
+            point["Point Refs"] = buildPointRefsArray();
+
+            return result;
         },
         getPointRef = function (upi) {
             var answer = point["Point Refs"].filter(function (pointRef) {
@@ -502,10 +569,10 @@ var reportsViewModel = function () {
         blockUI = function ($control, state, text) {
             if (state === true) {
                 $control.hide();
-                $spinnertext.text(text);
+                //$spinnertext.text(text);
             } else {
                 $control.show();
-                $spinnertext.text("");
+                //$spinnertext.text("");
             }
             $control.attr('disabled', state);
         },
@@ -734,17 +801,20 @@ var reportsViewModel = function () {
                 width: 1000
             });
         },
-        getAdjustedDatetime = function (filter) {
+        getFilterAdjustedDatetime = function (filter) {
+            return getAdjustedDatetime(filter.date, filter.time.toString());
+        },
+        getAdjustedDatetime = function (date, time) {
             var result,
-                timestamp = parseInt((filter.time.toString()).replace(':', ''), 10),
+                timestamp = parseInt(time.replace(':', ''), 10),
                 hour = ('00' + Math.floor(timestamp / 100)).slice(-2),
                 min = ('00' + timestamp % 100).slice(-2);
 
-            result = moment.unix(filter.date).startOf('day').unix();
-            result = moment.unix(result).add(hour, 'h').unix();
-            result = moment.unix(result).add(min, 'm').unix();
+            result = moment.unix(date).startOf('day');
+            result = result.add(hour, 'h');
+            result = result.add(min, 'm');
 
-            return result;
+            return result.unix();
         },
         initializeNewFilter = function (selectedItem, filter) {
             var localFilter = filter,
@@ -836,6 +906,7 @@ var reportsViewModel = function () {
                     results.push(localArray[i]);
                 }
                 if (cleanup && validColumn) {
+                    //delete results[results.length - 1]["colName"];  // valuelist is only used in UI
                     delete results[results.length - 1]["valueList"];  // valuelist is only used in UI
                     delete results[results.length - 1]["dataColumnName"]; // dataColumnName is only used in UI
                     delete results[results.length - 1]["rawValue"]; // rawValue is only used in UI
@@ -883,7 +954,7 @@ var reportsViewModel = function () {
                                 filters[i].time = "00:00";
                             } else  {
                                 if (filters[i].time.toString().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
-                                    filters[i].value = getAdjustedDatetime(filters[i]);
+                                    filters[i].value = getFilterAdjustedDatetime(filters[i]);
                                     filters[i].error = undefined;
                                 } else {
                                     valid = false;
@@ -907,7 +978,6 @@ var reportsViewModel = function () {
                         delete results[results.length - 1]["valueList"];
                         delete results[results.length - 1]["error"];
                         delete results[results.length - 1]["softDeleted"];
-                        cleanup
                     }
                 }
             }
@@ -947,43 +1017,52 @@ var reportsViewModel = function () {
             var result = [],
                 i,
                 pointRef,
-                len = theColumns.length;
+                len = theColumns.length,
+                currentColumn,
+                validColumn = true;
+
             for (i = 0; i < len; i++) {
-                if (theColumns[i].colDisplayName === undefined) { // TODO: remove once YDK reports have been opened and saved
-                    theColumns[i].colDisplayName = theColumns[i].colName;
-                }
-                if (!pointReferenceHardDeleted(theColumns[i].upi)) {
-                    if (pointReferenceSoftDeleted(theColumns[i].upi)) {
-                        console.log("softdeleted theColumns[" + i + "].upi = " + theColumns[i].upi);
-                        theColumns[i].softDeleted = true;
-                    }
-                    if (!!theColumns[i].upi && theColumns[i].upi > 0) {
-                        pointRef = getPointRef(theColumns[i].upi);
-                        if (pointRef.length > 1) {
-                            // found more than one reference in Point Ref array for UPI, sup wit dat?
+                currentColumn = theColumns[i];
+
+                if (!!currentColumn.upi && currentColumn.upi > 0) {
+                    pointRef = getPointRef(currentColumn.upi);
+                    if (!pointReferenceHardDeleted(currentColumn.upi)) {
+                        if (pointReferenceSoftDeleted(currentColumn.upi)) {
+                            console.log("softdeleted theColumns[" + i + "].upi = " + theColumns[i].upi);
+                            currentColumn.softDeleted = true;
                         }
-                        theColumns[i].colName = pointRef[0].PointName;
+                        currentColumn.colName = pointRef[0].PointName;
+                    } else {
+                        validColumn = false;
+                        // point being referenced doesn't exist in local Point Refs array
+                        console.log("point being referenced doesn't exist in local Point Refs array  theColumns[" + i + "].upi = " + theColumns[i].upi);
                     }
-                    result.push(theColumns[i]);
+                    if (pointRef.length > 1) {
+                        // found more than one reference in Point Ref array for UPI, sup wit dat?
+                    }
+                }
+
+                if (validColumn) {
                     switch (self.reportType) {
                         case "Property":
-                            result[i].canCalculate = columnCanBeCalculated(result[i]);
-                            if (result[i].valueType === "BitString") {
-                                result[i].bitstringEnums = window.workspaceManager.config.Enums[result[i].colName + ' Bits'];
+                            currentColumn.canCalculate = columnCanBeCalculated(currentColumn);
+                            if (currentColumn.valueType === "BitString") {
+                                currentColumn.bitstringEnums = window.workspaceManager.config.Enums[currentColumn.colName + ' Bits'];
                             }
                             break;
                         case "History":
                         case "Totalizer":
-                            result[i].valueList = getTotalizerValueList(result[i].pointType);
-                            result[i].canCalculate = true;
+                            if (currentColumn.colDisplayName === undefined) { // TODO: remove once YDK reports have been opened and saved
+                                currentColumn.colDisplayName = currentColumn.colName;
+                            }
+                            currentColumn.valueList = getTotalizerValueList(currentColumn.pointType);
+                            currentColumn.canCalculate = true;
                             break;
                         default:
                             console.log(" - - - DEFAULT  initColumns()");
                             break;
                     }
-                } else {
-                    // point being referenced doesn't exist in local Point Refs array
-                    console.log("point being referenced doesn't exist in local Point Refs array  theColumns[" + i + "].upi = " + theColumns[i].upi);
+                    result.push(currentColumn);
                 }
             }
             return result;
@@ -1055,7 +1134,7 @@ var reportsViewModel = function () {
             });
             self.listOfColumnPropertiesLength = columnsPropertyFields.length;
         },
-        getKeyBasedOnValue = function getKeyValue(obj, value) {
+        getKeyBasedOnValue = function (obj, value) {
             for (var key in obj) {
                 if (obj.hasOwnProperty(key)) {
                     if (obj[key] === parseInt(value, 10)) {
@@ -1064,33 +1143,20 @@ var reportsViewModel = function () {
                 }
             }
         },
-        disableStartEndDates = function (disable) {
-            var $startAndEndDates = $filtersGrid.find("input,button,textarea,select");
-            $startAndEndDates.prop("disabled", disable);
-
-            if (disable) {
-                $startAndEndDates.addClass("strikethrough");
-            } else {
-                $startAndEndDates.removeClass("strikethrough");
-            }
-            $direports.find(".durationButton").prop("disabled", !disable);
-        },
-        useDurationChanged = function () {
-            disableStartEndDates(self.useDuration());
-            if (!self.useDuration()) {
-                self.selectedDuration(self.listOfDurations()[0].value);
-            }
-        },
         buildReportDataRequest = function () {
             var result,
                 i,
-                columns = validateColumns(),
-                filters = validateFilters(),
+                columns,
+                filters,
                 filter,
                 activeError = false,
                 key,
                 upis = [],
                 uuid;
+
+            mergePersistedPointRefArrary();
+            columns = validateColumns();
+            filters = validateFilters();
 
             if (columns.length > 1) {
                 // collect UPIs from Columns
@@ -1108,12 +1174,9 @@ var reportsViewModel = function () {
                     }
                 }
 
-                // get Start & End Dates
-                if (self.useDuration()) {
-                    var duration = self.listOfDurations().filter(function (item) {
-                        return item.value === self.selectedDuration();
-                    });
-                    self.setDatesBasedOnDuration(duration[0]);
+                if (self.reportType === "Totalizer" || self.reportType === "History") {
+                    self.startDate = getAdjustedDatetime(self.selectedDuration().startDate.unix(), self.durationTimeOffSet());
+                    self.endDate = getAdjustedDatetime(self.selectedDuration().endDate.unix(), self.durationTimeOffSet());
                 } else {
                     for (key in filters) {
                         if (filters.hasOwnProperty(key)) {
@@ -1121,28 +1184,6 @@ var reportsViewModel = function () {
                             if (!!filter.error) {
                                 displayError(filter.error);
                                 activeError = true;
-                            } else {
-                                if (!filter.filterName || _.isEmpty(filter)) {
-                                    continue;
-                                }
-                                if (self.reportType === "Totalizer" || self.reportType === "History") {
-                                    switch (filter.filterName) {
-                                        case "Start_Date":
-                                            self.startDate = getAdjustedDatetime(filter);
-                                            break;
-                                        case "End_Date":
-                                            self.endDate = getAdjustedDatetime(filter);
-                                            break;
-                                        default:
-                                            break;
-                                    }
-                                    if (moment(self.startDate).isValid() && moment(self.endDate).isValid()) {
-                                        if (self.startDate > self.endDate) {
-                                            displayError("'Start Date' has to be earlier than 'End Date' in Filters");
-                                            activeError = true;
-                                        }
-                                    }
-                                }
                             }
                         }
                     }
@@ -1152,19 +1193,26 @@ var reportsViewModel = function () {
                     switch (self.reportType) {
                         case "History":
                         case "Totalizer":
-                            point["Report Config"].interval.text = self.interval();
-                            point["Report Config"].interval.value = self.intervalValue();
-                            point["Report Config"].duration.useDuration = self.useDuration();
-                            point["Report Config"].duration.value = self.selectedDuration();
+                            point["Report Config"].interval = {
+                                text: self.interval(),
+                                value: self.intervalValue()
+                            };
+                            point["Report Config"].duration = {
+                                startDate: self.selectedDuration().startDate.unix(),
+                                endDate: self.selectedDuration().endDate.unix(),
+                                offSet: self.durationTimeOffSet(),
+                                duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
+                                selectedRange: self.selectedDuration().selectedRange
+                            };
                             break;
                         case "Property":
+                            pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
                             break;
                         default:
                             console.log(" - - - DEFAULT  buildReportDataRequest()");
                             break;
                     }
 
-                    pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
                     point["Report Config"].pointFilter = pointFilter;
                     point["Report Config"].columns = columns;
                     point["Report Config"].filters = filters;
@@ -1237,9 +1285,8 @@ var reportsViewModel = function () {
             $tabConfiguration = $direports.find(".tabConfiguration");
             $tabViewReport = $direports.find(".tabViewReport");
             $viewReport = $direports.find(".viewReport");
-            $runReportSpinner = $direports.find(".runReportSpinner");
-            $runReportTabSpinner = $direports.find(".runReportTabSpinner");
-            $spinnertext = $runReportSpinner.find(".spinnertext");
+            $rightPanel = $direports.find(".rightPanel");
+            $spinnertext = $rightPanel.find(".spinnertext");
             $pointName1 = $direports.find(".pointName1");
             $pointName2 = $direports.find(".pointName2");
             $pointName3 = $direports.find(".pointName3");
@@ -1318,95 +1365,99 @@ var reportsViewModel = function () {
                 rawValue = dataField.Value;
 
             dataField.rawValue = rawValue;
-            switch (columnConfig.valueType) {
-                case "MinSec":
-                    htmlString = '<div class="durationCtrl durationDisplay"><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
-                    $customField = $(htmlString);
-                    $customField.find(".min").html(~~((rawValue % 3600) / 60));
-                    $customField.find(".sec").html(rawValue % 60);
-                    dataField.Value = $customField.html();
-                    break;
-                case "HourMin":
-                    htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span></div>';
-                    $customField = $(htmlString);
-                    $customField.find(".hr").html(~~(rawValue / 3600));
-                    $customField.find(".min").html(~~((rawValue % 3600) / 60));
-                    dataField.Value = $customField.html();
-                    break;
-                case "HourMinSec":
-                    htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
-                    $customField = $(htmlString);
-                    $customField.find(".hr").html(~~(rawValue / 3600));
-                    $customField.find(".min").html(~~((rawValue % 3600) / 60));
-                    $customField.find(".sec").html(rawValue % 60);
-                    dataField.Value = $customField.html();
-                    break;
-                case "Float":
-                case "Integer":
-                case "Unsigned":
-                    if ($.isNumeric(rawValue)) {
-                        dataField.Value = toFixedComma(rawValue, columnConfig.precision);
-                    } else {
-                        dataField.Value = rawValue;
-                    }
-                    break;
-                case "String":
-                    if ($.isNumeric(rawValue)) {
-                        dataField.Value = toFixedComma(rawValue, columnConfig.precision);
-                    } else {
-                        dataField.Value = rawValue;
-                    }
-                    break;
-                case "Bool":
-                    temp = dataField.Value.toString().toLowerCase();
-                    dataField.Value = temp[0].toUpperCase() + temp.substring(1);
-                    break;
-                case "BitString":
-                    htmlString = buildBitStringHtml(columnConfig, rawValue, false);
-                    $customField = $(htmlString);
-                    dataField.Value = $customField.html();
-                    break;
-                case "Enum":
-                case "undecided":
-                case "null":
-                case "None":
-                    if ($.isNumeric(rawValue)) {
-                        dataField.Value = toFixedComma(rawValue, columnConfig.precision);
-                    } else {
-                        dataField.Value = rawValue;
-                    }
-                    break;
-                case "DateTime":
-                case "Timet":
-                    if ($.isNumeric(rawValue) && rawValue > 0) {
-                        dataField.Value = moment.unix(rawValue).format("MM/DD/YY HH:mm");
-                    } else {
-                        dataField.Value = rawValue;
-                    }
-                    break;
-                case "UniquePID":
-                    if (dataField.PointInst !== undefined) {
-                        if (dataField.PointInst > 0) {
-                            dataField.Value = dataField.PointName;
-                            dataField.rawValue = dataField.PointName;
+            if (!!columnConfig) {
+                switch (columnConfig.valueType) {
+                    case "MinSec":
+                        htmlString = '<div class="durationCtrl durationDisplay"><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
+                        $customField = $(htmlString);
+                        $customField.find(".min").html(~~((rawValue % 3600) / 60));
+                        $customField.find(".sec").html(rawValue % 60);
+                        dataField.Value = $customField.html();
+                        break;
+                    case "HourMin":
+                        htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span></div>';
+                        $customField = $(htmlString);
+                        $customField.find(".hr").html(~~(rawValue / 3600));
+                        $customField.find(".min").html(~~((rawValue % 3600) / 60));
+                        dataField.Value = $customField.html();
+                        break;
+                    case "HourMinSec":
+                        htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
+                        $customField = $(htmlString);
+                        $customField.find(".hr").html(~~(rawValue / 3600));
+                        $customField.find(".min").html(~~((rawValue % 3600) / 60));
+                        $customField.find(".sec").html(rawValue % 60);
+                        dataField.Value = $customField.html();
+                        break;
+                    case "Float":
+                    case "Integer":
+                    case "Unsigned":
+                        if ($.isNumeric(rawValue)) {
+                            dataField.Value = toFixedComma(rawValue, columnConfig.precision);
                         } else {
-                            dataField.Value = "";
-                            dataField.rawValue = "";
+                            dataField.Value = rawValue;
                         }
-                    } else {
-                        //console.log("dataField.PointInst is UNDEFINED");
-                    }
-                    break;
-                default:
-                    dataField.Value = rawValue;
-                    break;
-            }
-
-            if (columnConfig.valueOptions !== undefined) {
-                keyBasedValue = getKeyBasedOnValue(columnConfig.valueOptions, rawValue);
-                if (!!keyBasedValue) {
-                    dataField.Value = keyBasedValue;
+                        break;
+                    case "String":
+                        if ($.isNumeric(rawValue)) {
+                            dataField.Value = toFixedComma(rawValue, columnConfig.precision);
+                        } else {
+                            dataField.Value = rawValue;
+                        }
+                        break;
+                    case "Bool":
+                        temp = dataField.Value.toString().toLowerCase();
+                        dataField.Value = temp[0].toUpperCase() + temp.substring(1);
+                        break;
+                    case "BitString":
+                        htmlString = buildBitStringHtml(columnConfig, rawValue, false);
+                        $customField = $(htmlString);
+                        dataField.Value = $customField.html();
+                        break;
+                    case "Enum":
+                    case "undecided":
+                    case "null":
+                    case "None":
+                        if ($.isNumeric(rawValue)) {
+                            dataField.Value = toFixedComma(rawValue, columnConfig.precision);
+                        } else {
+                            dataField.Value = rawValue;
+                        }
+                        break;
+                    case "DateTime":
+                    case "Timet":
+                        if ($.isNumeric(rawValue) && rawValue > 0) {
+                            dataField.Value = moment.unix(rawValue).format("MM/DD/YY HH:mm");
+                        } else {
+                            dataField.Value = rawValue;
+                        }
+                        break;
+                    case "UniquePID":
+                        if (dataField.PointInst !== undefined) {
+                            if (dataField.PointInst > 0) {
+                                dataField.Value = dataField.PointName;
+                                dataField.rawValue = dataField.PointName;
+                            } else {
+                                dataField.Value = "";
+                                dataField.rawValue = "";
+                            }
+                        } else {
+                            //console.log("dataField.PointInst is UNDEFINED");
+                        }
+                        break;
+                    default:
+                        dataField.Value = rawValue;
+                        break;
                 }
+
+                if (columnConfig.valueOptions !== undefined) {
+                    keyBasedValue = getKeyBasedOnValue(columnConfig.valueOptions, rawValue);
+                    if (!!keyBasedValue) {
+                        dataField.Value = keyBasedValue;
+                    }
+                }
+            } else {
+                console.log("formatDataField()  columnConfig is undefined");
             }
             return dataField;
         },
@@ -1416,32 +1467,35 @@ var reportsViewModel = function () {
                 pivotedData = [],
                 tempPivot,
                 lenHistoryData = historyData.length,
+                now = moment().unix(),
                 i,
                 j,
                 historyResults = [];
 
             for (i = 0; i < lenHistoryData; i++) {
-                historyResults = historyData[i].HistoryResults;
-                tempPivot = {};
-                tempPivot["Date"] = {};
-                tempPivot["Date"].Value = moment.unix(historyData[i].timestamp).format("MM/DD/YY HH:mm");
-                tempPivot["Date"].rawValue = historyData[i].timestamp;
-                for (j = 0; j < historyResults.length; j++) {
-                    columnName = historyResults[j].Name;
-                    tempPivot[columnName] = {};
-                    if (historyResults[j].Value === undefined) {
-                        tempPivot[columnName].Value = "";
-                        tempPivot[columnName].rawValue = "";
-                    } else {
-                        columnConfig = getColumnConfigByColName(columnName);
-                        if (columnConfig === undefined) {
-                            console.log("ERROR: columnConfig is undefined for columnName = " + columnName);
+                if (now > historyData[i].timestamp) { // skip any results greater than "now" (those results are zero placeholders)
+                    historyResults = historyData[i].HistoryResults;
+                    tempPivot = {};
+                    tempPivot["Date"] = {};
+                    tempPivot["Date"].Value = moment.unix(historyData[i].timestamp).format("MM/DD/YY HH:mm");
+                    tempPivot["Date"].rawValue = historyData[i].timestamp;
+                    for (j = 0; j < historyResults.length; j++) {
+                        columnName = historyResults[j].Name;
+                        tempPivot[columnName] = {};
+                        if (historyResults[j].Value === undefined) {
+                            tempPivot[columnName].Value = "";
+                            tempPivot[columnName].rawValue = "";
+                        } else {
+                            columnConfig = getColumnConfigByColName(columnName);
+                            if (columnConfig === undefined) {
+                                console.log("ERROR: columnConfig is undefined for columnName = " + columnName);
+                            }
+                            //console.log("[" + i + "] ==>  historyResults[" + j + "].Value = " + historyResults[j].Value);
+                            tempPivot[columnName] = formatDataField(historyResults[j], columnConfig);
                         }
-                        //console.log("[" + i + "] ==>  historyResults[" + j + "].Value = " + historyResults[j].Value);
-                        tempPivot[columnName] = formatDataField(historyResults[j], columnConfig);
                     }
+                    pivotedData.push(tempPivot);
                 }
-                pivotedData.push(tempPivot);
             }
 
             return pivotedData;
@@ -1454,35 +1508,38 @@ var reportsViewModel = function () {
                 rawValue,
                 operator,
                 numberOfColumnsFound = totalizerData.length,
+                now = moment().unix(),
                 i,
                 j;
 
             if (numberOfColumnsFound > 0 && totalizerData[0].totals) {
                 for (j = 0; j < totalizerData[0].totals.length; j++) {
-                    tempPivot = {};
-                    tempPivot["Date"] = {};
-                    tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YY HH:mm");
-                    tempPivot["Date"].rawValue = moment.unix(totalizerData[0].totals[j].range.start);
-                    for (i = 0; i < numberOfColumnsFound; i++) {
-                        operator = totalizerData[i].op.toLowerCase();
-                        columnConfig = getColumnConfigByOperatorAndUPI(operator, totalizerData[i].upi);
-                        columnName = columnConfig.colName + " - " + operator;
-                        rawValue = totalizerData[i].totals[j].total;
-                        tempPivot[columnName] = {};
-                        //console.log("totalizerData[" + i + "].totals[" + j + "].total = " + totalizerData[i].totals[j]);
-                        if (totalizerData[i].totals[j].total === undefined) {
-                            tempPivot[columnName].Value = "";
-                            tempPivot[columnName].rawValue = "";
-                        } else {
-                            if (operator === "runtime") {
-                                tempPivot[columnName].Value = (rawValue === 0 ? 0 : getDurationText(rawValue, columnConfig.precision, totalizerDurationInHours));
+                    if (now > totalizerData[0].totals[j].range.start) { // skip any results greater than "now" (those results are zero placeholders)
+                        tempPivot = {};
+                        tempPivot["Date"] = {};
+                        tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YY HH:mm");
+                        tempPivot["Date"].rawValue = totalizerData[0].totals[j].range.start;
+                        for (i = 0; i < numberOfColumnsFound; i++) {
+                            operator = totalizerData[i].op.toLowerCase();
+                            columnConfig = getColumnConfigByOperatorAndUPI(operator, totalizerData[i].upi);
+                            columnName = columnConfig.colName + " - " + operator;
+                            rawValue = totalizerData[i].totals[j].total;
+                            tempPivot[columnName] = {};
+                            //console.log("totalizerData[" + i + "].totals[" + j + "].total = " + totalizerData[i].totals[j]);
+                            if (totalizerData[i].totals[j].total === undefined) {
+                                tempPivot[columnName].Value = "";
+                                tempPivot[columnName].rawValue = "";
                             } else {
-                                tempPivot[columnName].Value = toFixedComma(rawValue, columnConfig.precision);
+                                if (operator === "runtime") {
+                                    tempPivot[columnName].Value = (rawValue === 0 ? 0 : getDurationText(rawValue, columnConfig.precision, totalizerDurationInHours));
+                                } else {
+                                    tempPivot[columnName].Value = toFixedComma(rawValue, columnConfig.precision);
+                                }
+                                tempPivot[columnName].rawValue = parseFloat(rawValue);
                             }
-                            tempPivot[columnName].rawValue = parseFloat(rawValue);
                         }
+                        pivotedData.push(tempPivot);
                     }
-                    pivotedData.push(tempPivot);
                 }
             }
 
@@ -1556,20 +1613,27 @@ var reportsViewModel = function () {
             }, resizeTimer);
         },
         saveReportConfig = function () {
+            mergePersistedPointRefArrary();
             point._pStatus = 0;  // activate report
             point["Report Config"].columns = validateColumns(true);
             point["Report Config"].filters = validateFilters(true);
             pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
             point["Report Config"].pointFilter = pointFilter;
             point["Report Config"].selectedPageLength = self.selectedPageLength();
-            point["Point Refs"] = buildPointRefsArray();
             switch (self.reportType) {
                 case "History":
                 case "Totalizer":
-                    point["Report Config"].interval.text = self.interval();
-                    point["Report Config"].interval.value = self.intervalValue();
-                    point["Report Config"].duration.useDuration = self.useDuration();
-                    point["Report Config"].duration.value = self.selectedDuration();
+                    point["Report Config"].interval = {
+                        text: self.interval(),
+                        value: self.intervalValue()
+                    };
+                    point["Report Config"].duration = {
+                        startDate: self.selectedDuration().startDate.unix(),
+                        endDate: self.selectedDuration().endDate.unix(),
+                        offSet: self.durationTimeOffSet(),
+                        duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
+                        selectedRange: self.selectedDuration().selectedRange
+                    };
                     break;
                 case "Property":
                     break;
@@ -1669,7 +1733,7 @@ var reportsViewModel = function () {
             });
 
             $direports.find(".runReportButton").on('click', function () {
-                $(this).focus()
+                $(this).focus();
                 self.requestReportData();
             });
 
@@ -1719,6 +1783,20 @@ var reportsViewModel = function () {
 
             $viewReport.on('length.dt', function (e, settings, len) {
                 self.selectedPageLength(len);
+            });
+
+            $viewReport.on('draw.dt', function (e, settings, len) {
+                var numberOfPages = $viewReport.DataTable().page.info().pages,
+                    $tablePagination,
+                    $pagination,
+                    $paginate_buttons;
+                if (numberOfPages === 1) {
+                    $tablePagination = $tabViewReport.find(".dataTables_paginate");
+                    $pagination = $tablePagination.find("ul.pagination");
+                    $paginate_buttons = $pagination.find(".paginate_button");
+                    $paginate_buttons = $paginate_buttons.not("li.active");
+                    $paginate_buttons.hide();
+                }
             });
 
             $filtersGrid.sortable({
@@ -1810,50 +1888,6 @@ var reportsViewModel = function () {
                 }
             ];
 
-            durations = [
-                {
-                    value: "None",
-                    unit: 0,
-                    unitType: ""
-                }, {
-                    value: "Last 2 hours",
-                    unit: 2,
-                    unitType: "hour"
-                }, {
-                    value: "Last 12 hours",
-                    unit: 12,
-                    unitType: "hour"
-                }, {
-                    value: "Last 24 hours",
-                    unit: 24,
-                    unitType: "hour"
-                }, {
-                    value: "Last 48 hours",
-                    unit: 48,
-                    unitType: "hour"
-                }, {
-                    value: "Last 72 hours",
-                    unit: 72,
-                    unitType: "hour"
-                }, {
-                    value: "Last 7 days",
-                    unit: 7,
-                    unitType: "day"
-                }, {
-                    value: "Last month",
-                    unit: 1,
-                    unitType: "month"
-                }, {
-                    value: "Last 6 months",
-                    unit: 6,
-                    unitType: "month"
-                }, {
-                    value: "Last year",
-                    unit: 1,
-                    unitType: "year"
-                }
-            ];
-
             entriesPerPage = [
                 {
                     value: "10",
@@ -1879,14 +1913,10 @@ var reportsViewModel = function () {
                 }
             ];
 
-            self.useDuration.subscribe(useDurationChanged, this);
-
             self.listOfIntervals(intervals);
             self.listOfCalculations(calculations);
-            self.listOfDurations(durations);
             self.listOfEntriesPerPage(entriesPerPage);
             checkForColumnCalculations();
-            useDurationChanged();
         },
         getVariance = function (columnData) {
             var i,
@@ -2141,11 +2171,6 @@ var reportsViewModel = function () {
                 $viewReport.DataTable({
                     api: true,
                     dom: 'Blfrtip',
-                    //fixedHeader: {
-                    //    header: true,
-                    //    footer: true
-                    //},
-                    //footer: true,
                     buttons: [
                         {
                             extend: 'collection',
@@ -2178,7 +2203,7 @@ var reportsViewModel = function () {
                                 {
                                     extend: 'pdfHtml5',
                                     text: '<i class="fa fa-file-pdf-o"></i> PDF',
-                                    //footer: true,
+                                    footer: true,
                                     key: {
                                         altKey: true,
                                         key: '4'
@@ -2195,6 +2220,9 @@ var reportsViewModel = function () {
                             key: {
                                 altKey: true,
                                 key: '5'
+                            },
+                            customize: function (win) {
+                                $(win.document.body).find("h1").css('font-size', '16pt').css("text-align", "center");
                             }
                         }
                     ],
@@ -2254,7 +2282,7 @@ var reportsViewModel = function () {
                             columnConfig = reportColumns[columnIndex];
                             currentPageData = api.column(columnIndex, { page: 'current'}).data();
                             allData = api.column(columnIndex).data();
-                            sameDataSet = (currentPageData.length === allData.length),
+                            sameDataSet = (currentPageData.length === allData.length);
                             calc = getCalcForColumn(currentPageData, allData, columnConfig);
                             $tdFooter = $(tfoot).find("td[colindex='" + columnIndex + "']");
                             $tdFooter.attr("title", "Page Calc (Table Calc)");
@@ -2426,13 +2454,19 @@ var reportsViewModel = function () {
 
     self.useDuration = ko.observable(false);
 
-    self.selectedDuration = ko.observable("");
+    self.selectedDuration = ko.observable({
+        startDate: moment().subtract(1, "day"),
+        endDate: moment(),
+        offSet: "00:00",
+        duration: 0,
+        selectedRange: ""
+    });
+
+    self.durationTimeOffSet = ko.observable("00:00");
 
     self.listOfIntervals = ko.observableArray([]);
 
     self.listOfCalculations = ko.observableArray([]);
-
-    self.listOfDurations = ko.observableArray([]);
 
     self.listOfEntriesPerPage = ko.observableArray([]);
 
@@ -2508,10 +2542,16 @@ var reportsViewModel = function () {
                 switch (self.reportType) {
                     case "History":
                     case "Totalizer":
+                        if (!!point["Report Config"].duration.duration) {
+                            self.selectedDuration().startDate = moment.unix(point["Report Config"].duration.startDate);
+                            self.selectedDuration().endDate = moment.unix(point["Report Config"].duration.endDate);
+                            self.selectedDuration().offSet = point["Report Config"].duration.offSet;
+                            self.durationTimeOffSet(point["Report Config"].duration.offSet);
+                            self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
+                            self.selectedDuration().selectedRange =point["Report Config"].duration.selectedRange;
+                        }
                         self.interval(point["Report Config"].interval.text);
                         self.intervalValue(point["Report Config"].interval.value);
-                        self.useDuration(point["Report Config"].duration.useDuration);
-                        self.selectedDuration(point["Report Config"].duration.value);
                         break;
                     case "Property":
                         filterOpenPointSelector($filterByPoint);
@@ -2540,34 +2580,6 @@ var reportsViewModel = function () {
                             valueList: [],
                             upi: 0
                         });
-                        self.listOfFilters.push({
-                            filterName: "Start_Date",
-                            condition: "$and",
-                            childLogic: false,
-                            operator: "EqualTo",
-                            valueType: "DateTime",
-                            valueList: [],
-                            value: moment().subtract(1, 'days').unix(),
-                            date: moment().subtract(1, 'days').unix(),
-                            time: "00:00"
-                        });
-                        self.listOfFilters.push({
-                            filterName: "End_Date",
-                            condition: "$and",
-                            childLogic: false,
-                            operator: "EqualTo",
-                            valueType: "DateTime",
-                            valueList: [],
-                            value: moment().unix(),
-                            date: moment().unix(),
-                            time: "00:00"
-                        });
-                        point["Report Config"].interval = {};
-                        point["Report Config"].interval.text = self.interval();
-                        point["Report Config"].interval.value = self.intervalValue();
-                        point["Report Config"].duration = {};
-                        point["Report Config"].duration.useDuration = self.useDuration();
-                        point["Report Config"].duration.value = self.selectedDuration();
                         break;
                     case "Property":
                         filterOpenPointSelector($filterByPoint);
@@ -2589,7 +2601,7 @@ var reportsViewModel = function () {
                 originalPoint = JSON.parse(JSON.stringify(point)); // reset original point ref since we've added attribs
             }
 
-            $direports.find(".container-fluid").show();
+            $direports.find("#wrapper").show();
             tabSwitch(1);
 
             updateListOfFilters(self.listOfFilters());
@@ -2602,17 +2614,9 @@ var reportsViewModel = function () {
             self.columnPropertiesSearchFilter(""); // computed props jolt
 
             if (!!externalConfig) {
-                if (externalConfig.startDate && externalConfig.endDate) {
-                    self.useDuration(false);
-                    self.setFiltersStartEndDates(externalConfig.startDate, externalConfig.endDate);
-                } else if (externalConfig.duration) {
-                    self.useDuration(true);
-                    self.selectedDuration(externalConfig.duration);
-                    var duration = self.listOfDurations().filter(function (item) {
-                        return item.value === self.selectedDuration();
-                    });
-                    self.setDatesBasedOnDuration(duration[0]);
-                }
+                self.selectedDuration(externalConfig);
+                self.durationTimeOffSet(externalConfig.offSet);
+                self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
                 self.requestReportData();
             }
         }
@@ -2819,8 +2823,8 @@ var reportsViewModel = function () {
         if (self.currentTab() !== 2) {
             requestObj = buildReportDataRequest();
             if (requestObj) {
+                tabSwitch(2);
                 if (self.reportResultViewed()) {
-                    tabSwitch(2);
                     $popAction.hide();
                     self.activeDataRequest(true);
                     self.reportResultViewed(false);
@@ -2941,10 +2945,6 @@ var reportsViewModel = function () {
         self.interval(selectedInterval);
     };
 
-    self.selectDuration = function (durationIndex) {
-        self.selectedDuration(self.listOfDurations()[durationIndex].value);
-    };
-
     self.setFilterConfig = function (indexOfCondition, selectedItem, field) {
         var tempArray = self.listOfFilters(),
             filter = tempArray[indexOfCondition];
@@ -2989,6 +2989,37 @@ var reportsViewModel = function () {
             window.workspaceManager.openWindowPositioned(window.location.href, $reporttitleInput.text(), 'report', '', windowUpi, options);
         }
     };
+
+    self.listOfIntervalsComputed = ko.computed(function () {
+        var result,
+            resetInterval = true,
+            intervalDuration,
+            currentDuration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
+
+        result = self.listOfIntervals().filter(function (interval) {
+            return (moment.duration(1, interval.text).asMilliseconds() < currentDuration);
+        });
+
+        if (result.length > 0) {
+            result.forEach(function (interval) {
+                if (self.interval().toLowerCase() === interval.text.toLowerCase()) {
+                    resetInterval = false;
+                }
+            });
+
+            if (resetInterval) {
+                self.interval(result[result.length - 1].text);
+                self.intervalValue(1);
+            } else {
+                intervalDuration = moment.duration(1, self.interval()).asMilliseconds();
+                if ((intervalDuration * self.intervalValue()) > currentDuration) {
+                    self.intervalValue(1);
+                }
+            }
+        }
+
+        return result;
+    }, self);
 
     self.filterFilteredProps = ko.computed(function () {
         var fFilter = self.filterPropertiesSearchFilter().toLowerCase();
