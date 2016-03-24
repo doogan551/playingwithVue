@@ -1,5 +1,6 @@
 var winston = require('winston');
 var moment = require('moment');
+var dailyFile = require('winston-daily-rotate-file');
 
 winston.emitErrs = true;
 
@@ -9,13 +10,14 @@ var logger = function(moduleName) {
   label = parts[parts.length - 2] + '/' + parts.pop();
   return new winston.Logger({
     transports: [
-      new winston.transports.File({
+      new dailyFile({
+        prepend: true,
         level: 'info',
         filename: './logs/all-logs.json',
         handleExceptions: false,
         json: true,
-        maxsize: 5242880, //5MB
-        maxFiles: 5,
+        maxsize: 1242880, //~1MB
+        maxFiles: 10,
         label: label,
         colorize: false,
         timestamp: function() {
@@ -34,13 +36,14 @@ var logger = function(moduleName) {
       })
     ],
     exceptionHandlers: [
-      new winston.transports.File({
+      new dailyFile({
+        prepend: true,
         filename: './logs/exceptions.json',
         handleExceptions: true,
         humanReadableUnhandledException: true,
         json: true,
         maxsize: 5242880, //5MB
-        maxFiles: 5,
+        maxFiles: 10,
         label: label,
         colorize: false,
         timestamp: function() {

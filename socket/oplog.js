@@ -79,9 +79,6 @@ module.exports = function(_common) {
                             reqID: openAlarms[k].data.reqID
                         });
                     }
-                    if (doc.ns === 'infoscan.Alarms') {
-                        common.acknowledgePointAlarms(doc.o);
-                    }
 
                     // active
                     if (openAlarms[k].alarmView === "Active" && doc.ns === 'infoscan.ActiveAlarms') {
@@ -95,6 +92,7 @@ module.exports = function(_common) {
             }
 
             if (doc.ns === 'infoscan.Alarms') {
+                common.acknowledgePointAlarms(doc.o);
                 notifications.processIncomingAlarm(doc.o);
             }
 
