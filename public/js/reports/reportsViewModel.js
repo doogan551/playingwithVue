@@ -2713,12 +2713,20 @@ var reportsViewModel = function () {
             self.columnPropertiesSearchFilter(""); // computed props jolt
 
             if (!!externalConfig) {
-                self.selectedDuration(externalConfig.selectedDuration);
-                self.interval(externalConfig.interval.text);
-                self.intervalValue(externalConfig.interval.value);
-                self.durationStartTimeOffSet(self.selectedDuration().startTimeOffSet);
-                self.durationEndTimeOffSet(self.selectedDuration().endTimeOffSet);
-                self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
+                if (self.reportType === "History" || "Totalizer") {
+                    self.selectedDuration({
+                        startDate: externalConfig.startDate,
+                        startTimeOffSet: externalConfig.startTimeOffSet,
+                        endDate: externalConfig.endDate,
+                        endTimeOffSet: externalConfig.endTimeOffSet,
+                        selectedRange: externalConfig.selectedRange
+                    });
+                    self.interval(externalConfig.interval.text);
+                    self.intervalValue(externalConfig.interval.value);
+                    self.durationStartTimeOffSet(self.selectedDuration().startTimeOffSet);
+                    self.durationEndTimeOffSet(self.selectedDuration().endTimeOffSet);
+                    self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
+                }
                 self.requestReportData();
             }
         }
@@ -3095,29 +3103,33 @@ var reportsViewModel = function () {
     };
 
     self.listOfIntervalsComputed = ko.computed(function () {
-        var result,
+        var result = [],
             resetInterval = true,
             intervalDuration,
+            currentDuration;
+
+        if (!!self.selectedDuration() && self.selectedDuration().endDate) {
             currentDuration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
 
-        result = self.listOfIntervals().filter(function (interval) {
-            return (moment.duration(1, interval.text).asMilliseconds() < currentDuration);
-        });
-
-        if (result.length > 0) {
-            result.forEach(function (interval) {
-                if (self.interval().toLowerCase() === interval.text.toLowerCase()) {
-                    resetInterval = false;
-                }
+            result = self.listOfIntervals().filter(function (interval) {
+                return (moment.duration(1, interval.text).asMilliseconds() < currentDuration);
             });
 
-            if (resetInterval) {
-                self.interval(result[result.length - 1].text);
-                self.intervalValue(1);
-            } else {
-                intervalDuration = moment.duration(1, self.interval()).asMilliseconds();
-                if ((intervalDuration * self.intervalValue()) > currentDuration) {
+            if (result.length > 0) {
+                result.forEach(function (interval) {
+                    if (self.interval().toLowerCase() === interval.text.toLowerCase()) {
+                        resetInterval = false;
+                    }
+                });
+
+                if (resetInterval) {
+                    self.interval(result[result.length - 1].text);
                     self.intervalValue(1);
+                } else {
+                    intervalDuration = moment.duration(1, self.interval()).asMilliseconds();
+                    if ((intervalDuration * self.intervalValue()) > currentDuration) {
+                        self.intervalValue(1);
+                    }
                 }
             }
         }
