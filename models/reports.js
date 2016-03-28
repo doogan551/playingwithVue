@@ -359,11 +359,12 @@ module.exports = Rpt = {
 
             criteria = {
                 query: searchCriteria,
-                collection: 'points',
+                collection: 'historydata',
                 sort: {
                     timestamp: -1
                 }
             };
+
             Utility.get(criteria, function(err, histPoints) {
                 if (err) {
                     return cb(err, null);
@@ -376,6 +377,7 @@ module.exports = Rpt = {
                     },
                     timestamps: timestamps
                 }, function(err, results) {
+                    console.log(results, histPoints);
                     for (var h = 0; h < histPoints.length; h++) {
                         var hadTS = false;
                         for (var r = 0; r < results.length; r++) {
@@ -390,7 +392,7 @@ module.exports = Rpt = {
                         }
                     }
                     histPoints = results;
-
+                    console.log(histPoints);
                     async.eachSeries(timestamps.reverse(), function(ts, callback1) {
                             //convert id to ts and upi
                             returnObj = {
@@ -444,7 +446,6 @@ module.exports = Rpt = {
                                                     end: ts
                                                 }
                                             }, function(err, results) {
-                                                console.log(criteria, nextOldest);
                                                 if (!!results.length) {
                                                     if ((!!nextOldest.length && nextOldest[0].timestamp < results[0].timestamp) || !nextOldest.length) {
                                                         nextOldest = results;
@@ -1072,7 +1073,7 @@ module.exports = Rpt = {
             var previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
 
             intervals.forEach(function(interval, index) {
-                //formatRange(interval);
+                // console.log(interval);
                 var runtime = 0;
                 var now = moment().unix();
                 var intervalLonger = now < interval.end;
@@ -1082,6 +1083,7 @@ module.exports = Rpt = {
                 var matches = history.filter(function(data) {
                     return data.timestamp > start && data.timestamp <= end;
                 });
+
                 if (!!matches.length) {
                     for (var i = 0; i < matches.length; i++) {
                         var currentValue = matches[i].Value;
@@ -1089,11 +1091,9 @@ module.exports = Rpt = {
                             runtime += matches[i].timestamp - start;
                         } else if (i === (matches.length - 1)) {
                             if (previousValue === 0 && currentValue !== 0) {
-                                runtime = end - matches[i].timestamp;
-                            } else if (previousValue !== 0 && currentValue === 0) {
-                                runtime = matches[i].timestamp - start;
+                                runtime += end - matches[i].timestamp;
                             } else if (previousValue !== 0 && currentValue !== 0) {
-                                runtime = end - start;
+                                runtime += end - start;
                             }
                         }
                         if (previousValue === 0 && currentValue !== 0) {
@@ -1111,7 +1111,6 @@ module.exports = Rpt = {
                     total: runtime,
                     range: interval
                 };
-
                 totals.push(result);
             });
 
@@ -1121,9 +1120,11 @@ module.exports = Rpt = {
         var findTotal = function(initial, history) {
             var totals = [];
             var value = 0;
+            var startValue = 0;
             if (!!history.length) {
                 if (initial.hasOwnProperty('Value')) {
-                    value = (initial.Value > history[0].Value) ? 0 : history[0].Value - initial.Value;
+                    value = initial.Value;
+                    startValue = (initial.Value > history[0].Value) ? 0 : history[0].Value - initial.Value;
                 } else {
                     value = history[0].Value;
                 }
@@ -1132,13 +1133,14 @@ module.exports = Rpt = {
             }
 
             intervals.forEach(function(interval, index) {
-                var total = 0;
+                var total = startValue;
+                startValue = 0;
                 var start = interval.start;
                 var end = (moment().unix() < interval.end) ? moment().unix() : interval.end;
+
                 var matches = history.filter(function(data) {
                     return data.timestamp > start && data.timestamp <= end;
                 });
-
                 for (var i = 0; i < matches.length; i++) {
                     if (matches[i].Value >= value) {
                         total += matches[i].Value - value;
@@ -1148,6 +1150,7 @@ module.exports = Rpt = {
                         value = matches[i].Value;
                     }
                 }
+
                 var result = {
                     total: total,
                     range: {

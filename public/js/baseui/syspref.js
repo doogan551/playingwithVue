@@ -2055,7 +2055,16 @@ var notificationsViewModel = function() {
                     alerts: data.alerts,
                     notificationsEnabled: data.notificationsEnabled,
                     notificationOptions: data.notificationOptions || self.getTemplate('notificationOptions')
+                },
+                processAlert = function (alert, idx) {
+                    if (alert.delay === undefined) {
+                        alert.delay = idx === 0 ? 0 : 1;
+                    }
                 };
+
+            for (var alertType in data.alerts) {
+                data.alerts[alertType].forEach(processAlert);
+            }
 
             return ret;
         },
@@ -2514,6 +2523,7 @@ var notificationsViewModel = function() {
     self.getContact = function (alert) {
         var contact,
             value = ko.toJS(alert).Value;
+
         self.forEachArray(self.bindings.currMember().contactInfo(), function (contactInfo) {
             if (contactInfo.Value() === value) {
                 contact = contactInfo;
@@ -2543,12 +2553,14 @@ var notificationsViewModel = function() {
                     notificationOptions: user.notificationOptions,
                     notificationsEnabled: user.notificationsEnabled
                 }
+            },
+            processUser = function (alert, idx, list) {
+                list[idx] = ko.toJS(me.getContact(alert));
+                list[idx].delay = alert.delay;
             };
 
         for (var alertType in user.alerts) {
-            user.alerts[alertType].forEach(function (alert, idx, list) {
-                list[idx] = ko.toJS(me.getContact(alert));
-            });
+            user.alerts[alertType].forEach(processUser);
         }
 
         $.ajax({
@@ -2833,12 +2845,16 @@ var notificationsViewModel = function() {
         },
 
         deleteAlert: function (alertType, idx) {
-            var _idx = idx();
+            var _idx = idx(),
+                row;
 
             alertType.alerts.splice(_idx, 1);
 
             if (_idx === 0) {//deleted first one
-                alertType.alerts()[0].delay(0);
+                row = alertType.alerts()[0];
+                if (row) {
+                    row.delay(0);
+                }
             }
         },
 
