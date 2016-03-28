@@ -1073,7 +1073,7 @@ module.exports = Rpt = {
             var previousValue = (initial.hasOwnProperty('Value')) ? initial.Value : 0;
 
             intervals.forEach(function(interval, index) {
-                //formatRange(interval);
+                // console.log(interval);
                 var runtime = 0;
                 var now = moment().unix();
                 var intervalLonger = now < interval.end;
@@ -1083,6 +1083,7 @@ module.exports = Rpt = {
                 var matches = history.filter(function(data) {
                     return data.timestamp > start && data.timestamp <= end;
                 });
+
                 if (!!matches.length) {
                     for (var i = 0; i < matches.length; i++) {
                         var currentValue = matches[i].Value;
@@ -1090,11 +1091,9 @@ module.exports = Rpt = {
                             runtime += matches[i].timestamp - start;
                         } else if (i === (matches.length - 1)) {
                             if (previousValue === 0 && currentValue !== 0) {
-                                runtime = end - matches[i].timestamp;
-                            } else if (previousValue !== 0 && currentValue === 0) {
-                                runtime = matches[i].timestamp - start;
+                                runtime += end - matches[i].timestamp;
                             } else if (previousValue !== 0 && currentValue !== 0) {
-                                runtime = end - start;
+                                runtime += end - start;
                             }
                         }
                         if (previousValue === 0 && currentValue !== 0) {
@@ -1112,7 +1111,7 @@ module.exports = Rpt = {
                     total: runtime,
                     range: interval
                 };
-
+                console.log(result);
                 totals.push(result);
             });
 
