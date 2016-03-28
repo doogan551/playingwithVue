@@ -238,7 +238,7 @@ block panels
             //- option(value='16') Data Report
             option Command Point
 
-        div(ng-show="editItem._actionButton.isReport")
+        div(ng-show="editItem._actionButton.isReport && !editItem._actionButton.isHistory")
             a(ng-click="editReportRange()", data-mini='true', data-role='button', data-inline='true', data-theme='c') Choose Report Range
 
         div(ng-show="!editItem._actionButton.isReport")

@@ -146,6 +146,8 @@ var ActionButton = function (config) {
 
                 if (_pointData['Point Type'].Value.match('Report')) {
                     external.isReport = true;
+                    external.reportType = _pointData['Report Type'].Value;
+                    external.isProperty = external.reportType === 'Property';
                 }
 
                 if (displays.editMode) {
@@ -190,28 +192,6 @@ var ActionButton = function (config) {
             displays.$scope.currActionButton = null;
         },
 
-        sendCommand = function () {
-            if (!noPointFound) {
-                var pointType = _pointData['Point Type'].Value,
-                    reportType;
-
-                if (pointType.match('Analog')) {
-                    $('#actionButtonInput').popup('open');
-                    $('#actionButtonValue').attr({
-                        min: external.min,
-                        max: external.max
-                    });
-                } else if (pointType === 'Report') {
-                    reportType = _pointData['Report Type'].Value;
-                    displays.setReportConfig(config.reportConfig);
-                    // displays.$scope.$apply();
-                    $('#reportChooseRange').modal('show');
-                    // $('#actionButtonReportInput').popup('open');
-                } else {
-                    _sendCommand();
-                }
-            }
-        },
         sendValue = function (value) {
             external.ActionParm = value;
             _sendCommand();
@@ -245,16 +225,21 @@ var ActionButton = function (config) {
         },
         openReport = function (cfg) {//type, duration, start, end) {
             var endPoint,
-                params = getExternalConfig(cfg);
+                params = cfg && getExternalConfig(cfg),
+                addtl = external.isProperty ? '' : '?pause';
 
             $('#reportChooseRange').modal('hide');
 
             endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', external.ActionPoint);
-            displays.openWindow(endPoint.review.url + '?pause', 'Report', 'Report', '', external.ActionPoint, {
+            displays.openWindow(endPoint.review.url + addtl, 'Report', 'Report', '', external.ActionPoint, {
                 height: 720,
                 width: 1280,
                 callback: function () {
-                    this.applyBindings(params);
+                    if (!external.isProperty) {
+                        this.applyBindings(params);
+                    // } else {
+                    //     this.applyBindings();
+                    }
                 }
             });
 
@@ -262,6 +247,30 @@ var ActionButton = function (config) {
         updateReportConfig = function (rConfig) {
             config.reportConfig = $.extend(true, {}, rConfig);
             $('#reportChooseRange').modal('hide');
+        },
+        sendCommand = function () {
+            if (!noPointFound) {
+                var pointType = _pointData['Point Type'].Value;
+
+                if (pointType.match('Analog')) {
+                    $('#actionButtonInput').popup('open');
+                    $('#actionButtonValue').attr({
+                        min: external.min,
+                        max: external.max
+                    });
+                } else if (pointType === 'Report') {
+                    displays.setReportConfig(config.reportConfig);
+                    // displays.$scope.$apply();
+                    if (!external.isProperty) {
+                        $('#reportChooseRange').modal('show');
+                    } else {
+                        openReport();
+                    }
+                    // $('#actionButtonReportInput').popup('open');
+                } else {
+                    _sendCommand();
+                }
+            }
         },
         setCommand = function (idx) {
             _code = codes[idx];
