@@ -105,7 +105,10 @@ var ActionButton = function (config) {
                 noPointFound = false;
                 external.ActionPoint = response._id;
                 config.ActionPoint = response._id;
+                // config.upi = response._id;
                 _validateOptions('upi');
+
+                displays.upiNames[response.upi] = response.Name;
 
                 _commandArguments.logData = {
                     user: displays.workspaceManager.user(),
@@ -139,6 +142,12 @@ var ActionButton = function (config) {
                 if (_pointData['Point Type'].Value.match('MultiState')) {
                     external.isMultistate = true;
                     external.options = transformOptions();
+                }
+
+                if (_pointData['Point Type'].Value.match('Report')) {
+                    external.isReport = true;
+                    external.reportType = _pointData['Report Type'].Value;
+                    external.isProperty = external.reportType === 'Property';
                 }
 
                 if (displays.editMode) {
@@ -183,10 +192,65 @@ var ActionButton = function (config) {
             displays.$scope.currActionButton = null;
         },
 
+        sendValue = function (value) {
+            external.ActionParm = value;
+            _sendCommand();
+        },
+        getExternalConfig = function (cfg) {
+            var ccfg = {
+                    intervalNum: 1,
+                    intervalType: 'Minute',
+                    timestamp: '08:00',
+                    durationInfo: {
+                        duration: 86399,
+                        selectedRange: 'Today',
+                        endDate: moment().endOf('d'),
+                        startDate: moment().startOf('d')
+                    }
+                },
+                externalReportConfig = {
+                    startDate: cfg.durationInfo.startDate,
+                    endDate: cfg.durationInfo.endDate,
+                    startTimeOffSet: cfg.starttimestamp,
+                    endTimeOffSet: cfg.endtimestamp,
+                    duration: cfg.durationInfo.duration,
+                    selectedRange: cfg.durationInfo.selectedRange,
+                    interval: {
+                        text: cfg.intervalType,
+                        value: cfg.intervalNum
+                    }
+                };
+
+            return externalReportConfig;
+        },
+        openReport = function (cfg) {//type, duration, start, end) {
+            var endPoint,
+                params = cfg && getExternalConfig(cfg),
+                addtl = external.isProperty ? '' : '?pause';
+
+            $('#reportChooseRange').modal('hide');
+
+            endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', external.ActionPoint);
+            displays.openWindow(endPoint.review.url + addtl, 'Report', 'Report', '', external.ActionPoint, {
+                height: 720,
+                width: 1280,
+                callback: function () {
+                    if (!external.isProperty) {
+                        this.applyBindings(params);
+                    // } else {
+                    //     this.applyBindings();
+                    }
+                }
+            });
+
+        },
+        updateReportConfig = function (rConfig) {
+            config.reportConfig = $.extend(true, {}, rConfig);
+            $('#reportChooseRange').modal('hide');
+        },
         sendCommand = function () {
             if (!noPointFound) {
-                var pointType = _pointData['Point Type'].Value,
-                    reportType;
+                var pointType = _pointData['Point Type'].Value;
 
                 if (pointType.match('Analog')) {
                     $('#actionButtonInput').popup('open');
@@ -195,39 +259,18 @@ var ActionButton = function (config) {
                         max: external.max
                     });
                 } else if (pointType === 'Report') {
-                    reportType = _pointData['Report Type'].Value;
-
-                    $('#actionButtonReportInput').popup('open');
+                    displays.setReportConfig(config.reportConfig);
+                    // displays.$scope.$apply();
+                    if (!external.isProperty) {
+                        $('#reportChooseRange').modal('show');
+                    } else {
+                        openReport();
+                    }
+                    // $('#actionButtonReportInput').popup('open');
                 } else {
                     _sendCommand();
                 }
             }
-        },
-        sendValue = function (value) {
-            external.ActionParm = value;
-            _sendCommand();
-        },
-        openReport = function (type, duration, start, end) {
-            var endPoint;
-
-            endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', external.ActionPoint);
-            displays.openWindow(endPoint.review.url + '?pause', 'Report', 'Report', '', external.ActionPoint, {
-                height: 720,
-                width: 1280,
-                callback: function () {
-                    var arg = {};
-
-                    if (type === 'predefined') {
-                        arg.duration = duration;
-                    } else {
-                        arg.startDate = Math.floor(start.getTime()/1000);
-                        arg.endDate = Math.floor(end.getTime()/1000);
-                    }
-
-                    this.applyBindings(arg);
-                }
-            });
-
         },
         setCommand = function (idx) {
             _code = codes[idx];
@@ -255,6 +298,13 @@ var ActionButton = function (config) {
             }
             _commandArguments.Priority = newCfg.ActionPriority;
             external.ActionPriority = displays.workspaceManager.systemEnums.controlpriorities[+config.ActionPriority || 0].value;
+
+            config.reportConfig = newCfg.reportConfig || config.reportConfig || $.extend(true, {}, displays.defaultReportConfig);
+
+            if (typeof config.reportConfig.durationInfo.endDate === 'string') {
+                config.reportConfig.durationInfo.endDate = moment(config.reportConfig.durationInfo.endDate);
+                config.reportConfig.durationInfo.startDate = moment(config.reportConfig.durationInfo.startDate);
+            }
         },
         setUPI = function (upi) {
             external.ActionPoint = upi;
@@ -277,6 +327,7 @@ var ActionButton = function (config) {
         sendCommand: sendCommand,
         sendValue: sendValue,
         openReport: openReport,
+        updateReportConfig: updateReportConfig,
         _getCommandArguments: _getCommandArguments,
         ActionPoint: null,
         min: min,
@@ -284,6 +335,7 @@ var ActionButton = function (config) {
         ActionPriority: null,
         isBinary: false,
         isMultistate: false,
+        isReport: false,
         ActionParm: (config.ActionParm !== undefined) ? parseFloat(config.ActionParm) : config.ActionParm
     };
 
@@ -476,6 +528,25 @@ displays = $.extend(displays, {
     sizing: false,
     foc: false,
     popUpWindowActive: false,
+    externalReportConfig: {
+        startDate: moment().subtract(1, "day"),
+        endDate: moment(),
+        offSet: "00:00",
+        duration: 0,
+        selectedRange: ""
+    },
+    defaultReportConfig: {
+        intervalNum: 1,
+        intervalType: 'Minute',
+        starttimestamp: '08:00',
+        endtimestamp: '08:00',
+        durationInfo: {
+            duration: 86399,
+            selectedRange: 'Today',
+            endDate: moment().endOf('d'),
+            startDate: moment().startOf('d')
+        }
+    },
     actionCodes: {
         0:  "No Action (useless)",
         1:  "History Log Plot – No longer supported",
@@ -513,6 +584,26 @@ displays = $.extend(displays, {
         14: "Select Interval",
         15: "Display",
         16: "Print"
+    },
+    setReportConfig: function (config) {
+        var $reportRange = $('#reportRange'),
+            picker = $reportRange.data('daterangepicker');
+
+        displays.$scope.reportConfig = $.extend(displays.$scope.reportConfig, {
+            intervalNum: config.intervalNum,
+            intervalType: config.intervalType,
+            timestamp: config.timestamp
+        });
+
+        picker.setStartDate(config.durationInfo.startDate);
+        picker.setEndDate(config.durationInfo.endDate);
+
+        $reportRange.val(config.durationInfo.startDate.format('MM/DD/YYYY') + ' - ' + config.durationInfo.endDate.format('MM/DD/YYYY'));
+
+        $reportRange.attr("title", config.durationInfo.selectedRange);
+
+        $('#reportTimeStart').val(config.starttimestamp);
+        $('#reportTimeEnd').val(config.endtimestamp);
     },
     resolveDisplayObjectPropertyName: function (screenObject) {
         var propertyName;
@@ -820,6 +911,7 @@ displays = $.extend(displays, {
             };
 
         displays.$scope = scope;
+        displays.$scope.isEdit = displays.editMode;
 
         displays.upiNames = displays.upiNames || {};
 
@@ -888,7 +980,107 @@ displays = $.extend(displays, {
     mouseEvents: function() {
         var leftMouseDown = false,
             rightMouseDown = false,
-            ctrlKeyDown = false;
+            ctrlKeyDown = false,
+            $reportTimeStart = $('#reportTimeStart'),
+            $reportTimeEnd = $('#reportTimeEnd'),
+            timePickerKeyUp = function (event, $el) {
+                if ($el.val().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
+                    $el.parent().removeClass("has-error");
+                    $el.parent().attr("title", "");
+                    $el.clockpicker('hide');
+                    $el.clockpicker('resetClock');
+                    $el.clockpicker('show');
+                } else {
+                    $el.parent().addClass("has-error");
+                    $el.parent().attr("title", "Error in time format");
+                }
+
+                displays.$scope.reportConfig.timestamp = $el.val();
+
+                // timestamp = $reportTime.val();
+            },
+            timePickerKeyDown = function (event, $el) {
+                var timeValue = $el.val(),
+                    element = $el[0],
+                    selectionLen = element.selectionEnd - element.selectionStart;
+                if (characterAllowedInTimeField(event, timeValue, selectionLen)) {
+                    if (event.keyCode === 38) { // up arrow
+                        $el.val(incrementTime(1, timeValue));
+                    } else if (event.keyCode === 40) { // down arrow
+                        $el.val(incrementTime(-1, timeValue));
+                    } else if (event.keyCode === 13) { // CR
+                        $el.val(incrementTime(0, timeValue));
+                    }
+                    $el.clockpicker('hide');
+                    $el.clockpicker('resetClock');
+                    $el.clockpicker('show');
+
+                    displays.$scope.reportConfig.timestamp = $el.val();
+                } else {
+                    event.preventDefault();
+                }
+            },
+            incrementTime = function (incrementUnit, value) {
+                var arr,
+                    hrs,
+                    mins,
+                    timeLen = value.length,
+                    wrapped = false;
+
+                if (timeLen > 2) {  // don't allow increment til 3 chars in time field
+                    if (value.indexOf(":") > 0) {
+                        arr = value.split(':');
+                    } else {
+                        arr = [];
+                        if (timeLen === 5) {  // step on errant text
+                            arr[0] = value.substr(0, 2);
+                            arr[1] = value.substr(3, 2);
+                        } else {
+                            arr[0] = value.substr(0, (timeLen === 4 ? 2 : 1 ));
+                            arr[1] = value.substr(timeLen - 2, 2);
+                        }
+                    }
+                    hrs = Number.isNaN(parseInt(arr[0], 10)) ? 0 : parseInt(arr[0], 10);
+                    mins = Number.isNaN(parseInt(arr[1], 10)) ? 0 : parseInt(arr[1], 10);
+
+                    if (hrs > 23) {
+                        hrs = 23;
+                    }
+                    if (mins > 59) {
+                        mins = 59;
+                    }
+
+                    if ((incrementUnit > 0 && mins < 59) ||
+                        (incrementUnit < 0 && mins > 0)) {
+                        mins += incrementUnit;
+                    } else if ((incrementUnit < 0 && mins === 0)) {
+                        if (hrs === 0 || hrs > 24) {
+                            hrs = 24;
+                        }
+                        mins = 59;
+                        wrapped = true;
+                    } else if ((incrementUnit > 0 && mins >= 59)) {
+                        if (hrs >= 23) {
+                            hrs = 0;
+                        }
+                        mins = 0;
+                        wrapped = true;
+                    }
+
+                    if (wrapped) { // the increment is wrapping
+                        switch (true) {
+                            case (incrementUnit > 0 && hrs < 23):
+                            case (incrementUnit < 0 && hrs > 0):
+                                hrs += incrementUnit;
+                                break;
+                        }
+                    }
+
+                    return ((hrs < 10 ? '0' : '') + hrs) + ':' + ((mins < 10 ? '0' : '') + mins);
+                } else {
+                    return value;
+                }
+            };
 
         $('#minDisplay').off('click').on('click', function() {
             var _title = window.displayJson.Name;
@@ -904,8 +1096,99 @@ displays = $.extend(displays, {
             });
         });
 
+        jQuery('#saveReport').click(function () {
+            displays.$editScope.editItem._actionButton.updateReportConfig(displays.$editScope.reportConfig);
+        });
+
+        jQuery('#openReportWithConfig').click(function () {
+            var actionButton = displays.$scope.currActionButton._actionButton;
+            actionButton.openReport(displays.$scope.reportConfig);
+            // actionButton.openReport($scope.reportType, $scope.reportDuration, $scope.reportStart, $scope.reportEnd);
+        });
+
         $('#actionButtonInput').popup();
         $('#actionButtonReportInput').popup();
+
+        $reportTimeStart.clockpicker({
+            doneText: 'Done',
+            autoclose: true,
+            afterDone: function() {
+                displays.$scope.reportConfig.starttimestamp = $reportTimeStart.val();
+            },
+        });
+
+        $reportTimeEnd.clockpicker({
+            doneText: 'Done',
+            autoclose: true,
+            afterDone: function() {
+                displays.$scope.reportConfig.endtimestamp = $reportTimeEnd.val();
+            },
+        });
+
+        // $reportTime.change(function (event) {
+        //     // report time = $reportTime.val()
+        // });
+
+        $reportTimeStart.keyup(function (event) {
+            timePickerKeyUp(event, $reportTimeStart);
+        });
+
+        $reportTimeEnd.keyup(function (event) {
+            timePickerKeyUp(event, $reportTimeEnd);
+        });
+
+        $reportTimeStart.keydown(function (event) {
+            timePickerKeyDown(event, $reportTimeStart);
+        });
+
+        $reportTimeEnd.keydown(function (event) {
+            timePickerKeyDown(event, $reportTimeEnd);
+        });
+
+        $('#reportRange').daterangepicker({
+            // startDate : durationInfo().startDate,
+            // endDate : durationInfo().endDate,
+            maxDate: moment().add(1, 'day'),
+            // chosenLabel: durationInfo().selectedRange,
+            alwaysShowCalendars: true,
+            autoApply: false,
+            autoUpdateInput: false,
+            timePicker: false,
+            ranges: {
+                'Today': [ moment() , moment() ],
+                'Yesterday': [ moment().subtract(1, 'days'), moment().subtract(1, 'days') ],
+                'Last 7 Days': [ moment().subtract(6, 'days'), moment() ],
+                'Last Week': [ moment().subtract(1, 'weeks').startOf('week'), moment().subtract(1, 'weeks').endOf('week') ],
+                'Last 4 Weeks': [ moment().subtract(4, 'weeks'), moment() ],
+                'Last Month': [ moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month') ],
+                'This Year': [ moment().startOf('year'), moment() ],
+                'Last Year': [ moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year') ]
+            }
+        });
+
+        $('#reportRange').on('apply.daterangepicker', function (ev, picker) {
+            var pickerInfo = {};
+            pickerInfo.startDate = picker.startDate;
+            pickerInfo.endDate = picker.endDate;
+            pickerInfo.duration = picker.endDate.unix() - picker.startDate.unix();
+            pickerInfo.selectedRange = picker.chosenLabel;
+
+            displays.$scope.reportConfig.durationInfo = pickerInfo;
+            $(this).val(pickerInfo.startDate.format('MM/DD/YYYY') + ' - ' + pickerInfo.endDate.format('MM/DD/YYYY'));
+            $(this).attr("title", pickerInfo.selectedRange);
+        });
+
+        $('#reportRange').on('hide.daterangepicker', function(ev, picker) {
+            var pickerInfo = {};
+            pickerInfo.startDate = picker.startDate;
+            pickerInfo.endDate = picker.endDate;
+            pickerInfo.duration = picker.endDate.diff(picker.startDate);
+            pickerInfo.selectedRange = picker.chosenLabel;
+
+            displays.$scope.reportConfig.durationInfo = pickerInfo;
+            $(this).val(pickerInfo.startDate.format('MM/DD/YYYY') + ' - ' + pickerInfo.endDate.format('MM/DD/YYYY'));
+            $(this).attr("title", pickerInfo.selectedRange);
+        });
 
         $('#leftPanel').hover(
             function() {
@@ -1446,30 +1729,35 @@ displays = $.extend(displays, {
                 $scope.dTop = (-1 * ($scope.display.Height / 2)) + $scope.panH;
                 $scope.objs = [];
                 $scope.objs = $scope.display['Screen Objects'];
+                $scope.reportConfig = $.extend(true, {}, displays.defaultReportConfig);
+
                 displays.initScreenObjects({
                     $scope: $scope
                 });
 
-                $scope.checkReportRange = function () {
-                    var $button = $('#openReport'),
-                        valid = displays.$scope.reportType === 'predefined' || (displays.$scope.reportType === 'chosen' && displays.$scope.reportStart < displays.$scope.reportEnd);
-
-                    if (valid) {
-                        $button.removeClass('ui-disabled');
-                    } else {
-                        $button.addClass('ui-disabled');
-                    }
+                $scope.selectInterval = function (interval) {
+                    $scope.reportConfig.intervalType = interval;
+                    setTimeout(function () {
+                        $scope.$apply();
+                    }, 1);
                 };
+
+                // $scope.checkReportRange = function () {
+                //     var $button = $('#openReport'),
+                //         valid = displays.$scope.reportType === 'predefined' || (displays.$scope.reportType === 'chosen' && displays.$scope.reportStart < displays.$scope.reportEnd);
+
+                //     if (valid) {
+                //         $button.removeClass('ui-disabled');
+                //     } else {
+                //         $button.addClass('ui-disabled');
+                //     }
+                // };
 
                 $scope.sendCommand = function () {
                     var val = parseFloat($('#actionButtonValue').val());
                     $scope.currActionButton._actionButton.sendValue(val);
                 };
 
-                $scope.openReport = function () {
-                    var actionButton = $scope.currActionButton._actionButton;
-                    actionButton.openReport($scope.reportType, $scope.reportDuration, $scope.reportStart, $scope.reportEnd);
-                };
 
                 $scope.action = action;
                 $scope.getBGStyle = function(display) {

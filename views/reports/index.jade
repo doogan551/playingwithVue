@@ -216,7 +216,12 @@ block content
 											i.fa.fa-calendar.glyphicon.glyphicon-calendar.durationCalendarIcon
 											span.reportDateRangeLabel.small Duration:&nbsp;
 											input.input.form-control.filterContainer.durationDateRange(data-bind="reportDateRangePicker: selectedDuration, enable: $root.canEdit()", type="text", placeholder="Select...")
-											input.input.form-control.filterContainer.durationDateRangeTime(data-bind="reportTimePicker: durationTimeOffSet, enable: $root.canEdit()", title="OffSet", type="text")
+										br
+										span.timePickers
+											span.timePickerLabel.small From:&nbsp;
+											input.input.form-control.filterContainer.durationDateRangeTime(data-bind="reportTimePicker: durationStartTimeOffSet, enable: $root.canEdit()", title="Start Time OffSet", type="text")
+											span.timePickerLabel.small To:&nbsp;
+											input.input.form-control.filterContainer.durationDateRangeTime(data-bind="reportTimePicker: durationEndTimeOffSet, enable: $root.canEdit()", title="End Time OffSet", type="text")
 										br
 										br
 										span.intervalSettings

@@ -150,13 +150,24 @@ input.durationCheckbox {
     display: none;
 }
 .durationCalendarIcon {
-    left: 75px;
+    left: 80px;
     top: 8px;
 }
+.timePickers {
+    display: flex;
+    margin-left: 112px;
+}
+span.timePickerLabel {
+    display: flex;
+    align-items: center;
+    color: black;
+}
+
 span.reportDateRangeLabel {
     display: flex;
     align-items: center;
     color: black;
+    padding: 0px 3px 0px 3px;
 }
 .intervalValue {
     width: 80px;
