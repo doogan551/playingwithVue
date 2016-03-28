@@ -1111,7 +1111,6 @@ module.exports = Rpt = {
                     total: runtime,
                     range: interval
                 };
-                console.log(result);
                 totals.push(result);
             });
 
