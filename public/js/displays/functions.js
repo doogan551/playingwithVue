@@ -225,20 +225,19 @@ var ActionButton = function (config) {
         },
         openReport = function (cfg) {//type, duration, start, end) {
             var endPoint,
-                params = cfg && getExternalConfig(cfg),
-                addtl = external.isProperty ? '' : '?pause';
+                params = cfg && getExternalConfig(cfg);
 
             $('#reportChooseRange').modal('hide');
 
             endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', external.ActionPoint);
-            displays.openWindow(endPoint.review.url + addtl, 'Report', 'Report', '', external.ActionPoint, {
+            displays.openWindow(endPoint.review.url + '?pause', 'Report', 'Report', '', external.ActionPoint, {
                 height: 720,
                 width: 1280,
                 callback: function () {
                     if (!external.isProperty) {
                         this.applyBindings(params);
-                    // } else {
-                    //     this.applyBindings();
+                    } else {
+                        this.applyBindings(true);
                     }
                 }
             });
