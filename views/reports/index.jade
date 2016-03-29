@@ -103,7 +103,7 @@ block content
 														// /ko
 													// ko if: ($parent.reportType !== 'Property')
 													td.displayName
-														input.form-control.columnDisplayName(data-bind="value: colDisplayName, enable: $parent.canEdit(), event: { change: function() { $parent.designChanged(true) } };", type="text", required)
+														input.form-control.columnDisplayName(data-bind="value: colDisplayName, enable: $parent.canEdit(), event: { change: function() { $parent.designChanged(true) } }", type="text", required)
 													// /ko
 													td.columnTotals
 														// ko if: ($data.canCalculate)
@@ -142,7 +142,7 @@ block content
 													// /ko
 													td.precision
 														// ko if: ($data.canCalculate)
-														input.form-control.inputPrecision(data-bind="value: precision, enable: $root.canEdit(), event: { keydown: function (data, event) { event.preventDefault(); }, change: function() { $root.designChanged(true) } }", type="number", min="0", max="20", placeholder="...")
+														input.form-control.inputPrecision(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")
 														// /ko
 													// ko if: ($root.canEdit())
 													td.removecolumn
