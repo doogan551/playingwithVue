@@ -1175,6 +1175,13 @@ displays = $.extend(displays, {
             displays.$scope.reportConfig.durationInfo = pickerInfo;
             $(this).val(pickerInfo.startDate.format('MM/DD/YYYY') + ' - ' + pickerInfo.endDate.format('MM/DD/YYYY'));
             $(this).attr("title", pickerInfo.selectedRange);
+
+            if (pickerInfo.duration > 86400) {
+                displays.$scope.reportConfig.intervalType = 'Day';
+            } else {
+                displays.$scope.reportConfig.intervalType = 'Hour';
+            }
+            displays.$scope.$apply();
         });
 
         $('#reportRange').on('hide.daterangepicker', function (ev, picker) {
@@ -1191,7 +1198,7 @@ displays = $.extend(displays, {
             //delay in order to hold modal open
             setTimeout(function () {
                 displays.cancelModalClose = false;
-            }, 500);
+            }, 1000);
         });
 
         $('#reportRange').on('show.daterangepicker', function (ev, picker) {
