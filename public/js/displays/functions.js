@@ -261,7 +261,11 @@ var ActionButton = function (config) {
                     displays.setReportConfig(config.reportConfig);
                     // displays.$scope.$apply();
                     if (!external.isProperty) {
-                        $('#reportChooseRange').modal('show');
+                        if (config.confirmRange) {
+                            $('#reportChooseRange').modal('show');
+                        } else {
+                            openReport(displays.$scope.reportConfig);
+                        }
                     } else {
                         openReport();
                     }
@@ -299,6 +303,7 @@ var ActionButton = function (config) {
             external.ActionPriority = displays.workspaceManager.systemEnums.controlpriorities[+config.ActionPriority || 0].value;
 
             config.reportConfig = newCfg.reportConfig || config.reportConfig || $.extend(true, {}, displays.defaultReportConfig);
+            config.confirmRange = config.confirmRange === undefined ? false : config.confirmRange;
 
             if (typeof config.reportConfig.durationInfo.endDate === 'string') {
                 config.reportConfig.durationInfo.endDate = moment(config.reportConfig.durationInfo.endDate);
