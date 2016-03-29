@@ -303,7 +303,7 @@ var ActionButton = function (config) {
             external.ActionPriority = displays.workspaceManager.systemEnums.controlpriorities[+config.ActionPriority || 0].value;
 
             config.reportConfig = newCfg.reportConfig || config.reportConfig || $.extend(true, {}, displays.defaultReportConfig);
-            config.confirmRange = config.confirmRange === undefined ? false : config.confirmRange;
+            config.confirmRange = config.confirmRange || false;
 
             if (typeof config.reportConfig.durationInfo.endDate === 'string') {
                 config.reportConfig.durationInfo.endDate = moment(config.reportConfig.durationInfo.endDate);
