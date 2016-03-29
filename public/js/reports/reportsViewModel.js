@@ -1,6 +1,27 @@
 "use strict";
 window.workspaceManager = (window.opener || window.top).workspaceManager;
-var reportsVM;
+var reportsVM,
+    reportDateRanges = function (selectedRange) {
+        var answer,
+            dateRanges = { // shifting everything by one day forward
+                'Today': [moment(), moment().add(1, 'day')],
+                'Yesterday': [moment().subtract(1, 'days'), moment()],
+                'Last 7 Days': [moment().subtract(6, 'days'), moment().add(1, 'day')],
+                'Last Week': [moment().subtract(1, 'weeks').startOf('week'), moment().subtract(1, 'weeks').endOf('week').add(1, 'day')],
+                'Last 4 Weeks': [moment().subtract(4, 'weeks'), moment().add(1, 'day')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month').add(1, 'day')],
+                'This Year': [moment().startOf('year'), moment().add(1, 'day')],
+                'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year').add(1, 'day')]
+            }
+
+        if (!!selectedRange && dateRanges.hasOwnProperty(selectedRange)) {
+            answer = dateRanges[selectedRange];
+        } else {
+            answer = dateRanges;
+        }
+
+        return answer;
+    };
 
 var initKnockout = function () {
     var $startDate,
@@ -120,16 +141,7 @@ var initKnockout = function () {
                 autoUpdateInput: false,
                 timePicker: false,
                 //timePicker24Hour: true,
-                ranges: {
-                    'Today': [moment(), moment()],
-                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                    'Last Week': [moment().subtract(1, 'weeks').startOf('week'), moment().subtract(1, 'weeks').endOf('week')],
-                    'Last 4 Weeks': [moment().subtract(4, 'weeks'), moment()],
-                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
-                    'This Year': [moment().startOf('year'), moment()],
-                    'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
-                }
+                ranges: reportDateRanges()
             });
 
             $element.on('apply.daterangepicker', function (ev, picker) {
@@ -897,18 +909,22 @@ var reportsViewModel = function () {
             });
         },
         getFilterAdjustedDatetime = function (filter) {
-            return getAdjustedDatetime(filter.date, filter.time.toString());
+            return getAdjustedDatetimeUnix(moment.unix(filter.date), filter.time.toString());
         },
-        getAdjustedDatetime = function (date, time) {
+        getAdjustedDatetimeMoment = function (date, time) {
             var result,
                 timestamp = parseInt(time.replace(':', ''), 10),
                 hour = ('00' + Math.floor(timestamp / 100)).slice(-2),
                 min = ('00' + timestamp % 100).slice(-2);
 
-            result = moment.unix(date).startOf('day');
+            result = date.startOf('day');
             result = result.add(hour, 'h');
             result = result.add(min, 'm');
 
+            return result;
+        },
+        getAdjustedDatetimeUnix = function (date, time) {
+            var result = getAdjustedDatetimeMoment(moment.unix(date), time.toString());
             return result.unix();
         },
         initializeNewFilter = function (selectedItem, filter) {
@@ -1289,7 +1305,8 @@ var reportsViewModel = function () {
                 activeError = false,
                 key,
                 upis = [],
-                uuid;
+                uuid,
+                dateRange;
 
             columns = $.extend(true, [], self.listOfColumns());
             filters = $.extend(true, [], self.listOfFilters());
@@ -1311,8 +1328,16 @@ var reportsViewModel = function () {
                 }
 
                 if (self.reportType === "Totalizer" || self.reportType === "History") {
-                    self.startDate = getAdjustedDatetime(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet());
-                    self.endDate = getAdjustedDatetime(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet());
+                    if (self.selectedDuration().selectedRange === "Custom Range") {
+                        self.startDate = getAdjustedDatetimeUnix(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet());
+                        self.endDate = getAdjustedDatetimeUnix(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet());
+                    } else {
+                        dateRange = reportDateRanges(self.selectedDuration().selectedRange);
+                        self.selectedDuration().startDate = getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
+                        self.selectedDuration().endDate = getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
+                        self.startDate = self.selectedDuration().startDate.unix();
+                        self.endDate = self.selectedDuration().endDate.unix();
+                    }
                 } else {
                     for (key in filters) {
                         if (filters.hasOwnProperty(key)) {
@@ -2599,9 +2624,11 @@ var reportsViewModel = function () {
 
     self.canEdit = ko.observable(true);
 
-    self.interval = ko.observable("Minute");
+    self.interval = ko.observable("Day");
 
     self.intervalValue = ko.observable(1);
+
+    self.durationError = ko.observable(false);
 
     self.selectedDuration = ko.observable({
         startDate: moment().subtract(1, "day"),
@@ -2988,44 +3015,48 @@ var reportsViewModel = function () {
     };
 
     self.requestReportData = function () {
-        if (self.currentTab() !== 2) {
-            buildReportDataRequestPromise(true).then(function (requestObj) {
-            //    var requestObj = buildReportDataRequest();
-                if (!!requestObj) {
-                    tabSwitch(2);
-                    if (self.reportResultViewed()) {
-                        $popAction.hide();
-                        self.activeDataRequest(true);
-                        self.reportResultViewed(false);
-                        configureDataTable(true, true);
-                        reportData = undefined;
-                        switch (self.reportType) {
-                            case "History":
-                                ajaxPost(requestObj, "/report/historyDataSearch", renderHistoryReport);
-                                //reportSocket.emit("historyDataSearch", {options: requestObj});
-                                break;
-                            case "Totalizer":
-                                ajaxPost(requestObj, "/report/totalizerReport", renderTotalizerReport);
-                                //reportSocket.emit("totalizerReport", {options: requestObj});
-                                break;
-                            case "Property":
-                                ajaxPost(requestObj, "/report/reportSearch", renderPropertyReport);
-                                //reportSocket.emit("reportSearch", {options: requestObj});
-                                break;
-                            default:
-                                console.log(" - - - DEFAULT  viewReport()");
-                                break;
+        if (!self.durationError()) {
+            if (self.currentTab() !== 2) {
+                buildReportDataRequestPromise(true).then(function (requestObj) {
+                    //    var requestObj = buildReportDataRequest();
+                    if (!!requestObj) {
+                        tabSwitch(2);
+                        if (self.reportResultViewed()) {
+                            $popAction.hide();
+                            self.activeDataRequest(true);
+                            self.reportResultViewed(false);
+                            configureDataTable(true, true);
+                            reportData = undefined;
+                            switch (self.reportType) {
+                                case "History":
+                                    ajaxPost(requestObj, "/report/historyDataSearch", renderHistoryReport);
+                                    //reportSocket.emit("historyDataSearch", {options: requestObj});
+                                    break;
+                                case "Totalizer":
+                                    ajaxPost(requestObj, "/report/totalizerReport", renderTotalizerReport);
+                                    //reportSocket.emit("totalizerReport", {options: requestObj});
+                                    break;
+                                case "Property":
+                                    ajaxPost(requestObj, "/report/reportSearch", renderPropertyReport);
+                                    //reportSocket.emit("reportSearch", {options: requestObj});
+                                    break;
+                                default:
+                                    console.log(" - - - DEFAULT  viewReport()");
+                                    break;
+                            }
+                        } else {
+                            renderReport();
                         }
                     } else {
-                        renderReport();
+                        // bad request object do nothing.
                     }
-                } else {
-                    // bad request object do nothing.
-                }
-            }, function (error) {
-                console.error("buildReportDataRequestPromise() Failed!", error);
-                return result;
-            });
+                }, function (error) {
+                    console.error("buildReportDataRequestPromise() Failed!", error);
+                    return result;
+                });
+            }
+        } else {
+            displayError("Invalid Date Time selection");
         }
         $('html,body').stop().animate({
             scrollTop: 0
@@ -3174,29 +3205,38 @@ var reportsViewModel = function () {
             currentDuration;
 
         if (!!self.selectedDuration() && self.selectedDuration().endDate) {
+            self.selectedDuration().startDate = getAdjustedDatetimeMoment(self.selectedDuration().startDate, self.durationStartTimeOffSet());
+            self.selectedDuration().endDate = getAdjustedDatetimeMoment(self.selectedDuration().endDate, self.durationEndTimeOffSet());
             currentDuration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
+            self.durationError(currentDuration < 0);
 
-            result = self.listOfIntervals().filter(function (interval) {
-                return (moment.duration(1, interval.text).asMilliseconds() < currentDuration);
-            });
-
-            if (result.length > 0) {
-                result.forEach(function (interval) {
-                    if (self.interval().toLowerCase() === interval.text.toLowerCase()) {
-                        resetInterval = false;
-                    }
+            if (!self.durationError()) {
+                self.durationError(false);
+                result = self.listOfIntervals().filter(function (interval) {
+                    return (moment.duration(1, interval.text).asMilliseconds() < currentDuration);
                 });
 
-                if (resetInterval) {
-                    self.interval(result[result.length - 1].text);
-                    self.intervalValue(1);
-                } else {
-                    intervalDuration = moment.duration(1, self.interval()).asMilliseconds();
-                    if ((intervalDuration * self.intervalValue()) > currentDuration) {
+                if (result.length > 0) {
+                    result.forEach(function (interval) {
+                        if (self.interval().toLowerCase() === interval.text.toLowerCase()) {
+                            resetInterval = false;
+                        }
+                    });
+
+                    if (resetInterval) {
+                        self.interval(result[result.length - 1].text);
                         self.intervalValue(1);
+                    } else {
+                        intervalDuration = moment.duration(1, self.interval()).asMilliseconds();
+                        if ((intervalDuration * self.intervalValue()) > currentDuration) {
+                            self.intervalValue(1);
+                        }
                     }
                 }
+            } else {
+                displayError("Invalid Date Time selection");
             }
+            console.log("self.listOfIntervalsComputed() fired  " + self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm:ss a") + " - "+ self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm:ss a"));
         }
 
         return result;
