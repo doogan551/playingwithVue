@@ -287,10 +287,10 @@ td.filterName {
     /*height: 70vh;*/
 }
 #reportColumns {
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 #additionalFilters {
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 .tabViewReport div.dataTables_filter {
     display: inline-block;
@@ -435,7 +435,7 @@ div.dataTables_wrapper div.dataTables_length select {
     width: 100px;
 }
 input.form-control.inputPrecision {
-    width: 42px;
+    width: 30px;
     padding: 2px 2px 2px 5px;
 }
 .inputSearch {

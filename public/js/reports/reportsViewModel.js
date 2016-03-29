@@ -44,7 +44,7 @@ var initKnockout = function () {
                     keyCode === 40 ||  // down
                     keyCode === 46 ||  // del
                     (keyCode === 186 && shiftKey && timeValue.indexOf(":") === -1) ||  // allow only 1 ":"
-                    (((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 150)) && !shiftKey) &&  // allow numbers
+                    (((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105)) && !shiftKey) &&  // allow numbers
                     timeValue.length - selectionLen <= 4;
             }
         },
@@ -286,7 +286,91 @@ var initKnockout = function () {
         }
     };
 
-    ko.bindingHandlers.reportPrecisionInput = { // TODO
+    ko.bindingHandlers.reportPrecisionInput = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var $element = $(element),
+                precisionValue = valueAccessor(),
+                maxNumber = ($element.attr("max") === undefined ? 10 : $element.attr("max")),
+                minNumber = ($element.attr("min") === undefined ? 0 : $element.attr("min")),
+                viewModelField = $element.attr("viewModelField"),
+                incrementNumber = function (incrementUnit, value) {
+                    var newValue = parseInt(value + incrementUnit, 10);
+
+                    if (newValue <= maxNumber && newValue >= minNumber) {
+                        return newValue;
+                    } else {
+                        return parseInt(value, 10);
+                    }
+                },
+                characterAllowedInPrecisionField = function (event, value) {
+                    var keyCode = (!!event.which ? event.which : event.keyCode),
+                        shiftKey = event.shiftKey,
+                        appendedValue = value.toString();
+                    if (keyCode === 16 || keyCode === 17) {
+                        return false;
+                    } else {
+                        if((((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105)) && !shiftKey)) {
+                            appendedValue = parseInt(appendedValue + String.fromCharCode((96 <= keyCode && keyCode <= 105)? keyCode-48 : keyCode), 10);
+                            return (appendedValue <= maxNumber && appendedValue >= minNumber);
+                        } else {
+                            return keyCode === 8 ||  // backspace
+                                keyCode === 13 ||  // CR
+                                keyCode === 35 ||  // end
+                                keyCode === 36 ||  // home
+                                keyCode === 37 ||  // left
+                                keyCode === 38 ||  // up
+                                keyCode === 39 ||  // right
+                                keyCode === 40 ||  // down
+                                keyCode === 46 ||  // del
+                                (((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 150)) && !shiftKey);  // allow numbers
+                        }
+                    }
+                };
+
+            $element.attr("title", "'" + minNumber + "' to '" + maxNumber + "'");
+
+            $element.keyup(function (event) {
+                if (ko.isObservable(precisionValue)) {
+                    precisionValue(parseInt($(element).val(), 10));
+                    if (!!viewModelField) {
+                        viewModel[viewModelField] = precisionValue();
+                    }
+                } else {
+                    precisionValue = parseInt($(element).val(), 10);
+                    if (!!viewModelField) {
+                        viewModel[viewModelField] = precisionValue;
+                    }
+                }
+            });
+
+            $element.keydown(function (event) {
+                var value = parseInt($element.val(), 10),
+                    keyCode = (!!event.which ? event.which : event.keyCode);
+                if ((isNaN(value) || value === "")) {
+                    value = 0;
+                }
+                if (characterAllowedInPrecisionField(event, value)) {
+                    if (keyCode === 38) { // up arrow
+                        $element.val(incrementNumber(1, value));
+                    } else if (keyCode === 40) { // down arrow
+                        $element.val(incrementNumber(-1, value));
+                    } else if (keyCode === 13) { // CR
+                        $element.val(value);
+                    }
+                    return true;
+                } else {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+        },
+
+        update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var $element = $(element),
+                value = ko.utils.unwrapObservable(valueAccessor());
+
+            $element.val(value);
+        }
 
     };
 };
@@ -1288,7 +1372,7 @@ var reportsViewModel = function () {
         buildReportDataRequestPromise = function () {
             return new Promise(function(resolve, reject) {
                 mergePersistedPointRefArray(true).then(function (response) {
-                    console.log("mergePersistedPointRefArray() Success!", response);
+                    //console.log("mergePersistedPointRefArray() Success!", response);
                     resolve(buildReportDataRequest());
                 }, function (error) {
                     console.error("buildReportDataRequestPromise() --> mergePersistedPointRefArray() Failed!", error);
@@ -2632,7 +2716,7 @@ var reportsViewModel = function () {
 
     self.selectedDuration = ko.observable({
         startDate: moment().subtract(1, "day"),
-        endDate: moment(),
+        endDate: moment().add(1, "day"),
         startTimeOffSet: "00:00",
         endTimeOffSet: "00:00",
         duration: 0,
@@ -2728,6 +2812,7 @@ var reportsViewModel = function () {
                             self.selectedDuration().endDate = moment.unix(point["Report Config"].duration.endDate);
                             self.selectedDuration().startTimeOffSet = point["Report Config"].duration.startTimeOffSet;
                             self.selectedDuration().endTimeOffSet = point["Report Config"].duration.endTimeOffSet;
+                            self.selectedDuration().selectedRange = point["Report Config"].duration.selectedRange
                             self.durationStartTimeOffSet(self.selectedDuration().startTimeOffSet);
                             self.durationEndTimeOffSet(self.selectedDuration().endTimeOffSet);
                             self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
@@ -3236,7 +3321,7 @@ var reportsViewModel = function () {
             } else {
                 displayError("Invalid Date Time selection");
             }
-            console.log("self.listOfIntervalsComputed() fired  " + self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm:ss a") + " - "+ self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm:ss a"));
+            //console.log("self.listOfIntervalsComputed() fired  " + self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm:ss a") + " - "+ self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm:ss a"));
         }
 
         return result;
