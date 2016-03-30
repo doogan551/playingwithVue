@@ -3347,9 +3347,9 @@ var reportsViewModel = function () {
             height: 768
         };
         if (window.top.location.href === window.location.href) {  // If we're a pop-out; pop back in
-            window.workspaceManager.openWindowPositioned(window.location.href, $reporttitleInput.text(), 'report', 'mainWindow', windowUpi);
+            window.workspaceManager.openWindowPositioned(window.location.href, point.Name, 'report', 'mainWindow', windowUpi);
         } else { // Open the window
-            window.workspaceManager.openWindowPositioned(window.location.href, $reporttitleInput.text(), 'report', '', windowUpi, options);
+            window.workspaceManager.openWindowPositioned(window.location.href, point.Name, 'report', '', windowUpi, options);
         }
     };
 
