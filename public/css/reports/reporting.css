@@ -438,6 +438,13 @@ input.form-control.inputPrecision {
     width: 30px;
     padding: 2px 2px 2px 5px;
 }
+.precisionColumn:hover{
+    cursor: pointer;
+}
+input.form-control.globalPrecision {
+    width: 30px;
+    padding: 2px 2px 2px 5px;
+}
 .inputSearch {
     margin-left: 6px;
     width: 215px;
@@ -454,6 +461,9 @@ input.form-control.inputPrecision {
     vertical-align: middle;
     cursor: move;
     margin-right: 12px;
+}
+.columnsGrid.table > thead > tr > th {
+    line-height: 30px;
 }
 .filtersGrid .handle {
     background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGElEQVQIW2NkYGBIA+JZQMzACCJgAIUDACENAQR6zKpeAAAAAElFTkSuQmCC) repeat;

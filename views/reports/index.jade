@@ -264,5 +264,8 @@ block content
 						.popIn.hidden
 							.fa.fa-arrow-circle-down
 							| Pop In
+
+	.hiddenPrecisionPlaceholder
+		input.form-control.globalPrecision.hidden(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
 	include footer
 	include modals/dialogScreens

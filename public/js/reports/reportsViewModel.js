@@ -332,11 +332,13 @@ var initKnockout = function () {
             $element.keyup(function (event) {
                 if (ko.isObservable(precisionValue)) {
                     precisionValue(parseInt($(element).val(), 10));
+                    precisionValue(isNaN(precisionValue()) ? 0 : precisionValue());
                     if (!!viewModelField) {
                         viewModel[viewModelField] = precisionValue();
                     }
                 } else {
                     precisionValue = parseInt($(element).val(), 10);
+                    precisionValue = (isNaN(precisionValue) ? 0 : precisionValue);
                     if (!!viewModelField) {
                         viewModel[viewModelField] = precisionValue;
                     }
@@ -399,9 +401,13 @@ var reportsViewModel = function () {
         $additionalFilters,
         $columnNames,
         $configurationContent,
+        $hiddenPrecisionPlaceholder,
+        $globalPrecision,
         pointSelectorRef,
         $pointSelectorIframe,
         $popAction,
+        longClickStart,
+        longClickTimer = 100,
         reportData,
         activeDataRequests,
         reportSocket,
@@ -996,14 +1002,20 @@ var reportsViewModel = function () {
             return getAdjustedDatetimeUnix(moment.unix(filter.date), filter.time.toString());
         },
         getAdjustedDatetimeMoment = function (date, time) {
-            var result,
-                timestamp = parseInt(time.replace(':', ''), 10),
-                hour = ('00' + Math.floor(timestamp / 100)).slice(-2),
+            var result = date,
+                timestamp,
+                hour,
+                min;
+
+            if (date !== undefined && time !== undefined) {
+                timestamp = parseInt(time.replace(':', ''), 10);
+                hour = ('00' + Math.floor(timestamp / 100)).slice(-2);
                 min = ('00' + timestamp % 100).slice(-2);
 
-            result = date.startOf('day');
-            result = result.add(hour, 'h');
-            result = result.add(min, 'm');
+                result = date.startOf('day');
+                result = result.add(hour, 'h');
+                result = result.add(min, 'm');
+            }
 
             return result;
         },
@@ -1143,6 +1155,12 @@ var reportsViewModel = function () {
                 return (col.upi === upi);
             });
             return result[0];
+        },
+        resetAllColumnPrecisionValues = function (precision) {
+            self.listOfColumns().forEach(function (column) {
+                column.precision = precision;
+            });
+            updateListOfColumns(self.listOfColumns());
         },
         validateFilters = function (cleanup) {
             var results = [],
@@ -1549,6 +1567,8 @@ var reportsViewModel = function () {
             $additionalFilters = $direports.find("#additionalFilters");
             $configurationContent = $direports.find(".configurationContent");
             $popAction = $direports.find(".pop.cursorPointer");
+            $hiddenPrecisionPlaceholder = $direports.find(".hiddenPrecisionPlaceholder");
+            $globalPrecision = $hiddenPrecisionPlaceholder.find(".globalPrecision");
         },
         getPointLookupFilterValues = function (iFrameContents) {
             var $nameInputField,
@@ -2048,6 +2068,44 @@ var reportsViewModel = function () {
                     $paginate_buttons = $pagination.find(".paginate_button");
                     $paginate_buttons = $paginate_buttons.not("li.active");
                     $paginate_buttons.hide();
+                }
+            });
+
+
+            $direports.find(".precisionColumn").on('mousedown', function (e) {
+                if (self.canEdit()) {
+                    longClickStart = moment();
+                }
+            });
+
+            $direports.find(".precisionColumn").on('click', function (e) {
+                if (self.canEdit()) {
+                    if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
+                        var originalField = $(this).html();
+
+                        $globalPrecision.removeClass("hidden");
+                        $(this).html("");
+                        $globalPrecision.appendTo($(this));
+                        $(this).find("input").focus();
+
+                        $(this).focusout(function (e) {
+                            $globalPrecision.appendTo($hiddenPrecisionPlaceholder);
+                            $(this).html(originalField);
+                        });
+
+                        $(this).keyup(function (event) {
+                            if (event.keyCode === 13) {
+                                var precision;
+                                if (isNaN($(this).find("input").val()) || $(this).find("input").val() === "") {
+                                    $(this).find("input").val(0);
+                                }
+                                precision = $(this).find("input").val();
+                                self.globalPrecisionValue(parseInt(precision, 10));
+                                resetAllColumnPrecisionValues(self.globalPrecisionValue());
+                                console.log("set all precision to " + self.globalPrecisionValue());
+                            }
+                        });
+                    }
                 }
             });
 
@@ -2711,6 +2769,8 @@ var reportsViewModel = function () {
     self.interval = ko.observable("Day");
 
     self.intervalValue = ko.observable(1);
+
+    self.globalPrecisionValue = ko.observable(3);
 
     self.durationError = ko.observable(false);
 
