@@ -1,8 +1,8 @@
 .leftBar {
     z-index: 5;
-    padding: 15px 0px 10px 10px;
+    padding: 15px 0px 10px 5px;
     position: absolute;
-    width: 110px;
+    width: 100px;
     height: 100%;
     color: #ffffff;
     background-color: rgb(65, 105, 51);
@@ -10,9 +10,13 @@
 }
 .rightPanel {
     z-index: 0;
-    padding: 0px 5px 5px 96px;
+    padding: 0px 0px 5px 96px;
     position: relative;
     width: 100%;
+}
+.rightPanel > div.container-fluid {
+    padding-right: 0px;
+    padding-left: 4px;
 }
 .reportDisplayFooter {
     display: inline-block;
@@ -261,7 +265,7 @@ td.filterName {
     border-color: #d5e1f2;
 }
 .tabConfiguration{
-    padding-top: 15px;
+    padding-top: 9px;
     min-width: 850px;
 }
 .tabConfiguration ul.nav.nav-tabs {

@@ -12,7 +12,7 @@ var reportsVM,
                 'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month').add(1, 'day')],
                 'This Year': [moment().startOf('year'), moment().add(1, 'day')],
                 'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year').add(1, 'day')]
-            }
+            };
 
         if (!!selectedRange && dateRanges.hasOwnProperty(selectedRange)) {
             answer = dateRanges[selectedRange];
@@ -111,7 +111,7 @@ var initKnockout = function () {
         };
 
     ko.bindingHandlers.reportDateRangePicker = {
-        init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        init: function (element, valueAccessor) {
             var $element = $(element),
                 durationInfo = valueAccessor(),
                 getPickerData = function (element, picker) {
@@ -155,7 +155,7 @@ var initKnockout = function () {
     };
 
     ko.bindingHandlers.reportDatePicker = {
-        init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var $element = $(element),
                 options = {
                     autoclose: true,
@@ -184,7 +184,7 @@ var initKnockout = function () {
                 }
             });
 
-            $element.change(function (event) {
+            $element.change(function () {
                 if (moment(new Date($(element).val())).isValid()) {
                     $element.parent().removeClass("has-error");
                     $element.parent().attr("title", "");
@@ -207,14 +207,14 @@ var initKnockout = function () {
                 $startDate.datepicker("setEndDate", initEndDate);
             }
         },
-        update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        update: function (element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor());
             $(element).datepicker("setDate", moment.unix(value).format("MM/DD/YYYY"));
         }
     };
 
     ko.bindingHandlers.reportTimePicker = {
-        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        init: function (element, valueAccessor) {
             var $element = $(element),
                 timestamp = valueAccessor(),
                 options = {
@@ -224,7 +224,7 @@ var initKnockout = function () {
 
             $element.clockpicker(options);
 
-            $element.change(function (event) {
+            $element.change(function () {
                 if (ko.isObservable(timestamp)) {
                     timestamp($(element).val());
                 } else {
@@ -232,7 +232,7 @@ var initKnockout = function () {
                 }
             });
 
-            $element.keyup(function (event) {
+            $element.keyup(function () {
                 if ($element.val().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
                     $element.parent().removeClass("has-error");
                     $element.parent().attr("title", "");
@@ -270,7 +270,7 @@ var initKnockout = function () {
             });
         },
 
-        update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        update: function (element, valueAccessor) {
             var $element = $(element),
                 value = ko.utils.unwrapObservable(valueAccessor()),
                 hr,
@@ -329,7 +329,7 @@ var initKnockout = function () {
 
             $element.attr("title", "'" + minNumber + "' to '" + maxNumber + "'");
 
-            $element.keyup(function (event) {
+            $element.keyup(function () {
                 if (ko.isObservable(precisionValue)) {
                     precisionValue(parseInt($(element).val(), 10));
                     precisionValue(isNaN(precisionValue()) ? 0 : precisionValue());
@@ -367,7 +367,7 @@ var initKnockout = function () {
             });
         },
 
-        update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        update: function (element, valueAccessor) {
             var $element = $(element),
                 value = ko.utils.unwrapObservable(valueAccessor());
 
@@ -379,7 +379,6 @@ var initKnockout = function () {
 
 var reportsViewModel = function () {
     var self = this,
-        decimalPrecision,
         $direports,
         $tabs,
         $tabConfiguration,
@@ -456,7 +455,7 @@ var reportsViewModel = function () {
             }
             return !!(cumulativePermissions & requestedAccessLevel);
         },
-        mergePersistedPointRefArray = function (status) {
+        mergePersistedPointRefArray = function () {
             return new Promise(function(resolve, reject) {
                 var requestObj = {pointid: windowUpi},
                     mergePointArray = function (reportPoint) {
@@ -533,16 +532,9 @@ var reportsViewModel = function () {
             }
         },
         getPointRef = function (appIndex) {
-            var answer = point["Point Refs"].filter(function (pointRef) {
+            return point["Point Refs"].filter(function (pointRef) {
                 return (pointRef.AppIndex === appIndex);
             });
-
-            return answer;
-        },
-        appIndexInPointRefs = function (appIndex) {
-            var answer = getPointRef(appIndex);
-
-            return (answer.length > 0);
         },
         pointReferenceSoftDeleted = function (appIndex) {
             var answer = false,
@@ -660,7 +652,7 @@ var reportsViewModel = function () {
 
             return onScreenPointRefs;
         },
-        buildBitStringHtml = function (config, rawValue, enable) {
+        buildBitStringHtml = function (config, rawValue) {
             var htmlString = '<div class="bitstringReporting">',
                 enumValue;
             for (var key in config.bitstringEnums) {
@@ -758,13 +750,11 @@ var reportsViewModel = function () {
 
             return result;
         },
-        blockUI = function ($control, state, text) {
+        blockUI = function ($control, state) {
             if (state === true) {
                 $control.hide();
-                //$spinnertext.text(text);
             } else {
                 $control.show();
-                //$spinnertext.text("");
             }
             $control.attr('disabled', state);
         },
@@ -1135,13 +1125,6 @@ var reportsViewModel = function () {
             //console.log(" validateColumns() results.length = " + results.length);
             return results;
         },
-        getColumnConfigByColName = function (columnName) {
-            var result;
-            result = self.listOfColumns().filter(function (col) {
-                return col.colName === columnName;
-            });
-            return result[0];
-        },
         getColumnConfigByOperatorAndUPI = function (op, upi) {
             var result;
             result = self.listOfColumns().filter(function (col) {
@@ -1506,22 +1489,22 @@ var reportsViewModel = function () {
             if ($.isNumeric(tabNumber)) {
                 $tabs.find("li").removeClass("active");
                 $tabs.find("li:eq(" + (tabNumber - 1) + ")").addClass("active");
-            }
-            self.currentTab(tabNumber);
-            switch (tabNumber) {
-                case 1:
-                    $tabConfiguration.addClass("active");
-                    $tabConfiguration.show();
-                    $tabViewReport.removeClass("active");
-                    $tabViewReport.hide();
-                    $popAction.show();
-                    break;
-                case 2:
-                    $tabConfiguration.removeClass("active");
-                    $tabConfiguration.hide();
-                    $tabViewReport.addClass("active");
-                    $popAction.hide();
-                    break;
+                self.currentTab(tabNumber);
+                switch (tabNumber) {
+                    case 1:
+                        $tabConfiguration.addClass("active");
+                        $tabConfiguration.show();
+                        $tabViewReport.removeClass("active");
+                        $tabViewReport.hide();
+                        $popAction.show();
+                        break;
+                    case 2:
+                        $tabConfiguration.removeClass("active");
+                        $tabConfiguration.hide();
+                        $tabViewReport.addClass("active");
+                        $popAction.hide();
+                        break;
+                }
             }
         },
         initSocket = function (cb) {
@@ -1566,7 +1549,7 @@ var reportsViewModel = function () {
             $reportColumns = $direports.find("#reportColumns");
             $additionalFilters = $direports.find("#additionalFilters");
             $configurationContent = $direports.find(".configurationContent");
-            $popAction = $direports.find(".pop.cursorPointer");
+            $popAction = $direports.find(".pop.popInOutDiv");
             $hiddenPrecisionPlaceholder = $direports.find(".hiddenPrecisionPlaceholder");
             $globalPrecision = $hiddenPrecisionPlaceholder.find(".globalPrecision");
         },
@@ -1848,15 +1831,20 @@ var reportsViewModel = function () {
             }
             return data;
         },
-        adjustDatatableHeight = function () {
+        adjustDatatableHeightWidth = function () {
             var infoscanHeader = 60,
                 adjustHeight,
+                $dataTablesScrollHead = $tabViewReport.find('.dataTables_scrollHead'),
                 $dataTablesScrollBody = $tabViewReport.find('.dataTables_scrollBody'),
+                $dataTablesScrollFoot = $tabViewReport.find('.dataTables_scrollFoot'),
                 $dataTablesWrapper = $tabViewReport.find('.dataTables_wrapper');
             $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
             setInfoBarDateTime();
             adjustHeight = $dataTablesScrollBody.height() - (($dataTablesWrapper.height() + infoscanHeader) - window.innerHeight);
+            $dataTablesScrollHead.css('width', $dataTablesWrapper.width() - 17); // allow for scrolly in body
             $dataTablesScrollBody.css('height', adjustHeight);
+            $dataTablesScrollBody.css('width', $dataTablesWrapper.width());
+            $dataTablesScrollFoot.css('width', $dataTablesWrapper.width() - 17); // allow for scrolly in body
         },
         adjustConfigTabActivePaneHeight = function () {
             var $activePane = $direports.find(".tabConfiguration .tab-pane.active");
@@ -1871,7 +1859,7 @@ var reportsViewModel = function () {
             setTimeout(function () {
                 if (new Date() - lastResize >= resizeTimer) {
                     if (self.currentTab() === 2) {
-                        adjustDatatableHeight();
+                        adjustDatatableHeightWidth();
                     } else {
                         adjustConfigTabActivePaneHeight();
                     }
@@ -1880,7 +1868,6 @@ var reportsViewModel = function () {
         },
         saveReportConfig = function () {
             mergePersistedPointRefArray(true).then(function (response) {
-                point._pStatus = 0;  // activate report
                 point["Report Config"].columns = validateColumns(true);
                 point["Report Config"].filters = validateFilters(true);
                 pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
@@ -1914,10 +1901,16 @@ var reportsViewModel = function () {
                 point.name4 = $pointName4.val();
                 point.Name = self.reportDisplayTitle();
 
-                reportSocket.emit('updatePoint', JSON.stringify({
-                    'newPoint': point,
-                    'oldPoint': originalPoint
-                }));
+                if (point._pStatus !== 0) {
+                    reportSocket.emit('addPoint', {
+                        point: point
+                    });
+                } else {
+                    reportSocket.emit('updatePoint', JSON.stringify({
+                        'newPoint': point,
+                        'oldPoint': originalPoint
+                    }));
+                }
             }, function (error) {
                 console.error("saveReportConfig() --> mergePersistedPointRefArray() Failed!", error);
                 reject(result);
@@ -1926,7 +1919,8 @@ var reportsViewModel = function () {
         setReportEvents = function () {
             var intervals,
                 calculations,
-                entriesPerPage;
+                entriesPerPage,
+                precisionEventsSet = false;
 
             $(window).resize(function () {
                 handleResize();
@@ -2055,9 +2049,24 @@ var reportsViewModel = function () {
 
             $viewReport.on('length.dt', function (e, settings, len) {
                 self.selectedPageLength(len);
+                setTimeout(function () {
+                    adjustDatatableHeightWidth();
+                }, 10);
             });
 
-            $viewReport.on('draw.dt', function (e, settings, len) {
+            $viewReport.on('page.dt', function (e, settings) {
+                setTimeout(function () {
+                    adjustDatatableHeightWidth();
+                }, 10);
+            });
+
+            $viewReport.on('search.dt', function (e, settings) {
+                setTimeout(function () {
+                    adjustDatatableHeightWidth();
+                }, 10);
+            });
+
+            $viewReport.on('draw.dt', function (e, settings) {
                 var numberOfPages = $viewReport.DataTable().page.info().pages,
                     $tablePagination,
                     $pagination,
@@ -2070,7 +2079,6 @@ var reportsViewModel = function () {
                     $paginate_buttons.hide();
                 }
             });
-
 
             $direports.find(".precisionColumn").on('mousedown', function (e) {
                 if (self.canEdit()) {
@@ -2088,23 +2096,26 @@ var reportsViewModel = function () {
                         $globalPrecision.appendTo($(this));
                         $(this).find("input").focus();
 
-                        $(this).focusout(function (e) {
-                            $globalPrecision.appendTo($hiddenPrecisionPlaceholder);
-                            $(this).html(originalField);
-                        });
+                        if (!precisionEventsSet) {
+                            $(this).focusout(function (e) {
+                                $globalPrecision.appendTo($hiddenPrecisionPlaceholder);
+                                $(this).html(originalField);
+                            });
 
-                        $(this).keyup(function (event) {
-                            if (event.keyCode === 13) {
-                                var precision;
-                                if (isNaN($(this).find("input").val()) || $(this).find("input").val() === "") {
-                                    $(this).find("input").val(0);
+                            $(this).keyup(function (event) {
+                                if (event.keyCode === 13) {
+                                    var precision;
+                                    if (isNaN($(this).find("input").val()) || $(this).find("input").val() === "") {
+                                        $(this).find("input").val(0);
+                                    }
+                                    precision = $(this).find("input").val();
+                                    self.globalPrecisionValue(parseInt(precision, 10));
+                                    resetAllColumnPrecisionValues(self.globalPrecisionValue());
+                                    console.log("set all precision to " + self.globalPrecisionValue());
+                                    precisionEventsSet = true;
                                 }
-                                precision = $(this).find("input").val();
-                                self.globalPrecisionValue(parseInt(precision, 10));
-                                resetAllColumnPrecisionValues(self.globalPrecisionValue());
-                                console.log("set all precision to " + self.globalPrecisionValue());
-                            }
-                        });
+                            });
+                        }
                     }
                 }
             });
@@ -2206,11 +2217,11 @@ var reportsViewModel = function () {
                     value: "15",
                     unit: 15
                 }, {
-                    value: "25",
-                    unit: 25
+                    value: "24",
+                    unit: 24
                 }, {
-                    value: "50",
-                    unit: 50
+                    value: "48",
+                    unit: 48
                 }, {
                     value: "75",
                     unit: 75
@@ -2664,7 +2675,7 @@ var reportsViewModel = function () {
                     scrollX: true,
                     scrollCollapse: true,
                     lengthChange: true,
-                    lengthMenu: [[10, 15, 25, 50, 75, 100, -1], [10, 15, 25, 50, 75, 100, "All"]],
+                    lengthMenu: [[10, 15, 24, 48, 75, 100, -1], [10, 15, 24, 48, 75, 100, "All"]],
                     //bFiler: false,  // search box
                     pageLength: parseInt(self.selectedPageLength(), 10)
                 });
@@ -2694,7 +2705,7 @@ var reportsViewModel = function () {
                 $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
                 self.refreshData(false);
                 self.currentTimeStamp = moment().format("dddd MMMM DD, YYYY hh:mm:ss a");
-                adjustDatatableHeight();
+                adjustDatatableHeightWidth();
 
                 if (!exportEventSet) {
                     $tabViewReport.find("a.btn.btn-default.buttons-collection").on('click', function () {
@@ -2754,7 +2765,7 @@ var reportsViewModel = function () {
 
     self.reportType = "";
 
-    self.selectedPageLength = ko.observable("25");
+    self.selectedPageLength = ko.observable("24");
 
     self.currentTimeStamp = "";
 
@@ -2836,7 +2847,6 @@ var reportsViewModel = function () {
             reportConfig;
 
         exportEventSet = false;
-        decimalPrecision = 2;
         activeDataRequests = [];
         getScreenFields();
         initKnockout();
@@ -2872,7 +2882,7 @@ var reportsViewModel = function () {
                             self.selectedDuration().endDate = moment.unix(point["Report Config"].duration.endDate);
                             self.selectedDuration().startTimeOffSet = point["Report Config"].duration.startTimeOffSet;
                             self.selectedDuration().endTimeOffSet = point["Report Config"].duration.endTimeOffSet;
-                            self.selectedDuration().selectedRange = point["Report Config"].duration.selectedRange
+                            self.selectedDuration().selectedRange = point["Report Config"].duration.selectedRange;
                             self.durationStartTimeOffSet(self.selectedDuration().startTimeOffSet);
                             self.durationEndTimeOffSet(self.selectedDuration().endTimeOffSet);
                             self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
@@ -2928,7 +2938,7 @@ var reportsViewModel = function () {
                         console.log(" - - - DEFAULT  init() null columns");
                         break;
                 }
-                originalPoint = JSON.parse(JSON.stringify(point)); // reset original point since we've added attribs
+                //originalPoint = JSON.parse(JSON.stringify(point)); // reset original point since we've added attribs
             }
 
             $direports.find("#wrapper").show();
