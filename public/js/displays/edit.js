@@ -801,6 +801,8 @@ displays = $.extend(displays, {
         displays.isEdit = true;
 
         displayApp.controller('EditItemCtrl', function($scope, $http) {
+            displays.$editScope = $scope;
+
             $scope.updateEditItem = displays.updateEditItem = function(item) {
                 var $el = $('#actionButtonValue');
 
@@ -825,6 +827,11 @@ displays = $.extend(displays, {
 
                 $scope.editItem = item;
                 displays.updateAnimItem(item);
+            };
+
+            $scope.editReportRange = function () {
+                $scope.editItem._actionButton.sendCommand();
+                // $('#reportChooseRange').modal('show');
             };
 
             $scope.updateAnimItem = displays.updateAnimItem = function(item) {
@@ -1047,6 +1054,14 @@ displays = $.extend(displays, {
             $scope.openWindow = displays.openWindow;
             $scope.serverImageBrowser = new diFileBrowser();
             displays.popUpWindowActive = false;
+
+            $scope.reportConfig = $.extend(true, {}, displays.defaultReportConfig);
+            $scope.selectInterval = function (interval) {
+                $scope.reportConfig.intervalType = interval;
+                setTimeout(function () {
+                    $scope.$apply();
+                }, 1);
+            };
 
             $scope.priorities = displays.workspaceManager.systemEnums.controlpriorities;
 

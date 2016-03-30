@@ -6931,7 +6931,7 @@ gpl.Manager = function () {
         if (block.isNonPoint !== true && !(block instanceof gpl.blocks.TextBlock)) {
             gpl.blockUI();
 
-            windowRef = gpl.openWindow('/pointLookup/newPoint/restrictTo/' + pointType, 'New Point', '', '', 'newPoint', {
+            windowRef = gpl.openWindow('/api/points/newPoint/restrictTo/' + pointType, 'New Point', '', '', 'newPoint', {
                 width: 980,
                 height: 280,
                 gplHandler: handler

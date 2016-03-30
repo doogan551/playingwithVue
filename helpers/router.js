@@ -17,6 +17,7 @@ module.exports = function(controllers) {
   });
 
   router.use('/', controllers.workspace);
+  router.use('/inbound', controllers.inbound);
 
   // ALL ROUTES BELOW THIS WILL REQUIRE AUTHENTICATION
   router.use(function(req, res, next) {

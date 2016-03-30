@@ -1169,7 +1169,11 @@ var findInSql = function(options, tables, callback) {
 					statement.push('AND TIMESTAMP >');
 				}
 				statement.push(options.range.start);
-				statement.push('AND TIMESTAMP <=');
+				if (options.ops[0].fx === 'latest history') {
+					statement.push('AND TIMESTAMP <');
+				} else{
+					statement.push('AND TIMESTAMP <=');
+				}
 				statement.push(options.range.end);
 				if (['history match'].indexOf(options.ops[0].fx) >= 0) {
 					statement.push('AND TIMESTAMP IN (');

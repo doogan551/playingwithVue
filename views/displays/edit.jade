@@ -238,30 +238,36 @@ block panels
             //- option(value='16') Data Report
             option Command Point
 
-        h4 Control Priority
-        select#actionButtonPriority(ng-model="editItem._actionButton.ActionPriority")
-          option(value='0') {{priorities[0].name}}
-          option(value='1') {{priorities[1].name}}
-          option(value='2') {{priorities[2].name}}
-          option(value='3') {{priorities[3].name}}
-          option(value='4') {{priorities[4].name}}
-          option(value='5') {{priorities[5].name}}
-          option(value='6') {{priorities[6].name}}
-          option(value='7') {{priorities[7].name}}
-          option(value='8') {{priorities[8].name}}
-          option(value='9') {{priorities[9].name}}
-          option(value='10') {{priorities[10].name}}
-          option(value='11') {{priorities[11].name}}
-          option(value='12') {{priorities[12].name}}
-          option(value='13') {{priorities[13].name}}
-          option(value='14') {{priorities[14].name}}
-          option(value='15') {{priorities[15].name}}
-          option(value='16') {{priorities[16].name}}
+        div(ng-show="editItem._actionButton.isReport && !editItem._actionButton.isHistory")
+            input#reportConfirmRange.custom(type='checkbox', name='reportConfirmRange', data-mini='true', data-iconpos="left", ng-model="editItem.confirmRange")
+            label(for='reportConfirmRange') Ask for range on click
+            a(ng-click="editReportRange()", data-mini='true', data-role='button', data-inline='true', data-theme='c') Choose Report Range
+
+        div(ng-show="!editItem._actionButton.isReport")
+            h4 Control Priority
+            select#actionButtonPriority(ng-model="editItem._actionButton.ActionPriority")
+              option(value='0') {{priorities[0].name}}
+              option(value='1') {{priorities[1].name}}
+              option(value='2') {{priorities[2].name}}
+              option(value='3') {{priorities[3].name}}
+              option(value='4') {{priorities[4].name}}
+              option(value='5') {{priorities[5].name}}
+              option(value='6') {{priorities[6].name}}
+              option(value='7') {{priorities[7].name}}
+              option(value='8') {{priorities[8].name}}
+              option(value='9') {{priorities[9].name}}
+              option(value='10') {{priorities[10].name}}
+              option(value='11') {{priorities[11].name}}
+              option(value='12') {{priorities[12].name}}
+              option(value='13') {{priorities[13].name}}
+              option(value='14') {{priorities[14].name}}
+              option(value='15') {{priorities[15].name}}
+              option(value='16') {{priorities[16].name}}
 
             //- option(ng-repeat="priority in priorities", value="{{$index}}") {{priorities[$index].name}}
 
-        h4 Value
         div(ng-show="editItem._actionButton.isBinary || editItem._actionButton.isMultistate")
+            h4 Value
             select#actionButtonValue(ng-model="editItem.ActionParm")
 
           //- div(ng-show="editItem['ActionCode'] > 6 && editItem['ActionCode'] < 13")

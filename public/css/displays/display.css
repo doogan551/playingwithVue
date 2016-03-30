@@ -2,6 +2,27 @@ body {
 	margin:0;
 	padding: 0;
 }
+.popover {
+    z-index: 2000;
+}
+#reportRange {
+    min-width: 170px;
+    margin-left: 5px;
+}
+.reportTime,
+#reportInterval {
+    width: 60px !important;
+}
+.inputRow {
+    margin-bottom: 10px;
+}
+.inputRow span,
+.inputRow input {
+    margin-right: 5px;
+}
+.rowLabel {
+    margin-right: 10px;
+}
 #container .ui-body-c {
 	/*background-image:url(dots.gif);*/
 	border:none;
@@ -30,6 +51,9 @@ body {
 #track .displayDelete .ui-btn-inner {
 	padding-left:4px;
 	padding-right:4px;
+}
+.ui-controlgroup-horizontal.ui-mini .ui-btn-inner {
+    height: auto;
 }
 #page {
 	overflow:hidden;

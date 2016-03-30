@@ -103,21 +103,21 @@ $(document).on('pageinit', function() {
 
     displays.mouseEvents();
 
-    $('#reportStart').datetimepicker({
-        allowBlank: false,
-        onChangeDateTime: function (datetime) {
-            displays.$scope.reportStart = datetime;
-            displays.$scope.checkReportRange();
-        }
-    });
+    // $('#reportStart').datetimepicker({
+    //     allowBlank: false,
+    //     onChangeDateTime: function (datetime) {
+    //         displays.$scope.reportStart = datetime;
+    //         displays.$scope.checkReportRange();
+    //     }
+    // });
 
-    $('#reportEnd').datetimepicker({
-        allowBlank: false,
-        onChangeDateTime: function (datetime) {
-            displays.$scope.reportEnd = datetime;
-            displays.$scope.checkReportRange();
-        }
-    });
+    // $('#reportEnd').datetimepicker({
+    //     allowBlank: false,
+    //     onChangeDateTime: function (datetime) {
+    //         displays.$scope.reportEnd = datetime;
+    //         displays.$scope.checkReportRange();
+    //     }
+    // });
 
     $('#editDisplay').off('click').on('click', function(e) {
         e.preventDefault();
