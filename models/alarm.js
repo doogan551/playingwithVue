@@ -1,3 +1,5 @@
+var ObjectID = require('mongodb').ObjectID;
+
 var Utility = require('../models/utility');
 var config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
@@ -128,5 +130,45 @@ exports.getRecentAlarms = function(data, cb) {
       return cb(err);
     }
     return cb(err, alarms, count);
+  });
+};
+
+exports.acknowledgeAlarm = function(data, cb) {
+  var ids, username, time;
+
+  ids = data.ids;
+  username = data.username;
+  time = Math.floor(new Date().getTime() / 1000);
+
+  for (var j = 0; j < ids.length; j++) {
+    ids[j] = ObjectID(ids[j]);
+  }
+
+  var criteria = {
+    collection: 'Alarms',
+    query: {
+      _id: {
+        $in: ids
+      },
+      ackStatus: 1
+    },
+    updateObj: {
+      $set: {
+        ackStatus: 2,
+        ackUser: username,
+        ackTime: time
+      }
+    },
+    options: {
+      multi: true
+    }
+  };
+
+
+  Utility.update(criteria, function(err, result) {
+    criteria.collection = 'ActiveAlarms';
+    Utility.update(criteria, function(err2, result2) {
+      cb(err || err2, result);
+    });
   });
 };

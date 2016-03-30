@@ -1178,7 +1178,7 @@ var Config = (function(obj) {
             var point = data.point,
                 updateIsDisplayable = false;
 
-            if (data.propertyObject.PointInst !== 0) {
+            if (data.propertyObject.PointInst !== 0) { // should be fine *ref
                 point._devModel = data.refPoint._devModel;
             } else {
                 point._devModel = enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"];
@@ -1633,7 +1633,7 @@ var Config = (function(obj) {
         },
 
         "Occupied Point": function(data) {
-            if (obj.Utility.getPropertyObject("Device Point", data.point).PointInst !== obj.Utility.getPropertyObject("Device Point", data.refPoint).PointInst) {
+            if (obj.Utility.getPropertyObject("Device Point", data.point).PointInst !== obj.Utility.getPropertyObject("Device Point", data.refPoint).PointInst) { // will fail *ref
                 data.ok = false;
                 data.result = data.property + " must reside on the same Device as this point.";
             }
@@ -1825,7 +1825,7 @@ var Config = (function(obj) {
                     data.ok = false;
                     data.result = data.property + " must be on same Device.";
                 } else {
-                    point._rmuModel = data.refPoint._rmuModel;
+                    point._rmuModel = data.refPoint._rmuModel; // should be fine *ref
                 }
             } else {
                 point._rmuModel = enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"];
@@ -2234,10 +2234,10 @@ var Config = (function(obj) {
 
         "Control Point": function(data) {
             var pointType = data.point["Point Type"].Value;
-
+            console.log('inside control point', !!data.refPoint, !!data.point, !!obj.Utility.getPropertyObject("Device Point", data.point));
             if (obj.Utility.getPropertyObject("Device Point", data.point) === null) {
                 if (pointType === "Schedule Entry") {
-                    if (!obj.Utility.isPropInSchedProps(data.refPoint["Point Type"].Value, data.point["Control Property"].Value)) {
+                    if (!!data.refPoint && !obj.Utility.isPropInSchedProps(data.refPoint["Point Type"].Value, data.point["Control Property"].Value)) { //failing *ref - fixed?
                         data.ok = false;
                         data.result = "Invalid Control Property.";
                     }
@@ -2248,7 +2248,7 @@ var Config = (function(obj) {
                     data.result = "Invalid Point Type for Control Point property";
                 }
 
-            } else if (!!data.refPoint && obj.Utility.getPropertyObject("Device Point", data.point).Value !== obj.Utility.getPropertyObject("Device Point", data.refPoint).Value) {
+            } else if (!!data.refPoint && obj.Utility.getPropertyObject("Device Point", data.point).Value !== obj.Utility.getPropertyObject("Device Point", data.refPoint).Value) { // should be fine *ref
                 data.ok = false;
                 data.result = data.property + " must reside on the same Device as this point.";
             } else if (pointType !== "Optimum Start") {
@@ -2263,7 +2263,7 @@ var Config = (function(obj) {
             var point = data.point,
                 refPoint = data.refPoint;
 
-            if (!obj.Utility.isPropInSchedProps(refPoint["Point Type"].Value, point["Control Property"].Value)) {
+            if (!!data.refPoint && !obj.Utility.isPropInSchedProps(refPoint["Point Type"].Value, point["Control Property"].Value)) { // will fail *ref - fixed?
                 data.ok = false;
                 data.result = "Invalid Control Property.";
             } else {

@@ -51,7 +51,7 @@ module.exports = {
 					criteria = {
 						collection: 'Users',
 						query: {
-							username: username
+							username: {"$regex": new RegExp(['^', username, '$'].join(''), 'i')}
 						},
 						updateObj: {
 							$set: {
