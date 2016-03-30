@@ -19,6 +19,7 @@ var History = require('../models/history');
 var logger = require('../helpers/logger')(module);
 var zmq = require('../helpers/zmq');
 var ObjectID = require('mongodb').ObjectID;
+var Alarm = require('../models/alarm');
 
 var pointsCollection = utils.CONSTANTS("pointsCollection");
 var historyCollection = utils.CONSTANTS("historyCollection");
@@ -158,7 +159,7 @@ module.exports = function socketio(_common) {
         data = JSON.parse(data);
       }
 
-      sendAcknowledge(data, function(err, result) {
+      Alarm.acknowledgeAlarm(data, function(err, result) {
         sock.emit('acknowledgeResponse', {
           result: result.result.nModified,
           reqID: data.reqID
@@ -909,46 +910,6 @@ function getActiveAlarms(data, callback) {
       }, function(err, count) {
         callback(err, recents, count);
       });
-    });
-  });
-}
-
-function sendAcknowledge(data, callback) {
-  var ids, username, time;
-
-  ids = data.ids;
-  username = data.username;
-  time = Math.floor(new Date().getTime() / 1000);
-
-  for (var j = 0; j < ids.length; j++) {
-    ids[j] = ObjectID(ids[j]);
-  }
-
-  var criteria = {
-    collection: alarmsCollection,
-    query: {
-      _id: {
-        $in: ids
-      },
-      ackStatus: 1
-    },
-    updateObj: {
-      $set: {
-        ackStatus: 2,
-        ackUser: username,
-        ackTime: time
-      }
-    },
-    options: {
-      multi: true
-    }
-  };
-
-
-  Utility.update(criteria, function(err, result) {
-    criteria.collection = 'ActiveAlarms';
-    Utility.update(criteria, function(err2, result2) {
-      callback(err || err2, result);
     });
   });
 }
