@@ -2037,14 +2037,20 @@ var reportsViewModel = function () {
             });
 
             $viewReport.on('column-reorder.dt', function (event, settings, details) {
-                var columnsArray = $.extend(true, [], self.listOfColumns());
-                var swapColumnFrom = $.extend(true, {}, columnsArray[details.from]);  // clone from field
-                columnsArray.splice(details.from, 1);
-                columnsArray.splice(details.to, 0, swapColumnFrom);
+                var columnsArray = $.extend(true, [], self.listOfColumns()),
+                    swapColumnFrom = $.extend(true, {}, columnsArray[details.iFrom]);  // clone from field
+                columnsArray.splice(details.iFrom, 1);
+                columnsArray.splice(details.iTo, 0, swapColumnFrom);
                 updateListOfColumns(columnsArray);
-                //$.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
                 $viewReport.DataTable().draw("current");
                 //console.log("moved column '" + details.from + "' to column '" + details.to + "'");
+            });
+
+            $viewReport.on('column-resize.dt', function (event, settings, details) {
+                var columnsArray = $.extend(true, [], self.listOfColumns());
+                columnsArray[details.resizedColumn].width = details.width;
+                updateListOfColumns(columnsArray);
+                console.log("column '" + details.resizedColumn + "' width set to '" + details.width + "'");
             });
 
             $viewReport.on('length.dt', function (e, settings, len) {
@@ -2412,6 +2418,7 @@ var reportsViewModel = function () {
                     result = {
                         title: columnTitle,
                         data: columnConfig.dataColumnName,
+                        width: (!!columnConfig.width ? columnConfig.width : "auto"),
                         render: {
                             _: "Value",
                             sort: "rawValue",
@@ -2499,7 +2506,8 @@ var reportsViewModel = function () {
             if (aoColumns.length > 0) {
                 $viewReport.DataTable({
                     api: true,
-                    dom: 'Blfrtip',
+                    dom: 'BRlfrtip',
+                    //dom: 'BRZlfrtip',
                     buttons: [
                         {
                             extend: 'collection',
@@ -2670,6 +2678,12 @@ var reportsViewModel = function () {
                         fixedColumnsLeft: 1,
                         realtime: false
                     },
+                    //colResize: {
+                    //    resizeCallback: function(column) {
+                    //        alert("Column Resized");
+                    //    },
+                    //    handleWidth: 10
+                    //},
                     order: [[0, "asc"]], // always default sort by first column
                     scrollY: true,
                     scrollX: true,
