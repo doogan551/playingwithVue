@@ -59,6 +59,14 @@ div.durationCtrl
    span.timeSeg sec
    // /ko
 // /ko
+// ko if: (valueType === "BitString")
+div.bitStringCtrl
+   // ko foreach: bitStringEnumsArray
+   input.bitStringCheckbox(data-bind="checked: checked, enable: $root.canEdit()", type="checkbox")
+   span.bitStringLabel(data-bind="text: name")
+   br
+   // /ko
+// /ko
 
 
 

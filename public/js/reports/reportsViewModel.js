@@ -652,20 +652,35 @@ var reportsViewModel = function () {
 
             return onScreenPointRefs;
         },
-        buildBitStringHtml = function (config, rawValue) {
+        buildBitStringHtml = function (config, rawValue, disabled) {
             var htmlString = '<div class="bitstringReporting">',
                 enumValue;
             for (var key in config.bitstringEnums) {
                 if (config.bitstringEnums.hasOwnProperty(key)) {
                     if (key !== "All") {
                         enumValue = rawValue & config.bitstringEnums[key].enum;
-                        htmlString += '<input type="checkbox" ' + (enumValue > 0 ? 'checked ' : '') + ' disabled="disabled"><span>' + key + '</span><br>';
+                        htmlString += '<input type="checkbox" ' + (enumValue > 0 ? 'checked ' : '') + (disabled ? 'disabled' : '') + '><span>' + key + '</span><br>';
                     }
                 }
             }
             htmlString += '</div>';
 
             return htmlString;
+        },
+        getBitStringEnumsArray = function (bitString) {
+            var enumsArray = [];
+            for (var key in bitString) {
+                if (bitString.hasOwnProperty(key)) {
+                    if (key !== "All") {
+                        enumsArray.push({
+                            name: key,
+                            checked: false
+                        });
+                    }
+                }
+            }
+
+            return enumsArray;
         },
         generateUUID = function () {
             var d = new Date().getTime(),
@@ -1040,6 +1055,9 @@ var reportsViewModel = function () {
                 case "Enum":
                     localFilter.evalue = -1;
                     break;
+                case "BitString":
+                    localFilter.bitStringEnumsArray = getBitStringEnumsArray(window.workspaceManager.config.Enums[localFilter.filterName + ' Bits']);
+                    break;
             }
 
             return localFilter;
@@ -1384,6 +1402,7 @@ var reportsViewModel = function () {
         buildReportDataRequest = function () {
             var result,
                 i,
+                j,
                 columns,
                 filters,
                 filter,
@@ -1424,12 +1443,40 @@ var reportsViewModel = function () {
                         self.endDate = self.selectedDuration().endDate.unix();
                     }
                 } else {
-                    for (key in filters) {
-                        if (filters.hasOwnProperty(key)) {
-                            filter = filters[key];
+                    if (filters.length > 0) {
+                        for (i = 0; i < filters.length; i++) {
+                            filter = filters[i];
                             if (!!filter.error) {
                                 displayError(filter.error);
                                 activeError = true;
+                            }
+                            if (filter.valueType === "BitString") {
+                                var total = 0,
+                                    key,
+                                    bitStringEnums = window.workspaceManager.config.Enums[filter.filterName + ' Bits'];
+
+                                for (key in bitStringEnums) {
+                                    if (bitStringEnums.hasOwnProperty(key)) {
+                                        if (key !== "All") {
+                                            total += bitStringEnums[key].enum;
+                                        }
+                                    }
+                                }
+
+                                filter.value = 0;
+                                for (j = 0; j < filter.bitStringEnumsArray.length; j++) {
+                                    key = filter.bitStringEnumsArray[j].name;
+                                    if (bitStringEnums.hasOwnProperty(key)) {
+                                        if (filter.bitStringEnumsArray[j].checked) {
+                                            //console.log("bitStringEnums[" + key + "].enum  = " + bitStringEnums[key].enum);
+                                            filter.value += bitStringEnums[key].enum;
+                                            //console.log("filter.value  = " + filter.value);
+                                        }
+                                        if (filter.value === total) {
+                                            filter.value = bitStringEnums["All"].enum;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -1659,7 +1706,7 @@ var reportsViewModel = function () {
                         dataField.Value = temp[0].toUpperCase() + temp.substring(1);
                         break;
                     case "BitString":
-                        htmlString = buildBitStringHtml(columnConfig, rawValue, false);
+                        htmlString = buildBitStringHtml(columnConfig, rawValue, true);
                         $customField = $(htmlString);
                         dataField.Value = $customField.html();
                         break;
@@ -2050,7 +2097,8 @@ var reportsViewModel = function () {
                 var columnsArray = $.extend(true, [], self.listOfColumns());
                 columnsArray[details.resizedColumn].width = details.width;
                 updateListOfColumns(columnsArray);
-                console.log("column '" + details.resizedColumn + "' width set to '" + details.width + "'");
+                $viewReport.DataTable().draw("current");
+                //console.log("column '" + details.resizedColumn + "' width set to '" + details.width + "'");
             });
 
             $viewReport.on('length.dt', function (e, settings, len) {
@@ -2507,7 +2555,6 @@ var reportsViewModel = function () {
                 $viewReport.DataTable({
                     api: true,
                     dom: 'BRlfrtip',
-                    //dom: 'BRZlfrtip',
                     buttons: [
                         {
                             extend: 'collection',
@@ -2678,12 +2725,6 @@ var reportsViewModel = function () {
                         fixedColumnsLeft: 1,
                         realtime: false
                     },
-                    //colResize: {
-                    //    resizeCallback: function(column) {
-                    //        alert("Column Resized");
-                    //    },
-                    //    handleWidth: 10
-                    //},
                     order: [[0, "asc"]], // always default sort by first column
                     scrollY: true,
                     scrollX: true,
