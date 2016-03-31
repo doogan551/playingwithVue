@@ -103,7 +103,7 @@ block content
 														// /ko
 													// ko if: ($parent.reportType !== 'Property')
 													td.displayName
-														input.form-control.columnDisplayName(data-bind="value: colDisplayName, enable: $parent.canEdit(), event: { change: function() { $parent.designChanged(true) } };", type="text", required)
+														input.form-control.columnDisplayName(data-bind="value: colDisplayName, enable: $parent.canEdit(), event: { change: function() { $parent.designChanged(true) } }", type="text", required)
 													// /ko
 													td.columnTotals
 														// ko if: ($data.canCalculate)
@@ -142,7 +142,7 @@ block content
 													// /ko
 													td.precision
 														// ko if: ($data.canCalculate)
-														input.form-control.inputPrecision(data-bind="value: precision, enable: $root.canEdit(), event: { keydown: function (data, event) { event.preventDefault(); }, change: function() { $root.designChanged(true) } }", type="number", min="0", max="20", placeholder="...")
+														input.form-control.inputPrecision(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")
 														// /ko
 													// ko if: ($root.canEdit())
 													td.removecolumn
@@ -215,20 +215,20 @@ block content
 										span.reportDateRangePicker
 											i.fa.fa-calendar.glyphicon.glyphicon-calendar.durationCalendarIcon
 											span.reportDateRangeLabel.small Duration:&nbsp;
-											input.input.form-control.filterContainer.durationDateRange(data-bind="reportDateRangePicker: selectedDuration, enable: $root.canEdit()", type="text", placeholder="Select...")
+											input.input.form-control.filterContainer.durationDateRange(data-bind="reportDateRangePicker: selectedDuration, enable: $root.canEdit(), css: { durationError: $root.durationError() }", type="text", placeholder="Select...")
 										br
 										span.timePickers
 											span.timePickerLabel.small From:&nbsp;
-											input.input.form-control.filterContainer.durationDateRangeTime(data-bind="reportTimePicker: durationStartTimeOffSet, enable: $root.canEdit()", title="Start Time OffSet", type="text")
+											input.input.form-control.filterContainer.durationDateRangeTime(data-bind="reportTimePicker: durationStartTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="Start Time OffSet", type="text")
 											span.timePickerLabel.small To:&nbsp;
-											input.input.form-control.filterContainer.durationDateRangeTime(data-bind="reportTimePicker: durationEndTimeOffSet, enable: $root.canEdit()", title="End Time OffSet", type="text")
+											input.input.form-control.filterContainer.durationDateRangeTime(data-bind="reportTimePicker: durationEndTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="End Time OffSet", type="text")
 										br
 										br
 										span.intervalSettings
 											span.intervalLabel.small Interval:&nbsp;
-											input.intervalValue.form-control(data-bind="value: $root.intervalValue, enable: $root.canEdit()", type="number", min="1", max="9999")
-											.dropdown.availableIntervalsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-												button.btn.btn-default.dropdown-toggle.intervalButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+											input.intervalValue.form-control(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
+											.dropdown.availableIntervalsContainer
+												button.btn.btn-default.dropdown-toggle.intervalButton(data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-toggle="dropdown")
 													span(data-bind="text: $root.interval")
 													span.caret.lm10px
 												ul.intervals.dropdown-menu
@@ -264,5 +264,8 @@ block content
 						.popIn.hidden
 							.fa.fa-arrow-circle-down
 							| Pop In
+
+	.hiddenPrecisionPlaceholder
+		input.form-control.globalPrecision.hidden(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
 	include footer
 	include modals/dialogScreens

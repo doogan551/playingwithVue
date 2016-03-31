@@ -1,6 +1,27 @@
 "use strict";
 window.workspaceManager = (window.opener || window.top).workspaceManager;
-var reportsVM;
+var reportsVM,
+    reportDateRanges = function (selectedRange) {
+        var answer,
+            dateRanges = { // shifting everything by one day forward
+                'Today': [moment(), moment().add(1, 'day')],
+                'Yesterday': [moment().subtract(1, 'days'), moment()],
+                'Last 7 Days': [moment().subtract(6, 'days'), moment().add(1, 'day')],
+                'Last Week': [moment().subtract(1, 'weeks').startOf('week'), moment().subtract(1, 'weeks').endOf('week').add(1, 'day')],
+                'Last 4 Weeks': [moment().subtract(4, 'weeks'), moment().add(1, 'day')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month').add(1, 'day')],
+                'This Year': [moment().startOf('year'), moment().add(1, 'day')],
+                'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year').add(1, 'day')]
+            };
+
+        if (!!selectedRange && dateRanges.hasOwnProperty(selectedRange)) {
+            answer = dateRanges[selectedRange];
+        } else {
+            answer = dateRanges;
+        }
+
+        return answer;
+    };
 
 var initKnockout = function () {
     var $startDate,
@@ -23,7 +44,7 @@ var initKnockout = function () {
                     keyCode === 40 ||  // down
                     keyCode === 46 ||  // del
                     (keyCode === 186 && shiftKey && timeValue.indexOf(":") === -1) ||  // allow only 1 ":"
-                    (((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 150)) && !shiftKey) &&  // allow numbers
+                    (((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105)) && !shiftKey) &&  // allow numbers
                     timeValue.length - selectionLen <= 4;
             }
         },
@@ -90,7 +111,7 @@ var initKnockout = function () {
         };
 
     ko.bindingHandlers.reportDateRangePicker = {
-        init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        init: function (element, valueAccessor) {
             var $element = $(element),
                 durationInfo = valueAccessor(),
                 getPickerData = function (element, picker) {
@@ -120,16 +141,7 @@ var initKnockout = function () {
                 autoUpdateInput: false,
                 timePicker: false,
                 //timePicker24Hour: true,
-                ranges: {
-                    'Today': [moment(), moment()],
-                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                    'Last Week': [moment().subtract(1, 'weeks').startOf('week'), moment().subtract(1, 'weeks').endOf('week')],
-                    'Last 4 Weeks': [moment().subtract(4, 'weeks'), moment()],
-                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
-                    'This Year': [moment().startOf('year'), moment()],
-                    'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
-                }
+                ranges: reportDateRanges()
             });
 
             $element.on('apply.daterangepicker', function (ev, picker) {
@@ -143,7 +155,7 @@ var initKnockout = function () {
     };
 
     ko.bindingHandlers.reportDatePicker = {
-        init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var $element = $(element),
                 options = {
                     autoclose: true,
@@ -172,7 +184,7 @@ var initKnockout = function () {
                 }
             });
 
-            $element.change(function (event) {
+            $element.change(function () {
                 if (moment(new Date($(element).val())).isValid()) {
                     $element.parent().removeClass("has-error");
                     $element.parent().attr("title", "");
@@ -195,14 +207,14 @@ var initKnockout = function () {
                 $startDate.datepicker("setEndDate", initEndDate);
             }
         },
-        update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        update: function (element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor());
             $(element).datepicker("setDate", moment.unix(value).format("MM/DD/YYYY"));
         }
     };
 
     ko.bindingHandlers.reportTimePicker = {
-        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        init: function (element, valueAccessor) {
             var $element = $(element),
                 timestamp = valueAccessor(),
                 options = {
@@ -212,7 +224,7 @@ var initKnockout = function () {
 
             $element.clockpicker(options);
 
-            $element.change(function (event) {
+            $element.change(function () {
                 if (ko.isObservable(timestamp)) {
                     timestamp($(element).val());
                 } else {
@@ -220,7 +232,7 @@ var initKnockout = function () {
                 }
             });
 
-            $element.keyup(function (event) {
+            $element.keyup(function () {
                 if ($element.val().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
                     $element.parent().removeClass("has-error");
                     $element.parent().attr("title", "");
@@ -258,7 +270,7 @@ var initKnockout = function () {
             });
         },
 
-        update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+        update: function (element, valueAccessor) {
             var $element = $(element),
                 value = ko.utils.unwrapObservable(valueAccessor()),
                 hr,
@@ -274,14 +286,99 @@ var initKnockout = function () {
         }
     };
 
-    ko.bindingHandlers.reportPrecisionInput = { // TODO
+    ko.bindingHandlers.reportPrecisionInput = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var $element = $(element),
+                precisionValue = valueAccessor(),
+                maxNumber = ($element.attr("max") === undefined ? 10 : $element.attr("max")),
+                minNumber = ($element.attr("min") === undefined ? 0 : $element.attr("min")),
+                viewModelField = $element.attr("viewModelField"),
+                incrementNumber = function (incrementUnit, value) {
+                    var newValue = parseInt(value + incrementUnit, 10);
+
+                    if (newValue <= maxNumber && newValue >= minNumber) {
+                        return newValue;
+                    } else {
+                        return parseInt(value, 10);
+                    }
+                },
+                characterAllowedInPrecisionField = function (event, value) {
+                    var keyCode = (!!event.which ? event.which : event.keyCode),
+                        shiftKey = event.shiftKey,
+                        appendedValue = value.toString();
+                    if (keyCode === 16 || keyCode === 17) {
+                        return false;
+                    } else {
+                        if((((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105)) && !shiftKey)) {
+                            appendedValue = parseInt(appendedValue + String.fromCharCode((96 <= keyCode && keyCode <= 105)? keyCode-48 : keyCode), 10);
+                            return (appendedValue <= maxNumber && appendedValue >= minNumber);
+                        } else {
+                            return keyCode === 8 ||  // backspace
+                                keyCode === 13 ||  // CR
+                                keyCode === 35 ||  // end
+                                keyCode === 36 ||  // home
+                                keyCode === 37 ||  // left
+                                keyCode === 38 ||  // up
+                                keyCode === 39 ||  // right
+                                keyCode === 40 ||  // down
+                                keyCode === 46 ||  // del
+                                (((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 150)) && !shiftKey);  // allow numbers
+                        }
+                    }
+                };
+
+            $element.attr("title", "'" + minNumber + "' to '" + maxNumber + "'");
+
+            $element.keyup(function () {
+                if (ko.isObservable(precisionValue)) {
+                    precisionValue(parseInt($(element).val(), 10));
+                    precisionValue(isNaN(precisionValue()) ? 0 : precisionValue());
+                    if (!!viewModelField) {
+                        viewModel[viewModelField] = precisionValue();
+                    }
+                } else {
+                    precisionValue = parseInt($(element).val(), 10);
+                    precisionValue = (isNaN(precisionValue) ? 0 : precisionValue);
+                    if (!!viewModelField) {
+                        viewModel[viewModelField] = precisionValue;
+                    }
+                }
+            });
+
+            $element.keydown(function (event) {
+                var value = parseInt($element.val(), 10),
+                    keyCode = (!!event.which ? event.which : event.keyCode);
+                if ((isNaN(value) || value === "")) {
+                    value = 0;
+                }
+                if (characterAllowedInPrecisionField(event, value)) {
+                    if (keyCode === 38) { // up arrow
+                        $element.val(incrementNumber(1, value));
+                    } else if (keyCode === 40) { // down arrow
+                        $element.val(incrementNumber(-1, value));
+                    } else if (keyCode === 13) { // CR
+                        $element.val(value);
+                    }
+                    return true;
+                } else {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+        },
+
+        update: function (element, valueAccessor) {
+            var $element = $(element),
+                value = ko.utils.unwrapObservable(valueAccessor());
+
+            $element.val(value);
+        }
 
     };
 };
 
 var reportsViewModel = function () {
     var self = this,
-        decimalPrecision,
         $direports,
         $tabs,
         $tabConfiguration,
@@ -303,9 +400,13 @@ var reportsViewModel = function () {
         $additionalFilters,
         $columnNames,
         $configurationContent,
+        $hiddenPrecisionPlaceholder,
+        $globalPrecision,
         pointSelectorRef,
         $pointSelectorIframe,
         $popAction,
+        longClickStart,
+        longClickTimer = 100,
         reportData,
         activeDataRequests,
         reportSocket,
@@ -333,7 +434,6 @@ var reportsViewModel = function () {
             ACKNOWLEDGE: 4,
             WRITE: 8
         },
-        pointRefArray = [],
         filtersPropertyFields = [],
         columnsPropertyFields = [],
         windowUpi,
@@ -355,27 +455,29 @@ var reportsViewModel = function () {
             }
             return !!(cumulativePermissions & requestedAccessLevel);
         },
-        mergePersistedPointRefArray = function (status) {
+        mergePersistedPointRefArray = function () {
             return new Promise(function(resolve, reject) {
                 var requestObj = {pointid: windowUpi},
                     mergePointArray = function (reportPoint) {
-                        point["Point Refs"] = buildPointRefsArray();  // get all points from screen
-
                         var i,
                             currentUPI,
                             currentAppIndex,
                             persistedPointRef,
-                            onscreenPointRefArray = pointRefArray,
-                            persistedPointRefArray = reportPoint["Point Refs"];
+                            onscreenPointRefArray = buildPointRefsArray(),  // get all points from screen
+                            persistedPointRefArray = (!!reportPoint ? reportPoint["Point Refs"] : null);
 
-                        for (i = 0; i < onscreenPointRefArray.length; i++) {
-                            currentUPI = onscreenPointRefArray[i].Value;
-                            currentAppIndex = onscreenPointRefArray[i].AppIndex;
-                            persistedPointRef = persistedPointRefArray.filter(function (pointref) {
-                                return (pointref.Value === currentUPI || pointref.AppIndex === currentAppIndex);
-                            });
-                            if (persistedPointRef.length > 0) {
-                                onscreenPointRefArray[i] = persistedPointRef[0];
+                        if (!!persistedPointRefArray) {
+                            for (i = 0; i < onscreenPointRefArray.length; i++) {
+                                currentUPI = onscreenPointRefArray[i].Value;
+                                currentAppIndex = onscreenPointRefArray[i].AppIndex;
+                                persistedPointRef = persistedPointRefArray.filter(function (pointref) {
+                                    return pointref.AppIndex === currentAppIndex;
+                                });
+                                if (persistedPointRef.length > 0) {
+                                    if (persistedPointRef[0].Value === 0 || persistedPointRef[0].Value === onscreenPointRefArray[i].Value) {
+                                        onscreenPointRefArray[i] = persistedPointRef[0];
+                                    }
+                                }
                             }
                         }
 
@@ -387,23 +489,52 @@ var reportsViewModel = function () {
 
                 ajaxPost(requestObj, "/api/points/getpoint/", mergePointArray);
             });
-
-            //setTimeout(function () {
-            //    // wait 1/4 sec
-            //}, 250);
-            //return true;
+        },
+        resetPointRefSlot = function (appIndex, upi, name) {
+            var i,
+                pointRef;
+            for(i = 0; i < point["Point Refs"].length; i++) {
+                if (point["Point Refs"][i].AppIndex === appIndex) {
+                    pointRef = point["Point Refs"][i];
+                    pointRef.Value = upi;
+                    pointRef.PointInst = upi;
+                    pointRef.PointName = name;
+                    pointRef.DevInst = 0;
+                }
+            }
+        },
+        clearPointRefSlot = function (appIndex) {
+            var i,
+                pointRef;
+            for(i = 0; i < point["Point Refs"].length; i++) {
+                if (point["Point Refs"][i].AppIndex === appIndex) {
+                    pointRef = point["Point Refs"][i];
+                    pointRef.Value = 0;
+                    pointRef.PointInst = 0;
+                    pointRef.PointName = "-cleared-";
+                    pointRef.DevInst = 0;
+                }
+            }
+        },
+        cleanPointRefArray = function () {
+            var i,
+                //pointRefs = $.extend(true, [], point["Point Refs"]),
+                pointRef;
+            for(i = 0; i < point["Point Refs"].length; i++) {
+                pointRef = point["Point Refs"][i];
+                if (!!pointRef) {
+                    if (pointRef.PropertyName === "Column Point" || pointRef.PropertyName === "Qualifier Point") {
+                        if (pointRef.PointName === "-cleared-") {
+                            point["Point Refs"].splice(i--, 1);
+                        }
+                    }
+                }
+            }
         },
         getPointRef = function (appIndex) {
-            var answer = pointRefArray.filter(function (pointRef) {
+            return point["Point Refs"].filter(function (pointRef) {
                 return (pointRef.AppIndex === appIndex);
             });
-
-            return answer;
-        },
-        appIndexInPointRefs = function (appIndex) {
-            var answer = getPointRef(appIndex);
-
-            return (answer.length > 0);
         },
         pointReferenceSoftDeleted = function (appIndex) {
             var answer = false,
@@ -421,22 +552,28 @@ var reportsViewModel = function () {
             return answer;
         },
         pointReferenceHardDeleted = function (appIndex) {
-            return (!!appIndex && appIndex > 0 && !appIndexInPointRefs(appIndex));
+            var pointRef = getPointRef(appIndex);
+
+            if (!!pointRef && pointRef.length > 0) {
+                return (pointRef[0].PointInst === 0 && pointRef[0].Value === 0);
+            } else {
+                return true;
+            }
         },
         getMaxAppIndexUsed = function () {
             var answer = 0,
                 i;
-            for (i = 0; i < pointRefArray.length; i++) {
-                if (answer < pointRefArray[i].AppIndex) {
-                    answer = pointRefArray[i].AppIndex;
+            for (i = 0; i < point["Point Refs"].length; i++) {
+                if (answer < point["Point Refs"][i].AppIndex) {
+                    answer = point["Point Refs"][i].AppIndex;
                 }
             }
             return answer;
         },
         buildPointRefsArray = function () {
-            var filters = self.listOfFilters(),
-                //columns = $.extend(true, [], self.listOfColumns()),
+            var //columns = $.extend(true, [], self.listOfColumns()),
                 //filters = $.extend(true, [], self.listOfFilters()),
+                onScreenPointRefs = $.extend(true, [], point["Point Refs"]),
                 column,
                 filter,
                 appIndex = getMaxAppIndexUsed(),
@@ -447,8 +584,8 @@ var reportsViewModel = function () {
                     for (i = 0; i < self.listOfColumns().length; i++) {
                         column = self.listOfColumns()[i];
                         if (!!column.upi && column.upi > 0) {
-                            existingPointRef = pointRefArray.filter(function (pRef) {
-                                return (pRef.Value === column.upi || pRef.AppIndex === column.AppIndex);
+                            existingPointRef = onScreenPointRefs.filter(function (pRef) {
+                                return (pRef.AppIndex === column.AppIndex);
                             });
 
                             if (existingPointRef.length === 0) {
@@ -463,7 +600,7 @@ var reportsViewModel = function () {
                                 pointRef.PointType = window.workspaceManager.config.Enums["Point Types"][column.pointType].enum;
                                 pointRef.PointInst = column.upi;
                                 pointRef.DevInst = 0;
-                                pointRefArray.push(pointRef);
+                                onScreenPointRefs.push(pointRef);
                                 column.AppIndex = pointRef.AppIndex;
                             } else {
                                 column.AppIndex = existingPointRef[0].AppIndex;
@@ -472,11 +609,11 @@ var reportsViewModel = function () {
                     }
                 },
                 checkFilters = function () {
-                    for (i = 0; i < filters.length; i++) {
-                        filter = filters[i];
+                    for (i = 0; i < self.listOfFilters().length; i++) {
+                        filter = self.listOfFilters()[i];
                         if (filter.valueType === "UniquePID") {
-                            existingPointRef = pointRefArray.filter(function (pRef) {
-                                return pRef.PointInst === filter.upi;
+                            existingPointRef = onScreenPointRefs.filter(function (pRef) {
+                                return (pRef.AppIndex === filter.AppIndex);
                             });
 
                             if (existingPointRef.length === 0) {
@@ -484,14 +621,17 @@ var reportsViewModel = function () {
                                 pointRef.PropertyEnum = window.workspaceManager.config.Enums.Properties["Qualifier Point"].enum;
                                 pointRef.PropertyName = "Qualifier Point";
                                 pointRef.Value = filter.upi;
-                                pointRef.AppIndex = appIndex++;
+                                pointRef.AppIndex = ++appIndex;
                                 pointRef.isDisplayable = true;
                                 pointRef.isReadOnly = false;
                                 pointRef.PointName = filter.value;
                                 pointRef.PointType = window.workspaceManager.config.Enums["Point Types"][filter.pointType].enum;
                                 pointRef.PointInst = filter.upi;
                                 pointRef.DevInst = 0;
-                                pointRefArray.push(pointRef);
+                                onScreenPointRefs.push(pointRef);
+                                filter.AppIndex = pointRef.AppIndex;
+                            } else {
+                                filter.AppIndex = existingPointRef[0].AppIndex;
                             }
                         }
                     }
@@ -503,7 +643,6 @@ var reportsViewModel = function () {
                     checkColumns();
                     break;
                 case "Property":
-                    checkColumns();
                     checkFilters();
                     break;
                 default:
@@ -511,9 +650,9 @@ var reportsViewModel = function () {
                     break;
             }
 
-            return pointRefArray;
+            return onScreenPointRefs;
         },
-        buildBitStringHtml = function (config, rawValue, enable) {
+        buildBitStringHtml = function (config, rawValue) {
             var htmlString = '<div class="bitstringReporting">',
                 enumValue;
             for (var key in config.bitstringEnums) {
@@ -611,13 +750,11 @@ var reportsViewModel = function () {
 
             return result;
         },
-        blockUI = function ($control, state, text) {
+        blockUI = function ($control, state) {
             if (state === true) {
                 $control.hide();
-                //$spinnertext.text(text);
             } else {
                 $control.show();
-                //$spinnertext.text("");
             }
             $control.attr('disabled', state);
         },
@@ -744,13 +881,15 @@ var reportsViewModel = function () {
                     if (self.reportType === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
                         tempObject.operator = tempObject.valueList[0].text;
-                        //tempObject.operator = (tempObject.valueList.length === 1 ? tempObject.valueList[0].text : "");
                     } else {
                         if (!!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
                             tempObject.valueOptions = window.workspaceManager.config.Templates.getTemplate(tempObject.pointType).Value.ValueOptions;
                         }
+                    }
+                    if (!!tempObject.AppIndex && tempObject.AppIndex > 0) {
+                        resetPointRefSlot(tempObject.AppIndex, tempObject.upi, tempObject.colName);
                     }
                     updatedList[objIndex] = tempObject;
                     updateListOfColumns(updatedList);
@@ -789,6 +928,9 @@ var reportsViewModel = function () {
                         tempObject.pointType = type;
                         if (!!tempObject.softDeleted) {
                             delete tempObject.softDeleted;
+                        }
+                        if (!!tempObject.AppIndex && tempObject.AppIndex > 0) {
+                            resetPointRefSlot(tempObject.AppIndex, tempObject.upi, name);
                         }
                         updatedList[objIndex] = tempObject;
                         updateListOfFilters(updatedList);
@@ -847,18 +989,28 @@ var reportsViewModel = function () {
             });
         },
         getFilterAdjustedDatetime = function (filter) {
-            return getAdjustedDatetime(filter.date, filter.time.toString());
+            return getAdjustedDatetimeUnix(moment.unix(filter.date), filter.time.toString());
         },
-        getAdjustedDatetime = function (date, time) {
-            var result,
-                timestamp = parseInt(time.replace(':', ''), 10),
-                hour = ('00' + Math.floor(timestamp / 100)).slice(-2),
+        getAdjustedDatetimeMoment = function (date, time) {
+            var result = date,
+                timestamp,
+                hour,
+                min;
+
+            if (date !== undefined && time !== undefined) {
+                timestamp = parseInt(time.replace(':', ''), 10);
+                hour = ('00' + Math.floor(timestamp / 100)).slice(-2);
                 min = ('00' + timestamp % 100).slice(-2);
 
-            result = moment.unix(date).startOf('day');
-            result = result.add(hour, 'h');
-            result = result.add(min, 'm');
+                result = date.startOf('day');
+                result = result.add(hour, 'h');
+                result = result.add(min, 'm');
+            }
 
+            return result;
+        },
+        getAdjustedDatetimeUnix = function (date, time) {
+            var result = getAdjustedDatetimeMoment(moment.unix(date), time.toString());
             return result.unix();
         },
         initializeNewFilter = function (selectedItem, filter) {
@@ -964,17 +1116,14 @@ var reportsViewModel = function () {
                     delete results[results.length - 1]["softDeleted"]; // error is only used in UI
                     delete results[results.length - 1]["bitstringEnums"]; // error is only used in UI
                 }
+
+                if (cleanup) {
+                    cleanPointRefArray();
+                }
             }
 
-            console.log(" validateColumns() results.length = " + results.length);
+            //console.log(" validateColumns() results.length = " + results.length);
             return results;
-        },
-        getColumnConfigByColName = function (columnName) {
-            var result;
-            result = self.listOfColumns().filter(function (col) {
-                return col.colName === columnName;
-            });
-            return result[0];
         },
         getColumnConfigByOperatorAndUPI = function (op, upi) {
             var result;
@@ -989,6 +1138,12 @@ var reportsViewModel = function () {
                 return (col.upi === upi);
             });
             return result[0];
+        },
+        resetAllColumnPrecisionValues = function (precision) {
+            self.listOfColumns().forEach(function (column) {
+                column.precision = precision;
+            });
+            updateListOfColumns(self.listOfColumns());
         },
         validateFilters = function (cleanup) {
             var results = [],
@@ -1037,6 +1192,10 @@ var reportsViewModel = function () {
                         delete results[results.length - 1]["error"];
                         delete results[results.length - 1]["softDeleted"];
                     }
+
+                    if (cleanup) {
+                        cleanPointRefArray();
+                    }
                 }
             }
 
@@ -1047,33 +1206,35 @@ var reportsViewModel = function () {
                 i,
                 pointRef,
                 currentFilter,
-                len = theFilters.length;
+                len = theFilters.length,
+                validFilter = true;
 
             for (i = 0; i < len; i++) {
                 currentFilter = theFilters[i];
 
                 if (!!currentFilter.upi && currentFilter.upi > 0) {
                     if (!!currentFilter.AppIndex) {
+                        pointRef = getPointRef(currentFilter.AppIndex);
                         if (!pointReferenceHardDeleted(currentFilter.AppIndex)) {
                             if (pointReferenceSoftDeleted(currentFilter.AppIndex)) {
                                 console.log("softdeleted theFilters[" + i + "].upi = " + currentFilter.upi);
                                 currentFilter.softDeleted = true;
                             }
-                            if (!!currentFilter.upi && currentFilter.upi > 0) {
-                                pointRef = getPointRef(currentFilter.upi);
-                                if (pointRef.length > 1) {
-                                    // found more than one reference in Point Ref array for UPI, sup wit dat?
-                                }
-                                currentFilter.value = pointRef[0].PointName;
-                            }
+                            currentFilter.value = pointRef[0].PointName;
                         } else {
-                            console.log("point being referenced doesn't exist in local Point Refs array  theFilters[" + i + "].upi = " + theFilters[i].upi);
+                            validFilter = false;
+                            console.log("'" + currentFilter.name + "' upi = ("  + theFilters[i].upi + ") has been 'Destroyed', filter " + i + " is being removed from the displayed report.");
+                        }
+                        if (pointRef.length > 1) {
+                            console.log("found more than one reference in Point Ref array for UPI, sup wit dat?  upi = " + theFilters[i].upi);
                         }
                     }
                 }
 
-                result.push(currentFilter);
-                result[i].valueList = getValueList(result[i].filterName, result[i].filterName);
+                if (validFilter) {
+                    currentFilter.valueList = getValueList(currentFilter.filterName, currentFilter.filterName);
+                    result.push(currentFilter);
+                }
             }
 
             return result;
@@ -1100,11 +1261,10 @@ var reportsViewModel = function () {
                             currentColumn.colName = pointRef[0].PointName;
                         } else {
                             validColumn = false;
-                            // point being referenced doesn't exist in local Point Refs array
-                            console.log("point being referenced doesn't exist in local Point Refs array  theColumns[" + i + "].upi = " + theColumns[i].upi);
+                            console.log("'" + currentColumn.colName + "' upi = ("  + theColumns[i].upi + ") has been 'Destroyed', column " + i + " is being removed from the displayed report.");
                         }
                         if (pointRef.length > 1) {
-                            // found more than one reference in Point Ref array for UPI, sup wit dat?
+                            console.log("found more than one reference in Point Ref array for UPI, sup wit dat?  upi = " + theColumns[i].upi);
                         }
                     }
                 }
@@ -1213,7 +1373,7 @@ var reportsViewModel = function () {
         buildReportDataRequestPromise = function () {
             return new Promise(function(resolve, reject) {
                 mergePersistedPointRefArray(true).then(function (response) {
-                    console.log("mergePersistedPointRefArray() Success!", response);
+                    //console.log("mergePersistedPointRefArray() Success!", response);
                     resolve(buildReportDataRequest());
                 }, function (error) {
                     console.error("buildReportDataRequestPromise() --> mergePersistedPointRefArray() Failed!", error);
@@ -1230,7 +1390,8 @@ var reportsViewModel = function () {
                 activeError = false,
                 key,
                 upis = [],
-                uuid;
+                uuid,
+                dateRange;
 
             columns = $.extend(true, [], self.listOfColumns());
             filters = $.extend(true, [], self.listOfFilters());
@@ -1252,8 +1413,16 @@ var reportsViewModel = function () {
                 }
 
                 if (self.reportType === "Totalizer" || self.reportType === "History") {
-                    self.startDate = getAdjustedDatetime(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet());
-                    self.endDate = getAdjustedDatetime(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet());
+                    if (self.selectedDuration().selectedRange === "Custom Range") {
+                        self.startDate = getAdjustedDatetimeUnix(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet());
+                        self.endDate = getAdjustedDatetimeUnix(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet());
+                    } else {
+                        dateRange = reportDateRanges(self.selectedDuration().selectedRange);
+                        self.selectedDuration().startDate = getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
+                        self.selectedDuration().endDate = getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
+                        self.startDate = self.selectedDuration().startDate.unix();
+                        self.endDate = self.selectedDuration().endDate.unix();
+                    }
                 } else {
                     for (key in filters) {
                         if (filters.hasOwnProperty(key)) {
@@ -1320,22 +1489,22 @@ var reportsViewModel = function () {
             if ($.isNumeric(tabNumber)) {
                 $tabs.find("li").removeClass("active");
                 $tabs.find("li:eq(" + (tabNumber - 1) + ")").addClass("active");
-            }
-            self.currentTab(tabNumber);
-            switch (tabNumber) {
-                case 1:
-                    $tabConfiguration.addClass("active");
-                    $tabConfiguration.show();
-                    $tabViewReport.removeClass("active");
-                    $tabViewReport.hide();
-                    $popAction.show();
-                    break;
-                case 2:
-                    $tabConfiguration.removeClass("active");
-                    $tabConfiguration.hide();
-                    $tabViewReport.addClass("active");
-                    $popAction.hide();
-                    break;
+                self.currentTab(tabNumber);
+                switch (tabNumber) {
+                    case 1:
+                        $tabConfiguration.addClass("active");
+                        $tabConfiguration.show();
+                        $tabViewReport.removeClass("active");
+                        $tabViewReport.hide();
+                        $popAction.show();
+                        break;
+                    case 2:
+                        $tabConfiguration.removeClass("active");
+                        $tabConfiguration.hide();
+                        $tabViewReport.addClass("active");
+                        $popAction.hide();
+                        break;
+                }
             }
         },
         initSocket = function (cb) {
@@ -1380,7 +1549,9 @@ var reportsViewModel = function () {
             $reportColumns = $direports.find("#reportColumns");
             $additionalFilters = $direports.find("#additionalFilters");
             $configurationContent = $direports.find(".configurationContent");
-            $popAction = $direports.find(".pop.cursorPointer");
+            $popAction = $direports.find(".pop.popInOutDiv");
+            $hiddenPrecisionPlaceholder = $direports.find(".hiddenPrecisionPlaceholder");
+            $globalPrecision = $hiddenPrecisionPlaceholder.find(".globalPrecision");
         },
         getPointLookupFilterValues = function (iFrameContents) {
             var $nameInputField,
@@ -1660,15 +1831,20 @@ var reportsViewModel = function () {
             }
             return data;
         },
-        adjustDatatableHeight = function () {
+        adjustDatatableHeightWidth = function () {
             var infoscanHeader = 60,
                 adjustHeight,
+                $dataTablesScrollHead = $tabViewReport.find('.dataTables_scrollHead'),
                 $dataTablesScrollBody = $tabViewReport.find('.dataTables_scrollBody'),
+                $dataTablesScrollFoot = $tabViewReport.find('.dataTables_scrollFoot'),
                 $dataTablesWrapper = $tabViewReport.find('.dataTables_wrapper');
             $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
             setInfoBarDateTime();
             adjustHeight = $dataTablesScrollBody.height() - (($dataTablesWrapper.height() + infoscanHeader) - window.innerHeight);
+            $dataTablesScrollHead.css('width', $dataTablesWrapper.width() - 17); // allow for scrolly in body
             $dataTablesScrollBody.css('height', adjustHeight);
+            $dataTablesScrollBody.css('width', $dataTablesWrapper.width());
+            $dataTablesScrollFoot.css('width', $dataTablesWrapper.width() - 17); // allow for scrolly in body
         },
         adjustConfigTabActivePaneHeight = function () {
             var $activePane = $direports.find(".tabConfiguration .tab-pane.active");
@@ -1683,7 +1859,7 @@ var reportsViewModel = function () {
             setTimeout(function () {
                 if (new Date() - lastResize >= resizeTimer) {
                     if (self.currentTab() === 2) {
-                        adjustDatatableHeight();
+                        adjustDatatableHeightWidth();
                     } else {
                         adjustConfigTabActivePaneHeight();
                     }
@@ -1691,8 +1867,7 @@ var reportsViewModel = function () {
             }, resizeTimer);
         },
         saveReportConfig = function () {
-            //mergePersistedPointRefArray(true).then(function (response) {
-                point._pStatus = 0;  // activate report
+            mergePersistedPointRefArray(true).then(function (response) {
                 point["Report Config"].columns = validateColumns(true);
                 point["Report Config"].filters = validateFilters(true);
                 pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
@@ -1726,19 +1901,26 @@ var reportsViewModel = function () {
                 point.name4 = $pointName4.val();
                 point.Name = self.reportDisplayTitle();
 
-                reportSocket.emit('updatePoint', JSON.stringify({
-                    'newPoint': point,
-                    'oldPoint': originalPoint
-                }));
-            //}, function (error) {
-            //    console.error("saveReportConfig() --> mergePersistedPointRefArray() Failed!", error);
-            //    reject(result);
-            //});
+                if (point._pStatus !== 0) {
+                    reportSocket.emit('addPoint', {
+                        point: point
+                    });
+                } else {
+                    reportSocket.emit('updatePoint', JSON.stringify({
+                        'newPoint': point,
+                        'oldPoint': originalPoint
+                    }));
+                }
+            }, function (error) {
+                console.error("saveReportConfig() --> mergePersistedPointRefArray() Failed!", error);
+                reject(result);
+            });
         },
         setReportEvents = function () {
             var intervals,
                 calculations,
-                entriesPerPage;
+                entriesPerPage,
+                precisionEventsSet = false;
 
             $(window).resize(function () {
                 handleResize();
@@ -1855,21 +2037,42 @@ var reportsViewModel = function () {
             });
 
             $viewReport.on('column-reorder.dt', function (event, settings, details) {
-                var columnsArray = $.extend(true, [], self.listOfColumns());
-                var swapColumnFrom = $.extend(true, {}, columnsArray[details.from]);  // clone from field
-                columnsArray.splice(details.from, 1);
-                columnsArray.splice(details.to, 0, swapColumnFrom);
+                var columnsArray = $.extend(true, [], self.listOfColumns()),
+                    swapColumnFrom = $.extend(true, {}, columnsArray[details.iFrom]);  // clone from field
+                columnsArray.splice(details.iFrom, 1);
+                columnsArray.splice(details.iTo, 0, swapColumnFrom);
                 updateListOfColumns(columnsArray);
-                //$.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
                 $viewReport.DataTable().draw("current");
                 //console.log("moved column '" + details.from + "' to column '" + details.to + "'");
             });
 
-            $viewReport.on('length.dt', function (e, settings, len) {
-                self.selectedPageLength(len);
+            $viewReport.on('column-resize.dt', function (event, settings, details) {
+                var columnsArray = $.extend(true, [], self.listOfColumns());
+                columnsArray[details.resizedColumn].width = details.width;
+                updateListOfColumns(columnsArray);
+                console.log("column '" + details.resizedColumn + "' width set to '" + details.width + "'");
             });
 
-            $viewReport.on('draw.dt', function (e, settings, len) {
+            $viewReport.on('length.dt', function (e, settings, len) {
+                self.selectedPageLength(len);
+                setTimeout(function () {
+                    adjustDatatableHeightWidth();
+                }, 10);
+            });
+
+            $viewReport.on('page.dt', function (e, settings) {
+                setTimeout(function () {
+                    adjustDatatableHeightWidth();
+                }, 10);
+            });
+
+            $viewReport.on('search.dt', function (e, settings) {
+                setTimeout(function () {
+                    adjustDatatableHeightWidth();
+                }, 10);
+            });
+
+            $viewReport.on('draw.dt', function (e, settings) {
                 var numberOfPages = $viewReport.DataTable().page.info().pages,
                     $tablePagination,
                     $pagination,
@@ -1880,6 +2083,46 @@ var reportsViewModel = function () {
                     $paginate_buttons = $pagination.find(".paginate_button");
                     $paginate_buttons = $paginate_buttons.not("li.active");
                     $paginate_buttons.hide();
+                }
+            });
+
+            $direports.find(".precisionColumn").on('mousedown', function (e) {
+                if (self.canEdit()) {
+                    longClickStart = moment();
+                }
+            });
+
+            $direports.find(".precisionColumn").on('click', function (e) {
+                if (self.canEdit()) {
+                    if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
+                        var originalField = $(this).html();
+
+                        $globalPrecision.removeClass("hidden");
+                        $(this).html("");
+                        $globalPrecision.appendTo($(this));
+                        $(this).find("input").focus();
+
+                        if (!precisionEventsSet) {
+                            $(this).focusout(function (e) {
+                                $globalPrecision.appendTo($hiddenPrecisionPlaceholder);
+                                $(this).html(originalField);
+                            });
+
+                            $(this).keyup(function (event) {
+                                if (event.keyCode === 13) {
+                                    var precision;
+                                    if (isNaN($(this).find("input").val()) || $(this).find("input").val() === "") {
+                                        $(this).find("input").val(0);
+                                    }
+                                    precision = $(this).find("input").val();
+                                    self.globalPrecisionValue(parseInt(precision, 10));
+                                    resetAllColumnPrecisionValues(self.globalPrecisionValue());
+                                    console.log("set all precision to " + self.globalPrecisionValue());
+                                    precisionEventsSet = true;
+                                }
+                            });
+                        }
+                    }
                 }
             });
 
@@ -1980,11 +2223,11 @@ var reportsViewModel = function () {
                     value: "15",
                     unit: 15
                 }, {
-                    value: "25",
-                    unit: 25
+                    value: "24",
+                    unit: 24
                 }, {
-                    value: "50",
-                    unit: 50
+                    value: "48",
+                    unit: 48
                 }, {
                     value: "75",
                     unit: 75
@@ -2175,6 +2418,7 @@ var reportsViewModel = function () {
                     result = {
                         title: columnTitle,
                         data: columnConfig.dataColumnName,
+                        width: (!!columnConfig.width ? columnConfig.width : "auto"),
                         render: {
                             _: "Value",
                             sort: "rawValue",
@@ -2262,7 +2506,8 @@ var reportsViewModel = function () {
             if (aoColumns.length > 0) {
                 $viewReport.DataTable({
                     api: true,
-                    dom: 'Blfrtip',
+                    dom: 'BRlfrtip',
+                    //dom: 'BRZlfrtip',
                     buttons: [
                         {
                             extend: 'collection',
@@ -2433,12 +2678,18 @@ var reportsViewModel = function () {
                         fixedColumnsLeft: 1,
                         realtime: false
                     },
+                    //colResize: {
+                    //    resizeCallback: function(column) {
+                    //        alert("Column Resized");
+                    //    },
+                    //    handleWidth: 10
+                    //},
                     order: [[0, "asc"]], // always default sort by first column
                     scrollY: true,
                     scrollX: true,
                     scrollCollapse: true,
                     lengthChange: true,
-                    lengthMenu: [[10, 15, 25, 50, 75, 100, -1], [10, 15, 25, 50, 75, 100, "All"]],
+                    lengthMenu: [[10, 15, 24, 48, 75, 100, -1], [10, 15, 24, 48, 75, 100, "All"]],
                     //bFiler: false,  // search box
                     pageLength: parseInt(self.selectedPageLength(), 10)
                 });
@@ -2468,7 +2719,7 @@ var reportsViewModel = function () {
                 $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
                 self.refreshData(false);
                 self.currentTimeStamp = moment().format("dddd MMMM DD, YYYY hh:mm:ss a");
-                adjustDatatableHeight();
+                adjustDatatableHeightWidth();
 
                 if (!exportEventSet) {
                     $tabViewReport.find("a.btn.btn-default.buttons-collection").on('click', function () {
@@ -2528,7 +2779,7 @@ var reportsViewModel = function () {
 
     self.reportType = "";
 
-    self.selectedPageLength = ko.observable("25");
+    self.selectedPageLength = ko.observable("24");
 
     self.currentTimeStamp = "";
 
@@ -2540,13 +2791,17 @@ var reportsViewModel = function () {
 
     self.canEdit = ko.observable(true);
 
-    self.interval = ko.observable("Minute");
+    self.interval = ko.observable("Day");
 
     self.intervalValue = ko.observable(1);
 
+    self.globalPrecisionValue = ko.observable(3);
+
+    self.durationError = ko.observable(false);
+
     self.selectedDuration = ko.observable({
         startDate: moment().subtract(1, "day"),
-        endDate: moment(),
+        endDate: moment().add(1, "day"),
         startTimeOffSet: "00:00",
         endTimeOffSet: "00:00",
         duration: 0,
@@ -2590,11 +2845,13 @@ var reportsViewModel = function () {
     self.listOfFilters = ko.observableArray([]);
 
     self.deleteColumnRow = function (item) {
+        clearPointRefSlot(item.AppIndex);
         self.listOfColumns.remove(item);
         updateListOfColumns(self.listOfColumns());
     };
 
     self.deleteFilterRow = function (item) {
+        clearPointRefSlot(item.AppIndex);
         self.listOfFilters.remove(item);
         updateListOfFilters(self.listOfFilters());
     };
@@ -2604,7 +2861,6 @@ var reportsViewModel = function () {
             reportConfig;
 
         exportEventSet = false;
-        decimalPrecision = 2;
         activeDataRequests = [];
         getScreenFields();
         initKnockout();
@@ -2628,7 +2884,6 @@ var reportsViewModel = function () {
             self.reportDisplayTitle(point.Name);
 
             if (columns) {
-                pointRefArray = point["Point Refs"];
                 self.listOfColumns(initColumns(reportConfig.columns));
                 self.listOfFilters(initFilters(reportConfig.filters));
                 pointFilter = (reportConfig.pointFilter ? reportConfig.pointFilter : pointFilter);
@@ -2641,6 +2896,7 @@ var reportsViewModel = function () {
                             self.selectedDuration().endDate = moment.unix(point["Report Config"].duration.endDate);
                             self.selectedDuration().startTimeOffSet = point["Report Config"].duration.startTimeOffSet;
                             self.selectedDuration().endTimeOffSet = point["Report Config"].duration.endTimeOffSet;
+                            self.selectedDuration().selectedRange = point["Report Config"].duration.selectedRange;
                             self.durationStartTimeOffSet(self.selectedDuration().startTimeOffSet);
                             self.durationEndTimeOffSet(self.selectedDuration().endTimeOffSet);
                             self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
@@ -2657,8 +2913,7 @@ var reportsViewModel = function () {
                         break;
                 }
             } else { // Initial config
-                pointRefArray = [];
-                point["Point Refs"] = pointRefArray;  // new report, clear out initial Report create data
+                point["Point Refs"] = [];  // new report, clear out initial Report create data
                 point["Report Config"].columns = [];
                 point["Report Config"].filters = [];
                 point["Report Config"].pointFilter = pointFilter;
@@ -2697,7 +2952,7 @@ var reportsViewModel = function () {
                         console.log(" - - - DEFAULT  init() null columns");
                         break;
                 }
-                originalPoint = JSON.parse(JSON.stringify(point)); // reset original point since we've added attribs
+                //originalPoint = JSON.parse(JSON.stringify(point)); // reset original point since we've added attribs
             }
 
             $direports.find("#wrapper").show();
@@ -2713,7 +2968,7 @@ var reportsViewModel = function () {
             self.columnPropertiesSearchFilter(""); // computed props jolt
 
             if (!!externalConfig) {
-                if (self.reportType === "History" || "Totalizer") {
+                if (self.reportType === "History" || self.reportType === "Totalizer") {
                     self.selectedDuration({
                         startDate: externalConfig.startDate,
                         startTimeOffSet: externalConfig.startTimeOffSet,
@@ -2929,44 +3184,48 @@ var reportsViewModel = function () {
     };
 
     self.requestReportData = function () {
-        if (self.currentTab() !== 2) {
-            //buildReportDataRequest(true).then(function (requestObj) {
-                var requestObj = buildReportDataRequest();
-                if (!!requestObj) {
-                    tabSwitch(2);
-                    if (self.reportResultViewed()) {
-                        $popAction.hide();
-                        self.activeDataRequest(true);
-                        self.reportResultViewed(false);
-                        configureDataTable(true, true);
-                        reportData = undefined;
-                        switch (self.reportType) {
-                            case "History":
-                                ajaxPost(requestObj, "/report/historyDataSearch", renderHistoryReport);
-                                //reportSocket.emit("historyDataSearch", {options: requestObj});
-                                break;
-                            case "Totalizer":
-                                ajaxPost(requestObj, "/report/totalizerReport", renderTotalizerReport);
-                                //reportSocket.emit("totalizerReport", {options: requestObj});
-                                break;
-                            case "Property":
-                                ajaxPost(requestObj, "/report/reportSearch", renderPropertyReport);
-                                //reportSocket.emit("reportSearch", {options: requestObj});
-                                break;
-                            default:
-                                console.log(" - - - DEFAULT  viewReport()");
-                                break;
+        if (!self.durationError()) {
+            if (self.currentTab() !== 2) {
+                buildReportDataRequestPromise(true).then(function (requestObj) {
+                    //    var requestObj = buildReportDataRequest();
+                    if (!!requestObj) {
+                        tabSwitch(2);
+                        if (self.reportResultViewed()) {
+                            $popAction.hide();
+                            self.activeDataRequest(true);
+                            self.reportResultViewed(false);
+                            configureDataTable(true, true);
+                            reportData = undefined;
+                            switch (self.reportType) {
+                                case "History":
+                                    ajaxPost(requestObj, "/report/historyDataSearch", renderHistoryReport);
+                                    //reportSocket.emit("historyDataSearch", {options: requestObj});
+                                    break;
+                                case "Totalizer":
+                                    ajaxPost(requestObj, "/report/totalizerReport", renderTotalizerReport);
+                                    //reportSocket.emit("totalizerReport", {options: requestObj});
+                                    break;
+                                case "Property":
+                                    ajaxPost(requestObj, "/report/reportSearch", renderPropertyReport);
+                                    //reportSocket.emit("reportSearch", {options: requestObj});
+                                    break;
+                                default:
+                                    console.log(" - - - DEFAULT  viewReport()");
+                                    break;
+                            }
+                        } else {
+                            renderReport();
                         }
                     } else {
-                        renderReport();
+                        // bad request object do nothing.
                     }
-                } else {
-                    // bad request object do nothing.
-                }
-            //}, function (error) {
-            //    console.error("buildReportDataRequest() Failed!", error);
-            //    return result;
-            //});
+                }, function (error) {
+                    console.error("buildReportDataRequestPromise() Failed!", error);
+                    return result;
+                });
+            }
+        } else {
+            displayError("Invalid Date Time selection");
         }
         $('html,body').stop().animate({
             scrollTop: 0
@@ -2982,6 +3241,9 @@ var reportsViewModel = function () {
         column.upi = 0;
         if (!!column.softDeleted) {
             delete column.softDeleted;
+        }
+        if (!!column.AppIndex) {
+            clearPointRefSlot(column.AppIndex);
         }
         updateListOfColumns(tempArray);
     };
@@ -3000,6 +3262,9 @@ var reportsViewModel = function () {
         filter.value = setDefaultValue(filter.valueType);
         if (!!filter.softDeleted) {
             delete filter.softDeleted;
+        }
+        if (!!filter.AppIndex) {
+            clearPointRefSlot(filter.AppIndex);
         }
         filter.upi = 0;
         updateListOfFilters(tempArray);
@@ -3096,9 +3361,9 @@ var reportsViewModel = function () {
             height: 768
         };
         if (window.top.location.href === window.location.href) {  // If we're a pop-out; pop back in
-            window.workspaceManager.openWindowPositioned(window.location.href, $reporttitleInput.text(), 'report', 'mainWindow', windowUpi);
+            window.workspaceManager.openWindowPositioned(window.location.href, point.Name, 'report', 'mainWindow', windowUpi);
         } else { // Open the window
-            window.workspaceManager.openWindowPositioned(window.location.href, $reporttitleInput.text(), 'report', '', windowUpi, options);
+            window.workspaceManager.openWindowPositioned(window.location.href, point.Name, 'report', '', windowUpi, options);
         }
     };
 
@@ -3109,29 +3374,38 @@ var reportsViewModel = function () {
             currentDuration;
 
         if (!!self.selectedDuration() && self.selectedDuration().endDate) {
+            self.selectedDuration().startDate = getAdjustedDatetimeMoment(self.selectedDuration().startDate, self.durationStartTimeOffSet());
+            self.selectedDuration().endDate = getAdjustedDatetimeMoment(self.selectedDuration().endDate, self.durationEndTimeOffSet());
             currentDuration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
+            self.durationError(currentDuration < 0);
 
-            result = self.listOfIntervals().filter(function (interval) {
-                return (moment.duration(1, interval.text).asMilliseconds() < currentDuration);
-            });
-
-            if (result.length > 0) {
-                result.forEach(function (interval) {
-                    if (self.interval().toLowerCase() === interval.text.toLowerCase()) {
-                        resetInterval = false;
-                    }
+            if (!self.durationError()) {
+                self.durationError(false);
+                result = self.listOfIntervals().filter(function (interval) {
+                    return (moment.duration(1, interval.text).asMilliseconds() < currentDuration);
                 });
 
-                if (resetInterval) {
-                    self.interval(result[result.length - 1].text);
-                    self.intervalValue(1);
-                } else {
-                    intervalDuration = moment.duration(1, self.interval()).asMilliseconds();
-                    if ((intervalDuration * self.intervalValue()) > currentDuration) {
+                if (result.length > 0) {
+                    result.forEach(function (interval) {
+                        if (self.interval().toLowerCase() === interval.text.toLowerCase()) {
+                            resetInterval = false;
+                        }
+                    });
+
+                    if (resetInterval) {
+                        self.interval(result[result.length - 1].text);
                         self.intervalValue(1);
+                    } else {
+                        intervalDuration = moment.duration(1, self.interval()).asMilliseconds();
+                        if ((intervalDuration * self.intervalValue()) > currentDuration) {
+                            self.intervalValue(1);
+                        }
                     }
                 }
+            } else {
+                displayError("Invalid Date Time selection");
             }
+            //console.log("self.listOfIntervalsComputed() fired  " + self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm:ss a") + " - "+ self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm:ss a"));
         }
 
         return result;
