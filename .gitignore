@@ -13,5 +13,4 @@ public/js/reports/deleteme.json
 npm-debug.log
 daemon/
 node_modules/grunt*
-config/
 aclient.js
