@@ -7,6 +7,7 @@ html
         link(rel='stylesheet', href='/css/lib/font-awesome-4.1.0/css/font-awesome.min.css')
         link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css')
         link(rel='stylesheet', href='/css/lib/fullcalendar.css')
+        link(rel='stylesheet', href='/css/lib/scheduler.css')
         link(rel='stylesheet', href='/css/lib/jquery-clockpicker.css')
         link(rel='stylesheet', href='/css/lib/jquery.toast.min.css')
         link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
@@ -50,6 +51,7 @@ html
         script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.hoverIntent.min.js')
         script(type='text/javascript', src='/js/lib/knockback.min.js')
         script(type='text/javascript', src='/js/lib/fullcalendar.js')
+        script(type='text/javascript', src='/js/lib/scheduler.js')
         script(type='text/javascript', src='/js/alarmMessageDefinition/ko.editables.js')
         script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.caret.js')
         script(type='text/javascript', src='/js/alarmMessageDefinition/knockout-inline-confirm.js')
@@ -385,8 +387,8 @@ html
                                     a(href="#policyAlertConfig") Alert Configurations
                                 li
                                     a(href="#policySchedule") Schedule
-                                //- li
-                                //-     a(href="#policyCalendar") Calendar
+                                li
+                                    a(href="#policyCalendar") Calendar
                                 //- li
                                 //-     a(href="#policyActivity") Activity
 
@@ -706,12 +708,17 @@ html
                                                                 input.input-sm.form-control(type="text", data-bind="timepicker: startTime")
                                                                 span To
                                                                 input.input-sm.form-control(type="text", data-bind="timepicker: endTime")
-                                                            input.checkbox-valign(type="checkbox", data-bind="checked: allDay")
+                                                            input.checkbox-valign(type="checkbox", data-bind="checked: allDay, click: $parents[2].updateScheduleEvents")
                                                             span All Day
                                                             a(href="#", data-bind="click: function () { $parents[2].deleteSchedule($context); }")
                                                                 i.fa.fa-times.deleteIcon
                                                     button.editableInput.btn.btn-sm.btn-xs.btn-default(data-bind="click: $parents[1].addSchedule") Add Schedule
                                     btn.btn-sm.btn-xs.btn-success.editableInput(data-bind="click: $parent.addScheduleLayer") Add Schedule Layer
+
+                                    //- calendar
+                                    h3.noGap Schedule Preview
+
+                                    #scheduleCalendar
 
 
                                 #policyCalendar.tab-pane
@@ -840,7 +847,7 @@ html
                     .notificationRow
                         .notificationIcon.smsIcon
                             .fa-stack
-                                i.fa.fa-stack-2x(data-bind="css: $parents[3].getAlertIcon($parents[3].getAlertType(Value))")
+                                i.fa.fa-stack-2x(data-bind="css: $parents[3].getAlertIcon($parents[3].getAlertType(Value, Type))")
                                 i.fa.fa-stack-1x.fa-stack-text
                         .notificationAlert
                             div

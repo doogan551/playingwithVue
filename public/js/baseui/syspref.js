@@ -2045,6 +2045,12 @@ var weatherViewModel = function() {
 var notificationsViewModel = function() {
     var _webendpoint = window.location.protocol + '//' + window.location.host,
         _webendpointURI = _webendpoint + '/api/security/',
+        _idCounter = 0,
+        $scheduleCalendar = $('#scheduleCalendar'),
+        makeId = function () {
+            _idCounter++;
+            return 'nid_' + _idCounter;
+        },
         Member = function (data, dt) {
             var ret = {
                     id: data._id,
@@ -2258,74 +2264,122 @@ var notificationsViewModel = function() {
 
         self.$tabs = $('.notificationsContent').on('click', '.nav a', function (e) {
             e.preventDefault();
+
             $(this).tab('show');
+
+            if ($(this).attr('href').toLowerCase().match('schedule')) {
+                $scheduleCalendar.fullCalendar('render');
+                self.updateScheduleEvents();
+            }
         });
 
-        $('#calendarDisplay').fullCalendar({
+        $scheduleCalendar.fullCalendar({
             eventClick: function (calEvent, jsEvent, view) {
                 console.log(calEvent);
                 jsEvent.preventDefault();
             },
             header: {
-                left: 'prev,next',
-                center: 'title',
-                right: 'agendaWeek,agendaDay'
+                left: '',//prev,next',
+                center: '',//title',
+                right: ''//agendaWeek,agendaDay'
             },
-            eventColor: '#7156FB',
+            // titleFormat: '[Schedule Preview]',
+            // eventColor: '#7156FB',
             allDaySlot: false,
-            defaultDate: '2016-01-12',
-            defaultView: 'agendaWeek',
+            defaultDate:  moment().format('YYYY-MM-DD'),//'2016-01-12',
+            defaultView: 'agendaDay',
             editable: false,
             eventLimit: false, // allow "more" link when too many events
             height: 575,
+            resources: [{
+                id: 'sun',
+                title: 'Sunday'
+            }, {
+                id: 'mon',
+                title: 'Monday'
+            }, {
+                id: 'tues',
+                title: 'Tuesday'
+            }, {
+                id: 'wed',
+                title: 'Wednesday'
+            }, {
+                id: 'thur',
+                title: 'Thursday'
+            }, {
+                id: 'fri',
+                title: 'Friday'
+            }, {
+                id: 'sat',
+                title: 'Saturday'
+            }, {
+                id: 'Holidays',
+                title: 'Holidays'
+            }],
+            events: [{
+                id: 1,
+                resourceId: 'Sunday',
+                start: '2016-01-12T08:00:00',
+                end: '2016-01-12T17:00:00'
+            }, {
+                id: 2,
+                resourceId: 'Monday',
+                start: '2016-01-12T08:00:00',
+                end: '2016-01-12T17:00:00'
+            }, {
+                id: 3,
+                resourceId: 'Holidays',
+                start: '2016-01-12T08:00:00',
+                end: '2016-01-12T17:00:00'
+            }],
             slotDuration: '01:00:00',
-            slotLabelInterval: '02:00:00',
-            events: [
-                // {
-                //     title: 'All Day Event',
-                //     start: '2016-01-01'
-                // },
-                // {
-                //     title: 'Long Event',
-                //     start: '2016-01-07',
-                //     end: '2016-01-10'
-                // },
-                {
-                    id: 999,
-                    start: '2016-01-10T08:00:00',
-                    end: '2016-01-10T17:00:00'
-                },
-                {
-                    id: 999,
-                    start: '2016-01-11T08:00:00',
-                    end: '2016-01-11T17:00:00'
-                },
-                {
-                    id: 999,
-                    start: '2016-01-12T08:00:00',
-                    end: '2016-01-12T17:00:00'
-                },
-                {
-                    id: 999,
-                    start: '2016-01-13T08:00:00',
-                    end: '2016-01-13T17:00:00'
-                },
-                {
-                    id: 999,
-                    start: '2016-01-14T08:00:00',
-                    end: '2016-01-14T17:00:00'
-                },
-                {
-                    id: 999,
-                    start: '2016-01-15T08:00:00',
-                    end: '2016-01-15T17:00:00'
-                },
-                {
-                    id: 999,
-                    start: '2016-01-16T08:00:00',
-                    end: '2016-01-16T17:00:00'
-                }
-            ]
+            slotLabelInterval: '02:00:00'
+            // events: [
+            //     // {
+            //     //     title: 'All Day Event',
+            //     //     start: '2016-01-01'
+            //     // },
+            //     // {
+            //     //     title: 'Long Event',
+            //     //     start: '2016-01-07',
+            //     //     end: '2016-01-10'
+            //     // },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-10T08:00:00',
+            //         end: '2016-01-10T17:00:00'
+            //     },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-11T08:00:00',
+            //         end: '2016-01-11T17:00:00'
+            //     },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-12T08:00:00',
+            //         end: '2016-01-12T17:00:00'
+            //     },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-13T08:00:00',
+            //         end: '2016-01-13T17:00:00'
+            //     },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-14T08:00:00',
+            //         end: '2016-01-14T17:00:00'
+            //     },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-15T08:00:00',
+            //         end: '2016-01-15T17:00:00'
+            //     },
+            //     {
+            //         id: 999,
+            //         start: '2016-01-16T08:00:00',
+            //         end: '2016-01-16T17:00:00'
+            //     }
+            // ]
         });
 
         if (!reset) {
@@ -2336,6 +2390,58 @@ var notificationsViewModel = function() {
         } else {
             self.buildPolicies(self._rawPolicies);
         }
+    };
+
+    self.updateScheduleEvents = function () {
+        var colors = ['#FDA46E', '#8666FB'],//, '#7DC551'],
+            datePrefix = moment().format('YYYY-MM-DDT'),
+            tomorrowPrefix = moment().add(1, 'd').format('YYYY-MM-DDT'),
+            events = [],
+            convertTime = function (time) {
+                var hr = time / 100,
+                    min = time % 100;
+
+                return ('0' + hr).slice(-2) + ':' + ('0' + min).slice(-2) + ':00';
+            },
+            createEvents = function (schedule, color, title) {
+                var start = datePrefix + convertTime(schedule.startTime || 0),
+                    end = convertTime(schedule.endTime || 0),
+                    _events = [];
+
+                if (schedule.allDay) {
+                    start = datePrefix + convertTime(0);
+                    end = tomorrowPrefix + convertTime(0);
+                } else {
+                    if (schedule.endTime === 0 || schedule.endTime === null) {
+                        end = tomorrowPrefix + end;
+                    } else {
+                        end = datePrefix + end;
+                    }
+                }
+
+                self.forEachArray(schedule.days, function (day) {
+                    _events.push({
+                        id: makeId(),
+                        start: start,
+                        end: end,
+                        resourceId: day,
+                        backgroundColor: color,
+                        borderColor: '#666666',
+                        title: title
+                    });
+                });
+
+                return _events;
+            };
+
+        self.forEachArray(self.bindings.currPolicy.scheduleLayers(), function (layer, idx) {
+            self.forEachArray(ko.toJS(layer.schedules), function (schedule) {
+                events = events.concat(createEvents(schedule, colors[idx % 2], 'Layer ' + (idx + 1)));
+            });
+        });
+
+        $scheduleCalendar.fullCalendar('removeEvents');
+        $scheduleCalendar.fullCalendar('addEventSource', events);
     };
 
     self.translateMember = function (id) {
@@ -2522,10 +2628,12 @@ var notificationsViewModel = function() {
 
     self.getContact = function (alert) {
         var contact,
-            value = ko.toJS(alert).Value;
+            rawAlert = ko.toJS(alert),
+            value = rawAlert.Value,
+            type = rawAlert.Type;
 
         self.forEachArray(self.bindings.currMember().contactInfo(), function (contactInfo) {
-            if (contactInfo.Value() === value) {
+            if (contactInfo.Value() === value && contactInfo.Type() === type) {
                 contact = contactInfo;
                 return false;
             }
@@ -2647,6 +2755,12 @@ var notificationsViewModel = function() {
         daySunday: ko.observable(false),
         dayHolidays: ko.observable(false),
 
+        updateScheduleEvents: function () {
+            self.updateScheduleEvents();
+
+            return true;
+        },
+
         editDays: function (schedule) {
             self.forEachArray(self.bindings.days, function (day, idx) {
                 self.bindings['day' + day](false);
@@ -2684,6 +2798,7 @@ var notificationsViewModel = function() {
             self._currSchedule.days(ret);
 
             $('#notificationsEditDaysModal').modal('hide');
+            self.updateScheduleEvents();
         },
 
         getAlertStyleText: function (value) {
@@ -2776,19 +2891,23 @@ var notificationsViewModel = function() {
 
             self.bindings.currPolicy.scheduleLayers()[layerIndex].schedules.splice(scheduleIndex, 1);
             self.dirty(true);
+            self.updateScheduleEvents();
         },
 
         addSchedule: function (scheduleLayer) {
             scheduleLayer.schedules.push(ko.viewmodel.fromModel(self.getTemplate('schedule')));
+            self.updateScheduleEvents();
         },
 
         addScheduleLayer: function () {
             self.bindings.currPolicy.scheduleLayers.push(ko.viewmodel.fromModel(self.getTemplate('scheduleLayer')));
+            self.updateScheduleEvents();
         },
 
         deleteScheduleLayer: function (layer, idx) {
             layer.scheduleLayers.splice(idx(), 1);
             self.dirty(true);
+            self.updateScheduleEvents();
         },
 
         editSchedule: function () {
@@ -2798,6 +2917,7 @@ var notificationsViewModel = function() {
         cancelEditSchedule: function () {
             ko.viewmodel.updateFromModel(self.bindings.currPolicy.scheduleLayers, self._currPolicy.scheduleLayers);
             self.bindings.isEditingSchedule(false);
+            self.updateScheduleEvents();
         },
 
         saveSchedule: function () {
@@ -2808,7 +2928,6 @@ var notificationsViewModel = function() {
         },
 
         editAlertConfigMembers: function (escalation) {
-            console.log(arguments);
             self.memberCb = self.updateAlertConfigMembers;
             self._currEscalation = escalation;
             self.editMembers(ko.toJS(self.bindings.currPolicy.members()), self.translateMembers(escalation.members()));
@@ -2823,8 +2942,8 @@ var notificationsViewModel = function() {
             return 'fa-' + self.iconLookup[type()];
         },
 
-        getAlertType: function (contactInfo) {
-            var contact = self.getContact({Value: contactInfo()});
+        getAlertType: function (contactInfo, type) {
+            var contact = self.getContact({Value: contactInfo(), Type: type()});
 
             return contact.Type;
         },
@@ -3124,7 +3243,7 @@ var notificationsViewModel = function() {
     };
 
     ko.bindingHandlers.timepicker = {
-        init: function (element, valueAccessor, allBindingsAccessor) {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel, context) {
             //initialize timepicker with some optional options
             var observable = valueAccessor(),
                 options = {
@@ -3135,6 +3254,7 @@ var notificationsViewModel = function() {
                             hr = parseInt(time[0], 10),
                             min = parseInt(time[1], 10);
                         observable(hr * 100 + min);
+                        context.$parents[2].updateScheduleEvents();
                     }
                 };
 
