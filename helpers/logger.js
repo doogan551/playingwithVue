@@ -46,7 +46,7 @@ var logger = function(moduleName) {
         timestamp: function() {
           return moment().format();
         }
-      }),
+      })/*,
       new winston.transports.Console({
         handleExceptions: true,
         json: true,
@@ -55,7 +55,7 @@ var logger = function(moduleName) {
         timestamp: function() {
           return moment().format();
         }
-      })
+      })*/
     ],
     exitOnError: false
   });

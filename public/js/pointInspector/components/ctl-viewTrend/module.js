@@ -80,6 +80,7 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
         self.reqType = ko.observable('');
         self.startTime = ko.observable(Math.floor(Date.now() / 1000));
         self.page = ko.observable(0);
+        self.lastPage = ko.observable(0);
         self.direction = ko.observable('next');
         self.minDate = ko.observable();
         self.maxDate = ko.observable();
@@ -91,8 +92,8 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
             Array.prototype.push.apply(_array, trendData);
             return sortArray.call(_array, 'timestamp', sortOrder);
         }, self);
-        self.startTime.subscribe(function(val){
-            console.log(val);
+        self.startTime.subscribe(function(val) {
+            // console.log(val);
         });
 
         self.reqType.subscribe(function(type) {
@@ -119,6 +120,7 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
                 self.reButton('Reset');
                 self.startTime(Math.floor(Date.now() / 1000));
                 self.page(1);
+                self.lastPage(1);
                 self.getHistory();
             }
         });
@@ -162,7 +164,7 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
             height;
 
         modalPadding = 2 * $modalDialog.css('padding-top').split('px')[0];
-        height = $(window).height() - modalPadding - $modalHeader.outerHeight(true) - $modalFooter.outerHeight(true) - 10;
+        height = $(window).height() - modalPadding - $modalHeader.outerHeight(true) - $modalFooter.outerHeight(true) - 75;
         if (!isNaN(height)) {
             $modalBody.height(height);
             $modalBody.css('max-height', height);
@@ -186,6 +188,7 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
             url: self.apiEndpoint + 'trenddata/getTrendLimits',
             data: data
         }).done(function(data) {
+            // console.log(data);
             self.minDate(moment.unix(data.min));
             self.maxDate(moment.unix(data.max));
         });
@@ -242,7 +245,7 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
             $modalError = $modal.find('.modalError'),
             $btnSubmit = $modal.find('.btnSubmit'),
             callback = function(data) {
-                console.log(data);
+                // console.log(data);
                 self.loadView(data, 'upload');
             };
 
@@ -272,11 +275,13 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
             $btnSubmit = $modal.find('.btnSubmit'),
             data = {
                 startTime: self.startTime(),
+                lastPage: self.lastPage(),
+                direction: (self.direction() === 'next') ? 1 : -1,
                 page: self.page(),
-                limit: 256,
+                limit: 256, //256
                 upi: self.data._id()
             };
-
+        console.log(moment.unix(data.startTime).format());
         $modalScene.hide();
         $modalWait.show();
         $btnSubmit.prop('disabled', true);
@@ -399,6 +404,8 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
         } else if (self.reqType() === 'history') {
             self.startTime(Math.floor(Date.now() / 1000));
             self.page(1);
+            self.lastPage(1);
+            self.direction('next');
             self.getHistory();
         }
     };
@@ -409,6 +416,7 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
 
         self.startTime((!!time) ? time : Math.floor(Date.now() / 1000));
         self.page(1);
+        self.lastPage(1);
         self.getHistory();
     };
 
@@ -430,19 +438,25 @@ define(['knockout', 'moment', 'bootstrap-3.3.4', 'datetimepicker', 'text!./view.
 
     ViewModel.prototype.previousPage = function() {
         var self = this;
+        self.lastPage(self.page());
         self.page(self.page() - 1);
         if (self.page() === 0)
             self.page(self.page() - 1);
         self.direction('previous');
+        console.log('A', moment.unix(self.trendData()[0].timestamp).format());
+        self.startTime(!!self.trendData().length && self.trendData()[0].timestamp + 1 || self.startTime());
+        console.log('B', moment.unix(self.trendData()[0].timestamp).format());
         self.getHistory();
     };
 
     ViewModel.prototype.nextPage = function() {
         var self = this;
+        self.lastPage(self.page());
         self.page(self.page() + 1);
         if (self.page() === 0)
             self.page(self.page() + 1);
         self.direction('next');
+        self.startTime(!!self.trendData().length && self.trendData()[self.trendData().length - 1].timestamp - 1 || self.startTime());
         self.getHistory();
     };
 

@@ -1188,7 +1188,7 @@ var findInSql = function(options, tables, callback) {
 		}
 
 		statement = statement.join(' ');
-		console.log('!!!statement', statement, year);
+		// console.log('!!!statement', statement, year);
 		criteria = {
 			year: parseInt(year, 10),
 			statement: statement
@@ -1212,6 +1212,7 @@ var fixResults = function(sResults, mResults, callback) {
 			return 1;
 		return 0;
 	};
+
 	if (!!sResults.length) {
 		// JS logger.info("---- fixResults() --> sResults.length = " + sResults.length);
 		// JS logger.info("---- fixResults() --> sResults = " + JSON.stringify(sResults));
@@ -1868,7 +1869,7 @@ module.exports = historyModel = {
 		// JS console.log('%%%%%%%%%%%', JSON.stringify(options));
 		getTables(options, function(err, tables) {
 			findInSql(options, tables, function(err, sResults) {
-				// JS console.log('***********', err, sResults);
+				// console.log('***********', err, sResults);
 				fixResults(sResults || [], [], function(err, results) {
 					callback(err, results);
 				});
@@ -1932,12 +1933,12 @@ module.exports = historyModel = {
 		self.findEarliest(options, function(err, earliest) {
 			options.range.end = moment().unix();
 			self.findLatest(options, function(err2, latest) {
-				earliest = earliest[0];
-				latest = latest[0];
+				min = earliest[0] || {timestamp:0};
+				max = latest[0] || {timestamp:0};
 
 				callback(err || err2, {
-					min: earliest.timestamp,
-					max: latest.timestamp
+					min: min.timestamp,
+					max: max.timestamp
 				});
 			});
 

@@ -1,11 +1,11 @@
 var rob = {
   'Infoscan': {
     'dbConfig': {
-      'host': 'scada1-v',
+      'host': '192.168.1.88',
       'dbName': 'infoscan'
     },
     'zmqConfig': {
-      'server': 'scada1-v',
+      'server': '192.168.1.88',
     },
     'files': {
       'driveLetter': 'C'
