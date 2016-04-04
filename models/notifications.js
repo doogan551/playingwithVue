@@ -175,8 +175,13 @@ var dbAlarmQueueLocked = false,
 						if (!!escalation) {
 							actions.utility.log('\tRotating members');
 							if (members.length) {
-								memberId = members.pop();	// Pop off the last member in the array
-								members.unshift(memberId);	// Put him/her @ the first of the array
+								// Yadkinville rotates the first person to the bottom of the list instead of the last person to the top of the list
+								// Keeping for now because we may add a UI option to control the rotation style
+								// memberId = members.pop();	// Pop off the last member in the array
+								// members.unshift(memberId);	// Put him/her @ the first of the array
+								memberId =  members.shift();	// Pop off the first member in the array
+								members.push(memberId);			// Put him/her @ the end of the array
+
 								data.policyConfigUpdates[policy._id] = policy;
 							}
 						} else {
