@@ -387,8 +387,8 @@ html
                                     a(href="#policyAlertConfig") Alert Configurations
                                 li
                                     a(href="#policySchedule") Schedule
-                                li
-                                    a(href="#policyCalendar") Calendar
+                                //- li
+                                //-     a(href="#policyCalendar") Calendar
                                 //- li
                                 //-     a(href="#policyActivity") Activity
 
@@ -594,13 +594,13 @@ html
                                                                         label
                                                                             input.checkbox-valign(type="checkbox", data-bind="checked: enabled, disable: !$parents[4].isEditingAlertConfig()")
                                                                             div Rotate the first responder
-                                                                            div Every #[span.editable(data-bind="text: scale")]  #[input.input-xs.form-control.input-sm.editableInput(type="text", data-bind="value: scale")] week at #[span.editable(data-bind="text: $parents[4].convertTime(time)")] #[input.timeInput.form-control.input-sm.editableInput(data-bind="timepicker: time")] on #[span.editable(data-bind="text: day")] #[select.form-control.input-sm.select-sm.editableInput(data-bind="value: day, options: $parents[4].days")]
+                                                                            div(data-bind="visible: enabled") Every #[span.editable(data-bind="text: scale")]  #[input.input-xs.form-control.input-sm.editableInput(type="text", data-bind="value: scale")] week at #[span.editable(data-bind="text: $parents[4].convertTime(time)")] #[input.timeInput.form-control.input-sm.editableInput(data-bind="timepicker: time")] on #[span.editable(data-bind="text: day")] #[select.form-control.input-sm.select-sm.editableInput(data-bind="value: day, options: $parents[4].days")]
                                                                 .sectionRepeat.sectionMultiline
                                                                     i.fa.fa-history
                                                                     .checkbox(data-bind="with: repeatConfig")
                                                                         label
                                                                             input.checkbox-valign(type="checkbox", data-bind="checked: enabled, disable: !$parents[4].isEditingAlertConfig()")
-                                                                            div If not acknowledged, repeat this alert #[span.editable(data-bind="text: repeatCount")] #[input.form-control.input-sm.input-xs.editableInput(data-bind="value: repeatCount")] times.  Wait #[span.editable(data-bind="text: $parent.memberAlertDelay")] #[input.form-control.input-sm.input-xs.editableInput(data-bind="value: $parent.memberAlertDelay")] minutes after the previous alert completes.
+                                                                            div If not acknowledged, repeat this alert #[span(data-bind="visible: enabled") #[span.editable(data-bind="text: repeatCount")] #[input.form-control.input-sm.input-xs.editableInput(data-bind="value: repeatCount")] times.  Wait #[span.editable(data-bind="text: $parent.memberAlertDelay")] #[input.form-control.input-sm.input-xs.editableInput(data-bind="value: $parent.memberAlertDelay")] minutes after the previous alert completes.]
 
                                                         .alertFooter
                                                             .escalationTimer
