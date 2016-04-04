@@ -15,7 +15,6 @@ var notifierUtility = new NotifierUtility();
 module.exports = {
   sendText: function(toNumber, message, cb) {
     var fromNumber = phoneNumbers[numberIndex++];
-    toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Twilio');
 
     if (numberIndex >= phoneNumbers.length)
       numberIndex = 0;
@@ -27,15 +26,9 @@ module.exports = {
     }, cb);
   },
 
-  sendVoice: function(toNumber, message, cb) {
-    toNumber = notifierUtility.fixPhoneNumbers(toNumber, 'Twilio');
-    var url = notifierUtility.buildVoiceUrl(message, 'Twilio');
-
-    client.makeCall({
-      to: toNumber,
-      from: phoneNumbers[0],
-      url: url
-    }, cb);
+  sendVoice: function(options, cb) {
+    options.from = phoneNumbers[0];
+    client.makeCall(options, cb);
   },
 
   getLogs: function(type, cb) {

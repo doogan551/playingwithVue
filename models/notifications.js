@@ -1539,7 +1539,6 @@ var dbAlarmQueueLocked = false,
 							if (thread.status.isReturnedNormal && !notifyingReturnNormal) {
 								msg += ' ' + getVoiceReturnNormalMessage(thread.returnNormal.timestamp);
 							}
-							msg += ' Thank you and goodbye.';
 						} else { // SMS or EMAIL
 							if (!isNormalAlarmClass) {
 								msg = alarmClassText + ':';
@@ -1652,9 +1651,14 @@ var dbAlarmQueueLocked = false,
 							text: notifyMsg
 						}, createCallback(notifyEntry)];
 					} else {
+						// TOOD if notifying via voice, create a unique id which will be stored with the notify log and
+						// sent to Twilio. When Twilio requests the XML document (Twiml), it will send this id with the 
+						// request which will give us all the info we need for creating the voice message, and so we can
+						// know who acknowledged if the user acknowledges the alarm via voice.
+
 						notifyParams = [(to.length === 10) ? '1' + to : to, notifyMsg, createCallback(notifyEntry)];
 					}
-					notifier[notifierFnLookup[notification.Type]].apply(notifier, notifyParams);
+					// notifier[notifierFnLookup[notification.Type]].apply(notifier, notifyParams);
 				}
 				cb(null, data);
 			}
@@ -1666,9 +1670,9 @@ var dbAlarmQueueLocked = false,
 				return (parseInt(info.data.now + (offset * MSPM), 10));
 			},
 			log: function () {
-				// for (var i = 0; i < arguments.length; i++) {
-				//	console.log(arguments[i]);
-				// }
+				for (var i = 0; i < arguments.length; i++) {
+					console.log(arguments[i]);
+				}
 			},
 			sendError: function (err) {
 				var siteName = siteConfig.get('Infoscan.location').site,
