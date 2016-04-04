@@ -1146,7 +1146,7 @@ module.exports = Rpt = {
                         total += matches[i].Value - value;
                         value = matches[i].Value;
                     } else {
-                        total += matches[i].Value;
+                        // total += matches[i].Value;
                         value = matches[i].Value;
                     }
                 }

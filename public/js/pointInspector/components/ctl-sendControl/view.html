@@ -32,6 +32,7 @@
 
                                     <!-- ko ifnot: isEnumValueType -->
                                     <input data-bind="textInput: controlValue" class="form-control input-sm val" type="text"/>
+                                    <label data-bind="text:valueValidation, visible: showValidation"></label>
                                     <!-- <input type="text" data-bind="propertyName: propertyName, numeric: data.Value, valueType: data.ValueType, min: min, max: max" class="form-control input-sm"> -->
                                     <!-- /ko -->
                                 </div>
