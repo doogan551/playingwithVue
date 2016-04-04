@@ -1,5 +1,7 @@
+var domains = ['yadkinvillenc.dtscada.com'];
 var yadkinville = {
   'Infoscan': {
+    'domains': domains,
     'dbConfig': {
       'host': 'localhost'
     },
@@ -10,12 +12,10 @@ var yadkinville = {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'Yadkinville',
-      'email': 'rkendall@dorsett-tech.com'
+      'site': 'Yadkinville'
     },
     'letsencrypt': {
-      'enabled': true,
-      'domains': ['yadkinvillenc.dtscada.com']
+      'enabled': true
     }
   }
 };

@@ -1,25 +1,24 @@
 var nodemailer = require('nodemailer');
 var config = require('config');
 
-var serverConfig = require('os').hostname();
-var toMail = config.get('Infoscan.location').email;
-// var defaultFromAddress = "'InfoScan' <infoscan@dorsett-tech.com>";
-var defaultFromAddress = 'testing@sparkpostbox.com';
+var serverName = require('os').hostname();
+var siteConfig = config.get('Infoscan');
+var siteDomain = siteConfig.domains[0];
+var siteName = siteConfig.location.site;
+var defaultFromAddress = siteConfig.email.from.default + '@' + siteDomain;
+var smtpAuth = config.get('SparkPost').smtpRelayAuth;
 
 var OPEN = 1;
 var CLOSED = 2;
+var TIMEOUT = 330000; // 5 minutes, 30 seconds
 var transportStatus = CLOSED;
-var timeout = 300000; // 5 minutes
 var smtpTransport;
 var timeoutObj;
 var smtpConfig = {
     host: "smtp.sparkpostmail.com", // hostname
     secureConnection: false, // connection is started in insecure plain text mode and later upgraded with STARTTLS
     port: 587, // port for secure SMTP
-    auth: {
-        user: "SMTP_Injection",
-        pass: "843730326ae23dd0859cd9affe42744c701ee63b"
-    }
+    auth: smtpAuth
   };
 
 function closeTransport () {
@@ -29,7 +28,7 @@ function closeTransport () {
 
 function getTransport () {
   clearTimeout(timeoutObj); // Clear the timeout
-  timeoutObj = setTimeout(closeTransport, timeout); // Close the connection pool after <timeout> milliseconds of inactivity
+  timeoutObj = setTimeout(closeTransport, TIMEOUT); // Close the connection pool after <timeout> milliseconds of inactivity
 
   if (transportStatus === CLOSED) {
     smtpTransport = nodemailer.createTransport("SMTP", smtpConfig);
@@ -37,23 +36,38 @@ function getTransport () {
   }
 }
 
+function sendEmail (options, cb) {
+  getTransport();
+
+  if (!!options.fromUser) {
+    options.from = options.fromUser + '@' + siteDomain;
+    delete options.fromUser; // Shouldn't matter but remove custom key just to be safe
+  } else {
+    options.from = defaultFromAddress;
+  }
+
+  if (!!options.fromName) {
+    options.from = options.fromName + ' <' + options.from + '>';
+    delete options.fromName; // Shouldn't matter but remove custom key just to be safe
+  }
+
+  smtpTransport.sendMail(options, cb);
+}
+
 module.exports = {
   sendError: function(msg) {
-    if (!!toMail) {
-      nodemailer.mail({
-        from: 'dorsett.alarms@gmail.com',
-        to: toMail,
-        subject: 'Error: ' + serverConfig,
-        text: msg
-      });
+    var options;
+
+    if (siteConfig.email.onError.enabled) {
+      options = {
+        to: siteConfig.email.onError.to,
+        subject: 'Error: ' + serverName + '(' + siteName + ')',
+        text: ['Site: ' + siteName, 'Time: ' + new Date().toString(), msg].join('\n')
+      };
+      sendEmail(options, function () {});
     }
   },
   sendEmail: function(options, cb) {
-    getTransport();
-
-    if (!!!options.from)
-      options.from = defaultFromAddress;
-
-    smtpTransport.sendMail(options, cb);
+    sendEmail(options, cb);
   }
 };

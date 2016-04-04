@@ -10,9 +10,13 @@ var dorsett = {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'Dorsett',
-      'email': 'rkendall@dorsett-tech.com'
-
+      'site': 'Dorsett'
+    },
+    'email': {
+      'onError': {
+          'to': 'rkendall@dorsett-tech.com',
+          'enabled': true
+      }
     }
   }
 };

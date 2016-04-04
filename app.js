@@ -82,7 +82,7 @@ require('./helpers/mongooseconn.js')(function() {
               configDir: config.get('Infoscan.files').driveLetter + ':' + config.get('Infoscan.letsencrypt').directory,
               approveRegistration: function(hostname, cb) {
                 cb(null, {
-                  domains: config.get('Infoscan.letsencrypt').domains,
+                  domains: config.get('Infoscan').domains,
                   email: 'rkendall@dorsett-tech.com', // 'user@example.com'
                   agreeTos: true
                 });

@@ -7,8 +7,13 @@ var jeff = {
             'driveLetter': 'C'
         },
         'location': {
-            'site': 'Jeff',
-            'email': 'jshore@dorsett-tech.com'
+            'site': 'Jeff'
+        },
+        'email': {
+            'onError': {
+                'to': 'jshore@dorsett-tech.com',
+                'enabled': true
+            }
         }
     },
     runNotifications: false
