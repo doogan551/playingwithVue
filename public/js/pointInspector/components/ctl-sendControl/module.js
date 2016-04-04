@@ -16,20 +16,24 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
         self.controlPriority = ko.observable(self.data['Control Priority'] && self.data['Control Priority'].eValue());
         self.valueValidation = ko.observable('');
         self.showValidation = ko.observable(false);
+        self.controlFocus = ko.observable(true);
 
-        self.controlValue.subscribe(function(val) {
+        self.controlFocus.subscribe(function(focused) {
             self.showValidation(false);
-            if (['Analog Input', 'Analog Output'].indexOf(self.data['Point Type'].Value()) >= 0) {
-                self.min = self.data['Minimum Value'].Value();
-                self.max = self.data['Maximum Value'].Value();
-                if (val > self.max) {
-                    self.controlValue(self.max);
-                    self.valueValidation('Value ' + val + ' is greater than point\'s maximum value: ' + self.max + '. Value has been set to max.');
-                    self.showValidation(true);
-                } else if (val < self.min) {
-                    self.controlValue(self.min);
-                    self.valueValidation('Value ' + val + ' is lower than point\'s minimum value: ' + self.min + '. Value has been set to min.');
-                    self.showValidation(true);
+            var val = self.controlValue();
+            if (!focused) {
+                if (['Analog Input', 'Analog Output'].indexOf(self.data['Point Type'].Value()) >= 0) {
+                    self.min = self.data['Minimum Value'].Value();
+                    self.max = self.data['Maximum Value'].Value();
+                    if (val > self.max) {
+                        self.controlValue(self.max);
+                        self.valueValidation('Value ' + val + ' is greater maximum value: ' + self.max + '. Value has been set to max.');
+                        self.showValidation(true);
+                    } else if (val < self.min) {
+                        self.controlValue(self.min);
+                        self.valueValidation('Value ' + val + ' is lower minimum value: ' + self.min + '. Value has been set to min.');
+                        self.showValidation(true);
+                    }
                 }
             }
         });
