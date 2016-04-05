@@ -833,7 +833,7 @@ var tou = {
                     val,
                     isEmpty = true,
                     withData = self.bindings.withDataSource(),
-                    processData = function (result) {
+                    processData = function (result, getValFn) {
                         if (!result || result.length === 0) {
                             self.bindings.noData(true);
                             if(!result) {
@@ -842,6 +842,9 @@ var tou = {
                         } else {
                             tou.forEachArray(result, function (row) {
                                 var newval,
+                                    getValFn = function (r) {
+                                        return (r.max + r.min)/2;
+                                    },
                                     setVal = function (valToSet) {
                                         newval = valToSet;
                                         if (multiply) {
@@ -855,7 +858,12 @@ var tou = {
                                 }
 
                                 if (row.range) {
-                                    setVal(row[prop]);
+                                    if (row.max !== undefined && row.min !== undefined) {
+                                        setVal(getValFn(row));
+                                    } else {
+                                        setVal(row.max | row.sum);
+                                    }
+
                                     newData.push({
                                         Value: newval,
                                         timestamp: row.range.start * 1000
@@ -936,7 +944,7 @@ var tou = {
                                             processTemps(results[1].results.tempRanges);
                                         } else {
                                             multiply = false;
-                                            processData(results[1].results[props]);
+                                            processData(results[1].results.sums || results[1].results.maxes);
                                         }
                                     } else {
                                         newData = null;
@@ -950,7 +958,11 @@ var tou = {
                             if (Array.isArray(results)) {
                                 processData(results[0].results[props]);//.results[props]);
                             } else {
-                                processData(results.results[props]);
+                                // if (self.bindings.dataSource() === 'Outside Air Temperature') {
+                                //     processData(results.results[props]);
+                                // } else {
+                                    processData(results.results[props]);
+                                // }
                             }
                             self.mainData = newData;
                             self.withData = null;
@@ -5992,7 +6004,7 @@ tou.utilityPages.Electricity = function() {
                             sumData = dataRow.results[arrayName][index];
                             if (!!sumData) {
                                 unitValue = myBindings.adjustPrecision(sumData[fieldName]);
-                                ts = moment(sumData.range.start * 1000),
+                                ts = moment(sumData.range.start * 1000);
                                 unitIndex = (parseInt(moment(ts).format(monthYear.childFormatCode), 10) - 1);
                                 if (dataRow.peak === "on") {
                                     onPeakData[unitIndex].timeStamp = (sumData.range.start * 1000);
@@ -7054,10 +7066,11 @@ tou.utilityPages.Electricity = function() {
                 rangeType: data.season,
                 title: data.seasonName || this.getTitle(data.season),
                 days: [],
-                rates: {}
+                rates: {},
+                enablePeakSelection: data.enablePeakSelection || false
             };
 
-            if (data.season !== 'transition') {
+            // if (data.season !== 'transition') {
                 tou.forEachArray(tou.fullDayList, function (day, idx) {
                     if (data['day' + day]) {
                         ret.days.push(tou.shortDayList[idx]);
@@ -7065,7 +7078,7 @@ tou.utilityPages.Electricity = function() {
                 });
                 ret.start.peak = parseInt(data.timeFrom.replace(':', ''), 10);
                 ret.end.peak = parseInt(data.timeTo.replace(':', ''), 10);
-            }
+            // }
 
             if (!data.isUpdate) {
                 if (!ret.touid) {
@@ -7104,7 +7117,8 @@ tou.utilityPages.Electricity = function() {
                     type: ko.observable(data.type),
                     qualifier: ko.observable(data.rateQualifier),
                     peak: ko.observable(data.peak),
-                    threshold: ko.observable(data.threshold)
+                    threshold: ko.observable(data.threshold),
+                    qualifierDemand: ko.observable(data.qualifierDemand)
                 };
 
             rateTable.addRate(rate, data.isUpdate, data.rateIdx);
@@ -7242,6 +7256,8 @@ tou.utilityPages.Electricity = function() {
                 observablePeriods: observablePeriods,
                 observableRates: observableRates,
 
+                hidePeakInfo: rawCfg.hidePeakInfo || false,
+
                 cfg: rawCfg,
 
                 getBindings: function () {
@@ -7251,6 +7267,7 @@ tou.utilityPages.Electricity = function() {
                         title: ko.observable(title),
                         touid: touid,
                         modifierQueue: modifierQueue,
+                        hidePeakInfo: ko.observable(self.hidePeakInfo),
                         isChild: ko.observable(self.parentTable !== null)
                     };
 
@@ -7292,6 +7309,7 @@ tou.utilityPages.Electricity = function() {
                     rawCfg.title = title;
                     rawCfg.parentTable = parentTitle;
                     rawCfg.rates = self.rawRates;
+                    rawCfg.hidePeakInfo = self.hidePeakInfo;
 
                     return rawCfg;
                 },
@@ -7568,7 +7586,8 @@ tou.utilityPages.Electricity = function() {
                     return {
                         title: self.title,
                         isChild: self.parentTable !== null,
-                        parentTableName: title || ''
+                        parentTableName: title || '',
+                        hidePeakInfo: self.hidePeakInfo
                     };
                 }
             });
@@ -7614,6 +7633,7 @@ tou.utilityPages.Electricity = function() {
                 dayThursday: false,
                 dayFriday: false,
                 daySaturday: false,
+                enablePeakSelection: false,
                 timeFrom: '',
                 timeTo: '',
                 seasonName: '',
@@ -7646,6 +7666,7 @@ tou.utilityPages.Electricity = function() {
                 isUpdate: false,
                 rateIdx: '',
                 saveText: 'Add',
+                qualifierDemand: 'Peak Demand',
                 addQualifier: function (scope, event) {
                     var qualifier = this.rateQualifier();
 
@@ -7659,14 +7680,16 @@ tou.utilityPages.Electricity = function() {
                 title: '',
                 isChild: false,
                 unlink: false,
-                parentTableName: ''
+                parentTableName: '',
+                hidePeakInfo: false
             },
             electricityAddRateTable: {
                 tableName: '',
                 copyPeriods: false,
                 linkPeriods: false,
                 linkedTable: '',
-                rateTablesUsable: []
+                rateTablesUsable: [],
+                hidePeakInfo: false
             },
             electricityAddOffPeakDay: {
                 date: '',
@@ -8158,7 +8181,8 @@ tou.utilityPages.Electricity = function() {
                         order: idx,
                         periods: data.periods,
                         rates: data.rates,
-                        parentTable: data.parentTable
+                        parentTable: data.parentTable,
+                        hidePeakInfo: data.hidePeakInfo
                     };
                 } else { //holiday table
                     tou.forEachArray(boundTable.holidays, function (holiday) {
@@ -8236,6 +8260,8 @@ tou.utilityPages.Electricity = function() {
             if (data.unlink) {
                 table.unlinkTable();
             }
+            table.bindings.hidePeakInfo(data.hidePeakInfo || false);
+            table.hidePeakInfo = data.hidePeakInfo || false;
             tou.hideModal();
         },
         checkForOverlap: function (table, start, end, isUpdate, data) {
@@ -8387,7 +8413,8 @@ tou.utilityPages.Electricity = function() {
                 peak: rate.peak,
                 rateName: rate.name,
                 rateQualifier: rate.qualifier,
-                threshold: rate.threshold
+                threshold: rate.threshold,
+                qualifierDemand: rate.qualifierDemand
             };
 
             return ret;
@@ -8397,6 +8424,7 @@ tou.utilityPages.Electricity = function() {
                 season: period.rangeType,
                 dateFrom: new Date(period.start.date),
                 dateTo: new Date(period.end.date),
+                enablePeakSelection: period.enablePeakSelection,
                 daySunday: false,
                 dayMonday: false,
                 dayTuesday: false,
@@ -8509,7 +8537,8 @@ tou.utilityPages.Electricity = function() {
                 peakText: period.rangeType === 'transition' ? '' : 'On-Peak',
                 _rawStart: period.start.date,
                 _rawEnd: period.end.date,
-                touid: period.touid
+                touid: period.touid,
+                enablePeakSelection: period.enablePeakSelection || false
             };
 
             out.rates = rates;
