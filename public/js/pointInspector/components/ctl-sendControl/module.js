@@ -196,9 +196,16 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
 
         self.showModal(true);
 
-        $modal.one('shown.bs.modal', function(e) {
+        $modal.on('shown.bs.modal', function(e) {
             var $valueField = $modal.find('.val:first');
             $valueField.focus().select();
+            $('#datetimepicker').data("DateTimePicker").date(new Date());
+        });
+
+        $modal.on('hidden.bs.modal', function(e) {
+            self.override['Time to Override'].Value(0);
+            $('#ttoBtn').click();
+            $('#ttoLabel').removeClass('active');
         });
     };
 
