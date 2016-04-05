@@ -77,7 +77,8 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
         $(function() {
             $('#datetimepicker').datetimepicker({
                 showClear: true,
-                showClose: true
+                showClose: true,
+                format: 'MM/DD/YY - HH:mm'
             });
             $('#datetimepicker').data("DateTimePicker").defaultDate(new Date());
             $('#datetimepicker').focusout(function() {
