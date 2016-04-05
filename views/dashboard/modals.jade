@@ -499,21 +499,22 @@
                     .col-xs-6
                         .title 3. Choose Qualifier (optional)
                     .col-xs-6
-                        .title 4. Choose Qualifier Demand
+                        .title(data-bind="visible: rateQualifier() === '' || rateQualifier() === null") &nbsp;
+                        .title(data-bind="visible: rateQualifier() !== '' && rateQualifier() !== null") 4. Choose Qualifier Demand
                     .col-xs-6
                         input.input-sm.rateQualifier.form-control(type="text", data-bind="value: rateQualifier")
                         select.selectSm.form-control
                             option hrs
-                    .col-xs-6
+                        .flexrow.flexaround
+                            button(data-val="<=", data-bind="click: addQualifier") &le;
+                            button(data-val="<", data-bind="click: addQualifier") &lt;
+                            button(data-val="AND", data-bind="click: addQualifier") AND
+                            button(data-val=">=", data-bind="click: addQualifier") &ge;
+                            button(data-val=">", data-bind="click: addQualifier") &gt;
+                    .col-xs-6(data-bind="visible: rateQualifier() !== '' && rateQualifier() !== null")
                         select.selectSm.form-control(data-bind="value: qualifierDemand")
                             option Max Demand
                             option Peak Demand
-                    .col-xs-6.flexrow.flexaround
-                        button(data-val="<=", data-bind="click: addQualifier") &le;
-                        button(data-val="<", data-bind="click: addQualifier") &lt;
-                        button(data-val="AND", data-bind="click: addQualifier") AND
-                        button(data-val=">=", data-bind="click: addQualifier") &ge;
-                        button(data-val=">", data-bind="click: addQualifier") &gt;
 
                 .title Final Step.  Choose rate element name.
                 .row
