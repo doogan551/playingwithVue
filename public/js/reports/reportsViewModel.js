@@ -1409,17 +1409,17 @@ var reportsViewModel = function () {
             }
             return answer;
         },
-        buildReportDataRequestPromise = function () {
-            return new Promise(function(resolve, reject) {
-                mergePersistedPointRefArray(true).then(function (response) {
-                    //console.log("mergePersistedPointRefArray() Success!", response);
-                    resolve(buildReportDataRequest());
-                }, function (error) {
-                    console.error("buildReportDataRequestPromise() --> mergePersistedPointRefArray() Failed!", error);
-                    reject(null);
-                });
-            });
-        },
+        //buildReportDataRequestPromise = function () {
+        //    return new Promise(function(resolve, reject) {
+        //        mergePersistedPointRefArray(true).then(function (response) {
+        //            //console.log("mergePersistedPointRefArray() Success!", response);
+        //            resolve(buildReportDataRequest());
+        //        }, function (error) {
+        //            console.error("buildReportDataRequestPromise() --> mergePersistedPointRefArray() Failed!", error);
+        //            reject(null);
+        //        });
+        //    });
+        //},
         buildReportDataRequest = function () {
             var result,
                 i,
@@ -2053,55 +2053,55 @@ var reportsViewModel = function () {
             }, resizeTimer);
         },
         saveReportConfig = function () {
-            mergePersistedPointRefArray(true).then(function (response) {
-                point["Report Config"].columns = validateColumns(true);
-                point["Report Config"].filters = validateFilters(true);
-                pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
-                point["Report Config"].pointFilter = pointFilter;
-                point["Report Config"].selectedPageLength = self.selectedPageLength();
-                point["Report Config"].selectedChartType = self.selectedChartType();
-                switch (self.reportType) {
-                    case "History":
-                    case "Totalizer":
-                        point["Report Config"].interval = {
-                            text: self.interval(),
-                            value: self.intervalValue()
-                        };
-                        point["Report Config"].duration = {
-                            startDate: self.selectedDuration().startDate.unix(),
-                            endDate: self.selectedDuration().endDate.unix(),
-                            startTimeOffSet: self.durationStartTimeOffSet(),
-                            endTimeOffSet: self.durationEndTimeOffSet(),
-                            duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
-                            selectedRange: self.selectedDuration().selectedRange
-                        };
-                        break;
-                    case "Property":
-                        break;
-                    default:
-                        console.log(" - - - DEFAULT  init()");
-                        break;
-                }
-                point.name1 = $pointName1.val();
-                point.name2 = $pointName2.val();
-                point.name3 = $pointName3.val();
-                point.name4 = $pointName4.val();
-                point.Name = self.reportDisplayTitle();
+            //mergePersistedPointRefArray(true).then(function (response) {
+            point["Report Config"].columns = validateColumns(true);
+            point["Report Config"].filters = validateFilters(true);
+            pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
+            point["Report Config"].pointFilter = pointFilter;
+            point["Report Config"].selectedPageLength = self.selectedPageLength();
+            point["Report Config"].selectedChartType = self.selectedChartType();
+            switch (self.reportType) {
+                case "History":
+                case "Totalizer":
+                    point["Report Config"].interval = {
+                        text: self.interval(),
+                        value: self.intervalValue()
+                    };
+                    point["Report Config"].duration = {
+                        startDate: self.selectedDuration().startDate.unix(),
+                        endDate: self.selectedDuration().endDate.unix(),
+                        startTimeOffSet: self.durationStartTimeOffSet(),
+                        endTimeOffSet: self.durationEndTimeOffSet(),
+                        duration: self.selectedDuration().endDate.diff(self.selectedDuration().startDate),
+                        selectedRange: self.selectedDuration().selectedRange
+                    };
+                    break;
+                case "Property":
+                    break;
+                default:
+                    console.log(" - - - DEFAULT  init()");
+                    break;
+            }
+            point.name1 = $pointName1.val();
+            point.name2 = $pointName2.val();
+            point.name3 = $pointName3.val();
+            point.name4 = $pointName4.val();
+            point.Name = self.reportDisplayTitle();
 
-                if (point._pStatus !== 0) {
-                    reportSocket.emit('addPoint', {
-                        point: point
-                    });
-                } else {
-                    reportSocket.emit('updatePoint', JSON.stringify({
-                        'newPoint': point,
-                        'oldPoint': originalPoint
-                    }));
-                }
-            }, function (error) {
-                console.error("saveReportConfig() --> mergePersistedPointRefArray() Failed!", error);
-                reject(result);
-            });
+            if (point._pStatus !== 0) {
+                reportSocket.emit('addPoint', {
+                    point: point
+                });
+            } else {
+                reportSocket.emit('updatePoint', JSON.stringify({
+                    'newPoint': point,
+                    'oldPoint': originalPoint
+                }));
+            }
+            //}, function (error) {
+            //    console.error("saveReportConfig() --> mergePersistedPointRefArray() Failed!", error);
+            //    reject(result);
+            //});
         },
         setReportEvents = function () {
             var intervals,
@@ -3041,6 +3041,7 @@ var reportsViewModel = function () {
                 if ($reportChartDiv.length > 0) {
                     if (self.selectedChartType() === "Pie") {
                         $reportChartDiv.highcharts({
+                            turboThreshold: 0,
                             chart: {
                                 width: chartWidth,
                                 height: chartHeight,
@@ -3075,6 +3076,7 @@ var reportsViewModel = function () {
                         });
                     } else {
                         trendPlot = new TrendPlot({
+                            turboThreshold: 0,
                             width: chartWidth,
                             height: chartHeight,
                             target: $reportChartDiv,
@@ -3521,44 +3523,44 @@ var reportsViewModel = function () {
     self.requestReportData = function () {
         if (!self.durationError()) {
             if (self.currentTab() !== 2) {
-                buildReportDataRequestPromise(true).then(function (requestObj) {
-                    //    var requestObj = buildReportDataRequest();
-                    if (!!requestObj) {
-                        tabSwitch(2);
-                        self.selectViewReportTabSubTab("gridData");
-                        if (self.reportResultViewed()) {
-                            $popAction.hide();
-                            self.activeDataRequest(true);
-                            self.reportResultViewed(false);
-                            configureDataTable(true, true);
-                            reportData = undefined;
-                            switch (self.reportType) {
-                                case "History":
-                                    ajaxPost(requestObj, "/report/historyDataSearch", renderHistoryReport);
-                                    //reportSocket.emit("historyDataSearch", {options: requestObj});
-                                    break;
-                                case "Totalizer":
-                                    ajaxPost(requestObj, "/report/totalizerReport", renderTotalizerReport);
-                                    //reportSocket.emit("totalizerReport", {options: requestObj});
-                                    break;
-                                case "Property":
-                                    ajaxPost(requestObj, "/report/reportSearch", renderPropertyReport);
-                                    //reportSocket.emit("reportSearch", {options: requestObj});
-                                    break;
-                                default:
-                                    console.log(" - - - DEFAULT  viewReport()");
-                                    break;
-                            }
-                        } else {
-                            renderReport();
+                //buildReportDataRequestPromise(true).then(function (requestObj) {
+                var requestObj = buildReportDataRequest();
+                if (!!requestObj) {
+                    tabSwitch(2);
+                    self.selectViewReportTabSubTab("gridData");
+                    if (self.reportResultViewed()) {
+                        $popAction.hide();
+                        self.activeDataRequest(true);
+                        self.reportResultViewed(false);
+                        configureDataTable(true, true);
+                        reportData = undefined;
+                        switch (self.reportType) {
+                            case "History":
+                                ajaxPost(requestObj, "/report/historyDataSearch", renderHistoryReport);
+                                //reportSocket.emit("historyDataSearch", {options: requestObj});
+                                break;
+                            case "Totalizer":
+                                ajaxPost(requestObj, "/report/totalizerReport", renderTotalizerReport);
+                                //reportSocket.emit("totalizerReport", {options: requestObj});
+                                break;
+                            case "Property":
+                                ajaxPost(requestObj, "/report/reportSearch", renderPropertyReport);
+                                //reportSocket.emit("reportSearch", {options: requestObj});
+                                break;
+                            default:
+                                console.log(" - - - DEFAULT  viewReport()");
+                                break;
                         }
                     } else {
-                        // bad request object do nothing.
+                        renderReport();
                     }
-                }, function (error) {
-                    console.error("buildReportDataRequestPromise() Failed!", error);
-                    return result;
-                });
+                } else {
+                    // bad request object do nothing.
+                }
+                //}, function (error) {
+                //    console.error("buildReportDataRequestPromise() Failed!", error);
+                //    return result;
+                //});
             }
         } else {
             displayError("Invalid Date Time selection");
@@ -3570,7 +3572,8 @@ var reportsViewModel = function () {
 
     self.generateChart = function () {
         if (!self.durationError()) {
-                buildReportDataRequestPromise(true).then(function (requestObj) {
+                //buildReportDataRequestPromise(true).then(function (requestObj) {
+                var requestObj = buildReportDataRequest();
                     if (!!requestObj) {
                             $reportChartDiv.html("");
                             self.activeDataRequestForChart(true);
@@ -3595,10 +3598,10 @@ var reportsViewModel = function () {
                     } else {
                         // bad request object do nothing.
                     }
-                }, function (error) {
-                    console.error("generateChart() --> buildReportDataRequestPromise() Failed!", error);
-                    return result;
-                });
+                //}, function (error) {
+                //    console.error("generateChart() --> buildReportDataRequestPromise() Failed!", error);
+                //    return result;
+                //});
         } else {
             displayError("Invalid Date Time selection");
         }
