@@ -484,12 +484,37 @@ div.dataTables_wrapper div.dataTables_length select {
 .precision {
     width: 60px;
 }
+.inputMultiplier {
+    width: 50px;
+    -webkit-appearance: none;
+    padding: 2px 5px 2px 5px;
+}
+.inputMultiplier::-webkit-inner-spin-button,
+.inputMultiplier::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 input.form-control.inputPrecision {
     width: 30px;
     padding: 2px 2px 2px 5px;
 }
-.precisionColumn:hover{
+.precisionColumn:hover {
     cursor: pointer;
+}
+.precisionColumn {
+    width: 70px;
+}
+.includeInChartColumn:hover {
+    cursor: pointer;
+}
+.includeInChartColumn {
+    width: 33px;
+}
+.includeInChartColumn > input {
+    height: 14px;
+    width: 14px;
+    margin-left: 9px;
+    margin-bottom: 10px;
 }
 input.form-control.globalPrecision {
     width: 30px;
@@ -511,9 +536,6 @@ input.form-control.globalPrecision {
     vertical-align: middle;
     cursor: move;
     margin-right: 12px;
-}
-.columnsGrid.table > thead > tr > th {
-    line-height: 30px;
 }
 .filtersGrid .handle {
     background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGElEQVQIW2NkYGBIA+JZQMzACCJgAIUDACENAQR6zKpeAAAAAElFTkSuQmCC) repeat;
@@ -542,7 +564,9 @@ input.form-control.globalPrecision {
 .columnsGrid.table > thead > tr > th {
     border-bottom: 2px solid #CCC;
     padding: 4px;
+    line-height: 34px;
 }
+
 .columnsGrid.table > tbody > tr > td {
     border-top: 1px solid #CCC;
     padding: 4px;

@@ -399,8 +399,9 @@ var reportsViewModel = function () {
         $reportColumns,
         $additionalFilters,
         $columnNames,
-        $hiddenPrecisionPlaceholder,
+        $hiddenPlaceholder,
         $globalPrecision,
+        $globalIncludeInChart,
         $availableChartTypesChartTab,
         $reportChartDiv,
         $saveReportButton,
@@ -786,9 +787,10 @@ var reportsViewModel = function () {
                     if (!self.chartable()) {
                         self.chartable(true);
                     }
+                    $columnsGrid.find(".multiplierColumn").show();
                     $columnsGrid.find(".calculateColumn").show();
                     $columnsGrid.find(".precisionColumn").show();
-                    $columnsGrid.find(".includeInChart").show();
+                    $columnsGrid.find(".includeInChartColumn").show();
                     break;
                 }
             }
@@ -897,7 +899,7 @@ var reportsViewModel = function () {
                     }
                     if (tempObject.canCalculate) {
                         tempObject.precision = 3;
-                        tempObject.includeInReport = false;
+                        tempObject.includeInChart = false;
                     }
                     tempObject.calculation = "";
                     tempObject.valueOptions = undefined;
@@ -1165,9 +1167,9 @@ var reportsViewModel = function () {
             });
             return result[0];
         },
-        resetAllColumnPrecisionValues = function (precision) {
+        globalSetAllColumnValues = function (columnField, newValue) {
             self.listOfColumns().forEach(function (column) {
-                column.precision = precision;
+                column[columnField] = newValue;
             });
             updateListOfColumns(self.listOfColumns());
         },
@@ -1315,8 +1317,11 @@ var reportsViewModel = function () {
                             console.log(" - - - DEFAULT  initColumns()");
                             break;
                     }
-                    if (currentColumn.includeInReport === undefined) {  // TODO  remove once YDK reports have been saved
-                        currentColumn.includeInReport = false;
+                    if (currentColumn.includeInChart === undefined) {  // TODO  remove once YDK reports have been saved
+                        currentColumn.includeInChart = false;
+                    }
+                    if (currentColumn.multiplier === undefined) {  // TODO  remove once YDK reports have been saved
+                        currentColumn.multiplier = 1;
                     }
                     result.push(currentColumn);
                 }
@@ -1642,8 +1647,9 @@ var reportsViewModel = function () {
             $reportColumns = $direports.find("#reportColumns");
             $additionalFilters = $direports.find("#additionalFilters");
             $popAction = $direports.find(".pop.popInOutDiv");
-            $hiddenPrecisionPlaceholder = $direports.find(".hiddenPrecisionPlaceholder");
-            $globalPrecision = $hiddenPrecisionPlaceholder.find(".globalPrecision");
+            $hiddenPlaceholder = $direports.find(".hiddenPlaceholder");
+            $globalPrecision = $hiddenPlaceholder.find("input.globalPrecision");
+            $globalIncludeInChart = $hiddenPlaceholder.find("input.globalChartCheckbox");
             $availableChartTypesChartTab = $direports.find(".availableChartTypes.chartTab");
             $reportChartDiv = $direports.find(".reportChartDiv");
         },
@@ -1736,7 +1742,7 @@ var reportsViewModel = function () {
                     case "Integer":
                     case "Unsigned":
                         if ($.isNumeric(rawValue)) {
-                            dataField.Value = toFixedComma(rawValue, columnConfig.precision);
+                            dataField.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
                         } else {
                             dataField.Value = rawValue;
                         }
@@ -1762,7 +1768,7 @@ var reportsViewModel = function () {
                     case "null":
                     case "None":
                         if ($.isNumeric(rawValue)) {
-                            dataField.Value = toFixedComma(rawValue, columnConfig.precision);
+                            dataField.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
                         } else {
                             dataField.Value = rawValue;
                         }
@@ -1874,9 +1880,9 @@ var reportsViewModel = function () {
                                 tempPivot[columnUPI].rawValue = "";
                             } else {
                                 if (operator === "runtime") {
-                                    tempPivot[columnUPI].Value = (rawValue === 0 ? 0 : getDurationText(rawValue, columnConfig.precision, totalizerDurationInHours));
+                                    tempPivot[columnUPI].Value = (rawValue === 0 ? 0 : getDurationText(columnConfig.multiplier * rawValue, columnConfig.precision, totalizerDurationInHours));
                                 } else {
-                                    tempPivot[columnUPI].Value = toFixedComma(rawValue, columnConfig.precision);
+                                    tempPivot[columnUPI].Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
                                 }
                                 tempPivot[columnUPI].rawValue = parseFloat(rawValue);
                             }
@@ -1939,12 +1945,12 @@ var reportsViewModel = function () {
                 columnSum = 0,
                 totalAmount = 0;
 
-            for (j = 0; j < columnsLength; j++) {
+            for (j = 1; j < columnsLength; j++) {
                 columnSum = 0;
                 columnConfig = {};
                 columnConfig = columnArray[j];
                 columnName = (columnConfig.dataColumnName !== undefined ? columnConfig.dataColumnName : columnConfig.colName);
-                if (columnConfig.includeInReport) {
+                if (columnConfig.includeInChart) {
                     if (self.selectedChartType() !== "Pie") {
                         columnData = [];
                     }
@@ -1955,15 +1961,22 @@ var reportsViewModel = function () {
                                 case "History":
                                 case "Totalizer":
                                     if (self.selectedChartType() === "Pie") {
-                                        columnSum += parseFloat(data[i][columnName].Value);
+                                        columnSum += parseFloat(data[i][columnName].rawValue);
                                     } else {
                                         columnData.push({
                                             timeStamp: moment.unix(data[i].Date.rawValue).toDate(),
-                                            value:  parseFloat(data[i][columnName].Value)
+                                            value: ($.isNumeric(data[i][columnName].rawValue) ? parseFloat(data[i][columnName].rawValue) : 0)
                                         });
                                     }
                                     break;
                                 case "Property":
+                                    if (self.selectedChartType() === "Pie") {
+                                        columnSum += ($.isNumeric(data[i][columnName].rawValue) ? parseFloat(data[i][columnName].rawValue) : 0);
+                                    } else {
+                                        columnData.push({
+                                            value: ($.isNumeric(data[i][columnName].rawValue) ? parseFloat(data[i][columnName].rawValue) : 0)
+                                        });
+                                    }
                                     break;
                                 default:
                                     console.log(" - - - DEFAULT  getOnlyChartData()");
@@ -2018,6 +2031,7 @@ var reportsViewModel = function () {
 
             if ($activePane.attr("id") === "chartData") {
                 $activePane.css('height', (window.innerHeight - 120));
+                $activePane.css('width', (window.innerWidth - 130));
             } else if ($activePane.attr("id") === "gridData") {
                 $dataTablesScrollHead = $tabViewReport.find('.dataTables_scrollHead');
                 $dataTablesScrollBody = $tabViewReport.find('.dataTables_scrollBody');
@@ -2108,7 +2122,8 @@ var reportsViewModel = function () {
                 calculations,
                 entriesPerPage,
                 chartTypes,
-                precisionEventsSet = false;
+                precisionEventsSet = false,
+                includeInChartEventsSet = false;;
 
             $(window).resize(function () {
                 handleResize();
@@ -2128,7 +2143,8 @@ var reportsViewModel = function () {
                         operator: "",
                         calculation: "",
                         canCalculate: false,
-                        includeInReport: false,
+                        includeInChart: false,
+                        multiplier: 1,
                         precision: 3,
                         valueList: [],
                         upi: 0
@@ -2294,7 +2310,7 @@ var reportsViewModel = function () {
 
                         if (!precisionEventsSet) {
                             $(this).focusout(function (e) {
-                                $globalPrecision.appendTo($hiddenPrecisionPlaceholder);
+                                $globalPrecision.appendTo($hiddenPlaceholder);
                                 $(this).html(originalField);
                             });
 
@@ -2306,9 +2322,44 @@ var reportsViewModel = function () {
                                     }
                                     precision = $(this).find("input").val();
                                     self.globalPrecisionValue(parseInt(precision, 10));
-                                    resetAllColumnPrecisionValues(self.globalPrecisionValue());
-                                    console.log("set all precision to " + self.globalPrecisionValue());
+                                    globalSetAllColumnValues("precision", self.globalPrecisionValue());
+                                    //console.log("set all precision to " + self.globalPrecisionValue());
                                     precisionEventsSet = true;
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+
+            $direports.find(".includeInChartColumn").on('mousedown', function (e) {
+                if (self.canEdit()) {
+                    longClickStart = moment();
+                }
+            });
+
+            $direports.find(".includeInChartColumn").on('click', function (e) {
+                if (self.canEdit()) {
+                    if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
+                        var originalField = $(this).html();
+
+                        $globalIncludeInChart.removeClass("hidden");
+                        $(this).html("");
+                        $globalIncludeInChart.appendTo($(this));
+                        $(this).find("input").focus();
+
+                        if (!includeInChartEventsSet) {
+                            $(this).focusout(function (e) {
+                                $globalIncludeInChart.appendTo($hiddenPlaceholder);
+                                $(this).html(originalField);
+                            });
+
+                            $(this).click(function (event) {
+                                if (event.target.checked !== undefined) {
+                                    console.log("set all include in chart to " + event.target.checked);
+                                    self.globalChartCheckboxValue(event.target.checked);
+                                    globalSetAllColumnValues("includeInChart", self.globalChartCheckboxValue());
+                                    includeInChartEventsSet = true;
                                 }
                             });
                         }
@@ -2990,10 +3041,10 @@ var reportsViewModel = function () {
                 console.log(" - * - * - renderPropertyReport() ERROR = ", data.err);
             }
         },
-        renderChart = function (arrayOfData) {
-            self.activeDataRequestForChart(false);
+        renderChart = function () {
             adjustViewReportTabHeightWidth();
             var trendPlot,
+                maxDataRowsForChart = 1000,
                 chartType = getValueBasedOnText(self.listOfChartTypes, self.selectedChartType()),
                 chartTitle = self.reportDisplayTitle(),
                 subTitle = "",
@@ -3001,105 +3052,99 @@ var reportsViewModel = function () {
                 chartWidth = $reportChartDiv.parent().width(),
                 chartHeight = $reportChartDiv.parent().height();
 
-            if (!!arrayOfData) {
-                reportData = arrayOfData;
-                reportChartData = arrayOfData;
-            } else { // redraw request
-                if (!!reportData) {
-                    reportChartData = reportData;
-                }
-            }
+            reportChartData = getOnlyChartData(reportData);
 
-            if (!!reportChartData) {
-                switch (self.reportType) {
-                    case "History":
-                        subTitle = self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm a") + " - " + self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm a"),
-                        yAxisTitle = "Totals";
-                        reportChartData = pivotHistoryData(reportChartData.historyData);
-                        break;
-                    case "Totalizer":
-                        subTitle = self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm a") + " - " + self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm a"),
-                        yAxisTitle = "Totals"
-                        reportChartData = pivotTotalizerData(reportChartData);
-                        break;
-                    case "Property":
-                        reportChartData = cleanResultData(reportChartData);
-                        break;
-                    default:
-                        console.log(" - - - DEFAULT  renderChart()");
-                        break;
-                }
+            if (!!reportChartData && !!reportChartData[0]) {
+                if (reportChartData[0].data.length < maxDataRowsForChart) {
+                    switch (self.reportType) {
+                        case "History":
+                            subTitle = self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm a") + " - " + self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm a"),
+                            yAxisTitle = "Totals";
+                            break;
+                        case "Totalizer":
+                            subTitle = self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm a") + " - " + self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm a"),
+                            yAxisTitle = "Totals"
+                            break;
+                        case "Property":
+                            break;
+                        default:
+                            console.log(" - - - DEFAULT  renderChart()");
+                            break;
+                    }
 
-                reportChartData = getOnlyChartData(reportChartData);
-
-                if (reportChartData && self.selectedChartType() !== "Pie") {
-                    reportChartData.sort(function (a, b) {
-                        return (a.timeStamp > b.timeStamp) ? 1 : -1;
-                    });
-                }
-
-                if ($reportChartDiv.length > 0) {
-                    if (self.selectedChartType() === "Pie") {
-                        $reportChartDiv.highcharts({
-                            turboThreshold: 0,
-                            chart: {
-                                width: chartWidth,
-                                height: chartHeight,
-                                plotBackgroundColor: null,
-                                plotBorderWidth: null,
-                                plotShadow: false,
-                                type: 'pie'
-                            },
-                            title: {
-                                text: chartTitle
-                            },
-                            subtitle: {
-                                text: subTitle
-                            },
-                            tooltip: {
-                                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-                            },
-                            plotOptions: {
-                                pie: {
-                                    allowPointSelect: true,
-                                    cursor: 'pointer',
-                                    dataLabels: {
-                                        enabled: true,
-                                        format: '<b>{point.name}</b>: {point.percentage:.1f} %',
-                                        style: {
-                                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
-                                        }
-                                    }
-                                }
-                            },
-                            series: reportChartData
-                        });
-                    } else {
-                        trendPlot = new TrendPlot({
-                            turboThreshold: 0,
-                            width: chartWidth,
-                            height: chartHeight,
-                            target: $reportChartDiv,
-                            title: chartTitle,
-                            subtitle: subTitle,
-                            y: 'value',
-                            x: 'timeStamp',
-                            //highlightMax: true,
-                            data: reportChartData,
-                            type: chartType,
-                            xAxis: {
-                                allowDecimals: false
-                            },
-                            legend: {
-                                layout: 'vertical',
-                                align: 'right',
-                                verticalAlign: 'middle',
-                                borderWidth: 0
-                            },
-                            yAxisTitle: yAxisTitle
+                    if (reportChartData && self.selectedChartType() !== "Pie") {
+                        reportChartData.sort(function (a, b) {
+                            return (a.timeStamp > b.timeStamp) ? 1 : -1;
                         });
                     }
+
+                    if ($reportChartDiv.length > 0) {
+                        if (self.selectedChartType() === "Pie") {
+                            $reportChartDiv.highcharts({
+                                turboThreshold: maxDataRowsForChart,
+                                chart: {
+                                    width: chartWidth,
+                                    height: chartHeight,
+                                    plotBackgroundColor: null,
+                                    plotBorderWidth: null,
+                                    plotShadow: false,
+                                    type: 'pie'
+                                },
+                                title: {
+                                    text: chartTitle
+                                },
+                                subtitle: {
+                                    text: subTitle
+                                },
+                                tooltip: {
+                                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                                },
+                                plotOptions: {
+                                    pie: {
+                                        allowPointSelect: true,
+                                        cursor: 'pointer',
+                                        dataLabels: {
+                                            enabled: true,
+                                            format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                                            style: {
+                                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                                            }
+                                        }
+                                    }
+                                },
+                                series: reportChartData
+                            });
+                        } else {
+                            trendPlot = new TrendPlot({
+                                turboThreshold: maxDataRowsForChart,
+                                width: chartWidth,
+                                height: chartHeight,
+                                target: $reportChartDiv,
+                                title: chartTitle,
+                                subtitle: subTitle,
+                                y: 'value',
+                                x: 'timeStamp',
+                                //highlightMax: true,
+                                data: reportChartData,
+                                type: chartType,
+                                xAxis: {
+                                    allowDecimals: false
+                                },
+                                legend: {
+                                    layout: 'vertical',
+                                    align: 'right',
+                                    verticalAlign: 'middle',
+                                    borderWidth: 0
+                                },
+                                yAxisTitle: yAxisTitle
+                            });
+                        }
+                    }
+                }  else {
+                    $reportChartDiv.html("Too many data rows for " + self.selectedChartType() + " Chart. Max = " + maxDataRowsForChart);
                 }
+            } else {
+                $reportChartDiv.html("Chart data not available");
             }
         };
 
@@ -3124,6 +3169,8 @@ var reportsViewModel = function () {
     self.intervalValue = ko.observable(1);
 
     self.globalPrecisionValue = ko.observable(3);
+
+    self.globalChartCheckboxValue = ko.observable(false);
 
     self.durationError = ko.observable(false);
 
@@ -3264,7 +3311,8 @@ var reportsViewModel = function () {
                             operator: "",
                             calculation: "",
                             canCalculate: false,
-                            includeInReport: false,
+                            includeInChart: false,
+                            multiplier: 1,
                             precision: 0,
                             valueList: [],
                             upi: 0
@@ -3282,7 +3330,8 @@ var reportsViewModel = function () {
                             precision: 0,
                             calculation: "",
                             canCalculate: false,
-                            includeInReport: false,
+                            includeInChart: false,
+                            multiplier: 1
                         });
                         break;
                     default:
@@ -3570,44 +3619,10 @@ var reportsViewModel = function () {
         }, 700);
     };
 
-    self.generateChart = function () {
-        if (!self.durationError()) {
-                //buildReportDataRequestPromise(true).then(function (requestObj) {
-                var requestObj = buildReportDataRequest();
-                    if (!!requestObj) {
-                            $reportChartDiv.html("");
-                            self.activeDataRequestForChart(true);
-                            reportData = undefined;
-                            switch (self.reportType) {
-                                case "History":
-                                    ajaxPost(requestObj, "/report/historyDataSearch", renderChart);
-                                    //reportSocket.emit("historyDataSearch", {options: requestObj});
-                                    break;
-                                case "Totalizer":
-                                    ajaxPost(requestObj, "/report/totalizerReport", renderChart);
-                                    //reportSocket.emit("totalizerReport", {options: requestObj});
-                                    break;
-                                case "Property":
-                                    ajaxPost(requestObj, "/report/reportSearch", renderChart);
-                                    //reportSocket.emit("reportSearch", {options: requestObj});
-                                    break;
-                                default:
-                                    console.log(" - - - DEFAULT  viewReport()");
-                                    break;
-                            }
-                    } else {
-                        // bad request object do nothing.
-                    }
-                //}, function (error) {
-                //    console.error("generateChart() --> buildReportDataRequestPromise() Failed!", error);
-                //    return result;
-                //});
-        } else {
-            displayError("Invalid Date Time selection");
-        }
-        $('html,body').stop().animate({
-            scrollTop: 0
-        }, 700);
+    self.requestChart = function () {
+        $reportChartDiv.html("");
+        self.selectViewReportTabSubTab("chartData");
+        renderChart();
     };
 
     self.clearColumnPoint = function (indexOfColumn) {
@@ -3657,7 +3672,7 @@ var reportsViewModel = function () {
         column.valueType = prop.valueType;
         column.calculation = "";
         column.canCalculate = columnCanBeCalculated(column);
-        column.includeInReport = false;
+        column.includeInChart = false;
         updateListOfColumns(tempArray);
     };
 
