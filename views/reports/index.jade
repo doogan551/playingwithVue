@@ -90,10 +90,11 @@ block content
 													// ko if: (reportType !== 'Property')
 													th.medium.strong Display Name
 													// /ko
+													th.medium.strong.multiplierColumn(style="display:none") Multiplier
 													th.medium.strong.calculateColumn(style="display:none") Calculate
 													th.medium.strong.typeColumn(style="display:none") Type
 													th.medium.strong.precisionColumn(style="display:none") Precision
-													th.medium.string.includeInChart(style="display:none") Chart
+													th.medium.string.includeInChartColumn(style="display:none") Chart
 													th.medium.strong
 											tbody.sortablecolums(data-bind="foreach: listOfColumns()")
 												tr.columnRowData(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
@@ -126,6 +127,10 @@ block content
 													td.displayName
 														input.form-control.columnDisplayName(data-bind="value: colDisplayName, enable: $parent.canEdit(), event: { change: function() { $parent.designChanged(true) } }", type="text", required)
 													// /ko
+													td.columnMultiplier
+														// ko if: ($data.canCalculate)
+														input.form-control.inputMultiplier(data-bind="value: multiplier, enable: $root.canEdit()", type="number")
+														// /ko
 													td.columnTotals
 														// ko if: ($data.canCalculate)
 														// ko if: ($root.canEdit())
@@ -167,7 +172,7 @@ block content
 														// /ko
 													// ko if: ($root.canEdit())
 													td.includeInChart
-														input.includeColumn(data-bind="checked: includeInReport, enable: ($root.canEdit() && canCalculate), visible: (canCalculate)", type="checkbox")
+														input.includeInChartColumn(data-bind="checked: includeInChart, enable: ($root.canEdit() && canCalculate), visible: (canCalculate)", type="checkbox")
 													td.removecolumn
 														a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
 													// /ko
@@ -278,7 +283,7 @@ block content
 							li.gridData.active(role="presentation")
 								a.strong.toggleTab(href="#gridData", data-toggle="tab") Grid View
 							// ko if: (chartable())
-							li.reportChart(data-bind="click: function () { $root.generateChart() }", role="presentation")
+							li.reportChart(data-bind="click: function () { $root.requestChart() }", role="presentation")
 								a.strong.toggleTab(href="#chartData", data-toggle="tab") Chart View
 							// /ko
 						div.tab-content
@@ -311,7 +316,8 @@ block content
 						.popIn.hidden
 							.fa.fa-arrow-circle-down
 							| Pop In
-	.hiddenPrecisionPlaceholder
+	.hiddenPlaceholder.hidden
 		input.form-control.globalPrecision.hidden(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
+		input.form-control.globalChartCheckbox.hidden(data-bind="checked: $root.globalChartCheckboxValue, enable: $root.canEdit()", type="checkbox")
 	include footer
 	include modals/dialogScreens
