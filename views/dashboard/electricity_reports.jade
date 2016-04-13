@@ -13,7 +13,9 @@
             // ko foreach: filteredReportMonthYear
             li
                 span(data-bind="id: 'datepicker-' + $index")
-                a(data-bind="click: function(){ $parent.monthSelected($data) }, text: $data.prettyDate, css: {'datepicker month': $data.period === 'Month', 'year': $data.period === 'Year'}")
+                a(data-bind="click: function(){ $parent.monthSelected($data) }")
+                    i.fa.fa-check(data-bind="visible: (!!$data.isReportCommitted ? $data.isReportCommitted() : false)")
+                    span(data-bind="text: prettyDate, css: {'datepicker month': $data.period === 'Month', 'year': $data.period === 'Year'}")
             // /ko
 
     .dropdown
@@ -28,6 +30,24 @@
 
     .dropdown
         button.btn.btn-default(type='button' data-bind="click:print") Print
+    // /ko
+
+    // ko if: (!activeDataRequest())
+    .buttonBar.editControls(data-bind="if: $root.canWrite($parent.securityBindings.security)")
+        // ko if: (!!selectedMonthYear().isReportCommitted && selectedMonthYear().isReportCommitted() === false && selectedMonthYear().prettyDate !== 'This month')
+        button.hideInEdit.btn.btn-primary.btn-sm.commit(type="button", data-bind="click: showCommitModal") Commit
+        // /ko
+
+    // ko if: (!!selectedMonthYear().isReportCommitted && selectedMonthYear().isReportCommitted())
+    .buttonBar.committed
+        i.fa.fa-check-square
+        // ko if: $root.canWrite($parent.securityBindings.security)
+        .commitInfo(data-bind="click: showUncommitModal.bind($parent), text: getCommitInfoString($data.selectedMonthYear())")
+        // /ko
+        // ko if: !$root.canWrite($parent.securityBindings.security)
+        .commitInfo(data-bind="text: getCommitInfoString($data.selectedMonthYear())", style="cursor: default; text-decoration: none;")
+        // /ko
+    // /ko
     // /ko
 
 //template
@@ -76,7 +96,9 @@
                 .sectionTitle(data-bind="text: temperatureTitle")
                 .sectionBody
                     .highlowTemperaturesPeriodChart.content
-                    .entry(data-bind="text: temperatureVerbiage() + temperatureVerbiageHDDCDD()")
+                    .entry(data-bind="text: highestTemperatureVerbiage()")
+                    .entry(data-bind="text: lowestTemperatureVerbiage()")
+                    .entry(data-bind="text: temperatureVerbiageHDDCDD()")
 
             //- .section
             //-     .entry This month's highest On-Peak Demand occurred on #[span Tuesday July 9th at 13:30] and was 20.52 MW
@@ -204,14 +226,14 @@
                                     th On Peak (kWh)
                                     // /ko
                                     th Total (kWh)
-                            tbody(data-bind="foreach: MeterReportCollection()")
+                            tbody.individualMetersData(data-bind="foreach: MeterReportCollection()")
                                 tr
-                                    td(data-bind="text: displayedMeterName")
-                                    td(data-bind="text: tou.toFixedComma(offPeakSum, 1)")
+                                    td.individualMeterName(data-bind="text: displayedMeterName")
+                                    td.meterOffPeakSum(data-bind="text: tou.toFixedComma(offPeakSum, 1)")
                                     // ko if: $parent.selectedMonthYear().season !== 'Transition'
-                                    td(data-bind="text: tou.toFixedComma(onPeakSum, 1)")
+                                    td.meterOnPeakSum(data-bind="text: tou.toFixedComma(onPeakSum, 1)")
                                     // /ko
-                                    td(data-bind="text: tou.toFixedComma(offPeakSum + onPeakSum, 1)")
+                                    td.meterOnAndOffPeakSum(data-bind="text: tou.toFixedComma(offPeakSum + onPeakSum, 1)")
 
         .reportsGridContent
             .title(data-bind="text: selectedMonthYear().period + 'ly Electrical Metering Grid Report - ' + selectedMonthYear().fullDate")
@@ -243,47 +265,59 @@
                             tbody(data-bind="foreach: koGridReportCollection()")
                                 tr
                                     // ko if: $parent.selectedMonthYear().period !== "Year"
-                                    td.meterdate(data-bind="text: moment(date * 1000).format('MM/DD/YYYY ddd')")
+                                    td.meterdate(data-bind="text: moment(date * 1000).format('MM/DD/YY ddd'), attr: { title: moment(date * 1000).format('dddd') }")
                                     // /ko
                                     // ko if: $parent.selectedMonthYear().period === "Year"
-                                    td.meterdate(data-bind="text: moment(date * 1000).format('MM/YYYY')")
+                                    td.meterdate(data-bind="text: moment(date * 1000).format('MM/YY'), attr: { title: moment(date * 1000).format('MMMM') }")
                                     // /ko
 
                                     // ko if: $parent.selectedMonthYear().season !== 'Transition'
-                                    td.gridonpeakdemand(data-bind="text: tou.numberWithCommas(onPeakDemand)")
-                                    td.gridonpeakreactive(data-bind="text: tou.numberWithCommas(onPeakReactive)")
+                                    td.gridonpeakdemand
+                                        .itemValue(data-bind="text: tou.numberWithCommas(OnPeakDemand.value)")
+                                        // ko if: OnPeakDemand.value !== 0
+                                        span.itemTimeStamp.small(data-bind="text: moment.unix(OnPeakDemand.timeStamp).format('HH:mm')")
+                                        // /ko
+                                    td.gridonpeakreactive
+                                        .itemValue(data-bind="text: tou.numberWithCommas(OnPeakReactive.value)")
                                     // /ko
 
-                                    td.gridoffpeakdemand(data-bind="text: tou.numberWithCommas(offPeakDemand)")
-                                    td.gridoffpeakreactive(data-bind="text: tou.numberWithCommas(offPeakReactive)")
+                                    td.gridoffpeakdemand
+                                        .itemValue(data-bind="text: tou.numberWithCommas(OffPeakDemand.value)")
+                                        // ko if: OffPeakDemand.value !== 0
+                                        span.itemTimeStamp.small(data-bind="text: moment.unix(OffPeakDemand.timeStamp).format('HH:mm')")
+                                        // /ko
+                                    td.gridoffpeakreactive
+                                        .itemValue(data-bind="text: tou.numberWithCommas(OffPeakReactive.value)")
 
                                     // ko if: $parent.selectedMonthYear().season !== 'Transition'
-                                    td.gridonpeakconsumption(data-bind="text: tou.numberWithCommas(onPeakConsumption)")
+                                    td.gridonpeakconsumption
+                                        .itemValue(data-bind="text: tou.numberWithCommas(OnPeakConsumption.value)")
                                     // /ko
 
-                                    td.gridoffpeakconsumption(data-bind="text: tou.numberWithCommas(offPeakConsumption)")
-
+                                    td.gridoffpeakconsumption
+                                        .itemValue(data-bind="text: tou.numberWithCommas(OffPeakConsumption.value)")
 
                                     // ko if: $parent.selectedMonthYear().season !== 'Transition'
-                                    td.gridconsumptiontotal(data-bind="text: tou.numberWithCommas(totalPeriodUsage)")
+                                    td.gridconsumptiontotal
+                                        .itemValue(data-bind="text: tou.numberWithCommas(TotaledOnOffPeakConsumption.value)")
                                     // /ko
-                            tbody
+                            tbody.koGridReportFooter
                                 tr
                                     td.bold Max Values
 
                                     // ko if: selectedMonthYear().season !== 'Transition'
-                                    td(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
-                                    td(data-bind="text: tou.numberWithCommas(duOnPeakMVAR().value)")
+                                    td.maxWithTime(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
+                                    td.max(data-bind="text: tou.numberWithCommas(duOnPeakMVAR().value)")
                                     // /ko
 
-                                    td(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
-                                    td(data-bind="text: tou.numberWithCommas(duOffPeakMVAR().value)")
+                                    td.maxWithTime(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
+                                    td.max(data-bind="text: tou.numberWithCommas(duOffPeakMVAR().value)")
 
                                     // ko if: selectedMonthYear().season !== 'Transition'
-                                    td(data-bind="text: tou.numberWithCommas(duOnPeakMWH().value)")
+                                    td.max(data-bind="text: tou.numberWithCommas(duOnPeakMWH().value)")
                                     // /ko
 
-                                    td(data-bind="text: tou.numberWithCommas(duOffPeakMWH().value)")
+                                    td.max(data-bind="text: tou.numberWithCommas(duOffPeakMWH().value)")
 
                                     // ko if: selectedMonthYear().season !== 'Transition'
                                     td(data-bind="text: tou.numberWithCommas(maxPeriodUsage().value)")
@@ -300,10 +334,10 @@
                                     td
 
                                     // ko if: selectedMonthYear().season !== 'Transition'
-                                    td(data-bind="text: tou.numberWithCommas(sumOfOnPeakConsumption())")
+                                    td.total(data-bind="text: tou.numberWithCommas(sumOfOnPeakConsumption())")
                                     // /ko
 
-                                    td(data-bind="text: tou.numberWithCommas(sumOfOffPeakConsumption())")
+                                    td.total(data-bind="text: tou.numberWithCommas(sumOfOffPeakConsumption())")
 
                                     // ko if: selectedMonthYear().season !== 'Transition'
                                     td(data-bind="text: tou.numberWithCommas(sumOfTotalPeriodUsage())")
