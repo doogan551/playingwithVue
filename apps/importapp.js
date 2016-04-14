@@ -125,7 +125,7 @@ function importUpdate() {
 			// logger.info("retrieved", err);
 			importPoint(db, doc, function(err) {
 				count++;
-				if (count % 100 === 0) {
+				if (count % 10000 === 0) {
 					logger.info(count);
 				}
 				cb(err);

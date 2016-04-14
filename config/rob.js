@@ -1,8 +1,8 @@
 var rob = {
   'Infoscan': {
     'dbConfig': {
-      'host': '192.168.1.88',
-      'dbName': 'infoscan'
+      'host': 'localhost',
+      'dbName': 'msfcimport'
     },
     'zmqConfig': {
       'server': '192.168.1.88',
@@ -19,7 +19,7 @@ var rob = {
       'smProcess': ''
     }
   },
-    runNotifications: false
+  runNotifications: false
 };
 
 rob.Infoscan.files.firmwareLocation = "\\\\192.168.1.88/d$/InfoScan/Firmware/";
