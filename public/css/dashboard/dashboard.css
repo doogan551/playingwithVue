@@ -1072,8 +1072,8 @@ Opera */
 .reportsContent .reportsgrid table .koGridReportFooter td.max {
     padding-right: 25px;
 }
-.reportsContent .reportsgrid table .koGridReportFooter td.maxWithTime {
-    padding-right: 56px;
+.koGridReportFooter span.maxWithTimeBlankOffset {
+    padding-right: 27px;
 }
 .reportsContent .reportsgrid table .koGridReportFooter td.total {
     padding-right: 25px;

@@ -306,39 +306,50 @@
                                     td.bold Max Values
 
                                     // ko if: selectedMonthYear().season !== 'Transition'
-                                    td.maxWithTime(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
-                                    td.max(data-bind="text: tou.numberWithCommas(duOnPeakMVAR().value)")
+                                    td
+                                        .itemValue(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
+                                        // ko if: duOnPeakMW().value !== 0
+                                        span.maxWithTimeBlankOffset &nbsp;
+                                        // /ko
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMVAR().value)")
                                     // /ko
 
-                                    td.maxWithTime(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
-                                    td.max(data-bind="text: tou.numberWithCommas(duOffPeakMVAR().value)")
+                                    td
+                                        .itemValue(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
+                                        // ko if: duOffPeakMW().value !== 0
+                                        span.maxWithTimeBlankOffset &nbsp;
+                                        // /ko
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMVAR().value)")
 
                                     // ko if: selectedMonthYear().season !== 'Transition'
-                                    td.max(data-bind="text: tou.numberWithCommas(duOnPeakMWH().value)")
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMWH().value)")
                                     // /ko
 
-                                    td.max(data-bind="text: tou.numberWithCommas(duOffPeakMWH().value)")
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMWH().value)")
 
                                     // ko if: selectedMonthYear().season !== 'Transition'
-                                    td(data-bind="text: tou.numberWithCommas(maxPeriodUsage().value)")
+                                    td
+                                        .itemValue(data-bind="text: tou.numberWithCommas(maxPeriodUsage().value)")
                                     // /ko
                                 tr
                                     td.bold Totals
-
                                     // ko if: selectedMonthYear().season !== 'Transition'
                                     td
                                     td
                                     // /ko
-
                                     td
                                     td
-
                                     // ko if: selectedMonthYear().season !== 'Transition'
-                                    td.total(data-bind="text: tou.numberWithCommas(sumOfOnPeakConsumption())")
+                                    td
+                                        .itemValue.total(data-bind="text: tou.numberWithCommas(sumOfOnPeakConsumption())")
                                     // /ko
-
-                                    td.total(data-bind="text: tou.numberWithCommas(sumOfOffPeakConsumption())")
-
+                                    td
+                                        .itemValue.total(data-bind="text: tou.numberWithCommas(sumOfOffPeakConsumption())")
                                     // ko if: selectedMonthYear().season !== 'Transition'
-                                    td(data-bind="text: tou.numberWithCommas(sumOfTotalPeriodUsage())")
+                                    td
+                                        .itemValue(data-bind="text: tou.numberWithCommas(sumOfTotalPeriodUsage())")
                                     // /ko

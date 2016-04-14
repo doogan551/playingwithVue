@@ -640,6 +640,8 @@ var trendPlots = {
                         return ret;
                     }
                 })
+            } else {
+                ret.tooltip = (!!tooltip ? tooltip : undefined);
             }
 
             ret = trendPlots.complicateObject(configMap, cfg, $.extend(true, {}, defaultCfg, ret));
