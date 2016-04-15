@@ -784,9 +784,6 @@ var reportsViewModel = function () {
 
             for (i = 0; i < len; i++) {
                 if (!!columns[i].canCalculate && columns[i].canCalculate === true) {
-                    if (!self.chartable()) {
-                        self.chartable(true);
-                    }
                     $columnsGrid.find(".multiplierColumn").show();
                     $columnsGrid.find(".calculateColumn").show();
                     $columnsGrid.find(".precisionColumn").show();
@@ -798,6 +795,25 @@ var reportsViewModel = function () {
             if (self.reportType === "Totalizer") {
                 $columnsGrid.find(".typeColumn").show();
             }
+        },
+        checkForIncludeInChart = function () {
+            var i,
+                activateCharting = false,
+                allChecked = true,
+                columns = $.extend(true, [], self.listOfColumns()),
+                len = columns.length;
+
+            for (i = 0; i < len; i++) {
+                if (!activateCharting && columns[i].includeInChart) {
+                    activateCharting = true;
+                }
+                if (!columns[i].includeInChart) {
+                    allChecked = false;
+                }
+            }
+
+            self.chartable(activateCharting);
+            self.allChartCheckboxChecked(allChecked);
         },
         updateListOfFilters = function (newArray) {
             self.listOfFilters([]);
@@ -814,6 +830,7 @@ var reportsViewModel = function () {
             self.listOfColumns([]);
             self.listOfColumns(newArray);
             checkForColumnCalculations();
+            checkForIncludeInChart();
             self.designChanged(true);
             self.unSavedDesignChange(true);
             self.refreshData(true);
@@ -1172,6 +1189,7 @@ var reportsViewModel = function () {
                 column[columnField] = newValue;
             });
             updateListOfColumns(self.listOfColumns());
+            checkForIncludeInChart();
         },
         validateFilters = function (cleanup) {
             var results = [],
@@ -2356,15 +2374,16 @@ var reportsViewModel = function () {
 
                             $(this).click(function (event) {
                                 if (event.target.checked !== undefined) {
-                                    console.log("set all include in chart to " + event.target.checked);
-                                    self.globalChartCheckboxValue(event.target.checked);
-                                    globalSetAllColumnValues("includeInChart", self.globalChartCheckboxValue());
+                                    //console.log("set all include in chart to " + event.target.checked);
+                                    globalSetAllColumnValues("includeInChart", event.target.checked);
                                     includeInChartEventsSet = true;
+                                    return true;
                                 }
                             });
                         }
                     }
                 }
+                return true;
             });
 
             $filtersGrid.sortable({
@@ -2523,6 +2542,7 @@ var reportsViewModel = function () {
             self.listOfEntriesPerPage = entriesPerPage;
             self.listOfChartTypes = chartTypes;
             checkForColumnCalculations();
+            checkForIncludeInChart();
         },
         getVariance = function (columnData) {
             var i,
@@ -3170,7 +3190,7 @@ var reportsViewModel = function () {
 
     self.globalPrecisionValue = ko.observable(3);
 
-    self.globalChartCheckboxValue = ko.observable(false);
+    self.allChartCheckboxChecked = ko.observable(false);
 
     self.durationError = ko.observable(false);
 
@@ -3727,6 +3747,14 @@ var reportsViewModel = function () {
         if (!!drawChart) {
             renderChart();
         }
+    };
+
+    self.includeInChartChanged = function (element, indexOfColumn) {
+        var tempArray = self.listOfColumns(),
+            column = tempArray[indexOfColumn];
+        column.includeInChart = element.checked;
+        updateListOfColumns(tempArray);
+        return true;
     };
 
     self.selectInterval = function (selectedInterval) {

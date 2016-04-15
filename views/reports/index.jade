@@ -172,7 +172,7 @@ block content
 														// /ko
 													// ko if: ($root.canEdit())
 													td.includeInChart
-														input.includeInChartColumn(data-bind="checked: includeInChart, enable: ($root.canEdit() && canCalculate), visible: (canCalculate)", type="checkbox")
+														input.includeInChartColumn(data-bind="checked: includeInChart, enable: ($root.canEdit() && canCalculate), visible: (canCalculate), click: function() { $parent.includeInChartChanged($element, $index()) } ", type="checkbox")
 													td.removecolumn
 														a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
 													// /ko
@@ -318,6 +318,6 @@ block content
 							| Pop In
 	.hiddenPlaceholder.hidden
 		input.form-control.globalPrecision.hidden(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
-		input.form-control.globalChartCheckbox.hidden(data-bind="checked: $root.globalChartCheckboxValue, enable: $root.canEdit()", type="checkbox")
+		input.form-control.globalChartCheckbox.hidden(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit()", type="checkbox")
 	include footer
 	include modals/dialogScreens
