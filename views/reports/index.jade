@@ -93,8 +93,10 @@ block content
 													th.medium.strong.multiplierColumn(style="display:none") Multiplier
 													th.medium.strong.calculateColumn(style="display:none") Calculate
 													th.medium.strong.typeColumn(style="display:none") Type
-													th.medium.strong.precisionColumn(style="display:none") Precision
-													th.medium.string.includeInChartColumn(style="display:none") Chart
+													th.medium.strong
+														.precisionColumn(style="display:none") Precision
+													th.medium.strong
+														.includeInChartColumn(style="display:none") Chart
 													th.medium.strong
 											tbody.sortablecolums(data-bind="foreach: listOfColumns()")
 												tr.columnRowData(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
@@ -172,7 +174,9 @@ block content
 														// /ko
 													// ko if: ($root.canEdit())
 													td.includeInChart
-														input.includeInChartColumn(data-bind="checked: includeInChart, enable: ($root.canEdit() && canCalculate), visible: (canCalculate), click: function() { $parent.includeInChartChanged($element, $index()) } ", type="checkbox")
+														// ko if: (!!canBeCharted && canBeCharted)
+														input.includeInChartColumn(data-bind="checked: includeInChart, enable: ($root.canEdit() && !!canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) } ", type="checkbox")
+														// /ko
 													td.removecolumn
 														a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
 													// /ko

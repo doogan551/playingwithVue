@@ -504,16 +504,27 @@ input.form-control.inputPrecision {
 .precisionColumn {
     width: 70px;
 }
+.includeInChart {
+    width: 40px;
+}
+.includeInChartColumn {
+    width: 17px;
+}
 .includeInChartColumn:hover {
     cursor: pointer;
 }
-.includeInChartColumn {
-    width: 33px;
+.includeInChartColumn.hideCheckbox {
+    width: 40px;
+    display: none;
+}
+.includeInChartColumn.showCheckbox {
+    width: 40px;
+    display: inline-block;
 }
 .includeInChartColumn > input {
     height: 14px;
     width: 14px;
-    margin-left: 9px;
+    /*margin-left: 9px;*/
     margin-bottom: 10px;
 }
 input.form-control.globalPrecision {
