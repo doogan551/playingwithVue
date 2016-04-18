@@ -259,15 +259,19 @@ var ActionButton = function (config) {
                     });
                 } else if (pointType === 'Report') {
                     displays.setReportConfig(config.reportConfig);
-                    // displays.$scope.$apply();
-                    if (!external.isProperty) {
-                        if (config.confirmRange) {
-                            $('#reportChooseRange').modal('show');
-                        } else {
-                            openReport(displays.$scope.reportConfig);
-                        }
+                    if (displays.editMode) {
+                        $('#reportChooseRange').modal('show');
                     } else {
-                        openReport();
+                        // displays.$scope.$apply();
+                        if (!external.isProperty) {
+                            if (config.confirmRange) {
+                                $('#reportChooseRange').modal('show');
+                            } else {
+                                openReport(config.reportConfig);
+                            }
+                        } else {
+                            openReport();
+                        }
                     }
                     // $('#actionButtonReportInput').popup('open');
                 } else {
