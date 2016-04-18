@@ -834,9 +834,10 @@ var tou = {
                     multiply = prop !== 'tempRange' && prop !== 'weather',
                     row,
                     val,
+                    when,
                     isEmpty = true,
                     withData = self.bindings.withDataSource(),
-                    processData = function (result, getValFn) {
+                    processData = function (result) {
                         if (!result || result.length === 0) {
                             self.bindings.noData(true);
                             if(!result) {
@@ -845,9 +846,6 @@ var tou = {
                         } else {
                             tou.forEachArray(result, function (row) {
                                 var newval,
-                                    getValFn = function (r) {
-                                        return (r.max + r.min)/2;
-                                    },
                                     setVal = function (valToSet) {
                                         newval = valToSet;
                                         if (multiply) {
@@ -861,12 +859,7 @@ var tou = {
                                 }
 
                                 if (row.range) {
-                                    if (row.max !== undefined && row.min !== undefined) {
-                                        setVal(getValFn(row));
-                                    } else {
-                                        setVal(row.max | row.sum);
-                                    }
-
+                                    setVal(row[prop]);
                                     newData.push({
                                         Value: newval,
                                         timestamp: row.range.start * 1000
@@ -947,7 +940,7 @@ var tou = {
                                             processTemps(results[1].results.tempRanges);
                                         } else {
                                             multiply = false;
-                                            processData(results[1].results.sums || results[1].results.maxes);
+                                            processData(results[1].results[props]);
                                         }
                                     } else {
                                         newData = null;
@@ -961,11 +954,7 @@ var tou = {
                             if (Array.isArray(results)) {
                                 processData(results[0].results[props]);//.results[props]);
                             } else {
-                                // if (self.bindings.dataSource() === 'Outside Air Temperature') {
-                                //     processData(results.results[props]);
-                                // } else {
-                                    processData(results.results[props]);
-                                // }
+                                processData(results.results[props]);
                             }
                             self.mainData = newData;
                             self.withData = null;
@@ -1006,6 +995,8 @@ var tou = {
                     } else {//statistic
                         row = results.results[props].slice(-1)[0];
                         getVal(row);
+                        when = moment.unix(results.results.maxes[0].timestamp);
+                        when = when.format('MM/DD/YY HH:MM:SS');
 
                         if (isNaN(val)) {
                             val = '';
@@ -1017,7 +1008,8 @@ var tou = {
                         }
 
                         newData = [{
-                            Value: tou.numberWithCommas(Math.round(val))
+                            Value: tou.numberWithCommas(Math.round(val)),
+                            when: when
                         }];
 
                         self.mainData = newData;
@@ -1042,8 +1034,10 @@ var tou = {
                 } else {
                     if (!isEmpty) {
                         self.bindings.value(newData[0].Value);
+                        self.bindings.when(newData[0].when);
                     } else {
                         self.bindings.value(0);
+                        self.bindings.when('');
                     }
                 }
             },
@@ -5583,7 +5577,7 @@ tou.utilityPages.Electricity = function() {
                             done: true,
                             timestamp: now,
                             user: [user.firstName, user.lastName].join(' ')
-                        }
+                        };
                     };
 
                 updateCommit(_reportData);
@@ -5872,7 +5866,7 @@ tou.utilityPages.Electricity = function() {
                             gridItem[fieldName] = {
                                 value: tou.toFixed(collectionItem.value, 0),
                                 timeStamp: collectionItem.timeStamp
-                            }
+                            };
                         } else {
                             //console.log(" --- setGridData() NOT FOUND ---- i = ", i,  "   itemData = ", new Date(collectionData[i].timeStamp));
                         }
@@ -6254,7 +6248,7 @@ tou.utilityPages.Electricity = function() {
                             sumData = dataRow.results[arrayName][index];
                             if (!!sumData) {
                                 unitValue = myBindings.adjustPrecision(sumData[fieldName]);
-                                ts = moment(sumData.range.start * 1000),
+                                ts = moment(sumData.range.start * 1000);
                                 unitIndex = (parseInt(moment(ts).format(monthYear.childFormatCode), 10) - 1);
                                 if (dataRow.peak === "on") {
                                     onPeakData[unitIndex].timeStamp = (sumData.range.start * 1000);
@@ -6557,7 +6551,7 @@ tou.utilityPages.Electricity = function() {
                         maxes[unitIndex].value = ($.isNumeric(maxMinData.max)) ? tou.toFixed(maxMinData.max, 2) : null;
                         maxes[unitIndex].timeStamp = maxMinData.range.start * 1000;
                         mins[unitIndex].value = ($.isNumeric(maxMinData.min)) ? tou.toFixed(maxMinData.min, 2) : null;
-                        mins[unitIndex].timeStamp = maxMinData.range.start * 1000
+                        mins[unitIndex].timeStamp = maxMinData.range.start * 1000;
                         if (maxes[unitIndex].value !== null || mins[unitIndex].value !== null) {
                             trendPlotData.valid = true;
                         }

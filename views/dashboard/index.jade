@@ -71,6 +71,7 @@ html
                         span(data-bind="if: type() === 'Statistic'")
                             .value(data-bind="text: value")
                             .units(data-bind="html: units")
+                            .when(data-bind="text: when")
                 .lowerBar
                     .actions
                         a(href="javascript://", data-bind="click: rewind, visible: type() !== 'Gauge' && showBackward()")
