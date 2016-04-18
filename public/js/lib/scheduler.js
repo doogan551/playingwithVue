@@ -5696,12 +5696,11 @@ LICENSE_INFO_URL = 'http://fullcalendar.io/scheduler/license/';
 PRESET_LICENSE_KEYS = ['GPL-My-Project-Is-Open-Source', 'CC-Attribution-NonCommercial-NoDerivatives'];
 
 processLicenseKey = function(key, containerEl) {
-    return true;
-  // if (!isImmuneUrl(window.location.href) && !isValidKey(key)) {
-  //   if (!detectWarningInContainer(containerEl)) {
-  //     return renderingWarningInContainer('Please use a valid license key. <a href="' + LICENSE_INFO_URL + '">More Info</a>', containerEl);
-  //   }
-  // }
+  if (!isImmuneUrl(window.location.href) && !isValidKey(key)) {
+    if (!detectWarningInContainer(containerEl)) {
+      return renderingWarningInContainer('Please use a valid license key. <a href="' + LICENSE_INFO_URL + '">More Info</a>', containerEl);
+    }
+  }
 };
 
 

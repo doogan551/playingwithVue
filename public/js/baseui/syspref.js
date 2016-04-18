@@ -2274,6 +2274,7 @@ var notificationsViewModel = function() {
         });
 
         $scheduleCalendar.fullCalendar({
+            schedulerLicenseKey: '0890776600-fcs-1460400855',
             eventClick: function (calEvent, jsEvent, view) {
                 console.log(calEvent);
                 jsEvent.preventDefault();
