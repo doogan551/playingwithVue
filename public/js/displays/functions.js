@@ -541,7 +541,7 @@ displays = $.extend(displays, {
     },
     defaultReportConfig: {
         intervalNum: 1,
-        intervalType: 'Daily',
+        intervalType: 'Day',
         starttimestamp: '00:00',
         endtimestamp: '00:00',
         durationInfo: {
