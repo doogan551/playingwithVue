@@ -459,41 +459,41 @@ var reportsViewModel = function () {
             }
             return !!(cumulativePermissions & requestedAccessLevel);
         },
-        mergePersistedPointRefArray = function () {
-            return new Promise(function(resolve, reject) {
-                var requestObj = {pointid: windowUpi},
-                    mergePointArray = function (reportPoint) {
-                        var i,
-                            currentUPI,
-                            currentAppIndex,
-                            persistedPointRef,
-                            onscreenPointRefArray = buildPointRefsArray(),  // get all points from screen
-                            persistedPointRefArray = (!!reportPoint ? reportPoint["Point Refs"] : null);
-
-                        if (!!persistedPointRefArray) {
-                            for (i = 0; i < onscreenPointRefArray.length; i++) {
-                                currentUPI = onscreenPointRefArray[i].Value;
-                                currentAppIndex = onscreenPointRefArray[i].AppIndex;
-                                persistedPointRef = persistedPointRefArray.filter(function (pointref) {
-                                    return pointref.AppIndex === currentAppIndex;
-                                });
-                                if (persistedPointRef.length > 0) {
-                                    if (persistedPointRef[0].Value === 0 || persistedPointRef[0].Value === onscreenPointRefArray[i].Value) {
-                                        onscreenPointRefArray[i] = persistedPointRef[0];
-                                    }
-                                }
-                            }
-                        }
-
-                        point["Point Refs"] = onscreenPointRefArray;
-                        self.listOfColumns(validateColumns());
-                        self.listOfFilters(validateFilters());
-                        resolve(true);
-                    };
-
-                ajaxPost(requestObj, "/api/points/getpoint/", mergePointArray);
-            });
-        },
+        //mergePersistedPointRefArray = function () {
+        //    return new Promise(function(resolve, reject) {
+        //        var requestObj = {pointid: windowUpi},
+        //            mergePointArray = function (reportPoint) {
+        //                var i,
+        //                    currentUPI,
+        //                    currentAppIndex,
+        //                    persistedPointRef,
+        //                    onscreenPointRefArray = buildPointRefsArray(),  // get all points from screen
+        //                    persistedPointRefArray = (!!reportPoint ? reportPoint["Point Refs"] : null);
+        //
+        //                if (!!persistedPointRefArray) {
+        //                    for (i = 0; i < onscreenPointRefArray.length; i++) {
+        //                        currentUPI = onscreenPointRefArray[i].Value;
+        //                        currentAppIndex = onscreenPointRefArray[i].AppIndex;
+        //                        persistedPointRef = persistedPointRefArray.filter(function (pointref) {
+        //                            return pointref.AppIndex === currentAppIndex;
+        //                        });
+        //                        if (persistedPointRef.length > 0) {
+        //                            if (persistedPointRef[0].Value === 0 || persistedPointRef[0].Value === onscreenPointRefArray[i].Value) {
+        //                                onscreenPointRefArray[i] = persistedPointRef[0];
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //
+        //                point["Point Refs"] = onscreenPointRefArray;
+        //                self.listOfColumns(validateColumns());
+        //                self.listOfFilters(validateFilters());
+        //                resolve(true);
+        //            };
+        //
+        //        ajaxPost(requestObj, "/api/points/getpoint/", mergePointArray);
+        //    });
+        //},
         resetPointRefSlot = function (appIndex, upi, name) {
             var i,
                 pointRef;
@@ -769,6 +769,15 @@ var reportsViewModel = function () {
 
             return result;
         },
+        columnCanBeCharted = function (column) {
+            var result = false;
+
+            if (columnCanBeCalculated(column) || (self.reportType !== "Property" && column.valueType === "Enum")) {
+                result = true;
+            }
+
+            return result;
+        },
         blockUI = function ($control, state) {
             if (state === true) {
                 $control.hide();
@@ -779,11 +788,10 @@ var reportsViewModel = function () {
         },
         checkForColumnCalculations = function () {
             var i,
-                columns = $.extend(true, [], self.listOfColumns()),
-                len = columns.length;
+                len = self.listOfColumns().length;
 
             for (i = 0; i < len; i++) {
-                if (!!columns[i].canCalculate && columns[i].canCalculate === true) {
+                if (!!self.listOfColumns()[i].canCalculate && self.listOfColumns()[i].canCalculate) {
                     $columnsGrid.find(".multiplierColumn").show();
                     $columnsGrid.find(".calculateColumn").show();
                     $columnsGrid.find(".precisionColumn").show();
@@ -800,15 +808,16 @@ var reportsViewModel = function () {
             var i,
                 activateCharting = false,
                 allChecked = true,
-                columns = $.extend(true, [], self.listOfColumns()),
-                len = columns.length;
+                len = self.listOfColumns().length;
 
             for (i = 0; i < len; i++) {
-                if (!activateCharting && columns[i].includeInChart) {
-                    activateCharting = true;
-                }
-                if (!columns[i].includeInChart) {
-                    allChecked = false;
+                if (columnCanBeCharted(self.listOfColumns()[i])) {
+                    if (!activateCharting && self.listOfColumns()[i].includeInChart) {
+                        activateCharting = true;
+                    }
+                    if (!self.listOfColumns()[i].includeInChart) {
+                        allChecked = false;
+                    }
                 }
             }
 
@@ -933,6 +942,7 @@ var reportsViewModel = function () {
                     if (!!tempObject.AppIndex && tempObject.AppIndex > 0) {
                         resetPointRefSlot(tempObject.AppIndex, tempObject.upi, tempObject.colName);
                     }
+                    tempObject.canBeCharted = columnCanBeCharted(tempObject);
                     updatedList[objIndex] = tempObject;
                     updateListOfColumns(updatedList);
                 },
@@ -1189,7 +1199,6 @@ var reportsViewModel = function () {
                 column[columnField] = newValue;
             });
             updateListOfColumns(self.listOfColumns());
-            checkForIncludeInChart();
         },
         validateFilters = function (cleanup) {
             var results = [],
@@ -1319,6 +1328,7 @@ var reportsViewModel = function () {
                     switch (self.reportType) {
                         case "Property":
                             currentColumn.canCalculate = columnCanBeCalculated(currentColumn);
+                            currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
                             if (currentColumn.valueType === "BitString") {
                                 currentColumn.bitstringEnums = window.workspaceManager.config.Enums[currentColumn.colName + ' Bits'];
                             }
@@ -1330,6 +1340,7 @@ var reportsViewModel = function () {
                             }
                             currentColumn.valueList = getTotalizerValueList(currentColumn.pointType);
                             currentColumn.canCalculate = true;
+                            currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
                             break;
                         default:
                             console.log(" - - - DEFAULT  initColumns()");
@@ -2141,7 +2152,9 @@ var reportsViewModel = function () {
                 entriesPerPage,
                 chartTypes,
                 precisionEventsSet = false,
-                includeInChartEventsSet = false;;
+                precisionOriginalField,
+                includeInChartEventsSet = false,
+                includeInChartOriginalField;
 
             $(window).resize(function () {
                 handleResize();
@@ -2319,17 +2332,22 @@ var reportsViewModel = function () {
             $direports.find(".precisionColumn").on('click', function (e) {
                 if (self.canEdit()) {
                     if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
-                        var originalField = $(this).html();
+                        if (!precisionEventsSet) {
+                            precisionOriginalField = $(this).html();
+                        }
 
-                        $globalPrecision.removeClass("hidden");
-                        $(this).html("");
-                        $globalPrecision.appendTo($(this));
-                        $(this).find("input").focus();
+                        if ($(this).html() === "Precision") {
+                            $globalPrecision.removeClass("hidden");
+                            $(this).html("");
+                            $globalPrecision.appendTo($(this));
+                            $(this).find("input").focus();
+                        }
 
                         if (!precisionEventsSet) {
+                            precisionEventsSet = true;
                             $(this).focusout(function (e) {
                                 $globalPrecision.appendTo($hiddenPlaceholder);
-                                $(this).html(originalField);
+                                $(this).html(precisionOriginalField);
                             });
 
                             $(this).keyup(function (event) {
@@ -2342,7 +2360,6 @@ var reportsViewModel = function () {
                                     self.globalPrecisionValue(parseInt(precision, 10));
                                     globalSetAllColumnValues("precision", self.globalPrecisionValue());
                                     //console.log("set all precision to " + self.globalPrecisionValue());
-                                    precisionEventsSet = true;
                                 }
                             });
                         }
@@ -2359,24 +2376,28 @@ var reportsViewModel = function () {
             $direports.find(".includeInChartColumn").on('click', function (e) {
                 if (self.canEdit()) {
                     if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
-                        var originalField = $(this).html();
+                        if (!includeInChartEventsSet) {
+                            includeInChartOriginalField = $(this).html();
+                        }
 
-                        $globalIncludeInChart.removeClass("hidden");
-                        $(this).html("");
-                        $globalIncludeInChart.appendTo($(this));
-                        $(this).find("input").focus();
+                        if ($(this).html() === "Chart") {
+                            $globalIncludeInChart.removeClass("hidden");
+                            $(this).html("");
+                            $globalIncludeInChart.appendTo($(this));
+                            $(this).find("input").focus();
+                        }
 
                         if (!includeInChartEventsSet) {
+                            includeInChartEventsSet = true;
                             $(this).focusout(function (e) {
                                 $globalIncludeInChart.appendTo($hiddenPlaceholder);
-                                $(this).html(originalField);
+                                $(this).html(includeInChartOriginalField);
                             });
 
                             $(this).click(function (event) {
                                 if (event.target.checked !== undefined) {
-                                    //console.log("set all include in chart to " + event.target.checked);
                                     globalSetAllColumnValues("includeInChart", event.target.checked);
-                                    includeInChartEventsSet = true;
+                                    //console.log("set all include in chart to " + event.target.checked);
                                     return true;
                                 }
                             });
@@ -2851,6 +2872,10 @@ var reportsViewModel = function () {
                             },
                             customize: function (win) {
                                 $(win.document.body).find("h1").css('font-size', '16pt').css("text-align", "center");
+                                if (columnsArray.length > 8) {
+                                    $(win.document.body).find("table").css('font-size', '8pt');
+                                }
+
                             }
                         }
                     ],
@@ -3147,6 +3172,9 @@ var reportsViewModel = function () {
                                 //highlightMax: true,
                                 data: reportChartData,
                                 type: chartType,
+                                chart: {
+                                    zoomType: 'x'
+                                },
                                 xAxis: {
                                     allowDecimals: false
                                 },
@@ -3692,6 +3720,7 @@ var reportsViewModel = function () {
         column.valueType = prop.valueType;
         column.calculation = "";
         column.canCalculate = columnCanBeCalculated(column);
+        column.canBeCharted = columnCanBeCharted(column);
         column.includeInChart = false;
         updateListOfColumns(tempArray);
     };
