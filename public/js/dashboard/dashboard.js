@@ -692,6 +692,7 @@ var tou = {
                 height: ko.observable(cfg.height),
                 title: ko.observable(cfg.title),
                 value: ko.observable('0'),
+                when: ko.observable(''),
                 currDate: ko.observable(currDate),
                 dataSource: ko.observable(cfg.dataSource),
                 withDataSource: ko.observable(cfg.withDataSource || 'None'),
