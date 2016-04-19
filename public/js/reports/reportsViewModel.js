@@ -9,6 +9,7 @@ var reportsVM,
                 'Last 7 Days': [moment().subtract(6, 'days'), moment().add(1, 'day')],
                 'Last Week': [moment().subtract(1, 'weeks').startOf('week'), moment().subtract(1, 'weeks').endOf('week').add(1, 'day')],
                 'Last 4 Weeks': [moment().subtract(4, 'weeks'), moment().add(1, 'day')],
+                'This Month': [moment().startOf('month'), moment().endOf('month').add(1, 'day')],
                 'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month').add(1, 'day')],
                 'This Year': [moment().startOf('year'), moment().add(1, 'day')],
                 'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year').add(1, 'day')]
@@ -113,6 +114,7 @@ var initKnockout = function () {
     ko.bindingHandlers.reportDateRangePicker = {
         init: function (element, valueAccessor) {
             var $element = $(element),
+                dateFormat = 'MM/DD/YYYY',
                 durationInfo = valueAccessor(),
                 getPickerData = function (element, picker) {
                     var pickerInfo = {};
@@ -125,16 +127,16 @@ var initKnockout = function () {
                     } else {
                         durationInfo = pickerInfo;
                     }
-                    element.val(pickerInfo.startDate.format('MM/DD/YYYY') + ' - ' + pickerInfo.endDate.format('MM/DD/YYYY'));
+                    element.val(pickerInfo.startDate.format(dateFormat) + ' - ' + pickerInfo.endDate.format(dateFormat));
                     element.attr("title", pickerInfo.selectedRange);
                 };
             $element.attr("title", (durationInfo().selectedRange !== "" ? durationInfo().selectedRange : "Start & End Dates"));
-            $element.val(durationInfo().startDate.format('MM/DD/YYYY') + ' - ' + durationInfo().endDate.format('MM/DD/YYYY'));
+            $element.val(durationInfo().startDate.format(dateFormat) + ' - ' + durationInfo().endDate.format(dateFormat));
 
             $element.daterangepicker({
                 startDate: durationInfo().startDate,
                 endDate: durationInfo().endDate,
-                maxDate: moment().add(1, "day"),
+                //maxDate: moment().add(1, "day"),
                 chosenLabel: durationInfo().selectedRange,
                 alwaysShowCalendars: true,
                 autoApply: false,

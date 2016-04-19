@@ -618,6 +618,10 @@ var trendPlots = {
                 cfg.title = ' ';//no title, blank
             }
 
+            if(cfg.chart !== undefined) {
+                ret.chart = $.extend(true, {}, ret.chart, cfg.chart);
+            }
+
             if (!cfg.units && cfg.yAxisTitle) {
                 cfg.units = cfg.yAxisTitle;
             }
