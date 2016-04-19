@@ -1163,14 +1163,15 @@ displays = $.extend(displays, {
             autoUpdateInput: false,
             timePicker: false,
             ranges: {
-                'Today': [ moment() , moment() ],
-                'Yesterday': [ moment().subtract(1, 'days'), moment().subtract(1, 'days') ],
-                'Last 7 Days': [ moment().subtract(6, 'days'), moment() ],
-                'Last Week': [ moment().subtract(1, 'weeks').startOf('week'), moment().subtract(1, 'weeks').endOf('week') ],
-                'Last 4 Weeks': [ moment().subtract(4, 'weeks'), moment() ],
-                'Last Month': [ moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month') ],
-                'This Year': [ moment().startOf('year'), moment() ],
-                'Last Year': [ moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year') ]
+                'Today': [moment(), moment().add(1, 'day')],
+                'Yesterday': [moment().subtract(1, 'days'), moment()],
+                'Last 7 Days': [moment().subtract(6, 'days'), moment().add(1, 'day')],
+                'Last Week': [moment().subtract(1, 'weeks').startOf('week'), moment().subtract(1, 'weeks').endOf('week').add(1, 'day')],
+                'Last 4 Weeks': [moment().subtract(4, 'weeks'), moment().add(1, 'day')],
+                'This Month': [moment().startOf('month'), moment().endOf('month').add(1, 'day')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month').add(1, 'day')],
+                'This Year': [moment().startOf('year'), moment().add(1, 'day')],
+                'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year').add(1, 'day')]
             }
         });
 
