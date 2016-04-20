@@ -2,7 +2,12 @@ var trendPlots = {
         logLinePrefix: true,
         numberWithCommas: function (theNumber) {
             if (theNumber !== null && theNumber !== undefined) {
-                return theNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                if (theNumber.toString().indexOf(".") > 0) {
+                    var arr = theNumber.toString().split('.');
+                    return arr[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "." + arr[1];
+                } else {
+                    return theNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                }
             } else {
                 return "";
             }
@@ -556,6 +561,7 @@ var trendPlots = {
                 if(x !== undefined) {
                     // data.push([x, y]);
                     data.push({
+                        rawX: row[cfg.rawX],
                         x: x,
                         y: y
                     });
@@ -577,6 +583,7 @@ var trendPlots = {
                 legend = cfg.legend || false,
                 type = cfg.type || 'line',
                 width = cfg.width || 600,
+                tooltip = cfg.tooltip || null,
                 ret = {
                     chart: {
                         renderTo: $renderTo[0]
@@ -627,7 +634,7 @@ var trendPlots = {
             }
 
             if(cfg.hideLegendXLabel) {
-                ret.tooltip = {
+                ret.tooltip = (!!tooltip ? tooltip : {
                     formatter: function () {
                         var ret = '',
                             self = this;
@@ -641,7 +648,9 @@ var trendPlots = {
 
                         return ret;
                     }
-                };
+                })
+            } else {
+                ret.tooltip = (!!tooltip ? tooltip : undefined);
             }
 
             ret = trendPlots.complicateObject(configMap, cfg, $.extend(true, {}, defaultCfg, ret));
@@ -687,10 +696,10 @@ var trendPlots = {
 
                 if(series.units || cfg.units) {
                     newSeries = $.extend(true, newSeries, {
-                        tooltip: {
+                        tooltip: (!!tooltip ? tooltip : {
                             pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y:,.1f} ' + (series.units || cfg.units) + '</b><br/>'
                             // valueSuffix: ' ' + series.units
-                        },
+                        }),
                         units: series.units
                     });
                 }
