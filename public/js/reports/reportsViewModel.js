@@ -1444,6 +1444,26 @@ var reportsViewModel = function () {
             }
             return answer;
         },
+        setSelectedDurationBasedOnRange = function (selectedRange) {
+            if(!!selectedRange) {
+                self.selectedDuration().selectedRange = selectedRange;
+            }
+            self.durationStartTimeOffSet(self.selectedDuration().startTimeOffSet);
+            self.durationEndTimeOffSet(self.selectedDuration().endTimeOffSet);
+
+            if (self.selectedDuration().selectedRange === "Custom Range") {
+                self.startDate = getAdjustedDatetimeUnix(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet());
+                self.endDate = getAdjustedDatetimeUnix(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet());
+            } else {
+                var dateRange = reportDateRanges(self.selectedDuration().selectedRange);
+                self.selectedDuration().startDate = getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
+                self.selectedDuration().endDate = getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
+                self.startDate = self.selectedDuration().startDate.unix();
+                self.endDate = self.selectedDuration().endDate.unix();
+            }
+            self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
+            self.selectedDuration.valueHasMutated();
+        },
         //buildReportDataRequestPromise = function () {
         //    return new Promise(function(resolve, reject) {
         //        mergePersistedPointRefArray(true).then(function (response) {
@@ -1465,8 +1485,7 @@ var reportsViewModel = function () {
                 filter,
                 activeError = false,
                 upis = [],
-                uuid,
-                dateRange;
+                uuid;
 
             columns = self.listOfColumns();
             filters = self.listOfFilters();
@@ -1512,16 +1531,7 @@ var reportsViewModel = function () {
                 }
 
                 if (self.reportType === "Totalizer" || self.reportType === "History") {
-                    if (self.selectedDuration().selectedRange === "Custom Range") {
-                        self.startDate = getAdjustedDatetimeUnix(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet());
-                        self.endDate = getAdjustedDatetimeUnix(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet());
-                    } else {
-                        dateRange = reportDateRanges(self.selectedDuration().selectedRange);
-                        self.selectedDuration().startDate = getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
-                        self.selectedDuration().endDate = getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
-                        self.startDate = self.selectedDuration().startDate.unix();
-                        self.endDate = self.selectedDuration().endDate.unix();
-                    }
+                    setSelectedDurationBasedOnRange();
                 } else {
                     if (filters.length > 0) {
                         for (i = 0; i < filters.length; i++) {
@@ -3444,9 +3454,7 @@ var reportsViewModel = function () {
                     });
                     self.interval(externalConfig.interval.text);
                     self.intervalValue(externalConfig.interval.value);
-                    self.durationStartTimeOffSet(self.selectedDuration().startTimeOffSet);
-                    self.durationEndTimeOffSet(self.selectedDuration().endTimeOffSet);
-                    self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
+                    setSelectedDurationBasedOnRange(externalConfig.selectedRange);
                 }
                 self.requestReportData();
             }
@@ -3856,7 +3864,7 @@ var reportsViewModel = function () {
             self.durationError(currentDuration < 0);
 
             if (!self.durationError()) {
-                self.durationError(false);
+                //self.durationError(false);
                 result = self.listOfIntervals().filter(function (interval) {
                     return (moment.duration(1, interval.text).asMilliseconds() <= currentDuration);
                 });
