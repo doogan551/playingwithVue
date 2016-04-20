@@ -163,6 +163,7 @@ var converters = {
 				return n.toString();
 			case "Unsigned":
 			case "UniquePID":
+			case "BitString":
 				return this.convertNumber(n);
 			default:
 				return this.convertBool(this.convertNumber(n));

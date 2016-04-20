@@ -419,10 +419,12 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
             this.getUpload();*/
     };
 
-    ViewModel.prototype.printHistory = function() {
-        var $modal = $('.modal.viewTrend'),
-            $modalTime = $modal.find('.modalTime'),
+    ViewModel.prototype.printInfo = function() {
+        var $modal = $('.modal.networkInfo'),
             $modalValue = $modal.find('.modalValue');
+            $devicesTable = $modal.find('.devicesTable');
+            $pointsTable = $modal.find('.pointsTable');
+            $routerTable = $modal.find('.routerTable');
         // requires jquery-migrate to function properly
         //$modalValue.printElement();
         /*$modalTime.hide('fast', function() {
@@ -430,7 +432,10 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
         });*/
 
         var w = window.open();
-        var html = $modalValue.html();
+        var html = '<label>' + this.point.data.Name() + '</label>';
+        html += '<p>'+$devicesTable.html()+'</p>';
+        html += '<p>'+$pointsTable.html()+'</p>';
+        html += '<p>'+$routerTable.html()+'</p>';
 
         $(w.document.body).html(html);
         w.print();

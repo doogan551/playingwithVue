@@ -498,6 +498,15 @@ tr:hover .showOnHover {
 /* notifications */
 /* blue #1771B3 */
 
+/*override*/
+.fc-event .fc-bg {
+    background-color: transparent;
+}
+
+.fc-unthemed .fc-today {
+    background-color: #ffffff;
+}
+
 .notifications {
     color: #666;
 }
@@ -579,6 +588,10 @@ tr:hover .showOnHover {
 
 .notifications .tab-pane h3 {
     font-style: italic;
+}
+
+.notifications .tab-pane .noGap {
+    margin-bottom: 0;
 }
 
 .notifications .editRow {
@@ -1035,6 +1048,10 @@ tr:hover .showOnHover {
     background-color: #8666FB;
     color: #fff;
 }
+
+/*.scheduleLayer:nth-child(3) .panel-heading {
+    background-color: #7DC551;
+}*/
 
 .scheduleLayers .scheduleLayer .panel-body {
     padding: 0;

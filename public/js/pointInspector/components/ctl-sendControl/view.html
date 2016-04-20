@@ -27,11 +27,12 @@
                                 <label>Value</label>
                                 <div class="form-group">
                                     <!-- ko if: isEnumValueType -->
-                                    <select data-bind="options: data.Value.ValueOptions, optionsText: 'name', optionsValue: 'value', value: controlValue" class="form-control input-sm"></select>
+                                    <select data-bind="options: data.Value.ValueOptions, optionsText: 'name', optionsValue: 'value', value: controlValue, hasFocus: controlFocus" class="form-control input-sm"></select>
                                     <!-- /ko -->
 
                                     <!-- ko ifnot: isEnumValueType -->
-                                    <input data-bind="textInput: controlValue" class="form-control input-sm val" type="text"/>
+                                    <input data-bind="textInput: controlValue, hasFocus: controlFocus" class="form-control input-sm val" type="text"/>
+                                    <label data-bind="text:valueValidation, visible: showValidation"></label>
                                     <!-- <input type="text" data-bind="propertyName: propertyName, numeric: data.Value, valueType: data.ValueType, min: min, max: max" class="form-control input-sm"> -->
                                     <!-- /ko -->
                                 </div>

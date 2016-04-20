@@ -239,6 +239,8 @@ block panels
             option Command Point
 
         div(ng-show="editItem._actionButton.isReport && !editItem._actionButton.isHistory")
+            input#reportConfirmRange.custom(type='checkbox', name='reportConfirmRange', data-mini='true', data-iconpos="left", ng-model="editItem.confirmRange")
+            label(for='reportConfirmRange') Ask for range on click
             a(ng-click="editReportRange()", data-mini='true', data-role='button', data-inline='true', data-theme='c') Choose Report Range
 
         div(ng-show="!editItem._actionButton.isReport")

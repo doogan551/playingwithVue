@@ -2,6 +2,7 @@ var gpl = {
     texts: {},
     blocks: {},
     shapes: {},
+    anchors: {},
     labelCounters: {},
     eventLog: [],
     actionLog: [],
@@ -399,7 +400,11 @@ var gpl = {
         doNext();
     },
     showMessage: function (message) {
-        gpl.$messageModalBody.html(message);
+        if (Array.isArray(message)) {
+            gpl.$messageModalBody.html('<ul><li>' + message.join('</li><li>') + '</li></ul>');
+        } else {
+            gpl.$messageModalBody.html(message);
+        }
         gpl.$messageModal.modal('show');
         if (gpl.socketWaitFn) {
             gpl.socketWaitFn();
@@ -523,7 +528,7 @@ var gpl = {
 
         return pad(red) + pad(green) + pad(blue);
     },
-    validationMessage: null,
+    validationMessage: [],
     validate: {
         connection: function (anchor1, anchor2, skipErrorPrint) {
             //get order as obj1 -> obj2
@@ -909,6 +914,10 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
 
         this.x = this.config.x || 0;
         this.y = this.config.y || 0;
+
+        this._anchorID = gpl.makeId();
+
+        gpl.anchors[this._anchorID] = this;
     },
 
     initConfig: function () {
@@ -987,7 +996,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
         var self = this;
         gpl.forEach(self.attachedLines, function (line) {
             line.redrawLine(self.gplId, {
-                x: self.left - (self.radius / 2),
+                x: self.left + (self.radius / 2),
                 y: self.top + (self.radius / 2)
             });
         });
@@ -1055,6 +1064,7 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
 
     delete: function () {
         gpl.blockManager.canvas.remove(this);
+        delete gpl.anchors[this.gplId];
     }
 });
 
@@ -1255,6 +1265,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
                 if (name) {
                     self.setPointRef(anchor.anchorType, otherBlock.upi, name);
+                    gpl.fire('editedblock', self);
                 }
             }
         }
@@ -1262,6 +1273,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     handleAnchorDetach: function (anchor, line) {
         this.setPointRef(anchor.anchorType, 0, '');
+        gpl.fire('editedblock', this);
         return;
     },
 
@@ -1273,7 +1285,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             newData = self._pointData,
             tmpData,
             formatPoint = gpl.workspaceManager.config.Update.formatPoint,
-            sync = function (anchor) {
+            sync = function (anchor, type) {
                 var lines = anchor.getLines() || [],
                     line,
                     otherEnd,
@@ -1282,6 +1294,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     gplId,
                     upi,
                     setDataVars = function () {
+                        var args;
                         if (!upi) {
                             gpl.emptyFn();
                             // gpl.log('no upi');
@@ -1289,17 +1302,22 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                             if (gpl.pointData[upi]) {
                                 // if(newData && data) {
                                 try {
-                                    tmpData = formatPoint({
+                                    args = {
                                         point: newData,
                                         oldPoint: data,
-                                        property: anchor.anchorType,
+                                        property: type === 'input' ? anchor.anchorType : otherEnd.anchorType,
                                         refPoint: gpl.pointData[upi]
-                                    });
+                                    };
+
+                                    tmpData = formatPoint(args);
                                 } catch (ex) {
                                     gpl.log('error formatting point', ex.message);
                                 }
                                 if (tmpData.err) {
-                                    gpl.log(self.gplId, self.type, anchor.anchorType, 'error:', tmpData.err);
+                                    gpl.log(self.gplId, self.type, args.property, 'error:', tmpData.err);
+                                    gpl.isValid = false;
+                                    gpl.validationMessage.push('Error with block "' + self.pointType + '-\'' + self.label + '\'": ' + tmpData.err + ' (Property: ' + anchor.anchorType + ')');
+                                    self.setInvalid();
                                 } else {
                                     self._origPointData = newData;
                                     self._pointData = tmpData;
@@ -1328,7 +1346,11 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
                             if (block) {
                                 if (block.blockType !== 'Constant') {
-                                    setDataVars();
+                                    if (type !== 'output' || block.blockType === 'ControlBlock') {
+                                        setDataVars();
+                                    } else {
+                                        gpl.log('skipping', self.label, block.label, type === 'input' ? anchor.anchorType : otherEnd.anchorType);
+                                    }
                                     // } else {
                                     //     gpl.log('constant found');
                                 }
@@ -1350,15 +1372,15 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         // gpl.log('syncing anchor points', this.gplId);
 
         for (c = 0; c < list.length; c++) {
-            sync(list[c]);
+            sync(list[c], 'input');
         }
 
         if (this.shutdownAnchor) {
-            sync(this.shutdownAnchor);
+            sync(this.shutdownAnchor, 'input');
         }
 
         if (this.outputAnchor) {
-            sync(this.outputAnchor);
+            sync(this.outputAnchor, 'output');
         }
     },
 
@@ -1744,7 +1766,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 } else {
                     if (anchor.required === true) {
                         ret = false;
-                        gpl.validationMessage = 'No ' + anchor.anchorType + ' connection on ' + self.type + ' block';
+                        gpl.validationMessage.push('No ' + anchor.anchorType + ' connection on ' + self.type + ' block');
                         gpl.log('no lines associated', anchor.anchorType, 'on', self.type);
                     }
                 }
@@ -1832,6 +1854,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         if (self.upi) {
             data = gpl.pointData[self.upi];
             if (!data) {
+                gpl.log(self.name || self.config.label || self.config.name, 'adding reference point', self.upi);
                 gpl.addReferencePoint(self.upi, function (map, point) {
                     self.setPointData(point);
                 });
@@ -4469,7 +4492,8 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                 xoffset,
                 yoffset,
                 line,
-                wideLine;
+                wideLine,
+                _coords = [];
 
             for (cc = 0; cc < calculatedSegments.length - 1; cc++) {
                 point1 = calculatedSegments[cc];
@@ -4511,6 +4535,8 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
         },
         drawLines = function () {
             var c,
+                lastSeg,
+                nextToLastSeg,
                 addSegment = function (index) { //point1, point2) {
                     var point1 = clSelf.coords[index],
                         point2 = clSelf.coords[index + 1],
@@ -4544,6 +4570,22 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
             for (c = 0; c < clSelf.coords.length - 1; c++) {
                 addSegment(c);
             }
+
+            if (calculatedSegments.length > 2) {
+                if (calculatedSegments[0].x === calculatedSegments[1].x && calculatedSegments[0].y === calculatedSegments[1].y) {
+                    calculatedSegments.shift();
+                }
+
+                lastSeg = calculatedSegments.slice(-2);
+                nextToLastSeg = lastSeg[0];
+                lastSeg = lastSeg[1];
+
+                if (nextToLastSeg.x === lastSeg.x && nextToLastSeg.y === lastSeg.y) {
+                    calculatedSegments.pop();
+                }
+            }
+
+            clSelf.coords = calculatedSegments;
 
             drawSegments();
         },
@@ -4774,9 +4816,14 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
         } else if (testAnchor(clSelf.endAnchor)) {
             start = startCoords;
             end = newCoord;
+        } else {
+            start = clSelf.coords[0];
+            end = clSelf.coords.slice(-1)[0];
         }
 
         clSelf.coords = [start, end];
+
+        fixCoords();
 
         drawLines();
     };
@@ -5310,7 +5357,9 @@ gpl.BlockManager = function (manager) {
                 gpl.$editTextModal.modal('hide');
             },
             deleteBlock: function () {
-                gpl.fire('deleteblock', manager.contextObject);
+                if (manager.contextObject) {
+                    gpl.fire('deleteblock', manager.contextObject);
+                }
             },
             showDevicePoint: function () {
                 bmSelf.openPointEditor(true);
@@ -5813,6 +5862,7 @@ gpl.BlockManager = function (manager) {
 
     gpl.on('newblock', function (newBlock) {
         var ref;
+
         gpl.hasEdits = true;
         bmSelf.newBlocks[newBlock.upi] = newBlock;
         bmSelf.updateBlockReferences(newBlock);
@@ -5824,7 +5874,9 @@ gpl.BlockManager = function (manager) {
     });
 
     gpl.on('editedblock', function (block) {
-        gpl.hasEdits = true;
+        if (gpl.rendered) {
+            gpl.hasEdits = true;
+        }
         bmSelf.editedBlocks[block.upi] = block;
     });
 
@@ -5855,7 +5907,7 @@ gpl.BlockManager = function (manager) {
             });
         }
 
-        delete bmSelf.blocks[oldBlock.upi];
+        delete bmSelf.blocks[oldBlock.gplId];
         oldBlock.delete();
         bmSelf.renderAll();
         gpl.log('block deleted');
@@ -6979,6 +7031,9 @@ gpl.Manager = function () {
                 gpl.captureThumbnail();
             };
 
+        gpl.isValid = true;
+        gpl.validationMessage = [];
+
         gpl.blockUI();
         gpl.waitForSocketMessage(gpl.unblockUI);
 
@@ -6998,7 +7053,13 @@ gpl.Manager = function () {
 
             offsetPositions(true); //resets/removes offset
 
-            finish();
+            if (gpl.isValid) {
+                finish();
+            } else {
+                gpl.showMessage(gpl.validationMessage);
+                managerSelf.resumeRender();
+            }
+
         } else {
             gpl.showMessage(gpl.validationMessage);
         }
@@ -8321,13 +8382,29 @@ gpl.Manager = function () {
                     managerSelf.pan(dx, dy);
                 } else {
                     obj = managerSelf.canvas.findTarget(event);
-                    gplObj = obj ? gpl.blockManager.getBlock((obj || {}).gplId) : null;
 
-                    if (gplObj && !gplObj.isToolbar && gplObj.blockType !== 'Constant') {
-                        text = (gpl.pointUpiMap[gplObj.upi] || {}).Name;
-                        managerSelf.updateTooltip(text, x, y);
+                    if (obj) {
+                        gplObj = obj ? gpl.blockManager.getBlock((obj || {}).gplId) : null;
+
+                        if (gplObj && !gplObj.isToolbar && gplObj.blockType !== 'Constant') {
+                            text = (gpl.pointUpiMap[gplObj.upi] || {}).Name;
+                            managerSelf.updateTooltip(text, x, y);
+                        } else {
+                            managerSelf.clearTooltip();
+                        }
                     } else {
-                        managerSelf.clearTooltip();
+                        if (gpl.isEdit) {
+                            obj = managerSelf.toolbarCanvas.findTarget(event);
+                            gplObj = obj ? gpl.blockManager.getBlock((obj || {}).gplId) : null;
+                            if (gplObj) {
+                                text = gplObj.pointType;
+                                managerSelf.updateTooltip(text, x, y);
+                            } else {
+                                managerSelf.clearTooltip();
+                            }
+                        } else {
+                            managerSelf.clearTooltip();
+                        }
                     }
                 }
             }

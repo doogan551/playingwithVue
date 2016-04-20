@@ -19,6 +19,10 @@ body {
     vertical-align: top;
 }
 
+#toolbarCanvas {
+    width: 100px;
+}
+
 #gplCanvas {
     position: fixed;
     left: 0;
@@ -284,10 +288,20 @@ body {
     background-color: #d3d3d3;
 }
 
+#gplMessageBody {
+    overflow: auto;
+    max-height: calc(100vh - 160px);
+}
+
 /* overrides */
 
 .modal-body {
     padding: 15px;
+}
+
+.modal-body-no-padding {
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .modal-header,
