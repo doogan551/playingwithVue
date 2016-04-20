@@ -1156,7 +1156,7 @@ displays = $.extend(displays, {
         $('#reportRange').daterangepicker({
             // startDate : durationInfo().startDate,
             // endDate : durationInfo().endDate,
-            maxDate: moment().add(1, 'day'),
+            // maxDate: moment().add(1, 'day'),
             // chosenLabel: durationInfo().selectedRange,
             alwaysShowCalendars: true,
             autoApply: false,
