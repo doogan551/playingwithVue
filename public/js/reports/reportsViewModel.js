@@ -727,10 +727,9 @@ var reportsViewModel = function () {
             return numberWithCommas(fixedNum);
         },
         numberWithCommas = function (theNumber) {
-            var arr;
             if (theNumber !== null && theNumber !== undefined) {
                 if (theNumber.toString().indexOf(".") > 0) {
-                    arr = theNumber.toString().split('.');
+                    var arr = theNumber.toString().split('.');
                     return arr[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "." + arr[1];
                 } else {
                     return theNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -1996,7 +1995,7 @@ var reportsViewModel = function () {
                                     } else {
                                         columnData.push({
                                             timeStamp: moment.unix(data[i].Date.rawValue).toDate(),
-                                            value: ($.isNumeric(data[i][columnName].rawValue) ? parseFloat(data[i][columnName].rawValue) : 0)
+                                            value: ($.isNumeric(data[i][columnName].Value) ? parseFloat(data[i][columnName].Value) : 0)
                                         });
                                     }
                                     break;
@@ -2005,7 +2004,7 @@ var reportsViewModel = function () {
                                         columnSum += ($.isNumeric(data[i][columnName].rawValue) ? parseFloat(data[i][columnName].rawValue) : 0);
                                     } else {
                                         columnData.push({
-                                            value: ($.isNumeric(data[i][columnName].rawValue) ? parseFloat(data[i][columnName].rawValue) : 0)
+                                            value: ($.isNumeric(data[i][columnName].Value) ? parseFloat(data[i][columnName].Value) : 0)
                                         });
                                     }
                                     break;
@@ -3105,6 +3104,7 @@ var reportsViewModel = function () {
                 chartType = getValueBasedOnText(self.listOfChartTypes, self.selectedChartType()),
                 chartTitle = self.reportDisplayTitle(),
                 subTitle = "",
+                toolTip,
                 yAxisTitle = "the Y-Axis",
                 chartWidth = $reportChartDiv.parent().width(),
                 chartHeight = $reportChartDiv.parent().height();
@@ -3172,6 +3172,14 @@ var reportsViewModel = function () {
                                 series: reportChartData
                             });
                         } else {
+                            if (self.selectedChartType() !== "Column") {
+                                toolTip = {
+                                    formatter: function () {
+                                        return '<span style="font-size: 10px">' + moment(this.x).format("dddd, MMM Do, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.point.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + '</b><br/>';
+                                    }
+                                }
+                            }
+
                             trendPlot = new TrendPlot({
                                 turboThreshold: maxDataRowsForChart,
                                 width: chartWidth,
@@ -3187,26 +3195,14 @@ var reportsViewModel = function () {
                                 chart: {
                                     zoomType: 'x'
                                 },
-                                //tooltip: {
-                                //    formatter: function () {
-                                //        var ret = '',
-                                //            self = this;
-                                //        $.each(this.points, function (idx) {
-                                //            ret += '<span style="font-size: 10px">' + moment(this.point.rawX).format("dddd, MMM Do, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + ' ' + myBindings.electricalUnit() + '</b>';
-                                //            if (idx < self.points.length - 1) {
-                                //                ret += '<br/>';
-                                //            }
-                                //        });
-                                //        return ret;
-                                //    },
-                                //},
+                                tooltip: toolTip,
                                 //plotOptions: {
                                 //    series: {
                                 //        cursor: 'pointer',
                                 //        point: {
                                 //            events: {
                                 //                click: function () {
-                                //                    alert('Category: ' + this.category + ', value: ' + this.y);
+                                //                    alert('x: ' + this.x + ', y: ' + this.y);
                                 //                }
                                 //            }
                                 //        }
