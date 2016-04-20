@@ -1853,7 +1853,7 @@ var reportsViewModel = function () {
                 historyResults = [];
 
             for (i = 0; i < lenHistoryData; i++) {
-                if (now > historyData[i].timestamp) { // skip any results greater than "now" (those results are zero placeholders)
+                //if (now > historyData[i].timestamp) { // skip any results greater than "now" (those results are zero placeholders)
                     historyResults = historyData[i].HistoryResults;
                     tempPivot = {};
                     tempPivot["Date"] = {};
@@ -1875,7 +1875,7 @@ var reportsViewModel = function () {
                         }
                     }
                     pivotedData.push(tempPivot);
-                }
+                //}
             }
 
             return pivotedData;
@@ -1894,7 +1894,7 @@ var reportsViewModel = function () {
 
             if (numberOfColumnsFound > 0 && totalizerData[0].totals) {
                 for (j = 0; j < totalizerData[0].totals.length; j++) {
-                    if (now > totalizerData[0].totals[j].range.start) { // skip any results greater than "now" (those results are zero placeholders)
+                    //if (now > totalizerData[0].totals[j].range.start) { // skip any results greater than "now" (those results are zero placeholders)
                         tempPivot = {};
                         tempPivot["Date"] = {};
                         tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YY HH:mm");
@@ -1919,7 +1919,7 @@ var reportsViewModel = function () {
                             }
                         }
                         pivotedData.push(tempPivot);
-                    }
+                    //}
                 }
             }
 
@@ -2873,11 +2873,21 @@ var reportsViewModel = function () {
                                 key: '5'
                             },
                             customize: function (win) {
-                                $(win.document.body).find("h1").css('font-size', '16pt').css("text-align", "center");
-                                if (columnsArray.length > 8) {
-                                    $(win.document.body).find("table").css('font-size', '8pt');
-                                }
+                                var $documentBody = $(win.document.body),
+                                    $documentHead = $(win.document.head),
+                                    $table = $documentBody.find("table"),
+                                    classes,
+                                    hostAndProtocol = window.location.protocol + '//' + window.location.host;
 
+                                $documentHead.find('link[rel=stylesheet]').remove();
+                                $documentHead.append('<link rel="stylesheet" href="' + hostAndProtocol + '/css/reports/reportprinting.css" type="text/css" />');
+                                $table.removeClass("table-striped dataTablePlaceHolder dataTable");
+                                $table.addClass('table').addClass('table-sm');
+                                $table.css("padding", "2px");
+                                for (i = 0; i < columnsArray.length; i++) {
+                                    classes = setColumnClasses(columnsArray[i], i);
+                                    $table.find("td:nth-child(" + (i+1) + ")").addClass(classes);
+                                }
                             }
                         }
                     ],
@@ -3177,6 +3187,31 @@ var reportsViewModel = function () {
                                 chart: {
                                     zoomType: 'x'
                                 },
+                                //tooltip: {
+                                //    formatter: function () {
+                                //        var ret = '',
+                                //            self = this;
+                                //        $.each(this.points, function (idx) {
+                                //            ret += '<span style="font-size: 10px">' + moment(this.point.rawX).format("dddd, MMM Do, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + ' ' + myBindings.electricalUnit() + '</b>';
+                                //            if (idx < self.points.length - 1) {
+                                //                ret += '<br/>';
+                                //            }
+                                //        });
+                                //        return ret;
+                                //    },
+                                //},
+                                //plotOptions: {
+                                //    series: {
+                                //        cursor: 'pointer',
+                                //        point: {
+                                //            events: {
+                                //                click: function () {
+                                //                    alert('Category: ' + this.category + ', value: ' + this.y);
+                                //                }
+                                //            }
+                                //        }
+                                //    }
+                                //},
                                 xAxis: {
                                     allowDecimals: false
                                 },
@@ -3388,7 +3423,6 @@ var reportsViewModel = function () {
                         console.log(" - - - DEFAULT  init() null columns");
                         break;
                 }
-                //originalPoint = JSON.parse(JSON.stringify(point)); // reset original point since we've added attribs
             }
 
             $direports.find("#wrapper").show();
@@ -3547,37 +3581,6 @@ var reportsViewModel = function () {
                 return val;
                 break;
         }
-    };
-
-    self.setDatesBasedOnDuration = function (duration) {
-        self.endDate = moment().unix();
-        self.startDate = moment().subtract(duration.unit, duration.unitType).unix();
-    };
-
-    self.setFiltersStartEndDates = function (start, end) {
-        var startDateFilter,
-            endDateFilter,
-            hrs,
-            mins;
-
-        startDateFilter = self.listOfFilters().filter(function (filter) {
-            return filter.filterName === "Start_Date";
-        });
-        endDateFilter = self.listOfFilters().filter(function (filter) {
-            return filter.filterName === "End_Date";
-        });
-
-        startDateFilter[0].value = start;
-        startDateFilter[0].date = start;
-        hrs = moment.unix(start).hours();
-        mins = moment.unix(start).minutes();
-        startDateFilter[0].time = ((hrs < 10 ? '0' : '') + hrs) + ':' + ((mins < 10 ? '0' : '') + mins);
-
-        endDateFilter[0].value = end;
-        endDateFilter[0].date = end;
-        hrs = moment.unix(end).hours();
-        mins = moment.unix(end).minutes();
-        endDateFilter[0].time = ((hrs < 10 ? '0' : '') + hrs) + ':' + ((mins < 10 ? '0' : '') + mins);
     };
 
     self.selectPointForColumn = function (data, index) {
@@ -3859,7 +3862,7 @@ var reportsViewModel = function () {
             if (!self.durationError()) {
                 self.durationError(false);
                 result = self.listOfIntervals().filter(function (interval) {
-                    return (moment.duration(1, interval.text).asMilliseconds() < currentDuration);
+                    return (moment.duration(1, interval.text).asMilliseconds() <= currentDuration);
                 });
 
                 if (result.length > 0) {
