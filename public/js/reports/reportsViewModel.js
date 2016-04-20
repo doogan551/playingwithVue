@@ -1448,9 +1448,6 @@ var reportsViewModel = function () {
             if(!!selectedRange) {
                 self.selectedDuration().selectedRange = selectedRange;
             }
-            self.durationStartTimeOffSet(self.selectedDuration().startTimeOffSet);
-            self.durationEndTimeOffSet(self.selectedDuration().endTimeOffSet);
-
             if (self.selectedDuration().selectedRange === "Custom Range") {
                 self.startDate = getAdjustedDatetimeUnix(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet());
                 self.endDate = getAdjustedDatetimeUnix(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet());
@@ -2185,6 +2182,7 @@ var reportsViewModel = function () {
                         operator: "",
                         calculation: "",
                         canCalculate: false,
+                        canBeCharted: false,
                         includeInChart: false,
                         multiplier: 1,
                         precision: 3,
@@ -3402,12 +3400,14 @@ var reportsViewModel = function () {
                             operator: "",
                             calculation: "",
                             canCalculate: false,
+                            canBeCharted: false,
                             includeInChart: false,
                             multiplier: 1,
                             precision: 0,
                             valueList: [],
                             upi: 0
                         });
+                        setSelectedDurationBasedOnRange("Today");
                         break;
                     case "Property":
                         filterOpenPointSelector($filterByPoint);
@@ -3421,6 +3421,7 @@ var reportsViewModel = function () {
                             precision: 0,
                             calculation: "",
                             canCalculate: false,
+                            canBeCharted: false,
                             includeInChart: false,
                             multiplier: 1
                         });
@@ -3452,6 +3453,8 @@ var reportsViewModel = function () {
                         endTimeOffSet: externalConfig.endTimeOffSet,
                         selectedRange: externalConfig.selectedRange
                     });
+                    self.durationStartTimeOffSet(self.selectedDuration().startTimeOffSet);
+                    self.durationEndTimeOffSet(self.selectedDuration().endTimeOffSet);
                     self.interval(externalConfig.interval.text);
                     self.intervalValue(externalConfig.interval.value);
                     setSelectedDurationBasedOnRange(externalConfig.selectedRange);
