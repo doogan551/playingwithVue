@@ -230,7 +230,7 @@ var ActionButton = function (config) {
             $('#reportChooseRange').modal('hide');
 
             endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', external.ActionPoint);
-            displays.openWindow(endPoint.review.url + '?pause', 'Report', 'Report', '', external.ActionPoint, {
+            displays.openWindow(endPoint.review.url + '?pause', _pointData['Name'], 'Report', '', external.ActionPoint, {
                 height: 720,
                 width: 1280,
                 callback: function () {
