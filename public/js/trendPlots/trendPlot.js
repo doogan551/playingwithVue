@@ -586,7 +586,8 @@ var trendPlots = {
                 tooltip = cfg.tooltip || null,
                 ret = {
                     chart: {
-                        renderTo: $renderTo[0]
+                        renderTo: $renderTo[0],
+                        alignTicks: false
                     },
                     xAxis: {
                         type: 'datetime',
