@@ -108,7 +108,7 @@ var ActionButton = function (config) {
                 // config.upi = response._id;
                 _validateOptions('upi');
 
-                displays.upiNames[response.upi] = response.Name;
+                displays.upiNames[response._id] = response.Name;
 
                 _commandArguments.logData = {
                     user: displays.workspaceManager.user(),
@@ -600,7 +600,8 @@ displays = $.extend(displays, {
         displays.$scope.reportConfig = $.extend(displays.$scope.reportConfig, {
             intervalNum: config.intervalNum,
             intervalType: config.intervalType,
-            timestamp: config.timestamp
+            timestamp: config.timestamp,
+            durationInfo: config.durationInfo
         });
 
         picker.setStartDate(config.durationInfo.startDate);
