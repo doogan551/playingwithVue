@@ -936,7 +936,7 @@ var reportsViewModel = function () {
                     tempObject.upi = selectedPoint._id;
                     tempObject.valueType = "None";
                     tempObject.colName = selectedPoint.Name;
-                    tempObject.colDisplayName = selectedPoint.Name;
+                    tempObject.colDisplayName = selectedPoint.Name.replace("_", " ");
                     tempObject.pointType = selectedPoint["Point Type"].Value;
                     tempObject.canCalculate = columnCanBeCalculated(tempObject);
                     if (selectedPoint["Engineering Units"]) {
@@ -1034,7 +1034,7 @@ var reportsViewModel = function () {
                         tempObject.upi = pid;
                         tempObject.valueType = "String";
                         tempObject.colName = name;
-                        tempObject.colDisplayName = name;
+                        tempObject.colDisplayName = name.replace("_", " ");
                     }
                 },
                 windowOpenedCallback = function () {
@@ -1355,7 +1355,7 @@ var reportsViewModel = function () {
                         case "History":
                         case "Totalizer":
                             if (currentColumn.colDisplayName === undefined) { // TODO: remove once YDK reports have been opened and saved
-                                currentColumn.colDisplayName = currentColumn.colName;
+                                currentColumn.colDisplayName = currentColumn.colName.replace("_", " ");
                             }
                             currentColumn.valueList = getTotalizerValueList(currentColumn.pointType);
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
@@ -2304,7 +2304,7 @@ var reportsViewModel = function () {
                 } else {
                     self.unSavedDesignChange(true);
                     originalPoint = _.clone(newPoint, true);
-                    self.reportDisplayTitle(originalPoint.Name);
+                    self.reportDisplayTitle(originalPoint.Name.replace("_", " "));
                     $tabConfiguration.find(".screenMessages").find(".errorMessage").text(data.err);
                 }
                 blockUI($tabConfiguration, false);
@@ -3380,7 +3380,7 @@ var reportsViewModel = function () {
             $pointName4.val(point.name4);
 
             initSocket();
-            self.reportDisplayTitle(point.Name);
+            self.reportDisplayTitle(point.Name.replace("_", " "));
 
             if (columns) {
                 self.listOfColumns(initColumns(reportConfig.columns));
