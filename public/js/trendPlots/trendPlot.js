@@ -649,7 +649,7 @@ var trendPlots = {
 
                         return ret;
                     }
-                })
+                });
             } else {
                 ret.tooltip = (!!tooltip ? tooltip : undefined);
             }
@@ -669,6 +669,44 @@ var trendPlots = {
             if(!cfg.sameAxis) {
                 tmpAxis = $.extend(true, {}, ret.yAxis);
                 ret.yAxis = [];
+                ret.chart = $.extend(true, ret.chart, {
+                    events: {
+                        load: function (event) {
+                            var me = this;
+                            trendPlots.forEachArray(me.series, function (series, idx) {
+                                series.yAxis.update({
+                                    lineColor: series.color,
+                                    labels: {
+                                        style: {
+                                            color: series.color
+                                        }
+                                    },
+                                    title: {
+                                        style: {
+                                            color: series.color
+                                        }
+                                    }
+                                });
+                            });
+
+                            // trendPlots.forEachArray(me.yAxis, function (axis, idx) {
+                            //     axis.update({
+                            //         lineColor: me.series[idx].color,
+                            //         labels: {
+                            //             style: {
+                            //                 color: me.series[idx].color
+                            //             }
+                            //         },
+                            //         title: {
+                            //             style: {
+                            //                 color: me.series[idx].color
+                            //             }
+                            //         }
+                            //     });
+                            // });
+                        }
+                    }
+                });
             }
 
             trendPlots.forEachArray(cfg.data, function (series) {
