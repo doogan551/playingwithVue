@@ -771,10 +771,28 @@ var reportsViewModel = function () {
             return result;
         },
         columnCanBeCharted = function (column) {
-            var result = false;
+            var result = false,
+                valueOptions;
 
-            if (columnCanBeCalculated(column) || (self.reportType !== "Property" && column.valueType === "Enum")) {
+            if (columnCanBeCalculated(column)) {
                 result = true;
+            } else {
+                switch (column.pointType) {
+                    case "Accumulator":
+                    case "Analog Input":
+                    case "Analog Output":
+                    case "Analog Value":
+                    case "Average":
+                    case "Binary Input":
+                    case "Binary Output":
+                    case "Binary Selector":
+                    case "Binary Value":
+                    case "Math":
+                    case "Totalizer":
+                        valueOptions = window.workspaceManager.config.Templates.getTemplate(column.pointType).Value.ValueOptions;
+                        result = (valueOptions !== undefined);
+                        break;
+                }
             }
 
             return result;
@@ -1326,9 +1344,9 @@ var reportsViewModel = function () {
                 }
 
                 if (validColumn) {
+                    currentColumn.canCalculate = columnCanBeCalculated(currentColumn);
                     switch (self.reportType) {
                         case "Property":
-                            currentColumn.canCalculate = columnCanBeCalculated(currentColumn);
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
                             if (currentColumn.valueType === "BitString") {
                                 currentColumn.bitstringEnums = window.workspaceManager.config.Enums[currentColumn.colName + ' Bits'];
@@ -1340,7 +1358,6 @@ var reportsViewModel = function () {
                                 currentColumn.colDisplayName = currentColumn.colName;
                             }
                             currentColumn.valueList = getTotalizerValueList(currentColumn.pointType);
-                            currentColumn.canCalculate = true;
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
                             break;
                         default:
@@ -1968,6 +1985,17 @@ var reportsViewModel = function () {
             }
             return data;
         },
+        parseNumberValue = function (theValue, rawValue, eValue) {
+            var result;
+            result = Number.parseFloat(theValue.toString().replace(",",""));
+            if (isNaN(result)) {
+                result = (eValue !== undefined ? parseFloat(eValue) : rawValue);
+                if (isNaN(result)) {
+                    result = rawValue;
+                }
+            }
+            return result;
+        },
         getOnlyChartData = function (data) {
             var columnArray = $.extend(true, [], self.listOfColumns()),
                 columnConfig,
@@ -1979,6 +2007,7 @@ var reportsViewModel = function () {
                 columnName,
                 columnDataFound,
                 result = [],
+                fieldValue,
                 columnSum = 0,
                 totalAmount = 0;
 
@@ -1994,6 +2023,7 @@ var reportsViewModel = function () {
                     for (i = 0; i < len; i++) {
                         columnDataFound = (data[i][columnName] !== undefined);
                         if (columnDataFound) {
+                            fieldValue = parseNumberValue(data[i][columnName].Value, data[i][columnName].rawValue, data[i][columnName].eValue);
                             switch (self.reportType) {
                                 case "History":
                                 case "Totalizer":
@@ -2002,7 +2032,7 @@ var reportsViewModel = function () {
                                     } else {
                                         columnData.push({
                                             timeStamp: moment.unix(data[i].Date.rawValue).toDate(),
-                                            value: ($.isNumeric(data[i][columnName].Value) ? parseFloat(data[i][columnName].Value) : 0)
+                                            value: fieldValue
                                         });
                                     }
                                     break;
@@ -2011,7 +2041,7 @@ var reportsViewModel = function () {
                                         columnSum += ($.isNumeric(data[i][columnName].rawValue) ? parseFloat(data[i][columnName].rawValue) : 0);
                                     } else {
                                         columnData.push({
-                                            value: ($.isNumeric(data[i][columnName].Value) ? parseFloat(data[i][columnName].Value) : 0)
+                                            value: fieldValue
                                         });
                                     }
                                     break;
@@ -2033,8 +2063,7 @@ var reportsViewModel = function () {
                         if (columnData.length > 0) {
                             result.push({
                                 data: columnData,
-                                name: columnConfig.colName,
-                                yAxis: 0
+                                name: columnConfig.colName
                             });
                         }
                     }
