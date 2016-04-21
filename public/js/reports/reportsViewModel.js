@@ -936,7 +936,7 @@ var reportsViewModel = function () {
                     tempObject.upi = selectedPoint._id;
                     tempObject.valueType = "None";
                     tempObject.colName = selectedPoint.Name;
-                    tempObject.colDisplayName = selectedPoint.Name.replace("_", " ");
+                    tempObject.colDisplayName = selectedPoint.Name.replace(/_/g, " ");
                     tempObject.pointType = selectedPoint["Point Type"].Value;
                     tempObject.canCalculate = columnCanBeCalculated(tempObject);
                     if (selectedPoint["Engineering Units"]) {
@@ -1034,7 +1034,7 @@ var reportsViewModel = function () {
                         tempObject.upi = pid;
                         tempObject.valueType = "String";
                         tempObject.colName = name;
-                        tempObject.colDisplayName = name.replace("_", " ");
+                        tempObject.colDisplayName = name.replace(/_/g, " ");
                     }
                 },
                 windowOpenedCallback = function () {
@@ -1355,7 +1355,7 @@ var reportsViewModel = function () {
                         case "History":
                         case "Totalizer":
                             if (currentColumn.colDisplayName === undefined) { // TODO: remove once YDK reports have been opened and saved
-                                currentColumn.colDisplayName = currentColumn.colName.replace("_", " ");
+                                currentColumn.colDisplayName = currentColumn.colName.replace(/_/g, " ");
                             }
                             currentColumn.valueList = getTotalizerValueList(currentColumn.pointType);
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
