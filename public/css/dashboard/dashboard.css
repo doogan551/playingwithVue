@@ -1103,35 +1103,37 @@ Opera */
     margin-bottom: 2px;
 }
 
-.billTable {
+.billTable, .yearBillTable {
     border: 2px solid #696969;
     background-color: #ffffff;
     padding: 6px 20px 10px 20px;
+    overflow: auto;
+}
+.yearBillTable {
+    padding-top: 0;
 }
 
-.billTable table {
+.billTable table, .yearBillTable table {
     width: 100%;
 }
 
-.billTable table td {
+.billTable table td, .yearBillTable table td {
     vertical-align: top;
 }
-.billTable table th:not(:first-child) {
+.billTable table th:not(:first-child), .yearBillTable table th:not(:first-child) {
     text-align: right;
     width: 125px;
+    min-width: 100px;
 }
 
-.billTable table th:last-child {
-    text-align: right;
-}
-
-.billTable table td:not(:first-child) {
+.billTable table td:not(:first-child), .yearBillTable table td:not(:first-child) {
     text-align: right;
     width: 125px;
+    min-width: 100px;
 }
 
-.billTable table td:last-child {
-    text-align: right;
+.yearBillTable table td:first-child, .yearBillTable table th:first-child {
+    min-width: 115px;
 }
 
 .billTable table tr:last-child td {
@@ -1142,8 +1144,28 @@ Opera */
     font-weight: bold;
 }
 
-.billTable .total {
+.billTable .total, .yearBillTable .total {
     font-weight: bold;
+}
+.yearBillTable .Charges tr:last-child td {
+    padding-top: 10px;
+}
+.yearBillTable .Charges tr:last-child td:first-child {
+    font-weight: bold;
+}
+
+.yearBillTable .max {
+    color: red;
+}
+
+.yearBillTable .Winter {
+    border-top: 6px solid #41c9fd;
+}
+.yearBillTable .Summer {
+    border-top: 6px solid #fcd02d;
+}
+.yearBillTable .Transition {
+    border-top: 6px solid #cccccc;
 }
 
 .billing.gettingData div {
@@ -1184,9 +1206,9 @@ Opera */
     color: #5BC377;
     margin-right: 10px;
 }
-li.billingFiscalYear a {
-    font-weight: bold;
-    margin-top: 10px;
+.billingTopBar .availablePeriods .selected {
+    /*background-color: #E6E6E6;*/
+    border-bottom: 1px solid #666;
 }
 /* Billing modal styles */
 /* Watch out here - the left-side green navigation column appears
@@ -1215,6 +1237,13 @@ li.billingFiscalYear a {
 @media print {
     .billTable table td:not(:first-child), .billTable table th:not(:first-child) {
         width: 8em;
+    }
+    .yearBillTable table td:not(:first-child), .yearBillTable table th:not(:first-child) {
+        width: 8em;
+        min-width: 1em;
+    }
+    .yearBillTable table td, .yearBillTable table th {
+        font-size: 0.7em;
     }
     .billingPortlet {
         page-break-inside: avoid;
