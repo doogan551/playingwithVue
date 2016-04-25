@@ -14,7 +14,7 @@
             // ko foreach: filteredBills
             li
                 a(data-bind="click: $parent.selectBill.bind($parent), css: {'month': $data.period === 'Month', 'year': $data.period === 'Year'}")
-                    i.fa.fa-check(data-bind="visible: isCommitted")
+                    i.fa.fa-check(data-bind="visible: isBillCommitted")
                     span(data-bind="text: prettyDate, css: { selected : $parent.selectedBill().prettyDate === prettyDate }")
             // /ko
 
@@ -23,7 +23,7 @@
 
     .buttonBar.editControls(data-bind="if: $root.canWrite($parent.securityBindings.security)")
         // ko ifnot: selectedBill().period === 'Month' ? billData().commit.done : yearBillData().commit.done
-        button.hideInEdit.btn.btn-primary.btn-sm.committ(type="button", data-bind="click: showCommitModal, visible: billingCycle().complete") Committ
+        button.hideInEdit.btn.btn-primary.btn-sm.committ(type="button", data-bind="click: showCommitModal, visible: billingCycle().complete") Commit
         button.hideInEdit.btn.btn-primary.btn-sm(type="button", data-bind="click: toEditMode") Edit
         button.showInEdit.editControl.btn.btn-link.btn-sm(type="button", data-bind="click: cancelEditMode") Cancel
         button.showInEdit.editControl.btn.btn-success.btn-sm(type="button", data-bind="click: save")

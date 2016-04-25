@@ -403,7 +403,7 @@ Opera */
     color: coral;
 }
 .dropdown-menu.availablePeriods .month {
-    margin-left: 10px;
+    margin-left: 3px;
 }
 .dropdown-menu.availablePeriods .year {
     font-weight: bold;
@@ -545,7 +545,7 @@ Opera */
 }
 
 .mainContent {
-    padding: 20px 20px 0 20px;
+    padding: 20px 7px 0 7px;
     overflow: auto;
     width: 100%;
 }
@@ -1042,6 +1042,13 @@ Opera */
 .reportsContent .reportsgrid table td {
     padding: 2px 20px;
 }
+.reportsContent .reportsgrid table td div.itemValue {
+    display: inline-block;
+    padding-right: 5px;
+}
+.reportsContent .reportsgrid table td span.itemTimeStamp {
+    color: #757575;
+}
 .reportsContent .reportsgrid table th:not(:first-child),
 .reportsContent .reportsgrid table td:not(:first-child) {
     text-align: right;
@@ -1049,7 +1056,7 @@ Opera */
 .reportsContent .reportsgrid table th:first-child,
 .reportsContent .reportsgrid table td:first-child {
     padding: 2px 5px;
-    width: 140px;
+    width: 100px;
 }
 @media print {
     .reportsContent .reportsgrid table th,
@@ -1061,6 +1068,29 @@ Opera */
         padding: 2px 5px;
         width: 150px;
     }
+}
+.reportsContent .reportsgrid table .koGridReportFooter td.max {
+    padding-right: 25px;
+}
+.koGridReportFooter span.maxWithTimeBlankOffset {
+    padding-right: 27px;
+}
+.reportsContent .reportsgrid table .koGridReportFooter td.total {
+    padding-right: 25px;
+}
+.reportsTopBar .dropdown-menu.availablePeriods i {
+    color: #5BC377;
+    margin-left: 5px;
+}
+.reportsTopBar .committed i.fa-check-square {
+    float: left;
+    padding: 4px 10px 0 0;
+    font-size: 30px;
+    color: #5BC377;
+}
+.reportsTopBar .commitInfo:hover {
+    cursor: pointer;
+    text-decoration: underline;
 }
 
 /* End Electricity Reports ------------------- */
