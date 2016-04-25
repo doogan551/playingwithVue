@@ -355,6 +355,11 @@ ul.calculations.dropdown-menu li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
 }
+ul.yaxisGroups.dropdown-menu li a:hover {
+    background-color: #d5e1f2;
+    cursor: pointer;
+    width: 30px;
+}
 ul.chartTypes.dropdown-menu li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
@@ -481,6 +486,10 @@ div.dataTables_wrapper div.dataTables_length select {
 .availablePropertiesContainer {
     display: inline-block;
 }
+.availableAxisGroupsContainer button.btn.btn-default.dropdown-toggle {
+    width: 35px;
+    padding: 6px 2px;
+}
 .precision {
     width: 60px;
 }
@@ -526,6 +535,20 @@ input.form-control.inputPrecision {
     width: 14px;
     /*margin-left: 9px;*/
     margin-bottom: 10px;
+}
+.yaxisChartGroup {
+    width: 32px;
+    text-align: center;
+}
+.yaxisGroups.dropdown-menu {
+    width: 32px;
+    min-width: 8px;
+    margin-left: 15px;
+    margin-top: -2px;
+}
+ul.yaxisGroups.dropdown-menu li a {
+    padding: 3px 1px 3px 1px;
+    text-align: -webkit-center;
 }
 input.form-control.globalPrecision {
     width: 30px;

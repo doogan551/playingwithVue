@@ -461,41 +461,6 @@ var reportsViewModel = function () {
             }
             return !!(cumulativePermissions & requestedAccessLevel);
         },
-        //mergePersistedPointRefArray = function () {
-        //    return new Promise(function(resolve, reject) {
-        //        var requestObj = {pointid: windowUpi},
-        //            mergePointArray = function (reportPoint) {
-        //                var i,
-        //                    currentUPI,
-        //                    currentAppIndex,
-        //                    persistedPointRef,
-        //                    onscreenPointRefArray = buildPointRefsArray(),  // get all points from screen
-        //                    persistedPointRefArray = (!!reportPoint ? reportPoint["Point Refs"] : null);
-        //
-        //                if (!!persistedPointRefArray) {
-        //                    for (i = 0; i < onscreenPointRefArray.length; i++) {
-        //                        currentUPI = onscreenPointRefArray[i].Value;
-        //                        currentAppIndex = onscreenPointRefArray[i].AppIndex;
-        //                        persistedPointRef = persistedPointRefArray.filter(function (pointref) {
-        //                            return pointref.AppIndex === currentAppIndex;
-        //                        });
-        //                        if (persistedPointRef.length > 0) {
-        //                            if (persistedPointRef[0].Value === 0 || persistedPointRef[0].Value === onscreenPointRefArray[i].Value) {
-        //                                onscreenPointRefArray[i] = persistedPointRef[0];
-        //                            }
-        //                        }
-        //                    }
-        //                }
-        //
-        //                point["Point Refs"] = onscreenPointRefArray;
-        //                self.listOfColumns(validateColumns());
-        //                self.listOfFilters(validateFilters());
-        //                resolve(true);
-        //            };
-        //
-        //        ajaxPost(requestObj, "/api/points/getpoint/", mergePointArray);
-        //    });
-        //},
         resetPointRefSlot = function (appIndex, upi, name) {
             var i,
                 pointRef;
@@ -524,7 +489,6 @@ var reportsViewModel = function () {
         },
         cleanPointRefArray = function () {
             var i,
-                //pointRefs = $.extend(true, [], point["Point Refs"]),
                 pointRef;
             for(i = 0; i < point["Point Refs"].length; i++) {
                 pointRef = point["Point Refs"][i];
@@ -814,7 +778,6 @@ var reportsViewModel = function () {
                     $columnsGrid.find(".multiplierColumn").show();
                     $columnsGrid.find(".calculateColumn").show();
                     $columnsGrid.find(".precisionColumn").show();
-                    $columnsGrid.find(".includeInChartColumn").show();
                     break;
                 }
             }
@@ -838,6 +801,11 @@ var reportsViewModel = function () {
                         allChecked = false;
                     }
                 }
+            }
+
+            if (activateCharting) {
+                $columnsGrid.find(".includeInChartColumn").show();
+                $columnsGrid.find(".yaxisChartGroupColumn").show();
             }
 
             self.chartable(activateCharting);
@@ -962,6 +930,7 @@ var reportsViewModel = function () {
                         resetPointRefSlot(tempObject.AppIndex, tempObject.upi, tempObject.colName);
                     }
                     tempObject.canBeCharted = columnCanBeCharted(tempObject);
+                    tempObject.yaxisGroup = "A";
                     updatedList[objIndex] = tempObject;
                     updateListOfColumns(updatedList);
                 },
@@ -1354,9 +1323,6 @@ var reportsViewModel = function () {
                             break;
                         case "History":
                         case "Totalizer":
-                            if (currentColumn.colDisplayName === undefined) { // TODO: remove once YDK reports have been opened and saved
-                                currentColumn.colDisplayName = currentColumn.colName.replace(/_/g, " ");
-                            }
                             currentColumn.valueList = getTotalizerValueList(currentColumn.pointType);
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
                             break;
@@ -1364,11 +1330,8 @@ var reportsViewModel = function () {
                             console.log(" - - - DEFAULT  initColumns()");
                             break;
                     }
-                    if (currentColumn.includeInChart === undefined) {  // TODO  remove once YDK reports have been saved
-                        currentColumn.includeInChart = false;
-                    }
-                    if (currentColumn.multiplier === undefined) {  // TODO  remove once YDK reports have been saved
-                        currentColumn.multiplier = 1;
+                    if (currentColumn.yaxisGroup === undefined) {  // TODO  remove once YDK reports have been saved
+                        currentColumn.yaxisGroup = "A";
                     }
                     result.push(currentColumn);
                 }
@@ -1478,17 +1441,6 @@ var reportsViewModel = function () {
             self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
             self.selectedDuration.valueHasMutated();
         },
-        //buildReportDataRequestPromise = function () {
-        //    return new Promise(function(resolve, reject) {
-        //        mergePersistedPointRefArray(true).then(function (response) {
-        //            //console.log("mergePersistedPointRefArray() Success!", response);
-        //            resolve(buildReportDataRequest());
-        //        }, function (error) {
-        //            console.error("buildReportDataRequestPromise() --> mergePersistedPointRefArray() Failed!", error);
-        //            reject(null);
-        //        });
-        //    });
-        //},
         buildReportDataRequest = function () {
             var result,
                 i,
@@ -1996,6 +1948,24 @@ var reportsViewModel = function () {
             }
             return result;
         },
+        setYaxisValues = function (chartData) {
+            var i,
+                foundValues = [];
+
+            for (i = 0; i < chartData.length; i++) {
+                if (!foundValues.includes(chartData[i].yAxis)) {
+                    foundValues.push(chartData[i].yAxis);
+                }
+            }
+
+            foundValues.sort();
+
+            for (i = 0; i < chartData.length; i++) {
+                chartData[i].yAxis = foundValues.indexOf(chartData[i].yAxis);
+            }
+
+            return chartData;
+        },
         getOnlyChartData = function (data) {
             var columnArray = $.extend(true, [], self.listOfColumns()),
                 columnConfig,
@@ -2032,7 +2002,8 @@ var reportsViewModel = function () {
                                     } else {
                                         columnData.push({
                                             timeStamp: moment.unix(data[i].Date.rawValue).toDate(),
-                                            value: fieldValue
+                                            value: fieldValue,
+                                            enumText: (!!columnConfig.valueOptions ? getKeyBasedOnValue(columnConfig.valueOptions, fieldValue) : "")
                                         });
                                     }
                                     break;
@@ -2063,7 +2034,8 @@ var reportsViewModel = function () {
                         if (columnData.length > 0) {
                             result.push({
                                 data: columnData,
-                                name: columnConfig.colName
+                                name: columnConfig.colName,
+                                yAxis: self.yaxisGroups.indexOf(columnConfig.yaxisGroup)
                             });
                         }
                     }
@@ -2079,7 +2051,7 @@ var reportsViewModel = function () {
                     data: columnData
                 });
             }
-            return result;
+            return setYaxisValues(result);
         },
         adjustViewReportTabHeightWidth = function () {
             var infoscanHeader = 95,
@@ -2133,7 +2105,6 @@ var reportsViewModel = function () {
             }, resizeTimer);
         },
         saveReportConfig = function () {
-            //mergePersistedPointRefArray(true).then(function (response) {
             point["Report Config"].columns = validateColumns(true);
             point["Report Config"].filters = validateFilters(true);
             pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
@@ -2178,10 +2149,6 @@ var reportsViewModel = function () {
                     'oldPoint': originalPoint
                 }));
             }
-            //}, function (error) {
-            //    console.error("saveReportConfig() --> mergePersistedPointRefArray() Failed!", error);
-            //    reject(result);
-            //});
         },
         setReportEvents = function () {
             var intervals,
@@ -2195,12 +2162,6 @@ var reportsViewModel = function () {
 
             $(window).resize(function () {
                 handleResize();
-            });
-
-            $columnNames.on('click', function (e) {
-                openPointSelectorForColumn();
-                e.preventDefault();
-                e.stopPropagation();
             });
 
             $direports.find(".addColumnButton").on('click', function (e) {
@@ -2361,13 +2322,13 @@ var reportsViewModel = function () {
                 }
             });
 
-            $direports.find(".precisionColumn").on('mousedown', function (e) {
+            $columnsGrid.find(".precisionColumn").on('mousedown', function (e) {
                 if (self.canEdit()) {
                     longClickStart = moment();
                 }
             });
 
-            $direports.find(".precisionColumn").on('click', function (e) {
+            $columnsGrid.find(".precisionColumn").on('click', function (e) {
                 if (self.canEdit()) {
                     if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
                         if (!precisionEventsSet) {
@@ -2405,13 +2366,13 @@ var reportsViewModel = function () {
                 }
             });
 
-            $direports.find(".includeInChartColumn").on('mousedown', function (e) {
+            $columnsGrid.find(".includeInChartColumn").on('mousedown', function (e) {
                 if (self.canEdit()) {
                     longClickStart = moment();
                 }
             });
 
-            $direports.find(".includeInChartColumn").on('click', function (e) {
+            $columnsGrid.find(".includeInChartColumn").on('click', function (e) {
                 if (self.canEdit()) {
                     if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
                         if (!includeInChartEventsSet) {
@@ -2667,9 +2628,6 @@ var reportsViewModel = function () {
                             if (columnIndex === 0 && columnConfig.dataColumnName === "Date") {
                                 $(tdField).attr('title', moment.unix(data[columnConfig.dataColumnName].rawValue).format("dddd"));
                             } else {
-                                //if (data[columnConfig.dataColumnName] && data[columnConfig.dataColumnName].rawValue) {
-                                //    $(tdField).attr('title', (data[columnConfig.dataColumnName].rawValue ? data[columnConfig.dataColumnName].rawValue : ""));
-                                //}
                             }
                             break;
                         case "Property":
@@ -3093,15 +3051,6 @@ var reportsViewModel = function () {
                 }
 
                 adjustViewReportTabHeightWidth();
-                //setTimeout(function () {
-                //    $(".tabViewReport").find(".dataTables_scrollHead .table th").on("mouseover", function (e) {
-                //        var border_right_width = parseInt($(this).css('border-right-width'), 10),
-                //            columnIndex = parseInt($(e.target).attr("data-column-index"), 10);
-                //        if (e.offsetX < border_right_width || e.offsetX > $(this).innerWidth()) {
-                //            console.log('This is the Right border of column ' + columnIndex);
-                //        }
-                //    });
-                //}, 200);
             }
         },
         renderHistoryReport = function (data) {
@@ -3212,7 +3161,7 @@ var reportsViewModel = function () {
                             if (self.selectedChartType() !== "Column") {
                                 toolTip = {
                                     formatter: function () {
-                                        return '<span style="font-size: 10px">' + moment(this.x).format("dddd, MMM Do, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.point.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + '</b><br/>';
+                                        return '<span style="font-size: 10px">' + moment(this.x).format("dddd, MMM Do, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.point.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + (!!this.point.enumText ? '-' + this.point.enumText : '') + '</b><br/>';
                                     }
                                 }
                             }
@@ -3226,6 +3175,7 @@ var reportsViewModel = function () {
                                 subtitle: subTitle,
                                 y: 'value',
                                 x: 'timeStamp',
+                                enumText: 'enumText',
                                 //highlightMax: true,
                                 data: reportChartData,
                                 type: chartType,
@@ -3277,6 +3227,8 @@ var reportsViewModel = function () {
     self.startDate = "";
 
     self.endDate = "";
+
+    self.yaxisGroups = ["A","B","C","D","E","F","G","H","I","J"];
 
     self.reportDisplayTitle = ko.observable("");
 
@@ -3430,6 +3382,7 @@ var reportsViewModel = function () {
                             calculation: "",
                             canCalculate: false,
                             canBeCharted: false,
+                            yaxisGroup: "A",
                             includeInChart: false,
                             multiplier: 1,
                             precision: 0,
@@ -3451,6 +3404,7 @@ var reportsViewModel = function () {
                             calculation: "",
                             canCalculate: false,
                             canBeCharted: false,
+                            yaxisGroup: "A",
                             includeInChart: false,
                             multiplier: 1
                         });
@@ -3661,7 +3615,6 @@ var reportsViewModel = function () {
     self.requestReportData = function () {
         if (!self.durationError()) {
             if (self.currentTab() !== 2) {
-                //buildReportDataRequestPromise(true).then(function (requestObj) {
                 var requestObj = buildReportDataRequest();
                 if (!!requestObj) {
                     tabSwitch(2);
@@ -3695,10 +3648,6 @@ var reportsViewModel = function () {
                 } else {
                     // bad request object do nothing.
                 }
-                //}, function (error) {
-                //    console.error("buildReportDataRequestPromise() Failed!", error);
-                //    return result;
-                //});
             }
         } else {
             displayError("Invalid Date Time selection");
@@ -3762,6 +3711,7 @@ var reportsViewModel = function () {
         column.calculation = "";
         column.canCalculate = columnCanBeCalculated(column);
         column.canBeCharted = columnCanBeCharted(column);
+        column.yaxisGroup = "A";
         column.includeInChart = false;
         updateListOfColumns(tempArray);
     };
@@ -3778,6 +3728,13 @@ var reportsViewModel = function () {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn];
         column.operator = selectedItem;
+        updateListOfColumns(tempArray);
+    };
+
+    self.selectYaxisGroup = function (element, indexOfColumn, selectedItem) {
+        var tempArray = self.listOfColumns(),
+            column = tempArray[indexOfColumn];
+        column.yaxisGroup = selectedItem;
         updateListOfColumns(tempArray);
     };
 
@@ -3896,7 +3853,6 @@ var reportsViewModel = function () {
             self.durationError(currentDuration < 0);
 
             if (!self.durationError()) {
-                //self.durationError(false);
                 result = self.listOfIntervals().filter(function (interval) {
                     return (moment.duration(1, interval.text).asMilliseconds() <= currentDuration);
                 });

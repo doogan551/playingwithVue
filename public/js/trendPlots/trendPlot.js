@@ -562,6 +562,7 @@ var trendPlots = {
                     // data.push([x, y]);
                     data.push({
                         rawX: row[cfg.rawX],
+                        enumText: row[cfg.enumText],
                         x: x,
                         y: y
                     });

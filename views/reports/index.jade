@@ -98,6 +98,8 @@ block content
 													th.medium.strong
 														.includeInChartColumn(style="display:none") Chart
 													th.medium.strong
+														.yaxisChartGroupColumn(style="display:none") Group
+													th.medium.strong
 											tbody.sortablecolums(data-bind="foreach: listOfColumns()")
 												tr.columnRowData(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
 													td.columnNameContainer(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
@@ -176,6 +178,22 @@ block content
 													td.includeInChart
 														// ko if: (!!canBeCharted && canBeCharted)
 														input.includeInChartColumn(data-bind="checked: includeInChart, enable: ($root.canEdit() && !!canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) } ", type="checkbox")
+														// /ko
+													td.yaxisChartGroup
+														// ko if: (!!canBeCharted && canBeCharted)
+														.dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+															button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+																span(data-bind="text: yaxisGroup")
+																// ko if: ($root.yaxisGroups.length > 1)
+																span.caret.lm10px
+																// /ko
+															// ko if: ($root.yaxisGroups.length > 1)
+															ul.yaxisGroups.dropdown-menu
+																// ko foreach: $root.yaxisGroups
+																li
+																	a(data-bind="click: function(){ $root.selectYaxisGroup($element, $parentContext.$index(), $data) }, text: $data")
+																// /ko
+															// /ko
 														// /ko
 													td.removecolumn
 														a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
