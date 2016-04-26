@@ -729,16 +729,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                 newVal = (newPoint[prop].Value !== '') ? newPoint[prop].Value : "[blank]";
               //if enum, if evalue changed AL, else if not enum, compare value
               if (updateObject[prop] !== undefined && ((updateObject[prop].ValueType === 5 && updateObject[prop].eValue !== oldPoint[prop].eValue) || (updateObject[prop].ValueType !== 5 && updateObject[prop].Value !== oldPoint[prop].Value))) {
-                if (prop === "Point Refs") {
-                  if (newPoint["Point Type"].Value === "Slide Show") {
-                    activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
-                      log: "Slide Show edited",
-                      activity: actLogsEnums["Slide Show Edit"].enum
-                    })));
-                  } else {
-                    compareArrays(newPoint[prop], oldPoint[prop], activityLogObjects);
-                  }
-                } else if (prop === "Configure Device") {
+                if (prop === "Configure Device") {
                   activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                     log: "Device configuration requested",
                     activity: actLogsEnums["Device Configuration"].enum
@@ -833,6 +824,15 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                     log: prop + " changed from " + oldVal + " to " + newVal,
                     activity: actLogsEnums["Point Property Edit"].enum
                   })));
+                }
+              } else if (prop === "Point Refs") {
+                if (newPoint["Point Type"].Value === "Slide Show") {
+                  activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                    log: "Slide Show edited",
+                    activity: actLogsEnums["Slide Show Edit"].enum
+                  })));
+                } else {
+                  compareArrays(newPoint[prop], oldPoint[prop], activityLogObjects);
                 }
               } else if (prop === "Alarm Messages" || prop === "Occupancy Schedule" || prop === "Sequence Details" || prop === "Security" || prop === "Script Source File") {
                 activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
@@ -979,17 +979,17 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
         logData.prop = newArray[i].PropertyName;
         if (newArray[i].Value === 0 && oldArray[i].Value !== 0) {
           activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
-            log: "Property deleted",
+            log: logData.prop + " removed",
             activity: actLogsEnums["Point Property Edit"].enum
           })));
         } else if (newArray[i].Value !== 0 && oldArray[i].Value === 0) {
           activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
-            log: "Property added",
+            log: logData.prop+" added",
             activity: actLogsEnums["Point Property Edit"].enum
           })));
         } else {
           activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
-            log: "Property changed",
+            log: logData.prop+" changed from " + oldArray[i].PointName + " to " + newArray[i].PointName,
             activity: actLogsEnums["Point Property Edit"].enum
           })));
         }
