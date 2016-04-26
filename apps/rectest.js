@@ -525,4 +525,14 @@ function createMathBlocks() {
     });
   });
 }
-createMathBlocks();
+// createMathBlocks();
+
+function deviceTree() {
+  var DeviceTree = require('../models/devicetree');
+  db.connect(connectionString.join(''), function(err) {
+    DeviceTree.buildTree({}, function(err, result) {
+      console.log(result);
+    });
+  });
+}
+deviceTree();
