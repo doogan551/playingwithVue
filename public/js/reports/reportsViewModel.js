@@ -2097,7 +2097,11 @@ var reportsViewModel = function () {
             setTimeout(function () {
                 if (new Date() - lastResize >= resizeTimer) {
                     if (self.currentTab() === 2) {
-                        adjustViewReportTabHeightWidth();
+                        if ($tabViewReport.find(".tab-pane.active").attr("id") === "chartData") {
+                            renderChart();
+                        } else {
+                            adjustViewReportTabHeightWidth();
+                        }
                     } else {
                         adjustConfigTabActivePaneHeight();
                     }
@@ -3084,7 +3088,10 @@ var reportsViewModel = function () {
             }
         },
         renderChart = function () {
+            self.activeDataRequestForChart(true);
+            $reportChartDiv.html("");
             adjustViewReportTabHeightWidth();
+
             var trendPlot,
                 maxDataRowsForChart = 1000,
                 chartType = getValueBasedOnText(self.listOfChartTypes, self.selectedChartType()),
@@ -3095,18 +3102,16 @@ var reportsViewModel = function () {
                 chartWidth = $reportChartDiv.parent().width(),
                 chartHeight = $reportChartDiv.parent().height();
 
-            reportChartData = getOnlyChartData(reportData);
-
             if (!!reportChartData && !!reportChartData[0]) {
                 if (reportChartData[0].data.length < maxDataRowsForChart) {
                     switch (self.reportType) {
                         case "History":
-                            subTitle = self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm a") + " - " + self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm a"),
+                            subTitle = self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm a") + " - " + self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm a");
                             yAxisTitle = "Totals";
                             break;
                         case "Totalizer":
-                            subTitle = self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm a") + " - " + self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm a"),
-                            yAxisTitle = "Totals"
+                            subTitle = self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm a") + " - " + self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm a");
+                            yAxisTitle = "Totals";
                             break;
                         case "Property":
                             break;
@@ -3206,6 +3211,7 @@ var reportsViewModel = function () {
                                 },
                                 yAxisTitle: yAxisTitle
                             });
+                            self.activeDataRequestForChart(false);
                         }
                     }
                 }  else {
@@ -3658,8 +3664,9 @@ var reportsViewModel = function () {
     };
 
     self.requestChart = function () {
-        $reportChartDiv.html("");
         self.selectViewReportTabSubTab("chartData");
+        $reportChartDiv.html("");
+        reportChartData = getOnlyChartData(reportData);
         renderChart();
     };
 
