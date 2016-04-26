@@ -5864,7 +5864,8 @@ tou.utilityPages.Electricity = function() {
         init: function () {
             var self = this,
                 filteredReportMonthYear,
-                $availablePeriodsInput = $('.' + self.utilityNameShort + ' .reportsTopBar .availablePeriods input'),
+                $availablePeriods = $('.' + self.utilityNameShort + ' .reportsTopBar .availablePeriods'),
+                $availablePeriodsInput = $availablePeriods.find('input'),
                 setDefaultMonthYear = function () {
                     if (self.bindings.selectedMonthYear() === "") {
                         filteredReportMonthYear = self.bindings.filteredReportMonthYear();
@@ -5917,7 +5918,10 @@ tou.utilityPages.Electricity = function() {
             // Automatically focus the search box when the drop-down is activated
             $('.' + self.utilityNameShort + ' .reportsTopBar .availablePeriodsSelect').click(function (e) {
                 window.setTimeout(function () { // Delay the focus for drop down transition to finish
-                    $availablePeriodsInput.focus();
+                    // If we're scrolled to the top of the list
+                    if ($availablePeriods.scrollTop() === 0) {
+                        $availablePeriodsInput.focus();
+                    }
                 }, 50);
             });
 
@@ -9870,13 +9874,17 @@ tou.utilityPages.Electricity = function() {
                 classPrefix = '.' + self.utilityNameShort,
                 addDropDownHandlers = function (selector) {
                     var $el = $(selector),
+                        $dropdown = $el.find('.dropdown-menu'),
                         $input = $el.find('input');
 
                     // Automatically focus the search box when the drop-down is activated
                     $el.click(function (e) {
                         // Delay the focus for drop down transition to finish
                         window.setTimeout(function () {
-                            $input.focus();
+                            // If we're scrolled to the top of the list
+                            if ($dropdown.scrollTop() === 0) {
+                                $input.focus();
+                            }
                         }, 50);
                     });
 
@@ -10720,14 +10728,18 @@ tou.utilityPages.Electricity = function() {
                 meters,
                 classPrefix = '.' + self.utilityNameShort + ' ',
                 addDropDownHandlers = function (selector) {
-                    var $el = $(classPrefix + selector),
+                    var $el = $(selector),
+                        $dropdown = $el.find('.dropdown-menu'),
                         $input = $el.find('input');
 
                     // Automatically focus the search box when the drop-down is activated
                     $el.click(function (e) {
                         // Delay the focus for drop down transition to finish
                         window.setTimeout(function () {
-                            $input.focus();
+                            // If we're scrolled to the top of the list
+                            if ($dropdown.scrollTop() === 0) {
+                                $input.focus();
+                            }
                         }, 50);
                     });
 

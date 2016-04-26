@@ -13,9 +13,10 @@
             li(role="separator", class="divider")
             // ko foreach: filteredBills
             li
-                a(data-bind="click: $parent.selectBill.bind($parent), css: {'month': $data.period === 'Month', 'year': $data.period === 'Year'}")
-                    i.fa.fa-check(data-bind="visible: isBillCommitted")
-                    span(data-bind="text: prettyDate, css: { selected : $parent.selectedBill().prettyDate === prettyDate }")
+                a(data-bind="click: $parent.selectBill.bind($parent), css: {'month': $data.period === 'Month', 'year': $data.period === 'Year', selected : $parent.selectedBill().prettyDate === prettyDate }")
+                    i.fa.fa-check(data-bind="visible: isCommitted() && $data.period === 'Month'")
+                    span(data-bind="text: prettyDate")
+                    i.fa.fa-check(data-bind="visible: isCommitted() && $data.period === 'Year'")
             // /ko
 
     .dropdown.viewControls

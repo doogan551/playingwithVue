@@ -14,7 +14,7 @@
                     li(role="separator", class="divider")
                     // ko foreach: filteredImportExportMonthYear
                     li
-                        a(data-bind="click: function(){ $parent.changeMonth($data) }, text: $data.prettyDate")
+                        a(data-bind="click: function(){ $parent.changeMonth($data) }, text: $data.prettyDate, css: { selected: $parent.selectedMonthYear() && $parent.selectedMonthYear().prettyDate === $data.prettyDate }")
                     // /ko
         .exportContainer
             .exportStep 2. Choose Meter
@@ -27,7 +27,7 @@
                     li(role="separator", class="divider")
                     // ko foreach: filteredImportExportMeters
                     li
-                        a(data-bind="click: function(){ $parent.meterSelected($data) }, text: $data.displayedMeterName")
+                        a(data-bind="click: function(){ $parent.meterSelected($data) }, text: $data.displayedMeterName, css: { selected: $parent.selectedMeter() && $parent.selectedMeter().displayedMeterName === $data.displayedMeterName }")
                     // /ko
         .exportContainer
             .exportStep 3. Download the file

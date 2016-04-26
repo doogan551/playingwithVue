@@ -402,12 +402,22 @@ Opera */
     font-family: monospace;
     color: coral;
 }
-.dropdown-menu.availablePeriods .month {
-    margin-left: 3px;
-}
 .dropdown-menu.availablePeriods .year {
     font-weight: bold;
 }
+.dropdown-menu.availablePeriods i {
+    color: #5BC377;
+}
+.dropdown-menu.availablePeriods .month i {
+    margin-right: 5px;
+}
+.dropdown-menu.availablePeriods .year i {
+    margin-left: 8px;
+}
+.dropdown-menu.availablePeriods .selected, .dropdown-menu.availableMeters .selected {
+    background-color: #E6E6E6;
+}
+
 /* End Main Dashboard ----------------------- */
 
 .thinScroll::-webkit-scrollbar {
@@ -545,7 +555,7 @@ Opera */
 }
 
 .mainContent {
-    padding: 20px 7px 0 7px;
+    padding: 20px 20px 0 20px;
     overflow: auto;
     width: 100%;
 }
@@ -1078,10 +1088,6 @@ Opera */
 .reportsContent .reportsgrid table .koGridReportFooter td.total {
     padding-right: 25px;
 }
-.reportsTopBar .dropdown-menu.availablePeriods i {
-    color: #5BC377;
-    margin-left: 5px;
-}
 .reportsTopBar .committed i.fa-check-square {
     float: left;
     padding: 4px 10px 0 0;
@@ -1231,14 +1237,6 @@ Opera */
 .billingTopBar button i {
     display: none;
     margin-right: 10px;
-}
-.billingTopBar .dropdown-menu.availablePeriods i {
-    color: #5BC377;
-    margin-right: 10px;
-}
-.billingTopBar .availablePeriods .selected {
-    /*background-color: #E6E6E6;*/
-    border-bottom: 1px solid #666;
 }
 /* Billing modal styles */
 /* Watch out here - the left-side green navigation column appears
