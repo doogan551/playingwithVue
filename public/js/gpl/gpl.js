@@ -1348,8 +1348,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                                 if (block.blockType !== 'Constant') {
                                     if (type !== 'output' || block.blockType === 'ControlBlock') {
                                         setDataVars();
-                                    } else {
-                                        gpl.log('skipping', self.label, block.label, type === 'input' ? anchor.anchorType : otherEnd.anchorType);
+                                    // } else {
+                                    //     gpl.log('skipping', self.label, block.label, type === 'input' ? anchor.anchorType : otherEnd.anchorType);
                                     }
                                     // } else {
                                     //     gpl.log('constant found');
@@ -5528,17 +5528,24 @@ gpl.BlockManager = function (manager) {
                 refs = [gpl.point['Point Refs'][0]];
 
             gpl.forEach(bmSelf.newBlocks, function (block) {
+                var data;
                 if (!block.isNonPoint) {
-                    saveObj.adds.push(block.getPointData());
+                    data = block.getPointData();
+
+                    saveObj.adds.push(data);
                 }
             });
 
             gpl.forEach(bmSelf.editedBlocks, function (block) {
+                var data;
+
                 if (!block.isNonPoint) {
-                    saveObj.updates.push({
+                    data = {
                         oldPoint: block._origPointData,
                         newPoint: block.getPointData()
-                    });
+                    };
+
+                    saveObj.updates.push(data);
                 }
             });
 
@@ -5556,6 +5563,44 @@ gpl.BlockManager = function (manager) {
             gpl.point['Point Refs'] = refs;
 
             return saveObj;
+        },
+
+        useEditVersion: function () {
+            // gpl.on('rendered', function () {
+                var changes = gpl.pointChanges;
+
+                gpl.forEachArray(changes.adds, function (block) {
+                    var upi = block.upi,
+                        gplBlock;
+
+                    gplBlock = bmSelf.getBlockByUpi(upi);
+
+                    gplBlock.setPointData(block);
+                });
+
+                gpl.forEachArray(changes.updates, function (block) {
+                    var upi = block.newPoint._id,
+                        gplBlock;
+
+                    gplBlock = bmSelf.getBlockByUpi(upi);
+
+                    gplBlock._origPointData = block.oldPoint;
+
+                    gplBlock.setPointData(block);
+                });
+
+                bmSelf.deletedBlocks = {};
+
+                gpl.forEachArray(changes.deletes, function (upi) {
+                    bmSelf.deletedBlocks[upi] = {
+                        upi: upi
+                    };
+                });
+
+                // bmSelf.newBlocks = changes.newBlocks;
+                // bmSelf.editedBlocks = changes.editedBlocks;
+                // bmSelf.deletedBlocks = changes.deletedBlocks;
+            // });
         },
 
         resetChanges: function () {
@@ -5675,6 +5720,18 @@ gpl.BlockManager = function (manager) {
             if (!ret) {
                 ret = bmSelf.newBlocks[id];
             }
+
+            return ret;
+        },
+
+        getBlockByUpi: function (upi) {
+            var ret = null;
+
+            gpl.forEach(bmSelf.blocks, function (block) {
+                if (block.upi === upi) {
+                    ret = block;
+                }
+            });
 
             return ret;
         },
@@ -5909,6 +5966,9 @@ gpl.BlockManager = function (manager) {
 
         delete bmSelf.blocks[oldBlock.gplId];
         oldBlock.delete();
+
+        delete bmSelf.editedBlocks[oldBlock.upi];
+
         bmSelf.renderAll();
         gpl.log('block deleted');
     });
@@ -5919,6 +5979,8 @@ gpl.BlockManager = function (manager) {
 
     gpl.on('saveForLater', function () {
         bmSelf.prepSaveData(gpl.json.editVersion);
+
+        gpl.json.editVersion.pointChanges = bmSelf.getSaveObject();
     });
 
     bmSelf.create = function (config) {
@@ -6428,6 +6490,13 @@ gpl.Manager = function () {
             managerSelf.useEditVersion = function () {
                 gpl.json.block = gpl.json.editVersion.block;
                 gpl.json.line = gpl.json.editVersion.line;
+
+                gpl.pointChanges = $.extend(true, {}, gpl.json.editVersion.pointChanges);
+
+                gpl.on('rendered', function () {
+                    gpl.blockManager.useEditVersion();
+                });
+
                 managerSelf.confirmEditVersion();
             };
 
