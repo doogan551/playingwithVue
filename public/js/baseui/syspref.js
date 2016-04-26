@@ -2407,7 +2407,8 @@ var notificationsViewModel = function() {
             createEvents = function (schedule, color, title) {
                 var start = datePrefix + convertTime(schedule.startTime || 0),
                     end = convertTime(schedule.endTime || 0),
-                    _events = [];
+                    _events = [],
+                    loops = false;
 
                 if (schedule.allDay) {
                     start = datePrefix + convertTime(0);
@@ -2418,18 +2419,47 @@ var notificationsViewModel = function() {
                     } else {
                         end = datePrefix + end;
                     }
+
+                    if (schedule.endTime !== undefined && schedule.startTime !== undefined && schedule.startTime > schedule.endTime) {
+                        loops = true;
+                    }
                 }
 
                 self.forEachArray(schedule.days, function (day) {
-                    _events.push({
-                        id: makeId(),
-                        start: start,
-                        end: end,
-                        resourceId: day,
-                        backgroundColor: color,
-                        borderColor: '#666666',
-                        title: title
-                    });
+                    if (loops) {
+                        if (schedule.endTime !== 0) {
+                            _events.push({
+                                id: makeId(),
+                                start: datePrefix + convertTime(0),
+                                end: end,
+                                resourceId: day,
+                                backgroundColor: color,
+                                borderColor: '#666666',
+                                title: title
+                            });
+                        }
+
+                        _events.push({
+                            id: makeId(),
+                            start: start,
+                            end: tomorrowPrefix + convertTime(0),
+                            resourceId: day,
+                            backgroundColor: color,
+                            borderColor: '#666666',
+                            title: title
+                        });
+
+                    } else {
+                        _events.push({
+                            id: makeId(),
+                            start: start,
+                            end: end,
+                            resourceId: day,
+                            backgroundColor: color,
+                            borderColor: '#666666',
+                            title: title
+                        });
+                    }
                 });
 
                 return _events;
@@ -2756,6 +2786,10 @@ var notificationsViewModel = function() {
         daySunday: ko.observable(false),
         dayHolidays: ko.observable(false),
 
+        savePolicy: function () {
+            self.savePolicy();
+        },
+
         updateScheduleEvents: function () {
             self.updateScheduleEvents();
 
@@ -2800,6 +2834,7 @@ var notificationsViewModel = function() {
 
             $('#notificationsEditDaysModal').modal('hide');
             self.updateScheduleEvents();
+            self.savePolicy();
         },
 
         getAlertStyleText: function (value) {
@@ -2903,6 +2938,7 @@ var notificationsViewModel = function() {
         addScheduleLayer: function () {
             self.bindings.currPolicy.scheduleLayers.push(ko.viewmodel.fromModel(self.getTemplate('scheduleLayer')));
             self.updateScheduleEvents();
+            self.savePolicy();
         },
 
         deleteScheduleLayer: function (layer, idx) {
@@ -3256,6 +3292,7 @@ var notificationsViewModel = function() {
                             min = parseInt(time[1], 10);
                         observable(hr * 100 + min);
                         context.$parents[2].updateScheduleEvents();
+                        context.$parents[2].savePolicy();
                     }
                 };
 
