@@ -3211,7 +3211,6 @@ var reportsViewModel = function () {
                                 },
                                 yAxisTitle: yAxisTitle
                             });
-                            self.activeDataRequestForChart(false);
                         }
                     }
                 }  else {
@@ -3220,6 +3219,7 @@ var reportsViewModel = function () {
             } else {
                 $reportChartDiv.html("Chart data not available");
             }
+            self.activeDataRequestForChart(false);
         };
 
     self.reportType = "";
