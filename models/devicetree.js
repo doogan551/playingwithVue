@@ -383,18 +383,20 @@ var buildNodes = function(next) {
 
     var buildTree = function() {
         newBranches = [{
-            upNetwork: 4100,
-            ethernets: [4101],
-            serials: []
-        }, {
-            upNetwork: 4101,
-            ethernets: [],
-            serials: [4102]
-        }, {
-            upNetwork: 4102,
-            ethernets: [4100],
-            serials: []
-        }];
+                upNetwork: 4000,
+                ethernets: [4002, 4003],
+                serials: []
+            }, {
+                upNetwork: 4003,
+                ethernets: [4002],
+                serials: [ /*, 4003, 5000*/ ]
+            }
+            /*, {
+                        upNetwork: 5000,
+                        ethernets: [4000, 4002, 4000],
+                        serials: []
+                    }*/
+        ];
         tree = [];
         /*branches: [{
           "upi": 64750,
@@ -419,7 +421,28 @@ var buildNodes = function(next) {
                 }
             });
             return retBranch;
-        }
+        };
+
+        var isInTree = function(tree, network) {
+            console.log('network', network);
+            var inTree = false;
+            if (tree.networkSegment === network) {
+                console.log('returning true');
+                inTree = true;
+            } else if (!!tree.branches.length) {
+                for (var b = 0; b < tree.branches.length; b++) {
+                    var branch = tree.branches[b];
+                    console.log('branch', branch);
+                    inTree = isInTree(branch, network);
+                    console.log('inTree', inTree);
+                    if (!!inTree) {
+                        break;
+                    }
+                }
+            }
+            console.log('return inTree', inTree);
+            return inTree;
+        };
 
         for (var i = 0; i < newBranches.length; i++) {
             isAdded = false;
@@ -427,16 +450,26 @@ var buildNodes = function(next) {
                 var branch = findBranches(tree[t].branches, newBranches[i].upNetwork);
                 if (branch !== null) {
                     newBranches[i].ethernets.forEach(function(ethernet) {
-                        branch.branches.push({
-                            networkSegment: ethernet,
-                            branches: []
-                        });
+                        if (!isInTree(tree[t], ethernet)) {
+                            branch.branches.push({
+                                networkSegment: ethernet,
+                                branches: []
+                            });
+                            console.log('ethernet', ethernet);
+                        } else {
+                            console.log('true ethernet', ethernet);
+                        }
                     });
                     newBranches[i].serials.forEach(function(serial) {
-                        branch.branches.push({
-                            networkSegment: serial,
-                            branches: []
-                        });
+                        if (!isInTree(tree[t], serial)) {
+                            branch.branches.push({
+                                networkSegment: serial,
+                                branches: []
+                            });
+                            console.log('serial', serial);
+                        } else {
+                            console.log('true serial', serial);
+                        }
                     });
                     isAdded = true;
                 }
