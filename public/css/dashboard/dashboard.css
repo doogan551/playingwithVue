@@ -402,17 +402,16 @@ Opera */
     font-family: monospace;
     color: coral;
 }
-.dropdown-menu.availablePeriods .year {
+.dropdown-menu.availablePeriods li.year a {
+    margin-top: 10px;
     font-weight: bold;
 }
 .dropdown-menu.availablePeriods i {
     color: #5BC377;
-}
-.dropdown-menu.availablePeriods .month i {
     margin-right: 5px;
 }
-.dropdown-menu.availablePeriods .year i {
-    margin-left: 8px;
+.dropdown-menu.availablePeriods i.notCommitted {
+    visibility: hidden;
 }
 .dropdown-menu.availablePeriods .selected, .dropdown-menu.availableMeters .selected {
     background-color: #E6E6E6;
@@ -1111,6 +1110,11 @@ Opera */
     padding-bottom: 20px;
 }
 
+.billingContent .units {
+    font-size: smaller;
+    color: #666;
+}
+
 .billTitle {
     font-size: 1.3em;
 }
@@ -1169,7 +1173,7 @@ Opera */
 }
 
 .yearBillTable table td:first-child, .yearBillTable table th:first-child {
-    min-width: 115px;
+    min-width: 225px;
 }
 
 .billTable table tr:last-child td {
@@ -1183,10 +1187,10 @@ Opera */
 .billTable .total, .yearBillTable .total {
     font-weight: bold;
 }
-.yearBillTable .Charges tr:last-child td {
+.yearBillTable .charges tr:last-child td {
     padding-top: 10px;
 }
-.yearBillTable .Charges tr:last-child td:first-child {
+.yearBillTable .charges tr:last-child td:first-child {
     font-weight: bold;
 }
 
@@ -1267,11 +1271,14 @@ Opera */
         width: 8em;
     }
     .yearBillTable table td:not(:first-child), .yearBillTable table th:not(:first-child) {
-        width: 8em;
-        min-width: 1em;
+        width: 125px;
+        min-width: 50px;
+    }
+    .yearBillTable table td:first-child, .yearBillTable table th:first-child {
+        min-width: 125px;
     }
     .yearBillTable table td, .yearBillTable table th {
-        font-size: 0.7em;
+        font-size: 0.8em;
     }
     .billingPortlet {
         page-break-inside: avoid;

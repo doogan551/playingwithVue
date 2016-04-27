@@ -11,13 +11,11 @@
             input.form-control(data-bind="textInput: reportDateFilter", type="text", placeholder="Search...")
             li(role="separator", class="divider")
             // ko foreach: filteredReportMonthYear
-            li
+            li(data-bind="css: {'month': $data.period === 'Month', 'year': $data.period === 'Year', 'selected': $parent.selectedMonthYear().prettyDate === prettyDate }")
                 span(data-bind="id: 'datepicker-' + $index")
-                a(data-bind="click: function(){ $parent.monthSelected($data) }, css: {'month': $data.period === 'Month', 'year': $data.period === 'Year', 'selected': $parent.selectedMonthYear().prettyDate === prettyDate } ")
-                    i.fa.fa-check(data-bind="visible: (!!$data.isReportCommitted ? $data.isReportCommitted() && $data.period === 'Month' : false)")
-                    //- span(data-bind="text: prettyDate, css: {'datepicker month': $data.period === 'Month', 'year': $data.period === 'Year'}")
+                a(data-bind="click: function(){ $parent.monthSelected($data) }")
+                    i.fa.fa-check(data-bind="css: { notCommitted: ($data.isReportCommitted && !$data.isReportCommitted()) }")
                     span(data-bind="text: prettyDate")
-                    i.fa.fa-check(data-bind="visible: (!!$data.isReportCommitted ? $data.isReportCommitted() && $data.period === 'Year' : false)")
             // /ko
 
     .dropdown

@@ -4731,47 +4731,151 @@ tou.utilityPages.Electricity = function() {
             yearBillData.title = self.processBillTitle(self.defaultTitle, bill);
             
             Array.prototype.push.apply(yearBillData.collections, [{
-                name: 'Demand',
-                columns: [{name: 'Name'}],
+                name: {
+                    displayValue: 'Demand',
+                    id: 'demand'
+                },
+                columns: [{
+                    name: {
+                        title:'Name',
+                        visible: true
+                    }
+                }],
                 rows: [{
-                    name: 'On Peak Demand',
+                    name: {
+                        id: 'onPeak',
+                        displayValue: 'On Peak Demand',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
                     data: []
                 }, {
-                    name: 'Off Peak Demand',
+                    name: {
+                        id: 'offPeak',
+                        displayValue: 'Off Peak Demand',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
                     data: []
                 }, {
-                    name: 'Reactive Power at Peak Demand',
+                    name: {
+                        id: 'reactiveAtPeak',
+                        displayValue: 'Reactive Power at Peak Demand',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
                     data: []
                 }]
             }, {
-                name: 'Consumption',
-                columns: [{name: 'Name'}],
+                name: {
+                    displayValue: 'Consumption',
+                    id: 'consumption'
+                },
+                columns: [{
+                    name: {
+                        title:'Name',
+                        visible: true
+                    }
+                }],
                 rows: [{
-                    name: 'Total kWh',
+                    name: {
+                        id: 'total',
+                        displayValue: 'Total Consumption',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
                     data: []
                 }, {
-                    name: 'On Peak kWh',
+                    name: {
+                        id: 'onPeak',
+                        displayValue: 'On Peak Consumption',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
                     data: [],
                 }, {
-                    name: 'Off Peak kWh',
+                    name: {
+                        id: 'offPeak',
+                        displayValue: 'Off Peak Consumption',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
                     data: []
                 }]
             }, {
-                name: 'Load Factor',
-                columns: [{name: 'Name'}],
+                name: {
+                    displayValue: 'Load Factor',
+                    id: 'loadFactor'
+                },
+                columns: [{
+                    name: {
+                        title:'Name',
+                        visible: true
+                    }
+                }],
                 rows: [{
-                    name: 'Load Factor (%)',
+                    name: {
+                        id: 'loadFactor',
+                        displayValue: 'Load Factor',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
                     data: []
                 }]
             }, {
-                name: 'Charges',
-                columns: [{name: 'Name'}],
+                name: {
+                    displayValue: 'Charges',
+                    id: 'charges'
+                },
+                columns: [{
+                    name: {
+                        title:'Name',
+                        visible: true
+                    }
+                }],
                 rows: []
             }, {
-                name: 'NET Cost',
-                columns: [{name: 'Name'}],
+                name: {
+                    displayValue: 'NET Cost',
+                    id: 'netCost'
+                },
+                columns: [{
+                    name: {
+                        title:'Name',
+                        visible: true
+                    }
+                }],
                 rows: [{
-                    name: 'NET Cost Per kWh',
+                    name: {
+                        id: 'kwh',
+                        displayValue: 'NET Cost Per kWh',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
                     data: []
                 }]
             }]);
@@ -4812,7 +4916,7 @@ tou.utilityPages.Electricity = function() {
                     December: 'Dec'
                 },
                 buildChargesCollection = function () {
-                    var chargesCollection = getCollection(collections, 'Charges'),
+                    var chargesCollection = getCollection(collections, 'charges'),
                         chargesRows = chargesCollection.rows,
                         chargeTotals = [];
 
@@ -4822,8 +4926,8 @@ tou.utilityPages.Electricity = function() {
                             total = 0;
 
                         chargesLineItems.forEach(function (lineItem) {
-                            var sourceRow = getRow(sourceRows, lineItem),
-                                chargeRow = getRow(chargesRows, lineItem),
+                            var sourceRow = getRow(sourceRows, lineItem, 'displayValue'),
+                                chargeRow = getRow(chargesRows, lineItem, 'displayValue'),
                                 data = {
                                     value: (sourceRow && sourceRow.amount.value) || 0,
                                     displayValue: (sourceRow && sourceRow.amount.displayValue) || '-'
@@ -4832,7 +4936,10 @@ tou.utilityPages.Electricity = function() {
 
                             if (!chargeRow) {
                                 chargesRows.push({
-                                    name: lineItem,
+                                    name: {
+                                        displayValue: lineItem,
+                                        visible: true
+                                    },
                                     data: []
                                 });
                                 
@@ -4861,15 +4968,18 @@ tou.utilityPages.Electricity = function() {
                     });
                     
                     chargesRows.push({
-                        name: 'Total',
+                        name: {
+                            displayValue: 'Total',
+                            visible: true
+                        },
                         data: chargeTotals,
                         isTotalRow: true
                     });
                 },
                 buildNetCosts = function () {
-                    var netCostData = getRow(getCollection(collections, 'NET Cost').rows, 'NET Cost Per kWh').data, // empty array
-                        chargeTotals = getRow(getCollection(collections, 'Charges').rows, 'Total').data, // array
-                        totalKwhData = getRow(getCollection(collections, 'Consumption').rows, 'Total kWh').data; // array
+                    var netCostData = getRow(getCollection(collections, 'netCost').rows, 'kwh').data, // empty array
+                        chargeTotals = getRow(getCollection(collections, 'charges').rows, 'Total', 'displayValue').data, // array
+                        totalKwhData = getRow(getCollection(collections, 'consumption').rows, 'total').data; // array
 
                     chargeTotals.forEach(function (total, index) {
                         var value = total.value / totalKwhData[index].value,
@@ -4892,32 +5002,32 @@ tou.utilityPages.Electricity = function() {
                 },
                 getMaxAvgAndTotals = function () {
                     var lookupTable = {
-                            'Demand': {
+                            'demand': {
                                 calc: 'Average',
                                 digits: 0,
                                 prepend: '',
                                 append: ''
                             },
-                            'Consumption': {
+                            'consumption': {
                                 calc: 'Total',
                                 digits: 0,
                                 prepend: '',
                                 append: ''
                             },
-                            'Load Factor': {
+                            'loadFactor': {
                                 calc: 'Average',
                                 digits: 1,
                                 prepend: '',
                                 append: '%'
                             },
-                            'Charges': {
+                            'charges': {
                                 calc: 'Total',
                                 digits: 2,
                                 minDigits: 2,
                                 prepend: '$',
                                 append: ''
                             },
-                            'NET Cost': {
+                            'netCost': {
                                 calc: 'Average',
                                 digits: 4,
                                 minDigits: 4,
@@ -4927,10 +5037,15 @@ tou.utilityPages.Electricity = function() {
                         };
 
                     yearData.collections.forEach(function (collection) {
-                        var lookup = lookupTable[collection.name];
+                        var lookup = lookupTable[collection.name.id];
 
                         // Add column for calculation output
-                        collection.columns.push({name: lookup.calc});
+                        collection.columns.push({
+                            name: {
+                                title: lookup.calc,
+                                visible: true
+                            }
+                        });
 
                         collection.rows.forEach(function (row) {
                             var max = {
@@ -4939,23 +5054,33 @@ tou.utilityPages.Electricity = function() {
                                 },
                                 sum = 0,
                                 cnt = 0,
-                                data = {};
+                                data = {},
+                                unitsUsed = {},
+                                unitValue;
+
                             row.data.forEach(function (item, index) {
                                 // Get maximum
                                 if (item.value > max.value) {
                                     max.value = item.value;
                                     max.index = index;
                                 }
-                                // Get sum
+                                // Get sum - assuming same units for all data - we'll need to evaluate this when we add support
+                                // for meters with different units
                                 sum += item.value;
                                 cnt++;
+                                
+                                // Evaluate units
+                                unitValue = item.units && item.units.displayValue;
+                                if (unitValue && unitValue.length && !unitsUsed[unitValue]) {
+                                    unitsUsed[item.units.displayValue] = true;
+                                }
                             });
                             // Update the isMax key on the maximum entry
                             if (max.index !== null) {
                                 row.data[max.index].isMax = true;
                             }
 
-                            // Get our data
+                            // Add the average/total result to our data set
                             if (lookup.calc === 'Total') {
                                 data.value = sum;
                                 data.isTotal = true;
@@ -4969,31 +5094,49 @@ tou.utilityPages.Electricity = function() {
                                 prepend: lookup.prepend,
                                 append: lookup.append
                             });
-                            data.isMax = false;
                             row.data.push(data);
+
+                            // Add units to our demand and consumption rows
+                            if (collection.name.id === 'demand' || collection.name.id === 'consumption') {
+                                // Convert to array
+                                unitsUsed = Object.keys(unitsUsed);
+                                // If only one unit type used
+                                if (unitsUsed.length === 1) {
+                                    // Set the units visible once for the entire row
+                                    row.units.displayValue = unitsUsed[0];
+                                    row.units.visible = true;
+                                } else {
+                                    // Set the units visible for each entry
+                                    row.data.forEach(function (item) {
+                                        if (item.units && item.units.displayValue.length) {
+                                            item.units.visible = true;
+                                        }
+                                    });
+                                }
+                            }
                         });
                     });
                 },
-                getCollection = function (collections, name) {
-                    for (var i = 0, len = collections.length; i < len; i++) {
-                        if (collections[i].name === name) {
-                            return collections[i];
+                getRowOrCollection = function (data, name, key) {
+                    var _name;
+
+                    for (var i = 0, len = data.length; i < len; i++) {
+                        _name = data[i].name;
+
+                        if (typeof _name === 'object') {
+                            _name = _name[key || 'id'];
+                        }
+
+                        if (_name === name) {
+                            return data[i];
                         }
                     }
                 },
-                getRow = function (rows, name) {
-                    var rowName;
-                    for (var i = 0, len = rows.length; i < len; i++) {
-                        rowName = rows[i].name;
-                        
-                        if (typeof rowName === 'object') {
-                            rowName = rowName.displayValue;
-                        }
-
-                        if (rowName === name) {
-                            return rows[i];
-                        }
-                    }
+                getCollection = function (collections, name, key) {
+                    return getRowOrCollection(collections, name, key);
+                },
+                getRow = function (rows, name, key) {
+                    return getRowOrCollection(rows, name, key);
                 },
                 getUsage = function (data, type, peak) {
                     var collections = data.collections,
@@ -5049,26 +5192,26 @@ tou.utilityPages.Electricity = function() {
                     };
                 },
                 process = {
-                    'Demand': function (collection, sourceData, index) {
-                        getRow(collection.rows, 'On Peak Demand').data.push(getUsage(sourceData, 'demand', 'on'));
-                        getRow(collection.rows, 'Off Peak Demand').data.push(getUsage(sourceData, 'demand', 'off'));
-                        getRow(collection.rows, 'Reactive Power at Peak Demand').data.push(getUsage(sourceData, 'reactive', 'both'));
+                    'demand': function (collection, sourceData, index) {
+                        getRow(collection.rows, 'onPeak').data.push(getUsage(sourceData, 'demand', 'on'));
+                        getRow(collection.rows, 'offPeak').data.push(getUsage(sourceData, 'demand', 'off'));
+                        getRow(collection.rows, 'reactiveAtPeak').data.push(getUsage(sourceData, 'reactive', 'both'));
                     },
-                    'Consumption': function (collection, sourceData, index) {
+                    'consumption': function (collection, sourceData, index) {
                         var data;
                         
                         // We handle our total consumption a bit differently because we need to add the 'isTotal' key to our data set
                         data = getUsage(sourceData, 'consumption', 'both');
                         data.isTotal = true;
-                        getRow(collection.rows, 'Total kWh').data.push(data);
+                        getRow(collection.rows, 'total').data.push(data);
                         
-                        getRow(collection.rows, 'On Peak kWh').data.push(getUsage(sourceData, 'consumption', 'on'));
-                        getRow(collection.rows, 'Off Peak kWh').data.push(getUsage(sourceData, 'consumption', 'off'));
+                        getRow(collection.rows, 'onPeak').data.push(getUsage(sourceData, 'consumption', 'on'));
+                        getRow(collection.rows, 'offPeak').data.push(getUsage(sourceData, 'consumption', 'off'));
                     },
-                    'Load Factor': function (collection, sourceData, index) {
-                        getRow(collection.rows, 'Load Factor (%)').data.push(getLoadFactor(sourceData));
+                    'loadFactor': function (collection, sourceData, index) {
+                        getRow(collection.rows, 'loadFactor').data.push(getLoadFactor(sourceData));
                     },
-                    'Charges': function (collection, sourceData, index) {
+                    'charges': function (collection, sourceData, index) {
                         var billTotalChargesCollection = getCollection(sourceData.collections, 'Total Charges'),
                             rows = (billTotalChargesCollection && billTotalChargesCollection.rows) || [];
                         rows.forEach(function (row) {
@@ -5079,19 +5222,22 @@ tou.utilityPages.Electricity = function() {
                             }
                         });
                     },
-                    'NET Cost': function (collection, sourceData, index) {
+                    'netCost': function (collection, sourceData, index) {
+                        // nothing to do with this collection yet
                     }
                 };
 
             yearData.source.forEach(function (source, index) {
                 yearData.collections.forEach(function (collection) {
                     collection.columns.push({
-                        month: source.month,
-                        name: monthShortLookup[source.month],
+                        name: {
+                            title: monthShortLookup[source.month],
+                            visible: true,
+                        },
                         season: source.season,
                         start: source.start
                     });
-                    process[collection.name](collection, source.data, index);
+                    process[collection.name.id](collection, source.data, index);
                 });
             });
 
@@ -5101,6 +5247,7 @@ tou.utilityPages.Electricity = function() {
             buildNetCosts();
             // Identify the maximums in each row & add total/average column
             getMaxAvgAndTotals();
+            // 
 
             delete yearData.source;
         },

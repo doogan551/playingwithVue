@@ -12,11 +12,10 @@
             input.form-control(data-bind="textInput: billsFilter", type="text", placeholder="Search...")
             li(role="separator", class="divider")
             // ko foreach: filteredBills
-            li
-                a(data-bind="click: $parent.selectBill.bind($parent), css: {'month': $data.period === 'Month', 'year': $data.period === 'Year', selected : $parent.selectedBill().prettyDate === prettyDate }")
-                    i.fa.fa-check(data-bind="visible: isCommitted() && $data.period === 'Month'")
+            li(data-bind="css: {'month': $data.period === 'Month', 'year': $data.period === 'Year', selected : $parent.selectedBill().prettyDate === prettyDate }")
+                a(data-bind="click: $parent.selectBill.bind($parent)")
+                    i.fa.fa-check(data-bind="css: { notCommitted: !isCommitted() }")
                     span(data-bind="text: prettyDate")
-                    i.fa.fa-check(data-bind="visible: isCommitted() && $data.period === 'Year'")
             // /ko
 
     .dropdown.viewControls
@@ -153,18 +152,28 @@
 
             // ko foreach: yearBillData().collections
             .billingPortlet
-                .title(data-bind="text: name")
+                .title(data-bind="text: name.displayValue")
                 .yearBillTable
-                    table(data-bind="css: $data.name.split(' ').join('')")
+                    table(data-bind="css: $data.name.id")
                         tr(data-bind="foreach: columns")
                             th(data-bind="css: $data.season")
-                                span(data-bind="text: name")
+                                span(data-bind="text: name.title")
                         // ko foreach: rows
                         tr
                             td
-                                span(data-bind="text: name")
+                                span(data-bind="text: name.displayValue")
+                                // ko if: $data.units && $data.units.visible
+                                span &nbsp;(
+                                span(data-bind="text: units.displayValue")
+                                span )
+                                // /ko
+
                             // ko foreach: data
-                            td(data-bind="text: $data.displayValue, css: { max: $data.isMax, total: $data.isTotal }")
+                            td
+                                span(data-bind="text: $data.displayValue, css: { max: $data.isMax, total: $data.isTotal }")
+                                span(class="units", data-bind="if: $data.units && $data.units.visible")
+                                    |&nbsp;
+                                    span(data-bind="text: units.displayValue")
                             // /ko
                         // /ko
             // /ko
