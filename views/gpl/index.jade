@@ -36,6 +36,7 @@ html
             button.btn.btn-primary.btn-sm#saveForLater(type="button", style="display:none", data-bind="visible: isEdit === true") Save For Later
             button.btn.btn-danger.btn-sm#cancel(type="button", style="display:none", data-bind="visible: isEdit === true") Cancel
             button.btn.btn-primary.btn-sm#edit(type="button", style="display:none", data-bind="visible: isEdit !== true") Edit
+            span.editVersionAvailable(data-bind="visible: editVersionAvailable") *Edit Version Available
             .zoomSection.pull-right
                 a.mr5(href="", title="Reset Zoom", data-bind="click: resetZoom")
                     i.fa.fa-search
