@@ -326,6 +326,22 @@ td.filterName {
     display: inline-block;
     margin-left: 50px;
 }
+.tabViewReport .chartButtons {
+    display: inline-flex;
+    padding: 3px;
+    margin-left: 50px;
+    margin-top: -6px;
+}
+.tabViewReport .chartButtons a.btn.btn-default {
+    padding: 4px 6px 0px 6px;
+    margin-left: -6px;
+    border-radius: 0px 4px 4px 0px;
+    height: 30px;
+    margin-top: 2px;
+}
+.tabViewReport .chartButtons i.fa-print {
+    padding-right: 3px;
+}
 #reportColumns {
     overflow-y: auto;
 }
@@ -646,6 +662,7 @@ input.form-control.globalPrecision {
 .availableChartTypes.chartTab > .btn {
     padding: 4px;
     margin-top: 2px;
+    border-radius: 4px 0px 0px 4px;
 }
 .panel-heading a.panel-anchor:after {
     font-family:'Glyphicons Halflings';

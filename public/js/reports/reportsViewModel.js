@@ -1967,6 +1967,8 @@ var reportsViewModel = function () {
             return chartData;
         },
         getOnlyChartData = function (data) {
+            self.activeRequestForChart(true);
+            self.chartSpinnerTitle("Formatting Data for Chart");
             var columnArray = $.extend(true, [], self.listOfColumns()),
                 columnConfig,
                 i,
@@ -2051,6 +2053,7 @@ var reportsViewModel = function () {
                     data: columnData
                 });
             }
+            self.activeRequestForChart(false);
             return setYaxisValues(result);
         },
         adjustViewReportTabHeightWidth = function () {
@@ -2068,8 +2071,9 @@ var reportsViewModel = function () {
             $tabViewReport.find(".tab-content").css('height', $tabViewReport.height() - 45);
 
             if ($activePane.attr("id") === "chartData") {
-                $activePane.css('height', (window.innerHeight - 120));
+                $activePane.css('height', (window.innerHeight - 90));
                 $activePane.css('width', (window.innerWidth - 130));
+                $activePane.css('margin-top', '-22px');
             } else if ($activePane.attr("id") === "gridData") {
                 $dataTablesScrollHead = $tabViewReport.find('.dataTables_scrollHead');
                 $dataTablesScrollBody = $tabViewReport.find('.dataTables_scrollBody');
@@ -3087,20 +3091,31 @@ var reportsViewModel = function () {
                 console.log(" - * - * - renderPropertyReport() ERROR = ", data.err);
             }
         },
-        renderChart = function () {
-            self.activeDataRequestForChart(true);
-            $reportChartDiv.html("");
-            adjustViewReportTabHeightWidth();
-
+        renderChart = function (formatForPrint) {
             var trendPlot,
                 maxDataRowsForChart = 1000,
-                chartType = getValueBasedOnText(self.listOfChartTypes, self.selectedChartType()),
+                chartType,
                 chartTitle = self.reportDisplayTitle(),
                 subTitle = "",
                 toolTip,
-                yAxisTitle = "the Y-Axis",
-                chartWidth = $reportChartDiv.parent().width(),
-                chartHeight = $reportChartDiv.parent().height();
+                yAxisTitle,
+                spinnerText,
+                chartWidth,
+                chartHeight;
+
+            self.activeRequestForChart(true);
+            if (!!formatForPrint) {
+                spinnerText = "Configuring "  + self.selectedChartType() + " Chart for printing....";
+            } else {
+                spinnerText = "Rending "  + self.selectedChartType() + " Chart....";
+            }
+            self.chartSpinnerTitle(spinnerText);
+            $reportChartDiv.html("");
+            adjustViewReportTabHeightWidth();
+
+            chartType = getValueBasedOnText(self.listOfChartTypes, self.selectedChartType());
+            chartWidth = (!!formatForPrint ? 950 : $reportChartDiv.parent().width());
+            chartHeight = (!!formatForPrint ? 650 : $reportChartDiv.parent().height());
 
             if (!!reportChartData && !!reportChartData[0]) {
                 if (reportChartData[0].data.length < maxDataRowsForChart) {
@@ -3126,100 +3141,102 @@ var reportsViewModel = function () {
                         });
                     }
 
-                    if ($reportChartDiv.length > 0) {
-                        if (self.selectedChartType() === "Pie") {
-                            $reportChartDiv.highcharts({
-                                turboThreshold: maxDataRowsForChart,
-                                chart: {
-                                    width: chartWidth,
-                                    height: chartHeight,
-                                    plotBackgroundColor: null,
-                                    plotBorderWidth: null,
-                                    plotShadow: false,
-                                    type: 'pie'
-                                },
-                                title: {
-                                    text: chartTitle
-                                },
-                                subtitle: {
-                                    text: subTitle
-                                },
-                                tooltip: {
-                                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-                                },
-                                plotOptions: {
-                                    pie: {
-                                        allowPointSelect: true,
-                                        cursor: 'pointer',
-                                        dataLabels: {
-                                            enabled: true,
-                                            format: '<b>{point.name}</b>: {point.percentage:.1f} %',
-                                            style: {
-                                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                    setTimeout(function () {
+                        if ($reportChartDiv.length > 0) {
+                            if (self.selectedChartType() === "Pie") {
+                                $reportChartDiv.highcharts({
+                                    turboThreshold: maxDataRowsForChart,
+                                    chart: {
+                                        width: chartWidth,
+                                        height: chartHeight,
+                                        plotBackgroundColor: null,
+                                        plotBorderWidth: null,
+                                        plotShadow: false,
+                                        type: 'pie'
+                                    },
+                                    title: {
+                                        text: chartTitle
+                                    },
+                                    subtitle: {
+                                        text: subTitle
+                                    },
+                                    tooltip: {
+                                        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                                    },
+                                    plotOptions: {
+                                        pie: {
+                                            allowPointSelect: true,
+                                            cursor: 'pointer',
+                                            dataLabels: {
+                                                enabled: true,
+                                                format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                                                style: {
+                                                    color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                                                }
                                             }
                                         }
-                                    }
-                                },
-                                series: reportChartData
-                            });
-                        } else {
-                            if (self.selectedChartType() !== "Column") {
-                                toolTip = {
-                                    formatter: function () {
-                                        return '<span style="font-size: 10px">' + moment(this.x).format("dddd, MMM Do, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.point.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + (!!this.point.enumText ? '-' + this.point.enumText : '') + '</b><br/>';
+                                    },
+                                    series: reportChartData
+                                });
+                            } else {
+                                if (self.selectedChartType() !== "Column") {
+                                    toolTip = {
+                                        formatter: function () {
+                                            return '<span style="font-size: 10px">' + moment(this.x).format("dddd, MMM Do, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.point.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + (!!this.point.enumText ? '-' + this.point.enumText : '') + '</b><br/>';
+                                        }
                                     }
                                 }
-                            }
 
-                            trendPlot = new TrendPlot({
-                                turboThreshold: maxDataRowsForChart,
-                                width: chartWidth,
-                                height: chartHeight,
-                                target: $reportChartDiv,
-                                title: chartTitle,
-                                subtitle: subTitle,
-                                y: 'value',
-                                x: 'timeStamp',
-                                enumText: 'enumText',
-                                //highlightMax: true,
-                                data: reportChartData,
-                                type: chartType,
-                                chart: {
-                                    zoomType: 'x'
-                                },
-                                tooltip: toolTip,
-                                //plotOptions: {
-                                //    series: {
-                                //        cursor: 'pointer',
-                                //        point: {
-                                //            events: {
-                                //                click: function () {
-                                //                    alert('x: ' + this.x + ', y: ' + this.y);
-                                //                }
-                                //            }
-                                //        }
-                                //    }
-                                //},
-                                xAxis: {
-                                    allowDecimals: false
-                                },
-                                legend: {
-                                    layout: 'vertical',
-                                    align: 'right',
-                                    verticalAlign: 'middle',
-                                    borderWidth: 0
-                                },
-                                yAxisTitle: yAxisTitle
-                            });
+                                trendPlot = new TrendPlot({
+                                    turboThreshold: maxDataRowsForChart,
+                                    width: chartWidth,
+                                    height: chartHeight,
+                                    target: $reportChartDiv,
+                                    title: chartTitle,
+                                    subtitle: subTitle,
+                                    y: 'value',
+                                    x: 'timeStamp',
+                                    enumText: 'enumText',
+                                    //highlightMax: true,
+                                    data: reportChartData,
+                                    type: chartType,
+                                    chart: {
+                                        zoomType: 'x'
+                                    },
+                                    tooltip: toolTip,
+                                    //plotOptions: {
+                                    //    series: {
+                                    //        cursor: 'pointer',
+                                    //        point: {
+                                    //            events: {
+                                    //                click: function () {
+                                    //                    alert('x: ' + this.x + ', y: ' + this.y);
+                                    //                }
+                                    //            }
+                                    //        }
+                                    //    }
+                                    //},
+                                    xAxis: {
+                                        allowDecimals: false
+                                    },
+                                    legend: {
+                                        layout: 'vertical',
+                                        align: 'right',
+                                        verticalAlign: 'middle',
+                                        borderWidth: 0
+                                    },
+                                    yAxisTitle: yAxisTitle
+                                });
+                            }
                         }
-                    }
-                }  else {
+                        self.activeRequestForChart(false);
+                    }, 110);
+                } else {
                     $reportChartDiv.html("Too many data rows for " + self.selectedChartType() + " Chart. Max = " + maxDataRowsForChart);
                 }
             } else {
                 $reportChartDiv.html("Chart data not available");
             }
-            self.activeDataRequestForChart(false);
         };
 
     self.reportType = "";
@@ -3279,6 +3296,8 @@ var reportsViewModel = function () {
 
     self.columnPropertiesSearchFilter = ko.observable("-blank-");
 
+    self.chartSpinnerTitle = ko.observable("");
+
     self.truncatedData = ko.observable(false);
 
     self.designChanged = ko.observable(true);
@@ -3289,7 +3308,7 @@ var reportsViewModel = function () {
 
     self.activeDataRequest = ko.observable(false);
 
-    self.activeDataRequestForChart = ko.observable(false);
+    self.activeRequestForChart = ko.observable(false);
 
     self.reportResultViewed = ko.observable(true);
 
@@ -3300,6 +3319,17 @@ var reportsViewModel = function () {
     self.listOfColumns = ko.observableArray([]);
 
     self.listOfFilters = ko.observableArray([]);
+
+    self.printDiv = function () {
+        renderChart(true);
+        setTimeout(function () {
+            $reportChartDiv.css('overflow', 'visible');
+            $reportChartDiv.printArea({
+                mode: 'iframe'
+            });
+            $reportChartDiv.css('overflow', 'auto');
+        }, 1500);
+    };
 
     self.deleteColumnRow = function (item) {
         clearPointRefSlot(item.AppIndex);
@@ -3670,6 +3700,11 @@ var reportsViewModel = function () {
         renderChart();
     };
 
+    self.focusGridView = function () {
+        self.selectViewReportTabSubTab("gridData");
+        adjustViewReportTabHeightWidth();
+    };
+
     self.clearColumnPoint = function (indexOfColumn) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn];
@@ -3767,12 +3802,9 @@ var reportsViewModel = function () {
     };
 
     self.selectChartType = function (element, selectedItem, drawChart) {
-        var tempArray = self.listOfChartTypes,
-            i;
-
-        for (i = 0; i < tempArray.length; i++) {
-            if (tempArray[i].value === selectedItem) {
-                self.selectedChartType(tempArray[i].text);
+        for (var i = 0; i < self.listOfChartTypes.length; i++) {
+            if (self.listOfChartTypes[i].value === selectedItem) {
+                self.selectedChartType(self.listOfChartTypes[i].text);
                 self.designChanged(true);
                 self.unSavedDesignChange(true);
                 break;
@@ -3919,7 +3951,7 @@ var reportsViewModel = function () {
     }, self);
 
     self.displayChartSpinner = ko.computed(function () {
-        return (self.activeDataRequestForChart());
+        return (self.activeRequestForChart());
     }, self);
 
     self.displayTabSpinner = ko.computed(function () {
