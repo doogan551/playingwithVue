@@ -531,7 +531,7 @@ function deviceTree() {
   var DeviceTree = require('../models/devicetree');
   db.connect(connectionString.join(''), function(err) {
     DeviceTree.buildTree({}, function(err, result) {
-      console.log(result);
+      console.log('done', result);
     });
   });
 }

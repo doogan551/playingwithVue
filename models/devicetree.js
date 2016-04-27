@@ -59,6 +59,7 @@ module.exports = {
             });
         });
     },
+
     buildTree: function(data, cb) {
         deviceTree = [];
         server = {};
@@ -72,13 +73,13 @@ module.exports = {
 
         buildNodes(function(err) {
             // makeTree(function(err) {
-                sortTree(function(err) {
-                    return cb(err, {
-                        tree: deviceTree,
-                        networkNumbers: networkNumbers.sort(sortArray),
-                        badNumbers: badNumbers.sort(sortArray)
-                    });
+            sortTree(function(err) {
+                return cb(err, {
+                    /* tree: deviceTree,
+                     networkNumbers: networkNumbers.sort(sortArray),
+                     badNumbers: badNumbers.sort(sortArray)*/
                 });
+            });
             // });
         });
     }
@@ -226,7 +227,7 @@ var makeTree = function(next) {
 
                 async.eachSeries(deviceBranch.networks, function(branchNetwork, callback2) {
                     if (device._id === 181) {
-                        console.log(startNetworks, branchNetwork, badNetworks);
+                        // console.log(startNetworks, branchNetwork, badNetworks);
                     }
                     if (branchNetwork !== 0 && startNetworks.indexOf(branchNetwork) < 0 && badNetworks.indexOf(branchNetwork) < 0) {
                         startNetworks.push(branchNetwork);
@@ -296,17 +297,15 @@ var buildNodes = function(next) {
 
     var removeBranches = function() {
         // TODO: find way to avoid deleting circular tree dependencies. 100 > 219 > 100
-        console.log(newBranches);
         for (var i = 0; i < unknownBranches.length; i++) {
             for (var j = 0; j < newBranches.length; j++) {
                 if (unknownBranches[i].ethernets.indexOf(newBranches[j].upNetwork) > -1 || unknownBranches[i].serials.indexOf(newBranches[j].upNetwork) > -1) {
                     for (var b = 0; b < badNetworks.length; b++) {
                         if (badNetworks.indexOf(unknownBranches[i].upNetwork) > -1) {
-                            console.log('recursion', unknownBranches[i].upNetwork, newBranches[j].upNetwork);
+                            // console.log('recursion', unknownBranches[i].upNetwork, newBranches[j].upNetwork);
                         }
                     }
                     badNetworks.push(newBranches[j].upNetwork);
-                    console.log(newBranches[j].upNetwork);
                     newBranches.splice(j, 1);
                     j--;
                 }
@@ -382,6 +381,110 @@ var buildNodes = function(next) {
         }
     };
 
+    var buildTree = function() {
+        newBranches = [{
+            upNetwork: 4100,
+            ethernets: [4101],
+            serials: []
+        }, {
+            upNetwork: 4101,
+            ethernets: [],
+            serials: [4102]
+        }, {
+            upNetwork: 4102,
+            ethernets: [4100],
+            serials: []
+        }];
+        tree = [];
+        /*branches: [{
+          "upi": 64750,
+          "text": "zWell 5_UNV",
+          "status": "Stop Scan",
+          "protocol": 0,
+          "networkSegment": 1,
+          "networks": [],
+          "branches": []
+        }],
+        "networkSegment": 1*/
+        var possibleTops = [];
+        var isAdded = false;
+
+        var findBranches = function(branchArray, networkNumber) {
+            var retBranch = null;
+            branchArray.forEach(function(branch) {
+                if (branch.networkSegment === networkNumber) {
+                    retBranch = branch;
+                } else if (!!branch.branches.length) {
+                    retBranch = findBranches(branch.branches, networkNumber);
+                }
+            });
+            return retBranch;
+        }
+
+        for (var i = 0; i < newBranches.length; i++) {
+            isAdded = false;
+            for (var t = 0; t < tree.length; t++) {
+                var branch = findBranches(tree[t].branches, newBranches[i].upNetwork);
+                if (branch !== null) {
+                    newBranches[i].ethernets.forEach(function(ethernet) {
+                        branch.branches.push({
+                            networkSegment: ethernet,
+                            branches: []
+                        });
+                    });
+                    newBranches[i].serials.forEach(function(serial) {
+                        branch.branches.push({
+                            networkSegment: serial,
+                            branches: []
+                        });
+                    });
+                    isAdded = true;
+                }
+                /*if (tree[t].networkSegment === newBranches[i].upNetwork) {
+                    isAdded = true;
+                    newBranches[i].ethernets.forEach(function(ethernet) {
+                        if (tree[t].branches.indexOf(ethernet) < 0) {
+                            node.branches.push({
+                                networkSegment: ethernet,
+                                branches: []
+                            });
+                        }
+                    });
+                    newBranches[i].serials.forEach(function(serial) {
+                        if (tree[t].branches.indexOf(serial) < 0) {
+                            node.branches.push({
+                                networkSegment: serial,
+                                branches: []
+                            });
+                        }
+                    });
+                }*/
+            }
+            if (!isAdded) {
+                var node = {
+                    networkSegment: newBranches[i].upNetwork,
+                    branches: []
+                };
+                newBranches[i].ethernets.forEach(function(ethernet) {
+                    node.branches.push({
+                        networkSegment: ethernet,
+                        branches: []
+                    });
+                });
+                newBranches[i].serials.forEach(function(serial) {
+                    node.branches.push({
+                        networkSegment: serial,
+                        branches: []
+                    });
+                });
+
+                tree.push(node);
+                possibleTops.push(newBranches[i].upNetwork);
+            }
+        }
+        console.log('tree', JSON.stringify(tree), possibleTops);
+    };
+
     Utility.get({
         collection: 'points',
         query: {
@@ -406,7 +509,8 @@ var buildNodes = function(next) {
         buildNodes(devices);
         buildBranches(devices);
         newBranches = _.cloneDeep(unknownBranches);
-        removeBranches();
+        // removeBranches();
+        buildTree();
         for (var i = 0; i < newBranches.length; i++) {
             topLevels.push(newBranches[i].upNetwork);
         }
