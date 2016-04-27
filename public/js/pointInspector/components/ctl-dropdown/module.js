@@ -42,44 +42,45 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         this.enumSetName = params.enumSetName;
         this.utility = params.rootContext.utility;
         this.isInEditMode = params.rootContext.isInEditMode;
-    }
+        this.getOptions = ko.computed(function() {
+            var options;
+            var data = this.data;
+            var valueIsInOptions;
 
-    // Use prototype to declare any public methods
-    ViewModel.prototype.getOptions = function() {
-        var options,
-            data = this.data,
-            valueIsInOptions;
+            if (typeof data.ValueOptions == 'function') {
+                options = data.ValueOptions();
+            } else {
+                options = this.utility.config.Utility.pointTypes.getEnums(this.enumSetName, this.propertyName);
+            }
 
-        if (typeof data.ValueOptions == 'function') {
-            options = data.ValueOptions();
-        } else {
-            options = this.utility.config.Utility.pointTypes.getEnums(this.enumSetName, this.propertyName);
-        }
+            if (!options) {
+                options = this.root.point.data.Value.ValueOptions();
+            }
 
-        if (!options) {
-            options = this.root.point.data.Value.ValueOptions();
-        }
-
-        valueIsInOptions = ko.utils.arrayFirst(options, function(option) {
-            return ko.unwrap(option.value) == data.eValue();
-        });
-        if (!valueIsInOptions) {
-            options.unshift({
-                name: data.Value(),
-                value: data.eValue(),
-                badProperty: true
+            valueIsInOptions = ko.utils.arrayFirst(options, function(option) {
+                return ko.unwrap(option.value) == data.eValue();
             });
-        } else {
-            for (var o = 0; o < options.length; o++) {
-                if (ko.isObservable(options[0].name)) {
-                    if (data.eValue() === options[o].value()) {
-                        data.Value(options[o].name());
+            if (!valueIsInOptions) {
+                options.unshift({
+                    name: data.Value(),
+                    value: data.eValue(),
+                    badProperty: true
+                });
+            } else {
+                for (var o = 0; o < options.length; o++) {
+                    if (ko.isObservable(options[0].name)) {
+                        if (data.eValue() === options[o].value()) {
+                            data.Value(options[o].name());
+                        }
                     }
                 }
             }
-        }
-        return options;
-    };
+            return options;
+        }, this);
+    }
+
+    // Use prototype to declare any public methods
+    // ViewModel.prototype.
     //knockout calls this when component is removed from view
     //Put logic here to dispose of subscriptions/computeds
     //or cancel setTimeouts or any other possible memory leaking code
