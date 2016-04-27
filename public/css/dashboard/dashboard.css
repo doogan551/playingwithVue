@@ -711,6 +711,23 @@ Opera */
 
 /* modals */
 
+/* General Use */
+.commitUncommit .warning {
+    color: red;
+    margin-top: 20px;
+}
+.commitUncommit .info {
+    margin-top: 20px;
+}
+.commitUncommit .warning i, .commitUncommit .info i {
+    padding-right: 10px;
+}
+.commitControls i, .uncommitControls i {
+    display: none;
+    margin-right: 10px;
+}
+
+/* Electrictiy Dashboard */
 .scaleBar {
     padding-top: 3px;
 }
@@ -1251,20 +1268,6 @@ Opera */
     float: left;
     padding: 5px 10px;
     font-size: 30px;
-}
-.billingModal .warning {
-    color: red;
-    margin-top: 20px;
-}
-.billingModal .info {
-    margin-top: 20px;
-}
-.billingModal .warning i, .billingModal .info i {
-    padding-right: 10px;
-}
-.modal .commitControls i, .modal .uncommitControls i {
-    display: none;
-    margin-right: 10px;
 }
 @media print {
     .billTable table td:not(:first-child), .billTable table th:not(:first-child) {

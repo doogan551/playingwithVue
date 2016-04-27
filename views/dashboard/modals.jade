@@ -571,7 +571,7 @@
 // Billing Modals
 .modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'billingDefaultTitle', touPage: 'Electricity-Billing'")
     .modal-dialog.modal-sm
-        .modal-content.billingModal
+        .modal-content
             .modal-header
                 h3.panel-title Update Bill Title Template
             .modal-body
@@ -594,12 +594,14 @@
 
 .modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'billingUncommitBill', touPage: 'Electricity-Billing'")
     .modal-dialog.modal-sm
-        .modal-content.billingModal
+        .modal-content.commitUncommit
             .modal-header(style="background-color: #000")
                 h3.panel-title Uncommit Bill
             .modal-body
-                //- span(data-bind="text: commitInfo")
-                span Select 'Uncommit' below to remove this committment and recreate the bill using data from the data store.
+                span Select 'Uncommit' to remove this committment and recreate the bill&nbsp;
+                span(data-bind="if: $page.bindings.selectedBill().period === 'Month'") using data from the data store.
+                span(data-bind="if: $page.bindings.selectedBill().period === 'Year'") using data from committed monthly bills and/or data from the data store when the monthly bills have not been committed.
+
                 .warning
                     i.fa.fa-exclamation-triangle
                     span Warning: this cannot be undone.
@@ -610,7 +612,7 @@
 
 .modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'billingCommitBill', touPage: 'Electricity-Billing'")
     .modal-dialog.modal-sm
-        .modal-content.billingModal
+        .modal-content.commitUncommit
             .modal-header
                 h3.panel-title Commit Bill
             .modal-body
@@ -625,13 +627,16 @@
                     i.fa.fa-spin.fa-spinner
                     span Commit
 
+// End Billing Modals
+
+// Report Modals
 .modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'reportingUncommitReport', touPage: 'Electricity-Reports'")
     .modal-dialog.modal-sm
-        .modal-content.reportingModal
+        .modal-content.commitUncommit
             .modal-header(style="background-color: #000")
                 h3.panel-title Uncommit Report
             .modal-body
-                span Select 'Uncommit' below to remove this commitment and recreate the report using data from the data store.
+                span Select 'Uncommit' to remove this commitment and recreate the report using data from the data store.
                 .warning
                     i.fa.fa-exclamation-triangle
                     span Warning: this cannot be undone.
@@ -642,7 +647,7 @@
 
 .modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'reportingCommitReport', touPage: 'Electricity-Reports'")
     .modal-dialog.modal-sm
-        .modal-content.reportingModal
+        .modal-content.commitUncommit
             .modal-header
                 h3.panel-title Commit Report
             .modal-body
@@ -656,8 +661,8 @@
                 button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.commitReport.bind($page)")
                     i.fa.fa-spin.fa-spinner
                     span Commit
+// End Report Modals
 
-// End Billing Modals
 
 //- Template.  touModal: modalName/property.
 
