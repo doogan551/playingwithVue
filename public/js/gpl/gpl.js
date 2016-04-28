@@ -6004,6 +6004,10 @@ gpl.BlockManager = function (manager) {
     });
 
     gpl.on('saveForLater', function () {
+        if (gpl.json.editVersion === undefined) {
+            gpl.json.editVersion = {};
+        }
+
         bmSelf.prepSaveData(gpl.json.editVersion);
 
         gpl.json.editVersion.pointChanges = bmSelf.getSaveObject();
@@ -6350,7 +6354,7 @@ gpl.BlockManager = function (manager) {
             ret.deletes.push(upi);
         });
 
-        managerSelf.socket.emit('updateSequencePoints', ret);
+        gpl.socket.emit('updateSequencePoints', ret);
     };
 
     bmSelf.destroyBlocks = function () {
