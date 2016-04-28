@@ -906,7 +906,7 @@ var tou = {
                             val = 0;
                             return;
                         }
-                        if (isEmpty && row.timestamp !== 0) {
+                        if (isEmpty && row.timestamp !== 0 && row.timestamp !== undefined) {
                             isEmpty = false;
                         }
                         if (row.value !== undefined) {
@@ -996,8 +996,9 @@ var tou = {
                     } else {//statistic
                         row = results.results[props].slice(-1)[0];
                         getVal(row);
-                        when = moment.unix(results.results.maxes[0].timestamp);
-                        when = when.format('MM/DD/YY HH:MM:SS');
+                        row = results.results[props][0];
+                        when = moment.unix(row.timestamp || row.range.start);
+                        when = when.format('MM/DD/YY HH:mm:SS');
 
                         if (isNaN(val)) {
                             val = '';
