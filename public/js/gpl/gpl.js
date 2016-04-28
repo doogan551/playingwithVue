@@ -1641,11 +1641,11 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         this.updatePointRefs(this._pointData);
 
         if (processChanges) {
-            this.processPointData(newPoint);
+            this.processPointData(this._pointData);
             if (this.setIconName) {
                 this.setIconName();
             }
-            this.setLabel(newPoint.name4);
+            this.setLabel(this._pointData.name4);
         }
 
         this.pointName = this._pointData.Name;
@@ -1690,6 +1690,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
     processPointData: function (point) {
         var self = this,
+            bindings = ko.toJS(gpl.manager.bindings),
             props = {
                 iconType: function () {
                     var calcType = point['Calculation Type'] || {},
@@ -1725,6 +1726,12 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         gpl.forEach(props, function (fn, property) {
             fn(property);
         });
+
+        point['Update Interval'].Value = bindings.deviceUpdateIntervalMinutes * 60 + bindings.deviceUpdateIntervalSeconds;
+        point['Show Label'].Value = bindings.deviceShowLabel;
+        point['Show Value'].Value = bindings.deviceShowValue;
+        point.Controller.Value = bindings.deviceControllerName;
+        point.Controller.eValue = bindings.deviceControllerValue;
     },
 
     setInvalid: function () {
@@ -1831,6 +1838,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             canvas.remove(this._shapes[c]);
         }
 
+        // gpl.log('Deleted block', this.gplId);
+
         this.renderAll();
     },
 
@@ -1927,6 +1936,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         }
 
         this.initialized = true;
+
+        // gpl.log('Created block', this.gplId);
     },
 
     initConfig: function () {
@@ -5555,10 +5566,22 @@ gpl.BlockManager = function (manager) {
                 }
             });
 
-            gpl.forEach(bmSelf.pointRefUpiMatrix, function (ref, k, c) {
-                ref.PropertyName = 'GPLBlock';
-                refs.push(ref);
+            gpl.forEach(bmSelf.blocks, function (block, gplId, idx) {
+                if (block.upi !== 0) {
+                    var ref = bmSelf.pointRefUpiMatrix[block.upi];
+
+                    if (ref) {
+                        ref.PropertyName = 'GPLBlock';
+                        // ref.AppIndex = idx;
+                        refs.push(ref);
+                    }
+                }
             });
+
+            // gpl.forEach(bmSelf.pointRefUpiMatrix, function (ref) {
+            //     ref.PropertyName = 'GPLBlock';
+            //     refs.push(ref);
+            // });
 
             gpl.point['Point Refs'] = refs;
 
@@ -5945,6 +5968,9 @@ gpl.BlockManager = function (manager) {
             bmSelf.deletedBlocks[oldBlock.upi] = oldBlock;
         }
 
+        delete bmSelf.newBlocks[oldBlock.upi];
+        delete bmSelf.pointRefUpiMatrix[oldBlock.upi];
+
         gpl.forEachArray(references, function (ref, c) {
             var refBlock = ref.block;
 
@@ -6313,6 +6339,20 @@ gpl.BlockManager = function (manager) {
         }
     };
 
+    bmSelf.handleUnload = function () {
+        var ret = {
+            updates: [],
+            adds: [],
+            deletes: []
+        };
+
+        gpl.forEach(bmSelf.newBlocks, function (block, upi) {
+            ret.deletes.push(upi);
+        });
+
+        managerSelf.socket.emit('updateSequencePoints', ret);
+    };
+
     bmSelf.destroyBlocks = function () {
         gpl.forEach(bmSelf.blocks, function (block, gplId) {
             var items = block._shapes || [],
@@ -6341,6 +6381,11 @@ gpl.BlockManager = function (manager) {
     }, {
         event: 'keyup',
         handler: bmSelf.handleKeyUp,
+        type: 'DOM',
+        window: true
+    }, {
+        event: 'unload',
+        handler: bmSelf.handleUnload,
         type: 'DOM',
         window: true
     }]);
@@ -6506,7 +6551,7 @@ gpl.Manager = function () {
 
             managerSelf.confirmEditVersion = function () {
                 managerSelf.hideEditVersionModal();
-                gpl.json.editVersion = {};
+                delete gpl.json.editVersion;
 
                 doNextInit();
             };
@@ -7675,6 +7720,7 @@ gpl.Manager = function () {
         managerSelf.addToBindings({
             isEdit: gpl.isEdit,
             loaded: managerSelf.sequenceLoaded,
+            editVersionAvailable: gpl.json.editVersion !== undefined && !gpl.isEdit,
 
             backgroundColor: ko.observable(managerSelf.backgroundColor),
             deviceBackgroundColor: ko.observable(managerSelf.backgroundColor),
@@ -8408,6 +8454,7 @@ gpl.Manager = function () {
 
     managerSelf.initEvents = function () {
         window.onbeforeunload = managerSelf.handleNavigateAway;
+
         managerSelf.registerHandlers([{
             event: 'mouseup',
             type: 'DOM',

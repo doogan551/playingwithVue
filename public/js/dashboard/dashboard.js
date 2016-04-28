@@ -7222,13 +7222,31 @@ tou.utilityPages.Electricity = function() {
                     rate.touid = rate.touid || tou.makeId();
 
                     rate.showInTransition = showInTransition;
+                },
+                processPeriod = function (period) {
+                    // var template = {
+                    //     start: null,
+                    //     end: null,
+                    //     rangeType: null,
+                    //     title: null,
+                    //     days: [],
+                    //     rates: {}
+                    // };
+
+                    var convertedPeriod = page.convertPeriod(period);
+
+                    tou.forEach(convertedPeriod, function (val, property) {
+                        if (property !== 'touid') {
+                            delete period[property];
+                        }
+                    });
+
+                    period.touid = period.touid || tou.makeId();
                 };
 
             tou.forEachArray(rates, processRate);
 
-            tou.forEachArray(rawPeriods, function (period) {
-                period.touid = period.touid || tou.makeId();
-            });
+            tou.forEachArray(rawPeriods, processPeriod);
 
             observableRates = ko.mapping.fromJS($.extend(true, [], rates));
 
