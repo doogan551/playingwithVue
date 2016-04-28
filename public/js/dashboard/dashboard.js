@@ -8192,10 +8192,10 @@ tou.utilityPages.Electricity = function() {
                     rate.showInTransition = showInTransition;
                 },
                 processPeriod = function (period) {
-                    var convertedPeriod = page.convertPeriod(period);
+                    var props = ['start', 'end', 'rangeType', 'title', 'days', 'rates', 'touid', 'enablePeakSelection'];
 
-                    tou.forEach(convertedPeriod, function (val, property) {
-                        if (property !== 'touid' && property !== 'enablePeakSelection') {
+                    tou.forEach(period, function (val, property) {
+                        if (props.indexOf(property) === -1) {
                             delete period[property];
                         }
                     });
