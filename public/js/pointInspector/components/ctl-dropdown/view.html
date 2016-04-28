@@ -3,7 +3,7 @@
     <div class="dataField">
         <label data-bind="text: propertyName, visible: showLabel"></label>
         <!-- ko if: isInEditMode -->
-        <select data-bind="options: getOptions,
+        <select data-bind="options: getOptions(),
                            optionsText: 'name',
                            optionsValue: 'value',
                            enumTextValue: data.Value,
