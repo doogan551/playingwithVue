@@ -6363,6 +6363,7 @@ tou.utilityPages.Electricity = function() {
                             myBindings.selectedMonthYear().isReportCommitted(false);
                             tou.hideModal();
                             self.refreshMonthYear();
+                            myBindings.getData();
                         } else {
                             tou.alert('There was a problem uncommitting this report. Please try again. If the problem persists please reload the page and try again.');
                         }
