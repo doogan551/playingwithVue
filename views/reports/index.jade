@@ -9,9 +9,9 @@ block content
 					.runReportSpinner(data-bind="css: { displayDiv: displayMainSpinner(), hideDiv: !displayMainSpinner()} ", title="Requesting Report Data")
 						i.fa.fa-spinner.fa-spin.fa-3x
 						span.spinnertext Getting Data
-					.runReportChartSpinner(data-bind="css: { displayDiv: displayChartSpinner(), hideDiv: !displayChartSpinner()} ", title="Requesting Report Data for Chart")
+					.runReportChartSpinner(data-bind="css: { displayDiv: displayChartSpinner(), hideDiv: !displayChartSpinner()}", title="Requesting Report Data for Chart")
 						i.fa.fa-spinner.fa-spin.fa-3x
-						span.spinnertext Formatting Data for Chart
+						span.spinnertext(data-bind="text: chartSpinnerTitle")
 					.tabConfiguration
 						ul.nav.nav-tabs
 							li.attribs.active(role="presentation")
@@ -303,7 +303,7 @@ block content
 					.tabViewReport.well.tab-pane.workingPane
 						ul.nav.nav-tabs
 							li.gridData.active(role="presentation")
-								a.strong.toggleTab(href="#gridData", data-toggle="tab") Grid View
+								a.strong.toggleTab(data-bind="click: function () { $root.focusGridView() }", href="#gridData", data-toggle="tab") Grid View
 							// ko if: (chartable())
 							li.reportChart(data-bind="click: function () { $root.requestChart() }", role="presentation")
 								a.strong.toggleTab(href="#chartData", data-toggle="tab") Chart View
@@ -317,19 +317,24 @@ block content
 											tr(data-bind="foreach: listOfColumns()")
 												td.strong(data-bind="attr: { colindex:  $index() }")
 							div#chartData.tab-pane
-								.dropdown.availableChartTypes.chartTab(data-bind="css: {disabled: !$root.canEdit()}")
-									button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-										span(data-bind="text: selectedChartType()")
+								.chartButtons
+									.dropdown.availableChartTypes.chartTab(data-bind="css: {disabled: !$root.canEdit()}")
+										button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+											span(data-bind="text: selectedChartType()")
+											// ko if: ($root.listOfChartTypes.length > 1)
+											span.caret.lm10px
+											// /ko
 										// ko if: ($root.listOfChartTypes.length > 1)
-										span.caret.lm10px
+										ul.chartTypes.dropdown-menu
+											// ko foreach: $root.listOfChartTypes
+											li
+												a(data-bind="click: function(){ $root.selectChartType($element, $data.value, true) }, text: $data.text")
+											// /ko
 										// /ko
-									// ko if: ($root.listOfChartTypes.length > 1)
-									ul.chartTypes.dropdown-menu
-										// ko foreach: $root.listOfChartTypes
-										li
-											a(data-bind="click: function(){ $root.selectChartType($element, $data.value, true) }, text: $data.text")
-										// /ko
-									// /ko
+									a.btn.btn-default(data-bind="click: function() { $root.printDiv() }", href="#")
+										span.printButton
+											i.fa.fa-print
+											| Print
 								.reportChartDiv
 					.pop.popInOutDiv.cursorPointer(data-bind='click: togglePop')
 						.popOut
