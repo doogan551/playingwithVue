@@ -7077,7 +7077,10 @@ gpl.Manager = function () {
             name3 = names[2],
             name4 = names[3] || '',
             handler = function (obj) {
+                var oldPoint = $.extend(true, {}, obj);
+
                 gpl.unblockUI();
+
                 if (obj && obj.target) { //is event
                     if (!called) {
                         log('New Point canceled, deleting block');
@@ -7088,10 +7091,16 @@ gpl.Manager = function () {
                 }
 
                 block.upi = obj._id;
+                obj._parentUpi = gpl.point._id;
                 block.setPointData(obj, true);
                 log(block.gplId, 'save callback', obj);
                 gpl.fire('newblock', block);
                 called = true;
+
+                managerSelf.socket.emit('updatePoint', JSON.stringify({
+                    'newPoint': obj,
+                    'oldPoint': oldPoint
+                }));
             };
 
         if (block.isNonPoint !== true && !(block instanceof gpl.blocks.TextBlock)) {
