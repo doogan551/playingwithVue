@@ -6002,7 +6002,6 @@ tou.utilityPages.Electricity = function() {
             if (!!self.bindings.$page.committedReports) {
                 self.reportPeriods = ko.utils.arrayFilter(copyOfListOfMonthYears, function (period) {
                     period.isReportCommitted = ko.observable(self.bindings.$page.committedReports.hasOwnProperty(period.fullDate) ? true : false);
-                    // We only want the month entries
                     return period;
                 });
                 self.listOfMonthYears(copyOfListOfMonthYears);
@@ -6030,7 +6029,9 @@ tou.utilityPages.Electricity = function() {
                     self.refreshMonthYear();
                     if (!configRequired) {
                         setDefaultMonthYear();
-                        self.bindings.getData();
+                        if (!self.bindings.selectedMonthYear().isReportCommitted()) {
+                            self.bindings.getData();
+                        }
                     }
                 };
             self.initReportSocket(self.bindings.getData);
