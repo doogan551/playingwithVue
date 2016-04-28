@@ -8194,7 +8194,7 @@ tou.utilityPages.Electricity = function() {
                     var convertedPeriod = page.convertPeriod(period);
 
                     tou.forEach(convertedPeriod, function (val, property) {
-                        if (property !== 'touid') {
+                        if (property !== 'touid' && property !== 'enablePeakSelection') {
                             delete period[property];
                         }
                     });
