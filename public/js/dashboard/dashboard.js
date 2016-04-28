@@ -4084,6 +4084,7 @@ tou.utilityPages.Electricity = function() {
         clearYearBillData: function () {
             var yearBillData = this.yearBillData;
             
+
             yearBillData.title = '';
             yearBillData.commit = {
                 done: false,
@@ -4649,14 +4650,14 @@ tou.utilityPages.Electricity = function() {
                 rateType: 'loadFactor'
             });
             // Add the period hours to the load factor contributors - we must calculate and store
-            // on the loadFactor contributors instead of pulling from our billingCycle observerable 
+            // on the loadFactor contributors instead of pulling from our billingCycle observerable
             // for yearly billing purposes (billingCycle for yearly bill != month)
             self.billData.loadFactor.contributors.hours = (function () {
                 var selectedDate = new Date(bill.start),
                     selectedMonth = selectedDate.getMonth(),
                     selectedYear = selectedDate.getFullYear(),
                     days;
-                
+
                 // Get total days in the billing cycle
                 days = self.daysInMonth[selectedMonth];
                 // Adjust total days if billing cycle is February and it's a leap year
@@ -4729,7 +4730,7 @@ tou.utilityPages.Electricity = function() {
             yearBillData.source = []; // Add a source array - this will be deleted after we're done processing
 
             yearBillData.title = self.processBillTitle(self.defaultTitle, bill);
-            
+
             Array.prototype.push.apply(yearBillData.collections, [{
                 name: {
                     displayValue: 'Demand',
@@ -4942,7 +4943,7 @@ tou.utilityPages.Electricity = function() {
                                     },
                                     data: []
                                 });
-                                
+
                                 chargeRow = chargesRows[chargesRows.length - 1];
                                 for (j = 0; j < index; j++) {
                                     chargeRow.data.push({
@@ -4955,7 +4956,7 @@ tou.utilityPages.Electricity = function() {
                             chargeRow.data.push(data);
                             total += data.value;
                         });
-                        
+
                         total = tou.toFixed(total, 2);
                         chargeTotals.push({
                             value: total,
@@ -4966,7 +4967,7 @@ tou.utilityPages.Electricity = function() {
                             isTotal: true
                         });
                     });
-                    
+
                     chargesRows.push({
                         name: {
                             displayValue: 'Total',
@@ -5068,7 +5069,7 @@ tou.utilityPages.Electricity = function() {
                                 // for meters with different units
                                 sum += item.value;
                                 cnt++;
-                                
+
                                 // Evaluate units
                                 unitValue = item.units && item.units.displayValue;
                                 if (unitValue && unitValue.length && !unitsUsed[unitValue]) {
@@ -5199,12 +5200,12 @@ tou.utilityPages.Electricity = function() {
                     },
                     'consumption': function (collection, sourceData, index) {
                         var data;
-                        
+
                         // We handle our total consumption a bit differently because we need to add the 'isTotal' key to our data set
                         data = getUsage(sourceData, 'consumption', 'both');
                         data.isTotal = true;
                         getRow(collection.rows, 'total').data.push(data);
-                        
+
                         getRow(collection.rows, 'onPeak').data.push(getUsage(sourceData, 'consumption', 'on'));
                         getRow(collection.rows, 'offPeak').data.push(getUsage(sourceData, 'consumption', 'off'));
                     },
@@ -5247,7 +5248,7 @@ tou.utilityPages.Electricity = function() {
             buildNetCosts();
             // Identify the maximums in each row & add total/average column
             getMaxAvgAndTotals();
-            // 
+            //
 
             delete yearData.source;
         },
@@ -5892,7 +5893,7 @@ tou.utilityPages.Electricity = function() {
                         bill = findBill(bindings.selectedBill());
                         // If no bill was selected or we couldn't find the previously selected bill
                         if (!bill) {
-                            // Our bills first entry should be the fiscal year, followed by the current month; we default 
+                            // Our bills first entry should be the fiscal year, followed by the current month; we default
                             // select the first month ('|| self.bills[0]' is just CYB)
                             bill = self.bills[1] || self.bills[0];
                         }
@@ -8186,13 +8187,22 @@ tou.utilityPages.Electricity = function() {
                     rate.touid = rate.touid || tou.makeId();
 
                     rate.showInTransition = showInTransition;
+                },
+                processPeriod = function (period) {
+                    var convertedPeriod = page.convertPeriod(period);
+
+                    tou.forEach(convertedPeriod, function (val, property) {
+                        if (property !== 'touid') {
+                            delete period[property];
+                        }
+                    });
+
+                    period.touid = period.touid || tou.makeId();
                 };
 
             tou.forEachArray(rates, processRate);
 
-            tou.forEachArray(rawPeriods, function (period) {
-                period.touid = period.touid || tou.makeId();
-            });
+            tou.forEachArray(rawPeriods, processPeriod);
 
             observableRates = ko.mapping.fromJS($.extend(true, [], rates));
 
