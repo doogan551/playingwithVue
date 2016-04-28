@@ -4084,7 +4084,7 @@ tou.utilityPages.Electricity = function() {
         },
         clearYearBillData: function () {
             var yearBillData = this.yearBillData;
-            
+
 
             yearBillData.title = '';
             yearBillData.commit = {
@@ -8020,7 +8020,8 @@ tou.utilityPages.Electricity = function() {
                 title: data.seasonName || this.getTitle(data.season),
                 days: [],
                 rates: {},
-                enablePeakSelection: data.enablePeakSelection || false
+                enablePeakSelection: data.enablePeakSelection || false,
+                touid: data.touid
             };
 
             // if (data.season !== 'transition') {
@@ -8452,6 +8453,8 @@ tou.utilityPages.Electricity = function() {
                     delete data.rates;
                     delete convertedPeriod.rates;
 
+
+
                     this.rawPeriods[idx] = $.extend(this.rawPeriods[idx], data);
                     periods[idx] = $.extend(periods[idx], convertedPeriod);
                     // periods[idx].rates = rates;
@@ -8602,6 +8605,7 @@ tou.utilityPages.Electricity = function() {
                 isUpdate: false,
                 periodIdx: '',
                 saveText: 'Add',
+                touid: 0,
                 computeds: {
                     atLeastOneDay: function (scope) {
                         return function () {
@@ -9478,6 +9482,8 @@ tou.utilityPages.Electricity = function() {
                     return startStr + ' - ' + endStr;
                 };
 
+
+
             if (!period.touid) {
                 period.touid = tou.makeId();
             }
@@ -9495,11 +9501,11 @@ tou.utilityPages.Electricity = function() {
                 periodType: period.rangeType,
                 rangeText: getShortDate(period.start.date) + ' - ' + getShortDate(period.end.date),
                 daysText: getDaysText(period.days),
-                timeText: period.rangeType !== 'transition' ? getTimeText(period) : '',
-                peakText: period.rangeType === 'transition' ? '' : 'On-Peak',
+                timeText: getTimeText(period),
+                peakText: 'On-Peak',
                 _rawStart: period.start.date,
                 _rawEnd: period.end.date,
-                touid: period.touid,
+                touid: period.touid || tou.makeId(),
                 enablePeakSelection: period.enablePeakSelection || false
             };
 
