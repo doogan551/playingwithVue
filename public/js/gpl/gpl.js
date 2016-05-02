@@ -35,6 +35,7 @@ var gpl = {
     $tooltip: $('.gplTooltip'),
     $fontColorPicker: $('#fontColorPicker'),
     $bgColorPicker: $('#bgColorPicker'),
+    $saveForLaterConfirmModal: $('#safeForLaterConfirm'),
     $editTextModal: $('#editTextModal'),
     $messageModal: $('#gplMessage'),
     $messageModalBody: $('#gplMessageBody'),
@@ -5593,7 +5594,7 @@ gpl.BlockManager = function (manager) {
                 var changes = gpl.pointChanges;
 
                 gpl.forEachArray(changes.adds, function (block) {
-                    var upi = block.upi,
+                    var upi = block._id,
                         gplBlock;
 
                     gplBlock = bmSelf.getBlockByUpi(upi);
@@ -5602,14 +5603,16 @@ gpl.BlockManager = function (manager) {
                 });
 
                 gpl.forEachArray(changes.updates, function (block) {
-                    var upi = block.newPoint._id,
+                    var upi = block.newPoint && block.newPoint._id,
                         gplBlock;
 
-                    gplBlock = bmSelf.getBlockByUpi(upi);
+                    if (upi) {
+                        gplBlock = bmSelf.getBlockByUpi(upi);
 
-                    gplBlock._origPointData = block.oldPoint;
+                        gplBlock._origPointData = block.oldPoint;
 
-                    gplBlock.setPointData(block);
+                        gplBlock.setPointData(block);
+                    }
                 });
 
                 bmSelf.deletedBlocks = {};
@@ -5751,7 +5754,7 @@ gpl.BlockManager = function (manager) {
             var ret = null;
 
             gpl.forEach(bmSelf.blocks, function (block) {
-                if (block.upi === upi) {
+                if (block.getPointData() && block.getPointData()._id === upi) {
                     ret = block;
                 }
             });
@@ -5785,7 +5788,7 @@ gpl.BlockManager = function (manager) {
                 lines = [];
 
             gpl.forEach(bmSelf.blocks, function (obj) {
-                if (!obj.bypassSave) {
+                if (!obj.bypassSave && obj.targetCanvas === 'main') {
                     if (obj.syncAnchorPoints) {
                         obj.syncAnchorPoints();
                     }
@@ -5848,6 +5851,15 @@ gpl.BlockManager = function (manager) {
             }
 
             bmSelf.pointRefUpiMatrix = ret;
+
+            if (gpl.pointChanges !== undefined) {
+                gpl.forEachArray(gpl.pointChanges.adds, function (add) {
+                    var ref = gpl.makePointRef(add._id, add.Name);
+
+                    bmSelf.pointRefUpiMatrix[add._id] = ref;
+                });
+            }
+
             bmSelf.invalidPointRefs = {};
         },
 
@@ -5860,6 +5872,7 @@ gpl.BlockManager = function (manager) {
             }
 
             if (!ret) {
+
                 bmSelf.invalidPointRefs[upi] = {
                     cls: Cls,
                     cfg: block
@@ -5943,7 +5956,8 @@ gpl.BlockManager = function (manager) {
     gpl.on('newblock', function (newBlock) {
         var ref;
 
-        gpl.hasEdits = true;
+        // gpl.hasEdits = true;
+        bmSelf.manager.bindings.hasEdits(true);
         bmSelf.newBlocks[newBlock.upi] = newBlock;
         bmSelf.updateBlockReferences(newBlock);
 
@@ -5955,7 +5969,8 @@ gpl.BlockManager = function (manager) {
 
     gpl.on('editedblock', function (block) {
         if (gpl.rendered) {
-            gpl.hasEdits = true;
+            bmSelf.manager.bindings.hasEdits(true);
+            // gpl.hasEdits = true;
         }
         bmSelf.editedBlocks[block.upi] = block;
     });
@@ -5964,7 +5979,8 @@ gpl.BlockManager = function (manager) {
         var references = bmSelf.upis[oldBlock.upi] || [];
 
         if (!isCancel) {
-            gpl.hasEdits = true;
+            bmSelf.manager.bindings.hasEdits(true);
+            // gpl.hasEdits = true;
             bmSelf.deletedBlocks[oldBlock.upi] = oldBlock;
         }
 
@@ -6350,11 +6366,13 @@ gpl.BlockManager = function (manager) {
             deletes: []
         };
 
-        gpl.forEach(bmSelf.newBlocks, function (block, upi) {
-            ret.deletes.push(upi);
-        });
+        if (bmSelf.manager.bindings.hasEdits()) {
+            gpl.forEach(bmSelf.newBlocks, function (block, upi) {
+                ret.deletes.push(upi);
+            });
 
-        gpl.socket.emit('updateSequencePoints', ret);
+            gpl.socket.emit('updateSequencePoints', ret);
+        }
     };
 
     bmSelf.destroyBlocks = function () {
@@ -6605,6 +6623,7 @@ gpl.Manager = function () {
                 managerSelf.$saveForLaterButton = $('#saveForLater');
                 managerSelf.$editButton = $('#edit');
                 managerSelf.$cancelButton = $('#cancel');
+                managerSelf.$quitButton = $('#quit');
                 managerSelf.$validateButton = $('#validate');
                 managerSelf.$contextMenuList = $('#jqxMenu ul');
                 managerSelf.contextMenu = $('#jqxMenu').jqxMenu({
@@ -6795,14 +6814,15 @@ gpl.Manager = function () {
 
                 if (gpl.isEdit) {
                     if (gpl.json.editVersion && gpl.json.editVersion.block) { //has edit version
-                        // if(now - gpl.point._pollTime > gpl.editVersionStaleTimeout) {//stale
-                        gpl.$discardEditVersionButton.click(managerSelf.discardEditVersion);
-                        gpl.$useEditVersionButton.click(managerSelf.useEditVersion);
-                        managerSelf.showEditVersionModal();
-                        // } else {//not stale
-                        //     gpl.showMessage('This sequence currently being edited');
-                        // }
-                        //check if stale.  if not, block changes.  if so, ask if they want to use it?
+                        managerSelf.useEditVersion();
+                    //     // if(now - gpl.point._pollTime > gpl.editVersionStaleTimeout) {//stale
+                    //     gpl.$discardEditVersionButton.click(managerSelf.discardEditVersion);
+                    //     gpl.$useEditVersionButton.click(managerSelf.useEditVersion);
+                    //     managerSelf.showEditVersionModal();
+                    //     // } else {//not stale
+                    //     //     gpl.showMessage('This sequence currently being edited');
+                    //     // }
+                    //     //check if stale.  if not, block changes.  if so, ask if they want to use it?
                     } else {
                         managerSelf.confirmEditVersion();
                     }
@@ -7134,6 +7154,8 @@ gpl.Manager = function () {
         var saveObj,
             isValid,
             finish = function () {
+                delete gpl.json.editVersion;
+
                 managerSelf.socket.emit('updateSequence', {
                     sequenceName: gpl.point.Name,
                     sequenceData: {
@@ -7151,11 +7173,15 @@ gpl.Manager = function () {
 
                 managerSelf.resumeRender();
 
-                gpl.hasEdits = false;
+
+                managerSelf.bindings.hasEdits(false);
+                // gpl.hasEdits = false;
 
                 log('save complete');
 
                 gpl.captureThumbnail();
+
+                managerSelf.doCancel();
             };
 
         gpl.isValid = true;
@@ -7193,8 +7219,13 @@ gpl.Manager = function () {
     };
 
     managerSelf.doSaveForLater = function () {
+        var continueEditingCb = function () {
+            gpl.unblockUI();
+            gpl.$saveForLaterConfirmModal.modal('show');
+        };
+
         gpl.blockUI();
-        gpl.waitForSocketMessage(gpl.unblockUI);
+        gpl.waitForSocketMessage(continueEditingCb);
         gpl.fire('saveForLater');
 
         managerSelf.embedActionButtons(gpl.json.editVersion);
@@ -7211,6 +7242,9 @@ gpl.Manager = function () {
 
         offsetPositions(false, gpl.json.editVersion);
         offsetPositions(false);
+
+        managerSelf.bindings.hasEdits(false);
+        // gpl.hasEdits = false;
     };
 
     managerSelf.embedActionButtons = function (obj) {
@@ -7656,7 +7690,7 @@ gpl.Manager = function () {
     };
 
     managerSelf.handleNavigateAway = function (event) {
-        if (gpl.hasEdits) {
+        if (managerSelf.bindings.hasEdits()) {
             return 'You have unsaved changes. Are you sure you want to leave this page?';
         }
 
@@ -7732,6 +7766,7 @@ gpl.Manager = function () {
 
         managerSelf.addToBindings({
             isEdit: gpl.isEdit,
+            hasEdits: ko.observable(false),
             loaded: managerSelf.sequenceLoaded,
             editVersionAvailable: gpl.json.editVersion !== undefined && !gpl.isEdit,
 
@@ -7745,6 +7780,10 @@ gpl.Manager = function () {
             controllers: gpl.controllers,
 
             currentZoom: ko.observable(Math.round(100 * gpl.scaleValue)),
+
+            doCancel: function () {
+                managerSelf.doCancel();
+            },
 
             resetZoom: function () {
                 managerSelf.scale(1);
@@ -7965,6 +8004,12 @@ gpl.Manager = function () {
         });
 
         managerSelf.$cancelButton.click(function () {
+            managerSelf.bindings.hasEdits(false);
+            gpl.blockManager.handleUnload();
+            managerSelf.doCancel();
+        });
+
+        managerSelf.$quitButton.click(function () {
             managerSelf.doCancel();
         });
 
