@@ -906,7 +906,7 @@ var tou = {
                             val = 0;
                             return;
                         }
-                        if (isEmpty && row.timestamp !== 0) {
+                        if (isEmpty && row.timestamp !== 0 && row.timestamp !== undefined) {
                             isEmpty = false;
                         }
                         if (row.value !== undefined) {
@@ -996,8 +996,9 @@ var tou = {
                     } else {//statistic
                         row = results.results[props].slice(-1)[0];
                         getVal(row);
-                        when = moment.unix(results.results.maxes[0].timestamp);
-                        when = when.format('MM/DD/YY HH:MM:SS');
+                        row = results.results[props][0];
+                        when = moment.unix(row.timestamp || row.range.start);
+                        when = when.format('MM/DD/YY HH:mm:SS');
 
                         if (isNaN(val)) {
                             val = '';
@@ -4083,7 +4084,8 @@ tou.utilityPages.Electricity = function() {
         },
         clearYearBillData: function () {
             var yearBillData = this.yearBillData;
-            
+
+
             yearBillData.title = '';
             yearBillData.commit = {
                 done: false,
@@ -4649,14 +4651,14 @@ tou.utilityPages.Electricity = function() {
                 rateType: 'loadFactor'
             });
             // Add the period hours to the load factor contributors - we must calculate and store
-            // on the loadFactor contributors instead of pulling from our billingCycle observerable 
+            // on the loadFactor contributors instead of pulling from our billingCycle observerable
             // for yearly billing purposes (billingCycle for yearly bill != month)
             self.billData.loadFactor.contributors.hours = (function () {
                 var selectedDate = new Date(bill.start),
                     selectedMonth = selectedDate.getMonth(),
                     selectedYear = selectedDate.getFullYear(),
                     days;
-                
+
                 // Get total days in the billing cycle
                 days = self.daysInMonth[selectedMonth];
                 // Adjust total days if billing cycle is February and it's a leap year
@@ -4729,7 +4731,7 @@ tou.utilityPages.Electricity = function() {
             yearBillData.source = []; // Add a source array - this will be deleted after we're done processing
 
             yearBillData.title = self.processBillTitle(self.defaultTitle, bill);
-            
+
             Array.prototype.push.apply(yearBillData.collections, [{
                 name: {
                     displayValue: 'Demand',
@@ -4942,7 +4944,7 @@ tou.utilityPages.Electricity = function() {
                                     },
                                     data: []
                                 });
-                                
+
                                 chargeRow = chargesRows[chargesRows.length - 1];
                                 for (j = 0; j < index; j++) {
                                     chargeRow.data.push({
@@ -4955,7 +4957,7 @@ tou.utilityPages.Electricity = function() {
                             chargeRow.data.push(data);
                             total += data.value;
                         });
-                        
+
                         total = tou.toFixed(total, 2);
                         chargeTotals.push({
                             value: total,
@@ -4966,7 +4968,7 @@ tou.utilityPages.Electricity = function() {
                             isTotal: true
                         });
                     });
-                    
+
                     chargesRows.push({
                         name: {
                             displayValue: 'Total',
@@ -5068,7 +5070,7 @@ tou.utilityPages.Electricity = function() {
                                 // for meters with different units
                                 sum += item.value;
                                 cnt++;
-                                
+
                                 // Evaluate units
                                 unitValue = item.units && item.units.displayValue;
                                 if (unitValue && unitValue.length && !unitsUsed[unitValue]) {
@@ -5199,12 +5201,12 @@ tou.utilityPages.Electricity = function() {
                     },
                     'consumption': function (collection, sourceData, index) {
                         var data;
-                        
+
                         // We handle our total consumption a bit differently because we need to add the 'isTotal' key to our data set
                         data = getUsage(sourceData, 'consumption', 'both');
                         data.isTotal = true;
                         getRow(collection.rows, 'total').data.push(data);
-                        
+
                         getRow(collection.rows, 'onPeak').data.push(getUsage(sourceData, 'consumption', 'on'));
                         getRow(collection.rows, 'offPeak').data.push(getUsage(sourceData, 'consumption', 'off'));
                     },
@@ -5247,7 +5249,7 @@ tou.utilityPages.Electricity = function() {
             buildNetCosts();
             // Identify the maximums in each row & add total/average column
             getMaxAvgAndTotals();
-            // 
+            //
 
             delete yearData.source;
         },
@@ -5892,7 +5894,7 @@ tou.utilityPages.Electricity = function() {
                         bill = findBill(bindings.selectedBill());
                         // If no bill was selected or we couldn't find the previously selected bill
                         if (!bill) {
-                            // Our bills first entry should be the fiscal year, followed by the current month; we default 
+                            // Our bills first entry should be the fiscal year, followed by the current month; we default
                             // select the first month ('|| self.bills[0]' is just CYB)
                             bill = self.bills[1] || self.bills[0];
                         }
@@ -8041,7 +8043,8 @@ tou.utilityPages.Electricity = function() {
                 title: data.seasonName || this.getTitle(data.season),
                 days: [],
                 rates: {},
-                enablePeakSelection: data.enablePeakSelection || false
+                enablePeakSelection: data.enablePeakSelection || false,
+                touid: data.touid
             };
 
             // if (data.season !== 'transition') {
@@ -8210,13 +8213,22 @@ tou.utilityPages.Electricity = function() {
                     rate.touid = rate.touid || tou.makeId();
 
                     rate.showInTransition = showInTransition;
+                },
+                processPeriod = function (period) {
+                    var props = ['start', 'end', 'rangeType', 'title', 'days', 'rates', 'touid', 'enablePeakSelection'];
+
+                    tou.forEach(period, function (val, property) {
+                        if (props.indexOf(property) === -1) {
+                            delete period[property];
+                        }
+                    });
+
+                    period.touid = period.touid || tou.makeId();
                 };
 
             tou.forEachArray(rates, processRate);
 
-            tou.forEachArray(rawPeriods, function (period) {
-                period.touid = period.touid || tou.makeId();
-            });
+            tou.forEachArray(rawPeriods, processPeriod);
 
             observableRates = ko.mapping.fromJS($.extend(true, [], rates));
 
@@ -8464,6 +8476,8 @@ tou.utilityPages.Electricity = function() {
                     delete data.rates;
                     delete convertedPeriod.rates;
 
+
+
                     this.rawPeriods[idx] = $.extend(this.rawPeriods[idx], data);
                     periods[idx] = $.extend(periods[idx], convertedPeriod);
                     // periods[idx].rates = rates;
@@ -8614,6 +8628,7 @@ tou.utilityPages.Electricity = function() {
                 isUpdate: false,
                 periodIdx: '',
                 saveText: 'Add',
+                touid: 0,
                 computeds: {
                     atLeastOneDay: function (scope) {
                         return function () {
@@ -9490,6 +9505,8 @@ tou.utilityPages.Electricity = function() {
                     return startStr + ' - ' + endStr;
                 };
 
+
+
             if (!period.touid) {
                 period.touid = tou.makeId();
             }
@@ -9507,11 +9524,11 @@ tou.utilityPages.Electricity = function() {
                 periodType: period.rangeType,
                 rangeText: getShortDate(period.start.date) + ' - ' + getShortDate(period.end.date),
                 daysText: getDaysText(period.days),
-                timeText: period.rangeType !== 'transition' ? getTimeText(period) : '',
-                peakText: period.rangeType === 'transition' ? '' : 'On-Peak',
+                timeText: getTimeText(period),
+                peakText: 'On-Peak',
                 _rawStart: period.start.date,
                 _rawEnd: period.end.date,
-                touid: period.touid,
+                touid: period.touid || tou.makeId(),
                 enablePeakSelection: period.enablePeakSelection || false
             };
 
