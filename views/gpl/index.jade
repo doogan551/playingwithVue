@@ -34,7 +34,8 @@ html
             span.sequenceName(style="display:none", data-bind="text: sequenceName, visible: sequenceName !== undefined")
             button.btn.btn-primary.btn-sm#save(type="button", style="display:none", data-bind="visible: isEdit === true") Save
             button.btn.btn-primary.btn-sm#saveForLater(type="button", style="display:none", data-bind="visible: isEdit === true") Save For Later
-            button.btn.btn-danger.btn-sm#cancel(type="button", style="display:none", data-bind="visible: isEdit === true") Cancel
+            button.btn.btn-danger.btn-sm#cancel(type="button", style="display:none", data-bind="visible: hasEdits() === true") Discard Changes
+            button.btn.btn-danger.btn-sm#quit(type="button", style="display:none", data-bind="visible: isEdit === true && hasEdits() === false") Quit
             button.btn.btn-primary.btn-sm#edit(type="button", style="display:none", data-bind="visible: isEdit !== true") Edit
             span.editVersionAvailable(data-bind="visible: editVersionAvailable") *Edit Version Available
             .zoomSection.pull-right
@@ -124,6 +125,18 @@ html
                         h3.panel-title GPL Message
                     .modal-body.modal-body-no-padding
                         #gplMessageBody.panel-body
+
+        #safeForLaterConfirm.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
+            .modal-dialog
+                .modal-content
+                    //- .modal-header
+                    //-     h3.panel-title Continue Editing
+                    .modal-body.clearfix
+                        h4 Continue Editing?
+
+                    .modal-footer
+                        button.btn.btn-default.btn-sm(data-dismiss="modal") Continue Editing
+                        button.btn.btn-primary.btn-sm(data-bind="click: doCancel") Return to View Mode
 
         #editVersionModal.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
             .modal-dialog
