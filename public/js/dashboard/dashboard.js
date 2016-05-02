@@ -6024,14 +6024,23 @@ tou.utilityPages.Electricity = function() {
                     }
                 },
                 postInit = function () {
-                    var configRequired = (self.bindings.listOfMeters().length === 0) || (self.listOfMonthYears().length === 0);
+                    var configRequired = (self.bindings.listOfMeters().length === 0) || (self.listOfMonthYears().length === 0),
+                        listOfDates,
+                        monthYear;
+
                     self.bindings.configRequired(configRequired);
                     self.refreshMonthYear();
+                    listOfDates = self.bindings.$page.listOfMonthYears();
                     if (!configRequired) {
                         setDefaultMonthYear();
                         if (!self.bindings.selectedMonthYear().isReportCommitted()) {
                             self.bindings.getData();
                         }
+                        monthYear = ko.utils.arrayFilter(listOfDates, function (monthYearObj) {
+                            return monthYearObj.searchDate === self.bindings.selectedMonthYear().searchDate;
+                        });
+                        self.bindings.selectedMonthYear(monthYear[0]);
+                        self.bindings.rateTablePeriod(self.bindings.findPeriod(self.bindings.selectedMonthYear().rateTable["Demand Charges"].periods));
                     }
                 };
             self.initReportSocket(self.bindings.getData);
@@ -6111,7 +6120,6 @@ tou.utilityPages.Electricity = function() {
                 if (utilityName === self.utilityName) {
                     self.listOfMonthYears(tou.availablePeriods[self.utilityName]);
                     self.bindings.reportDateFilter.valueHasMutated();
-
                     postInit();
                 }
             });
@@ -6172,6 +6180,7 @@ tou.utilityPages.Electricity = function() {
             numberOfInactiveMeters: ko.observable(0),
             numberOfTimeSlotsPerDay: (24 * 2),
             percentageOfMissingData: ko.observable(0),
+            rateTablePeriod: ko.observable({}),
             reportData: {},
             reportDateFilter: ko.observable(""),
             reportsModes: ko.observableArray(["Chart", "Grid"]),
@@ -6188,6 +6197,19 @@ tou.utilityPages.Electricity = function() {
             highestTemperatureVerbiage: ko.observable(""),
             lowestTemperatureVerbiage: ko.observable(""),
             temperatureVerbiageHDDCDD: ko.observable(""),
+            findPeriod: function (periods) {
+                var selectedDate = new Date(this.selectedMonthYear().start).setDate(15),
+                    rtPeriod,
+                    result,
+                    i;
+                for (i = 0, len = periods.length; i < len; i++) {
+                    rtPeriod = periods[i];
+                    if ((selectedDate > new Date(rtPeriod.start.date)) && (selectedDate < new Date(rtPeriod.end.date))) {
+                        result = rtPeriod;
+                    }
+                }
+                return result;
+            },
             getUnitsInPeriod: function () {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
                     answer = 0,
@@ -7865,6 +7887,7 @@ tou.utilityPages.Electricity = function() {
 
                 myBindings.numberOfDaysInCurrentPeriod = tou.toFixed(moment.duration(endDay.diff(startDay)).asDays(), 0);
                 myBindings.selectedMonthYear(selectedDate);
+                myBindings.rateTablePeriod(myBindings.findPeriod(myBindings.selectedMonthYear().rateTable["Demand Charges"].periods));
                 if (myBindings.selectedReportsMode() !== "") {
                     myBindings.koGridReportCollection([]);
                     if (!!selectedDate.isReportCommitted && selectedDate.isReportCommitted()) {
