@@ -7693,8 +7693,6 @@ gpl.Manager = function () {
         if (managerSelf.bindings.hasEdits()) {
             return 'You have unsaved changes. Are you sure you want to leave this page?';
         }
-
-        managerSelf.destroy();
     };
 
     managerSelf.updateTooltip = function (text, x, y) {
@@ -8506,7 +8504,6 @@ gpl.Manager = function () {
                 ret = setInterval(fn, 1000 * 60 * 5);
                 return ret;
             }());
-
         }
     };
 
@@ -8514,6 +8511,13 @@ gpl.Manager = function () {
         window.onbeforeunload = managerSelf.handleNavigateAway;
 
         managerSelf.registerHandlers([{
+            event: 'unload',
+            type: 'DOM',
+            window: true,
+            handler: function () {
+                managerSelf.destroy();
+            }
+        }, {
             event: 'mouseup',
             type: 'DOM',
             window: true,
