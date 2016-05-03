@@ -525,4 +525,17 @@ function createMathBlocks() {
     });
   });
 }
-createMathBlocks();
+// createMathBlocks();
+
+function test() {
+  var logFilePath = "C:/InfoScanJS/apps/backup.log";
+
+  var logToFile = function(msg) {
+    var timestamp = moment().format();
+    var data = '\n' + timestamp + ' ' + msg;
+    fs.writeFileSync(logFilePath, data, {flag: 'wx'});
+  };
+  logToFile('test');
+}
+test();
+

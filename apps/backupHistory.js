@@ -21,7 +21,7 @@ var History = require('../models/history.js');
 var ArchiveUtility = require('../models/archiveutility.js');
 var Utility = require('../models/utility.js');
 
-var logFilePath = "D:/InfoScan/PowerData/PowerMeterDataXfer.log";
+var logFilePath = config.get('Infoscan.files').driveLetter + ":/InfoScanJS/apps/backup.log";
 
 var logToFile = function(msg) {
     var timestamp = moment().format();
