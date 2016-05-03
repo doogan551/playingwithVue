@@ -4,7 +4,6 @@ var _ = require('lodash');
 var Utility = require('../models/utility');
 var logger = require('../helpers/logger')(module);
 
-var validDeviceModels = [18, 19, 20, 13, 16, 17];
 var validPortProtocols = [1, 4];
 var validEthProtocols = [1];
 
@@ -15,7 +14,7 @@ var startNetworks = [];
 var badNumbers = [];
 var badNetworks = [];
 var deviceUpis = [];
-var topLevels = [];
+var template = [];
 var unknownBranches = [];
 var tree = [];
 var topNode;
@@ -34,15 +33,13 @@ var compare = function(a, b) {
 };
 
 module.exports = {
-
     getTree: function(data, cb) {
-
         deviceTree = [];
         server = {};
         networkNumbers = [];
         badNumbers = [];
         deviceUpis = [];
-        topLevels = [];
+        template = [];
         unknownBranches = [];
         tree = [];
         newBranches = [];
@@ -57,30 +54,6 @@ module.exports = {
                     });
                 });
             });
-        });
-    },
-
-    buildTree: function(data, cb) {
-        deviceTree = [];
-        server = {};
-        networkNumbers = [];
-        badNumbers = [];
-        deviceUpis = [];
-        topLevels = [];
-        unknownBranches = [];
-        tree = [];
-        newBranches = [];
-
-        buildNodes(function(err) {
-            // makeTree(function(err) {
-            sortTree(function(err) {
-                return cb(err, {
-                    /* tree: deviceTree,
-                     networkNumbers: networkNumbers.sort(sortArray),
-                     badNumbers: badNumbers.sort(sortArray)*/
-                });
-            });
-            // });
         });
     }
 };
@@ -114,16 +87,12 @@ var makeTree = function(next) {
             collection: 'points',
             query: {
                 'Point Type.Value': 'Device',
-                'Model Type.eValue': {
-                    $in: validDeviceModels
-                },
                 _id: {
                     $nin: deviceUpis
                 }
             }
         }, function(err, devices) {
             for (var i = 0; i < devices.length; i++) {
-
                 var deviceNetwork = devices[i]["Network Segment"].Value;
                 var currentUplinkPort = devices[i]['Uplink Port'].eValue;
                 var branch = {
@@ -131,16 +100,12 @@ var makeTree = function(next) {
                     downNetworks: []
                 };
 
-                if (topLevels.indexOf(deviceNetwork) < 0) {
-                    topLevels.push(deviceNetwork);
-                }
-
                 if (currentUplinkPort === 0) {
                     var portNs = [1, 2];
                     if ([18, 19, 20].indexOf(devices[i]['Model Type'].eValue) > -1) {
                         portNs = portNs.concat([3, 4]);
                     }
-                    for (var n = 1; n < portNs.length; n++) {
+                    for (var n = 1; n <= portNs.length; n++) {
                         var portN = 'Port ' + n + ' ';
                         if (validPortProtocols.indexOf(devices[i][portN + 'Protocol'].eValue) > -1 && devices[i][portN + 'Network'].Value !== 0 && branch.downNetworks.indexOf(devices[i][portN + 'Network'].Value) < 0) {
                             branch.downNetworks.push(devices[i][portN + 'Network'].Value);
@@ -157,7 +122,7 @@ var makeTree = function(next) {
         });
     };
 
-    var buildTree = function(networkSegment, cb) {
+    var buildTree = function(network, cb) {
         var branches = [];
 
         var start = new Date();
@@ -165,7 +130,7 @@ var makeTree = function(next) {
             collection: 'points',
             query: {
                 'Point Type.Value': 'Device',
-                'Network Segment.Value': networkSegment
+                'Network Segment.Value': network.networkSegment
             },
             fields: {
                 Name: 1,
@@ -195,7 +160,6 @@ var makeTree = function(next) {
                 if ([18, 19, 20].indexOf(device['Model Type'].eValue) > -1) {
                     portNs = portNs.concat([3, 4]);
                 }
-
                 var deviceBranch = {
                     upi: device._id,
                     text: device.Name,
@@ -209,14 +173,13 @@ var makeTree = function(next) {
                 var downlinkNetwork = device['Downlink Network'].Value;
 
                 if (currentUplinkPort === 0) {
-
                     testNetworkNumber(downlinkNetwork, deviceBranch);
                 } else {
-                    if (device['Ethernet Network'].Value !== 0 && device['Ethernet Protocol'].eValue !== 0) {
+                    if (device['Ethernet Network'].Value !== 0 && validEthProtocols.indexOf(device['Ethernet Protocol'].eValue) > -1) {
                         testNetworkNumber(device['Ethernet Network'].Value, deviceBranch);
                     }
                 }
-                for (var i = 1; i < portNs.length; i++) {
+                for (var i = 1; i <= portNs.length; i++) {
                     if (i !== currentUplinkPort) {
                         var portN = 'Port ' + i + ' ';
                         if (validPortProtocols.indexOf(device[portN + 'Protocol'].eValue) > -1 && device[portN + 'Network'].Value !== 0) {
@@ -231,7 +194,9 @@ var makeTree = function(next) {
                     }
                     if (branchNetwork !== 0 && startNetworks.indexOf(branchNetwork) < 0 && badNetworks.indexOf(branchNetwork) < 0) {
                         startNetworks.push(branchNetwork);
-                        buildTree(branchNetwork, function(err, _branches) {
+                        buildTree({
+                            networkSegment: branchNetwork
+                        }, function(err, _branches) {
                             if (!!_branches.length) {
                                 deviceBranch.branches = deviceBranch.branches.concat(_branches);
                             }
@@ -242,7 +207,7 @@ var makeTree = function(next) {
                     }
                 }, function(err) {
                     branches.push(deviceBranch);
-
+                    // console.log(branches, deviceBranch);
                     callback1();
                 });
 
@@ -252,28 +217,21 @@ var makeTree = function(next) {
         });
     };
 
-    async.eachSeries(topLevels, function(top, acb) {
-        startNetworks = [top];
-        if (networkNumbers.indexOf(top) < 0) {
-            networkNumbers.push(top);
-        }
+    async.eachSeries(template, function(node, acb) {
         topNode = {
+            networkSegment: node.networkSegment,
             branches: []
         };
-        topNode.networkSegment = top;
-        buildTree(top, function(err, _branches) {
+        buildTree(node, function(err, _branches) {
+            // console.log(_branches);
             topNode.branches = topNode.branches.concat(_branches);
             deviceTree.push(topNode);
-
             acb();
         });
     }, function(err) {
-        // logger.info('badNumbers: '+badNumbers);
 
         next();
     });
-
-
 };
 
 var buildNodes = function(next) {
@@ -295,37 +253,7 @@ var buildNodes = function(next) {
         }
     };
 
-    var removeBranches = function() {
-        // TODO: find way to avoid deleting circular tree dependencies. 100 > 219 > 100
-        for (var i = 0; i < unknownBranches.length; i++) {
-            for (var j = 0; j < newBranches.length; j++) {
-                if (unknownBranches[i].ethernets.indexOf(newBranches[j].upNetwork) > -1 || unknownBranches[i].serials.indexOf(newBranches[j].upNetwork) > -1) {
-                    for (var b = 0; b < badNetworks.length; b++) {
-                        if (badNetworks.indexOf(unknownBranches[i].upNetwork) > -1) {
-                            // console.log('recursion', unknownBranches[i].upNetwork, newBranches[j].upNetwork);
-                        }
-                    }
-                    badNetworks.push(newBranches[j].upNetwork);
-                    newBranches.splice(j, 1);
-                    j--;
-                }
-            }
-        }
-    };
-
-    var buildUpTree = function() {
-        var isAdded = false;
-        newBranches = [];
-        for (var i = 0; i < unknownBranches.length; i++) {
-            for (var j = 0; j < newBranches.length; j++) {
-                if (newBranches[j].ethernets.indexOf(unknownBranches[i].upNetwork) > -1 || newBranches[j].serials.indexOf(unknownBranches[i].upNetwork) > -1) {
-
-                }
-            }
-        }
-    };
-
-    var buildNodes = function(devices) {
+    var buildStructure = function(devices) {
         var isAdded;
         for (var i = 0; i < devices.length; i++) {
             isAdded = false;
@@ -346,22 +274,16 @@ var buildNodes = function(next) {
         }
     };
 
-    var buildTree = function() {
-        /*for (var i = 0; i < unknownBranches.length; i++) {
-
-        }*/
-    };
-
     var buildBranches = function(devices) {
         for (var i = 0; i < devices.length; i++) {
             var deviceNetwork = devices[i]["Network Segment"].Value;
             var currentUplinkPort = devices[i]['Uplink Port'].eValue;
-
             var portNs = [1, 2];
+
             if ([18, 19, 20].indexOf(devices[i]['Model Type'].eValue) > -1) {
                 portNs = portNs.concat([3, 4]);
             }
-            for (var n = 1; n < portNs.length; n++) {
+            for (var n = 1; n <= portNs.length; n++) {
                 if (n !== currentUplinkPort) {
                     var portN = 'Port ' + n + ' ';
                     if (validPortProtocols.indexOf(devices[i][portN + 'Protocol'].eValue) > -1 && devices[i][portN + 'Network'].Value !== 0) {
@@ -370,7 +292,7 @@ var buildNodes = function(next) {
                 }
             }
 
-            if (devices[i]['Ethernet Network'].Value !== 0) {
+            if (devices[i]['Ethernet Network'].Value !== 0 && validEthProtocols.indexOf(devices[i]['Ethernet Protocol'].eValue) > -1) {
                 addToBranch(deviceNetwork, devices[i]['Ethernet Network'].Value, currentUplinkPort);
             }
 
@@ -381,68 +303,71 @@ var buildNodes = function(next) {
         }
     };
 
-    var buildTree = function() {
-        newBranches = [{
-                upNetwork: 4000,
-                ethernets: [4002, 4003],
-                serials: []
-            }, {
-                upNetwork: 4003,
-                ethernets: [4002],
-                serials: [ /*, 4003, 5000*/ ]
-            }
-            /*, {
-                        upNetwork: 5000,
-                        ethernets: [4000, 4002, 4000],
-                        serials: []
-                    }*/
-        ];
+    var buildNetworks = function() {
+        /*newBranches = [{
+            upNetwork: 4002,
+            ethernets: [],
+            serials: []
+        }, {
+            upNetwork: 4003,
+            ethernets: [],
+            serials: [4004]
+        }, {
+            upNetwork: 4000,
+            ethernets: [4002, 4003],
+            serials: []
+        }];*/
         tree = [];
-        /*branches: [{
-          "upi": 64750,
-          "text": "zWell 5_UNV",
-          "status": "Stop Scan",
-          "protocol": 0,
-          "networkSegment": 1,
-          "networks": [],
-          "branches": []
-        }],
-        "networkSegment": 1*/
         var possibleTops = [];
         var isAdded = false;
 
         var findBranches = function(branchArray, networkNumber) {
             var retBranch = null;
-            branchArray.forEach(function(branch) {
+            for (var i = 0; i < branchArray.length; i++) {
+                branch = branchArray[i];
                 if (branch.networkSegment === networkNumber) {
                     retBranch = branch;
+                    break;
                 } else if (!!branch.branches.length) {
                     retBranch = findBranches(branch.branches, networkNumber);
                 }
-            });
+            }
             return retBranch;
         };
 
         var isInTree = function(tree, network) {
-            console.log('network', network);
             var inTree = false;
             if (tree.networkSegment === network) {
-                console.log('returning true');
                 inTree = true;
             } else if (!!tree.branches.length) {
                 for (var b = 0; b < tree.branches.length; b++) {
                     var branch = tree.branches[b];
-                    console.log('branch', branch);
                     inTree = isInTree(branch, network);
-                    console.log('inTree', inTree);
                     if (!!inTree) {
                         break;
                     }
                 }
             }
-            console.log('return inTree', inTree);
             return inTree;
         };
+
+        var findParents = function(index, branches) {
+            var removals = [];
+            for (var b = 0; b < branches.length; b++) {
+                for (var t = 0; t < tree.length; t++) {
+                    if (t !== index) {
+                        if (tree[t].networkSegment === branches[b].networkSegment) {
+                            branches[b] = _.cloneDeep(tree[t]);
+                            removals.push(t);
+                        }
+                    }
+                }
+            }
+            removals.sort().reverse();
+            for (var r = 0; r < removals.length; r++) {
+                tree.splice(removals[r], 1);
+            }
+        }
 
         for (var i = 0; i < newBranches.length; i++) {
             isAdded = false;
@@ -450,49 +375,27 @@ var buildNodes = function(next) {
                 var branch = findBranches(tree[t].branches, newBranches[i].upNetwork);
                 if (branch !== null) {
                     newBranches[i].ethernets.forEach(function(ethernet) {
-                        if (!isInTree(tree[t], ethernet)) {
-                            branch.branches.push({
-                                networkSegment: ethernet,
-                                branches: []
-                            });
-                            console.log('ethernet', ethernet);
-                        } else {
-                            console.log('true ethernet', ethernet);
+                        if (isInTree(tree[t], ethernet)) {
+                            badNumbers.push(ethernet);
                         }
+                        branch.branches.push({
+                            networkSegment: ethernet,
+                            branches: []
+                        });
                     });
                     newBranches[i].serials.forEach(function(serial) {
-                        if (!isInTree(tree[t], serial)) {
-                            branch.branches.push({
-                                networkSegment: serial,
-                                branches: []
-                            });
-                            console.log('serial', serial);
-                        } else {
-                            console.log('true serial', serial);
+                        if (isInTree(tree[t], serial)) {
+                            badNumbers.push(serial);
                         }
+                        branch.branches.push({
+                            networkSegment: serial,
+                            branches: []
+                        });
                     });
                     isAdded = true;
                 }
-                /*if (tree[t].networkSegment === newBranches[i].upNetwork) {
-                    isAdded = true;
-                    newBranches[i].ethernets.forEach(function(ethernet) {
-                        if (tree[t].branches.indexOf(ethernet) < 0) {
-                            node.branches.push({
-                                networkSegment: ethernet,
-                                branches: []
-                            });
-                        }
-                    });
-                    newBranches[i].serials.forEach(function(serial) {
-                        if (tree[t].branches.indexOf(serial) < 0) {
-                            node.branches.push({
-                                networkSegment: serial,
-                                branches: []
-                            });
-                        }
-                    });
-                }*/
             }
+
             if (!isAdded) {
                 var node = {
                     networkSegment: newBranches[i].upNetwork,
@@ -512,10 +415,10 @@ var buildNodes = function(next) {
                 });
 
                 tree.push(node);
-                possibleTops.push(newBranches[i].upNetwork);
+                var parent = findParents(tree.length - 1, node.branches);
             }
         }
-        console.log('tree', JSON.stringify(tree), possibleTops);
+        console.log('tree', JSON.stringify(tree), badNumbers);
     };
 
     Utility.get({
@@ -526,6 +429,7 @@ var buildNodes = function(next) {
         fields: {
             'Network Segment': 1,
             'Ethernet Network': 1,
+            'Ethernet Protocol': 1,
             'Downlink Network': 1,
             'Port 1 Network': 1,
             'Port 2 Network': 1,
@@ -539,14 +443,11 @@ var buildNodes = function(next) {
             'Model Type': 1
         }
     }, function(err, devices) {
-        buildNodes(devices);
+        buildStructure(devices);
         buildBranches(devices);
         newBranches = _.cloneDeep(unknownBranches);
-        // removeBranches();
-        buildTree();
-        for (var i = 0; i < newBranches.length; i++) {
-            topLevels.push(newBranches[i].upNetwork);
-        }
+        buildNetworks();
+        template = tree;
         return next();
     });
 };
@@ -567,22 +468,4 @@ var sortTree = function(next) {
         }
         return next();
     });
-};
-
-var labelBadNetworks = function(next) {
-    var findNetwork = function(network, branch) {
-        if (branch.networks.indexOf(network) > -1) {
-
-        }
-
-    };
-    // badNumbers.push(666);
-    for (var i = 0; i < badNumbers.length; i++) {
-        for (var j = 0; j < deviceTree.length; j++) {
-            for (var k = 0; k < deviceTree[j].branches.length; k++) {
-                findNetwork(badNumbers[i], deviceTree[j].branches[k]);
-            }
-        }
-    }
-    return next();
 };

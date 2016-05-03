@@ -530,8 +530,8 @@ function createMathBlocks() {
 function deviceTree() {
   var DeviceTree = require('../models/devicetree');
   db.connect(connectionString.join(''), function(err) {
-    DeviceTree.buildTree({}, function(err, result) {
-      console.log('done', result);
+    DeviceTree.getTree({}, function(err, result) {
+      console.log('done', result.tree[0].branches);
     });
   });
 }
