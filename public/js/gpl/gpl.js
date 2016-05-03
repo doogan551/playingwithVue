@@ -6561,6 +6561,7 @@ gpl.Manager = function () {
                 gpl.pointChanges = $.extend(true, {}, gpl.json.editVersion.pointChanges);
 
                 gpl.on('rendered', function () {
+                    managerSelf.bindings.hasEdits(true);
                     gpl.blockManager.useEditVersion();
                 });
 
