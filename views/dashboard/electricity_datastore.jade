@@ -12,7 +12,7 @@
             li(role="separator", class="divider")
             // ko foreach: filteredDatastoreMonthYear
             li
-                a(data-bind="click: function(){ $parent.monthSelected($data) }, text: $data.prettyDate")
+                a(data-bind="click: function(){ $parent.monthSelected($data) }, text: $data.prettyDate, css: { selected: $parent.selectedMonthYear().prettyDate === $data.prettyDate }")
             // /ko
     .dropdown
         button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
@@ -32,7 +32,7 @@
             li(role="separator", class="divider")
             // ko foreach: filteredMeters
             li
-                a(data-bind="click: function(){ $parent.meterSelected($data) }, text: $data.displayedMeterName")
+                a(data-bind="click: function(){ $parent.meterSelected($data) }, text: $data.displayedMeterName, css: { selected: $parent.selectedMeter() && $parent.selectedMeter().displayedMeterName === $data.displayedMeterName }")
             // /ko
 
     .buttonBar(data-bind="if: $root.canWrite($parent.securityBindings.security)")

@@ -144,7 +144,7 @@ module.exports = {
 
             html = fn({});
 
-            cb(html);
+            cb(html, err);
         });
     },
 
