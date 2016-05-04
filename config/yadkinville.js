@@ -1,7 +1,6 @@
-var domains = ['yadkinvillenc.dtscada.com'];
 var yadkinville = {
   'Infoscan': {
-    'domains': domains,
+    'domains': ['yadkinvillenc.dtscada.com'],
     'dbConfig': {
       'host': 'localhost'
     },
@@ -17,7 +16,12 @@ var yadkinville = {
     'letsencrypt': {
       'enabled': true
     }
-  }
+  },
+  'SparkPost': {
+    "smtpAuth": {
+      'pass': 'f0dc741ba04fedf3d9073953f1dc390fab7b10c1'
+    }
+  },
 };
 
 yadkinville.redisConfig = {
