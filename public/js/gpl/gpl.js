@@ -251,6 +251,8 @@ var gpl = {
                 fn(complete);
             };
 
+        gpl._origPoint = $.extend(true, {}, window.gplData.point);
+
         gpl.point = gpl.convertBooleanStrings(gpl.point);
         gpl.devicePointRef = gpl.deStringObject(gpl.point['Point Refs'][0]);
 
@@ -1733,6 +1735,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         point['Show Value'].Value = bindings.deviceShowValue;
         point.Controller.Value = bindings.deviceControllerName;
         point.Controller.eValue = bindings.deviceControllerValue;
+        point._parentUpi = gpl.point._id;
     },
 
     setInvalid: function () {
@@ -5972,7 +5975,9 @@ gpl.BlockManager = function (manager) {
             bmSelf.manager.bindings.hasEdits(true);
             // gpl.hasEdits = true;
         }
-        bmSelf.editedBlocks[block.upi] = block;
+        if (!isNaN(block.upi)) {
+            bmSelf.editedBlocks[block.upi] = block;
+        }
     });
 
     gpl.on('deleteblock', function (oldBlock, isCancel) {
@@ -6359,7 +6364,7 @@ gpl.BlockManager = function (manager) {
         }
     };
 
-    bmSelf.handleUnload = function () {
+    bmSelf.handleUnload = function (cb) {
         var ret = {
             updates: [],
             adds: [],
@@ -6370,6 +6375,10 @@ gpl.BlockManager = function (manager) {
             gpl.forEach(bmSelf.newBlocks, function (block, upi) {
                 ret.deletes.push(upi);
             });
+
+            if (cb) {
+                gpl.waitForSocketMessage(cb);
+            }
 
             gpl.socket.emit('updateSequencePoints', ret);
         }
@@ -7102,7 +7111,8 @@ gpl.Manager = function () {
             name3 = names[2],
             name4 = names[3] || '',
             handler = function (obj) {
-                var oldPoint = $.extend(true, {}, obj);
+                var oldPoint = $.extend(true, {}, obj),
+                    newPoint;
 
                 gpl.unblockUI();
 
@@ -7116,14 +7126,17 @@ gpl.Manager = function () {
                 }
 
                 block.upi = obj._id;
-                obj._parentUpi = gpl.point._id;
+
                 block.setPointData(obj, true);
-                log(block.gplId, 'save callback', obj);
+
+                newPoint = block.getPointData();
+
+                log(block.gplId, 'save callback', newPoint);
                 gpl.fire('newblock', block);
                 called = true;
 
                 managerSelf.socket.emit('updatePoint', JSON.stringify({
-                    'newPoint': obj,
+                    'newPoint': newPoint,
                     'oldPoint': oldPoint
                 }));
             };
@@ -7169,6 +7182,11 @@ gpl.Manager = function () {
                 if (gpl.point._pStatus === 1) {
                     managerSelf.socket.emit('addPoint', {
                         point: gpl.point
+                    });
+                } else {
+                    managerSelf.socket.emit('updatePoint', {
+                        oldPoint: gpl._origPoint,
+                        newPoint: gpl.point
                     });
                 }
 
@@ -8004,8 +8022,9 @@ gpl.Manager = function () {
 
         managerSelf.$cancelButton.click(function () {
             managerSelf.bindings.hasEdits(false);
-            gpl.blockManager.handleUnload();
-            managerSelf.doCancel();
+            gpl.blockManager.handleUnload(function () {
+                managerSelf.doCancel();
+            });
         });
 
         managerSelf.$quitButton.click(function () {
