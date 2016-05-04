@@ -728,7 +728,13 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               var oldVal = (oldPoint[prop].Value !== '') ? oldPoint[prop].Value : "[blank]",
                 newVal = (newPoint[prop].Value !== '') ? newPoint[prop].Value : "[blank]";
               //if enum, if evalue changed AL, else if not enum, compare value
-              if (updateObject[prop] !== undefined && ((updateObject[prop].ValueType === 5 && updateObject[prop].eValue !== oldPoint[prop].eValue) || (updateObject[prop].ValueType !== 5 && updateObject[prop].Value !== oldPoint[prop].Value))) {
+              if(['Report', 'Sequence'].indexOf(newPoint['Point Type'].Value) >= 0 ) {
+               activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                 log: newPoint['Point Type'].Value + " updated",
+                 activity: actLogsEnums["Point Property Edit"].enum
+               })));
+              }
+              else if (updateObject[prop] !== undefined && ((updateObject[prop].ValueType === 5 && updateObject[prop].eValue !== oldPoint[prop].eValue) || (updateObject[prop].ValueType !== 5 && updateObject[prop].Value !== oldPoint[prop].Value))) {
                 if (prop === "Configure Device") {
                   activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                     log: "Device configuration requested",

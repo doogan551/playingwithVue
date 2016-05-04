@@ -2918,6 +2918,10 @@ var notificationsViewModel = function() {
                 return el !== '';
             });
 
+            days.forEach(function (day, idx, arr) {
+                arr[idx] = day.charAt(0).toUpperCase() + day.slice(1);
+            });
+
             return days.join(',');
         },
 
