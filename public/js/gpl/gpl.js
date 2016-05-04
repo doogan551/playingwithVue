@@ -1006,8 +1006,12 @@ gpl.Anchor = fabric.util.createClass(fabric.Circle, {
     },
 
     getConnectedBlock: function () {
-        var line = this.attachedLine,
-            ret = null;
+        var lines = this.attachedLines,
+            ids = Object.keys(lines),
+            line = lines[ids[0]],
+            ret;
+        // var line = this.attachedLine,
+        //     ret = null;
 
         if (line) {
             if (line.endAnchor === this) {
@@ -1266,7 +1270,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     name = otherBlock.name;
                 }
 
-                if (name) {
+                if (name && gpl.rendered) {
                     self.setPointRef(anchor.anchorType, otherBlock.upi, name);
                     gpl.fire('editedblock', self);
                 }
@@ -1679,11 +1683,18 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             idx;
 
         if (data) {
-            refs = this._pointData['Point Refs'];
+            refs = this._pointData['Point Refs'];//if monitor
             idx = this._pointRefs[prop];
             if (idx !== undefined) {
                 ref = refs[idx];
-                ref.Value = ref.DevInst = ref.PointInst = upi;
+                ref.Value = ref.PointInst = upi;
+
+                if (this.type === 'MonitorBlock') {
+                    ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
+                } else {
+                    ref.DevInst = gpl.deviceId;
+                }
+
                 refs[idx].PointName = name;
             }
             // } else {
@@ -5791,7 +5802,7 @@ gpl.BlockManager = function (manager) {
                 lines = [];
 
             gpl.forEach(bmSelf.blocks, function (obj) {
-                if (!obj.bypassSave && obj.targetCanvas === 'main') {
+                if (!obj.bypassSave && obj.targetCanvas !== 'toolbar') {
                     if (obj.syncAnchorPoints) {
                         obj.syncAnchorPoints();
                     }
@@ -7126,6 +7137,7 @@ gpl.Manager = function () {
                 }
 
                 block.upi = obj._id;
+                obj['Point Instance'].Value = obj._id;
 
                 block.setPointData(obj, true);
 
@@ -7164,6 +7176,23 @@ gpl.Manager = function () {
         }
     };
 
+    managerSelf.afterSave = function () {
+        offsetPositions(false);
+
+        managerSelf.resumeRender();
+
+        managerSelf.bindings.hasEdits(false);
+        // gpl.hasEdits = false;
+
+        log('save complete');
+
+        gpl.captureThumbnail();
+
+        setTimeout(function () {
+            managerSelf.doCancel();
+        }, 500);
+    };
+
     managerSelf.doSave = function () {
         var saveObj,
             isValid,
@@ -7177,8 +7206,6 @@ gpl.Manager = function () {
                     }
                 });
 
-                offsetPositions(false);
-
                 if (gpl.point._pStatus === 1) {
                     managerSelf.socket.emit('addPoint', {
                         point: gpl.point
@@ -7190,17 +7217,7 @@ gpl.Manager = function () {
                     });
                 }
 
-                managerSelf.resumeRender();
 
-
-                managerSelf.bindings.hasEdits(false);
-                // gpl.hasEdits = false;
-
-                log('save complete');
-
-                gpl.captureThumbnail();
-
-                managerSelf.doCancel();
             };
 
         gpl.isValid = true;
@@ -7208,6 +7225,8 @@ gpl.Manager = function () {
 
         gpl.blockUI();
         gpl.waitForSocketMessage(gpl.unblockUI);
+
+        managerSelf.doCompleteSave = true;
 
         saveObj = gpl.blockManager.getSaveObject();
         isValid = managerSelf.validate();
@@ -8022,9 +8041,22 @@ gpl.Manager = function () {
 
         managerSelf.$cancelButton.click(function () {
             managerSelf.bindings.hasEdits(false);
-            gpl.blockManager.handleUnload(function () {
-                managerSelf.doCancel();
+            gpl.blockManager.handleUnload();
+
+            delete gpl.json.editVersion;
+
+            managerSelf.offsetPositions(true);
+
+            managerSelf.socket.emit('updateSequence', {
+                sequenceName: gpl.point.Name,
+                sequenceData: {
+                    sequence: gpl.json
+                }
             });
+
+            setTimeout(function () {
+                managerSelf.doCancel();
+            }, 100);
         });
 
         managerSelf.$quitButton.click(function () {
@@ -8495,6 +8527,9 @@ gpl.Manager = function () {
 
             socket.on('sequenceUpdateMessage', function (message) {
                 gpl.showMessage('Sequence Saved');
+                if (managerSelf.doCompleteSave) {
+                    managerSelf.afterSave();
+                }
             });
 
             socket.on('sequencePointsUpdated', function (data) {
