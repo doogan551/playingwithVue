@@ -781,11 +781,13 @@ var reportsViewModel = function () {
             }
         },
         checkForIncludeInChart = function () {
-            var activateCharting = false,
+            var displayChartingHeader = false,
+                activateCharting = false,
                 allChecked = true;
 
             for (var i = 0; i < self.listOfColumns().length; i++) {
                 if (columnCanBeCharted(self.listOfColumns()[i])) {
+                    displayChartingHeader = true;
                     if (!activateCharting && self.listOfColumns()[i].includeInChart) {
                         activateCharting = true;
                     }
@@ -795,7 +797,7 @@ var reportsViewModel = function () {
                 }
             }
 
-            if (activateCharting) {
+            if (displayChartingHeader) {
                 $columnsGrid.find(".includeInChartColumn").show();
                 $columnsGrid.find(".yaxisChartGroupColumn").show();
             }
@@ -2097,6 +2099,7 @@ var reportsViewModel = function () {
             point["Report Config"].pointFilter = pointFilter;
             point["Report Config"].selectedPageLength = self.selectedPageLength();
             point["Report Config"].selectedChartType = self.selectedChartType();
+            point["Report Config"].reportTitle = self.reportDisplayTitle();
             switch (self.reportType) {
                 case "History":
                 case "Totalizer":
@@ -2123,7 +2126,13 @@ var reportsViewModel = function () {
             point.name2 = $pointName2.val();
             point.name3 = $pointName3.val();
             point.name4 = $pointName4.val();
-            point.Name = self.reportDisplayTitle();
+            point._name1 = point.name1.toLowerCase();
+            point._name2 = point.name2.toLowerCase();
+            point._name3 = point.name3.toLowerCase();
+            point._name4 = point.name4.toLowerCase();
+            point.Name = point.name1 + "_" + point.name2 + "_" + point.name3 + "_" + point.name4;
+            point.Name = point.Name.replace(/_\s*$/, "");
+            point._Name = point.Name.toLowerCase();
 
             if (point._pStatus !== 0) {
                 reportSocket.emit('addPoint', {
@@ -3066,6 +3075,7 @@ var reportsViewModel = function () {
             chartType = getValueBasedOnText(self.listOfChartTypes, self.selectedChartType());
             chartWidth = (!!formatForPrint ? 950 : $reportChartDiv.parent().width());
             chartHeight = (!!formatForPrint ? 650 : $reportChartDiv.parent().height());
+            reportChartData = getOnlyChartData(reportData);
 
             if (!!reportChartData && !!reportChartData[0]) {
                 if (reportChartData[0].data.length < maxDataRowsForChart) {
@@ -3318,9 +3328,9 @@ var reportsViewModel = function () {
             $pointName4.val(point.name4);
 
             initSocket();
-            self.reportDisplayTitle(point.Name.replace("_", " "));
 
             if (columns) {
+                self.reportDisplayTitle((!!point["Report Config"].reportTitle ? point["Report Config"].reportTitle : point.Name.replace(/_/g, " ")));
                 self.listOfColumns(initColumns(reportConfig.columns));
                 self.listOfFilters(initFilters(reportConfig.filters));
                 pointFilter = (reportConfig.pointFilter ? reportConfig.pointFilter : pointFilter);
@@ -3351,6 +3361,7 @@ var reportsViewModel = function () {
                         break;
                 }
             } else { // Initial config
+                self.reportDisplayTitle(point.Name.replace(/_/g, " "));
                 point["Point Refs"] = [];  // new report, clear out initial Report create data
                 point["Report Config"].columns = [];
                 point["Report Config"].filters = [];
