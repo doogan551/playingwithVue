@@ -2127,7 +2127,7 @@ var AlarmManager = function (conf) {
 
     self.ackRequired = function (alarm) {
         var ackStatus = alarm.ackStatus();
-        return (ackStatus && (ackStatus !== ACK_DONE));
+        return (ackStatus && (ackStatus !== ACK_DONE) && (ackStatus !== AUTO_ACK));
     };
 
     self.openDisplay = function (data) {
@@ -2820,14 +2820,16 @@ var AlarmManager = function (conf) {
     self.anyAckSelected = ko.computed(function() {
         var i,
             alarm,
+            ackStatus,
             alarms = self.alarms().list(),
             n = alarms.length,
             len = (n > 200) ? 200:n;
 
         for (i = 0; i < len; i++) {
             alarm = alarms[i];
+            ackStatus = alarm.ackStatus();
 
-            if (alarm.isSelected() && (alarm.ackStatus() !== ACK_NONE) && (alarm.ackStatus() !== ACK_DONE) && (alarm.ackStatus() !== AUTO_ACK)) {
+            if (alarm.isSelected() && (ackStatus !== ACK_NONE) && (ackStatus !== ACK_DONE) && (ackStatus !== AUTO_ACK)) {
                 return true;
             }
         }
