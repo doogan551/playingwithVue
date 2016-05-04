@@ -1,6 +1,6 @@
 var defaults = {
     'Infoscan': {
-        'domains': ['dorsett.dtscada.com'],
+        'domains': ['dorsettnc.dtscada.com'],
         'dbConfig': {
             'host': '192.168.1.88',
             'port': 27017,
@@ -62,9 +62,9 @@ var defaults = {
         'phoneNumber': '16623384486'
     },
     'SparkPost': {
-        "smtpRelayAuth": {
+        "smtpAuth": {
             'user': "SMTP_Injection",
-            'pass': "843730326ae23dd0859cd9affe42744c701ee63b"
+            'pass': 'f72bbcb40e28f4387831edaa35afab90caa66d01'
         }
     },
     runNotifications: true

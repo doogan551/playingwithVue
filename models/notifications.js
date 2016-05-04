@@ -2,13 +2,18 @@ var async = require('async'),
 	utility = require('../models/utility'),
 	utils = require('../helpers/utils'),
 	calendar = require('../models/calendar'),
-	siteConfig = require('config'),
+	config = require('config'),
+	siteConfig = config.get('Infoscan'),
 	Config = require('../public/js/lib/config.js'),
 	appConfig = require('config'),
 	cronJob = require('../models/cronjob'),
 	ObjectID = require('mongodb').ObjectID,
 	logger = require('../helpers/logger')(module),
 	Notifier = require('../models/notifierutility');
+
+var siteConfig = config.get('InfoScan'),
+	siteDomain = siteConfig.domains[0],
+	emailFromUser = siteConfig.email.from.alarms;
 
 var notifier = new Notifier();
 
@@ -1440,7 +1445,7 @@ var dbAlarmQueueLocked = false,
 						return ['It returned normal' + getVoiceMsgDate(timestamp), 'at', getMsgTime(timestamp) + '.'].join(' ');
 					},
 					getReturnNormalMessage = function (timestamp) {
-						return ['It has since returned normal', '(' + getMsgDate(timestamp), getMsgTime(timestamp) + ').'].join('');
+						return ['It has since returned normal', '(' + getMsgDate(timestamp), getMsgTime(timestamp) + ').'].join(' ');
 					},
 					getEmailSubject = function () {
 						// thread variables were set before this routine was called
@@ -1588,10 +1593,29 @@ var dbAlarmQueueLocked = false,
 
 					// Send notification
 					if (notification.Type === EMAIL) {
+						// Beautify our email message
+						notifyMsg =  '<span style="font-family: Helvetica, Arial, sans-serif; font-size: 14px; color: #FF0000">' + notifyMsg + '</span>';
+						
+						notifyMsg += '<p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-style: italic;">Reply to this email to acknowledge this alarm.</p>';
+						
+						notifyMsg += '<p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px;">Thanks,<br />';
+						notifyMsg += 'Your Dorsett Technologies InfoScan Team<br />';
+						notifyMsg += '800-331-7605<br/>';
+						notifyMsg += '<a href="http://www.dorsett-tech.com" style="color: #15C;">www.dorsett-tech.com</a>';
+						notifyMsg += '</p>';
+
+						notifyMsg += '<table cellpadding=”0″ cellspacing=”0″ style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #666; background-color: #EEE; border: 1px solid #CCC; border-collapse: collapse"><td style="padding: 10px;">';
+						notifyMsg += 'You are receiving this email at the account <a href="mailto:' + to + '" style="color: #15C;">' + to + '</a> because you are subscribed for alarm notifications on InfoScan.<br /><br />';
+						notifyMsg += 'To stop receiving these emails, please log in to <a href="http://' + siteDomain + '" style="color: #15C;">' + siteDomain + '</a> and change your alarm notification settings.<br /><br />';
+						notifyMsg += 'Do not edit or remove anything below this line when replying.<br />{' + thread.trigger.alarmId + '}';
+						notifyMsg += '</td></table>';
+
 						notifyParams = [{
 							to: to,
+							fromUser: emailFromUser,
 							subject: getEmailSubject(),
-							text: notifyMsg
+							html: notifyMsg,
+							generateTextFromHTML: true
 						}, createCallback(notifyEntry)];
 					} else {
 						notifyParams = [(to.length === 10) ? '1' + to : to, notifyMsg, createCallback(notifyEntry)];
@@ -1613,7 +1637,7 @@ var dbAlarmQueueLocked = false,
 				// }
 			},
 			sendError: function (err) {
-				var siteName = siteConfig.get('Infoscan.location').site,
+				var siteName = siteConfig.location.site,
 					text = [
 						'Site: ' + siteName,
 						'Timestamp: ' + new Date().getTime(),

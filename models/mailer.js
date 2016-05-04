@@ -5,8 +5,8 @@ var serverName = require('os').hostname();
 var siteConfig = config.get('Infoscan');
 var siteDomain = siteConfig.domains[0];
 var siteName = siteConfig.location.site;
-var defaultFromAddress = siteConfig.email.from.default + '@' + siteDomain;
-var smtpAuth = config.get('SparkPost').smtpRelayAuth;
+var defaultFromUser = siteConfig.email.from.default;
+var smtpAuth = config.get('SparkPost').smtpAuth;
 
 var OPEN = 1;
 var CLOSED = 2;
@@ -39,17 +39,17 @@ function getTransport () {
 function sendEmail (options, cb) {
   getTransport();
 
-  if (!!options.fromUser) {
-    options.from = options.fromUser + '@' + siteDomain;
-    delete options.fromUser; // Shouldn't matter but remove custom key just to be safe
-  } else {
-    options.from = defaultFromAddress;
+  if (!options.fromUser) {
+    options.fromUser = defaultFromUser;
   }
+  options.from = options.fromUser + '@' + siteDomain;
+  delete options.fromUser; // Shouldn't matter but remove custom key just to be safe
 
-  if (!!options.fromName) {
-    options.from = options.fromName + ' <' + options.from + '>';
-    delete options.fromName; // Shouldn't matter but remove custom key just to be safe
+  if (!options.fromName) {
+    options.fromName = 'InfoScan';
   }
+  options.from = options.fromName + ' <' + options.from + '>';
+  delete options.fromName; // Shouldn't matter but remove custom key just to be safe
 
   smtpTransport.sendMail(options, cb);
 }
@@ -61,7 +61,7 @@ module.exports = {
     if (siteConfig.email.onError.enabled) {
       options = {
         to: siteConfig.email.onError.to,
-        subject: 'Error: ' + serverName + '(' + siteName + ')',
+        subject: 'Error: ' + serverName + ' (Site: ' + siteName + ')',
         text: ['Site: ' + siteName, 'Time: ' + new Date().toString(), msg].join('\n')
       };
       sendEmail(options, function () {});
