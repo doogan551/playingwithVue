@@ -728,13 +728,12 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               var oldVal = (oldPoint[prop].Value !== '') ? oldPoint[prop].Value : "[blank]",
                 newVal = (newPoint[prop].Value !== '') ? newPoint[prop].Value : "[blank]";
               //if enum, if evalue changed AL, else if not enum, compare value
-              if(['Report', 'Sequence'].indexOf(newPoint['Point Type'].Value) >= 0 ) {
-               activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
-                 log: newPoint['Point Type'].Value + " updated",
-                 activity: actLogsEnums["Point Property Edit"].enum
-               })));
-              }
-              else if (updateObject[prop] !== undefined && ((updateObject[prop].ValueType === 5 && updateObject[prop].eValue !== oldPoint[prop].eValue) || (updateObject[prop].ValueType !== 5 && updateObject[prop].Value !== oldPoint[prop].Value))) {
+              if (['Report', 'Sequence'].indexOf(newPoint['Point Type'].Value) >= 0) {
+                activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                  log: newPoint['Point Type'].Value + " updated",
+                  activity: actLogsEnums["Point Property Edit"].enum
+                })));
+              } else if (updateObject[prop] !== undefined && ((updateObject[prop].ValueType === 5 && updateObject[prop].eValue !== oldPoint[prop].eValue) || (updateObject[prop].ValueType !== 5 && updateObject[prop].Value !== oldPoint[prop].Value))) {
                 if (prop === "Configure Device") {
                   activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                     log: "Device configuration requested",
@@ -990,12 +989,12 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
           })));
         } else if (newArray[i].Value !== 0 && oldArray[i].Value === 0) {
           activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
-            log: logData.prop+" added",
+            log: logData.prop + " added",
             activity: actLogsEnums["Point Property Edit"].enum
           })));
         } else {
           activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
-            log: logData.prop+" changed from " + oldArray[i].PointName + " to " + newArray[i].PointName,
+            log: logData.prop + " changed from " + oldArray[i].PointName + " to " + newArray[i].PointName,
             activity: actLogsEnums["Point Property Edit"].enum
           })));
         }
@@ -1287,7 +1286,7 @@ function updateDependencies(refPoint, flags, user, callback) {
 
               for (var i = 0; i < dependency["Point Refs"].length; i++) {
                 if (dependency["Point Refs"][i].Value === refPoint._id) {
-                  data.property = dependency["Point Refs"][i].PropertyName;
+                  data.property = i;
                   data.propertyObject = dependency["Point Refs"][i];
 
                   switch (flags.method) {
