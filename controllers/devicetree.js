@@ -8,7 +8,7 @@ router.get('/gettree', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
 
-	Devicetree.getTree(data, function(err, result) {
+	Devicetree.getTree(function(err, result) {
 		if (err) {
 			return utils.sendResponse(res, {
 				err: err
