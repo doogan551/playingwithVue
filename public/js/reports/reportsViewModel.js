@@ -501,7 +501,7 @@ var reportsViewModel = function () {
                         });
                         answer = (columnReference.length > 0);
                     } else if (pRef.PropertyName === "Qualifier Point") {
-                        filterReference = self.listOfColumns().filter(function (filter) {
+                        filterReference = self.listOfFilters().filter(function (filter) {
                             return (pRef.AppIndex === filter.AppIndex);
                         });
                         answer = (filterReference.length > 0);
@@ -1066,6 +1066,8 @@ var reportsViewModel = function () {
             localFilter.operator = "EqualTo";
             localFilter.childLogic = false;
             localFilter.valueType = prop.valueType;
+            localFilter.upi = 0;
+            localFilter.AppIndex = undefined;
             localFilter.value = setDefaultValue(localFilter.valueType);
             localFilter.valueList = getValueList(selectedItem.name, selectedItem.name);
             switch (localFilter.valueType) {
@@ -1192,10 +1194,10 @@ var reportsViewModel = function () {
                     delete results[results.length - 1]["softDeleted"]; // error is only used in UI
                     delete results[results.length - 1]["bitstringEnums"]; // error is only used in UI
                 }
+            }
 
-                if (cleanup) {
-                    cleanPointRefArray();
-                }
+            if (cleanup) {
+                cleanPointRefArray();
             }
 
             return results;
@@ -1316,11 +1318,11 @@ var reportsViewModel = function () {
                         delete results[results.length - 1]["error"];
                         delete results[results.length - 1]["softDeleted"];
                     }
-
-                    if (cleanup) {
-                        cleanPointRefArray();
-                    }
                 }
+            }
+
+            if (cleanup) {
+                cleanPointRefArray();
             }
 
             return results;
