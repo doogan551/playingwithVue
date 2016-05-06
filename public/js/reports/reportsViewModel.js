@@ -489,12 +489,31 @@ var reportsViewModel = function () {
         },
         cleanPointRefArray = function () {
             var i,
-                pointRef;
+                pointRef,
+                pointRefUsed = function (pRef) {
+                    var answer = false,
+                        columnReference,
+                        filterReference;
+
+                    if (pRef.PropertyName === "Column Point") {
+                        columnReference = self.listOfColumns().filter(function (column) {
+                            return (pRef.AppIndex === column.AppIndex);
+                        });
+                        answer = (columnReference.length > 0);
+                    } else if (pRef.PropertyName === "Qualifier Point") {
+                        filterReference = self.listOfColumns().filter(function (filter) {
+                            return (pRef.AppIndex === filter.AppIndex);
+                        });
+                        answer = (filterReference.length > 0);
+                    }
+
+                    return answer;
+                };
             for(i = 0; i < point["Point Refs"].length; i++) {
                 pointRef = point["Point Refs"][i];
                 if (!!pointRef) {
                     if (pointRef.PropertyName === "Column Point" || pointRef.PropertyName === "Qualifier Point") {
-                        if (pointRef.PointName === "-cleared-") {
+                        if (!pointRefUsed(pointRef)) {
                             point["Point Refs"].splice(i--, 1);
                         }
                     }
@@ -955,9 +974,6 @@ var reportsViewModel = function () {
                         tempObject.valueType = "UniquePID";
                         tempObject.value = name;
                         tempObject.pointType = type;
-                        if (!!tempObject.softDeleted) {
-                            delete tempObject.softDeleted;
-                        }
                         if (!!tempObject.AppIndex && tempObject.AppIndex > 0) {
                             resetPointRefSlot(tempObject.AppIndex, tempObject.upi, name);
                         }
@@ -1111,13 +1127,43 @@ var reportsViewModel = function () {
         },
         validateColumns = function (cleanup) {
             var results = [],
-                localArray = $.extend(true, [], self.listOfColumns()),
+                localArray,
+                appIndex = getMaxAppIndexUsed(),
                 i,
                 pointRef,
                 column,
                 validColumn,
-                push;
+                push,
+                existingPointRef,
+                checkColumnsForPointRefs = function () {
+                    for (i = 0; i < self.listOfColumns().length; i++) {
+                        column = self.listOfColumns()[i];
+                        if (!!column.upi && column.upi > 0) {
+                            existingPointRef = point["Point Refs"].filter(function (pRef) {
+                                return (pRef.AppIndex === column.AppIndex && pRef.PropertyName === "Column Point");
+                            });
 
+                            if (existingPointRef.length === 0) {
+                                pointRef = {};
+                                pointRef.PropertyEnum = window.workspaceManager.config.Enums.Properties["Column Point"].enum;
+                                pointRef.PropertyName = "Column Point";
+                                pointRef.Value = column.upi;
+                                pointRef.AppIndex = ++appIndex;
+                                pointRef.isDisplayable = true;
+                                pointRef.isReadOnly = false;
+                                pointRef.PointName = column.colName;
+                                pointRef.PointType = window.workspaceManager.config.Enums["Point Types"][column.pointType].enum;
+                                pointRef.PointInst = column.upi;
+                                pointRef.DevInst = 0;
+                                point["Point Refs"].push(pointRef);
+                                column.AppIndex = pointRef.AppIndex;
+                            }
+                        }
+                    }
+                };
+
+            checkColumnsForPointRefs();
+            localArray = $.extend(true, [], self.listOfColumns());
             for (i = 0; i < localArray.length; i++) {
                 column = localArray[i];
                 validColumn = true;
@@ -1129,7 +1175,6 @@ var reportsViewModel = function () {
                         pointRef = getPointRef(column.AppIndex);
                         if (pointRef.length > 0) { // in case of a rename since last report save
                             column.colName = pointRef[0].PointName;
-                            column.softDeleted = (pointRef[0].PointInst === 0); // check for softdelete since last save
                         } else {  // upi not in pointref array
                             push = false;
                         }
@@ -1139,7 +1184,7 @@ var reportsViewModel = function () {
                 if (push) {
                     results.push(column);
                 }
-                if (cleanup && validColumn) {
+                if (cleanup && validColumn && results.length > 0) {
                     delete results[results.length - 1]["valueList"];  // valuelist is only used in UI
                     delete results[results.length - 1]["dataColumnName"]; // dataColumnName is only used in UI
                     delete results[results.length - 1]["rawValue"]; // rawValue is only used in UI
@@ -1177,47 +1222,96 @@ var reportsViewModel = function () {
         },
         validateFilters = function (cleanup) {
             var results = [],
+                appIndex = getMaxAppIndexUsed(),
                 valid,
-                filters = $.extend(true, [], self.listOfFilters()),
-                i;
+                push,
+                pointRef,
+                filters,
+                filter,
+                i,
+                existingPointRef,
+                checkFiltersForPointRefs = function () {
+                    for (i = 0; i < self.listOfFilters().length; i++) {
+                        filter = self.listOfFilters()[i];
+                        if (filter.valueType === "UniquePID" && !!filter.upi) {
+                            existingPointRef = point["Point Refs"].filter(function (pRef) {
+                                return (pRef.AppIndex === filter.AppIndex && pRef.PropertyName === "Qualifier Point");
+                            });
 
+                            if (existingPointRef.length === 0) {
+                                pointRef = {};
+                                pointRef.PropertyEnum = window.workspaceManager.config.Enums.Properties["Qualifier Point"].enum;
+                                pointRef.PropertyName = "Qualifier Point";
+                                pointRef.Value = filter.upi;
+                                pointRef.AppIndex = ++appIndex;
+                                pointRef.isDisplayable = true;
+                                pointRef.isReadOnly = false;
+                                pointRef.PointName = filter.value;
+                                pointRef.PointType = window.workspaceManager.config.Enums["Point Types"][filter.pointType].enum;
+                                pointRef.PointInst = filter.upi;
+                                pointRef.DevInst = 0;
+                                point["Point Refs"].push(pointRef);
+                                filter.AppIndex = pointRef.AppIndex;
+                            }
+                        }
+                    }
+                };
+
+            checkFiltersForPointRefs();
+            filters = $.extend(true, [], self.listOfFilters());
             for (i = 0; i < filters.length; i++) {
                 if (filters[i].filterName !== "") {
                     valid = true;
-                    switch (filters[i].valueType) {
+                    push = true;
+                    filter = filters[i];
+                    switch (filter.valueType) {
                         case "Timet":
                         case "DateTime":
-                            if (moment.unix(filters[i].date).isValid()) {
-                                filters[i].error = undefined;
+                            if (moment.unix(filter.date).isValid()) {
+                                filter.error = undefined;
                             } else {
                                 valid = false;
-                                filters[i].error = "Invalid Date format in Filters";
+                                filter.error = "Invalid Date format in Filters";
                             }
-                            if (parseInt(filters[i].time, 10) === 0) {
-                                filters[i].time = "00:00";
+                            if (parseInt(filter.time, 10) === 0) {
+                                filter.time = "00:00";
                             } else {
-                                if (filters[i].time.toString().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
-                                    filters[i].value = getFilterAdjustedDatetime(filters[i]);
-                                    filters[i].error = undefined;
+                                if (filter.time.toString().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
+                                    filter.value = getFilterAdjustedDatetime(filter);
+                                    filter.error = undefined;
                                 } else {
                                     valid = false;
-                                    filters[i].error = "Invalid Time format in Filters";
+                                    filter.error = "Invalid Time format in Filters";
                                 }
                             }
                             break;
                         case "HourMinSec":
                         case "HourMin":
                         case "MinSec":
-                            filters[i].hours = parseInt(filters[i].hours, 10);
-                            filters[i].minutes = parseInt(filters[i].minutes, 10);
-                            filters[i].seconds = parseInt(filters[i].seconds, 10);
-                            filters[i].value = parseInt(filters[i].hours * 3600, 10);
-                            filters[i].value += parseInt(filters[i].minutes * 60, 10);
-                            filters[i].value += parseInt(filters[i].seconds, 10);
+                            filter.hours = parseInt(filter.hours, 10);
+                            filter.minutes = parseInt(filter.minutes, 10);
+                            filter.seconds = parseInt(filter.seconds, 10);
+                            filter.value = parseInt(filter.hours * 3600, 10);
+                            filter.value += parseInt(filter.minutes * 60, 10);
+                            filter.value += parseInt(filter.seconds, 10);
+                            break;
+                        case "UniquePID":
+                            if (filter.upi > 0 && !!filter.AppIndex) {
+                                pointRef = getPointRef(filter.AppIndex);
+                                if (pointRef.length > 0) {
+                                    filter.value = pointRef[0].PointName;
+                                } else {  // upi not in pointref array
+                                    push = false;
+                                }
+                            }
                             break;
                     }
-                    results.push(filters[i]);
-                    if (cleanup && valid) {  // clean fields only used during UI
+
+                    if (push) {
+                        results.push(filter);
+                    }
+
+                    if (cleanup && valid && results.length > 0) {  // clean fields only used during UI
                         delete results[results.length - 1]["valueList"];
                         delete results[results.length - 1]["error"];
                         delete results[results.length - 1]["softDeleted"];
@@ -1237,11 +1331,11 @@ var reportsViewModel = function () {
                 pointRef,
                 currentFilter,
                 len = theFilters.length,
-                validFilter = true;
+                validFilter;
 
             for (i = 0; i < len; i++) {
                 currentFilter = theFilters[i];
-
+                validFilter = true;
                 if (!!currentFilter.upi && currentFilter.upi > 0) {
                     if (!!currentFilter.AppIndex) {
                         pointRef = getPointRef(currentFilter.AppIndex);
@@ -1275,10 +1369,11 @@ var reportsViewModel = function () {
                 pointRef,
                 len = theColumns.length,
                 currentColumn,
-                validColumn = true;
+                validColumn;
 
             for (i = 0; i < len; i++) {
                 currentColumn = theColumns[i];
+                validColumn = true;
 
                 if (!!currentColumn.upi && currentColumn.upi > 0) {
                     if(!!currentColumn.AppIndex) {
