@@ -239,9 +239,18 @@ var Config = (function(obj) {
                         //return all default point types
                         return filterPointTypes('default');
                     }
+                    // gplblock
                     switch (property) {
+                        case 'Qualifier Point':
+                        case 'Display Button':
+                            return filterPointTypes('default');
+                        case 'Display Trend':
+                        case 'Display Animation':
+                        case 'Display Dynamic':
                         case 'Dynamic':
                             return filterPointTypes('dynamic');
+                        case 'GPLBlock':
+                            return filterPointTypes('gpl');
                         case 'Alarm Adjust Point':
                         case 'Dry Bulb Point':
                         case 'Humidity Point':
@@ -761,18 +770,9 @@ var Config = (function(obj) {
             if (pointTemplate.hasOwnProperty(data.property) === true) {
                 data.ok = true;
             } else {
-                if ((pointType === "Program") && (data.property === "Point Register")) {
-                    // There may be 0 to 32 point registers in each program point, so they are not included in the template.
-                    // Therefore we always treat the Point Register property as valid for the Program point type.
+                var ptRefProps = obj.Enums['Point Types'][pointType].ptRefProps;
+                if(ptRefProps.indexOf(data.property) >= 0){
                     data.ok = true;
-                } else {
-                    len = pointTemplate["Point Refs"].length;
-                    for (var a = 0; a < len; a++) {
-                        if (pointTemplate["Point Refs"][a].PropertyName === data.property) {
-                            data.ok = true;
-                            break;
-                        }
-                    }
                 }
             }
 
