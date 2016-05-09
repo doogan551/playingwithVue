@@ -101,6 +101,7 @@ common.setQualityLabel = function(point) {
 common.newUpdate = newUpdate;
 common.signalExecTOD = signalExecTOD;
 common.updateDependencies = updateDependencies;
+common.restorePoint = restorePoint;
 common.deletePoint = deletePoint;
 common.updateDeviceToDs = updateDeviceToDs;
 common.signalHostTOD = signalHostTOD;
@@ -158,7 +159,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
       timestamp: Date.now(),
       point: newPoint
     };
-
   readOnlyProps = ["_id", "_cfgDevice", "_updTOD", "_pollTime",
     "_forceAllCOV", "_actvAlmId", "Alarm State", "Control Pending", "Device Status",
     "Last Report Time", "Point Instance", "Point Type", "Reliability"
@@ -1093,7 +1093,7 @@ function updateRefs(updateReferences, newPoint, flags, callback) {
     updateDependencies(newPoint, {
       from: "newUpdate",
       method: (flags.method === null) ? "update" : flags.method
-    }, null, function(err) {
+    }, user, function(err) {
       return callback(err);
     });
 
@@ -1326,7 +1326,7 @@ function updateDependencies(refPoint, flags, user, callback) {
                 newUpdate(data.oldPoint, data.point, {
                   method: flags.method,
                   from: "updateDependencies"
-                }, null, function(response, point) {
+                }, user, function(response, point) {
                   cb3(response.err);
                 });
               });
@@ -1334,7 +1334,7 @@ function updateDependencies(refPoint, flags, user, callback) {
               newUpdate(data.oldPoint, data.point, {
                 method: flags.method,
                 from: "updateDependencies"
-              }, null, function(response, point) {
+              }, user, function(response, point) {
                 cb3(null);
               });
             }
@@ -1349,6 +1349,116 @@ function updateDependencies(refPoint, flags, user, callback) {
           return callback(err);
         updateDeviceToDs(devices, function(err) {
           callback((error !== null) ? error : err);
+        });
+      });
+    });
+  });
+}
+
+function restorePoint(upi, user, callback) {
+  var logData = {
+    user: user,
+    timestamp: Date.now()
+  };
+  Utility.findAndModify({
+    collection: pointsCollection,
+    query: {
+      _id: upi
+    },
+    sort: [],
+    updateObj: {
+      $set: {
+        _pStatus: 0
+      }
+    },
+    options: {
+      new: true
+    }
+  }, function(err, point) {
+
+    if (err)
+      return callback({
+        err: err
+      });
+
+    logData.activity = actLogsEnums["Point Restore"].enum;
+    logData.log = "Point restored";
+    logData.point = point;
+    Utility.insert({
+      collection: activityLogCollection,
+      insertObj: logData
+    }, function(err, result) {
+      if (point["Point Type"].Value === "Schedule") {
+        // get points based on parentupi
+        Utility.iterateCursor({
+          collection: 'points',
+          query: {
+            _parentUpi: point._id
+          }
+        }, function(err, doc, cb) {
+          restorePoint(doc._id, user, cb);
+        }, function() {
+          return callback({
+            message: "success"
+          });
+        })
+      } else {
+        restoreScheduleEntries(point, point["Point Type"].Value, user, function() {
+          common.updateDependencies(point, {
+            method: "restore"
+          }, user, function() {
+            return callback({
+              message: "success"
+            });
+          });
+        });
+      }
+    });
+  });
+}
+
+function restoreScheduleEntries(refPoint, pointType, user, callback) {
+  var options = {
+      from: "updateSchedules"
+    },
+    query = {};
+
+  // Build the query object
+  if (pointType === "Schedule") {
+    query._parentUpi = refPoint._id;
+  } else {
+    // deleted a non-schedule point
+    // do i need to search based on parentUpi still?
+    // query._parentUpi = 0;
+    query["Point Type.Value"] = "Schedule Entry";
+    query["Point Refs"] = {
+      $elemMatch: {
+        Value: refPoint._id,
+        PropertyName: "Control Point"
+      }
+    };
+  }
+
+  Utility.get({
+    collection: constants('pointsCollection'),
+    query: query
+  }, function(err, points) {
+    var devices = [],
+      signalTOD = false;
+    async.eachSeries(points, function(point, asyncCB) {
+      // if host schedule - set flag
+      updateScheduleEntries(point, devices, refPoint, function(todSignal) {
+        signalTOD = (signalTOD | todSignal) ? true : false;
+        restorePoint(point._id, user, function(err) {
+          asyncCB(err.err);
+        });
+      });
+    }, function(err) {
+      signalHostTOD(signalTOD, function(err) {
+        if (err)
+          return callback(err);
+        updateDeviceToDs(devices, function(err) {
+          callback(err);
         });
       });
     });
@@ -1596,7 +1706,6 @@ function deleteScheduleEntries(method, pointType, upi, user, callback) {
           callback(err);
         });
       });
-      callback(err);
     });
   });
 }
@@ -1640,7 +1749,6 @@ function signalHostTOD(signalTOD, callback) {
 //updateDependencies, deleteScheduleEntries
 function updateScheduleEntries(scheduleEntry, devices, refPoint, callback) {
   var signalTOD = false;
-
 
   if (refPoint !== null)
     scheduleEntry = Config.Update.formatPoint({
