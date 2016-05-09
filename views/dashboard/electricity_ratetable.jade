@@ -60,9 +60,9 @@
                             // ko foreach: periods
                             td.tooltip(data-toggle="tooltip", data-placement="top", data-bind="attr: { title: periodTitle, class: periodType }")
                                 .dateRange.editPointer(data-bind="style: { cursor: $parent.isChild()?'default':'pointer' }, text: rangeText, click: function() {$parentContext.$parent.editRatePeriod($parentContext, $data)}")
-                                .onPeak(data-bind="text: peakText, visible: !$parent.hidePeakInfo()")
-                                .days(data-bind="text: daysText, visible: !$parent.hidePeakInfo()")
-                                .time(data-bind="text: timeText, visible: !$parent.hidePeakInfo()")
+                                .onPeak(data-bind="text: peakText, visible: !$parent.hidePeakInfo() && (periodType() !== 'transition' || enablePeakSelection() === true)")
+                                .days(data-bind="text: daysText, visible: !$parent.hidePeakInfo() && (periodType() !== 'transition' || enablePeakSelection() === true)")
+                                .time(data-bind="text: timeText, visible: !$parent.hidePeakInfo() && (periodType() !== 'transition' || enablePeakSelection() === true)")
                             // /ko
                             td.addPeriod.showInEdit
                                 a(href="javascript://", data-bind="click: $parent.addRatePeriod.bind($parent)") Add Period
