@@ -1,3 +1,5 @@
+//in order to properly import the config file(s), we set the config dir
+process.env.NODE_CONFIG_DIR = __dirname + '/../config';
 var async = require('async');
 var utility = require('../models/utility');
 var db = require('../helpers/db');
@@ -58,7 +60,7 @@ var scripts = {
 						date = new Date(period.start.date);
 						end = new Date(period.end.date);
 						season = [period.rangeType.charAt(0).toUpperCase(), period.rangeType.slice(1)].join('');
-						
+
 						do {
 							title = months[date.getMonth()] + ', ' + date.getFullYear();
 							committedBill = touUtility.Billing.committedBills[title];
@@ -71,7 +73,7 @@ var scripts = {
 										if (billRow && !billRow.rateElement) {
 											// Add the rate table's rate element to the billing row
 											billRow.rateElement = collection.rates[j];
-											
+
 											if (!changes[title]) {
 												changes[title] = 0;
 											}
@@ -129,7 +131,47 @@ var scripts = {
 				return doCallback(err, results);
 			});
 		});
-	}
+	},
+
+    // 0.3.10 - GPL Point Ref PropertyEnum Update.  Updated GPLBlock PropertyEnum to be 439 instead of (placeholder) 0
+    updateGPLBlockPointRefEnum: function (callback) {
+        utility.iterateCursor({
+            collection: 'points',
+            query: {'Point Type.Value':'Sequence'}
+        }, function processSequence (err, doc, cb) {
+            var list = doc['Point Refs'];
+
+            list.forEach(function processPointRefs (ref) {
+                if (ref.PropertyName === 'GPLBlock') {
+                    ref.PropertyEnum = 439;
+                }
+            });
+
+            logger.info('updating sequence:', doc._id);
+
+            utility.update({
+                collection: 'points',
+                query: {
+                    _id: doc._id
+                },
+                updateObj: doc
+            }, function updatedSequenceHandler (err) {
+                if (err) {
+                    logger.debug('Update err:', err);
+                }
+
+                cb(null);
+            });
+
+        }, function finishUpdatingSequences (err) {
+            logger.info('Finished with updateGPLBlockPointRefEnum');
+            callback(null, {
+                fn: 'updateGPLBlockPointRefEnum',
+                errors: err
+            });
+        });
+    }
+
 };
 
 db.connect(connectionString, function (err) {
@@ -137,7 +179,7 @@ db.connect(connectionString, function (err) {
 		return logger.debug(err);
 	}
 	// Array of tasks that should be run
-	var tasks = [scripts.updateCommittedBills];
+    var tasks = [scripts.updateCommittedBills, scripts.updateGPLBlockPointRefEnum];
 
 	// Each task is provided a callback argument which should be called once the task completes.
 	// The task callback should be called with two arguments: err, result
@@ -158,5 +200,8 @@ db.connect(connectionString, function (err) {
 			logger.info("Error: ", err);
 		}
 		logger.info("Results: ", results);
+
+        //added a clean exit for when scripts are done
+        process.exit();
 	});
 });
