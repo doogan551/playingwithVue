@@ -1599,7 +1599,7 @@ function addBlocksToSequencePointRefs(db, point, cb) {
 		makePointRef = function(upi, name) {
 			var baseRef = {
 				"PropertyName": "GPLBlock",
-				"PropertyEnum": 0,
+				"PropertyEnum": 439,
 				"Value": upi,
 				"AppIndex": c + 1,
 				"isDisplayable": true,
