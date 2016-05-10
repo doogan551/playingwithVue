@@ -1902,6 +1902,295 @@ var alarmMessageDefinitions = _.partial(function(masterVm) {
     return self;
 }, sysPrefsViewModel);
 
+// Alarm Messages Screen ---------------------------------------------------------
+var alarmMessageViewModel = function() {
+    var self = this,
+        originalData,
+        $grid,
+        $alarmMessageMessage,
+        $addAlarmMessageForm,
+        $newAlarmMessageName,
+        ID = 'AlarmMessage ID',
+        NAME = 'AlarmMessage Name',
+        dataUrl = '/api/system/controllers',
+        saveUrl = '/api/system/updateControllers',
+        dirs = {},
+        setDirty = function() {
+            self.dirty(true);
+        },
+        AlarmMessage = function(row, idx) {
+            // console.log('row', row);
+            var id = row[ID],
+                name = row[NAME],
+                description = row.Description,
+                isUser = (row.isUser === true || row.isUser === 'true' || false);
+
+            this.isUser = isUser;
+            this[ID] = ko.observable(parseInt(id, 10));
+            this[NAME] = ko.observable(name);
+            this.Description = ko.observable(description);
+            this[NAME].subscribe(setDirty);
+            this.Description.subscribe(setDirty);
+            this._idx = idx;
+        },
+        setData = function(data) {
+            var c, len = data.length,
+                ret = [];
+
+            for (c = 0; c < len; c++) {
+                ret.push(new AlarmMessage(data[c], c));
+            }
+
+            self.sortByID();
+
+            self.alarmMessages(ret);
+            self.dirty(false);
+        },
+        getData = function() {
+            $.ajax({
+                url: dataUrl
+            }).done(function(data) {
+                originalData = data;
+                setData(data);
+            });
+        },
+
+        sortBy = function(field, numeric) {
+            var dir = dirs[field];
+
+            self.alarmMessages.sort(function(a, b) {
+                var aa = a[field](),
+                    bb = b[field]();
+
+                if (numeric) {
+                    aa = parseInt(aa, 10);
+                    bb = parseInt(bb, 10);
+                } else {
+                    aa = aa.toLowerCase();
+                    bb = bb.toLowerCase();
+                }
+
+                if (aa > bb) {
+                    return dir;
+                }
+
+                if (aa < bb) {
+                    return -1 * dir;
+                }
+
+                return 0;
+            });
+
+            dirs[field] = -dir;
+        },
+
+    //display status message on saving
+        showMessage = function(text) {
+            var message = text.charAt(0).toUpperCase() + text.substring(1);
+            $controllerMessage.stop(true)
+                .html(message)
+                .show(0)
+                .delay(2000)
+                .fadeOut();
+        };
+
+    self.displayName = 'Alarm Messages2';
+    self.dirty = ko.observable(false);
+    self.hasError = ko.observable(false);
+    self.alarmMessageName = ko.observable();
+    self.alarmMessageDesc = ko.observable();
+    self.alarmMessages = ko.observableArray();
+    self.showEntryForm = ko.observable(false);
+
+    dirs[NAME] = -1;
+    dirs[ID] = -1;
+    dirs.Description = -1;
+
+    self.init = function() {
+        $grid = $('#controllerGrid');
+        $controllerMessage = $('#controllerMessage');
+        $addControllerForm = $('#newControllerForm');
+        $newControllerName = $('#newControllerName');
+
+        $addControllerForm.jqxValidator({
+            animationDuration: 0,
+            rules: [{
+                input: '#newControllerName',
+                message: 'Name is required',
+                action: 'blur',
+                rule: 'required'
+            }, {
+                input: '#newControllerName',
+                message: 'Name must be at least 3 characters',
+                action: 'blur',
+                rule: 'length=3,255'
+            }]
+        });
+
+        getData();
+    };
+
+    self.sortByID = function() {
+        sortBy(ID, true);
+    };
+
+    self.sortByName = function() {
+        sortBy(NAME);
+    };
+
+    self.sortByDescription = function() {
+        sortBy('Description');
+    };
+
+    //shows add controller form
+
+    self.showForm = function() {
+        self.resetForm();
+        self.showEntryForm(true);
+        $newAlarmMessageName.focus();
+    };
+
+    self.resetForm = function() {
+        $addAlarmMessageForm.jqxValidator('hide');
+        self.alarmMessageName('');
+        self.alarmMessageDesc('');
+        self.showEntryForm(false);
+    };
+
+    //handles the add form submission
+    self.handleFormSubmit = function(form) {
+        var name = self.alarmMessageName(),
+            desc = self.alarmMessageDesc(),
+            records = self.alarmMessages(),
+            len = records.length,
+            done = false,
+            isValidated,
+            emptyIndex,
+            row,
+            maxId = 0,
+            tmpId,
+            obj = {},
+            ids = {},
+            finish = function() {
+                self.dirty(true);
+                self.resetForm();
+                showMessage('Added alarmMessage "' + name + '" with ID ' + emptyIndex);
+            },
+            findEmpty = function() {
+                var cc,
+                    done = false,
+                    emptyId;
+
+                for (cc = 1; cc < maxId && !done; cc++) {
+                    if (ids[cc] !== true) {
+                        emptyId = cc;
+                        done = true;
+                    }
+                }
+                if (!done) {
+                    emptyId = maxId + 1;
+                }
+                return emptyId;
+            },
+            c;
+
+        isValidated = $addAlarmMessageForm.jqxValidator('validate');
+
+        //make sure the form is valid first
+        if (isValidated === true) {
+            for (c = 0; c < len && !done; c++) {
+                row = records[c];
+                tmpId = row[ID]();
+                ids[tmpId] = true;
+                if (tmpId > maxId) {
+                    maxId = tmpId;
+                }
+                if (row[NAME]() === '') {
+                    emptyIndex = tmpId;
+                    row[NAME](name);
+                    row.Description(desc);
+                    row.isUser = false;
+                    done = true;
+                }
+            }
+
+            if (done === false) {
+                if (len < 255) {
+                    emptyIndex = findEmpty();
+                    obj[NAME] = name;
+                    obj.Description = desc;
+                    obj[ID] = emptyIndex;
+                    obj.isUser = false;
+                    row = new AlarmMessage(obj, self.controllers().length);
+
+                    self.controllers.push(row);
+                    finish();
+                } else {
+                    showMessage('No available alarmMessage slots');
+                }
+            } else {
+                finish();
+            }
+        }
+    };
+
+    self.deleteAlarmMessage = function(alarmMessage, event) {
+        var id = alarmMessage[ID](),
+            name = alarmMessage[NAME](),
+            idx = alarmMessage._idx,
+            controllers = self.alarmMessages(),
+            row = alarmMessages[idx];
+
+        row[NAME]('');
+
+        showMessage('Deleted alarmMessage "' + name + '" with ID ' + id);
+
+        self.dirty(true);
+    };
+
+    self.save = function() {
+        var controllers = ko.toJS(self.alarmMessages()),
+            sanitizedAlarmMessages = [],
+            sanitize = function() {
+                var c,
+                    row,
+                    obj;
+
+                for (c = 0; c < alarmMessages.length; c++) {
+
+                    row = alarmMessages[c];
+                    obj = {};
+                    obj[ID] = row[ID];
+                    obj[NAME] = row[NAME];
+                    obj.Description = row.Description;
+                    obj.isUser = row.isUser;
+                    if(!!row[NAME])
+                        sanitizedAlarmMessages.push(obj);
+                }
+            };
+
+        sanitize();
+
+        $.ajax({
+            url: saveUrl,
+            data: {
+                Entries: sanitizedAlarmMessages
+            },
+            dataType: 'json',
+            type: 'post'
+        }).done(function(response) {
+            self.dirty(false);
+            originalData = sanitizedAlarmMessages;
+            showMessage('Save alarmMessages: ' + response.message);
+        });
+    };
+
+    self.cancel = function() {
+        setData(originalData);
+    };
+};
+
+
 // Weather screen -------------------------------------------------------------
 var weatherViewModel = function() {
     var self = this,
@@ -3360,6 +3649,7 @@ $(function() {
             sysPrefsViewModel.registerSection(telemetryViewModel, 'init');
             sysPrefsViewModel.registerSection(backupViewModel, 'init');
             sysPrefsViewModel.registerSection(alarmMessageDefinitions);
+            sysPrefsViewModel.registerSection(alarmMessageViewModel, 'init');
             sysPrefsViewModel.registerSection(weatherViewModel, 'init');
             sysPrefsViewModel.registerSection(notificationsViewModel, 'init');
 
