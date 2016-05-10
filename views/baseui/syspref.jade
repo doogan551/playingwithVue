@@ -275,7 +275,7 @@ html
                                 td IP Port
                                 td.clickToEdit(data-bind="clickEdit: $data['IP Port']")
                                     span(data-bind="text: $data['IP Port']")
-                                    input#telemetryIPPort.hide.form-control(type="text", data-bind="value: $data['IP Port']")
+                                    input#telemetryIPNetworkSegment.hide.form-control(type="text", data-bind="value: $data['IP Port']")
                             tr
                                 td APDU Timeout (seconds)
                                 td.clickToEdit(data-bind="clickEdit: $data['APDU Timeout']")
@@ -304,15 +304,9 @@ html
                 br
                 div(data-bind='with:alarmMessagesViewModel.viewModel()')
                     include ../AlarmMessageDefinition/AlarmMessageDefinitionModule.jade
-            // ------ Alarm Message Definitions ---------------------------------------------------------------------
-            #alarmMessageDefinitionContainer2(data-bind="visible: section() == 'Alarm Messages2'")
-                .title Alarm Messages2
-                br
-                //div(data-bind='with:alarmMessageViewModel.viewModel()')
-                    include ../AlarmMessageDefinition/AlarmMessageDefinitionModule.jade
 
             // ------ Backup ----------------------------------------------------------------------------------------
-            div#backupContainer(data-bind="visible: section() == 'Backup'")
+            div#telemetry(data-bind="visible: section() == 'Backup'")
                 .title Backup
                 br
                 div#backupForm(data-bind="with: backupViewModel")
