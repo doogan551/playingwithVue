@@ -6749,7 +6749,7 @@ tou.utilityPages.Electricity = function() {
                             date.setSeconds(0);
                             date.setMilliseconds(0);
                             if (monthYear.period === "Year") {
-                                date.setDate(15);
+                                date.setDate(1);
                             }
                             return date.getTime();
                         }
@@ -6812,7 +6812,7 @@ tou.utilityPages.Electricity = function() {
                             date.setSeconds(0);
                             date.setMilliseconds(0);
                             if (monthYear.period === "Year") {
-                                date.setDate(15);
+                                date.setDate(1);
                             }
                             return date.getTime();
                         }
@@ -6868,7 +6868,7 @@ tou.utilityPages.Electricity = function() {
                             date.setSeconds(0);
                             date.setMilliseconds(0);
                             if (monthYear.period === "Year") {
-                                date.setDate(15);
+                                date.setDate(1);
                             }
                             return date.getTime();
                         }
