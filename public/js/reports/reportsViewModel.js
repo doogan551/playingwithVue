@@ -1045,6 +1045,9 @@ var reportsViewModel = function () {
             if (column.colName === "Choose Point") {
                 answer.valid = false;
                 answer.error = "Missing Column point at index " + colIndex;
+            } else if (column.colName === "Choose Property") {
+                answer.valid = false;
+                answer.error = "Missing Column property at index " + colIndex;
             } else if ((self.reportType === "Totalizer") || (self.reportType === "History")) {
                 if (column.colName !== "Date" && !!column.AppIndex) { //  skip first column  "Date"
                     pointRef = getPointRef(column.AppIndex);
@@ -1318,6 +1321,7 @@ var reportsViewModel = function () {
                             if (currentColumn.valueType === "BitString") {
                                 currentColumn.bitstringEnums = window.workspaceManager.config.Enums[currentColumn.colName + ' Bits'];
                             }
+                            currentColumn.dataColumnName = currentColumn.colName;
                             break;
                         case "History":
                             currentColumn.valueList = "";
@@ -1696,11 +1700,17 @@ var reportsViewModel = function () {
         formatDataField = function (dataField, columnConfig) {
             var keyBasedValue,
                 htmlString = "",
-                temp,
                 $customField,
-                rawValue = dataField.Value;
+                rawValue,
+                result = {};
 
-            dataField.rawValue = rawValue;
+            if (typeof dataField !== 'object') {
+                rawValue = dataField;
+            } else if (typeof dataField === 'object') {
+                rawValue = dataField.Value;
+                result = dataField;
+            }
+            result.rawValue = rawValue;
             if (!!columnConfig) {
                 switch (columnConfig.valueType) {
                     case "MinSec":
@@ -1708,14 +1718,14 @@ var reportsViewModel = function () {
                         $customField = $(htmlString);
                         $customField.find(".min").html(~~((rawValue % 3600) / 60));
                         $customField.find(".sec").html(rawValue % 60);
-                        dataField.Value = $customField.html();
+                        result.Value = $customField.html();
                         break;
                     case "HourMin":
                         htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span></div>';
                         $customField = $(htmlString);
                         $customField.find(".hr").html(~~(rawValue / 3600));
                         $customField.find(".min").html(~~((rawValue % 3600) / 60));
-                        dataField.Value = $customField.html();
+                        result.Value = $customField.html();
                         break;
                     case "HourMinSec":
                         htmlString = '<div class="durationCtrl durationDisplay"><span class="hr"></span><span class="timeSeg">hr</span><span class="min"></span><span class="timeSeg">min</span><span class="sec"></span><span class="timeSeg">sec</span></div>';
@@ -1723,79 +1733,85 @@ var reportsViewModel = function () {
                         $customField.find(".hr").html(~~(rawValue / 3600));
                         $customField.find(".min").html(~~((rawValue % 3600) / 60));
                         $customField.find(".sec").html(rawValue % 60);
-                        dataField.Value = $customField.html();
+                        result.Value = $customField.html();
                         break;
                     case "Float":
                     case "Integer":
                     case "Unsigned":
                         if ($.isNumeric(rawValue)) {
-                            dataField.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
+                            result.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
+                        } else if (rawValue === "") {
+                            result.Value = 0;
+                            result.rawValue = 0;
+                            rawValue = 0;
                         } else {
-                            dataField.Value = rawValue;
+                            result.Value = rawValue;
                         }
                         break;
                     case "String":
                         if ($.isNumeric(rawValue)) {
-                            dataField.Value = toFixedComma(rawValue, columnConfig.precision);
+                            result.Value = toFixedComma(rawValue, columnConfig.precision);
                         } else {
-                            dataField.Value = rawValue;
+                            result.Value = rawValue;
                         }
                         break;
                     case "Bool":
-                        temp = dataField.Value.toString().toLowerCase();
-                        dataField.Value = temp[0].toUpperCase() + temp.substring(1);
+                        if (result.Value !== "") {
+                            var temp = result.Value.toString().toLowerCase();
+                            result.Value = temp[0].toUpperCase() + temp.substring(1);
+                        }
                         break;
                     case "BitString":
                         htmlString = buildBitStringHtml(columnConfig, rawValue, true);
                         $customField = $(htmlString);
-                        dataField.Value = $customField.html();
+                        result.Value = $customField.html();
                         break;
                     case "Enum":
                     case "undecided":
                     case "null":
                     case "None":
                         if ($.isNumeric(rawValue)) {
-                            dataField.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
+                            result.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
                         } else {
-                            dataField.Value = rawValue;
+                            result.Value = rawValue;
                         }
                         break;
                     case "DateTime":
                     case "Timet":
                         if ($.isNumeric(rawValue) && rawValue > 0) {
-                            dataField.Value = moment.unix(rawValue).format("MM/DD/YY HH:mm");
+                            result.Value = moment.unix(rawValue).format("MM/DD/YY HH:mm");
                         } else {
-                            dataField.Value = rawValue;
+                            result.Value = rawValue;
                         }
                         break;
                     case "UniquePID":
                         if (dataField.PointInst !== undefined) {
                             if (dataField.PointInst > 0) {
-                                dataField.Value = dataField.PointName;
-                                dataField.rawValue = dataField.PointName;
+                                result.Value = dataField.PointName;
+                                result.rawValue = dataField.PointName;
                             } else {
-                                dataField.Value = "";
-                                dataField.rawValue = "";
+                                result.Value = "";
+                                result.rawValue = "";
                             }
                         } else {
                             //console.log("dataField.PointInst is UNDEFINED");
                         }
                         break;
                     default:
-                        dataField.Value = rawValue;
+                        result.Value = rawValue;
                         break;
                 }
 
                 if (columnConfig.valueOptions !== undefined) {
                     keyBasedValue = getKeyBasedOnValue(columnConfig.valueOptions, rawValue);
                     if (!!keyBasedValue) {
-                        dataField.Value = keyBasedValue;
+                        result.Value = keyBasedValue;
                     }
                 }
             } else {
                 console.log("formatDataField()  columnConfig is undefined");
             }
-            return dataField;
+            return result;
         },
         pivotHistoryData = function (historyData) {
             var columnConfig,
@@ -1879,37 +1895,29 @@ var reportsViewModel = function () {
             var columnArray = $.extend(true, [], self.listOfColumns()),
                 columnConfig,
                 i,
-                len = data.length,
                 j,
-                columnsLength = columnArray.length,
                 columnName,
-                columnDataFound,
-                rawValue;
+                columnDataFound;
 
-            for (i = 0; i < len; i++) {
-                for (j = 0; j < columnsLength; j++) {
-                    columnConfig = {};
+            for (i = 0; i < data.length; i++) {
+                if (!!data[i]._id) {
+                    delete data[i]._id;
+                }
+                for (j = 0; j < columnArray.length; j++) {
                     columnConfig = columnArray[j];
                     columnName = (columnConfig.dataColumnName !== undefined ? columnConfig.dataColumnName : columnConfig.colName);
                     columnDataFound = (data[i][columnName] !== undefined);
 
                     if (!columnDataFound) {  // data was NOT found for this column
                         data[i][columnName] = {};
-                        data[i][columnName] = data[i][columnName];
                         data[i][columnName].Value = "";
                         data[i][columnName].rawValue = "";
-                    } else if (typeof data[i][columnName] !== 'object') {
-                        rawValue = data[i][columnName];
-                        data[i][columnName] = {};
-                        data[i][columnName].Value = rawValue;
-                        data[i][columnName].rawValue = rawValue;
                     }
 
-                    if (columnDataFound) {
-                        data[i][columnName] = formatDataField(data[i][columnName], columnConfig);
-                    }
+                    data[i][columnName] = formatDataField(data[i][columnName], columnConfig);
                 }
             }
+
             return data;
         },
         parseNumberValue = function (theValue, rawValue, eValue) {
@@ -2155,8 +2163,9 @@ var reportsViewModel = function () {
             });
 
             $direports.find(".addColumnButton").on('click', function (e) {
-                var rowTemplate = {
-                        colName: "Choose Point",
+                var defaultColName = ((self.reportType === "Totalizer") || (self.reportType === "History") ? "Choose Point" : "Choose Property"),
+                    rowTemplate = {
+                        colName: defaultColName,
                         colDisplayName: "",
                         valueType: "String",
                         operator: "",
@@ -3040,7 +3049,7 @@ var reportsViewModel = function () {
             self.activeDataRequest(false);
             if (data.err === undefined) {
                 reportData = cleanResultData(data);
-                self.truncatedData(reportData);
+                self.truncatedData(reportData.truncated);
                 renderReport();
             } else {
                 console.log(" - * - * - renderPropertyReport() ERROR = ", data.err);
@@ -3390,6 +3399,7 @@ var reportsViewModel = function () {
                         self.listOfColumns.push({
                             colName: "Name",
                             colDisplayName: "Name",
+                            dataColumnName: "Name",
                             valueType: "String",
                             AppIndex: -1,
                             precision: 0,
