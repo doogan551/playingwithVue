@@ -1237,12 +1237,12 @@ function updateDependencies(refPoint, flags, user, callback) {
     collection: constants('pointsCollection'),
     query: {
       "Point Refs.Value": refPoint._id
+        // _parentUpi
     },
     fields: {
       _id: 1
     }
   }, function(err, dependencies) {
-
     async.eachSeries(dependencies, function(dependencyId, depCB) {
       Utility.getOne({
         collection: constants('pointsCollection'),
@@ -1251,8 +1251,8 @@ function updateDependencies(refPoint, flags, user, callback) {
         }
       }, function(err, dependency) {
         // TODO Check for errors
+        console.log('waterfall', dependency.Name, dependency["Point Type"].Value, flags.method)
         async.waterfall([
-
           function(cb1) {
             if (dependency["Point Type"].Value === "Schedule Entry" && flags.method === "hard") {
               updateScheduleEntries(dependency, devices, null, function(todSignal) {
@@ -1264,6 +1264,7 @@ function updateDependencies(refPoint, flags, user, callback) {
                     _id: dependency._id
                   }
                 }, function(err, result) {
+                  console.log('first err', err);
                   cb1(err);
                 });
               });
@@ -1278,9 +1279,10 @@ function updateDependencies(refPoint, flags, user, callback) {
             data.oldPoint = deepClone(dependency);
 
             if (dependency["Point Type"].Value !== "Schedule Entry" || (flags.method !== "hard")) {
-              if (dependency["Point Type"].Value === "Schedule Entry" && flags.method === "soft")
-                dependency._pStatus = 1; // was _pAccess
-
+              if (dependency["Point Type"].Value === "Schedule Entry" && dependency._parentUpi === 0 && flags.method === "soft") {
+                dependency._pStatus = 2;
+                return cb2(null);
+              }
               // dependency._cfgRequired = false;
               // dependency._updPoint = false;
 
@@ -1320,16 +1322,21 @@ function updateDependencies(refPoint, flags, user, callback) {
           },
           function(cb3) {
             if (dependency["Point Type"].Value === "Schedule Entry") {
-              updateScheduleEntries(dependency, devices, null, function(todSignal) {
-                signalTOD = (signalTOD | todSignal) ? true : false;
-                // does deletePoint need to be called here?
-                newUpdate(data.oldPoint, data.point, {
-                  method: flags.method,
-                  from: "updateDependencies"
-                }, user, function(response, point) {
-                  cb3(response.err);
+              if (flags.method !== 'hard') {
+                updateScheduleEntries(dependency, devices, null, function(todSignal) {
+                  signalTOD = (signalTOD | todSignal) ? true : false;
+                  // does deletePoint need to be called here?
+                  newUpdate(data.oldPoint, data.point, {
+                    method: flags.method,
+                    from: "updateDependencies"
+                  }, user, function(response, point) {
+                    console.log('second err', err);
+                    cb3(response.err);
+                  });
                 });
-              });
+              } else {
+                return cb3();
+              }
             } else {
               newUpdate(data.oldPoint, data.point, {
                 method: flags.method,
@@ -1340,6 +1347,7 @@ function updateDependencies(refPoint, flags, user, callback) {
             }
           }
         ], function(err) {
+          console.log('err', err);
           depCB(err);
         });
       });
@@ -1390,20 +1398,26 @@ function restorePoint(upi, user, callback) {
     }, function(err, result) {
       if (point["Point Type"].Value === "Schedule") {
         // get points based on parentupi
-        Utility.iterateCursor({
+        Utility.update({
           collection: 'points',
           query: {
             _parentUpi: point._id
+          },
+          updateObj: {
+            $set: {
+              _pStatus: 0
+            }
+          },
+          options: {
+            multi: true
           }
-        }, function(err, doc, cb) {
-          restorePoint(doc._id, user, cb);
-        }, function() {
+        }, function(err, result) {
           return callback({
             message: "success"
           });
         })
       } else {
-        restoreScheduleEntries(point, point["Point Type"].Value, user, function() {
+        restoreScheduleEntries(point, user, function() {
           common.updateDependencies(point, {
             method: "restore"
           }, user, function() {
@@ -1417,27 +1431,19 @@ function restorePoint(upi, user, callback) {
   });
 }
 
-function restoreScheduleEntries(refPoint, pointType, user, callback) {
+function restoreScheduleEntries(refPoint, user, callback) {
   var options = {
       from: "updateSchedules"
     },
-    query = {};
-
-  // Build the query object
-  if (pointType === "Schedule") {
-    query._parentUpi = refPoint._id;
-  } else {
-    // deleted a non-schedule point
-    // do i need to search based on parentUpi still?
-    // query._parentUpi = 0;
-    query["Point Type.Value"] = "Schedule Entry";
-    query["Point Refs"] = {
-      $elemMatch: {
-        Value: refPoint._id,
-        PropertyName: "Control Point"
+    query = {
+      'Point Type.Value': 'Schedule Entry',
+      'Point Refs': {
+        $elemMatch: {
+          Value: refPoint._id,
+          PropertyName: "Control Point"
+        }
       }
     };
-  }
 
   Utility.get({
     collection: constants('pointsCollection'),
@@ -1667,47 +1673,37 @@ function deleteScheduleEntries(method, pointType, upi, user, callback) {
       from: "updateSchedules"
     },
     query = {};
-
   // Build the query object
   if (pointType === "Schedule") {
     query._parentUpi = upi;
-  } else {
-    // deleted a non-schedule point
-    // do i need to search based on parentUpi still?
-    query._parentUpi = 0;
-    query["Point Type.Value"] = "Schedule Entry";
-    query["Point Refs"] = {
-      $elemMatch: {
-        Value: upi,
-        PropertyName: "Control Point"
-      }
-    };
-  }
+    if (method === 'soft') {
 
-  Utility.get({
-    collection: constants('pointsCollection'),
-    query: query
-  }, function(err, points) {
-    var devices = [],
-      signalTOD = false;
-    async.eachSeries(points, function(point, asyncCB) {
-      // if host schedule - set flag
-      updateScheduleEntries(point, devices, null, function(todSignal) {
-        signalTOD = (signalTOD | todSignal) ? true : false;
-        deletePoint(point._id, method, user, options, function(err) {
-          asyncCB(err.err);
-        });
+      Utility.update({
+        collection: constants('pointsCollection'),
+        query: query,
+        updateObj: {
+          $set: {
+            _pStatus: 2
+          }
+        },
+        options: {
+          multi: true
+        }
+      }, function(err, results) {
+        callback(err);
       });
-    }, function(err) {
-      signalHostTOD(signalTOD, function(err) {
-        if (err)
-          return callback(err);
-        updateDeviceToDs(devices, function(err) {
-          callback(err);
-        });
-      });
-    });
-  });
+    } else if (method === 'hard') {
+      Utility.remove({
+          collection: constants('pointsCollection'),
+          query: query
+        },
+        callback);
+    } else {
+      return callback();
+    }
+  } else {
+    return callback();
+  }
 }
 
 //updateDependencies, deleteScheduleEntries, updateSchedules(io)
