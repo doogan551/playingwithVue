@@ -13,13 +13,28 @@ module.exports = function (grunt) {
             build: {
                 options: {
                     report: 'min'
+                    // mangle: false,
+                    // compress: {
+                    //     keep_fnames: true,
+                    //     sequences: false,
+                    //     hoist_funs: false,
+                    //     properties: false,
+                    //     dead_code: false,
+                    //     booleans: false,
+                    //     unused: false,
+                    //     join_vars: false,
+                    //     cascade: false
+                    // }
                 },
                 files: [{
                     expand: true,
-                    cwd: 'public/',
-                    src: ['js/**/*.js'],
-                    dest: 'dist/public/',
-                    ext: '.js'
+                    cwd: 'public/js',
+                    src: ['**/*.js', '!**/lib/angular.js', '!**displays/*.js'],//for now, ignore displays and angular, as it messes all sorts of stuff up
+                    dest: 'dist/public/js'
+                    // ext: '.js',
+                    // rename: function (destBase, destPath) {
+                    //     return destBase + destPath;
+                    // }
                 }]
             }
         },
