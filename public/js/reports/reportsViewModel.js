@@ -1791,7 +1791,11 @@ var reportsViewModel = function () {
                     case "null":
                     case "None":
                         if ($.isNumeric(rawValue)) {
-                            result.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
+                            if (!!columnConfig.multiplier) {
+                                result.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
+                            } else {
+                                result.Value = toFixedComma(rawValue, columnConfig.precision);
+                            }
                         } else {
                             result.Value = rawValue;
                         }
