@@ -1309,6 +1309,29 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         return;
     },
 
+    _doFormatPoint: function (args, cb) {
+        if (args.point) {
+            var tmpData = gpl.formatPoint(args),
+                self = this;
+
+            if (tmpData.err) {
+                gpl.log(self.gplId, self.type, args.property, 'error:', tmpData.err);
+                // gpl.showMessage('Error with block "' + self.pointType + '-\'' + self.label + '\'": ' + tmpData.err + ' (Property: ' + args.property + ')');
+                // gpl.isValid = false;
+                // gpl.validationMessage.push('Error with block "' + self.pointType + '-\'' + self.label + '\'": ' + tmpData.err + ' (Property: ' + anchor.anchorType + ')');
+                if (self.setInvalid) {
+                    self.setInvalid();
+                }
+            } else {
+                self._pointData = tmpData;
+            }
+
+            if (cb) {
+                cb(tmpData);
+            }
+        }
+    },
+
     formatPoint: function (anchor, line, block, newData) {
         if (gpl.rendered) {
             var otherEnd = line && line.getOtherAnchor(),
@@ -1320,28 +1343,26 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     refPoint: otherBlock && otherBlock.upi
                 };
 
-            tmpData = gpl.formatPoint(args);
-
-             if (tmpData.err) {
-                gpl.log(self.gplId, self.type, args.property, 'error:', tmpData.err);
-                gpl.showMessage('Error with block "' + self.pointType + '-\'' + self.label + '\'": ' + tmpData.err + ' (Property: ' + anchor.anchorType + ')');
-                // gpl.isValid = false;
-                // gpl.validationMessage.push('Error with block "' + self.pointType + '-\'' + self.label + '\'": ' + tmpData.err + ' (Property: ' + anchor.anchorType + ')');
-                self.setInvalid();
-            } else {
-                self._pointData = tmpData;
-                data = newData;
+            this._doFormatPoint(args, function (data) {
                 newData = data;
-            }
+            });
         }
     },
 
-    formatPointFromData: function (oldPoint, newPoint) {
-        // var args = {
-        //     point: newPoint,
-        //     oldPoint: oldPoint,
-        //     property
-        // }
+    formatPointFromData: function (oldPoint, newPoint, property, refPoint) {
+        if (gpl.rendered) {
+            var self = this,
+                args = {
+                    point: newPoint || self.getPointData(),
+                    oldPoint: oldPoint || self._origPointData,
+                    property: property,
+                    refPoint: refPoint
+                };
+
+            self._doFormatPoint(args, function (data) {
+                self.setPointData(data);
+            });
+        }
     },
 
     syncAnchorPoints: function () {
@@ -1703,7 +1724,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
             this.updatePointRefs(this._origPointData);
         }
 
-        this.formatPointFromData(oldPoint, newPoint);
+        // this.formatPointFromData(oldPoint, newPoint);
 
         this._pointData = $.extend(true, {}, newPoint);
         gpl.pointData[this.upi] = this._pointData;
@@ -5613,6 +5634,12 @@ gpl.BlockManager = function (manager) {
             }
         },
 
+        forEachBlock: function (cb) {
+            gpl.forEach(bmSelf.blocks, function eachBlockFn (block) {
+                cb(block);
+            });
+        },
+
         getActiveBlock: function () {
             var target = bmSelf.canvas.getActiveObject(),
                 gplId = (target && target.gplId) || null,
@@ -5666,6 +5693,7 @@ gpl.BlockManager = function (manager) {
 
                     if (ref) {
                         ref.PropertyName = 'GPLBlock';
+                        ref.PropertyEnum = 439;
                         // ref.AppIndex = idx;
                         refs.push(ref);
                     }
@@ -7231,9 +7259,14 @@ gpl.Manager = function () {
 
                 newPoint = block.getPointData();
 
+                newPoint['Point Refs'][0].Value = gpl.deviceId;
+
+                block.formatPointFromData(newPoint, newPoint, 'Device Point', gpl.devicePoint);
+
                 log(block.gplId, 'save callback', newPoint);
                 gpl.fire('newblock', block);
                 called = true;
+
 
                 managerSelf.socket.emit('updatePoint', JSON.stringify({
                     'newPoint': newPoint,
@@ -7354,7 +7387,7 @@ gpl.Manager = function () {
         offsetPositions(true, gpl.json.editVersion);
         offsetPositions(true);
 
-        gpl.updateSequence();
+        gpl.saveSequence();
 
         offsetPositions(false, gpl.json.editVersion);
         offsetPositions(false);
@@ -8049,19 +8082,41 @@ gpl.Manager = function () {
                 gpl.point.Controller.eValue = props.deviceControllerValue;
                 managerSelf.bindings.updateBackgroundColor();
 
-                console.log('update', props);
+                if (gpl.devicePoint._id !== gpl._newDevicePoint._id) {
+                    gpl.devicePoint = gpl._newDevicePoint;
+                    gpl.deviceId = gpl._newDevicePoint._id;
+
+                    gpl.blockManager.forEachBlock(function (block) {
+                        gpl.log('processing block', block.gplId);
+                        if (block.isNonPoint !== true) {
+                            block.formatPointFromData(null, null, 'Device Point', gpl.devicePoint);
+                        }
+                        gpl.fire('editedblock', block);
+                    });
+                }
+
+                delete gpl._newDevicePoint;
+
+                // console.log('update', props);
                 gpl.$sequencePropertiesModal.modal('hide');
             },
             showUpdateSequenceModal: function () {
                 if (gpl.isEdit) {
+                    delete gpl._newDevicePoint;
                     gpl.$sequencePropertiesModal.modal('show');
                 }
             },
             selectDevicePoint: function () {
                 gpl.openPointSelector(function (upi, name) {
+                    $.ajax({
+                        url: '/api/points/' + upi
+                    }).done(function (data) {
+                        gpl._newDevicePoint = data;
+                    });
+
                     managerSelf.bindings.deviceName(name);
                     managerSelf.bindings.deviceUpi(upi);
-                }, null, 'Device', 'Device Point');
+                }, null, 'Device', 'Device Point', {});
             },
 
             addNewButton: function () {
@@ -8125,7 +8180,7 @@ gpl.Manager = function () {
 
             managerSelf.offsetPositions(true);
 
-            gpl.updateSequence();
+            gpl.saveSequence();
 
             setTimeout(function () {
                 managerSelf.doCancel();
