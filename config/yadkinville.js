@@ -14,9 +14,9 @@ var yadkinville = {
       'email': 'rkendall@dorsett-tech.com'
     },
     'letsencrypt': {
-      'enabled': true,
-      'domains': ['yadkinvillenc.dtscada.com']
-    }
+      'enabled': true
+    },
+    'domains': ['yadkinvillenc.dtscada.com']
   }
 };
 
