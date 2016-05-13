@@ -170,16 +170,82 @@ var scripts = {
                 errors: err
             });
         });
-    }
+    },
+// 0.3.10 - new Report fields
+	updateExistingReports: function (callback) {
+		var collection = 'points',
+			reportUpdateCounter = 0;
+
+		utility.iterateCursor({
+			collection: collection,
+			query: {"Point Type.Value": "Report"}
+		}, function (err, doc, cb) {
+			var reportConfig = doc["Report Config"],
+				columns,
+				updatedCol = {},
+				updatedColumns = [],
+				updateDoc = false;
+
+			if (!!reportConfig) {
+				columns = (!!reportConfig ? reportConfig.columns : []);
+				if (!!columns) {
+					for (var i = 0; i < columns.length; i++) {
+						updatedCol = columns[i];
+						if (updatedCol.multiplier === undefined) {
+							updatedCol.multiplier = 1;
+							updateDoc = true;
+						}
+						if (updatedCol.includeInChart === undefined) {
+							updatedCol.includeInChart = false;
+							updateDoc = true;
+						}
+						updatedColumns.push(updatedCol);
+					}
+					doc["Report Config"].columns = updatedColumns;
+
+					if (updatedColumns.length > 0 && updateDoc) {
+						logger.info('updating report:', doc._id);
+						utility.update({
+							collection: 'points',
+							query: {
+								_id: doc._id
+							},
+							updateObj: doc
+						}, function (err) {
+							if (err) {
+								logger.debug('Update err:', err);
+							} else {
+								reportUpdateCounter++;
+							}
+							cb(null);
+						});
+					} else {
+						cb(null);
+					}
+				} else {
+					cb(null);
+				}
+			} else {
+				cb(null);
+			}
+		}, function (err) {
+			logger.info('Finished with updateExistingReports updated ' + reportUpdateCounter + ' reports');
+			callback(null, {
+				fn: 'updateExistingReports',
+				errors: err
+			});
+		});
+	}
 
 };
+
 
 db.connect(connectionString, function (err) {
 	if (err) {
 		return logger.debug(err);
 	}
 	// Array of tasks that should be run
-    var tasks = [scripts.updateCommittedBills, scripts.updateGPLBlockPointRefEnum];
+    var tasks = [scripts.updateCommittedBills, scripts.updateGPLBlockPointRefEnum, scripts.updateExistingReports];
 
 	// Each task is provided a callback argument which should be called once the task completes.
 	// The task callback should be called with two arguments: err, result
