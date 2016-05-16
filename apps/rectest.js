@@ -528,14 +528,7 @@ function createMathBlocks() {
 // createMathBlocks();
 
 function test() {
-  var logFilePath = "C:/InfoScanJS/apps/backup.log";
-
-  var logToFile = function(msg) {
-    var timestamp = moment().format();
-    var data = '\n' + timestamp + ' ' + msg;
-    fs.writeFileSync(logFilePath, data, {flag: 'wx'});
-  };
-  logToFile('test');
+  var pjson = require('../package.json');
+  console.log(pjson.version);
 }
 test();
-
