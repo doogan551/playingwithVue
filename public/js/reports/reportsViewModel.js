@@ -1431,21 +1431,41 @@ var reportsViewModel = function () {
             }
             return answer;
         },
-        setSelectedDurationBasedOnRange = function (selectedRange) {
-            if(!!selectedRange) {
-                self.selectedDuration().selectedRange = selectedRange;
+        configureSelectedDuration = function (durationObject) {
+            if (!!durationObject) {
+                self.selectedDuration({
+                    startDate: $.isNumeric(durationObject.startDate) ? moment.unix(durationObject.startDate) : durationObject.startDate,
+                    startTimeOffSet: durationObject.startTimeOffSet,
+                    endDate: $.isNumeric(durationObject.endDate) ? moment.unix(durationObject.endDate) : durationObject.endDate,
+                    endTimeOffSet: durationObject.endTimeOffSet,
+                    selectedRange: (!!durationObject.selectedRange ? durationObject.selectedRange : "")
+                });
+
+                self.durationStartTimeOffSet(durationObject.startTimeOffSet);
+                self.durationEndTimeOffSet(durationObject.endTimeOffSet);
+                if (!!durationObject.interval) {
+                    self.interval(durationObject.interval.text);
+                    self.intervalValue(durationObject.interval.value);
+                }
             }
-            if (self.selectedDuration().selectedRange === "Custom Range") {
-                self.startDate = getAdjustedDatetimeUnix(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet());
-                self.endDate = getAdjustedDatetimeUnix(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet());
-            } else {
-                var dateRange = reportDateRanges(self.selectedDuration().selectedRange);
-                self.selectedDuration().startDate = getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
-                self.selectedDuration().endDate = getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
-                self.startDate = self.selectedDuration().startDate.unix();
-                self.endDate = self.selectedDuration().endDate.unix();
+
+            if (typeof self.selectedDuration() === 'object') {
+                self.selectedDuration().startTimeOffSet = self.durationStartTimeOffSet();
+                self.selectedDuration().endTimeOffSet = self.durationEndTimeOffSet();
+
+                if (self.selectedDuration().selectedRange === "Custom Range") {
+                    self.startDate = getAdjustedDatetimeUnix(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet());
+                    self.endDate = getAdjustedDatetimeUnix(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet());
+                } else {
+                    var dateRange = reportDateRanges(self.selectedDuration().selectedRange);
+                    self.selectedDuration().startDate = getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
+                    self.selectedDuration().endDate = getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
+                    self.startDate = self.selectedDuration().startDate.unix();
+                    self.endDate = self.selectedDuration().endDate.unix();
+                }
+                self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
             }
-            self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
+
             self.selectedDuration.valueHasMutated();
         },
         buildReportDataRequest = function () {
@@ -1483,7 +1503,7 @@ var reportsViewModel = function () {
                 }
 
                 if (self.reportType === "Totalizer" || self.reportType === "History") {
-                    setSelectedDurationBasedOnRange();
+                    configureSelectedDuration();
                 } else {
                     if (filters.length > 0) {
                         for (i = 0; i < filters.length; i++) {
@@ -1771,7 +1791,11 @@ var reportsViewModel = function () {
                     case "null":
                     case "None":
                         if ($.isNumeric(rawValue)) {
-                            result.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
+                            if (!!columnConfig.multiplier) {
+                                result.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
+                            } else {
+                                result.Value = toFixedComma(rawValue, columnConfig.precision);
+                            }
                         } else {
                             result.Value = rawValue;
                         }
@@ -1924,7 +1948,7 @@ var reportsViewModel = function () {
             var result;
             result = Number.parseFloat(theValue.toString().replace(",",""));
             if (isNaN(result)) {
-                result = (eValue !== undefined ? parseFloat(eValue) : rawValue);
+                result = (eValue !== undefined ? parseFloat(eValue) : parseFloat(rawValue));
                 if (isNaN(result)) {
                     result = rawValue;
                 }
@@ -3233,17 +3257,17 @@ var reportsViewModel = function () {
     self.durationError = ko.observable(false);
 
     self.selectedDuration = ko.observable({
-        startDate: moment().subtract(1, "day"),
+        startDate: moment(),
         endDate: moment().add(1, "day"),
         startTimeOffSet: "00:00",
         endTimeOffSet: "00:00",
-        duration: 0,
-        selectedRange: ""
+        duration: moment().add(1, "day").diff(moment()),
+        selectedRange: "Today"
     });
 
-    self.durationStartTimeOffSet = ko.observable("00:00");
+    self.durationStartTimeOffSet = ko.observable(self.selectedDuration().startTimeOffSet);
 
-    self.durationEndTimeOffSet = ko.observable("00:00");
+    self.durationEndTimeOffSet = ko.observable(self.selectedDuration().endTimeOffSet);
 
     self.listOfIntervals = ko.observableArray([]);
 
@@ -3343,14 +3367,7 @@ var reportsViewModel = function () {
                     case "History":
                     case "Totalizer":
                         if (!!point["Report Config"].duration.duration) { // have to set each manually because of computed relationship
-                            self.selectedDuration().startDate = moment.unix(point["Report Config"].duration.startDate);
-                            self.selectedDuration().endDate = moment.unix(point["Report Config"].duration.endDate);
-                            self.selectedDuration().startTimeOffSet = point["Report Config"].duration.startTimeOffSet;
-                            self.selectedDuration().endTimeOffSet = point["Report Config"].duration.endTimeOffSet;
-                            self.selectedDuration().selectedRange = point["Report Config"].duration.selectedRange;
-                            self.durationStartTimeOffSet(self.selectedDuration().startTimeOffSet);
-                            self.durationEndTimeOffSet(self.selectedDuration().endTimeOffSet);
-                            self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
+                            configureSelectedDuration(point["Report Config"].duration);
                         }
                         self.interval(point["Report Config"].interval.text);
                         self.intervalValue(point["Report Config"].interval.value);
@@ -3390,7 +3407,7 @@ var reportsViewModel = function () {
                             valueList: [],
                             upi: 0
                         });
-                        setSelectedDurationBasedOnRange("Today");
+                        configureSelectedDuration();
                         break;
                     case "Property":
                         filterOpenPointSelector($filterByPoint);
@@ -3431,18 +3448,7 @@ var reportsViewModel = function () {
 
             if (!!externalConfig) {
                 if (self.reportType === "History" || self.reportType === "Totalizer") {
-                    self.selectedDuration({
-                        startDate: externalConfig.startDate,
-                        startTimeOffSet: externalConfig.startTimeOffSet,
-                        endDate: externalConfig.endDate,
-                        endTimeOffSet: externalConfig.endTimeOffSet,
-                        selectedRange: externalConfig.selectedRange
-                    });
-                    self.durationStartTimeOffSet(self.selectedDuration().startTimeOffSet);
-                    self.durationEndTimeOffSet(self.selectedDuration().endTimeOffSet);
-                    self.interval(externalConfig.interval.text);
-                    self.intervalValue(externalConfig.interval.value);
-                    setSelectedDurationBasedOnRange(externalConfig.selectedRange);
+                    configureSelectedDuration(externalConfig);
                 }
                 self.requestReportData();
             }
