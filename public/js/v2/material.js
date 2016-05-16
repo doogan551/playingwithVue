@@ -21,5 +21,7 @@ var material = {
     }
 };
 
-material.clock.checkTime(true);
+// material.clock.checkTime(true);
 // material.clock.interval = setInterval(material.clock.checkTime, 1000);
+
+$.material.init();
