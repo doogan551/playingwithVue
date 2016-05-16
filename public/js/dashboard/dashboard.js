@@ -5994,7 +5994,7 @@ tou.utilityPages.Electricity = function() {
                 if (data.err === null) {
                     myBindings.parseReturnedData(data.results);
                 } else {
-                    tou.alert("Error while retrieving data");
+                    tou.alert("Error while retrieving data.  (" + data.err + ")");
                 }
             });
         },
@@ -6014,7 +6014,7 @@ tou.utilityPages.Electricity = function() {
                 filteredReportMonthYear,
                 $availablePeriods = $('.' + self.utilityNameShort + ' .reportsTopBar .availablePeriods'),
                 $availablePeriodsInput = $availablePeriods.find('input'),
-                setDefaultMonthYear = function () {
+                setDefaultMonth = function () {
                     if (self.bindings.selectedMonthYear() === "") {
                         filteredReportMonthYear = self.bindings.filteredReportMonthYear();
                         for (var i = 0, len = filteredReportMonthYear.length, done = false; i < len && !done; i++) {
@@ -6034,10 +6034,7 @@ tou.utilityPages.Electricity = function() {
                     self.refreshMonthYear();
                     listOfDates = self.bindings.$page.listOfMonthYears();
                     if (!configRequired) {
-                        setDefaultMonthYear();
-                        if (!self.bindings.selectedMonthYear().isReportCommitted()) {
-                            self.bindings.getData();
-                        }
+                        setDefaultMonth();
                         monthYear = ko.utils.arrayFilter(listOfDates, function (monthYearObj) {
                             return monthYearObj.searchDate === self.bindings.selectedMonthYear().searchDate;
                         });
@@ -6093,20 +6090,14 @@ tou.utilityPages.Electricity = function() {
             self.bindings.meterIndexArray = self.bindings.indexMeters();
             self.bindings.$reportsContent.hide();
             self.bindings.$reportsGridContent.hide();
-            self.bindings.decimalPlaces((self.bindings.electricalUnit() === "kW") ? 0 : 3);
+            self.bindings.decimalPlaces = (self.bindings.electricalUnit === "kW") ? 0 : 3;
 
             // Set the config required flag - if true, reports is disabled
             self.bindings.configRequired((self.bindings.listOfMeters().length === 0) || (self.listOfMonthYears().length === 0));
-            postInit();
-            self.bindings.reportDateFilter.valueHasMutated();
-
-            if (!self.bindings.configRequired()) {
-                // We don't do the followign if config is requried because it causes us to try and get a report (monthSelected fires it off),
-                // which was causing the UI busy spinner to become visible.
-
-                // Default select the most recent month
-                setDefaultMonthYear();
+            if (self.bindings.selectedMonthYear() === "") {
+                postInit();
             }
+            self.bindings.reportDateFilter.valueHasMutated();
 
             tou.on('meterssaved', function (utilityName) {
                 if (utilityName === self.utilityName) {
@@ -6132,7 +6123,7 @@ tou.utilityPages.Electricity = function() {
             activeDataRequest: ko.observable(false),
             committedReports: {},
             dataRequestTimer: null,
-            decimalPlaces: ko.observable(0),
+            decimalPlaces: 0,
             displayPercentageOfValidData: ko.observable(0),
             duOffPeakMW: ko.observable({
                 timestamp: null,
@@ -6158,7 +6149,7 @@ tou.utilityPages.Electricity = function() {
                 timestamp: null,
                 value: null
             }),
-            electricalUnit: ko.observable("kW"),
+            electricalUnit: "kW",
             endTime: 0,
             errorWithRequest: ko.observable(false),
             gridReportCollection: [],
@@ -6185,7 +6176,7 @@ tou.utilityPages.Electricity = function() {
             rateTablePeriod: ko.observable({}),
             reportData: {},
             reportDateFilter: ko.observable(""),
-            reportsModes: ko.observableArray(["Chart", "Grid"]),
+            reportModes: ["Chart", "Grid"],
             resizeTimer: 500,
             selectedMonthYear: ko.observable(""),
             selectedReportsMode: ko.observable("Chart"),
@@ -6427,7 +6418,7 @@ tou.utilityPages.Electricity = function() {
             adjustPrecision: function (value) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
                 value = isNaN(value) ? 0: value;
-                value = (myBindings.electricalUnit() === "kW") ? value * 1000 : value;
+                value = (myBindings.electricalUnit === "kW") ? value * 1000 : value;
                 return value;
             },
             findMax: function (data) {
@@ -6444,7 +6435,7 @@ tou.utilityPages.Electricity = function() {
                         //console.log("   data[" + i + "].timeStamp = " + moment(data[i].timeStamp).format("MM/DD/YYYY"));
                         if (data[i].value !== null) {
                             if ((answer.value === null) || (answer.value < data[i].value)) {
-                                answer.value = tou.toFixed(data[i].value, myBindings.decimalPlaces());
+                                answer.value = tou.toFixed(data[i].value, myBindings.decimalPlaces);
                                 answer.timeStamp = data[i].timeStamp;
                             }
                         }
@@ -6472,7 +6463,7 @@ tou.utilityPages.Electricity = function() {
                 for (i = 0; i < lenData; i++) {
                     answer += data[i].value;
                 }
-                return tou.toFixed(answer, myBindings.decimalPlaces());
+                return tou.toFixed(answer, myBindings.decimalPlaces);
             },
             initGridData: function () {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
@@ -6532,14 +6523,14 @@ tou.utilityPages.Electricity = function() {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
                     answer,
                     monthYear = myBindings.selectedMonthYear(),
-                    displayValue = tou.toFixed(value, myBindings.decimalPlaces()),
+                    displayValue = tou.toFixed(value, myBindings.decimalPlaces),
                     timeStampFormat = includeTimeStamp ? "dddd, MMMM Do YYYY, HH:00" : "dddd, MMMM Do YYYY";
 
                 if (timeStamp !== null && displayValue > 0) {
                     if (monthYear.period.toLowerCase() === "month") {
-                        answer = moment(timeStamp).format(timeStampFormat) + " and was " + tou.numberWithCommas(displayValue) + myBindings.electricalUnit();
+                        answer = moment(timeStamp).format(timeStampFormat) + " and was " + tou.numberWithCommas(displayValue) + myBindings.electricalUnit;
                     } else if (monthYear.period.toLowerCase() === "year") {
-                        answer = moment(timeStamp).format("MMMM, YYYY") + " and was " + tou.numberWithCommas(displayValue) + myBindings.electricalUnit();
+                        answer = moment(timeStamp).format("MMMM, YYYY") + " and was " + tou.numberWithCommas(displayValue) + myBindings.electricalUnit;
                     }
                 } else {
                     answer = "- no data available -";
@@ -6725,7 +6716,7 @@ tou.utilityPages.Electricity = function() {
                                 var ret = '',
                                     self = this;
                                 $.each(this.points, function (idx) {
-                                    ret += '<span style="font-size: 10px">' + moment(this.point.rawX).format("dddd, MMM DD, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + ' ' + myBindings.electricalUnit() + '</b>';
+                                    ret += '<span style="font-size: 10px">' + moment(this.point.rawX).format("dddd, MMM DD, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + ' ' + myBindings.electricalUnit + '</b>';
                                     if (idx < self.points.length - 1) {
                                         ret += '<br/>';
                                     }
@@ -6741,7 +6732,7 @@ tou.utilityPages.Electricity = function() {
                         xAxis: {
                             allowDecimals: false
                         },
-                        yAxisTitle: myBindings.electricalUnit(),
+                        yAxisTitle: myBindings.electricalUnit,
                         xValueFormatter: function(timestamp) {
                             var date = new Date(timestamp);
                             date.setHours(0);
@@ -6788,7 +6779,7 @@ tou.utilityPages.Electricity = function() {
                                 var ret = '',
                                     self = this;
                                 $.each(this.points, function (idx) {
-                                    ret += '<span style="font-size: 10px">' + moment(this.point.rawX).format("dddd, MMM DD, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + ' ' + myBindings.electricalUnit() + '</b>';
+                                    ret += '<span style="font-size: 10px">' + moment(this.point.rawX).format("dddd, MMM DD, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + ' ' + myBindings.electricalUnit + '</b>';
                                     if (idx < self.points.length - 1) {
                                         ret += '<br/>';
                                     }
@@ -6804,7 +6795,7 @@ tou.utilityPages.Electricity = function() {
                         xAxis: {
                             allowDecimals: false
                         },
-                        yAxisTitle: myBindings.electricalUnit(),
+                        yAxisTitle: myBindings.electricalUnit,
                         xValueFormatter: function(timestamp) {
                             var date = new Date(timestamp);
                             date.setHours(0);
@@ -6840,7 +6831,7 @@ tou.utilityPages.Electricity = function() {
 
                 // Round it
                 for (i = 0; i < arrayOfData; i++) {
-                    arrayOfData[i].value = tou.toFixed(arrayOfData[i].value, myBindings.decimalPlaces());
+                    arrayOfData[i].value = tou.toFixed(arrayOfData[i].value, myBindings.decimalPlaces);
                 }
 
                 if ($highestConsumptionPeriodChart.length > 0) {
@@ -6860,7 +6851,7 @@ tou.utilityPages.Electricity = function() {
                         xAxis: {
                             allowDecimals: false
                         },
-                        yAxisTitle: myBindings.electricalUnit() + "h",
+                        yAxisTitle: myBindings.electricalUnit + "h",
                         xValueFormatter: function(timestamp) {
                             var date = new Date(timestamp);
                             date.setHours(0);
@@ -7043,7 +7034,7 @@ tou.utilityPages.Electricity = function() {
                             if (arrayOfData[i].value !== null) {
                                 arrayContainsOnlyNulls = false;
                             }
-                            arrayOfData[i].value = (arrayOfData[i].value === null) ? 0 : tou.toFixed(arrayOfData[i].value, myBindings.decimalPlaces());
+                            arrayOfData[i].value = (arrayOfData[i].value === null) ? 0 : tou.toFixed(arrayOfData[i].value, myBindings.decimalPlaces);
                         }
 
                         return arrayOfData;
@@ -7223,10 +7214,10 @@ tou.utilityPages.Electricity = function() {
                 // tally up results.. and round it
                 for (unitIndex = 0; unitIndex < trendPlotData.length; unitIndex++) {
                     if (highestValue.value < trendPlotData[unitIndex].value) {
-                        highestValue.value = tou.toFixed(trendPlotData[unitIndex].value, myBindings.decimalPlaces());
+                        highestValue.value = tou.toFixed(trendPlotData[unitIndex].value, myBindings.decimalPlaces);
                         highestValue.timeStamp = trendPlotData[unitIndex].timeStamp;
                     }
-                    trendPlotData[unitIndex].value = tou.toFixed(trendPlotData[unitIndex].value, myBindings.decimalPlaces());
+                    trendPlotData[unitIndex].value = tou.toFixed(trendPlotData[unitIndex].value, myBindings.decimalPlaces);
                 }
 
                 return {
@@ -7373,7 +7364,7 @@ tou.utilityPages.Electricity = function() {
                             meter = summedData[myBindings.meterIndexArray[meterPointUPI].meterIndex];
                             sumData = dataRow.results.sums[meterPointUPI];
                             if (!!sumData) {
-                                unitValue = ((myBindings.electricalUnit() === "kW") ? sumData.sum * 1000 : sumData.sum);
+                                unitValue = ((myBindings.electricalUnit === "kW") ? sumData.sum * 1000 : sumData.sum);
                                 if (dataRow.peak === "on") {
                                     meter.onPeakSum = unitValue;
                                     summedData[lenSumData].onPeakSum += unitValue; // for last row in table  "Totals"
@@ -7388,53 +7379,60 @@ tou.utilityPages.Electricity = function() {
                     // Round it
                     for (i = 0; i < summedData.length; i++) {
                         delete summedData[i].meterPoints;
-                        summedData[i].onPeakSum = tou.toFixed(summedData[i].onPeakSum, (myBindings.electricalUnit() === "kW") ? 1 : 3);
-                        summedData[i].offPeakSum = tou.toFixed(summedData[i].offPeakSum, (myBindings.electricalUnit() === "kW") ? 1 : 3);
+                        summedData[i].onPeakSum = tou.toFixed(summedData[i].onPeakSum, (myBindings.electricalUnit === "kW") ? 1 : 3);
+                        summedData[i].offPeakSum = tou.toFixed(summedData[i].offPeakSum, (myBindings.electricalUnit === "kW") ? 1 : 3);
                     }
                     myBindings.reportData["IndividualMeterData"] = summedData;
                 }
             },
             parseReturnedData: function (data) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
-                    len = this.activeDataRequests.length,
-                    lenData = data.length,
+                    len = myBindings.activeDataRequests.length,
                     i,
                     j,
+                    renderReport = false,
                     matchingRequestData;
 
                 myBindings.reportData = {};
-                if (lenData > 0) {
-                    for (j = 0; j < len; j++) {
-                        matchingRequestData = [];
-                        for (i = 0; i < lenData; i++) {
-                            delete data[i].upis; // trimming data
-                            if (myBindings.activeDataRequests[j].touid === data[i].touid.split('-')[0]) {
-                                matchingRequestData.push(data[i]);
-                            }
-                        }
-                        if (matchingRequestData.length > 0) {
-                            this.$page.blockUI(true);
-                            //console.log(" - - - myBindings.activeDataRequests[" + j + "] = ", myBindings.activeDataRequests[j].fx.prototype);
-                            if (matchingRequestData.length === 1) {
-                                myBindings.activeDataRequests[j].fx(matchingRequestData[0]);
-                            } else {
-                                myBindings.activeDataRequests[j].fx(matchingRequestData);
-                            }
+                this.$page.blockUI(true);
+                for (j = 0; j < len; j++) {
+                    matchingRequestData = [];
+                    for (i = 0; i < data.length; i++) {
+                        delete data[i].upis; // trimming data
+                        //console.log(" - - - myBindings.activeDataRequests[" + j + "].touid = [" + myBindings.activeDataRequests[j].touid + "]   data[" + i + "].touid.split('-')[0] = [" + data[i].touid.split('-')[0] + "]");
+                        if (myBindings.activeDataRequests[j].touid === data[i].touid.split('-')[0]) {
+                            //console.log(" - PUSH  i = " + i);
+                            matchingRequestData.push(data[i]);
+                            renderReport = true;
                         }
                     }
+                    if (matchingRequestData.length > 0) {
+                        //console.log(" - - - matchingRequestData.length = ", matchingRequestData.length);
+                        //console.log(" - - - myBindings.activeDataRequests[" + j + "] = ", myBindings.activeDataRequests[j].fx.prototype);
+                        if (matchingRequestData.length === 1) {
+                            myBindings.activeDataRequests[j].fx(matchingRequestData[0]);
+                        } else {
+                            myBindings.activeDataRequests[j].fx(matchingRequestData);
+                        }
+                    }
+                }
 
-                    if (!!matchingRequestData &&  matchingRequestData.length > 0) {
-                        myBindings.renderCompleteReport();
-                        if (myBindings.dataRequestTimer) {
-                            clearTimeout(myBindings.dataRequestTimer);
-                            myBindings.dataRequestTimer = null;
-                        }
-                        this.$page.blockUI(false);
-                        myBindings.activeDataRequests = [];
-                        myBindings.activeDataRequest(false);
-                    }
+                if (renderReport) {
+                    myBindings.renderCompleteReport();
+                    this.$page.blockUI(false);
+                    myBindings.activeDataRequests = [];
                 } else {
-                    tou.alert("no data returned from request");
+                    tou.alert("no matching data returned from request");
+                    this.$page.blockUI(false);
+                    myBindings.errorWithRequest(true);
+                    myBindings.$reportsContent.hide();
+                }
+
+                myBindings.activeDataRequest(false);
+
+                if (myBindings.dataRequestTimer) {
+                    clearTimeout(myBindings.dataRequestTimer);
+                    myBindings.dataRequestTimer = null;
                 }
             },
             buildMissingDataRequestObject: function (startDay, endDay, touID) {
@@ -7757,6 +7755,7 @@ tou.utilityPages.Electricity = function() {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
                 if (myBindings.selectedMonthYear() !== "" && myBindings.listOfMeters().length > 0) {
                     myBindings.startTime = moment();
+                    myBindings.errorWithRequest(false);
                     this.$page.blockUI(true);
                     var monthYear = this.selectedMonthYear(),
                         monthYearPeriod = monthYear.period.toLowerCase(),
