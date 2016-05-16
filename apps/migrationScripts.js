@@ -1,5 +1,4 @@
-//in order to properly import the config file(s), we set the config dir
-process.env.NODE_CONFIG_DIR = __dirname + '/../config';
+// To run from command prompt, run from root infoscan folder as such: 'node apps/migrationScripts.js'
 var async = require('async');
 var utility = require('../models/utility');
 var db = require('../helpers/db');
