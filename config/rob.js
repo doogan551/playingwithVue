@@ -1,7 +1,7 @@
 var rob = {
   'Infoscan': {
     'dbConfig': {
-      'host': '192.168.1.88',
+      'host': 'localhost',
       'dbName': 'infoscan'
     },
     'zmqConfig': {
@@ -12,7 +12,7 @@ var rob = {
     },
     'location': {
       'site': 'Rob',
-      'email': 'rkendall@dorsett-tech.com'
+      'email': ''
     },
     'processes': {
       'zmqProcess': '',

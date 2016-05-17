@@ -1396,7 +1396,7 @@ function restorePoint(upi, user, callback) {
       collection: activityLogCollection,
       insertObj: logData
     }, function(err, result) {
-      if (["Schedule", 'Sequence'].indexOf(dependency["Point Type"].Value) >= 0) {
+      if (["Schedule", 'Sequence'].indexOf(point["Point Type"].Value) >= 0) {
         // get points based on parentupi
         Utility.update({
           collection: 'points',
@@ -1674,7 +1674,7 @@ function deleteChildren(method, pointType, upi, user, callback) {
     },
     query = {};
   // Build the query object
-  if (["Schedule", 'Sequence'].indexOf(dependency["Point Type"].Value) >= 0) {
+  if (["Schedule", 'Sequence'].indexOf(pointType) >= 0) {
     query._parentUpi = upi;
     if (method === 'soft') {
 
