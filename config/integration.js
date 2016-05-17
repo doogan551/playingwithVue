@@ -1,8 +1,8 @@
-var development = {
+var integration = {
   'Infoscan': {
     'dbConfig': {
       'host': 'localhost',
-      'dbName': 'development'
+      'dbName': 'integration'
     },
     'zmqConfig': {
       'server': '127.0.0.1'
@@ -11,7 +11,7 @@ var development = {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'engineering development',
+      'site': 'engineering integration',
       'email': 'rkendall@dorsett-tech.com'
     },
     'letsencrypt': {
@@ -22,8 +22,8 @@ var development = {
   runNotifications: false
 };
 
-development.redisConfig = {
-  host: development.Infoscan.dbConfig.host
+integration.redisConfig = {
+  host: integration.Infoscan.dbConfig.host
 };
 
-module.exports = development;
+module.exports = integration;
