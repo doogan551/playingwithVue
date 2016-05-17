@@ -334,7 +334,7 @@ define([
                 method: 'hard'
             },
             emitString = 'deletePoint';
-        if (newPointData._pStatus !== 0)
+        if (newPointData._pStatus === 1)
             pointInspector.socket.emit(emitString, emitData);
             
         window.close();

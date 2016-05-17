@@ -210,5 +210,20 @@ router.post('/updateWeather', function(req, res, next) {
     }
   });
 });
+// Checked
+router.get('/versions', function(req, res, next) {
+  var data = _.merge(req.params, req.body);
+  data.user = req.user;
+
+  System.getVersions(data, function(err, versions) {
+    if (err) {
+      return utils.sendResponse(res, {
+        err: err
+      });
+    } else {
+      return utils.sendResponse(res, versions);
+    }
+  });
+});
 
 module.exports = router;
