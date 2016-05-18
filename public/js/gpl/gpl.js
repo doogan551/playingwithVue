@@ -87,7 +87,7 @@ var gpl = {
         gpl.point._parentUpi = 0;
         gpl.point['Point Refs'][0].PointName = gpl.devicePoint.Name;
 
-        managerSelf.socket.emit('updateSequence', {
+        gpl.socket.emit('updateSequence', {
             sequenceName: gpl.point.Name,
             sequenceData: {
                 sequence: gpl.json
