@@ -1,34 +1,74 @@
-extends layout
+doctype html
+html
+    head
+        title
+            | Infoscan by Dorsett Technologies
+        link(rel='stylesheet', href='/css/lib/bootstrap.css')
+        link(rel='stylesheet', href='/sass/v2/bootstrap')
+        link(rel='stylesheet', href='/sass/bootstrap/bootstrap-material-design')
+        link(rel='stylesheet', href='/sass/bootstrap/ripples')
+        link(rel='stylesheet', href='/css/lib/font-awesome.4.6.1.css')
 
-block content
-  script(src='/js/lib/angular.js')
+    body
+        .nav-side-menu
+            .brand Infoscan
+            i.fa.fa-bars.fa-2x.toggle-btn(data-toggle='collapse', data-target='#menu-content')
+            .menu-list
+                ul#menu-content.menu-content.collapse.out
+                    //- li
+                    //-     a(href='javascript://')
+                    //-         i.fa.fa-dashboard.fa-lg
+                    //-         |  Dashboard
+                    li.collapsed.active(data-toggle='collapse', data-target='#products')
+                        a(href='javascript://')
+                            i.fa.fa-gift.fa-lg
+                            |  UI Elements
+                            span.arrow
+                    ul#products.sub-menu.collapse.in
+                        li
+                            a(href='javascript://') Dynamic
+                        li
+                            a(href='javascript://') Animation
+                        li
+                            a(href='javascript://') Text
+                        li
+                            a(href='javascript://') Action Button
+                        li
+                            a(href='javascript://') Link Button
+                    //- li.collapsed(data-toggle='collapse', data-target='#service')
+                    //-     a(href='javascript://')
+                    //-         i.fa.fa-globe.fa-lg
+                    //-         |  Services
+                    //-         span.arrow
+                    //- ul#service.sub-menu.collapse
+                    //-     li New Service 1
+                    //-     li New Service 2
+                    //-     li New Service 3
+                    //- li.collapsed(data-toggle='collapse', data-target='#new')
+                    //-     a(href='javascript://')
+                    //-         i.fa.fa-car.fa-lg
+                    //-         |  New
+                    //-         span.arrow
+                    //- ul#new.sub-menu.collapse
+                    //-     li New New 1
+                    //-     li New New 2
+                    //-     li New New 3
+                    li
+                        a(href='javascript://')
+                            i.fa.fa-user.fa-lg
+                            |  Profile
+                    //- li
+                    //-     a(href='javascript://')
+                    //-         i.fa.fa-users.fa-lg
+                    //-         |  Users
 
-  link(rel='stylesheet', href='/css/displays/main.css')
-  .ui-bar.ui-bar-b(style='position: relative; padding: 0px; padding-top: 4px; padding-bottom: 4px;')
-      div(style='float: right;')
-        .displayGroup(data-role='controlgroup', data-type='horizontal', data-inline='true', data-mini='true')
-          a(href='#moreMenu', data-rel='popup', data-role='button', data-inline='true', data-transition='fade', data-icon='arrow-d', data-theme='b') Open Displays ({{tabs.length}})
-          a#addDisplay( data-mini='true', data-role='button', data-icon='d-open', data-theme='b', data-inline='true', data-iconpos='notext') Load Display
-          a#newDisplay(href='#', data-mini='true', data-role='button', data-icon='d-burst', data-theme='b', data-inline='true', data-iconpos='notext') Create Display
-          a#importDisplay(href='/displays/import', data-mini='true', data-role='button', data-icon='d-import', data-theme='b', data-inline='true', data-iconpos='notext') Import Displays
-      div(style='overflow:hidden;margin-right:290px;height:32px;')
-          ul#track
-            li.displayTab(ng-repeat='tab in tabs',class='pinned{{tab.pinned}}')
-              .displayGroup(data-role='controlgroup', data-type='horizontal', data-inline='true', data-mini='true')
-                  a.displayTitle(ng-click="viewTab(tab)", data-role='button', data-theme='{{tab.theme}}') {{tab.title}}
-                  a.displayPin(ng-click="pinTab(tab)", data-role='button', data-iconpos='notext', data-theme='{{tab.theme}}', data-icon='pinned-{{tab.pinned}}') Pin Display
-                  a.displayPop(ng-click="popTab(tab)", data-role='button', data-iconpos='notext', data-theme='{{tab.theme}}', data-icon='d-pop') Pop-Out Display
-                  a.displayClose(ng-click="closeTab(tab)", data-role='button', data-iconpos='notext', data-theme='{{tab.theme}}', data-icon='delete') Close Display
 
-
-    #framebox(style='border: none; position: fixed; top: 42px; left: 0px; right: 0px; bottom:0px;')
-      iframe(ng-repeat='tab in tabs',class='iframe theme{{tab.theme}} disp_{{tab.upi}}', frameborder='0', src='/displays/view/{{tab.upi}}')
-
-block panels
-  #popSelector(data-role='popup', data-overlay-theme='a', data-theme='a', data-corners='false', data-tolerance='15,15')
-    a.ui-btn-right(class='closePop', data-rel='back', data-role='button', data-theme='a', data-icon='delete', data-iconpos='notext') Close
-    iframe(id='popFrame', src='', width='800', height='600', seamless='seamless')
-  #moreMenu(data-role='popup',data-mini='true', data-theme='c')
-    div(data-role='controlgroup', data-mini='true')
-      a(ng-repeat='tab in tabs',ng-click="viewTabFront(tab)", data-role='button', data-icon='arrow-l', data-theme='c', data-mini='true', data-iconpos='left'){{tab.title}}
-
+    script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
+    script(type='text/javascript', src='/js/lib/config.js')
+    script(type='text/javascript', src='/js/lib/moment.js')
+    script(type='text/javascript', src="/js/lib/knockout-3.2.0.js")
+    script(type='text/javascript', src='/js/lib/socket.io.js')
+    script(type='text/javascript', src='/js/lib/bootstrap.js')
+    script(type='text/javascript', src='/js/lib/material.js')
+    script(type='text/javascript', src='/js/lib/ripples.js')
+    script(type='text/javascript', src='/js/v2/material.js')
