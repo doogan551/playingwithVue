@@ -1,7 +1,8 @@
 var yadkinville = {
   'Infoscan': {
     'dbConfig': {
-      'host': 'localhost'
+      'host': 'localhost',
+      'dbName': 'yadkinville'
     },
     'zmqConfig': {
       'server': '127.0.0.1'
