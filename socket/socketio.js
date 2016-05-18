@@ -475,7 +475,7 @@ module.exports = function socketio(_common) {
         sock.emit('pointUpdated', JSON.stringify(msg));
       });
     });
-    // NOT CHECKED - can't get context window to stay open
+    // Checked
     sock.on('restorePoint', function(data) {
 
       logger.debug('restorePoint');
@@ -483,7 +483,7 @@ module.exports = function socketio(_common) {
         data = JSON.parse(data);
       }
 
-      restorePoint(data.upi, user, function(msg) {
+      _common.restorePoint(data.upi, user, function(msg) {
         msg.reqID = data.reqID;
         sock.emit('pointUpdated', JSON.stringify(msg));
       });
@@ -942,54 +942,6 @@ function compileScript(data, callback) {
           });
         });
       });
-    });
-  });
-}
-
-function restorePoint(upi, user, callback) {
-  var logData = {
-    user: user,
-    timestamp: Date.now()
-  };
-  Utility.findAndModify({
-    collection: pointsCollection,
-    query: {
-      _id: upi
-    },
-    sort: [],
-    updateObj: {
-      $set: {
-        _pStatus: 0
-      }
-    },
-    options: {
-      new: true
-    }
-  }, function(err, point) {
-
-    if (err)
-      return callback({
-        err: err
-      });
-
-    logData.activity = actLogsEnums["Point Restore"].enum;
-    logData.log = "Point restored";
-    logData.point = point;
-    Utility.insert({
-      collection: activityLogCollection,
-      insertObj: logData
-    }, function(err, result) {
-      if (point["Point Type.Value"] === "Schedule") {
-        // get points based on parentupi
-      } else {
-        common.updateDependencies(point, {
-          method: "restore"
-        }, user, function() {
-          return callback({
-            message: "success"
-          });
-        });
-      }
     });
   });
 }

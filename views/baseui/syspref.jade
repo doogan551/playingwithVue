@@ -330,6 +330,21 @@ html
                             a(data-bind="text: $data.point().Name, click: $parent.openPointRef")
                             // /ko
 
+
+            // ------ About -----------------------------------------------------------------------------------------
+            div#versions(data-bind="visible: section() == 'Versions'")
+                div(data-bind="with: versionsViewModel")
+                    .title Versions
+                    .versionsContainer
+                        table#versionList.linedTable
+                            tbody
+                                tr
+                                    td.col-sm-4 Server Processes Version
+                                    td.col-sm-9(data-bind="text: $data.processVer")
+                                tr
+                                    td.col-sm-4 InfoscanJS Version
+                                    td.col-sm-9(data-bind="text: $data.ijsVer")
+
             // ------ Notifications ---------------------------------------------------------------------------------
             .notifications(data-bind="visible: section() == 'Notifications'")
                 div(data-bind="with: notificationsViewModel.bindings")
@@ -820,25 +835,6 @@ html
                     .modal-footer
                         button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
                         button.btn.btn-success.btn-sm(data-bind="click: updateDays") Update
-
-
-
-            // ------ About -----------------------------------------------------------------------------------------
-            //div#about(data-bind="visible: section() == 'About InfoScan'")
-                img#infologo(src='/img/InfoScanLogoBlue.png')
-                #rev Version x.xx
-                br
-                br
-                |For help, please contact us via email or phone:
-                br
-                a(href='mailto:support@dorsett-tech.com') support@dorsett-tech.com
-                br
-                |P: 800-331-7605
-                br
-                br
-                br
-                img#dorlogo(src='/img/dorsett_logoGraphic_small.png')
-                |Copyright 2013 Dorsett Technologies, Inc. All rights reserved.
 
         script#notificationTableTpl(type="text/html")
             .notificationTableContainer(data-bind="visible: $parent.notificationOptions[name] || name === 'Normal'")
