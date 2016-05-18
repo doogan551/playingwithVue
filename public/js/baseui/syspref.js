@@ -441,7 +441,8 @@ var calendarViewModel = function() {
             }
 
             // Loop through each holiday in the modified collection until we find a difference
-            for (i = 0;  (i < mlen) && (diff === false); i++) {
+            for (i = 0;
+                (i < mlen) && (diff === false); i++) {
                 found = false; // Initialize difference found flag
 
                 // Try to find a match in the original holiday collection
@@ -642,7 +643,7 @@ var controllerViewModel = function() {
             dirs[field] = -dir;
         },
 
-    //display status message on saving
+        //display status message on saving
         showMessage = function(text) {
             var message = text.charAt(0).toUpperCase() + text.substring(1);
             $controllerMessage.stop(true)
@@ -825,7 +826,7 @@ var controllerViewModel = function() {
                     obj[NAME] = row[NAME];
                     obj.Description = row.Description;
                     obj.isUser = row.isUser;
-                    if(!!row[NAME])
+                    if (!!row[NAME])
                         sanitizedControllers.push(obj);
                 }
             };
@@ -1025,22 +1026,22 @@ var qualityCodesViewModel = function() {
 
 
 // Custom Color Codes Screen --------------------------------------------------
-var customColorCodesViewModel = function () {
+var customColorCodesViewModel = function() {
     var self = this,
         originalData,
-        makeDirty = function () {
+        makeDirty = function() {
             self.dirty(true);
         },
-        CustomColorCode = function (index, hexColor) {
+        CustomColorCode = function(index, hexColor) {
             this['hexColor'] = ko.observable(hexColor);
             this['hexColor'].subscribe(makeDirty);
         },
-        saveCustomColors = function (input, url) {
+        saveCustomColors = function(input, url) {
             var i,
                 len = input.length;
-                rawHexColor = [];
+            rawHexColor = [];
 
-            for(i = 0; i < len; i++) {
+            for (i = 0; i < len; i++) {
                 rawHexColor.push(input[i].hexColor());
             }
 
@@ -1048,7 +1049,7 @@ var customColorCodesViewModel = function () {
                 url: url,
                 type: 'POST',
                 dataType: 'json',
-                success: function (returnData) {
+                success: function(returnData) {
                     //console.log(url, "input = " + JSON.stringify(input));
                     //console.log(url, "returnData = " + JSON.stringify(returnData));
                 },
@@ -1057,7 +1058,7 @@ var customColorCodesViewModel = function () {
                 }
             });
         },
-        setData = function (customColors) {
+        setData = function(customColors) {
             var i,
                 len = customColors.length,
                 ret = [];
@@ -1070,13 +1071,13 @@ var customColorCodesViewModel = function () {
             self.customColorCodes(ret);
             self.dirty(false);
         };
-    self.init = function () {
+    self.init = function() {
         $.getJSON('/api/system/getCustomColors', setData);
     };
-    self.cancel = function () {
+    self.cancel = function() {
         setData(originalData);
     };
-    self.save = function () {
+    self.save = function() {
         saveCustomColors(self.customColorCodes(), '/api/system/updateCustomColors');
         self.dirty(false);
     };
@@ -1188,7 +1189,7 @@ var telemetryViewModel = function() {
                 value = fullData[name];
 
                 self[name](value);
-                if(name === 'Time Zone'){
+                if (name === 'Time Zone') {
                     self.selectedTimeZoneText(getZoneFromEnum(value));
                 }
                 // Original values saved as a string because that's how they're formatted after they are changed in the UI
@@ -1253,8 +1254,11 @@ var telemetryViewModel = function() {
     self.timeZones = function() {
         var timezones = [];
 
-        for(var prop in tzEnums){
-            timezones.push({name:prop, value:tzEnums[prop].enum});
+        for (var prop in tzEnums) {
+            timezones.push({
+                name: prop,
+                value: tzEnums[prop].enum
+            });
         }
 
         return timezones;
@@ -1287,9 +1291,9 @@ var telemetryViewModel = function() {
     self.cancel = function() {
         setData();
     };
-    self.changeTimezone = function(e){
-        for(var prop in tzEnums){
-            if(tzEnums[prop].enum === self.selectedTimeZone()){
+    self.changeTimezone = function(e) {
+        for (var prop in tzEnums) {
+            if (tzEnums[prop].enum === self.selectedTimeZone()) {
                 self['Time Zone'](self.selectedTimeZone());
                 self.selectedTimeZoneText(prop);
                 self.dirty(true);
@@ -1325,13 +1329,40 @@ var backupViewModel = function() {
     socket.on('returnFromField', function(data) {
         // data = $.parseJSON(data);
 
-        if(data.err){
+        if (data.err) {
             self.backupMsg('Error: ' + data.err);
-        }else{
+        } else {
             self.backupMsg(data);
         }
         self.showBackupMsg(true);
     });
+};
+
+// About screen ---------------------------------------------------------------
+var versionsViewModel = function() {
+    var self = this;
+    self.displayName = 'Versions';
+    self.dirty = ko.observable(false);
+    self.hasError = ko.observable(false);
+    self.processVer = ko.observable('');
+    self.ijsVer = ko.observable('');
+
+    self.getData = function() {
+        $.ajax({
+            url: '/api/system/versions'
+        }).done(function(data) {
+            if (!!data.err) {
+                console.log(data);
+                alert('There was an error getting versions.');
+            } else {
+                self.ijsVer(data.infoscanjs);
+                self.processVer(data.Processes);
+            }
+        });
+    };
+    self.init = function() {
+        self.getData();
+    };
 };
 
 // Alarm messages screen ------------------------------------------------------
@@ -1908,17 +1939,17 @@ var weatherViewModel = function() {
         dataUrl = '/api/system/weather',
         saveUrl = '/api/system/updateWeather',
         workspaceManager = window.opener && window.opener.workspaceManager,
-        openWindow =  workspaceManager && window.opener.workspaceManager.openWindowPositioned,
+        openWindow = workspaceManager && window.opener.workspaceManager.openWindowPositioned,
         activePointStatus = workspaceManager && workspaceManager.config.Enums["Point Statuses"].Active.enum,
         originalData,
-        openPointSelector = function (callback) {
+        openPointSelector = function(callback) {
             var windowRef,
-                pointSelectedCallback = function (pid, name, type) {
+                pointSelectedCallback = function(pid, name, type) {
                     if (!!pid) {
                         callback(pid, name, type);
                     }
                 },
-                windowOpenedCallback = function () {
+                windowOpenedCallback = function() {
                     windowRef.pointLookup.MODE = 'select';
                     windowRef.pointLookup.init(pointSelectedCallback);
                 };
@@ -1928,11 +1959,11 @@ var weatherViewModel = function() {
                 width: 1000
             });
         },
-        setData = function (data) {
+        setData = function(data) {
             var newData = [];
 
             if (Array.isArray(data)) {
-                data.forEach(function (weatherPoint) {
+                data.forEach(function(weatherPoint) {
                     newData.push({
                         title: weatherPoint.title,
                         point: ko.observable(weatherPoint.point)
@@ -1952,21 +1983,21 @@ var weatherViewModel = function() {
         getData = function() {
             $.ajax({
                 url: dataUrl
-            }).done(function (data) {
+            }).done(function(data) {
                 originalData = data;
                 setData(data);
             });
         },
-        getDataToSave = function () {
+        getDataToSave = function() {
             var data = {};
-            self.weatherPoints().forEach(function (weatherPoint) {
+            self.weatherPoints().forEach(function(weatherPoint) {
                 var point = weatherPoint.point(),
                     upi = (point && point._id) || null;
                 data[weatherPoint.title] = upi;
             });
             return data;
         },
-        saveData = function () {
+        saveData = function() {
             // Create a snapshot in case the user modifies the data before save is completed
             var snapshot = ko.toJS(self.weatherPoints);
             // Save the data
@@ -1975,7 +2006,7 @@ var weatherViewModel = function() {
                 data: getDataToSave(),
                 dataType: 'json',
                 type: 'post'
-            }).done(function (response) {
+            }).done(function(response) {
                 var err;
                 console.log(response);
                 if (response.message && response.message === 'success') {
@@ -1996,24 +2027,24 @@ var weatherViewModel = function() {
 
     self.weatherPoints = ko.observableArray([]);
 
-    self.init = function () {
+    self.init = function() {
         getData();
     };
 
-    self.save = function () {
+    self.save = function() {
         saveData();
     };
 
-    self.cancel = function () {
+    self.cancel = function() {
         setData(originalData);
     };
 
-    self.removePointRef = function (data) {
+    self.removePointRef = function(data) {
         data.point(null);
         self.dirty(true);
     };
 
-    self.editPointRef = function (data) {
+    self.editPointRef = function(data) {
         openPointSelector(function(upi, name, pointType) {
             data.point({
                 _id: upi,
@@ -2027,7 +2058,7 @@ var weatherViewModel = function() {
         });
     };
 
-    self.openPointRef = function (data) {
+    self.openPointRef = function(data) {
         var point = data.point(),
             upi = point._id,
             pointType = point['Point Type'].Value,
@@ -2047,11 +2078,11 @@ var notificationsViewModel = function() {
         _webendpointURI = _webendpoint + '/api/security/',
         _idCounter = 0,
         $scheduleCalendar = $('#scheduleCalendar'),
-        makeId = function () {
+        makeId = function() {
             _idCounter++;
             return 'nid_' + _idCounter;
         },
-        Member = function (data, dt) {
+        Member = function(data, dt) {
             var ret = {
                     id: data._id,
                     firstName: data['First Name'].Value,
@@ -2062,7 +2093,7 @@ var notificationsViewModel = function() {
                     notificationsEnabled: data.notificationsEnabled,
                     notificationOptions: data.notificationOptions || self.getTemplate('notificationOptions')
                 },
-                processAlert = function (alert, idx) {
+                processAlert = function(alert, idx) {
                     if (alert.delay === undefined) {
                         alert.delay = idx === 0 ? 0 : 1;
                     }
@@ -2169,7 +2200,7 @@ var notificationsViewModel = function() {
                 }
             },
 
-            forEachArray: function (arr, fn) {
+            forEachArray: function(arr, fn) {
                 var c,
                     list = arr || [],
                     len = list.length,
@@ -2185,7 +2216,7 @@ var notificationsViewModel = function() {
                 return errorFree;
             },
 
-            getTemplate: function (template) {
+            getTemplate: function(template) {
                 var tpl = $.extend(true, {}, self.templates[template]),
                     copyProperties = ['repeatConfig', 'rotateConfig'],
                     idProperties = {
@@ -2196,7 +2227,7 @@ var notificationsViewModel = function() {
                     newID,
                     idProperty;
 
-                copyProperties.forEach(function (property) {
+                copyProperties.forEach(function(property) {
                     if (tpl.hasOwnProperty(property)) {
                         tpl[property] = self.getTemplate(property);
                     }
@@ -2216,12 +2247,12 @@ var notificationsViewModel = function() {
             policies: []
         };
 
-    self.init = function (reset) {
+    self.init = function(reset) {
         var columns = [{
                 data: 'firstName()',
                 title: 'First Name',
                 className: 'firstName',
-                render: function (data, type, full, meta) {
+                render: function(data, type, full, meta) {
                     return '<a href="#">' + data + '</a>';
                 }
             }, {
@@ -2233,7 +2264,7 @@ var notificationsViewModel = function() {
                 title: 'Member By Way Of Security Group',
                 className: 'securityGroup'
             }],
-            initMemberDataTable = function () {
+            initMemberDataTable = function() {
                 var members = self.bindings.currPolicy.members,
                     $memberList = $('#memberList');
 
@@ -2244,7 +2275,7 @@ var notificationsViewModel = function() {
                     bInfo: false
                 });
 
-                $memberList.on('click', '.firstName', function (event) {
+                $memberList.on('click', '.firstName', function(event) {
                     var rowIdx = self.memberDT.cell(this).index().row,
                         member = self.memberDT.rows(rowIdx).data()[0];
 
@@ -2253,7 +2284,7 @@ var notificationsViewModel = function() {
                     event.preventDefault();
                 });
 
-                members.subscribe(function (members) {
+                members.subscribe(function(members) {
                     self.memberDT.clear();
                     self.memberDT.rows.add(members);
                     self.memberDT.draw();
@@ -2262,7 +2293,7 @@ var notificationsViewModel = function() {
 
         initMemberDataTable();
 
-        self.$tabs = $('.notificationsContent').on('click', '.nav a', function (e) {
+        self.$tabs = $('.notificationsContent').on('click', '.nav a', function(e) {
             e.preventDefault();
 
             $(this).tab('show');
@@ -2275,19 +2306,19 @@ var notificationsViewModel = function() {
 
         $scheduleCalendar.fullCalendar({
             schedulerLicenseKey: '0890776600-fcs-1460400855',
-            eventClick: function (calEvent, jsEvent, view) {
+            eventClick: function(calEvent, jsEvent, view) {
                 console.log(calEvent);
                 jsEvent.preventDefault();
             },
             header: {
-                left: '',//prev,next',
-                center: '',//title',
-                right: ''//agendaWeek,agendaDay'
+                left: '', //prev,next',
+                center: '', //title',
+                right: '' //agendaWeek,agendaDay'
             },
             // titleFormat: '[Schedule Preview]',
             // eventColor: '#7156FB',
             allDaySlot: false,
-            defaultDate:  moment().format('YYYY-MM-DD'),//'2016-01-12',
+            defaultDate: moment().format('YYYY-MM-DD'), //'2016-01-12',
             defaultView: 'agendaDay',
             editable: false,
             eventLimit: false, // allow "more" link when too many events
@@ -2335,56 +2366,56 @@ var notificationsViewModel = function() {
             }],
             slotDuration: '01:00:00',
             slotLabelInterval: '02:00:00'
-            // events: [
-            //     // {
-            //     //     title: 'All Day Event',
-            //     //     start: '2016-01-01'
-            //     // },
-            //     // {
-            //     //     title: 'Long Event',
-            //     //     start: '2016-01-07',
-            //     //     end: '2016-01-10'
-            //     // },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-10T08:00:00',
-            //         end: '2016-01-10T17:00:00'
-            //     },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-11T08:00:00',
-            //         end: '2016-01-11T17:00:00'
-            //     },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-12T08:00:00',
-            //         end: '2016-01-12T17:00:00'
-            //     },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-13T08:00:00',
-            //         end: '2016-01-13T17:00:00'
-            //     },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-14T08:00:00',
-            //         end: '2016-01-14T17:00:00'
-            //     },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-15T08:00:00',
-            //         end: '2016-01-15T17:00:00'
-            //     },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-16T08:00:00',
-            //         end: '2016-01-16T17:00:00'
-            //     }
-            // ]
+                // events: [
+                //     // {
+                //     //     title: 'All Day Event',
+                //     //     start: '2016-01-01'
+                //     // },
+                //     // {
+                //     //     title: 'Long Event',
+                //     //     start: '2016-01-07',
+                //     //     end: '2016-01-10'
+                //     // },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-10T08:00:00',
+                //         end: '2016-01-10T17:00:00'
+                //     },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-11T08:00:00',
+                //         end: '2016-01-11T17:00:00'
+                //     },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-12T08:00:00',
+                //         end: '2016-01-12T17:00:00'
+                //     },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-13T08:00:00',
+                //         end: '2016-01-13T17:00:00'
+                //     },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-14T08:00:00',
+                //         end: '2016-01-14T17:00:00'
+                //     },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-15T08:00:00',
+                //         end: '2016-01-15T17:00:00'
+                //     },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-16T08:00:00',
+                //         end: '2016-01-16T17:00:00'
+                //     }
+                // ]
         });
 
         if (!reset) {
-            $.getJSON('/api/policies/get').done(function (response) {
+            $.getJSON('/api/policies/get').done(function(response) {
                 self._rawPolicies = response;
                 self.buildPolicies(response);
             });
@@ -2393,18 +2424,18 @@ var notificationsViewModel = function() {
         }
     };
 
-    self.updateScheduleEvents = function () {
-        var colors = ['#FDA46E', '#8666FB'],//, '#7DC551'],
+    self.updateScheduleEvents = function() {
+        var colors = ['#FDA46E', '#8666FB'], //, '#7DC551'],
             datePrefix = moment().format('YYYY-MM-DDT'),
             tomorrowPrefix = moment().add(1, 'd').format('YYYY-MM-DDT'),
             events = [],
-            convertTime = function (time) {
+            convertTime = function(time) {
                 var hr = time / 100,
                     min = time % 100;
 
                 return ('0' + hr).slice(-2) + ':' + ('0' + min).slice(-2) + ':00';
             },
-            createEvents = function (schedule, color, title) {
+            createEvents = function(schedule, color, title) {
                 var start = datePrefix + convertTime(schedule.startTime || 0),
                     end = convertTime(schedule.endTime || 0),
                     _events = [],
@@ -2425,7 +2456,7 @@ var notificationsViewModel = function() {
                     }
                 }
 
-                self.forEachArray(schedule.days, function (day) {
+                self.forEachArray(schedule.days, function(day) {
                     if (loops) {
                         if (schedule.endTime !== 0) {
                             _events.push({
@@ -2465,8 +2496,8 @@ var notificationsViewModel = function() {
                 return _events;
             };
 
-        self.forEachArray(self.bindings.currPolicy.scheduleLayers(), function (layer, idx) {
-            self.forEachArray(ko.toJS(layer.schedules), function (schedule) {
+        self.forEachArray(self.bindings.currPolicy.scheduleLayers(), function(layer, idx) {
+            self.forEachArray(ko.toJS(layer.schedules), function(schedule) {
                 events = events.concat(createEvents(schedule, colors[idx % 2], 'Layer ' + (idx + 1)));
             });
         });
@@ -2475,41 +2506,41 @@ var notificationsViewModel = function() {
         $scheduleCalendar.fullCalendar('addEventSource', events);
     };
 
-    self.translateMember = function (id) {
+    self.translateMember = function(id) {
         return self.userLookup[id];
     };
 
-    self.translateMembers = function (arr) {
+    self.translateMembers = function(arr) {
         var c,
             len = arr.length,
             ret = [];
 
-        for(c=0; c<len; c++) {
+        for (c = 0; c < len; c++) {
             ret.push(self.translateMember(arr[c]));
         }
 
         return ret;
     };
 
-    self.unTranslateMembers = function (policy) {
+    self.unTranslateMembers = function(policy) {
         var rawPolicy = ko.toJS(policy);
-        self.forEachArray(rawPolicy.members, function (member, idx) {
+        self.forEachArray(rawPolicy.members, function(member, idx) {
             rawPolicy.members[idx] = member.id;
         });
 
         return rawPolicy;
     };
 
-    self.buildPolicy = function (policy) {
+    self.buildPolicy = function(policy) {
         policy.members = self.translateMembers(policy.members);
 
 
-        self.forEachArray(policy.alertConfigs, function (alertConfig) {
+        self.forEachArray(policy.alertConfigs, function(alertConfig) {
             var newGroups = [];
             alertConfig.groups = alertConfig.groups || [];
-            self.forEachArray(alertConfig.groups, function (group) {
+            self.forEachArray(alertConfig.groups, function(group) {
                 group.escalations = group.escalations || [];
-                self.forEachArray(group.escalations, function (escalation) {
+                self.forEachArray(group.escalations, function(escalation) {
                     escalation.members = escalation.members || [];
                 });
                 if (group.active) {
@@ -2523,23 +2554,23 @@ var notificationsViewModel = function() {
 
     };
 
-    self.buildPolicies = function (policies) {
+    self.buildPolicies = function(policies) {
         var c,
             len = policies.length;
 
         self.bindings.policyList.removeAll();
 
-        for(c=0; c<len; c++) {
+        for (c = 0; c < len; c++) {
             self.buildPolicy(policies[c]);
             self.bindings.policyList.push(ko.viewmodel.fromModel(policies[c]));
         }
     };
 
-    self.prepPolicyForSave = function (policy) {
-        self.forEachArray(policy.alertConfigs, function (config) {
+    self.prepPolicyForSave = function(policy) {
+        self.forEachArray(policy.alertConfigs, function(config) {
             var foundActive = false;
 
-            self.forEachArray(config.groups, function (group, idx) {
+            self.forEachArray(config.groups, function(group, idx) {
                 if (group.active) {
                     foundActive = true;
                 }
@@ -2551,14 +2582,14 @@ var notificationsViewModel = function() {
         });
     };
 
-    self.cancel = function () {
+    self.cancel = function() {
         self.dirty(false);
         self.bindings.home();
         self.init(true);
     };
 
-    self.save = function () {
-        self.forEachArray(self.bindings.policyList(), function (policy, idx) {
+    self.save = function() {
+        self.forEachArray(self.bindings.policyList(), function(policy, idx) {
             var data = self.unTranslateMembers(policy);
 
             self.prepPolicyForSave(data);
@@ -2569,7 +2600,7 @@ var notificationsViewModel = function() {
                 type: 'POST',
                 dataType: 'json',
                 contentType: 'application/json'
-            }).done(function (response) {
+            }).done(function(response) {
                 if (policy._new && policy._new() === true) {
                     delete policy._new;
                     if (policy._id() === self.bindings.currPolicy._id()) {
@@ -2584,7 +2615,7 @@ var notificationsViewModel = function() {
         self.dirty(false);
     };
 
-    self.clearEdits = function (resetAll) {
+    self.clearEdits = function(resetAll) {
         var binding;
 
         for (binding in self.bindings) {
@@ -2596,25 +2627,25 @@ var notificationsViewModel = function() {
         }
     };
 
-    self.editMember = function (member) {
+    self.editMember = function(member) {
         self._originalMember = ko.toJS(member);
         self.bindings.currMember(member);
         self.bindings.isEditingMember(true);
     };
 
-    self.editMembers = function (primary, secondary) {
+    self.editMembers = function(primary, secondary) {
         var c,
             cc,
             len = secondary.length,
             plen = primary.length,
             found = false;
 
-        for(c=0; c<plen; c++) {
+        for (c = 0; c < plen; c++) {
             primary[c].selected = false;
             found = false;
 
-            for(cc=0; cc<len && !found; cc++) {
-                 if (primary[c].id === secondary[cc].id) {
+            for (cc = 0; cc < len && !found; cc++) {
+                if (primary[c].id === secondary[cc].id) {
                     primary[c].selected = true;
                     found = true;
                 }
@@ -2626,11 +2657,11 @@ var notificationsViewModel = function() {
         self.$modal.modal('show');
     };
 
-    self.updateAlertConfigMembers = function () {
+    self.updateAlertConfigMembers = function() {
         var arr = ko.toJS(self.bindings.primaryMemberList()),
             newMembers = [];
 
-        arr.forEach(function (member) {
+        arr.forEach(function(member) {
             if (member.selected) {
                 newMembers.push(member.id);
             }
@@ -2639,31 +2670,31 @@ var notificationsViewModel = function() {
         ko.viewmodel.updateFromModel(self._currEscalation.members, newMembers);
     };
 
-    self.updatePolicyMembers = function () {
+    self.updatePolicyMembers = function() {
         var arr = ko.toJS(self.bindings.primaryMemberList()),
             newMembers = [];
 
-        arr.forEach(function (member) {
+        arr.forEach(function(member) {
             if (member.selected) {
                 newMembers.push(member);
             }
         });
 
         ko.viewmodel.updateFromModel(self.bindings.currPolicy.members, newMembers);
-        self.forEachArray(self.bindings.policyList(), function (policy) {
+        self.forEachArray(self.bindings.policyList(), function(policy) {
             if (policy._id() === self.bindings.currPolicy._id()) {
                 policy.members(newMembers);
             }
         });
     };
 
-    self.getContact = function (alert) {
+    self.getContact = function(alert) {
         var contact,
             rawAlert = ko.toJS(alert),
             value = rawAlert.Value,
             type = rawAlert.Type;
 
-        self.forEachArray(self.bindings.currMember().contactInfo(), function (contactInfo) {
+        self.forEachArray(self.bindings.currMember().contactInfo(), function(contactInfo) {
             if (contactInfo.Value() === value && contactInfo.Type() === type) {
                 contact = contactInfo;
                 return false;
@@ -2673,8 +2704,8 @@ var notificationsViewModel = function() {
         return contact;
     };
 
-    self.savePolicy = function () {
-        self.forEachArray(self.bindings.policyList(), function (policy, idx) {
+    self.savePolicy = function() {
+        self.forEachArray(self.bindings.policyList(), function(policy, idx) {
             if (policy._id() === self.bindings.currPolicy._id()) {
                 ko.viewmodel.updateFromModel(self.bindings.policyList()[idx], ko.toJS(self.bindings.currPolicy));
             }
@@ -2683,7 +2714,7 @@ var notificationsViewModel = function() {
         self.dirty(true);
     };
 
-    self.saveUser = function (user) {
+    self.saveUser = function(user) {
         var me = this,
             data = {
                 userid: user.id,
@@ -2693,7 +2724,7 @@ var notificationsViewModel = function() {
                     notificationsEnabled: user.notificationsEnabled
                 }
             },
-            processUser = function (alert, idx, list) {
+            processUser = function(alert, idx, list) {
                 list[idx] = ko.toJS(me.getContact(alert));
                 list[idx].delay = alert.delay;
             };
@@ -2708,7 +2739,7 @@ var notificationsViewModel = function() {
             dataType: 'json',
             contentType: 'application/json',
             data: JSON.stringify(data),
-            success: function (returnData) {
+            success: function(returnData) {
                 if (returnData.err) {
                     console.log('Error saving user', returnData.err);
                 } else {
@@ -2718,10 +2749,10 @@ var notificationsViewModel = function() {
         });
     };
 
-    self.checkAlertConfigNames = function (id, name, configs) {
+    self.checkAlertConfigNames = function(id, name, configs) {
         var duplicate = false;
 
-        self.forEachArray(configs, function (config) {
+        self.forEachArray(configs, function(config) {
             if (config.name() === name && (id !== undefined && id !== config.id())) {
                 duplicate = true;
                 return false;
@@ -2786,22 +2817,22 @@ var notificationsViewModel = function() {
         daySunday: ko.observable(false),
         dayHolidays: ko.observable(false),
 
-        savePolicy: function () {
+        savePolicy: function() {
             self.savePolicy();
         },
 
-        updateScheduleEvents: function () {
+        updateScheduleEvents: function() {
             self.updateScheduleEvents();
 
             return true;
         },
 
-        editDays: function (schedule) {
-            self.forEachArray(self.bindings.days, function (day, idx) {
+        editDays: function(schedule) {
+            self.forEachArray(self.bindings.days, function(day, idx) {
                 self.bindings['day' + day](false);
             });
 
-            self.forEachArray(schedule.days(), function (day) {
+            self.forEachArray(schedule.days(), function(day) {
                 var idx = self.bindings.shortDays.indexOf(day);
 
                 if (idx !== -1) {
@@ -2816,9 +2847,9 @@ var notificationsViewModel = function() {
             $('#notificationsEditDaysModal').modal('show');
         },
 
-        updateDays: function () {
+        updateDays: function() {
             var ret = [];
-            self.forEachArray(self.bindings.days, function (day, idx) {
+            self.forEachArray(self.bindings.days, function(day, idx) {
                 if (self.bindings['day' + day]()) {
                     ret.push(self.bindings.shortDays[idx]);
                 }
@@ -2837,9 +2868,9 @@ var notificationsViewModel = function() {
             self.savePolicy();
         },
 
-        getAlertStyleText: function (value) {
+        getAlertStyleText: function(value) {
             var ret;
-            self.forEachArray(self.bindings.alertStyles, function (style) {
+            self.forEachArray(self.bindings.alertStyles, function(style) {
                 if (style.value === value) {
                     ret = style.text;
                 }
@@ -2848,18 +2879,18 @@ var notificationsViewModel = function() {
             return ret;
         },
 
-        getUserName: function (id) {
+        getUserName: function(id) {
             var user = self.translateMember(id);
 
             return user.firstName + ' ' + user.lastName;
         },
 
-        addAlertConfig: function (layer) {
+        addAlertConfig: function(layer) {
             layer.$parent.alertConfigs.push(layer.$data.id());
         },
 
-        deleteAlertConfig: function (config) {
-            self.bindings.currPolicy.alertConfigs.remove(function (item) {
+        deleteAlertConfig: function(config) {
+            self.bindings.currPolicy.alertConfigs.remove(function(item) {
                 return item.id() === config.id();
             });
             self.savePolicy();
@@ -2867,10 +2898,10 @@ var notificationsViewModel = function() {
             //needs validation
         },
 
-        convertTime: function (scheduleTime) {
+        convertTime: function(scheduleTime) {
             var ret,
                 fullTime = scheduleTime(),
-                hr = fullTime/100,
+                hr = fullTime / 100,
                 ampm = hr >= 12 ? 'PM' : 'AM';
 
             if (hr > 12) {
@@ -2884,7 +2915,7 @@ var notificationsViewModel = function() {
             return hr + ' ' + ampm;
         },
 
-        convertDate: function (scheduleDays) {
+        convertDate: function(scheduleDays) {
             var _days = scheduleDays().join(';'),
                 days = [],
                 weekdays = 'mon;tues;wed;thur;fri',
@@ -2914,18 +2945,18 @@ var notificationsViewModel = function() {
                 }
             }
 
-            days = days.filter(function (el, idx, arr) {
+            days = days.filter(function(el, idx, arr) {
                 return el !== '';
             });
 
-            days.forEach(function (day, idx, arr) {
+            days.forEach(function(day, idx, arr) {
                 arr[idx] = day.charAt(0).toUpperCase() + day.slice(1);
             });
 
             return days.join(',');
         },
 
-        deleteSchedule: function (context) {
+        deleteSchedule: function(context) {
             var scheduleIndex = context.$index(),
                 layerIndex = context.$parentContext.$index();
 
@@ -2934,62 +2965,65 @@ var notificationsViewModel = function() {
             self.updateScheduleEvents();
         },
 
-        addSchedule: function (scheduleLayer) {
+        addSchedule: function(scheduleLayer) {
             scheduleLayer.schedules.push(ko.viewmodel.fromModel(self.getTemplate('schedule')));
             self.updateScheduleEvents();
         },
 
-        addScheduleLayer: function () {
+        addScheduleLayer: function() {
             self.bindings.currPolicy.scheduleLayers.push(ko.viewmodel.fromModel(self.getTemplate('scheduleLayer')));
             self.updateScheduleEvents();
             self.savePolicy();
         },
 
-        deleteScheduleLayer: function (layer, idx) {
+        deleteScheduleLayer: function(layer, idx) {
             layer.scheduleLayers.splice(idx(), 1);
             self.dirty(true);
             self.updateScheduleEvents();
         },
 
-        editSchedule: function () {
+        editSchedule: function() {
             self.bindings.isEditingSchedule(true);
         },
 
-        cancelEditSchedule: function () {
+        cancelEditSchedule: function() {
             ko.viewmodel.updateFromModel(self.bindings.currPolicy.scheduleLayers, self._currPolicy.scheduleLayers);
             self.bindings.isEditingSchedule(false);
             self.updateScheduleEvents();
         },
 
-        saveSchedule: function () {
+        saveSchedule: function() {
             self._currPolicy = ko.toJS(self.bindings.currPolicy);
             self.bindings.isEditingSchedule(false);
 
             self.savePolicy();
         },
 
-        editAlertConfigMembers: function (escalation) {
+        editAlertConfigMembers: function(escalation) {
             self.memberCb = self.updateAlertConfigMembers;
             self._currEscalation = escalation;
             self.editMembers(ko.toJS(self.bindings.currPolicy.members()), self.translateMembers(escalation.members()));
         },
 
-        editPolicyMembers: function () {
+        editPolicyMembers: function() {
             self.memberCb = self.updatePolicyMembers;
             self.editMembers(self.users, ko.toJS(self.bindings.currPolicy.members()));
         },
 
-        getAlertIcon: function (type) {
+        getAlertIcon: function(type) {
             return 'fa-' + self.iconLookup[type()];
         },
 
-        getAlertType: function (contactInfo, type) {
-            var contact = self.getContact({Value: contactInfo(), Type: type()});
+        getAlertType: function(contactInfo, type) {
+            var contact = self.getContact({
+                Value: contactInfo(),
+                Type: type()
+            });
 
             return contact.Type;
         },
 
-        addNewAlert: function (data) {
+        addNewAlert: function(data) {
             var alert = self.getTemplate('alertNotification'),
                 firstContact = self.bindings.currMember().contactInfo()[0],
                 alerts = self.bindings.currMember().alerts[data.name];
@@ -3004,13 +3038,13 @@ var notificationsViewModel = function() {
             self.bindings.currMember().alerts[data.name].push(ko.viewmodel.fromModel(alert));
         },
 
-        deleteAlert: function (alertType, idx) {
+        deleteAlert: function(alertType, idx) {
             var _idx = idx(),
                 row;
 
             alertType.alerts.splice(_idx, 1);
 
-            if (_idx === 0) {//deleted first one
+            if (_idx === 0) { //deleted first one
                 row = alertType.alerts()[0];
                 if (row) {
                     row.delay(0);
@@ -3018,7 +3052,7 @@ var notificationsViewModel = function() {
             }
         },
 
-        getContactString: function (contact) {
+        getContactString: function(contact) {
             var type = self.alertTypeLookup[contact.Type()],
                 val = contact.Value(),
                 name = contact.Name();
@@ -3026,30 +3060,30 @@ var notificationsViewModel = function() {
             return [type, name, 'at', val].join(' ');
         },
 
-        getContactAlertString: function (alert) {
+        getContactAlertString: function(alert) {
             var contact = self.getContact(alert);
 
             return self.bindings.getContactString(contact);
         },
 
-        editAlertNotifications: function () {
+        editAlertNotifications: function() {
             self.bindings.isEditingAlertNotifications(true);
         },
 
-        cancelEditAlertNotifications: function () {
+        cancelEditAlertNotifications: function() {
             self.bindings.currMember(ko.viewmodel.fromModel(self._originalMember));
             self.bindings.isEditingAlertNotifications(false);
             ko.viewmodel.updateFromModel(self.bindings.currMember().alerts, self._originalMember.alerts);
         },
 
-        saveAlertNotifications: function (user) {
+        saveAlertNotifications: function(user) {
             self.bindings.isEditingAlertNotifications(false);
             self.saveUser(ko.toJS(user));
 
             self.savePolicy();
         },
 
-        updateMembers: function () {
+        updateMembers: function() {
             if (self.memberCb) {
                 self.memberCb();
                 self.memberCb = null;
@@ -3058,7 +3092,7 @@ var notificationsViewModel = function() {
             self.$modal.modal('hide');
         },
 
-        doDeletePolicy: function (id, cb) {
+        doDeletePolicy: function(id, cb) {
             $.ajax({
                 url: '/api/policies/delete',
                 data: {
@@ -3066,26 +3100,26 @@ var notificationsViewModel = function() {
                 },
                 type: 'POST',
                 dataType: 'json'
-            }).done(function (response) {
+            }).done(function(response) {
                 console.log('Deleted');
                 cb();
             });
         },
 
-        deletePolicy: function (policy) {
-            self.forEachArray(self.bindings.policyList(), function (boundPolicy, idx) {
+        deletePolicy: function(policy) {
+            self.forEachArray(self.bindings.policyList(), function(boundPolicy, idx) {
                 if (boundPolicy._id() === policy._id()) {
                     if (policy._new && policy._new()) {
                         self.bindings.policyList.splice(idx, 1);
                     } else {
-                        self.bindings.doDeletePolicy(policy._id(), function () {
+                        self.bindings.doDeletePolicy(policy._id(), function() {
                             self.bindings.policyList.splice(idx, 1);
                         });
                     }
                 }
             });
         },
-        selectPolicy: function (policy) {
+        selectPolicy: function(policy) {
             var rawPolicy = ko.toJS(policy);
             self.bindings.currAlertConfig(null);
             self.bindings.isEditingMember(false);
@@ -3093,11 +3127,11 @@ var notificationsViewModel = function() {
             ko.viewmodel.updateFromModel(self.bindings.currPolicy, rawPolicy);
             self.bindings.isEditingPolicy(true);
         },
-        addPolicy: function () {
+        addPolicy: function() {
             self.bindings.newPolicyName('');
             self.bindings.isEditingNewPolicy(true);
         },
-        doAddNewPolicy: function () {
+        doAddNewPolicy: function() {
             var newPolicy = self.getTemplate('policy'),
                 name = self.bindings.newPolicyName();
 
@@ -3109,42 +3143,42 @@ var notificationsViewModel = function() {
             self.bindings.selectPolicy(newPolicy);
             self.dirty(true);
         },
-        editPolicyName: function () {
+        editPolicyName: function() {
             self.bindings.currPolicyName(self.bindings.currPolicy.name());
             self.bindings.isEditingPolicyName(true);
         },
-        savePolicyName: function () {
+        savePolicyName: function() {
             self.bindings.currPolicy.name(self.bindings.currPolicyName());
             self.bindings.isEditingPolicyName(false);
             self.savePolicy();
         },
-        cancelPolicyNameEdit: function () {
+        cancelPolicyNameEdit: function() {
             self.bindings.isEditingPolicyName(false);
         },
 
-        cancelEditMember: function () {
+        cancelEditMember: function() {
             self.bindings.currMember(null);
             self.bindings.isEditingMember(false);
         },
 
-        editPolicyEnabled: function () {
+        editPolicyEnabled: function() {
             self.bindings.currPolicyEnabled(self.bindings.currPolicy.enabled());
             self.bindings.isEditingPolicyEnabled(true);
         },
-        savePolicyEnabled: function () {
+        savePolicyEnabled: function() {
             self.bindings.currPolicy.enabled(!self.bindings.currPolicyEnabled());
             self.bindings.isEditingPolicyEnabled(false);
             self.savePolicy();
         },
-        cancelPolicyEnabledEdit: function () {
+        cancelPolicyEnabledEdit: function() {
             self.bindings.isEditingPolicyEnabled(false);
         },
 
-        addConfiguration: function () {
+        addConfiguration: function() {
             self.bindings.newConfigurationName('');
             self.bindings.isEditingNewConfiguration(true);
         },
-        doAddNewConfiguration: function () {
+        doAddNewConfiguration: function() {
             var configurationTemplate = self.getTemplate('alertConfig'),
                 duplicate;
 
@@ -3160,31 +3194,31 @@ var notificationsViewModel = function() {
             }
         },
 
-        editAlertConfig: function (alertConfig) {
+        editAlertConfig: function(alertConfig) {
             self.bindings.currAlertConfig(alertConfig);
         },
-        cancelEditAlertConfig: function () {
+        cancelEditAlertConfig: function() {
             self.bindings.cancelDoEditAlertConfig();
             self.bindings.currAlertConfig(null);
         },
 
-        doEditAlertConfig: function () {
+        doEditAlertConfig: function() {
             self._originalAlertConfig = ko.toJS(self.bindings.currAlertConfig);
 
             self.bindings.isEditingAlertConfig(true);
         },
-        cancelDoEditAlertConfig: function () {
+        cancelDoEditAlertConfig: function() {
             ko.viewmodel.updateFromModel(self.bindings.currAlertConfig, self._originalAlertConfig);
             self.bindings.isEditingAlertConfig(false);
         },
-        saveEditAlertConfig: function () {
+        saveEditAlertConfig: function() {
             var id = self.bindings.currAlertConfig().id(),
                 duplicate;
 
             duplicate = self.checkAlertConfigNames(self.bindings.currAlertConfig().id(), self.bindings.currAlertConfig().name(), self.bindings.currPolicy.alertConfigs());
 
             if (!duplicate) {
-                self.forEachArray(self.bindings.currPolicy.alertConfigs(), function (config) {
+                self.forEachArray(self.bindings.currPolicy.alertConfigs(), function(config) {
                     if (config.id() === id) {
                         ko.viewmodel.updateFromModel(config, ko.toJS(self.bindings.currAlertConfig));
                         // ko.viewmodel.updateFromModel(self.bindings.currPolicy.alertConfigs)
@@ -3200,24 +3234,24 @@ var notificationsViewModel = function() {
             }
         },
 
-        addAlertGroup: function () {
+        addAlertGroup: function() {
             self.bindings.currAlertConfig().groups.push(ko.viewmodel.fromModel(self.getTemplate('group')));
         },
 
-        deleteAlertGroup: function (alertConfig, idx) {
+        deleteAlertGroup: function(alertConfig, idx) {
             alertConfig.groups.splice(idx(), 1);
             self.dirty(true);
         },
 
-        addEscalation: function (group) {
+        addEscalation: function(group) {
             group.escalations.push(ko.viewmodel.fromModel(self.getTemplate('escalation')));
         },
 
-        deleteEscalation: function (group, idx) {
+        deleteEscalation: function(group, idx) {
             group.escalations.splice(idx(), 1);
         },
 
-        home: function () {
+        home: function() {
             // self.forEachArray(self.bindings.policyList(), function (policy, idx) {
             //     if (policy._id === self.bindings.currPolicy._id()) {
             //         ko.viewmodel.updateFromModel(self.bindings.policyList()[idx], ko.toJS(self.bindings.currPolicy));
@@ -3233,7 +3267,7 @@ var notificationsViewModel = function() {
         contentType: 'application/json',
         dataType: 'json',
         type: 'post'
-    }).done(function (data){
+    }).done(function(data) {
         self.groups = data;
     });
 
@@ -3242,7 +3276,7 @@ var notificationsViewModel = function() {
         contentType: 'application/json',
         dataType: 'json',
         type: 'post'
-    }).done(function (data){
+    }).done(function(data) {
         var c,
             users = data.Users,
             len = users.length,
@@ -3251,14 +3285,14 @@ var notificationsViewModel = function() {
         self.users = [];
         self.userLookup = {};
 
-        for (c=0; c<len; c++) {
+        for (c = 0; c < len; c++) {
             member = new Member(users[c]);
             self.users.push(member);
             self.userLookup[member.id] = member;
         }
     });
 
-    $('body').on('shown.bs.dropdown', '.daySelect input', function (e) {
+    $('body').on('shown.bs.dropdown', '.daySelect input', function(e) {
 
     });
 
@@ -3272,7 +3306,7 @@ var notificationsViewModel = function() {
                 len = alertConfigs.length,
                 done = false;
 
-            for(c=0; c<len && !done; c++) {
+            for (c = 0; c < len && !done; c++) {
                 if (alertConfigs[c].id() === configID) {
                     alertConfig = alertConfigs[c];
                     done = true;
@@ -3284,13 +3318,13 @@ var notificationsViewModel = function() {
     };
 
     ko.bindingHandlers.timepicker = {
-        init: function (element, valueAccessor, allBindingsAccessor, viewModel, context) {
+        init: function(element, valueAccessor, allBindingsAccessor, viewModel, context) {
             //initialize timepicker with some optional options
             var observable = valueAccessor(),
                 options = {
                     doneText: 'Done',
                     autoclose: true,
-                    afterDone: function () {
+                    afterDone: function() {
                         var time = $(element).val().split(':'),
                             hr = parseInt(time[0], 10),
                             min = parseInt(time[1], 10);
@@ -3302,12 +3336,12 @@ var notificationsViewModel = function() {
 
             $(element).clockpicker(options);
 
-            $(element).change(function (event) {
+            $(element).change(function(event) {
                 $(element).clockpicker('resetclock');
             });
         },
 
-        update: function (element, valueAccessor) {
+        update: function(element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()),
                 hr,
                 min;
@@ -3326,23 +3360,10 @@ var notificationsViewModel = function() {
     return self;
 };
 
-// About Infoscan -------------------------------------------------------------
-/*
-var aboutInfoScanViewModel = function() {
-    this.displayName = 'About InfoScan';
-
-    this.dirty = ko.observable(false);
-
-    this.hasError = ko.observable(false);
-};
-
-sysPrefsViewModel.registerSection(aboutInfoScanViewModel);
-*/
-
 // Shortcut for $(document).ready(function()...
 $(function() {
 
-    function postInit () {
+    function postInit() {
         var year,
             calendarVM,
             hash;
@@ -3362,6 +3383,7 @@ $(function() {
             sysPrefsViewModel.registerSection(alarmMessageDefinitions);
             sysPrefsViewModel.registerSection(weatherViewModel, 'init');
             sysPrefsViewModel.registerSection(notificationsViewModel, 'init');
+            sysPrefsViewModel.registerSection(versionsViewModel, 'init');
 
             year = new Date().getFullYear();
             calendarVM = sysPrefsViewModel.getSection('Calendar');

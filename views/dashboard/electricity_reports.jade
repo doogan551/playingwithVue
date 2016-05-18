@@ -23,7 +23,7 @@
             span(data-bind="text: (selectedReportsMode() !== '' ? selectedReportsMode() : 'Select Mode')")
             span.caret.lm10px
         ul.reportingmode.dropdown-menu
-            // ko foreach: reportsModes
+            // ko foreach: reportModes
             li
                 a(data-bind="click: function(){ $parent.modeSelected($data)}, text: $data")
             // /ko
@@ -32,7 +32,7 @@
         button.btn.btn-default(type='button' data-bind="click:print") Print
     // /ko
 
-    // ko if: (!activeDataRequest())
+    // ko if: (!activeDataRequest() && !errorWithRequest())
     .buttonBar.editControls(data-bind="if: $root.canWrite($parent.securityBindings.security)")
         // ko if: (!!selectedMonthYear().isReportCommitted && selectedMonthYear().isReportCommitted() === false && selectedMonthYear().prettyDate !== 'This month')
         button.hideInEdit.btn.btn-primary.btn-sm.commit(type="button", data-bind="click: showCommitModal") Commit

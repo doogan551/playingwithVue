@@ -69,7 +69,7 @@ module.exports = {
     };
 
     Utility.get(criteria, function(err, result) {
-      if(err){
+      if (err) {
         return cb(err);
       }
 
@@ -425,5 +425,26 @@ module.exports = {
     };
 
     Utility.update(criteria, cb);
+  },
+  getVersions: function(data, cb) {
+    var pjson = require('../package.json');
+    var versions = {
+      infoscanjs: pjson.version
+    };
+    var criteria = {
+      collection: 'SystemInfo',
+      query: {
+        Name: 'Preferences'
+      }
+    };
+
+    Utility.getOne(criteria, function(err, result) {
+      if (err) {
+        return cb(err);
+      } else {
+        versions.Processes = result['Server Version'];
+        return cb(null, versions);
+      }
+    })
   }
 };

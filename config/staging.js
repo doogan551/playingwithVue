@@ -1,8 +1,8 @@
-var yadkinville = {
+var staging = {
   'Infoscan': {
     'dbConfig': {
       'host': 'localhost',
-      'dbName': 'yadkinville'
+      'dbName': 'staging'
     },
     'zmqConfig': {
       'server': '127.0.0.1'
@@ -11,18 +11,19 @@ var yadkinville = {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'Yadkinville',
+      'site': 'engineering staging',
       'email': 'rkendall@dorsett-tech.com'
     },
     'letsencrypt': {
-      'enabled': true
+      'enabled': false
     },
-    'domains': ['yadkinvillenc.dtscada.com']
-  }
+    'domains': ['']
+  },
+  runNotifications: false
 };
 
-yadkinville.redisConfig = {
-  host: yadkinville.Infoscan.dbConfig.host
+staging.redisConfig = {
+  host: staging.Infoscan.dbConfig.host
 };
 
-module.exports = yadkinville;
+module.exports = staging;

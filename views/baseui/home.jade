@@ -293,7 +293,7 @@ html
                 .form-group(data-bind="visible: isLogIn, enable: isLogIn")
                     .control.email
                         label(for='user') Username
-                        input#user(type='text', required='required', spellcheck='false', data-bind='value: username', data-err-req-message='Please enter your username.')
+                        input#user(type='text', required='required', autocapitalize="off", autocorrect="off", data-bind='value: username', data-err-req-message='Please enter your username.')
                         .col1.validationMessage(data-bind='validationMessage: username', style='display: none;')
                 .form-group(data-bind="visible: isLogIn, enable: isLogIn")
                     .control.password

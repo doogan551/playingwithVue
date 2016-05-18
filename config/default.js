@@ -3,7 +3,7 @@ var defaults = {
         'dbConfig': {
             'host': '192.168.1.88',
             'port': 27017,
-            'dbName': 'infoscan',
+            'dbName': 'development',
             'driver': 'mongodb'
         },
         'zmqConfig': {

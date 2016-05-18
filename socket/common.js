@@ -101,6 +101,7 @@ common.setQualityLabel = function(point) {
 common.newUpdate = newUpdate;
 common.signalExecTOD = signalExecTOD;
 common.updateDependencies = updateDependencies;
+common.restorePoint = restorePoint;
 common.deletePoint = deletePoint;
 common.updateDeviceToDs = updateDeviceToDs;
 common.signalHostTOD = signalHostTOD;
@@ -158,7 +159,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
       timestamp: Date.now(),
       point: newPoint
     };
-
   readOnlyProps = ["_id", "_cfgDevice", "_updTOD", "_pollTime",
     "_forceAllCOV", "_actvAlmId", "Alarm State", "Control Pending", "Device Status",
     "Last Report Time", "Point Instance", "Point Type", "Reliability"
@@ -1093,7 +1093,7 @@ function updateRefs(updateReferences, newPoint, flags, callback) {
     updateDependencies(newPoint, {
       from: "newUpdate",
       method: (flags.method === null) ? "update" : flags.method
-    }, null, function(err) {
+    }, user, function(err) {
       return callback(err);
     });
 
@@ -1237,12 +1237,12 @@ function updateDependencies(refPoint, flags, user, callback) {
     collection: constants('pointsCollection'),
     query: {
       "Point Refs.Value": refPoint._id
+        // _parentUpi
     },
     fields: {
       _id: 1
     }
   }, function(err, dependencies) {
-
     async.eachSeries(dependencies, function(dependencyId, depCB) {
       Utility.getOne({
         collection: constants('pointsCollection'),
@@ -1251,8 +1251,8 @@ function updateDependencies(refPoint, flags, user, callback) {
         }
       }, function(err, dependency) {
         // TODO Check for errors
+        console.log('waterfall', dependency.Name, dependency["Point Type"].Value, flags.method)
         async.waterfall([
-
           function(cb1) {
             if (dependency["Point Type"].Value === "Schedule Entry" && flags.method === "hard") {
               updateScheduleEntries(dependency, devices, null, function(todSignal) {
@@ -1264,6 +1264,7 @@ function updateDependencies(refPoint, flags, user, callback) {
                     _id: dependency._id
                   }
                 }, function(err, result) {
+                  console.log('first err', err);
                   cb1(err);
                 });
               });
@@ -1278,9 +1279,10 @@ function updateDependencies(refPoint, flags, user, callback) {
             data.oldPoint = deepClone(dependency);
 
             if (dependency["Point Type"].Value !== "Schedule Entry" || (flags.method !== "hard")) {
-              if (dependency["Point Type"].Value === "Schedule Entry" && flags.method === "soft")
-                dependency._pStatus = 1; // was _pAccess
-
+              if (dependency["Point Type"].Value === "Schedule Entry" && dependency._parentUpi === 0 && flags.method === "soft") {
+                dependency._pStatus = 2;
+                return cb2(null);
+              }
               // dependency._cfgRequired = false;
               // dependency._updPoint = false;
 
@@ -1320,26 +1322,32 @@ function updateDependencies(refPoint, flags, user, callback) {
           },
           function(cb3) {
             if (dependency["Point Type"].Value === "Schedule Entry") {
-              updateScheduleEntries(dependency, devices, null, function(todSignal) {
-                signalTOD = (signalTOD | todSignal) ? true : false;
-                // does deletePoint need to be called here?
-                newUpdate(data.oldPoint, data.point, {
-                  method: flags.method,
-                  from: "updateDependencies"
-                }, null, function(response, point) {
-                  cb3(response.err);
+              if (flags.method !== 'hard') {
+                updateScheduleEntries(dependency, devices, null, function(todSignal) {
+                  signalTOD = (signalTOD | todSignal) ? true : false;
+                  // does deletePoint need to be called here?
+                  newUpdate(data.oldPoint, data.point, {
+                    method: flags.method,
+                    from: "updateDependencies"
+                  }, user, function(response, point) {
+                    console.log('second err', err);
+                    cb3(response.err);
+                  });
                 });
-              });
+              } else {
+                return cb3();
+              }
             } else {
               newUpdate(data.oldPoint, data.point, {
                 method: flags.method,
                 from: "updateDependencies"
-              }, null, function(response, point) {
+              }, user, function(response, point) {
                 cb3(null);
               });
             }
           }
         ], function(err) {
+          console.log('err', err);
           depCB(err);
         });
       });
@@ -1355,7 +1363,115 @@ function updateDependencies(refPoint, flags, user, callback) {
   });
 }
 
-//updateSchedules(io), io, deleteScheduleEntries, updateSequencePoints(io)
+function restorePoint(upi, user, callback) {
+  var logData = {
+    user: user,
+    timestamp: Date.now()
+  };
+  Utility.findAndModify({
+    collection: pointsCollection,
+    query: {
+      _id: upi
+    },
+    sort: [],
+    updateObj: {
+      $set: {
+        _pStatus: 0
+      }
+    },
+    options: {
+      new: true
+    }
+  }, function(err, point) {
+
+    if (err)
+      return callback({
+        err: err
+      });
+
+    logData.activity = actLogsEnums["Point Restore"].enum;
+    logData.log = "Point restored";
+    logData.point = point;
+    Utility.insert({
+      collection: activityLogCollection,
+      insertObj: logData
+    }, function(err, result) {
+      if (["Schedule", 'Sequence'].indexOf(point["Point Type"].Value) >= 0) {
+        // get points based on parentupi
+        Utility.update({
+          collection: 'points',
+          query: {
+            _parentUpi: point._id
+          },
+          updateObj: {
+            $set: {
+              _pStatus: 0
+            }
+          },
+          options: {
+            multi: true
+          }
+        }, function(err, result) {
+          return callback({
+            message: "success"
+          });
+        })
+      } else {
+        restoreScheduleEntries(point, user, function() {
+          common.updateDependencies(point, {
+            method: "restore"
+          }, user, function() {
+            return callback({
+              message: "success"
+            });
+          });
+        });
+      }
+    });
+  });
+}
+
+function restoreScheduleEntries(refPoint, user, callback) {
+  var options = {
+      from: "updateSchedules"
+    },
+    query = {
+      'Point Type.Value': 'Schedule Entry',
+      'Point Refs': {
+        $elemMatch: {
+          Value: refPoint._id,
+          PropertyName: "Control Point"
+        }
+      }
+    };
+
+  Utility.get({
+    collection: constants('pointsCollection'),
+    query: query
+  }, function(err, points) {
+    var devices = [],
+      signalTOD = false;
+    async.eachSeries(points, function(point, asyncCB) {
+      // if host schedule - set flag
+      updateScheduleEntries(point, devices, refPoint, function(todSignal) {
+        signalTOD = (signalTOD | todSignal) ? true : false;
+        restorePoint(point._id, user, function(err) {
+          asyncCB(err.err);
+        });
+      });
+    }, function(err) {
+      signalHostTOD(signalTOD, function(err) {
+        if (err)
+          return callback(err);
+        updateDeviceToDs(devices, function(err) {
+          callback(err);
+        });
+      });
+    });
+  });
+}
+
+//updateSchedules(io), io, deleteChildren, updateSequencePoints(io)
 function deletePoint(upi, method, user, options, callback) {
   var _point,
     _updateFromSchedule = !!options && options.from === "updateSchedules",
@@ -1501,8 +1617,8 @@ function deletePoint(upi, method, user, options, callback) {
         cb(null);
       });
     },
-    _deleteScheduleEntries = function(cb) {
-      deleteScheduleEntries(method, _point["Point Type"].Value, _point._id, null, function(err) {
+    _deleteChildren = function(cb) {
+      deleteChildren(method, _point["Point Type"].Value, _point._id, null, function(err) {
         if (err) {
           _buildWarning('could not delete all schedule entries associated with this point');
         }
@@ -1532,7 +1648,7 @@ function deletePoint(upi, method, user, options, callback) {
       });
     },
     executeFunctions = [_findPoint, _deletePoint, _updateUpis, _deleteHistory, _fromScheduleExitCheck, _addActivityLog,
-      _deleteScheduleEntries, _updateCfgRequired, _updateDependencies
+      _deleteChildren, _updateCfgRequired, _updateDependencies
     ];
 
   async.waterfall(executeFunctions, function(err) {
@@ -1552,56 +1668,45 @@ function deletePoint(upi, method, user, options, callback) {
 }
 
 // deletepoint
-function deleteScheduleEntries(method, pointType, upi, user, callback) {
+function deleteChildren(method, pointType, upi, user, callback) {
   var options = {
       from: "updateSchedules"
     },
     query = {};
-
   // Build the query object
-  if (pointType === "Schedule") {
+  if (["Schedule", 'Sequence'].indexOf(pointType) >= 0) {
     query._parentUpi = upi;
-  } else {
-    // deleted a non-schedule point
-    // do i need to search based on parentUpi still?
-    query._parentUpi = 0;
-    query["Point Type.Value"] = "Schedule Entry";
-    query["Point Refs"] = {
-      $elemMatch: {
-        Value: upi,
-        PropertyName: "Control Point"
-      }
-    };
-  }
+    if (method === 'soft') {
 
-  Utility.get({
-    collection: constants('pointsCollection'),
-    query: query
-  }, function(err, points) {
-    var devices = [],
-      signalTOD = false;
-    async.eachSeries(points, function(point, asyncCB) {
-      // if host schedule - set flag
-      updateScheduleEntries(point, devices, null, function(todSignal) {
-        signalTOD = (signalTOD | todSignal) ? true : false;
-        deletePoint(point._id, method, user, options, function(err) {
-          asyncCB(err.err);
-        });
+      Utility.update({
+        collection: constants('pointsCollection'),
+        query: query,
+        updateObj: {
+          $set: {
+            _pStatus: 2
+          }
+        },
+        options: {
+          multi: true
+        }
+      }, function(err, results) {
+        callback(err);
       });
-    }, function(err) {
-      signalHostTOD(signalTOD, function(err) {
-        if (err)
-          return callback(err);
-        updateDeviceToDs(devices, function(err) {
-          callback(err);
-        });
-      });
-      callback(err);
-    });
-  });
+    } else if (method === 'hard') {
+      Utility.remove({
+          collection: constants('pointsCollection'),
+          query: query
+        },
+        callback);
+    } else {
+      return callback();
+    }
+  } else {
+    return callback();
+  }
 }
 
-//updateDependencies, deleteScheduleEntries, updateSchedules(io)
+//updateDependencies, deleteChildren, updateSchedules(io)
 function updateDeviceToDs(devices, callback) {
   Utility.update({
     collection: constants('pointsCollection'),
@@ -1622,7 +1727,7 @@ function updateDeviceToDs(devices, callback) {
     callback(err);
   });
 }
-//updateDependencies, deleteScheduleEntries, updateSchedules(io)
+//updateDependencies, deleteChildren, updateSchedules(io)
 function signalHostTOD(signalTOD, callback) {
   if (signalTOD === true) {
     var command = {
@@ -1637,10 +1742,9 @@ function signalHostTOD(signalTOD, callback) {
     callback(null, "success");
   }
 }
-//updateDependencies, deleteScheduleEntries
+//updateDependencies, deleteChildren
 function updateScheduleEntries(scheduleEntry, devices, refPoint, callback) {
   var signalTOD = false;
-
 
   if (refPoint !== null)
     scheduleEntry = Config.Update.formatPoint({
