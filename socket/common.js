@@ -938,7 +938,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                     return callback({
                       err: err
                     }, result);
-                  updateRefs(updateReferences, newPoint, flags, function(err) {
+                  updateRefs(updateReferences, newPoint, flags, user, function(err) {
                     if (err)
                       return callback({
                         err: err
@@ -1088,7 +1088,7 @@ function commitScript(data, callback) {
   });
 }
 // newupdate
-function updateRefs(updateReferences, newPoint, flags, callback) {
+function updateRefs(updateReferences, newPoint, flags, user, callback) {
   if (updateReferences === true) {
     updateDependencies(newPoint, {
       from: "newUpdate",
