@@ -84,7 +84,7 @@ var gpl = {
         gpl.socketWaitFn = fn;
     },
     saveSequence: function () {
-        gpl.point._parentUpi = gpl.point._id;
+        gpl.point._parentUpi = 0;
         gpl.point['Point Refs'][0].PointName = gpl.devicePoint.Name;
 
         managerSelf.socket.emit('updateSequence', {
