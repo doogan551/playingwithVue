@@ -8082,7 +8082,7 @@ gpl.Manager = function () {
                 gpl.point.Controller.eValue = props.deviceControllerValue;
                 managerSelf.bindings.updateBackgroundColor();
 
-                if (gpl.devicePoint._id !== gpl._newDevicePoint._id) {
+                if (gpl._newDevicePoint && gpl.devicePoint._id !== gpl._newDevicePoint._id) {
                     gpl.devicePoint = gpl._newDevicePoint;
                     gpl.deviceId = gpl._newDevicePoint._id;
 
