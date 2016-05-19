@@ -88,9 +88,9 @@ html
                                 .col-sm-4
                                     .form-group.dataField
                                         label Update Interval
-                                        input.short-input.form-control.input-sm(type="text", min="0", max="59", placeholder="Min", data-bind="textInput: deviceUpdateIntervalMinutes")
+                                        input.short-input.form-control.input-sm(type="number", min="0", max="59", placeholder="Min", data-bind="textInput: deviceUpdateIntervalMinutes")
                                         | :
-                                        input.short-input.form-control.input-sm(type="text", min="0", max="59", placeholder="Sec", data-bind="textInput: deviceUpdateIntervalSeconds")
+                                        input.short-input.form-control.input-sm(type="number", min="0", max="59", placeholder="Sec", data-bind="textInput: deviceUpdateIntervalSeconds")
                                         button.btn.btn-xs.btn-primary(data-bind="click: applyUpdateInterval") Apply All
                                 .col-sm-4
                                     .form-group.dataField

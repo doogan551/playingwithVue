@@ -1333,13 +1333,13 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     },
 
     formatPoint: function (anchor, line, block, newData) {
-        if (gpl.rendered) {
+        if (gpl.rendered && !window.destroyed) {
             var otherEnd = line && line.getOtherAnchor(),
                 otherBlock = block || gpl.blockManager.getBlock(otherEnd && otherEnd.gplId),
                 args = {
                     point: newData || this.getPointData(),
                     oldPoint: this._origPointData,
-                    property: this.blockType === 'input' ? anchor.anchorType : otherEnd.anchorType,
+                    property: this.blockType === 'output' ? otherEnd.anchorType : anchor.anchorType,
                     refPoint: otherBlock && otherBlock.upi
                 };
 
@@ -1800,7 +1800,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     if (self.setIconName) {
                         self.setIconName();
                     } else {
-                        if (calcType && self.iconType !== calcType) {
+                        if (calcType) {//} && self.iconType !== calcType) {
                             self.config.iconType = calcType;
 
                             if (self.iconPrefix) {
@@ -4725,7 +4725,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                     }
                 };
 
-            if (isNew) {
+            if (isNew && gpl.rendered) {
                 centerInAnchor(clSelf.startAnchor, 0, 1);
                 centerInAnchor(clSelf.endAnchor, len - 1, len - 2);
             }
@@ -4744,6 +4744,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
         };
 
     clSelf.coords = $.extend(true, [], coords);
+    clSelf.isNew = isNew || false;
 
     clSelf.lines = [];
     clSelf.wideLines = [];
@@ -5338,18 +5339,24 @@ gpl.LineManager = function (manager) {
 
     lmSelf.convertLine = function (line) {
         var ret = {
-            handle: line.coords
+            handle: line.coords,
         };
 
         return ret;
     };
 
-    lmSelf.prepSaveData = function (saveObject) {
-        var ret = [];
+    lmSelf.prepSaveData = function (saveObject, isForLater) {
+        var ret = [],
+            laterRet = [];
 
         gpl.forEach(lmSelf.lines, function (obj) {
+            var rawLine = lmSelf.convertLine(obj);
+
             if (obj.state !== 'deleted') {
-                ret.push(lmSelf.convertLine(obj));
+                if (!obj.isNew || !gpl.isCancel) {
+                    rawLine.isNew = obj.isNew || false;
+                    ret.push(rawLine);
+                }
             }
         });
 
@@ -5390,7 +5397,7 @@ gpl.LineManager = function (manager) {
     });
 
     gpl.on('saveForLater', function () {
-        lmSelf.prepSaveData(gpl.json.editVersion);
+        lmSelf.prepSaveData(gpl.json.editVersion, true);
     });
 
     gpl.onDestroy(function () {
@@ -5721,6 +5728,8 @@ gpl.BlockManager = function (manager) {
                     gplBlock = bmSelf.getBlockByUpi(upi);
 
                     gplBlock.setPointData(block);
+
+                    bmSelf.newBlocks[upi] = gplBlock;
                 });
 
                 gpl.forEachArray(changes.updates, function (block) {
@@ -5733,6 +5742,8 @@ gpl.BlockManager = function (manager) {
                         gplBlock._origPointData = block.oldPoint;
 
                         gplBlock.setPointData(block);
+
+                        bmSelf.editedBlocks[upi] = gplBlock;
                     }
                 });
 
@@ -5875,7 +5886,8 @@ gpl.BlockManager = function (manager) {
             var ret = null;
 
             gpl.forEach(bmSelf.blocks, function (block) {
-                if (block.getPointData() && block.getPointData()._id === upi) {
+                var data = block.getPointData && block.getPointData();
+                if (data && data._id === upi) {
                     ret = block;
                 }
             });
@@ -5976,6 +5988,13 @@ gpl.BlockManager = function (manager) {
             if (gpl.pointChanges !== undefined) {
                 gpl.forEachArray(gpl.pointChanges.adds, function (add) {
                     var ref = gpl.makePointRef(add._id, add.Name, add);
+
+                    bmSelf.pointRefUpiMatrix[add._id] = ref;
+                });
+
+                gpl.forEachArray(gpl.pointChanges.updates, function (adds) {
+                    var add = adds.newPoint,
+                        ref = gpl.makePointRef(add._id, add.Name, add);
 
                     bmSelf.pointRefUpiMatrix[add._id] = ref;
                 });
@@ -6489,17 +6508,17 @@ gpl.BlockManager = function (manager) {
             deletes: []
         };
 
-        if (bmSelf.manager.bindings.hasEdits()) {
-            gpl.forEach(bmSelf.newBlocks, function (block, upi) {
-                ret.deletes.push(upi);
-            });
+        // if (bmSelf.manager.bindings.hasEdits()) {
+        //     gpl.forEach(bmSelf.newBlocks, function (block, upi) {
+        //         ret.deletes.push(upi);
+        //     });
 
-            if (cb) {
-                gpl.waitForSocketMessage(cb);
-            }
+        //     if (cb) {
+        //         gpl.waitForSocketMessage(cb);
+        //     }
 
-            gpl.socket.emit('updateSequencePoints', ret);
-        }
+        //     gpl.socket.emit('updateSequencePoints', ret);
+        // }
     };
 
     bmSelf.destroyBlocks = function () {
@@ -7006,6 +7025,17 @@ gpl.Manager = function () {
         managerSelf.bindings = $.extend(managerSelf.bindings, props);
     };
 
+    managerSelf.rebuildBoundingRect = function () {
+        managerSelf.minX = 9999;
+        managerSelf.minY = 9999;
+        managerSelf.maxX = 0;
+        managerSelf.maxY = 0;
+
+        gpl.blockManager.forEachBlock(function (block) {
+            managerSelf.addToBoundingRect(block);
+        });
+    };
+
     managerSelf.addToBoundingRect = function (block) {
         var items = block._shapes || [],
             start = new Date(),
@@ -7248,25 +7278,26 @@ gpl.Manager = function () {
 
                 block.upi = obj._id;
                 obj['Point Instance'].Value = obj._id;
-                if (obj['Calculation Type']) {
-                    obj['Calculation Type'].Value = block.iconType;
-                }
 
                 // if (obj['Reverse Action'])
 
 
+                obj['Point Refs'][0].Value = gpl.deviceId;
+
+                block.formatPointFromData(obj, obj, 'Device Point', gpl.devicePoint);
+                obj = block.getPointData();
+
+                if (obj['Calculation Type']) {
+                    obj['Calculation Type'].Value = block.iconType;
+                    obj['Calculation Type'].eValue = obj['Calculation Type'].ValueOptions[block.iconType];
+                    // block.formatPointFromData(obj, obj, 'Calculation Type');
+                }
+
                 block.setPointData(obj, true);
-
-                newPoint = block.getPointData();
-
-                newPoint['Point Refs'][0].Value = gpl.deviceId;
-
-                block.formatPointFromData(newPoint, newPoint, 'Device Point', gpl.devicePoint);
 
                 log(block.gplId, 'save callback', newPoint);
                 gpl.fire('newblock', block);
                 called = true;
-
 
                 managerSelf.socket.emit('updatePoint', JSON.stringify({
                     'newPoint': newPoint,
@@ -7897,7 +7928,30 @@ gpl.Manager = function () {
     };
 
     managerSelf.initBindings = function () {
-        var handlers = {
+        var formatSequencePoint = function (property, value) {
+                var newPoint = $.extend(true, {}, gpl.point),
+                    tmpData;
+
+                newPoint[property].Value = value;
+                tmpData = gpl.formatPoint({
+                    point: newPoint,
+                    oldPoint: gpl.point,
+                    property: property
+                });
+
+                if (tmpData.err) {
+                    gpl.log('Error with sequence point data:', property, 'error:', tmpData.err);
+                } else {
+                    gpl.log('Successfully updated sequence point property', property);
+                    gpl.point = tmpData;
+                }
+            },
+            updateUpdateInterval = function (newValue) {
+                var val = (+managerSelf.bindings.deviceUpdateIntervalMinutes()) || 0 * 60 + (+managerSelf.bindings.deviceUpdateIntervalSeconds()) || 0;
+
+                formatSequencePoint('Update Interval', val);
+            },
+            handlers = {
                 deviceDescription: function (val) {
                     gpl.point.Description.Value = val; //validate?
                 }
@@ -8108,14 +8162,30 @@ gpl.Manager = function () {
             },
             selectDevicePoint: function () {
                 gpl.openPointSelector(function (upi, name) {
-                    $.ajax({
-                        url: '/api/points/' + upi
-                    }).done(function (data) {
-                        gpl._newDevicePoint = data;
+                    var tmpData = $.extend(true, {}, gpl.point);
+                    tmpData['Point Refs'][0].Value = upi;
+                    tmpData = gpl.formatPoint({
+                        oldPoint: gpl.point,
+                        point: tmpData,
+                        property: 'Sequence Device'
                     });
 
-                    managerSelf.bindings.deviceName(name);
-                    managerSelf.bindings.deviceUpi(upi);
+                    if (tmpData.err) {
+                        gpl.log('Error setting device point:', tmpData.err);
+                        gpl.showMessage('Error setting device point: ' + tmpData.err);
+                    } else {
+                        managerSelf.bindings.deviceName(name);
+                        managerSelf.bindings.deviceUpi(upi);
+
+                        gpl.log('Set device point Successfully');
+
+                        $.ajax({
+                            url: '/api/points/' + upi
+                        }).done(function (data) {
+                            gpl._newDevicePoint = data;
+                        });
+                    }
+
                 }, null, 'Device', 'Device Point', {});
             },
 
@@ -8150,6 +8220,17 @@ gpl.Manager = function () {
             managerSelf.scale(newValue / 100, true);
         });
 
+        managerSelf.bindings.deviceUpdateIntervalMinutes.subscribe(updateUpdateInterval);
+        managerSelf.bindings.deviceUpdateIntervalSeconds.subscribe(updateUpdateInterval);
+        managerSelf.bindings.deviceShowValue.subscribe(function (newValue) {
+            formatSequencePoint('Show Value', newValue);
+        });
+
+        managerSelf.bindings.deviceShowLabel.subscribe(function (newValue) {
+            formatSequencePoint('Show Label', newValue);
+        });
+
+
         managerSelf.bindings.backgroundColorHex = ko.computed(function () {
             var color = '#' + managerSelf.bindings.backgroundColor();
 
@@ -8173,12 +8254,14 @@ gpl.Manager = function () {
         });
 
         managerSelf.$cancelButton.click(function () {
+            gpl.isCancel = true;
             managerSelf.bindings.hasEdits(false);
             gpl.blockManager.handleUnload();
+            gpl.lineManager.prepSaveData(gpl.json);
 
             delete gpl.json.editVersion;
 
-            managerSelf.offsetPositions(true);
+            offsetPositions(true);
 
             gpl.saveSequence();
 
@@ -8533,6 +8616,7 @@ gpl.Manager = function () {
             block,
             blocktype,
             blockCfg,
+            line,
             handles,
             handle,
             coords,
@@ -8596,7 +8680,8 @@ gpl.Manager = function () {
 
         for (c = 0; c < lines.length; c++) {
             coords = [];
-            handles = lines[c].handle;
+            line = lines[c];
+            handles = line.handle;
 
             for (cc = 0; cc < handles.length; cc++) {
                 handle = handles[cc];
@@ -8606,8 +8691,10 @@ gpl.Manager = function () {
                 });
             }
 
-            newLine = new gpl.ConnectionLine(coords, managerSelf.canvas);
-            managerSelf.shapes.push(newLine);
+            if (!line.isNew || gpl.isEdit) {
+                newLine = new gpl.ConnectionLine(coords, managerSelf.canvas, line.isNew || false);
+                managerSelf.shapes.push(newLine);
+            }
         }
 
         managerSelf.renderAll();
