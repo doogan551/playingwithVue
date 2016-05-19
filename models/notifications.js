@@ -3,7 +3,6 @@ var async = require('async'),
 	utils = require('../helpers/utils'),
 	calendar = require('../models/calendar'),
 	config = require('config'),
-	siteConfig = config.get('Infoscan'),
 	Config = require('../public/js/lib/config.js'),
 	appConfig = require('config'),
 	cronJob = require('../models/cronjob'),
@@ -11,9 +10,9 @@ var async = require('async'),
 	logger = require('../helpers/logger')(module),
 	Notifier = require('../models/notifierutility');
 
-var siteConfig = config.get('InfoScan'),
+var siteConfig = config.get('Infoscan'),
 	siteDomain = siteConfig.domains[0],
-	emailFromUser = siteConfig.email.from.alarms;
+	alarmEmail = siteConfig.email.accounts.alarms;
 
 var notifier = new Notifier();
 
@@ -24,6 +23,7 @@ var	enums = Config.Enums,
 	alarmClassRevEnums = revEnums['Alarm Classes'],
 	alarmClassEnums = enums['Alarm Classes'],
 	alarmCategoryEnums = enums['Alarm Categories'],
+	accessFlagsEnums = enums['Access Flags'],
 	alarmCategoryRevEnums = revEnums['Alarm Categories'],
 	eventCategoryEnum = alarmCategoryEnums.Event.enum,
 	maintenanceCategoryEnum = alarmCategoryEnums.Maintenance.enum,
@@ -593,9 +593,33 @@ var dbAlarmQueueLocked = false,
 						}
 						return obj;
 					})(),
+					getUserPermissions = function (userId) {
+						// This routine returns a _pAccess value for the userId associated with the notifying point
+						var user = info.data.usersObj[userId],
+							security = thread.trigger.Security, // Array of group ids
+							_pAccess = 0, // Assume no permissions
+							group;
+
+						if (user) {
+							if (user['System Admin'].Value === true) {
+								_pAccess = accessFlagsEnums.All;
+							} else {
+								security.forEach(function (groupId) {
+									group = info.data.groupsObj[groupId];
+									
+									// If our user is a member of this group
+									if (group.Users[userId]) {
+										_pAccess |= group._pAccess;	// Add group permissions
+									}
+								});
+							}
+						}
+						return _pAccess;
+					},
 					notifyAlarmStateChange = function (change) {
 						var i,
 							history,
+							userId,
 							key;
 
 						// If the alarm changed state (return to normal or a new alarm state), we immediately notify 
@@ -603,14 +627,16 @@ var dbAlarmQueueLocked = false,
 						// already been notified
 						for (i = 0; i < recepientHistoryLength; i++) {
 							history = thread.recepientHistory[i];
-							key = [history.userId, history.Type, history.Value].join('');
+							userId = history.userId;
+							key = [userId, history.Type, history.Value].join('');
 							
 							// We'll only alert the user of the alarm state change if they
 							// don't already have a notification of this type in the queue,
 							// or if they do but it's not scheduled until later
 							if (!(notifyLookup.hasOwnProperty(key)) || notifyLookup[key].nextAction > now) {
 								thread.notifyQueue.push({
-									userId: history.userId,
+									userId: userId,
+									userCanAck: !!(getUserPermissions(userId) & accessFlagsEnums.Acknowledge.enum),
 									nextAction: now,
 									Type: history.Type, // email, voice, sms
 									Value: history.Value, // phone number or email
@@ -635,6 +661,7 @@ var dbAlarmQueueLocked = false,
 						for (i = 0; i < len; i++) {
 							userId = userIds[i];
 
+							// Returns an empty array if user not found
 							userAlerts = actions.policies.getUserAlerts(info.data.usersObj[userId], alarmClassName);
 
 							for (j = 0, jlen = userAlerts.length; j < jlen; j++) {
@@ -646,6 +673,7 @@ var dbAlarmQueueLocked = false,
 								if (!notifyLookup.hasOwnProperty(key) || thread._state === ADDED) {
 									notification = {
 										userId: userId,
+										userCanAck: getUserPermissions(userId) & accessFlagsEnums.Acknowledge.enum,
 										nextAction: actions.utility.getTimestamp(info, userAlert.delay),
 										Type: userAlert.Type, // email, voice, sms
 										Value: userAlert.Value // phone number or email
@@ -1009,7 +1037,7 @@ var dbAlarmQueueLocked = false,
 					collection: alarmsCollection,
 					query: query,
 					fields: fields
-				}, function(err, alarm) { // alarm is null if not found
+				}, function (err, alarm) { // alarm is null if not found
 					var ackStatus = (alarm && alarm.ackStatus) || isAcknowledgedEnum, // If we can't find the alarm (shouldn't happen), we treat it like it has been acknowledged
 						isAcknowledged = (ackStatus === isAcknowledgedEnum);
 					
@@ -1330,7 +1358,7 @@ var dbAlarmQueueLocked = false,
 								if (thread._state !== DELETED) {
 									notifyQueue.splice(k, 1);
 									k--;
-									klen = thread.notifyQueue.length;
+									klen--;
 								}
 							} else {
 								_numberOfQueuedItems++;
@@ -1352,6 +1380,7 @@ var dbAlarmQueueLocked = false,
 				//	notification: {
 				//		userId: *,
 				//		nextAction: *,
+				//		userCanAck: *,	// Boolean indicates if user can acknowledge this alarm
 				//		type: *,	// EMAIL, VOICE, SMS
 				//		info: *,	// Phone number or email
 				//		change: *,	// may or may not be present
@@ -1387,6 +1416,8 @@ var dbAlarmQueueLocked = false,
 					key,
 					i,
 					to,
+					notifyingReturnNormal,
+					showReplyToAckMsg,
 					recepientHistoryLookup = (function(){
 						var obj = {},
 							thread,
@@ -1458,19 +1489,27 @@ var dbAlarmQueueLocked = false,
 						}
 						return subject + thread.trigger.Name;
 					},
+					getColor = function () {
+						// notifyingReturnNormal variable was set before this routine was called
+						var color;
+						if (notifyingReturnNormal) {
+							color = '#008000'; // Green
+						} else {
+							color = '#FF0000'; // Red
+						}
+						return color;
+					},
 					getMessage = function () {
-						// thread and notification variables were set before this routine was called
+						// thread, notification, and notifyingReturnNormal variables were set before this routine was called
 						var trigger = thread.trigger,
 							isNormalAlarmClass = trigger.almClass === alarmClassEnums.Normal.enum,
 							alarmClassText = alarmClassRevEnums[trigger.almClass],
-							notifyingReturnNormal = false,
 							msg = '',
 							timestamp,
 							obj;
 
-						if (!!notification.change && notification.change === 'return') {
+						if (notifyingReturnNormal) {
 							obj = thread.returnNormal;
-							notifyingReturnNormal = true;
 						} else {
 							obj = trigger;
 						}
@@ -1531,6 +1570,7 @@ var dbAlarmQueueLocked = false,
 
 								notifyType: notification.Type,
 								timestamp: new Date().getTime(),
+								to: notification.Value,
 								message: notifyEntry.notifyMsg
 							},
 							criteria = {
@@ -1550,10 +1590,11 @@ var dbAlarmQueueLocked = false,
 					};
 
 				for (i = 0; i < len; i++) {
+					notifyingReturnNormal = false;
 					notifyEntry = data.notifyList[i];
 					// Each notifyEntry is of the form
 					// {
-					//	notification: {}, // Has keys: userId, nextAction, type, Value
+					//	notification: {}, // Has keys: userId, userCanAck, nextAction, type, Value
 					//	policy: {},
 					//	thread: {}
 					// }
@@ -1563,6 +1604,9 @@ var dbAlarmQueueLocked = false,
 					to = notification.Value;
 					thread = notifyEntry.thread;
 
+					if (!!notification.change && notification.change === 'return') {
+						notifyingReturnNormal = true;
+					}
 					// We'll also collect notifications by user which can be used to prevent overwhelming the user
 					// with too many pages at one time (ex: we could combine messages or simply tell the user he/she has x new alarms to review)
 					if (!userNotifyList.hasOwnProperty(notification.userId)) {
@@ -1593,26 +1637,33 @@ var dbAlarmQueueLocked = false,
 
 					// Send notification
 					if (notification.Type === EMAIL) {
+						showReplyToAckMsg = !notifyingReturnNormal && !thread.status.isAcknowledged && notification.userCanAck;
+
 						// Beautify our email message
-						notifyMsg =  '<span style="font-family: Helvetica, Arial, sans-serif; font-size: 14px; color: #FF0000">' + notifyMsg + '</span>';
+						notifyMsg =  '<span style="font-family: Helvetica, Arial, sans-serif; font-size: 14px; color: ' + getColor() + '">' + notifyMsg + '</span>';
 						
-						notifyMsg += '<p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-style: italic;">Reply to this email to acknowledge this alarm.</p>';
+						if (showReplyToAckMsg) {
+							notifyMsg += '<p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-style: italic;">Reply to this email to acknowledge this alarm.</p>';
+						}
 						
 						notifyMsg += '<p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px;">Thanks,<br />';
 						notifyMsg += 'Your Dorsett Technologies InfoScan Team<br />';
 						notifyMsg += '800-331-7605<br/>';
 						notifyMsg += '<a href="http://www.dorsett-tech.com" style="color: #15C;">www.dorsett-tech.com</a>';
-						notifyMsg += '</p>';
+						notifyMsg += '</p><br />';
 
-						notifyMsg += '<table cellpadding=”0″ cellspacing=”0″ style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #666; background-color: #EEE; border: 1px solid #CCC; border-collapse: collapse"><td style="padding: 10px;">';
-						notifyMsg += 'You are receiving this email at the account <a href="mailto:' + to + '" style="color: #15C;">' + to + '</a> because you are subscribed for alarm notifications on InfoScan.<br /><br />';
-						notifyMsg += 'To stop receiving these emails, please log in to <a href="http://' + siteDomain + '" style="color: #15C;">' + siteDomain + '</a> and change your alarm notification settings.<br /><br />';
-						notifyMsg += 'Do not edit or remove anything below this line when replying.<br />{' + thread.trigger.alarmId + '}';
-						notifyMsg += '</td></table>';
+						notifyMsg += '<table cellpadding=”0″ cellspacing=”0″ style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #666; background-color: #EEE; border: 1px solid #CCC; border-collapse: collapse"><tr><td style="padding: 10px;">';
+						notifyMsg += 'You are receiving this email at the account <a href="mailto:' + to + '" style="color: #15C;">' + to + '</a> because you are subscribed for alarm notifications on InfoScan. ';
+						notifyMsg += 'To stop receiving these emails, please log in to InfoScan at <a href="http://' + siteDomain + '" style="color: #15C;">' + siteDomain + '</a> and change your alarm notification settings.';
+
+						if (showReplyToAckMsg) {
+							notifyMsg += '<br /><br />Do not edit or remove anything below this line when replying to this message.<br />{' + thread.trigger.alarmId + '}';
+						}
+						notifyMsg += '</td></tr></table>';
 
 						notifyParams = [{
 							to: to,
-							fromUser: emailFromUser,
+							from: alarmEmail,
 							subject: getEmailSubject(),
 							html: notifyMsg,
 							generateTextFromHTML: true
@@ -1641,12 +1692,13 @@ var dbAlarmQueueLocked = false,
 					text = [
 						'Site: ' + siteName,
 						'Timestamp: ' + new Date().getTime(),
-						'Error: ' + JSON.stringify(err)
+						'',
+						err
 					].join('\n');
 				
 				notifier.sendEmail({
 					to: 'johnny.dr@gmail.com',
-					subject: 'Notifications error at customer site (' + siteName + ')',
+					subject: 'Error: Notifications (Site: ' + siteName + ')',
 					text: text
 				});
 				notifier.sendText('13364690900', 'Notifications error @ customer site. Check gmail for details.', function (){});
@@ -1666,6 +1718,23 @@ var dbAlarmQueueLocked = false,
 
 				for (var i = 0, len = users.length; i < len; i++) {
 					obj[users[i]._id] = users[i];
+				}
+				cb(null, obj);
+			});
+		},
+		dbGetAllGroupsObj: function (cb) {
+			var query = {
+					collection: 'User Groups'
+				};
+
+			utility.get(query, function (err, groups) {
+				if (!!err) {
+					return cb(err);
+				}
+				var obj = {};
+
+				for (var i = 0, len = groups.length; i < len; i++) {
+					obj[groups[i]._id] = groups[i];
 				}
 				cb(null, obj);
 			});
@@ -1874,7 +1943,8 @@ var dbAlarmQueueLocked = false,
 
 				async.parallel({
 					holidaysObj: actions.calendar.dbGetHolidaysObj,
-					usersObj: actions.dbGetAllUsersObj
+					usersObj: actions.dbGetAllUsersObj,
+					groupsObj: actions.dbGetAllGroupsObj
 				}, function complete (err, data) {
 					if (!!err)
 						return cb(err);
@@ -1969,6 +2039,7 @@ function run () {
 		alarmQueue: actions.alarmQueue.dbGetAll,
 		holidaysObj: actions.calendar.dbGetHolidaysObj,
 		usersObj: actions.dbGetAllUsersObj,
+		groupsObj: actions.dbGetAllGroupsObj,
 		scheduledTasks: actions.scheduledTasks.dbGetAll
 	}, function (err, data) {
 		if (!!err) {
@@ -1989,6 +2060,7 @@ function run () {
 		//		alarmQueue: [],
 		//		holidaysObj: {"1-1": "New Year's Day", etc.},
 		//		usersObj: {_id: {}},
+		//		groupsObj: {_id: {}},
 		//		policiesAckList: {},
 		//		notifyList: [],
 		//		date: date object
