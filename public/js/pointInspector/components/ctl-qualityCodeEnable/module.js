@@ -27,16 +27,16 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         }, this);
         this.qualityEnums = params.rootContext.utility.config.Enums['Quality Code Enable Bits'];
 
-        this.override = ko.observable(this.data.Value() & this.qualityEnums.Override.enum);
-        this.covDisabled = ko.observable(this.data.Value() & this.qualityEnums['COV Enable'].enum);
-        this.alarmsOff = ko.observable(this.data.Value() & this.qualityEnums['Alarms Off'].enum);
-        this.commandPending = ko.observable(this.data.Value() & this.qualityEnums['Command Pending'].enum);
+        this.override = ko.observable(this.qualityEnums.Override.enum);
+        this.covDisabled = ko.observable( this.qualityEnums['COV Enable'].enum);
+        this.alarmsOff = ko.observable( this.qualityEnums['Alarms Off'].enum);
+        this.commandPending = ko.observable( this.qualityEnums['Command Pending'].enum);
 
         this.tempVal = ko.computed(function() {
-            var override = (!!this.override()) ? this.qualityEnums.Override.enum : 0;
-            var covDisabled = (!!this.covDisabled()) ? this.qualityEnums['COV Enable'].enum : 0;
-            var alarmsOff = (!!this.alarmsOff()) ? this.qualityEnums['Alarms Off'].enum : 0;
-            var commandPending = (!!this.commandPending()) ? this.qualityEnums['Command Pending'].enum : 0;
+            var override = this.data.Value() & this.override();
+            var covDisabled = this.data.Value() & this.covDisabled();
+            var alarmsOff = this.data.Value() & this.alarmsOff();
+            var commandPending = this.data.Value() & this.commandPending();
             var total = this.qualityEnums.Override.enum | this.qualityEnums['COV Enable'].enum | this.qualityEnums['Alarms Off'].enum | this.qualityEnums['Command Pending'].enum;
 
             var val = override | covDisabled | alarmsOff | commandPending;

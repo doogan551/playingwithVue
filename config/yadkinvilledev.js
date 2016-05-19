@@ -1,8 +1,8 @@
 var yadkinville = {
   'Infoscan': {
-    'domains': ['yadkinvillenc.dtscada.com'],
     'dbConfig': {
-      'host': 'localhost'
+      'host': 'localhost',
+      'dbName': 'scada1'
     },
     'zmqConfig': {
       'server': '127.0.0.1'
@@ -11,17 +11,15 @@ var yadkinville = {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'Yadkinville'
+      'site': 'scada1-v',
+      'email': 'rkendall@dorsett-tech.com'
     },
     'letsencrypt': {
       'enabled': true
-    }
+    },
+    'domains': ['dorsettnc.dtscada.com']
   },
-  'SparkPost': {
-    "smtpAuth": {
-      'pass': 'f0dc741ba04fedf3d9073953f1dc390fab7b10c1'
-    }
-  },
+  runNotifications: false
 };
 
 yadkinville.redisConfig = {

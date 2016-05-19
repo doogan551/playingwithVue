@@ -214,6 +214,7 @@ window.newPoint = (function(module, ko, $) {
                 .done(function(data) {
                     $.unblockUI();
                     if (data.err) {
+                        $createPointBtn.removeAttr('disabled');
                         return alert(data.err);
                     }
 

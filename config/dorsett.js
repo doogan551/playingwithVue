@@ -1,7 +1,8 @@
 var dorsett = {
   'Infoscan': {
     'dbConfig': {
-      'host': 'localhost'
+      'host': 'localhost',
+      'dbName': 'dorsett'
     },
     'zmqConfig': {
       'server': '127.0.0.1'
@@ -10,9 +11,13 @@ var dorsett = {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'Dorsett',
-      'email': 'rkendall@dorsett-tech.com'
-
+      'site': 'Dorsett'
+    },
+    'email': {
+      'onError': {
+          'to': 'rkendall@dorsett-tech.com',
+          'enabled': true
+      }
     }
   }
 };

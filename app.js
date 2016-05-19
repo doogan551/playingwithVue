@@ -9,6 +9,7 @@ var app = express();
 var LEX = require('letsencrypt-express');
 var http = require('http');
 var https = require('https');
+var fs = require('fs');
 var db = require('./helpers/db');
 var sockets = require('./helpers/sockets');
 var config = require('config');
@@ -34,7 +35,16 @@ var sessionStore = new RedisStore(config.get('redisConfig'));
 
 require('./helpers/passport')(passport); // pass passport for configuration
 
+//if production, use dist folders
+if (config.minifyFiles !== false) {
+    //no need to test for existence of directories, it falls back to public/...
+    logger.info('Using minified files');
+    app.use('/js', express.static(__dirname + '/dist/public/js'));
+    app.use('/css', express.static(__dirname + '/dist/public/css'));
+}
+
 app.use(express.static(__dirname + '/public'));
+
 app.use(morgan(':remote-addr :method :url :status :res[content-length] :response-time', {
   'stream': loggerStream.stream
 }));
@@ -50,6 +60,22 @@ app.use(multer({
 app.engine('jade', require('jade').__express);
 app.set('view engine', 'jade');
 
+//if production, use dist folders
+if (config.minifyFiles !== false) {
+    try {
+        var stat = fs.statSync(__dirname + '/dist/views/');
+        if (stat.isDirectory()) {
+            logger.info('Found prod directory, redirecting views');
+            app.set('views', __dirname + '/dist/views');
+        } else {
+            logger.info('Prod view folder not found, skipping view redirect');
+        }
+    } catch (ex) {
+        logger.info('Prod view folder not found, skipping view redirect');
+    }
+}
+
+
 app.use(session({
   key: 'express.sid',
   secret: 'lepanto',
@@ -64,7 +90,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/', require('./helpers/router')(_controllers));
-
 
 require('./helpers/mongooseconn.js')(function() {
   db.connect(connectionString.join(''), function(err) {
@@ -82,7 +107,7 @@ require('./helpers/mongooseconn.js')(function() {
               configDir: config.get('Infoscan.files').driveLetter + ':' + config.get('Infoscan.letsencrypt').directory,
               approveRegistration: function(hostname, cb) {
                 cb(null, {
-                  domains: config.get('Infoscan.letsencrypt').domains,
+                  domains: config.get('Infoscan').domains,
                   email: 'rkendall@dorsett-tech.com', // 'user@example.com'
                   agreeTos: true
                 });

@@ -1,30 +1,34 @@
-var msfc = {
+var integration = {
   'Infoscan': {
     'dbConfig': {
       'host': 'localhost',
-      'dbName': 'msfc'
+      'dbName': 'integration'
     },
     'zmqConfig': {
-      'server': '127.0.0.1',
+      'server': '127.0.0.1'
     },
     'files': {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'MSFC'
+      'site': 'engineering integration'
     },
     'email': {
       'onError': {
           'to': 'rkendall@dorsett-tech.com',
           'enabled': true
       }
-    }
+    },
+    'letsencrypt': {
+      'enabled': false
+    },
+    'domains': ['']
   },
   runNotifications: false
 };
 
-msfc.redisConfig = {
-  host: msfc.Infoscan.dbConfig.host
+integration.redisConfig = {
+  host: integration.Infoscan.dbConfig.host
 };
 
-module.exports = msfc;
+module.exports = integration;

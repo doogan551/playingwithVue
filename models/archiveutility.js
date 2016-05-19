@@ -8,7 +8,7 @@ var logger = require("../helpers/logger")(module);
 var sdb = {};
 
 var driveLetter = config.get('Infoscan.files').driveLetter;
-var archiveLocation = config.get('Infoscan.files').archiveLocation;
+var archiveLocation = config.get('Infoscan.files').archiveLocation + config.get('Infoscan.dbConfig').dbName + '/';
 
 var buildSdb = function(year, callback) {
   var buildTables = function(year, tableCB) {

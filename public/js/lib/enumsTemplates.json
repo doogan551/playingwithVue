@@ -1157,245 +1157,286 @@
                 "enum": 128,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Alarm Status": {
                 "enum": 168,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Monitor Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Analog Input": {
                 "enum": 0,
                 "lists": ["ai", "default", "value", "dynamic", "register", "schedEntry", "float", "math"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Sensor Point", "Alarm Adjust Point", "Alarm Display Point", "Interlock Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
             },
             "Analog Output": {
                 "enum": 1,
                 "lists": ["ao", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Sensor Point", "Alarm Adjust Point", "Alarm Display Point", "Interlock Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
             },
             "Analog Selector": {
                 "enum": 139,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Monitor Point", "Setpoint Input"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Analog Value": {
                 "enum": 2,
                 "lists": ["av", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Monitor Point", "Alarm Adjust Point", "Alarm Display Point", "Interlock Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
             },
             "Average": {
                 "enum": 129,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Input Point 1", "Input Point 2", "Input Point 3", "Input Point 4", "Input Point 5"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Binary Input": {
                 "enum": 3,
                 "lists": ["bi", "default", "value", "dynamic", "register", "schedEntry", "enum", "math"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Alarm Display Point", "Interlock Point", "Feedback Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Alarm Value"]
             },
             "Binary Output": {
                 "enum": 4,
                 "lists": ["bo", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "math"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Alarm Display Point", "Interlock Point", "Feedback Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off"]
             },
             "Binary Selector": {
                 "enum": 130,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Monitor Point", "Setpoint Input"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Binary Value": {
                 "enum": 5,
                 "lists": ["bv", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Alarm Display Point", "Interlock Point", "Monitor Point", "Feedback Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Alarm Value"]
             },
             "Comparator": {
                 "enum": 170,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Input Point 1", "Input Point 2"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Delay": {
                 "enum": 131,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Monitor Point", "Trigger Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Device": {
                 "enum": 8,
                 "lists": ["default", "device", "dynamic"],
                 "endpoint": "default",
+                "ptRefProps": ["Alarm Display Point"],
                 "schedProps": []
             },
             "Digital Logic": {
                 "enum": 169,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Input Point 1", "Input Point 2"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Display": {
                 "enum": 151,
                 "lists": ["default", "display"],
                 "endpoint": "display",
+                "ptRefProps": ["Display Dynamic", "Display Button", "Display Animation", "Display Trend"],
                 "schedProps": []
             },
             "Duty Cycle": {
                 "enum": 140,
                 "lists": ["default"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point"],
                 "schedProps": []
             },
             "Economizer": {
                 "enum": 132,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Mixed Air Point", "Return Air Point", "Outside Air Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Enthalpy": {
                 "enum": 133,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Dry Bulb Point", "Humidity Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Imux Watchdog": {
                 "enum": 141,
                 "lists": ["default", "dynamic"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point"],
                 "schedProps": []
             },
             "Lift Station": {
                 "enum": 201,
                 "lists": ["default"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Runtime Alarm Point", "Pump 2 Control Point", "Pump 1 Control Point", "Power Fail Point", "Off Level Float Point", "Low Level Float Point", "Light Control Point", "Level Sensor Point", "Lead Level Float Point", "Lag Level Float Point", "Horn Control Point", "High Level Float Point", "Flow Total Point", "Flow Rate Point", "Float Alarm Point", "Auxiliary Control Point"],
                 "schedProps": []
             },
             "Logic": {
                 "enum": 135,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Input Point 1", "Input Point 2", "Input Point 3", "Input Point 4", "Input Point 5"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Math": {
                 "enum": 136,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Input Point 1", "Input Point 2"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Multiplexer": {
                 "enum": 167,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Input Point 1", "Input Point 2", "Select Input"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "MultiState Value": {
                 "enum": 142,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Optimum Start": {
                 "enum": 143,
                 "lists": ["default", "schedEntry", "dynamic"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Control Point", "Monitor Point", "Occupied Point", "Setpoint Input", "Outside Air Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Program": {
                 "enum": 16,
                 "lists": ["default", "register", "schedEntry"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Script Point", "Point Register"],
                 "schedProps": ["Program Change Request"]
             },
             "Proportional": {
                 "enum": 137,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Monitor Point", "Setpoint Input"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Ramp": {
                 "enum": 171,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Monitor Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Remote Unit": {
                 "enum": 144,
                 "lists": ["default", "remote", "dynamic"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Alarm Display Point"],
                 "schedProps": []
             },
             "Report": {
                 "enum": 153,
                 "lists": ["default"],
                 "endpoint": "report",
+                "ptRefProps": ["Qualifier Point", "Column Point"],
                 "schedProps": []
             },
             "Schedule": {
                 "enum": 148,
                 "lists": ["default", "schedEntry"],
                 "endpoint": "default",
+                "ptRefProps": [],
                 "schedProps": ["Execute Now"]
             },
             "Schedule Entry": {
                 "enum": 149,
                 "lists": [],
+                "ptRefProps": ["Control Point"],
                 "schedProps": []
             },
             "Script": {
                 "enum": 10,
                 "lists": ["default", "script"],
                 "endpoint": "default",
+                "ptRefProps": [],
                 "schedProps": []
             },
             "Select Value": {
                 "enum": 134,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Input Point 1", "Input Point 2", "Input Point 3", "Input Point 4", "Input Point 5"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Sensor": {
                 "enum": 205,
                 "lists": ["default", "sensor"],
                 "endpoint": "default",
+                "ptRefProps": ["Sensor Point"],
                 "schedProps": []
             },
             "Sequence": {
                 "enum": 166,
                 "lists": ["default"],
                 "endpoint": "gpl",
+                "ptRefProps": ["Sequence Device", "GPLBlock"],
                 "schedProps": []
             },
             "Setpoint Adjust": {
                 "enum": 138,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Monitor Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "Slide Show": {
                 "enum": 164,
                 "lists": ["default"],
                 "endpoint": "slideshow",
+                "ptRefProps": ["Slide Display"],
                 "schedProps": []
             },
             "Totalizer": {
                 "enum": 172,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Monitor Point"],
                 "schedProps": ["Out of Service", "Value"]
             },
             "VAV": {
                 "enum": 145,
                 "lists": ["default"],
                 "endpoint": "default",
+                "ptRefProps": ["Device Point", "Remote Unit Point", "Zone Offset Point", "Zone Temp Point", "Unoccupied Heat Setpoint", "Unoccupied Cool Setpoint", "Source Air Temp Point", "Occupied Input", "Occupied Heat Setpoint", "Occupied Cool Setpoint", "Lights Control Point", "Heat 1 Control Point", "Fan Control Point", "Digital Heat 3 Control Point", "Digital Heat 2 Control Point", "Digital Heat 1 Control Point", "Damper Control Point", "CFM Input Point"],
                 "schedProps": []
             }
         },
@@ -1648,11 +1689,6 @@
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": "Modbus Control Functions"
-            },
-            "Pump Control Mode": {
-                "enum": 419,
-                "valueType": "Enum",
-                "reportEnable": false
             },
             "Control Pending": {
                 "enum": 13,
@@ -2157,6 +2193,11 @@
             "Font Underline": {
                 "enum": 321,
                 "valueType": "String",
+                "reportEnable": false
+            },
+            "GPLBlock": {
+                "enum": 439,
+                "valueType": "UniquePID",
                 "reportEnable": false
             },
             "Grid X": {
@@ -3069,6 +3110,11 @@
                 "valueType": "UniquePID",
                 "reportEnable": false
             },
+            "Pump Control Mode": {
+                "enum": 419,
+                "valueType": "Enum",
+                "reportEnable": false
+            },
             "Pump Select Mode": {
                 "enum": 420,
                 "valueType": "Enum",
@@ -3784,32 +3830,7 @@
                     "Value": "Property",
                     "eValue": 0
                 },
-                "Point Refs": [
-                    {
-                        "PropertyName": "Qualifier Point",
-                        "PropertyEnum": 130,
-                        "AppIndex": 1,
-                        "isDisplayable": true,
-                        "isReadOnly": false,
-                        "Value": 0,
-                        "PointName": "",
-                        "PointType": 0,
-                        "PointInst": 0,
-                        "DevInst": 0
-                    },
-                    {
-                        "PropertyName": "Column Point",
-                        "PropertyEnum": 131,
-                        "AppIndex": 1,
-                        "isDisplayable": true,
-                        "isReadOnly": false,
-                        "Value": 0,
-                        "PointName": "",
-                        "PointType": 0,
-                        "PointInst": 0,
-                        "DevInst": 0
-                    }
-                ]
+                "Point Refs": []
             },
 
             "Display": {
@@ -9199,6 +9220,12 @@
             },
 
             "Optimum Start": {
+                "Active Release": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
                 "Alarm Messages": [{
                     "msgType": 17,
                     "msgId": 0,
@@ -9231,105 +9258,6 @@
                     "Value": "None",
                     "eValue": 0
                 },
-                "COV Enable": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": true
-                },
-                "Description": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 2,
-                    "Value": ""
-                },
-                "Last Report Time": {
-                    "isDisplayable": true,
-                    "isReadOnly": true,
-                    "ValueType": 11,
-                    "Value": 0
-                },
-                "Notify Policies": [],
-                "Out of Service": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": false
-                },
-                "Quality Code Enable": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 18,
-                    "Value": 255
-                },
-                "Reliability": {
-                    "isDisplayable": true,
-                    "isReadOnly": true,
-                    "ValueType": 5,
-                    "Value": "Configuration Required",
-                    "eValue": 64
-                },
-                "Remarks": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 2,
-                    "Value": ""
-                },
-                "Status Flags": {
-                    "isDisplayable": true,
-                    "isReadOnly": true,
-                    "ValueType": 18,
-                    "Value": 4
-                },
-                "Trend Enable": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": false
-                },
-                "Trend Interval": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 13,
-                    "Value": 60
-                },
-                "Trend Last Status": {
-                    "isDisplayable": false,
-                    "isReadOnly": true,
-                    "ValueType": 18,
-                    "Value": 0
-                },
-                "Trend Last Value": {
-                    "isDisplayable": false,
-                    "isReadOnly": true,
-                    "ValueType": 5,
-                    "Value": "Off",
-                    "eValue": 0
-                },
-                "Trend Samples": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 0
-                },
-                "Value": {
-                    "isDisplayable": true,
-                    "isReadOnly": true,
-                    "oosValue": 0,
-                    "ValueType": 5,
-                    "Value": "Off",
-                    "eValue": 0,
-                    "ValueOptions": {
-                        "Off": 0,
-                        "On": 1,
-                        "Calc Start Time": 2,
-                        "Calc Stop Time": 3,
-                        "Occupied": 4,
-                        "Unoccupied": 5,
-                        "Setback Off": 6,
-                        "Setback On": 7
-                    }
-                },
                 "Cooling Equipment": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -9342,11 +9270,23 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
-                "Input Deadband": {
+                "Cooling Setpoint": {
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 0.0
+                },
+                "COV Enable": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": true
+                },
+                "Description": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 2,
+                    "Value": ""
                 },
                 "Heating Equipment": {
                     "isDisplayable": true,
@@ -9360,20 +9300,7 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
-                "Setback Controller": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 5,
-                    "Value": "None",
-                    "eValue": 0
-                },
-                "Setback Enable": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": false
-                },
-                "Setback Deadband": {
+                "Heating Setpoint": {
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 1,
@@ -9385,17 +9312,17 @@
                     "ValueType": 7,
                     "Value": false
                 },
-                "Active Release": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 7,
-                    "Value": false
-                },
-                "Outside Air Gain": {
+                "Input Deadband": {
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 0.0
+                },
+                "Last Report Time": {
+                    "isDisplayable": true,
+                    "isReadOnly": true,
+                    "ValueType": 11,
+                    "Value": 0
                 },
                 "Lead Time": {
                     "isDisplayable": true,
@@ -9403,19 +9330,15 @@
                     "ValueType": 17,
                     "Value": 0
                 },
-                "Stop Gain": {
+                "Notify Policies": [],
+                "Occupancy Schedule": [],
+                "Out of Service": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 1,
-                    "Value": 0.0
+                    "ValueType": 7,
+                    "Value": false
                 },
-                "Cooling Setpoint": {
-                    "isDisplayable": true,
-                    "isReadOnly": false,
-                    "ValueType": 1,
-                    "Value": 0.0
-                },
-                "Heating Setpoint": {
+                "Outside Air Gain": {
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 1,
@@ -9488,7 +9411,105 @@
                     "PointInst": 0,
                     "DevInst": 0
                 }],
-                "Occupancy Schedule": []
+                "Quality Code Enable": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 18,
+                    "Value": 255
+                },
+                "Reliability": {
+                    "isDisplayable": true,
+                    "isReadOnly": true,
+                    "ValueType": 5,
+                    "Value": "Configuration Required",
+                    "eValue": 64
+                },
+                "Remarks": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 2,
+                    "Value": ""
+                },
+                "Setback Controller": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "None",
+                    "eValue": 0
+                },
+                "Setback Deadband": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 1,
+                    "Value": 0.0
+                },
+                "Setback Enable": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
+                "Status Flags": {
+                    "isDisplayable": true,
+                    "isReadOnly": true,
+                    "ValueType": 18,
+                    "Value": 4
+                },
+                "Stop Gain": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 1,
+                    "Value": 0.0
+                },
+                "Trend Enable": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
+                "Trend Interval": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 13,
+                    "Value": 60
+                },
+                "Trend Last Status": {
+                    "isDisplayable": false,
+                    "isReadOnly": true,
+                    "ValueType": 18,
+                    "Value": 0
+                },
+                "Trend Last Value": {
+                    "isDisplayable": false,
+                    "isReadOnly": true,
+                    "ValueType": 5,
+                    "Value": "Off",
+                    "eValue": 0
+                },
+                "Trend Samples": {
+                    "isDisplayable": true,
+                    "isReadOnly": false,
+                    "ValueType": 4,
+                    "Value": 0
+                },
+                "Value": {
+                    "isDisplayable": true,
+                    "isReadOnly": true,
+                    "oosValue": 0,
+                    "ValueType": 5,
+                    "Value": "Off",
+                    "eValue": 0,
+                    "ValueOptions": {
+                        "Off": 0,
+                        "On": 1,
+                        "Calc Start Time": 2,
+                        "Calc Stop Time": 3,
+                        "Occupied": 4,
+                        "Unoccupied": 5,
+                        "Setback Off": 6,
+                        "Setback On": 7
+                    }
+                }
             },
 
             "Proportional": {

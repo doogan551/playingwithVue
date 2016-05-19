@@ -11,11 +11,32 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
         self.controllerId = self.utility.workspace.user().controllerId;
         self.disableControl = self.controllerId ? false : true; // Disable controls if user has invalid controller id
         self.revValueOptions = {};
-
         self.showModal = ko.observable(false);
         self.controlValue = ko.observable();
         self.controlPriority = ko.observable(self.data['Control Priority'] && self.data['Control Priority'].eValue());
+        self.valueValidation = ko.observable('');
+        self.showValidation = ko.observable(false);
+        self.controlFocus = ko.observable(true);
 
+        self.controlFocus.subscribe(function(focused) {
+            self.showValidation(false);
+            var val = self.controlValue();
+            if (!focused) {
+                if (['Analog Input', 'Analog Output'].indexOf(self.data['Point Type'].Value()) >= 0) {
+                    self.min = self.data['Minimum Value'].Value();
+                    self.max = self.data['Maximum Value'].Value();
+                    if (val > self.max) {
+                        self.controlValue(self.max);
+                        self.valueValidation('Value ' + val + ' is greater maximum value: ' + self.max + '. Value has been set to max.');
+                        self.showValidation(true);
+                    } else if (val < self.min) {
+                        self.controlValue(self.min);
+                        self.valueValidation('Value ' + val + ' is lower minimum value: ' + self.min + '. Value has been set to min.');
+                        self.showValidation(true);
+                    }
+                }
+            }
+        });
         // Initializations
         // Default control value is the current value
         if (self.isEnumValueType) {
@@ -56,7 +77,9 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
         $(function() {
             $('#datetimepicker').datetimepicker({
                 showClear: true,
-                showClose: true
+                showClose: true,
+                format: 'MM/DD/YY - HH:mm',
+                sideBySide: true
             });
             $('#datetimepicker').data("DateTimePicker").defaultDate(new Date());
             $('#datetimepicker').focusout(function() {
@@ -80,9 +103,9 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
         var time = self.override["Time to Override"].Value();;
         var ret = 0;
 
-        if(activeId === 'ttoLabel' && time !== 0){
-            ret = Math.floor(Date.now() /1000) + time;
-        }else if(activeId === 'rtLabel'){
+        if (activeId === 'ttoLabel' && time !== 0) {
+            ret = Math.floor(Date.now() / 1000) + time;
+        } else if (activeId === 'rtLabel') {
             ret = $('#datetimepicker').data("DateTimePicker").date().unix();
         }
         return ret;
@@ -174,9 +197,16 @@ define(['knockout', 'text!./view.html', 'bannerJS', 'datetimepicker'], function(
 
         self.showModal(true);
 
-        $modal.one('shown.bs.modal', function(e) {
+        $modal.on('shown.bs.modal', function(e) {
             var $valueField = $modal.find('.val:first');
             $valueField.focus().select();
+            $('#datetimepicker').data("DateTimePicker").date(new Date());
+        });
+
+        $modal.on('hidden.bs.modal', function(e) {
+            self.override['Time to Override'].Value(0);
+            $('#ttoBtn').click();
+            $('#ttoLabel').removeClass('active');
         });
     };
 

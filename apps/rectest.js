@@ -525,4 +525,10 @@ function createMathBlocks() {
     });
   });
 }
-createMathBlocks();
+// createMathBlocks();
+
+function test() {
+  var pjson = require('../package.json');
+  console.log(pjson.version);
+}
+test();

@@ -125,7 +125,7 @@ function importUpdate() {
 			// logger.info("retrieved", err);
 			importPoint(db, doc, function(err) {
 				count++;
-				if (count % 100 === 0) {
+				if (count % 10000 === 0) {
 					logger.info(count);
 				}
 				cb(err);
@@ -153,61 +153,65 @@ function importUpdate() {
 		updateNameSegments(point, function(err) {
 			if (err)
 				logger.info("updateNameSegments", err);
-			updateTaglist(point, function(err) {
+			updateSequences(point, function(err) {
 				if (err)
-					logger.info('updateTaglist', err);
-				updateCfgRequired(point, function(err) {
+					logger.info("updateSequences", err);
+				updateTaglist(point, function(err) {
 					if (err)
-						logger.info("updateCfgRequired", err);
-					updateOOSValue(point, function(err) {
+						logger.info('updateTaglist', err);
+					updateCfgRequired(point, function(err) {
 						if (err)
-							logger.info("updateOOSValue", err);
-						addTrendProperties(point, function(err) {
+							logger.info("updateCfgRequired", err);
+						updateOOSValue(point, function(err) {
 							if (err)
-								logger.info("addTrendProperties", err);
-							updateScriptPoint(point, function(err) {
+								logger.info("updateOOSValue", err);
+							addTrendProperties(point, function(err) {
 								if (err)
-									logger.info("updateScriptPoint", err);
-								/*updateProgramPoints(point, db, function(err) {
-										if (err)
-											logger.info("updateProgramPoints", err);*/
-								updateMultiplexer(point, function(err) {
+									logger.info("addTrendProperties", err);
+								updateScriptPoint(point, function(err) {
 									if (err)
-										logger.info("updateMultiplexer", err);
-									updateGPLBlocks(point, function(err) {
+										logger.info("updateScriptPoint", err);
+									/*updateProgramPoints(point, db, function(err) {
+											if (err)
+												logger.info("updateProgramPoints", err);*/
+									updateMultiplexer(point, function(err) {
 										if (err)
-											logger.info("updateGPLBlocks", err);
-										/*updateSensorPoints(db, point, function(err) {
+											logger.info("updateMultiplexer", err);
+										updateGPLBlocks(point, function(err) {
 											if (err)
-												logger.info("updateSensorPoints", err);*/
-										updateReferences(db, point, function(err) {
-											if (err)
-												logger.info("updateReferences", err);
-											updatePointInstances(point, function(err) {
+												logger.info("updateGPLBlocks", err);
+											/*updateSensorPoints(db, point, function(err) {
 												if (err)
-													logger.info("updatePointInstances", err);
-												updateTimeZones(point, function(err) {
+													logger.info("updateSensorPoints", err);*/
+											updateReferences(db, point, function(err) {
+												if (err)
+													logger.info("updateReferences", err);
+												updatePointInstances(point, function(err) {
 													if (err)
-														logger.info("updateTimeZones", err);
-													updateModels(db, point, function(err) {
+														logger.info("updatePointInstances", err);
+													updateTimeZones(point, function(err) {
 														if (err)
-															logger.info("updateModels", err);
-														updateDevices(point, function(err) {
+															logger.info("updateTimeZones", err);
+														updateModels(db, point, function(err) {
 															if (err)
-																logger.info("updateDevices", err);
-															updateAlarmMessages(point, function(err) {
+																logger.info("updateModels", err);
+															updateDevices(point, function(err) {
 																if (err)
-																	logger.info("updateAlarmMessages", err);
-																addBroadcastPeriod(point, function(err) {
+																	logger.info("updateDevices", err);
+																updateAlarmMessages(point, function(err) {
 																	if (err)
-																		logger.info("addBroadcastPeriod", err);
-																	updateTrend(point, function(err) {
+																		logger.info("updateAlarmMessages", err);
+																	addBroadcastPeriod(point, function(err) {
 																		if (err)
-																			logger.info("updateTrend", err);
-																		updatePoint(db, point, function(err) {
+																			logger.info("addBroadcastPeriod", err);
+																		updateTrend(point, function(err) {
 																			if (err)
-																				logger.info("updatePoint", err);
-																			cb(null);
+																				logger.info("updateTrend", err);
+																			updatePoint(db, point, function(err) {
+																				if (err)
+																					logger.info("updatePoint", err);
+																				cb(null);
+																			});
 																		});
 																	});
 																});
@@ -1595,7 +1599,7 @@ function addBlocksToSequencePointRefs(db, point, cb) {
 		makePointRef = function(upi, name) {
 			var baseRef = {
 				"PropertyName": "GPLBlock",
-				"PropertyEnum": 0,
+				"PropertyEnum": 439,
 				"Value": upi,
 				"AppIndex": c + 1,
 				"isDisplayable": true,
@@ -2016,7 +2020,7 @@ function updateDevices(point, callback) {
 function updateAlarmMessages(point, callback) {
 	//logger.info("updateAlarmMessages");
 	var alarmClasses = ["Emergency", "Critical"];
-	if(point.hasOwnProperty('Alarm Messages')){
+	if (point.hasOwnProperty('Alarm Messages')) {
 		point['Notify Policies'] = [];
 	}
 
@@ -2135,6 +2139,13 @@ function updateNameSegments(point, callback) {
 
 	// });
 	callback(null);
+}
+
+function updateSequences(point, callback) {
+	if (point['Point Type.Value'] === 'Sequence') {
+		point._parentUpi = 0;
+	}
+	callback();
 }
 
 function updateTaglist(point, callback) {

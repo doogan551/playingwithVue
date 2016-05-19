@@ -2,7 +2,12 @@ var trendPlots = {
         logLinePrefix: true,
         numberWithCommas: function (theNumber) {
             if (theNumber !== null && theNumber !== undefined) {
-                return theNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                if (theNumber.toString().indexOf(".") > 0) {
+                    var arr = theNumber.toString().split('.');
+                    return arr[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "." + arr[1];
+                } else {
+                    return theNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                }
             } else {
                 return "";
             }
@@ -556,6 +561,8 @@ var trendPlots = {
                 if(x !== undefined) {
                     // data.push([x, y]);
                     data.push({
+                        rawX: row[cfg.rawX],
+                        enumText: row[cfg.enumText],
                         x: x,
                         y: y
                     });
@@ -577,9 +584,11 @@ var trendPlots = {
                 legend = cfg.legend || false,
                 type = cfg.type || 'line',
                 width = cfg.width || 600,
+                tooltip = cfg.tooltip || null,
                 ret = {
                     chart: {
-                        renderTo: $renderTo[0]
+                        renderTo: $renderTo[0],
+                        alignTicks: false
                     },
                     xAxis: {
                         type: 'datetime',
@@ -618,12 +627,16 @@ var trendPlots = {
                 cfg.title = ' ';//no title, blank
             }
 
+            if(cfg.chart !== undefined) {
+                ret.chart = $.extend(true, {}, ret.chart, cfg.chart);
+            }
+
             if (!cfg.units && cfg.yAxisTitle) {
                 cfg.units = cfg.yAxisTitle;
             }
 
             if(cfg.hideLegendXLabel) {
-                ret.tooltip = {
+                ret.tooltip = (!!tooltip ? tooltip : {
                     formatter: function () {
                         var ret = '',
                             self = this;
@@ -637,7 +650,9 @@ var trendPlots = {
 
                         return ret;
                     }
-                };
+                });
+            } else {
+                ret.tooltip = (!!tooltip ? tooltip : undefined);
             }
 
             ret = trendPlots.complicateObject(configMap, cfg, $.extend(true, {}, defaultCfg, ret));
@@ -655,6 +670,44 @@ var trendPlots = {
             if(!cfg.sameAxis) {
                 tmpAxis = $.extend(true, {}, ret.yAxis);
                 ret.yAxis = [];
+                ret.chart = $.extend(true, ret.chart, {
+                    events: {
+                        load: function (event) {
+                            var me = this;
+                            trendPlots.forEachArray(me.series, function (series, idx) {
+                                series.yAxis.update({
+                                    lineColor: series.color,
+                                    labels: {
+                                        style: {
+                                            color: series.color
+                                        }
+                                    },
+                                    title: {
+                                        style: {
+                                            color: series.color
+                                        }
+                                    }
+                                });
+                            });
+
+                            // trendPlots.forEachArray(me.yAxis, function (axis, idx) {
+                            //     axis.update({
+                            //         lineColor: me.series[idx].color,
+                            //         labels: {
+                            //             style: {
+                            //                 color: me.series[idx].color
+                            //             }
+                            //         },
+                            //         title: {
+                            //             style: {
+                            //                 color: me.series[idx].color
+                            //             }
+                            //         }
+                            //     });
+                            // });
+                        }
+                    }
+                });
             }
 
             trendPlots.forEachArray(cfg.data, function (series) {
@@ -683,10 +736,10 @@ var trendPlots = {
 
                 if(series.units || cfg.units) {
                     newSeries = $.extend(true, newSeries, {
-                        tooltip: {
+                        tooltip: (!!tooltip ? tooltip : {
                             pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y:,.1f} ' + (series.units || cfg.units) + '</b><br/>'
                             // valueSuffix: ' ' + series.units
-                        },
+                        }),
                         units: series.units
                     });
                 }

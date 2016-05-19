@@ -60,9 +60,9 @@
                             // ko foreach: periods
                             td.tooltip(data-toggle="tooltip", data-placement="top", data-bind="attr: { title: periodTitle, class: periodType }")
                                 .dateRange.editPointer(data-bind="style: { cursor: $parent.isChild()?'default':'pointer' }, text: rangeText, click: function() {$parentContext.$parent.editRatePeriod($parentContext, $data)}")
-                                .onPeak(data-bind="text: peakText")
-                                .days(data-bind="text: daysText")
-                                .time(data-bind="text: timeText")
+                                .onPeak(data-bind="text: peakText, visible: !$parent.hidePeakInfo() && (periodType() !== 'transition' || enablePeakSelection() === true)")
+                                .days(data-bind="text: daysText, visible: !$parent.hidePeakInfo() && (periodType() !== 'transition' || enablePeakSelection() === true)")
+                                .time(data-bind="text: timeText, visible: !$parent.hidePeakInfo() && (periodType() !== 'transition' || enablePeakSelection() === true)")
                             // /ko
                             td.addPeriod.showInEdit
                                 a(href="javascript://", data-bind="click: $parent.addRatePeriod.bind($parent)") Add Period
@@ -73,8 +73,8 @@
                                 .editPointer(data-bind="text: name, click: function() {$parentContext.$parent.editRateElement($parentContext, $data)}")
                             //ko foreach: $parent.periods
                             td
-                                span.hideInEdit(data-bind="text: $data.rates[$parent.name()]")
-                                input.input-sm.form-control.showInEdit(type="number", data-bind="visible: (periodType() === 'transition' && $parent.showInTransition()) || (periodType() !== 'transition'), editableText: $data.rates[$parent.name()]")
+                                span.hideInEdit(data-bind="visible: (periodType() === 'transition' && (enablePeakSelection() === true || $parent.showInTransition())) || (periodType() !== 'transition'),text: $data.rates[$parent.name()]() || 0")
+                                input.input-sm.form-control.showInEdit(type="number", data-bind="visible: (periodType() === 'transition' && (enablePeakSelection() === true || $parent.showInTransition())) || (periodType() !== 'transition'), editableText: $data.rates[$parent.name()]")
                             // /ko
                             td.showInEdit &nbsp;
                         // /ko

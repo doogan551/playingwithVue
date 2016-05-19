@@ -108,7 +108,7 @@ var ActionButton = function (config) {
                 // config.upi = response._id;
                 _validateOptions('upi');
 
-                displays.upiNames[response.upi] = response.Name;
+                displays.upiNames[response._id] = response.Name;
 
                 _commandArguments.logData = {
                     user: displays.workspaceManager.user(),
@@ -230,7 +230,7 @@ var ActionButton = function (config) {
             $('#reportChooseRange').modal('hide');
 
             endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', external.ActionPoint);
-            displays.openWindow(endPoint.review.url + '?pause', 'Report', 'Report', '', external.ActionPoint, {
+            displays.openWindow(endPoint.review.url + '?pause', _pointData['Name'], 'Report', '', external.ActionPoint, {
                 height: 720,
                 width: 1280,
                 callback: function () {
@@ -259,15 +259,19 @@ var ActionButton = function (config) {
                     });
                 } else if (pointType === 'Report') {
                     displays.setReportConfig(config.reportConfig);
-                    // displays.$scope.$apply();
-                    if (!external.isProperty) {
-                        if (config.confirmRange) {
-                            $('#reportChooseRange').modal('show');
-                        } else {
-                            openReport(displays.$scope.reportConfig);
-                        }
+                    if (displays.editMode) {
+                        $('#reportChooseRange').modal('show');
                     } else {
-                        openReport();
+                        // displays.$scope.$apply();
+                        if (!external.isProperty) {
+                            if (config.confirmRange) {
+                                $('#reportChooseRange').modal('show');
+                            } else {
+                                openReport(config.reportConfig);
+                            }
+                        } else {
+                            openReport();
+                        }
                     }
                     // $('#actionButtonReportInput').popup('open');
                 } else {
@@ -541,7 +545,7 @@ displays = $.extend(displays, {
     },
     defaultReportConfig: {
         intervalNum: 1,
-        intervalType: 'Daily',
+        intervalType: 'Day',
         starttimestamp: '00:00',
         endtimestamp: '00:00',
         durationInfo: {
@@ -596,7 +600,8 @@ displays = $.extend(displays, {
         displays.$scope.reportConfig = $.extend(displays.$scope.reportConfig, {
             intervalNum: config.intervalNum,
             intervalType: config.intervalType,
-            timestamp: config.timestamp
+            timestamp: config.timestamp,
+            durationInfo: config.durationInfo
         });
 
         picker.setStartDate(config.durationInfo.startDate);
@@ -1152,21 +1157,22 @@ displays = $.extend(displays, {
         $('#reportRange').daterangepicker({
             // startDate : durationInfo().startDate,
             // endDate : durationInfo().endDate,
-            maxDate: moment().add(1, 'day'),
+            // maxDate: moment().add(1, 'day'),
             // chosenLabel: durationInfo().selectedRange,
             alwaysShowCalendars: true,
             autoApply: false,
             autoUpdateInput: false,
             timePicker: false,
             ranges: {
-                'Today': [ moment() , moment() ],
-                'Yesterday': [ moment().subtract(1, 'days'), moment().subtract(1, 'days') ],
-                'Last 7 Days': [ moment().subtract(6, 'days'), moment() ],
-                'Last Week': [ moment().subtract(1, 'weeks').startOf('week'), moment().subtract(1, 'weeks').endOf('week') ],
-                'Last 4 Weeks': [ moment().subtract(4, 'weeks'), moment() ],
-                'Last Month': [ moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month') ],
-                'This Year': [ moment().startOf('year'), moment() ],
-                'Last Year': [ moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year') ]
+                'Today': [moment(), moment().add(1, 'day')],
+                'Yesterday': [moment().subtract(1, 'days'), moment()],
+                'Last 7 Days': [moment().subtract(6, 'days'), moment().add(1, 'day')],
+                'Last Week': [moment().subtract(1, 'weeks').startOf('week'), moment().subtract(1, 'weeks').endOf('week').add(1, 'day')],
+                'Last 4 Weeks': [moment().subtract(4, 'weeks'), moment().add(1, 'day')],
+                'This Month': [moment().startOf('month'), moment().endOf('month').add(1, 'day')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month').add(1, 'day')],
+                'This Year': [moment().startOf('year'), moment().add(1, 'day')],
+                'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year').add(1, 'day')]
             }
         });
 

@@ -204,7 +204,7 @@ var Config = (function(obj) {
                         added = {},
                         i,
                         len,
-                        doFilter = function (_filter) {
+                        doFilter = function(_filter) {
                             var prop,
                                 item,
                                 arr = [];
@@ -224,7 +224,7 @@ var Config = (function(obj) {
                         filtered = doFilter(filter);
                     } else {
                         len = filter.length;
-                        for (i=0; i<len; i++) {
+                        for (i = 0; i < len; i++) {
                             filtered = filtered.concat(doFilter(filter[i]));
                         }
                     }
@@ -239,9 +239,18 @@ var Config = (function(obj) {
                         //return all default point types
                         return filterPointTypes('default');
                     }
+                    // gplblock
                     switch (property) {
+                        case 'Qualifier Point':
+                        case 'Display Button':
+                            return filterPointTypes('default');
+                        case 'Display Trend':
+                        case 'Display Animation':
+                        case 'Display Dynamic':
                         case 'Dynamic':
                             return filterPointTypes('dynamic');
+                        case 'GPLBlock':
+                            return filterPointTypes('gpl');
                         case 'Alarm Adjust Point':
                         case 'Dry Bulb Point':
                         case 'Humidity Point':
@@ -413,7 +422,7 @@ var Config = (function(obj) {
                             return filterPointTypes('enumControl');
                         case "Column Point":
                             return filterPointTypes('value');
-                        // Begin Lift Station point properties
+                            // Begin Lift Station point properties
                         case "High Level Float Point":
                         case "Lag Level Float Point":
                         case "Lead Level Float Point":
@@ -437,7 +446,7 @@ var Config = (function(obj) {
                         case "Pump 1 Control Point":
                         case "Pump 2 Control Point":
                             return filterPointTypes(['bi', 'bo', 'bv']);
-                        // End Lift Station point properties
+                            // End Lift Station point properties
                         default:
                             return {
                                 error: 'Property not recognized. Received "' + property + '".'
@@ -761,18 +770,9 @@ var Config = (function(obj) {
             if (pointTemplate.hasOwnProperty(data.property) === true) {
                 data.ok = true;
             } else {
-                if ((pointType === "Program") && (data.property === "Point Register")) {
-                    // There may be 0 to 32 point registers in each program point, so they are not included in the template.
-                    // Therefore we always treat the Point Register property as valid for the Program point type.
+                var ptRefProps = obj.Enums['Point Types'][pointType].ptRefProps;
+                if (ptRefProps.indexOf(data.property) >= 0) {
                     data.ok = true;
-                } else {
-                    len = pointTemplate["Point Refs"].length;
-                    for (var a = 0; a < len; a++) {
-                        if (pointTemplate["Point Refs"][a].PropertyName === data.property) {
-                            data.ok = true;
-                            break;
-                        }
-                    }
                 }
             }
 
@@ -2234,7 +2234,7 @@ var Config = (function(obj) {
 
         "Control Point": function(data) {
             var pointType = data.point["Point Type"].Value;
-            console.log('inside control point', !!data.refPoint, !!data.point, !!obj.Utility.getPropertyObject("Device Point", data.point));
+            // console.log('inside control point', !!data.refPoint, !!data.point, !!obj.Utility.getPropertyObject("Device Point", data.point));
             if (obj.Utility.getPropertyObject("Device Point", data.point) === null) {
                 if (pointType === "Schedule Entry") {
                     if (!!data.refPoint && !obj.Utility.isPropInSchedProps(data.refPoint["Point Type"].Value, data.point["Control Property"].Value)) { //failing *ref - fixed?
@@ -2525,13 +2525,13 @@ var Config = (function(obj) {
 
     obj.EditChanges = {
 
-        addFakeValueOptions: function(pointProp){
-            if(!pointProp.hasOwnProperty('eValue')){
+        addFakeValueOptions: function(pointProp) {
+            if (!pointProp.hasOwnProperty('eValue')) {
                 pointProp.eValue = 0;
             }
-            if(!pointProp.hasOwnProperty('ValueOptions')){
+            if (!pointProp.hasOwnProperty('ValueOptions')) {
                 pointProp.ValueOptions = {
-                    'Off':0,
+                    'Off': 0,
                     'On': 1
                 };
             }
@@ -2804,12 +2804,12 @@ var Config = (function(obj) {
             }
             obj.Utility.getPropertyObject("Level Sensor Point", point).isDisplayable = isDisplayable;
             point['Emergency Pump Down Time'].isDisplayable = isDisplayable;
-            for (i=0, len=props.length; i<len; i++) {
+            for (i = 0, len = props.length; i < len; i++) {
                 point[props[i]].isDisplayable = isDisplayable;
             }
 
             isDisplayable = !isDisplayable;
-            for (i=0, len=refProps.length; i<len; i++) {
+            for (i = 0, len = refProps.length; i < len; i++) {
                 obj.Utility.getPropertyObject(refProps[i], point).isDisplayable = isDisplayable;
             }
             return point;
@@ -3284,7 +3284,6 @@ var Config = (function(obj) {
                         point["Control Value"] = refPoint[point["Control Property"].Value];
                     } else if (point["Control Value"].ValueType === 5) {
                         //point["Control Value"].ValueOptions = refPoint.Value.ValueOptions;
-                        console.log("chaning control value", point.Name);
                         for (var prop in refPoint.Value.ValueOptions) {
                             tempOption = {
                                 eValue: refPoint.Value.ValueOptions[prop],
@@ -3343,7 +3342,7 @@ var Config = (function(obj) {
                         point.Value.eValue = tempOption.eValue;
                     }
                 }
-            } else {
+            } else if (refPoint !== null) {
                 applyScheduleEntry();
             }
             return point;

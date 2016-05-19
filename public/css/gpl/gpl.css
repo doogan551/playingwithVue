@@ -19,6 +19,10 @@ body {
     vertical-align: top;
 }
 
+#toolbarCanvas {
+    width: 100px;
+}
+
 #gplCanvas {
     position: fixed;
     left: 0;
@@ -209,6 +213,11 @@ body {
     color: #ffffff;
 }
 
+.bottomBar .editVersionAvailable {
+    font-size: 0.8em;
+    padding-left: 10px;
+}
+
 .pop .fa-arrow-circle-up,
 .pop .fa-arrow-circle-down {
     margin-right: 3px;
@@ -284,10 +293,20 @@ body {
     background-color: #d3d3d3;
 }
 
+#gplMessageBody {
+    overflow: auto;
+    max-height: calc(100vh - 160px);
+}
+
 /* overrides */
 
 .modal-body {
     padding: 15px;
+}
+
+.modal-body-no-padding {
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .modal-header,

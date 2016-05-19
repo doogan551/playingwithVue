@@ -1,9 +1,10 @@
 var defaults = {
     'Infoscan': {
+        'domains': ['dorsettnc.dtscada.com'],
         'dbConfig': {
             'host': '192.168.1.88',
             'port': 27017,
-            'dbName': 'infoscan',
+            'dbName': 'development',
             'driver': 'mongodb'
         },
         'zmqConfig': {
@@ -31,6 +32,16 @@ var defaults = {
             'email': null,
             'timezone': 5
         },
+        'email': {
+            'onError': {
+                'to': 'engineering@dorsett-tech.com',
+                'enabled': true
+            },
+            'accounts': {
+                'default': 'infoscan', // Local/user part of email address; domain is appended in mailer.js
+                'alarms': 'alarms'
+            }
+        },
         'letsencrypt': {
             'directory': '/letsencrypt/etc',
             'enabled': false
@@ -49,6 +60,12 @@ var defaults = {
         'authId': 'MAOTAYY2RKNJU5MMQWZT',
         'authToken': 'NmFkN2M0MWVjYjI4YTQ2ZmZkMDVkOTRiNGI5ODA4',
         'phoneNumber': '16623384486'
+    },
+    'SparkPost': {
+        "smtpAuth": {
+            'user': "SMTP_Injection",
+            'pass': 'f72bbcb40e28f4387831edaa35afab90caa66d01'
+        }
     },
     runNotifications: true
 };

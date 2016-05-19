@@ -8,11 +8,16 @@ var johnny = {
       'driveLetter': 'C'
     },
     'location': {
-      'site': 'Johnny',
-      'email': 'jroberts@dorsett-tech.com'
+      'site': 'Johnny'
+    },
+    'email': {
+      'onError': {
+          'to': 'jroberts@dorsett-tech.com',
+          'enabled': true
+      }
     }
   },
-  runNotifications: true
+  runNotifications: false
 };
 
 johnny.redisConfig = {

@@ -6,15 +6,15 @@
     // ko if: !configRequired()
     .dropdown.viewControls
         button.btn.btn-default.dropdown-toggle.billSelect(data-toggle="dropdown")
-            span(data-bind="text: selectedBill() && selectedBill().prettyDate")
+            span(data-bind="text: selectedBill().prettyDate")
             span.caret.lm10px
         ul.dropdown-menu.availablePeriods
             input.form-control(data-bind="textInput: billsFilter", type="text", placeholder="Search...")
             li(role="separator", class="divider")
             // ko foreach: filteredBills
-            li(data-bind="css: { billingFiscalYear: period === 'Fiscal Year' }")
+            li(data-bind="css: {'month': $data.period === 'Month', 'year': $data.period === 'Year', selected : $parent.selectedBill().prettyDate === prettyDate }")
                 a(data-bind="click: $parent.selectBill.bind($parent)")
-                    i.fa.fa-check(data-bind="visible: isCommitted")
+                    i.fa.fa-check(data-bind="css: { notCommitted: !isCommitted() }")
                     span(data-bind="text: prettyDate")
             // /ko
 
@@ -22,8 +22,8 @@
         button.btn.btn-default(type='button' data-bind="click:print") Print
 
     .buttonBar.editControls(data-bind="if: $root.canWrite($parent.securityBindings.security)")
-        // ko if: billData().commit.done === false
-        button.hideInEdit.btn.btn-primary.btn-sm.committ(type="button", data-bind="click: showCommitModal, visible: billingCycle().complete") Committ
+        // ko ifnot: selectedBill().period === 'Month' ? billData().commit.done : yearBillData().commit.done
+        button.hideInEdit.btn.btn-primary.btn-sm.committ(type="button", data-bind="click: showCommitModal, visible: billingCycle().complete") Commit
         button.hideInEdit.btn.btn-primary.btn-sm(type="button", data-bind="click: toEditMode") Edit
         button.showInEdit.editControl.btn.btn-link.btn-sm(type="button", data-bind="click: cancelEditMode") Cancel
         button.showInEdit.editControl.btn.btn-success.btn-sm(type="button", data-bind="click: save")
@@ -35,7 +35,7 @@
     //- block was visible even though billData().done was false, so I switched to the if binding. This occurred
     //- when the bill data was receved from the server while the Billing page was not selected. If the billing
     //- page was selected when the data was returned I did not see this behavior.
-    // ko with: billData().commit
+    // ko with: selectedBill().period === 'Month' ? billData().commit : yearBillData().commit
     // ko if: done === true && !$parent.gettingData()
     .buttonBar.billing.committed
         i.fa.fa-check-square
@@ -54,7 +54,9 @@
 
 //template
 .mainContent(data-bind="css: {viewMode: !isEditMode(), editMode: isEditMode()}")
-    .innerContent(data-bind="visible: !gettingData() && !configRequired()")
+    // ko if: !gettingData() && !configRequired()
+    //- Monthly bill
+    .innerContent(data-bind="if: selectedBill().period === 'Month'")
         .billingContent
             .billingHeader(data-bind="if: billData().collections.length > 0")
                 // ko with: billData()
@@ -121,6 +123,62 @@
                                 span(data-bind="text: amount.displayValue, visible: amount.visible")
                         // /ko
             // /ko
+    
+    //- Yearly bill
+    .innerContent(data-bind="if: selectedBill().period === 'Year'")
+        .billingContent
+            .billingHeader
+                // ko with: yearBillData()
+                .billTitle(data-bind="click: $parent.showDefaultTitleModal.bind($parent)")
+                    i.fa.fa-gear.showInEdit
+                    span(data-bind="text: title")
+                    // ko if: !title.length
+                    span.hideInEdit Select Edit to set the default bill title template
+                    span.showInEdit Click here to set the bill title template
+                    // /ko
+                // /ko
+
+                .billDays Days in Billing Cycle:&nbsp;
+                    // ko with: billingCycle()
+                    span(data-bind="text: completedDays")
+                    span(data-bind="visible: !complete")
+                        span &nbsp;of&nbsp;
+                        span(data-bind="text: totalDays")
+                        .billingBar
+                            .progress
+                                .progress-bar(role="progressbar", aria-valuenow="18", aria-valuemin="1", aria-valuemax="31", data-bind="style: {width: percentComplete}")
+                                    span.sr-only &nbsp;
+                    // /ko
+
+            // ko foreach: yearBillData().collections
+            .billingPortlet
+                .title(data-bind="text: name.displayValue")
+                .yearBillTable
+                    table(data-bind="css: $data.name.id")
+                        tr(data-bind="foreach: columns")
+                            th(data-bind="css: $data.season")
+                                span(data-bind="text: name.title")
+                        // ko foreach: rows
+                        tr
+                            td
+                                span(data-bind="text: name.displayValue")
+                                // ko if: $data.units && $data.units.visible
+                                span &nbsp;(
+                                span(data-bind="text: units.displayValue")
+                                span )
+                                // /ko
+
+                            // ko foreach: data
+                            td
+                                span(data-bind="text: $data.displayValue, css: { max: $data.isMax, total: $data.isTotal }")
+                                span(class="units", data-bind="if: $data.units && $data.units.visible")
+                                    |&nbsp;
+                                    span(data-bind="text: units.displayValue")
+                            // /ko
+                        // /ko
+            // /ko
+    // /ko
+
     .innerContent(data-bind="visible: gettingData")
         .billing.gettingData
             i.fa.fa-spinner.fa-spin

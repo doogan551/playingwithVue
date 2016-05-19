@@ -1,30 +1,34 @@
-var msfc = {
+var development = {
   'Infoscan': {
     'dbConfig': {
       'host': 'localhost',
-      'dbName': 'msfc'
+      'dbName': 'development'
     },
     'zmqConfig': {
-      'server': '127.0.0.1',
+      'server': '127.0.0.1'
     },
     'files': {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'MSFC'
+      'site': 'engineering development'
     },
     'email': {
       'onError': {
           'to': 'rkendall@dorsett-tech.com',
           'enabled': true
       }
-    }
+    },
+    'letsencrypt': {
+      'enabled': false
+    },
+    'domains': ['']
   },
   runNotifications: false
 };
 
-msfc.redisConfig = {
-  host: msfc.Infoscan.dbConfig.host
+development.redisConfig = {
+  host: development.Infoscan.dbConfig.host
 };
 
-module.exports = msfc;
+module.exports = development;

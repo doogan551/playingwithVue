@@ -530,9 +530,7 @@ var getValues = function(option, callback) {
 					console.log('error', err);
 					return callback(err);
 				}
-				// console.log('sql', sResults.length);
 				// findInMongo(mdb, option, function(err, mResults) {
-				// console.log('mongo', err, mResults.length);
 				fixResults(sResults, [], function(err, results) {
 					callback(err, results);
 				});
@@ -779,7 +777,7 @@ var buildRanges = function(periods, holidays, op, _range, callback) {
 			peakStart = period.start.peak;
 			peakEnd = period.end.peak;
 
-			if (peakStart !== null && peakStart !== undefined) {
+			if (peakStart !== null && peakStart !== undefined && (period.rangeType !== 'transition' || (period.rangeType === 'transition' && !!period.enablePeakSelection)) ) {
 				var minutes = peakStart % 100;
 				var hours = peakStart / 100;
 				currentRangeStart.hour(hours).minute(minutes);
@@ -1163,7 +1161,7 @@ var findInSql = function(options, tables, callback) {
 
 				}
 
-				if (['weather', 'history match', 'latest history'].indexOf(options.ops[0].fx) >= 0) {
+				if (['weather', 'history match', 'latest history', 'earliest history'].indexOf(options.ops[0].fx) >= 0) {
 					statement.push('AND TIMESTAMP >=');
 				} else {
 					statement.push('AND TIMESTAMP >');
@@ -1187,10 +1185,11 @@ var findInSql = function(options, tables, callback) {
 		}
 		if (['latest history'].indexOf(options.ops[0].fx) >= 0) {
 			statement.push('ORDER BY TIMESTAMP DESC LIMIT 1');
+		} else if (['earliest history'].indexOf(options.ops[0].fx) >= 0) {
+			statement.push('ORDER BY TIMESTAMP ASC LIMIT 1');
 		}
 
 		statement = statement.join(' ');
-		// console.log('!!!statement', statement, year, _sdb);
 		criteria = {
 			year: parseInt(year, 10),
 			statement: statement
@@ -1214,6 +1213,7 @@ var fixResults = function(sResults, mResults, callback) {
 			return 1;
 		return 0;
 	};
+
 	if (!!sResults.length) {
 		// JS logger.info("---- fixResults() --> sResults.length = " + sResults.length);
 		// JS logger.info("---- fixResults() --> sResults = " + JSON.stringify(sResults));
@@ -1309,7 +1309,6 @@ var countInSql = function(options, tables, callback) {
 			}
 		}
 		statement = statement.join(' ');
-		// console.log('???count', statement);
 		criteria = {
 			year: parseInt(year, 10),
 			statement: statement
@@ -1870,7 +1869,6 @@ module.exports = historyModel = {
 		// JS console.log('%%%%%%%%%%%', JSON.stringify(options));
 		getTables(options, function(err, tables) {
 			findInSql(options, tables, function(err, sResults) {
-				// JS console.log('***********', err, sResults);
 				fixResults(sResults || [], [], function(err, results) {
 					callback(err, results);
 				});
@@ -1888,17 +1886,57 @@ module.exports = historyModel = {
 
 		getTables(options, function(err, tables) {
 			findInSql(options, tables, function(err, sResults) {
-				// console.log(err);
 				fixResults(sResults || [], [], function(err, results) {
 					if (!results.length && moment.unix(range.start).year() > 2000) {
 						range.end = range.start - 1;
 						historyModel.findLatest(options, callback);
 					} else {
-						// console.log(options.upis, moment.unix(range.end).format(), moment.unix(results[0].timestamp).format());
 						return callback(err, results);
 					}
 				});
 			});
+		});
+	},
+	findEarliest: function(options, callback) {
+		// find oldest value based on upi and ts, build all months into one statement per year
+		var range = options.range;
+
+		options.ops = [{
+			fx: 'earliest history'
+		}];
+		range.end = moment.unix(range.start).endOf('year').unix();
+
+		getTables(options, function(err, tables) {
+			findInSql(options, tables, function(err, sResults) {
+				fixResults(sResults || [], [], function(err, results) {
+					if (!results.length && range.end <= moment().unix()) {
+						range.start = range.end + 1;
+						historyModel.findEarliest(options, callback);
+					} else {
+						return callback(err, results);
+					}
+				});
+			});
+		});
+	},
+	findEarliestAndLatest: function(options, callback) {
+		var self = this;
+		options.range = {
+			start: moment(2000, 'YYYY').unix()
+		};
+
+		self.findEarliest(options, function(err, earliest) {
+			options.range.end = moment().unix();
+			self.findLatest(options, function(err2, latest) {
+				min = earliest[0] || {timestamp:0};
+				max = latest[0] || {timestamp:0};
+
+				callback(err || err2, {
+					min: min.timestamp,
+					max: max.timestamp
+				});
+			});
+
 		});
 	},
 	doBackUp: runBackUp,

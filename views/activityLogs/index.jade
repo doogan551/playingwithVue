@@ -29,7 +29,7 @@ html
                                 i.fa.fa-2x.fa-times.closeIt(data-bind="click: cancelUserNameFilter")
                             div
                             br(clear="all")
-                        .usernamesFilter
+                        .usernamesFilter.thinScroll(style="height:600px;overflow-y:auto;")
                             .header
                                 .colSelect
                                     input(type="checkbox" data-bind="checkedValue: $data, checked: checkAllNames")

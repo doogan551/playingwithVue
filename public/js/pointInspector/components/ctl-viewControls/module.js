@@ -111,7 +111,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                         control.value(controlValue);
                     }
                     if (releaseTime !== 0) {
-                        control.releaseTime(moment.unix(releaseTime).format('llll'));
+                        control.releaseTime(moment.unix(releaseTime).format('MM/DD/YY - HH:mm:ss'));
                     } else {
                         control.releaseTime('');
                     }
@@ -263,7 +263,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                         control.value(controlValue);
                     }
                     if (releaseTime !== 0) {
-                        control.releaseTime(moment.unix(releaseTime).format('llll'));
+                        control.releaseTime(moment.unix(releaseTime).format('MM/DD/YY - HH:mm:ss'));
                     } else {
                         control.releaseTime('');
                     }

@@ -9,10 +9,13 @@ block content
 					.runReportSpinner(data-bind="css: { displayDiv: displayMainSpinner(), hideDiv: !displayMainSpinner()} ", title="Requesting Report Data")
 						i.fa.fa-spinner.fa-spin.fa-3x
 						span.spinnertext Getting Data
+					.runReportChartSpinner(data-bind="css: { displayDiv: displayChartSpinner(), hideDiv: !displayChartSpinner()}", title="Requesting Report Data for Chart")
+						i.fa.fa-spinner.fa-spin.fa-3x
+						span.spinnertext(data-bind="text: chartSpinnerTitle")
 					.tabConfiguration
 						ul.nav.nav-tabs
 							li.attribs.active(role="presentation")
-								a.strong.toggleTab(href="#reportAttribs", data-toggle="tab") Report Attributes
+								a.strong.toggleTab(href="#reportAttribs", data-toggle="tab") Attributes
 							li.columns(role="presentation")
 								a.strong.toggleTab(href="#reportColumns", data-toggle="tab") Columns
 							// ko if: (reportType === 'Property')
@@ -39,28 +42,45 @@ block content
 											strong.pull-right Report Title
 										.col-xs-10.reporttitlediv
 											input.form-control.input-md(data-bind="value: reportDisplayTitle, enable: $root.canEdit()")
-									.form-group.clearfix.direportgroup
-										h5.col-xs-2.control-label
+									.form-group.clearfix.direportgroup(style="display: inline-flex;margin-left: 61px;")
+										h5.col-xs-4.control-label
 											strong.pull-right Report Type
-										.col-xs-10.reporttype
+										.col-xs-2.reporttype
 											medium(data-bind="text: reportType")
-									.form-group.clearfix.direportgroup
-										h5.col-xs-2.control-label
+										h5.col-xs-4.control-label
 											strong.pull-right # of entries per Page
-										.col-xs-10.reporttype
+										.col-xs-2.entries
 											.dropdown.availableEntries(data-bind="css: {disabled: !$root.canEdit()}")
 												button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
 													span(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
-													// ko if: (listOfEntriesPerPage().length > 1)
+													// ko if: (listOfEntriesPerPage.length > 1)
 													span.caret.lm10px
 													// /ko
-												// ko if: (listOfEntriesPerPage().length > 1)
+												// ko if: (listOfEntriesPerPage.length > 1)
 												ul.calculations.dropdown-menu
-													// ko foreach: listOfEntriesPerPage()
+													// ko foreach: listOfEntriesPerPage
 													li
 														a(data-bind="click: function(){ $root.selectNumberOfEntries($element, $data.value) }, text: $data.value")
 													// /ko
 												// /ko
+										// ko if: (chartable())
+										h5.col-xs-4.control-label
+											strong.pull-right Chart Type
+										.col-xs-2.chartTypes
+											.dropdown.availableChartTypes(data-bind="css: {disabled: !$root.canEdit()}")
+												button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+													span(data-bind="text: selectedChartType()")
+													// ko if: ($root.listOfChartTypes.length > 1)
+													span.caret.lm10px
+													// /ko
+												// ko if: ($root.listOfChartTypes.length > 1)
+												ul.chartTypes.dropdown-menu
+													// ko foreach: $root.listOfChartTypes
+													li
+														a(data-bind="click: function(){ $root.selectChartType($element, $data.value) }, text: $data.text")
+													// /ko
+												// /ko
+										// /ko
 								div#reportColumns.tab-pane
 									h4.strong.panel-title
 										table.columnsGrid.small.grid.table
@@ -70,12 +90,18 @@ block content
 													// ko if: (reportType !== 'Property')
 													th.medium.strong Display Name
 													// /ko
+													th.medium.strong.multiplierColumn(style="display:none") Multiplier
 													th.medium.strong.calculateColumn(style="display:none") Calculate
 													th.medium.strong.typeColumn(style="display:none") Type
-													th.medium.strong.precisionColumn(style="display:none") Precision
+													th.medium.strong
+														.precisionColumn(style="display:none") Precision
+													th.medium.strong
+														.includeInChartColumn(style="display:none") Chart
+													th.medium.strong
+														.yaxisChartGroupColumn(style="display:none") Group
 													th.medium.strong
 											tbody.sortablecolums(data-bind="foreach: listOfColumns()")
-												tr.pointdata(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
+												tr.columnRowData(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
 													td.columnNameContainer(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
 														.handle
 														// ko if: ($parent.reportType !== 'Property')
@@ -105,6 +131,10 @@ block content
 													td.displayName
 														input.form-control.columnDisplayName(data-bind="value: colDisplayName, enable: $parent.canEdit(), event: { change: function() { $parent.designChanged(true) } }", type="text", required)
 													// /ko
+													td.columnMultiplier
+														// ko if: ($data.canCalculate)
+														input.form-control.inputMultiplier(data-bind="value: multiplier, enable: $root.canEdit()", type="number")
+														// /ko
 													td.columnTotals
 														// ko if: ($data.canCalculate)
 														// ko if: ($root.canEdit())
@@ -145,6 +175,26 @@ block content
 														input.form-control.inputPrecision(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")
 														// /ko
 													// ko if: ($root.canEdit())
+													td.includeInChart
+														// ko if: (!!canBeCharted && canBeCharted)
+														input.includeInChartColumn(data-bind="checked: includeInChart, enable: ($root.canEdit() && !!canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) } ", type="checkbox")
+														// /ko
+													td.yaxisChartGroup
+														// ko if: (!!canBeCharted && canBeCharted)
+														.dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+															button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+																span(data-bind="text: yaxisGroup")
+																// ko if: ($root.yaxisGroups.length > 1)
+																span.caret.lm10px
+																// /ko
+															// ko if: ($root.yaxisGroups.length > 1)
+															ul.yaxisGroups.dropdown-menu
+																// ko foreach: $root.yaxisGroups
+																li
+																	a(data-bind="click: function(){ $root.selectYaxisGroup($element, $parentContext.$index(), $data) }, text: $data")
+																// /ko
+															// /ko
+														// /ko
 													td.removecolumn
 														a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
 													// /ko
@@ -251,12 +301,41 @@ block content
 											.errorMessage.alert-danger
 											.successMessage.alert-success
 					.tabViewReport.well.tab-pane.workingPane
-							.row
-								h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
-								table.table.table-striped.table-bordered.table-responsive.viewReport
-									tfoot.tableFooter
-										tr(data-bind="foreach: listOfColumns()")
-											td.strong(data-bind="attr: { colindex:  $index() }")
+						ul.nav.nav-tabs
+							li.gridData.active(role="presentation")
+								a.strong.toggleTab(data-bind="click: function () { $root.focusGridView() }", href="#gridData", data-toggle="tab") Grid View
+							// ko if: (chartable())
+							li.reportChart(data-bind="click: function () { $root.requestChart() }", role="presentation")
+								a.strong.toggleTab(href="#chartData", data-toggle="tab") Chart View
+							// /ko
+						div.tab-content
+							div#gridData.active.tab-pane
+								.row
+									h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
+									table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
+										tfoot.tableFooter
+											tr(data-bind="foreach: listOfColumns()")
+												td.strong(data-bind="attr: { colindex:  $index() }")
+							div#chartData.tab-pane
+								.chartButtons
+									.dropdown.availableChartTypes.chartTab(data-bind="css: {disabled: !$root.canEdit()}")
+										button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+											span(data-bind="text: selectedChartType()")
+											// ko if: ($root.listOfChartTypes.length > 1)
+											span.caret.lm10px
+											// /ko
+										// ko if: ($root.listOfChartTypes.length > 1)
+										ul.chartTypes.dropdown-menu
+											// ko foreach: $root.listOfChartTypes
+											li
+												a(data-bind="click: function(){ $root.selectChartType($element, $data.value, true) }, text: $data.text")
+											// /ko
+										// /ko
+									a.btn.btn-default(data-bind="click: function() { $root.printDiv() }", href="#")
+										span.printButton
+											i.fa.fa-print
+											| Print
+								.reportChartDiv
 					.pop.popInOutDiv.cursorPointer(data-bind='click: togglePop')
 						.popOut
 							.fa.fa-arrow-circle-up
@@ -264,8 +343,8 @@ block content
 						.popIn.hidden
 							.fa.fa-arrow-circle-down
 							| Pop In
-
-	.hiddenPrecisionPlaceholder
+	.hiddenPlaceholder.hidden
 		input.form-control.globalPrecision.hidden(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
+		input.form-control.globalChartCheckbox.hidden(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit()", type="checkbox")
 	include footer
 	include modals/dialogScreens

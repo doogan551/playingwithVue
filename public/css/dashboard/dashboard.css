@@ -402,12 +402,21 @@ Opera */
     font-family: monospace;
     color: coral;
 }
-.dropdown-menu.availablePeriods .month {
-    margin-left: 10px;
-}
-.dropdown-menu.availablePeriods .year {
+.dropdown-menu.availablePeriods li.year a {
+    margin-top: 10px;
     font-weight: bold;
 }
+.dropdown-menu.availablePeriods i {
+    color: #5BC377;
+    margin-right: 5px;
+}
+.dropdown-menu.availablePeriods i.notCommitted {
+    visibility: hidden;
+}
+.dropdown-menu.availablePeriods .selected, .dropdown-menu.availableMeters .selected {
+    background-color: #E6E6E6;
+}
+
 /* End Main Dashboard ----------------------- */
 
 .thinScroll::-webkit-scrollbar {
@@ -702,6 +711,23 @@ Opera */
 
 /* modals */
 
+/* General Use */
+.commitUncommit .warning {
+    color: red;
+    margin-top: 20px;
+}
+.commitUncommit .info {
+    margin-top: 20px;
+}
+.commitUncommit .warning i, .commitUncommit .info i {
+    padding-right: 10px;
+}
+.commitControls i, .uncommitControls i {
+    display: none;
+    margin-right: 10px;
+}
+
+/* Electrictiy Dashboard */
 .scaleBar {
     padding-top: 3px;
 }
@@ -1040,7 +1066,14 @@ Opera */
 .reportsContent .inactiveMeters table td,
 .reportsContent .reportsgrid table th,
 .reportsContent .reportsgrid table td {
-    padding: 2px 20px;
+    padding: 2px 15px;
+}
+.reportsContent .reportsgrid table td div.itemValue {
+    display: inline-block;
+    padding-right: 5px;
+}
+.reportsContent .reportsgrid table td span.itemTimeStamp {
+    color: #757575;
 }
 .reportsContent .reportsgrid table th:not(:first-child),
 .reportsContent .reportsgrid table td:not(:first-child) {
@@ -1049,7 +1082,7 @@ Opera */
 .reportsContent .reportsgrid table th:first-child,
 .reportsContent .reportsgrid table td:first-child {
     padding: 2px 5px;
-    width: 140px;
+    width: 100px;
 }
 @media print {
     .reportsContent .reportsgrid table th,
@@ -1062,6 +1095,25 @@ Opera */
         width: 150px;
     }
 }
+.reportsContent .reportsgrid table .koGridReportFooter td.max {
+    padding-right: 25px;
+}
+.koGridReportFooter span.maxWithTimeBlankOffset {
+    padding-right: 27px;
+}
+.reportsContent .reportsgrid table .koGridReportFooter td.total {
+    padding-right: 25px;
+}
+.reportsTopBar .committed i.fa-check-square {
+    float: left;
+    padding: 4px 10px 0 0;
+    font-size: 30px;
+    color: #5BC377;
+}
+.reportsTopBar .commitInfo:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
 
 /* End Electricity Reports ------------------- */
 
@@ -1073,6 +1125,11 @@ Opera */
 
 .billingContent {
     padding-bottom: 20px;
+}
+
+.billingContent .units {
+    font-size: smaller;
+    color: #666;
 }
 
 .billTitle {
@@ -1103,35 +1160,37 @@ Opera */
     margin-bottom: 2px;
 }
 
-.billTable {
+.billTable, .yearBillTable {
     border: 2px solid #696969;
     background-color: #ffffff;
     padding: 6px 20px 10px 20px;
+    overflow: auto;
+}
+.yearBillTable {
+    padding-top: 0;
 }
 
-.billTable table {
+.billTable table, .yearBillTable table {
     width: 100%;
 }
 
-.billTable table td {
+.billTable table td, .yearBillTable table td {
     vertical-align: top;
 }
-.billTable table th:not(:first-child) {
+.billTable table th:not(:first-child), .yearBillTable table th:not(:first-child) {
     text-align: right;
     width: 125px;
+    min-width: 100px;
 }
 
-.billTable table th:last-child {
-    text-align: right;
-}
-
-.billTable table td:not(:first-child) {
+.billTable table td:not(:first-child), .yearBillTable table td:not(:first-child) {
     text-align: right;
     width: 125px;
+    min-width: 100px;
 }
 
-.billTable table td:last-child {
-    text-align: right;
+.yearBillTable table td:first-child, .yearBillTable table th:first-child {
+    min-width: 225px;
 }
 
 .billTable table tr:last-child td {
@@ -1142,8 +1201,28 @@ Opera */
     font-weight: bold;
 }
 
-.billTable .total {
+.billTable .total, .yearBillTable .total {
     font-weight: bold;
+}
+.yearBillTable .charges tr:last-child td {
+    padding-top: 10px;
+}
+.yearBillTable .charges tr:last-child td:first-child {
+    font-weight: bold;
+}
+
+.yearBillTable .max {
+    color: red;
+}
+
+.yearBillTable .Winter {
+    border-top: 6px solid #41c9fd;
+}
+.yearBillTable .Summer {
+    border-top: 6px solid #fcd02d;
+}
+.yearBillTable .Transition {
+    border-top: 6px solid #cccccc;
 }
 
 .billing.gettingData div {
@@ -1180,14 +1259,6 @@ Opera */
     display: none;
     margin-right: 10px;
 }
-.billingTopBar .dropdown-menu.availablePeriods i {
-    color: #5BC377;
-    margin-right: 10px;
-}
-li.billingFiscalYear a {
-    font-weight: bold;
-    margin-top: 10px;
-}
 /* Billing modal styles */
 /* Watch out here - the left-side green navigation column appears
    to be really sensitive to any changes here down...idk why
@@ -1198,23 +1269,19 @@ li.billingFiscalYear a {
     padding: 5px 10px;
     font-size: 30px;
 }
-.billingModal .warning {
-    color: red;
-    margin-top: 20px;
-}
-.billingModal .info {
-    margin-top: 20px;
-}
-.billingModal .warning i, .billingModal .info i {
-    padding-right: 10px;
-}
-.modal .commitControls i, .modal .uncommitControls i {
-    display: none;
-    margin-right: 10px;
-}
 @media print {
     .billTable table td:not(:first-child), .billTable table th:not(:first-child) {
         width: 8em;
+    }
+    .yearBillTable table td:not(:first-child), .yearBillTable table th:not(:first-child) {
+        width: 125px;
+        min-width: 50px;
+    }
+    .yearBillTable table td:first-child, .yearBillTable table th:first-child {
+        min-width: 125px;
+    }
+    .yearBillTable table td, .yearBillTable table th {
+        font-size: 0.8em;
     }
     .billingPortlet {
         page-break-inside: avoid;

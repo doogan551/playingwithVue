@@ -236,6 +236,13 @@ span.intervalLabel {
     margin-left: 24px;
     margin-top: -2px;
 }
+.chartTypes.dropdown-menu {
+    width: 65px;
+    min-width: 65px;
+    text-indent: -13px;
+    margin-left: 24px;
+    margin-top: -2px;
+}
 .childCondition > .dropdown > .operators.dropdown-menu {
     min-width: 45px;
     width: 45px;
@@ -265,7 +272,7 @@ td.filterName {
     border-color: #d5e1f2;
 }
 .tabConfiguration{
-    padding-top: 9px;
+    padding-top: 0px;
     min-width: 850px;
 }
 .tabConfiguration ul.nav.nav-tabs {
@@ -290,15 +297,59 @@ td.filterName {
 .tabConfiguration .tab-pane {
     /*height: 70vh;*/
 }
+.tabViewReport {
+    padding-top: 0px;
+    min-width: 850px;
+}
+.tabViewReport ul.nav.nav-tabs {
+    /*background-color: rgb(65, 105, 51);*/
+    border-bottom: none;
+}
+.tabViewReport ul.nav.nav-tabs li.active a {
+    background-color: #dddddd;
+    border: 1px solid #416933;
+}
+.tabViewReport ul.nav.nav-tabs li a {
+    /*background-color: #B1B1B1;*/
+    padding: 1px 3px 1px 3px;
+    border-radius: 4px 4px 4px 4px;
+}
+.tabViewReport .tab-content {
+    background-color: #F5F5F5;
+    border-radius: 0px 0px 7px 7px;
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    padding-right: 20px;
+}
+.tabViewReport div.dataTables_filter {
+    display: inline-block;
+    margin-left: 50px;
+}
+.tabViewReport .chartButtons {
+    display: inline-flex;
+    padding: 3px;
+    margin-left: 50px;
+    margin-top: -6px;
+}
+.tabViewReport .chartButtons a.btn.btn-default {
+    padding: 4px 6px 0px 6px;
+    margin-left: -6px;
+    border-radius: 0px 4px 4px 0px;
+    height: 30px;
+    margin-top: 2px;
+}
+.tabViewReport .chartButtons i.fa-print {
+    padding-right: 3px;
+}
 #reportColumns {
     overflow-y: auto;
 }
 #additionalFilters {
     overflow-y: auto;
 }
-.tabViewReport div.dataTables_filter {
-    display: inline-block;
-    margin-left: 50px;
+#chartSettings {
+    overflow-y: auto;
 }
 ul.filterValues.dropdown-menu {
     min-width: 60px;
@@ -317,6 +368,15 @@ ul.totalizerOperators.dropdown-menu li a:hover {
     cursor: pointer;
 }
 ul.calculations.dropdown-menu li a:hover {
+    background-color: #d5e1f2;
+    cursor: pointer;
+}
+ul.yaxisGroups.dropdown-menu li a:hover {
+    background-color: #d5e1f2;
+    cursor: pointer;
+    width: 30px;
+}
+ul.chartTypes.dropdown-menu li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
 }
@@ -381,6 +441,13 @@ body {
     position: relative;
     font-size: 18px;
 }
+.runReportChartSpinner {
+    z-index: 5;
+    left: 45%;
+    padding-top: 200px;
+    position: absolute;
+    font-size: 18px;
+}
 
 i.iconLink {
     vertical-align: middle;
@@ -435,15 +502,69 @@ div.dataTables_wrapper div.dataTables_length select {
 .availablePropertiesContainer {
     display: inline-block;
 }
+.availableAxisGroupsContainer button.btn.btn-default.dropdown-toggle {
+    width: 35px;
+    padding: 6px 2px;
+}
 .precision {
-    width: 100px;
+    width: 60px;
+}
+.inputMultiplier {
+    width: 50px;
+    -webkit-appearance: none;
+    padding: 2px 5px 2px 5px;
+}
+.inputMultiplier::-webkit-inner-spin-button,
+.inputMultiplier::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 input.form-control.inputPrecision {
     width: 30px;
     padding: 2px 2px 2px 5px;
 }
-.precisionColumn:hover{
+.precisionColumn:hover {
     cursor: pointer;
+}
+.precisionColumn {
+    width: 70px;
+}
+.includeInChart {
+    width: 40px;
+}
+.includeInChartColumn {
+    width: 17px;
+}
+.includeInChartColumn:hover {
+    cursor: pointer;
+}
+.includeInChartColumn.hideCheckbox {
+    width: 40px;
+    display: none;
+}
+.includeInChartColumn.showCheckbox {
+    width: 40px;
+    display: inline-block;
+}
+.includeInChartColumn > input {
+    height: 14px;
+    width: 14px;
+    /*margin-left: 9px;*/
+    margin-bottom: 10px;
+}
+.yaxisChartGroup {
+    width: 32px;
+    text-align: center;
+}
+.yaxisGroups.dropdown-menu {
+    width: 32px;
+    min-width: 8px;
+    margin-left: 15px;
+    margin-top: -2px;
+}
+ul.yaxisGroups.dropdown-menu li a {
+    padding: 3px 1px 3px 1px;
+    text-align: -webkit-center;
 }
 input.form-control.globalPrecision {
     width: 30px;
@@ -465,9 +586,6 @@ input.form-control.globalPrecision {
     vertical-align: middle;
     cursor: move;
     margin-right: 12px;
-}
-.columnsGrid.table > thead > tr > th {
-    line-height: 30px;
 }
 .filtersGrid .handle {
     background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGElEQVQIW2NkYGBIA+JZQMzACCJgAIUDACENAQR6zKpeAAAAAElFTkSuQmCC) repeat;
@@ -496,7 +614,9 @@ input.form-control.globalPrecision {
 .columnsGrid.table > thead > tr > th {
     border-bottom: 2px solid #CCC;
     padding: 4px;
+    line-height: 34px;
 }
+
 .columnsGrid.table > tbody > tr > td {
     border-top: 1px solid #CCC;
     padding: 4px;
@@ -524,6 +644,25 @@ input.form-control.globalPrecision {
 }
 .filtersGrid tr.ui-sortable-helper a.span.removerow {
     display: none;
+}
+.chartSettingsGrid.table > thead > tr > th {
+    border-bottom: 2px solid #CCC;
+    padding: 4px;
+}
+.chartSettingsGrid.table > tbody > tr > td {
+    border-top: 1px solid #CCC;
+    padding: 4px;
+}
+.chartSettingsGrid.table > tbody {
+    border-bottom: 2px solid #CCC;
+}
+.availableChartTypes.chartTab {
+    padding: 0px;
+}
+.availableChartTypes.chartTab > .btn {
+    padding: 4px;
+    margin-top: 2px;
+    border-radius: 4px 0px 0px 4px;
 }
 .panel-heading a.panel-anchor:after {
     font-family:'Glyphicons Halflings';
@@ -605,7 +744,7 @@ td.filterCondition.lastConditionInGroup {
     /*margin-left: -20%;*/
     width: 120%;
 }
-.pointdata button {
+button {
     margin-right: 5px;
 }
 .cursorPointer {
