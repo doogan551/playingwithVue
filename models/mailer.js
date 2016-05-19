@@ -55,11 +55,11 @@ function getTransport () {
 }
 
 function sendEmail (options, cb) {
-  var fromName = options.fromName || 'InfoScan',
-      fromAcnt = options.from || defaultAccount;
+  var fromName = '"' + (options.fromName || 'InfoScan') + '"',
+      fromAddr = (options.fromAccount || defaultAccount) + '@' + siteDomain;
 
   getTransport();
-  options.from = fromName + ' <' + fromAcnt + '>';
+  options.from = fromName + ' <' + fromAddr + '>';
   smtpTransport.sendMail(options, cb);
 }
 

@@ -14,7 +14,8 @@ var alarmUtility = require('../models/alarm.js');
 var notifier = new Notifier();
 
 var infoscanConfig = config.get('Infoscan');
-var alarmEmail = infoscanConfig.email.accounts.alarms;
+var alarmsEmailAccount = infoscanConfig.email.accounts.alarms;
+var alarmsEmailAddress = alarmsEmailAccount + '@' + infoscanConfig.domains[0];
 
 var enums = Config.Enums;
 var ackStatuses = enums['Acknowledge Statuses'];
@@ -23,7 +24,7 @@ var accessFlags = enums['Access Flags'];
 var handler = {
 		email: {}
 	};
-handler.email[alarmEmail] = function (relay_message) {
+handler.email[alarmsEmailAddress] = function (relay_message) {
 	var getHeader = function (name) {
 			var headers = relay_message.content.headers,
 				len = (headers && headers.length) || 0,
@@ -57,7 +58,7 @@ handler.email[alarmEmail] = function (relay_message) {
 		// http://wesmorgan.blogspot.com/2012/07/understanding-email-headers-part-ii.html
 		notifier.sendEmail({
 			to: relay_message.msg_from,
-			from: alarmEmail,
+			fromAccount: alarmsEmailAccount,
 			subject: 'RE: ' + relay_message.content.subject,
 			html: 'Got your email! <hr> <p>' + relay_message.content.text + '</p>',
 			generateTextFromHTML: true,

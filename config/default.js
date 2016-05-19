@@ -1,7 +1,6 @@
-var domain = 'dorsettnc.dtscada.com';
 var defaults = {
     'Infoscan': {
-        'domains': [domain],
+        'domains': ['dorsettnc.dtscada.com'],
         'dbConfig': {
             'host': '192.168.1.88',
             'port': 27017,
@@ -39,8 +38,8 @@ var defaults = {
                 'enabled': true
             },
             'accounts': {
-                'default': 'infoscan@' + domain,
-                'alarms': 'alarms@' + domain
+                'default': 'infoscan', // Local/user part of email address; domain is appended in mailer.js
+                'alarms': 'alarms'
             }
         },
         'letsencrypt': {

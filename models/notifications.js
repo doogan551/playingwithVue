@@ -12,7 +12,7 @@ var async = require('async'),
 
 var siteConfig = config.get('Infoscan'),
 	siteDomain = siteConfig.domains[0],
-	alarmEmail = siteConfig.email.accounts.alarms;
+	alarmsEmailAccount = siteConfig.email.accounts.alarms;
 
 var notifier = new Notifier();
 
@@ -1663,7 +1663,7 @@ var dbAlarmQueueLocked = false,
 
 						notifyParams = [{
 							to: to,
-							from: alarmEmail,
+							fromAccount: alarmsEmailAccount,
 							subject: getEmailSubject(),
 							html: notifyMsg,
 							generateTextFromHTML: true
