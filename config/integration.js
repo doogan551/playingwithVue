@@ -11,8 +11,13 @@ var integration = {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'engineering integration',
-      'email': 'rkendall@dorsett-tech.com'
+      'site': 'engineering integration'
+    },
+    'email': {
+      'onError': {
+          'to': 'rkendall@dorsett-tech.com',
+          'enabled': true
+      }
     },
     'letsencrypt': {
       'enabled': false

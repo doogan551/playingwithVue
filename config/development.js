@@ -11,8 +11,13 @@ var development = {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'engineering development',
-      'email': 'rkendall@dorsett-tech.com'
+      'site': 'engineering development'
+    },
+    'email': {
+      'onError': {
+          'to': 'rkendall@dorsett-tech.com',
+          'enabled': true
+      }
     },
     'letsencrypt': {
       'enabled': false
