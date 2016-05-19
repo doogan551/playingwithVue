@@ -6298,10 +6298,13 @@ gpl.BlockManager = function (manager) {
 
         for (c = 0; c < items.length; c++) {
             item = items[c];
-            if (!item.canvas) { //double adds nonpoint shapes
+            if (item.canvas) {
+                item.canvas.remove(item);
+            }
+            // if (!item.canvas) { //double adds nonpoint shapes
                 canvas.add(item);
                 item.on('moving', handleBlockMove);
-            }
+            // }
         }
 
         if (!block.isToolbar) {
@@ -8128,7 +8131,7 @@ gpl.Manager = function () {
             updateSequenceProperties: function () {
                 var props = ko.toJS(managerSelf.bindings);
 
-                gpl.point['Update Interval'].Value = props.deviceUpdateIntervalMinutes * 60 + props.deviceUpdateIntervalSeconds;
+                gpl.point['Update Interval'].Value = (+props.deviceUpdateIntervalMinutes || 0) * 60 + (+props.deviceUpdateIntervalSeconds || 0);
                 gpl.point['Show Label'].Value = props.deviceShowLabel;
                 gpl.point['Show Value'].Value = props.deviceShowValue;
                 gpl.point.Description.Value = props.deviceDescription;
@@ -8743,6 +8746,7 @@ gpl.Manager = function () {
             socket.on('sequenceUpdateMessage', function (message) {
                 gpl.showMessage('Sequence Saved');
                 if (managerSelf.doCompleteSave) {
+                    managerSelf.doCompleteSave = false;
                     managerSelf.afterSave();
                 }
             });
