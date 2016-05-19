@@ -8,7 +8,13 @@ var stephen = {
             'driveLetter': 'C'
         },
         'location': {
-            'email': 'strent@dorsett-tech.com'
+            'site': 'Stephen'
+        },
+        'email': {
+            'onError': {
+                'to': 'strent@dorsett-tech.com',
+                'enabled': true
+            }
         }
     },
     runNotifications: false

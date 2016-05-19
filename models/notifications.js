@@ -2,13 +2,17 @@ var async = require('async'),
 	utility = require('../models/utility'),
 	utils = require('../helpers/utils'),
 	calendar = require('../models/calendar'),
-	siteConfig = require('config'),
+	config = require('config'),
 	Config = require('../public/js/lib/config.js'),
 	appConfig = require('config'),
 	cronJob = require('../models/cronjob'),
 	ObjectID = require('mongodb').ObjectID,
 	logger = require('../helpers/logger')(module),
 	Notifier = require('../models/notifierutility');
+
+var siteConfig = config.get('Infoscan'),
+	siteDomain = siteConfig.domains[0],
+	alarmsEmailAccount = siteConfig.email.accounts.alarms;
 
 var notifier = new Notifier();
 
@@ -19,6 +23,7 @@ var	enums = Config.Enums,
 	alarmClassRevEnums = revEnums['Alarm Classes'],
 	alarmClassEnums = enums['Alarm Classes'],
 	alarmCategoryEnums = enums['Alarm Categories'],
+	accessFlagsEnums = enums['Access Flags'],
 	alarmCategoryRevEnums = revEnums['Alarm Categories'],
 	eventCategoryEnum = alarmCategoryEnums.Event.enum,
 	maintenanceCategoryEnum = alarmCategoryEnums.Maintenance.enum,
@@ -65,12 +70,6 @@ var dbAlarmQueueLocked = false,
 	actions = {
 		calendar: {
 			dbGetHolidaysObj: function (cb) {
-				// TEST
-				if (selfTest.enabled && !selfTest.useDb.holidays) {
-					return cb(null, selfTest.holidays);
-				}
-				// end TEST
-
 				var query = {
 						year: new Date().getFullYear()
 					};
@@ -100,12 +99,6 @@ var dbAlarmQueueLocked = false,
 		},
 		scheduledTasks: {
 			dbGetAll: function (cb) {
-				// TEST
-				if (selfTest.enabled && !selfTest.useDb.scheduledTasks) {
-					return cb(null, selfTest.sceduledTasks);
-				}
-				// end TEST
-
 				var query = {
 						collection: 'NotifyScheduledTasks'
 					};
@@ -249,14 +242,6 @@ var dbAlarmQueueLocked = false,
 		},
 		policies: {
 			dbGet: function (idList, cb) {
-				// TEST
-				if (selfTest.enabled && !selfTest.useDb.policies) {
-					return cb(null, selfTest.policies.filter(function (policy) {
-						return !!~idList.indexOf(policy._id);
-					}));
-				}
-				// end TEST
-
 				var objectIdList = idList.map(function (id) {
 						return new ObjectID(id);
 					}),
@@ -271,11 +256,6 @@ var dbAlarmQueueLocked = false,
 				utility.get(criteria, cb);
 			},
 			dbGetAll: function (cb) {
-				// TEST
-				if (selfTest.enabled && !selfTest.useDb.policies) {
-					return cb(null, selfTest.policies);
-				}
-				// end TEST
 				var criteria = {
 						collection: 'NotifyPolicies'
 					};
@@ -315,12 +295,6 @@ var dbAlarmQueueLocked = false,
 			},
 			dbUpdateThreads: function (data, cb) {
 				actions.utility.log('policies.dbUpdateThreads');
-
-				// TEST
-				if (selfTest.enabled && !selfTest.useDb.policies) {
-					return cb(null, data);
-				}
-				// end TEST
 
 				var updates = [],
 					inserts = {},
@@ -624,9 +598,33 @@ var dbAlarmQueueLocked = false,
 						}
 						return obj;
 					})(),
+					getUserPermissions = function (userId) {
+						// This routine returns a _pAccess value for the userId associated with the notifying point
+						var user = info.data.usersObj[userId],
+							security = thread.trigger.Security, // Array of group ids
+							_pAccess = 0, // Assume no permissions
+							group;
+
+						if (user) {
+							if (user['System Admin'].Value === true) {
+								_pAccess = accessFlagsEnums.All;
+							} else {
+								security.forEach(function (groupId) {
+									group = info.data.groupsObj[groupId];
+									
+									// If our user is a member of this group
+									if (group.Users[userId]) {
+										_pAccess |= group._pAccess;	// Add group permissions
+									}
+								});
+							}
+						}
+						return _pAccess;
+					},
 					notifyAlarmStateChange = function (change) {
 						var i,
 							history,
+							userId,
 							key;
 
 						// If the alarm changed state (return to normal or a new alarm state), we immediately notify 
@@ -634,14 +632,16 @@ var dbAlarmQueueLocked = false,
 						// already been notified
 						for (i = 0; i < recepientHistoryLength; i++) {
 							history = thread.recepientHistory[i];
-							key = [history.userId, history.Type, history.Value].join('');
+							userId = history.userId;
+							key = [userId, history.Type, history.Value].join('');
 							
 							// We'll only alert the user of the alarm state change if they
 							// don't already have a notification of this type in the queue,
 							// or if they do but it's not scheduled until later
 							if (!(notifyLookup.hasOwnProperty(key)) || notifyLookup[key].nextAction > now) {
 								thread.notifyQueue.push({
-									userId: history.userId,
+									userId: userId,
+									userCanAck: !!(getUserPermissions(userId) & accessFlagsEnums.Acknowledge.enum),
 									nextAction: now,
 									Type: history.Type, // email, voice, sms
 									Value: history.Value, // phone number or email
@@ -666,6 +666,7 @@ var dbAlarmQueueLocked = false,
 						for (i = 0; i < len; i++) {
 							userId = userIds[i];
 
+							// Returns an empty array if user not found
 							userAlerts = actions.policies.getUserAlerts(info.data.usersObj[userId], alarmClassName);
 
 							for (j = 0, jlen = userAlerts.length; j < jlen; j++) {
@@ -677,6 +678,7 @@ var dbAlarmQueueLocked = false,
 								if (!notifyLookup.hasOwnProperty(key) || thread._state === ADDED) {
 									notification = {
 										userId: userId,
+										userCanAck: getUserPermissions(userId) & accessFlagsEnums.Acknowledge.enum,
 										nextAction: actions.utility.getTimestamp(info, userAlert.delay),
 										Type: userAlert.Type, // email, voice, sms
 										Value: userAlert.Value // phone number or email
@@ -1036,17 +1038,11 @@ var dbAlarmQueueLocked = false,
 					return cb(null, policiesAckList[alarmId] === isAcknowledgedEnum);
 				}
 
-				// TEST
-				if (selfTest.enabled && !selfTest.useDb.alarmAcks) {
-					return cb(null, false);
-				}
-				// end TEST
-
 				utility.getOne({
 					collection: alarmsCollection,
 					query: query,
 					fields: fields
-				}, function(err, alarm) { // alarm is null if not found
+				}, function (err, alarm) { // alarm is null if not found
 					var ackStatus = (alarm && alarm.ackStatus) || isAcknowledgedEnum, // If we can't find the alarm (shouldn't happen), we treat it like it has been acknowledged
 						isAcknowledged = (ackStatus === isAcknowledgedEnum);
 					
@@ -1088,12 +1084,6 @@ var dbAlarmQueueLocked = false,
 		},
 		alarmQueue: {
 			dbGetAll: function (cb) {
-				// TEST
-				if (selfTest.enabled && !selfTest.useDb.alarmQueue) {
-					return cb(null, selfTest.alarmQueue);
-				}
-				// end TEST
-
 				var query = {
 						collection: 'NotifyAlarmQueue'
 					};
@@ -1104,12 +1094,6 @@ var dbAlarmQueueLocked = false,
 						collection: 'NotifyAlarmQueue',
 						insertObj: queueEntries
 					};
-				// TEST
-				if (selfTest.enabled && !selfTest.useDb.alarmQueue) {
-					Array.prototype.push.apply(selfTest.alarmQueue, queueEntries);
-					return cb(null);
-				}
-				// end TEST
 				utility.insert(criteria, cb);
 			},
 			dbRemoveAll: function (data, cb) {
@@ -1120,14 +1104,6 @@ var dbAlarmQueueLocked = false,
 					return cb(null, data);
 				}
 				
-				// TEST
-				if (selfTest.enabled && !selfTest.useDb.alarmQueue) {
-					selfTest.alarmQueue.length = 0;
-					data.alarmQueue.length = 0;
-					return cb(null, data);
-				}
-				// end TEST
-
 				var criteria = {
 						collection: 'NotifyAlarmQueue',
 						query: {}
@@ -1387,7 +1363,7 @@ var dbAlarmQueueLocked = false,
 								if (thread._state !== DELETED) {
 									notifyQueue.splice(k, 1);
 									k--;
-									klen = thread.notifyQueue.length;
+									klen--;
 								}
 							} else {
 								_numberOfQueuedItems++;
@@ -1409,6 +1385,7 @@ var dbAlarmQueueLocked = false,
 				//	notification: {
 				//		userId: *,
 				//		nextAction: *,
+				//		userCanAck: *,	// Boolean indicates if user can acknowledge this alarm
 				//		type: *,	// EMAIL, VOICE, SMS
 				//		info: *,	// Phone number or email
 				//		change: *,	// may or may not be present
@@ -1444,6 +1421,8 @@ var dbAlarmQueueLocked = false,
 					key,
 					i,
 					to,
+					notifyingReturnNormal,
+					showReplyToAckMsg,
 					recepientHistoryLookup = (function(){
 						var obj = {},
 							thread,
@@ -1502,7 +1481,7 @@ var dbAlarmQueueLocked = false,
 						return ['It returned normal' + getVoiceMsgDate(timestamp), 'at', getMsgTime(timestamp) + '.'].join(' ');
 					},
 					getReturnNormalMessage = function (timestamp) {
-						return ['It has since returned normal', '(' + getMsgDate(timestamp), getMsgTime(timestamp) + ').'].join('');
+						return ['It has since returned normal', '(' + getMsgDate(timestamp), getMsgTime(timestamp) + ').'].join(' ');
 					},
 					getEmailSubject = function () {
 						// thread variables were set before this routine was called
@@ -1515,19 +1494,27 @@ var dbAlarmQueueLocked = false,
 						}
 						return subject + thread.trigger.Name;
 					},
+					getColor = function () {
+						// notifyingReturnNormal variable was set before this routine was called
+						var color;
+						if (notifyingReturnNormal) {
+							color = '#008000'; // Green
+						} else {
+							color = '#FF0000'; // Red
+						}
+						return color;
+					},
 					getMessage = function () {
-						// thread and notification variables were set before this routine was called
+						// thread, notification, and notifyingReturnNormal variables were set before this routine was called
 						var trigger = thread.trigger,
 							isNormalAlarmClass = trigger.almClass === alarmClassEnums.Normal.enum,
 							alarmClassText = alarmClassRevEnums[trigger.almClass],
-							notifyingReturnNormal = false,
 							msg = '',
 							timestamp,
 							obj;
 
-						if (!!notification.change && notification.change === 'return') {
+						if (notifyingReturnNormal) {
 							obj = thread.returnNormal;
-							notifyingReturnNormal = true;
 						} else {
 							obj = trigger;
 						}
@@ -1588,6 +1575,7 @@ var dbAlarmQueueLocked = false,
 
 								notifyType: notification.Type,
 								timestamp: new Date().getTime(),
+								to: notification.Value,
 								message: notifyEntry.notifyMsg
 							},
 							criteria = {
@@ -1607,10 +1595,11 @@ var dbAlarmQueueLocked = false,
 					};
 
 				for (i = 0; i < len; i++) {
+					notifyingReturnNormal = false;
 					notifyEntry = data.notifyList[i];
 					// Each notifyEntry is of the form
 					// {
-					//	notification: {}, // Has keys: userId, nextAction, type, Value
+					//	notification: {}, // Has keys: userId, userCanAck, nextAction, type, Value
 					//	policy: {},
 					//	thread: {}
 					// }
@@ -1620,6 +1609,9 @@ var dbAlarmQueueLocked = false,
 					to = notification.Value;
 					thread = notifyEntry.thread;
 
+					if (!!notification.change && notification.change === 'return') {
+						notifyingReturnNormal = true;
+					}
 					// We'll also collect notifications by user which can be used to prevent overwhelming the user
 					// with too many pages at one time (ex: we could combine messages or simply tell the user he/she has x new alarms to review)
 					if (!userNotifyList.hasOwnProperty(notification.userId)) {
@@ -1650,11 +1642,36 @@ var dbAlarmQueueLocked = false,
 
 					// Send notification
 					if (notification.Type === EMAIL) {
+						showReplyToAckMsg = !notifyingReturnNormal && !thread.status.isAcknowledged && notification.userCanAck;
+
+						// Beautify our email message
+						notifyMsg =  '<span style="font-family: Helvetica, Arial, sans-serif; font-size: 14px; color: ' + getColor() + '">' + notifyMsg + '</span>';
+						
+						if (showReplyToAckMsg) {
+							notifyMsg += '<p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-style: italic;">Reply to this email to acknowledge this alarm.</p>';
+						}
+						
+						notifyMsg += '<p style="font-family: Helvetica, Arial, sans-serif; font-size: 14px;">Thanks,<br />';
+						notifyMsg += 'Your Dorsett Technologies InfoScan Team<br />';
+						notifyMsg += '800-331-7605<br/>';
+						notifyMsg += '<a href="http://www.dorsett-tech.com" style="color: #15C;">www.dorsett-tech.com</a>';
+						notifyMsg += '</p><br />';
+
+						notifyMsg += '<table cellpadding=”0″ cellspacing=”0″ style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #666; background-color: #EEE; border: 1px solid #CCC; border-collapse: collapse"><tr><td style="padding: 10px;">';
+						notifyMsg += 'You are receiving this email at the account <a href="mailto:' + to + '" style="color: #15C;">' + to + '</a> because you are subscribed for alarm notifications on InfoScan. ';
+						notifyMsg += 'To stop receiving these emails, please log in to InfoScan at <a href="http://' + siteDomain + '" style="color: #15C;">' + siteDomain + '</a> and change your alarm notification settings.';
+
+						if (showReplyToAckMsg) {
+							notifyMsg += '<br /><br />Do not edit or remove anything below this line when replying to this message.<br />{' + thread.trigger.alarmId + '}';
+						}
+						notifyMsg += '</td></tr></table>';
+
 						notifyParams = [{
 							to: to,
-							from: 'infoscan@dorsett-tech.com',
+							fromAccount: alarmsEmailAccount,
 							subject: getEmailSubject(),
-							text: notifyMsg
+							html: notifyMsg,
+							generateTextFromHTML: true
 						}, createCallback(notifyEntry)];
 					} else {
 						notifyParams = [(to.length === 10) ? '1' + to : to, notifyMsg, createCallback(notifyEntry)];
@@ -1676,29 +1693,23 @@ var dbAlarmQueueLocked = false,
 				// }
 			},
 			sendError: function (err) {
-				var siteName = siteConfig.get('Infoscan.location').site,
+				var siteName = siteConfig.location.site,
 					text = [
 						'Site: ' + siteName,
 						'Timestamp: ' + new Date().getTime(),
-						'Error: ' + JSON.stringify(err)
+						'',
+						err
 					].join('\n');
 				
 				notifier.sendEmail({
-					from: 'infoscan@dorsett-tech.com',
 					to: 'johnny.dr@gmail.com',
-					subject: 'Notifications error at customer site (' + siteName + ')',
+					subject: 'Error: Notifications (Site: ' + siteName + ')',
 					text: text
 				});
 				notifier.sendText('13364690900', 'Notifications error @ customer site. Check gmail for details.', function (){});
 			}
 		},
 		dbGetAllUsersObj: function (cb) {
-			// TEST
-			if (selfTest.enabled && !selfTest.useDb.users) {
-				return cb(null, selfTest.usersObj);
-			}
-			// end TEST
-
 			var query = {
 					collection: 'Users'
 				};
@@ -1716,8 +1727,24 @@ var dbAlarmQueueLocked = false,
 				cb(null, obj);
 			});
 		},
+		dbGetAllGroupsObj: function (cb) {
+			var query = {
+					collection: 'User Groups'
+				};
+
+			utility.get(query, function (err, groups) {
+				if (!!err) {
+					return cb(err);
+				}
+				var obj = {};
+
+				for (var i = 0, len = groups.length; i < len; i++) {
+					obj[groups[i]._id] = groups[i];
+				}
+				cb(null, obj);
+			});
+		},
 		processIncomingAlarm: function (alarm) {
-			logger.info('INCOMING ' + alarmCategoryRevEnums[alarm.msgCat].toUpperCase() + ' - ' + JSON.stringify(alarm));
 			if (!appConfig.runNotifications)
 				return;
 
@@ -1734,7 +1761,7 @@ var dbAlarmQueueLocked = false,
 					return str;
 				})();
 
-			logger.info('INCOMING ' + alarmCategoryRevEnums[alarm.msgCat].toUpperCase() + ' - ' + name);
+			actions.utility.log('INCOMING ' + alarmCategoryRevEnums[alarm.msgCat].toUpperCase() + ' - ' + name);
 
 			if (!alarm.almNotify || alarm.msgCat === eventCategoryEnum) {
 				actions.utility.log('\tDiscarding ' + alarmCategoryRevEnums[alarm.msgCat], 'DONE');
@@ -1921,7 +1948,8 @@ var dbAlarmQueueLocked = false,
 
 				async.parallel({
 					holidaysObj: actions.calendar.dbGetHolidaysObj,
-					usersObj: actions.dbGetAllUsersObj
+					usersObj: actions.dbGetAllUsersObj,
+					groupsObj: actions.dbGetAllGroupsObj
 				}, function complete (err, data) {
 					if (!!err)
 						return cb(err);
@@ -2016,6 +2044,7 @@ function run () {
 		alarmQueue: actions.alarmQueue.dbGetAll,
 		holidaysObj: actions.calendar.dbGetHolidaysObj,
 		usersObj: actions.dbGetAllUsersObj,
+		groupsObj: actions.dbGetAllGroupsObj,
 		scheduledTasks: actions.scheduledTasks.dbGetAll
 	}, function (err, data) {
 		if (!!err) {
@@ -2036,6 +2065,7 @@ function run () {
 		//		alarmQueue: [],
 		//		holidaysObj: {"1-1": "New Year's Day", etc.},
 		//		usersObj: {_id: {}},
+		//		groupsObj: {_id: {}},
 		//		policiesAckList: {},
 		//		notifyList: [],
 		//		date: date object
@@ -2078,421 +2108,3 @@ if (appConfig.runNotifications) {
 	// anyway - seconds should always be 0 if the CRON fires and we execute on time
 	new cronJob('00 * * * * *', run);
 }
-
-
-
-
-
-
-/////////////////////////////////// TEST ////////////////////////////////////////
-var selfTest = {
-		enabled: false,
-		dbConnect: false,
-		useDb: {
-			policies: true,
-			scheduledTasks: true,
-			alarmQueue: true,
-			holidays: true,
-			users: true,
-			alarmAcks: true
-		},
-		policies: [{
-			_id: "1a5c",
-			name: 'WWTP',
-			members: ['1abc' , '2abc', '3abc', '4abc'],
-			memberGroups: [],
-			enabled: true,
-			_currAlertID: 1,
-			_currGroupID: 4,
-			_currEscalationID: 7,
-			alertConfigs: [{
-				id: 1, // seeded from _currAlertID
-				name: 'Off-Hours',
-				isOnCall: true,
-				rotateConfig: { // false/null if only 1?
-					enabled: false,
-					scale: 'week',
-					time: '9:00',
-					day: 'Friday'
-				},
-				groups: [{
-					id: 1,// seeded from _currGroupID
-					active: true,
-					name: 'Group 1',
-					alertDelay: 1,
-					repeatConfig: {
-						enabled: false,
-						repeatCount: 0
-					},
-					escalations: [{
-						id: 1, // seeded from _currEscalationID
-						members: ['1abc', '2abc'],
-						alertStyle: 'Everyone', //FirstResponder, Everyone, Sequenced
-						escalationDelay: 30,
-						memberAlertDelay: 5,
-						rotateConfig: { // false/null if unchecked?
-							enabled: true,// if retain the object
-							scale: 'week',
-							time: '9:00',
-							day: 'Friday'
-						},
-						repeatConfig: {
-							enabled: false,
-							repeatCount: 0
-						}
-					}]
-				}, {
-					id: 2,// seeded from _currGroupID
-					active: false,
-					name: 'Group 1',
-					alertDelay: 1,
-					repeatConfig: {
-						enabled: false,
-						repeatCount: 0
-					},
-					escalations: [{
-						id: 1, // seeded from _currEscalationID
-						members: ['3abc', '4abc'],
-						alertStyle: 'Everyone', //FirstResponder, Everyone, Sequenced
-						escalationDelay: 30,
-						memberAlertDelay: 5,
-						rotateConfig: { // false/null if unchecked?
-							enabled: true,// if retain the object
-							scale: 'week',
-							time: '9:00',
-							day: 'Friday'
-						},
-						repeatConfig: {
-							enabled: false,
-							repeatCount: 0
-						}
-					}]
-				}]
-			}],
-			scheduleLayers: [{ // layer 1
-				alertConfigs: [1],
-				schedules: [{// holidays
-					holidays: false, // precedence, if layer 2 holiday match, does layer 1 run?
-					days: ['mon', 'tues', 'wed', 'thurs', 'fri'], //'weekdays' will be translated in UI
-					startTime: 800,
-					endTime: 1700,
-					allDay: false
-				}, {
-					holidays: false,
-					days: ['sat', 'sun'],
-					startTime: null,
-					endTime: null,
-					allDay: true
-				}]
-			}],
-			threads: []
-		}],
-		usersObj: {
-			'1abc': {
-				_id: '1abc',
-				alerts: {
-					Normal: [{
-						Type: SMS,
-						Value: '13364690900',
-						delay: 0
-					}, {
-						Type: SMS,
-						Value: '13364690900',
-						delay: 1
-					}, {
-						Type: EMAIL,
-						Value: 'johnny.dr@gmail.com',
-						delay: 30
-					}],
-					Emergency: [],
-					Critical: [],
-					Urgent: []
-				},
-				'First Name': {
-					Value: 'Johnny'
-				},
-				'Last Name': {
-					Value: 'Roberts'
-				},
-				username: 'jroberts',
-				notificationsEnabled: true
-			},
-			'2abc': {
-				_id: '2abc',
-				alerts: {
-					Normal: [{
-						Type: SMS,
-						Value: '2222220000',
-						delay: 0
-					}, {
-						Type: EMAIL,
-						Value: 'user2@dorsett-tech.com',
-						delay: 2
-					}, {
-						Type: VOICE,
-						Value: '2222220001',
-						delay: 20
-					}],
-					Emergency: [],
-					Critical: [],
-					Urgent: []
-				},
-				notificationsEnabled: true
-			},
-			'3abc': {
-				_id: '3abc',
-				alerts: {
-					Normal: [{
-						Type: SMS,
-						Value: '3333330000',
-						delay: 0
-					}, {
-						Type: EMAIL,
-						Value: 'user3@dorsett-tech.com',
-						delay: 3
-					}, {
-						Type: VOICE,
-						Value: '3333330001',
-						delay: 30
-					}],
-					Emergency: [],
-					Critical: [],
-					Urgent: []
-				},
-				notificationsEnabled: true
-			},
-			'4abc': {
-				_id: '4abc',
-				alerts: {
-					Normal: [{
-						Type: SMS,
-						Value: '4444440000',
-						delay: 0
-					}, {
-						Type: EMAIL,
-						Value: 'user4@dorsett-tech.com',
-						delay: 4
-					}, {
-						Type: VOICE,
-						Value: '4444440001',
-						delay: 40
-					}],
-					Emergency: [],
-					Critical: [],
-					Urgent: []
-				},
-				notificationsEnabled: true
-			}
-		},
-		holidays: {
-			'1-1': 'New Years'
-		},
-		alarmQueue: [{
-			type: NEW,
-			policyIds: ["1a5c"],
-			upi: 1111,
-			alarmId: 111111111111111,
-			msgCat: alarmCategoryEnums.Alarm.enum,
-			msgText: 'Eeek - 1111 in alarm!',
-			msgType: alarmTypesEnums.Open.enum,
-			almClass: Config.Enums['Alarm Classes'].Normal.enum, // comes from the point
-			msgTime: Math.round(new Date().getTime() / 1000, 0),
-			Name1: 'Test Point 1',
-			Name2: '',
-			Name3: '',
-			Name4: '',
-			pointType: 3, // binary input
-			notifyReturnNormal: true, // comes from the point
-			Security: []
-		}],
-		scheduledTasks: [{
-			type: RECURRING,
-			action: 'rotateMembers',
-			policyID: "1a5c",
-			nextAction: 1457705102972,
-			interval: 14,
-			config: {
-				alertConfigID: 1,
-				groupID: 1,
-				escalationID: 1
-			}
-		}, {
-			type: RECURRING,
-			action: 'rotateGroup',
-			policyID: "1a5c",
-			nextAction: 1457705102972,
-			interval: 14,
-			config: {
-				alertConfigID: 1,
-				groupID: 1
-			}
-		}]
-	};
-
-// Test definitions
-if (selfTest.enabled) {
-	var testInfo = {
-			policy: selfTest.policies[0],
-			queueEntry: selfTest.alarmQueue[0],
-			data: {
-				policies: selfTest.policies,
-				alarmQueue: selfTest.alarmQueue,
-				usersObj: selfTest.usersObj,
-				holidays: selfTest.holidays,
-				scheduledTasks: selfTest.scheduledTasks,
-				policiesAckList: {},
-				date: new Date(),
-				now: new Date().setSeconds(0)
-			}
-		};
-
-	actions.selfTest = {
-		runNotifications: false,
-		template: {
-			run: false,
-			fn: function (cb) {
-				cb(null, 'data');
-			}
-		},
-		removeThreads: {
-			run: true,
-			fn: function (cb) {
-				actions.policies.dbRemoveThreads('56e6f8b37dec812412e840a1', function (err) {
-					cb(err, 'data');
-				});
-			}
-		},
-		processScheduledTasks: {
-			run: false,
-			fn: function (cb) {
-				actions.scheduledTasks.process(testInfo.data, function (err, data) {
-					data.policies.forEach(function (policy) {
-						policy.alertConfigs.forEach(function (alertConfig) {
-							alertConfig.groups.forEach(function (group) {
-								group.escalations.forEach(function (escalation) {
-									actions.utility.log(['policy:'+policy.name, 'alertConfigId:'+alertConfig.id, 'groupId:'+group.id+(group.active?'(active)':''), 'escalationId:'+escalation.id, 'members: ['+escalation.members.join(', ')+']'].join(', '));
-								});
-							});
-						});
-					});
-					cb(null, 'done');
-				});
-			}
-		},
-		sendEmail: {
-			run: false,
-			fn: function (cb) {
-				notifier.sendEmail({
-					to: 'acgroce5@gmail.com',
-					from: 'infoscan@dorsett-tech.com',
-					subject: 'test',
-					text: 'this is a test'
-				}, cb);
-			}
-		},
-		getActiveAlertConfigIds: {
-			run: false,
-			fn: function () {
-				actions.utility.log('testing getActiveAlertConfigIds');
-				actions.utility.log(actions.policies.getActiveAlertConfigIds(testInfo));
-			}
-		},
-		createThread: {
-			run: false,
-			fn: function () {
-				actions.utility.log('testing createThread');
-				actions.utility.log(actions.policies.createThread(testInfo));
-			}
-		},
-		dbGetHolidaysObj: {
-			run: false,
-			fn: function (cb) {
-				actions.calendar.dbGetHolidaysObj(function (err, data) {
-					return cb(err, data);
-				});
-			}
-		},
-		dbGetAllNotifyPolicies: {
-			run: false,
-			fn: function (cb) {
-				actions.policies.dbGetAll(function (err, data) {
-					return cb(err, data);
-				});
-			}
-		},
-		dbGetNotifyPolicies: {
-			run: false,
-			fn: function (cb) {
-				actions.policies.dbGet(["56d75ff6e98d941f89fc6ff5"], function (err, data) {
-					return cb(err, data);
-				});
-			}
-		},
-		dbGetAllUsersObj: {
-			run: false,
-			fn: function (cb) {
-				actions.dbGetAllUsersObj(function (err, data) {
-					return cb(err, data);
-				});
-			}
-		},
-		processAlarmQueue: {
-			run: false,
-			fn: function (cb) {
-				actions.utility.log('Testing processAlarmQueue');
-				actions.alarmQueue.process(testInfo.data, function (err, data) {
-					cb(null, data.policies[0].threads);
-				});
-			}
-		},
-		processPolicies: {
-			run: false,
-			fn: function (cb) {
-				actions.utility.log('Testing processPolicies');
-				actions.policies.process(testInfo.data, function (err, data) {
-					cb(null, data.policies[0].threads);
-				});
-			}
-		}
-	};
-}
-
-
-// DB connect
-if (selfTest.dbConnect) {
-	var db = require('../helpers/db'),
-		config = require('config'),
-		dbConfig = config.get('Infoscan.dbConfig'),
-		connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName].join('');
-
-	db.connect(connectionString, function(err) {
-		if (err) {
-			logger.debug(err);
-			return;
-		} else if (selfTest.enabled) {
-			doTest();
-		}
-	});
-} else if (selfTest.enabled) {
-	doTest();
-}
-
-function doTest () {
-	var key,
-		testObj,
-		cb = function (err, result) {
-			actions.utility.log(err || result);
-			// logger.debug(err || result);
-		};
-	for (key in actions.selfTest) {
-		testObj = actions.selfTest[key];
-		if (testObj.run) {
-			testObj.fn(cb);
-		}
-	}
-
-	if (actions.selfTest.runNotifications) {
-		run();
-	}
-}
-//////////////////////////////// END TEST //////////////////////////////////////

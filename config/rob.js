@@ -1,25 +1,30 @@
 var rob = {
   'Infoscan': {
     'dbConfig': {
-      'host': 'localhost',
-      'dbName': 'msfcimport'
+      'host': '192.168.1.172',
+      'dbName': 'infoscan'
     },
     'zmqConfig': {
-      'server': '192.168.1.88',
+      'server': '192.168.1.172',
     },
     'files': {
       'driveLetter': 'C'
     },
     'location': {
-      'site': 'Rob',
-      'email': ''
+      'site': 'Rob'
+    },
+    'email': {
+      'onError': {
+          'to': 'rkendall@dorsett-tech.com',
+          'enabled': true
+      }
     },
     'processes': {
       'zmqProcess': '',
       'smProcess': ''
     }
   },
-  runNotifications: false
+    runNotifications: false
 };
 
 rob.Infoscan.files.firmwareLocation = "\\\\192.168.1.88/d$/InfoScan/Firmware/";

@@ -11,9 +11,13 @@ var msfc = {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'MSFC',
-      'email': 'rkendall@dorsett-tech.com'
-
+      'site': 'MSFC'
+    },
+    'email': {
+      'onError': {
+          'to': 'rkendall@dorsett-tech.com',
+          'enabled': true
+      }
     }
   },
   runNotifications: false
