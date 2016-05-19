@@ -318,6 +318,47 @@ module.exports = {
 
     Utility.update(criteria, cb);
   },
+  getAlarmTemplates: function(data, cb) {
+    var searchCriteria = {};
+    var criteria = {
+      query: searchCriteria,
+      collection: 'AlarmDefs'
+    };
+    Utility.get(criteria, function(err, data) {
+
+      if (err) {
+        return cb(err.message);
+      }
+
+      var entries = data;
+      return cb(null, entries);
+    });
+  },
+  updateAlarmTemplate: function(data, cb) {
+    var searchCriteria = {
+      "_id": data._id
+    };
+
+    var alarmTemplateUpdate = {
+      $set: {
+        "isSystemMessage" : data.isSystemMessage,
+        "msgType" : data.msgType,
+        "msgCat" : data.msgCat,
+        "msgTextColor" : data.msgTextColor,
+        "msgBackColor" : data.msgBackColor,
+        "msgName" : data.msgName,
+        "msgFormat" : data.msgFormat
+      }
+    };
+
+    var criteria = {
+      query: searchCriteria,
+      collection: 'AlarmDefs',
+      updateObj: alarmTemplateUpdate
+    };
+
+    Utility.update(criteria, cb);
+  },
   weather: function(cb) {
     var returnData;
     var upiMatrix = {};

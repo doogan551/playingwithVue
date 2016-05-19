@@ -61,7 +61,6 @@ html
         script(type="text/javascript" src='/js/lib/DataTables-1.10.10/jquery.dataTables.js')
         script(type="text/javascript" src='/js/lib/DataTables-1.10.10/dataTables.bootstrap.min.js')
         script(type='text/javascript', src='/js/baseui/syspref.js')
-        include ../AlarmMessageDefinition/templates.jade
 
     body.whitebg
         div#navbar
@@ -275,7 +274,7 @@ html
                                 td IP Port
                                 td.clickToEdit(data-bind="clickEdit: $data['IP Port']")
                                     span(data-bind="text: $data['IP Port']")
-                                    input#telemetryIPNetworkSegment.hide.form-control(type="text", data-bind="value: $data['IP Port']")
+                                    input#telemetryIPPort.hide.form-control(type="text", data-bind="value: $data['IP Port']")
                             tr
                                 td APDU Timeout (seconds)
                                 td.clickToEdit(data-bind="clickEdit: $data['APDU Timeout']")
@@ -297,23 +296,21 @@ html
                                 td.clickToEdit(data-bind="clickEdit: $data['Public IP']")
                                     span(data-bind="text: $data['Public IP']")
                                     input#telemetryPublicIP.hide.form-control.input-sm(type="text", data-bind="value: $data['Public IP']")
-
-            // ------ Alarm Message Definitions ---------------------------------------------------------------------
-            #alarmMessageDefinitionContainer(data-bind="visible: section() == 'Alarm Messages'")
-                .title Alarm Messages
+            // ------ Alarm Templates ---------------------------------------------------------------------
+            #alarmTemplateContainer(data-bind="visible: section() == 'Alarm Templates'")
+                .title(data-bind="visible: section()")
                 br
-                div(data-bind='with:alarmMessagesViewModel.viewModel()')
-                    include ../AlarmMessageDefinition/AlarmMessageDefinitionModule.jade
-
+                div(data-bind='with:alarmTemplateViewModel')
+                    table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
+                    //include ../AlarmMessageDefinition/AlarmMessageDefinitionModule.jade
             // ------ Backup ----------------------------------------------------------------------------------------
-            div#telemetry(data-bind="visible: section() == 'Backup'")
+            div#backupContainer(data-bind="visible: section() == 'Backup'")
                 .title Backup
                 br
                 div#backupForm(data-bind="with: backupViewModel")
                     button(id='backup', type='button', class='btn btn-primary btn-sm', data-bind='click: startBackup') Backup Now
                     br
                     div#backupMessage(data-bind="text: backupMsg, visible: showBackupMsg")
-
             // ------ Weather ---------------------------------------------------------------------------------------
             div#weather(data-bind="visible: section() == 'Weather'")
                 div(data-bind="with: weatherViewModel")
@@ -329,7 +326,6 @@ html
                             // ko if: $data.point() !== null
                             a(data-bind="text: $data.point().Name, click: $parent.openPointRef")
                             // /ko
-
             // ------ Notifications ---------------------------------------------------------------------------------
             .notifications(data-bind="visible: section() == 'Notifications'")
                 div(data-bind="with: notificationsViewModel.bindings")

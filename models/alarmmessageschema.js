@@ -141,7 +141,6 @@ alarmMessageDefinitionsHelperData = {
             "Value Tags": ""
         }];
     }
-
 };
 amdSchema = new mongoose.Schema({
     msgFormat: {

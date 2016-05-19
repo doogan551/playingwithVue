@@ -1,0 +1,6 @@
+.input-group#filterContainer(data-states='{"ready":"3","editing":"2","data":"2","dirty":"2","error":"2"}')
+    input#filter.form-control(type="text",data-bind='value:searchFilter,valueUpdate:"keyup"',placeholder="Enter Search Criteria")
+    span#clearSearchFilter.input-group-addon(data-bind='visible:searchFilter')
+        btn.fa.fa-times-circle(data-states='{"ready":"3","editing":"2","dirty":"2"}',data-bind='click:function() { this.searchFilter("") }')
+    span.input-group-addon
+        span.badge(data-bind='text:resultLength')

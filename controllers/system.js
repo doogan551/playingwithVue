@@ -181,6 +181,37 @@ router.post('/updateCustomColors', function(req, res, next) {
     }
   });
 });
+
+router.get('/getAlarmTemplates', function(req, res, next) {
+  var data = _.merge(req.params, req.body);
+  data.user = req.user;
+
+  System.getAlarmTemplates(data, function(err, alarmTemplates) {
+    if (err) {
+      return utils.sendResponse(res, {
+        err: err
+      });
+    } else {
+      return utils.sendResponse(res, alarmTemplates);
+    }
+  });
+});
+
+router.post('/updateAlarmTemplate', function(req, res, next) {
+  var data = _.merge(req.params, req.body);
+  data.user = req.user;
+
+  System.updateAlarmTemplate(data, function(err, result) {
+    if (err) {
+      return utils.sendResponse(res, {
+        err: err
+      });
+    } else {
+      return utils.sendResponse(res, {message:'success'});
+    }
+  });
+});
+
 // Checked
 router.get('/weather', function(req, res, next) {
   var data = _.merge(req.params, req.body);

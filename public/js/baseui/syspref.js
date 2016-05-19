@@ -1334,573 +1334,399 @@ var backupViewModel = function() {
     });
 };
 
-// Alarm messages screen ------------------------------------------------------
-var alarmMessageDefinitions = _.partial(function(masterVm) {
-    _.mixin(_.str.exports());
-    var Amd, initialize, self, facadeViewModel;
-    self = this;
-    if (!_.isObject(masterVm)) {
-        masterVm = self;
-    }
-    Amd = function(bootStrapped) {
-        var alarmMessageDefinitionsViewModel,
-            gridViewModel,
-            EditorViewModel,
-            editorViewModel,
-            supportModel,
-            HierarchyViewModel,
-            masterViewModel,
-            ValueTokenizer,
-            boundValueTokenizer,
-            DefinitionQueryCollection,
-            alarmDefinitionsModel = new Backbone.Model({
-                supportModel: new Backbone.Model(bootStrapped),
-                gridViewModel: null,
-                editor: null,
-                definitionCollection: {},
-                error: null
+// Alarm Messages Screen ---------------------------------------------------------
+var alarmTemplateViewModel = function() {
+    var self = this,
+        originalData,
+        alarmTemplateCategories = window.opener.workspaceManager.config.Enums["Alarm Categories"],
+        alarmTemplateTypes = window.opener.workspaceManager.config.Enums["Alarm Types"],
+        $alarmTemplateContainer,
+        $alarmTemplateDataTable,
+        $addAlarmTemplateForm,
+        $newAlarmTemplateName,
+        ID = 'AlarmTemplate ID',
+        NAME = 'AlarmTemplate Name',
+        dataUrl = '/api/system/getAlarmTemplates',
+        saveUrl = '/api/system/updateAlarmTemplate',
+        dirs = {},
+        alarmTemplateData,
+        getColumnByRenderIndex = function (index) {
+            var result;
+            result = columnsArray.filter(function (col) {
+                return (col.renderedIndex === index);
             });
+            return result[0];
+        },
+        getKeyBasedOnEnumValue = function (obj, value) {
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    if (obj[key].enum === parseInt(value, 10)) {
+                        return key;
+                    }
+                }
+            }
+            return "-blank-";
+        },
+        getColumns = function () {
+            var cols = [];
+            cols.push({
+                columnKey: "_id",
+                columnName: "ID",
+                width: 2,
+                display: false
+            });
+            cols.push({
+                columnKey: "msgCat",
+                columnName: "Category",
+                width: 55,
+                display: true
+            });
+            cols.push({
+                columnKey: "msgType",
+                columnName: "Type",
+                width: 230,
+                display: true
+            });
+            cols.push({
+                columnKey: "msgName",
+                columnName: "Name",
+                width: 200,
+                display: true
+            });
+            cols.push({
+                columnKey: "msgFormat",
+                columnName: "Definition",
+                width: 350,
+                display: true
+            });
+            cols.push({
+                columnKey: "msgTextColor",
+                columnName: "Text Color",
+                display: false
+            });
+            cols.push({
+                columnKey: "msgBackColor",
+                columnName: "Background Color",
+                display: false
+            });
+            cols.push({
+                columnKey: "isSystemMessage",
+                columnName: "System",
+                width: 55,
+                display: true
+            });
+            return cols;
+        },
+        columnsArray = getColumns(),
+        setDirty = function() {
+            self.dirty(true);
+        },
+        configureDataTable = function (destroy, clearData, columns) {
+            var aoColumns = [],
+                i,
+                renderedIndex = 0,
+                setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
+                    switch (columnConfig.columnKey) {
+                        case "msgFormat":
+                            $(tdField).css('background-color', data.msgBackColor.Value);
+                            $(tdField).css('color', data.msgTextColor.Value);
+                            break;
+                        default:
+                            //console.log(" - - - DEFAULT  setTdAttribs()");
+                            break;
+                    }
+                },
+                setColumnClasses = function (columnKey) {
+                    var result = "";
+                    switch (columnKey) {
+                        case "msgCat":
+                            result = "col-md-1";
+                            break;
+                        case "msgType":
+                            result = "col-md-2";
+                            break;
+                        case "msgName":
+                            result = "col-md-2";
+                            break;
+                        case "msgFormat":
+                            result = "col-md-4";
+                            break;
+                        case "isSystemMessage":
+                            result = "col-md-1";
+                            break;
+                        default:
+                            //console.log(" - - - DEFAULT  setColumnClasses()");
+                            break;
+                    }
+                    return result;
+                },
+                buildColumnObject = function (columnConfig, columnIndex) {
+                    var result,
+                        columnTitle = columnConfig.columnName,
+                        sortAbleColumn = true;
 
-        DefinitionQueryCollection = Backbone.Collection.extend({
-            initialize: function(models, options) {
-                var self;
-                self = this;
-                this.add(models);
-                alarmMessageDefinitionsViewModel.definitionCollection(this);
-                _.bindAll(this, 'presave', 'remove', 'removeDefinition');
-            },
-            url: 'api/alarmMessageDefinitions',
-            parse: function(response) {
-                return response.results;
-            },
-            removeDefinition: function(definition) {
-                var self, toRemove, collection;
-                self = this;
-                collection = definition.model.collection;
-                toRemove = function(data) {
-                    collection.remove(definition.model);
-                    //collection.reset(collection.toJSON());
-                    //console.log(definition.dispose());
+                    result = {
+                        title: columnTitle,
+                        data: columnConfig.columnKey,
+                        //className: setColumnClasses(columnConfig.columnKey),
+                        width: (!!columnConfig.width ? columnConfig.width : "auto"),
+                        render: {
+                            _: "Value"
+                        },
+                        fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
+                            setTdAttribs(nTd, getColumnByRenderIndex(iCol), oData, iCol);
+                        },
+                        bSortable: sortAbleColumn
+                    };
+
+                    return result;
                 };
-                self.sync('delete', definition.model).done(toRemove).fail(toRemove);
-            },
-            presave: function(mdl, callbacks) {
-                var col;
-                col = this;
-                mdl.url = col.url;
-                mdl.save().done(function(result, message) {
-                    if (message === 'success') {
-                        if (mdl.isNew()) {
-                            col.add(mdl);
-                        }
-                        mdl.set(result.result);
-                        callbacks.success(result);
-                        col.reset(col.toJSON());
-                    } else {
-                        callbacks.error(result);
-                    }
-                }).fail(callbacks.error);
+
+            //if ($.fn.DataTable.isDataTable($alarmTemplateDataTable)) {
+            //    $alarmTemplateDataTable.DataTable().destroy();
+            //    $alarmTemplateDataTable.find("thead").empty();
+            //    $alarmTemplateDataTable.find("tbody").empty(); // leaving dynamic footer
+            //}
+            //if (clearData === true) {
+            //    alarmTemplateData = {};
+            //}
+
+            for (i = 0; i < columns.length; i++) {
+                delete columns[i].renderedIndex;
+                if (columns[i].display) {
+                    columns[i].renderedIndex = renderedIndex++;
+                    aoColumns.push(buildColumnObject(columns[i], i));
+                }
             }
-        });
 
-        alarmMessageDefinitionsViewModel = kb.viewModel(alarmDefinitionsModel, {}, {
-            keys: ['error', 'gridViewModel', 'editor', 'deletor', 'supportModel', 'definitionCollection']
-        });
-
-        alarmMessageDefinitionsViewModel.editor = ko.observable(null);
-        alarmMessageDefinitionsViewModel.deletor = ko.observable(null);
-
-        alarmMessageDefinitionsViewModel.clearSelectedRow = function(mdl, ev) {
-            alarmMessageDefinitionsViewModel.gridViewModel().definitions().gridOptions.selectedItems([]);
-            $('#grid .selected').removeClass('selected');
-        };
-
-        alarmMessageDefinitionsViewModel.editorSubscription = alarmMessageDefinitionsViewModel.editor.subscribe(function(val) {
-            if (!_.isObject(val)) {
-                alarmMessageDefinitionsViewModel.clearSelectedRow();
+            if (aoColumns.length > 0) {
+                $alarmTemplateDataTable.DataTable({
+                    //api: true,
+                    //dom: 'BRlfrtip',
+                    //buttons: [
+                    //    {
+                    //        extend: 'collection',
+                    //        text: 'Export',
+                    //        buttons: [
+                    //            {
+                    //                extend: 'copyHtml5',
+                    //                text: '<i class="fa fa-files-o"></i> Copy',
+                    //                key: {
+                    //                    altKey: true,
+                    //                    key: '1'
+                    //                }
+                    //            },
+                    //            {
+                    //                extend: 'csvHtml5',
+                    //                text: '<i class="fa fa-file-o"></i> CSV',
+                    //                key: {
+                    //                    altKey: true,
+                    //                    key: '2'
+                    //                }
+                    //            },
+                    //            {
+                    //                extend: 'excelHtml5',
+                    //                text: '<i class="fa fa-file-excel-o"></i> Excel',
+                    //                key: {
+                    //                    altKey: true,
+                    //                    key: '3'
+                    //                }
+                    //            },
+                    //            {
+                    //                extend: 'pdfHtml5',
+                    //                text: '<i class="fa fa-file-pdf-o"></i> PDF',
+                    //                footer: true,
+                    //                key: {
+                    //                    altKey: true,
+                    //                    key: '4'
+                    //                },
+                    //                customize: function (doc, thisButton) {
+                    //                    // could insert TrendPlots here
+                    //                }
+                    //            }
+                    //        ]
+                    //    },
+                    //    {
+                    //        extend: 'print',
+                    //        text: '<i class="fa fa-print"></i> Print',
+                    //        key: {
+                    //            altKey: true,
+                    //            key: '5'
+                    //        },
+                    //        customize: function (win) {
+                    //            var $documentBody = $(win.document.body),
+                    //                $documentHead = $(win.document.head),
+                    //                $table = $documentBody.find("table"),
+                    //                classes,
+                    //                hostAndProtocol = window.location.protocol + '//' + window.location.host;
+                    //
+                    //            $documentHead.find('link[rel=stylesheet]').remove();
+                    //            $documentHead.append('<link rel="stylesheet" href="' + hostAndProtocol + '/css/reports/reportprinting.css" type="text/css" />');
+                    //            $table.removeClass("table-striped dataTablePlaceHolder dataTable");
+                    //            $table.addClass('table').addClass('table-sm');
+                    //            $table.css("padding", "2px");
+                    //            for (i = 0; i < columns.length; i++) {
+                    //                classes = setColumnClasses(columns[i], i);
+                    //                $table.find("td:nth-child(" + (i + 1) + ")").addClass(classes);
+                    //            }
+                    //        }
+                    //    }
+                    //],
+                    data: alarmTemplateData,
+                    columns: aoColumns,
+                    headerCallback: function (thead, data, start, end, display) {
+                        for (i = 0; i < aoColumns.length; i++) {
+                            $(thead).find('th').eq(i).css("background-color", "rgb(234, 234, 234)");
+                            $(thead).find('th').eq(i).addClass("strong");
+                        }
+                    },
+                    order: [[1, "asc"]], // always default sort by 2nd column
+                    scrollY: true,
+                    scrollX: true,
+                    scrollCollapse: true,
+                    lengthChange: true,
+                    lengthMenu: [[10, 18, 30, 50, 75, 100, -1], [10, 18, 30, 50, 75, 100, "All"]],
+                    //bFiler: false,  // search box
+                    pageLength: 18
+                });
             }
-        });
-
-        gridViewModel = function(options) {
-            var $el, grid, definitions, self,
-                definitionViewModelBase, DefinitionsViewModel;
-            self = this;
-            definitions = new DefinitionQueryCollection(options.definitions, {
-                url: '/api/alarmMessageDefinitions',
-                idAttribute: '_id'
-            });
-            DefinitionsViewModel = function(model) {
-                var self, vm;
-                self = this;
-                vm = new definitionViewModelBase(model);
-                vm.sortOn = ko.observable(null);
-                vm.searchResults = kb.collectionObservable(definitions, {
-                    filters: function(mdl) {
-                        var result;
-                        if ((_.isString(vm.searchFilter()) && vm.searchFilter().length > 0)) {
-                            result = _.str.include(_.values(mdl.toJSON()).join('').toLowerCase(), vm.searchFilter().toLowerCase());
-                            return result;
-                        }
-                        result = true;
-                        return result;
-                    },
-                    sort_attributes: vm.sortOn,
-                    view_model: function(model) {
-                        return new function() {
-                            var self;
-                            self = this;
-                            self.msgCatName = model.get('msgCatName');
-                            self.msgTypeName = model.get('msgTypeName');
-                            self.msgType = model.get('msgType');
-                            self.msgCat = model.get('msgCat');
-                            self.msgFormat = model.get('msgFormat');
-                            self.msgName = kb.observable(model, 'msgName');
-                            self.msgBackColor = _.sprintf('%s', model.get('msgBackColor'));
-                            self.msgTextColor = _.sprintf('%s', model.get('msgTextColor'));
-                            self.systemMessage = model.get('systemMessage');
-                            self.cloneable = (self.msgCatName !== 'Event');
-                            self.deletable = !model.get('isSystemMessage');
-                            self.isSystemMessage = model.get('isSystemMessage') === true ? 'Yes' : 'No';
-                            self.template = model.get('template');
-                            self._id = model.id;
-                            self.model = model;
-                            self.dispose = function() {
-                                kb.release(self);
-                            };
-                            return self;
-                        };
-                    }
-                });
-                vm.gridOptions.data = vm.searchResults;
-                vm.resultLength = ko.computed({
-                    read: function() {
-                        return vm.searchResults().length;
-                    }
-                });
-                return vm;
-            };
-            definitionViewModelBase = kb.ViewModel.extend({
-                filterResults: function(crit) {
-                    var result, vm;
-                    vm = this;
-                    if (!_.isString(crit) || crit.length < 1) {
-                        result = this.data.where({});
-                        return result;
-                    }
-                    result = this.data.filter(function(v, i) {
-                        var searchData, found;
-                        searchData = _.values(v.attributes);
-                        found = _.str.include(searchData.join(''), crit);
-                        if (found) {
-                            return v;
-                        }
-                    });
-                    return result;
+        },
+        renderAlarmTemplates = function () {
+            if (alarmTemplateData) {
+                configureDataTable(true, true, columnsArray);
+                $alarmTemplateDataTable.DataTable().clear();
+                $alarmTemplateDataTable.DataTable().rows.add(alarmTemplateData);
+                $alarmTemplateDataTable.DataTable().draw();
+            }
+        },
+        buildAlarmTemplate = function(row, idx) {
+            var result = {
+                _id: {
+                    Value: row._id,
+                    rawValue: row._id
                 },
-                setEditor: function(definition) {
-                    if (options.setEditor) {
-                        options.setEditor(definition);
-                    }
-                    return definition;
+                msgCat: {
+                    Value: getKeyBasedOnEnumValue(alarmTemplateCategories, row.msgCat),
+                    rawValue: row.msgCat
                 },
-                gridOptions: {
-                    showGroupPanel: false,
-                    columnWidth: 100,
-                    keepLastSelected: false,
-                    data: ko.observable(),
-                    width: 100,
-                    multiSelect: false,
-                    columnDefs: [{
-                        field: 'systemMessage',
-                        width: 60,
-                        displayName: ' ',
-                        cellFilter: function(data) {
-                            if (_.isNull(data)) {
-                                data = false;
-                            }
-                            return data;
-                        },
-                        headerClass: '.definitions-sys-header-color',
-                        cellTemplate: $('#tmplIsSystemMessage').html()
-                    }, {
-                        field: "msgCatName",
-                        displayName: "Category",
-                        width: 120,
-                        cellTemplate: $('#tmplGridMsgCat').html()
-                    }, {
-                        field: "msgTypeName",
-                        displayName: "Type",
-                        width: 230,
-                        cellTemplate: $('#tmplGridMsgType').html()
-                    }, {
-                        field: "msgName",
-                        displayName: "Name",
-                        width: 300,
-                        cellTemplate: $('#tmplGridMsgName').html()
-                    }, {
-                        field: "msgFormat",
-                        displayName: "Definition",
-                        width: 500,
-                        cellTemplate: $('#tmplGridMsgFormat').html()
-                    }, {
-                        field: "isSystemMessage",
-                        displayName: "System Message",
-                        width: 150,
-                        cellTemplate: $('#tmplSystemMessage').html()
-                    }],
-                    displaySelectionCheckbox: false,
-                    enableSorting: ko.observable(true),
-                    canSelectRows: false,
-                    selectedItems: ko.observableArray(),
-                    footerVisible: false,
-                    rowHeight: 30,
-                    rowTemplate: $("#tmplGridRow").html(),
-                    showColumnMenu: false,
-                    showFilter: false
+                msgType: {
+                    Value: getKeyBasedOnEnumValue(alarmTemplateTypes, row.msgType),
+                    rawValue: row.msgCat
                 },
-                clearSearchFilter: function(mdl, ev) {
-                    mdl.searchFilter(null);
+                msgName: {
+                    Value: row.msgName,
+                    rawValue: row.msgName
                 },
-                clone: function(definition) {
-                    var newDefinition, newDefVals;
-                    newDefVals = _.omit(definition.model.toJSON(), '_id', 'id');
-                    newDefVals.template = 'newMessage';
-                    newDefVals.isSystemMessage = false;
-                    newDefVals.systemMessage = false;
-                    newDefinition = new options.modelConstructor(new Backbone.Model(newDefVals));
-                    this.setEditor(newDefinition);
+                msgFormat: {
+                    Value: row.msgFormat,
+                    rawValue: row.msgFormat
                 },
-                remove: function(definition) {
-                    //var toRemove,collection;
-                    //collection = definition.model.collection;
-                    //collection.removeDefinition(definition);
+                msgTextColor: {
+                    Value: "#" + row.msgTextColor,
+                    rawValue: row.msgTextColor
                 },
-                setDeletable: _.bind(function(definition) {
-                    var subscription, self;
-                    self = this;
-                    this.deletor({
-                        definition: definition,
-                        buttons: {
-                            cancel: {
-                                text: 'cancel',
-                                fn: function() {
-                                    self.deletor(null);
-                                }
-                            },
-                            okay: {
-                                text: 'okay',
-                                fn: function() {
-                                    var collection;
-                                    collection = definition.model.collection;
-                                    collection.removeDefinition(definition);
-                                    console.log(definition);
-                                }
-                            }
-                        }
-                    });
-
-                }, alarmMessageDefinitionsViewModel)
-            });
-            self.vm = kb.viewModel(new Backbone.Model({
-                definitions: new DefinitionsViewModel(new Backbone.Model({
-                    collection: definitions,
-                    searchFilter: '',
-                    gridOptions: definitionViewModelBase.gridOptions,
-                    resultLength: 0,
-                }))
-            }));
-
-            return self.vm;
-        };
-        ValueTokenizer = function(valueTokens, pattern, definition, callbacks) {
-            var self, crit, eachValueTokens, tokens;
-            self = this;
-            tokens = ['%NAME'];
-            crit = {
-                Category: definition.msgCatName,
-                'Type Value': definition.msgType
-            };
-            eachValueTokens = function(token, i) {
-                if (token.Category.toLowerCase() == crit.Category.toLowerCase() && token['Type Value'] == crit['Type Value']) {
-                    tokens.push(_.map(token['Value Tags'].split(','), function(v) {
-                        return _.str.trim(v);
-                    }));
+                msgBackColor: {
+                    Value: "#" + row.msgBackColor,
+                    rawValue: row.msgBackColor
+                },
+                isSystemMessage: {
+                    Value: row.isSystemMessage,
+                    rawValue: row.isSystemMessage
                 }
             };
-            self.model = new Backbone.Model({
-                selectedValueToken: null,
-                showing: false,
-                searchToken: ''
+            return result;
+        },
+        setData = function(data) {
+            var i;
+
+            alarmTemplateData = [];
+            for (i = 0; i < data.length; i++) {
+                alarmTemplateData.push(buildAlarmTemplate(data[i], i));
+            }
+            self.alarmTemplates(alarmTemplateData);
+            self.dirty(false);
+            renderAlarmTemplates();
+        },
+        getData = function() {
+            $.ajax({
+                url: dataUrl
+            }).done(function(data) {
+                originalData = data;
+                setData(data);
             });
-            self.result = kb.viewModel(self.model);
-            self.result.valueTokens = ko.observableArray([]);
-            _.each(valueTokens, eachValueTokens);
-            self.result.valueTokens(_.flatten(tokens));
-            return self.result;
+        },
+    //display status message on saving
+        showMessage = function(text) {
+            var message = text.charAt(0).toUpperCase() + text.substring(1);
+            $controllerMessage.stop(true)
+                .html(message)
+                .show(0)
+                .delay(2000)
+                .fadeOut();
         };
-        boundValueTokenizer = _.partial(ValueTokenizer, alarmMessageDefinitionsViewModel.supportModel().hierarchy());
-        EditorViewModel = function(templates, validators, toEdit, setter) {
-            var self, editor, BaseViewModel, ValueTokenViewModel, caretPos;
-            self = this;
-            editor = this;
-            caretPos = 0;
-            BaseViewModel = kb.ViewModel.extend({
-                constructor: function(options) {
-                    var self, donow, createTokenizerInstance;
-                    self = this;
-                    _.extend(self, options);
-                    createTokenizerInstance = function() {
-                        self.tokenizer = new boundValueTokenizer(self.tokenizerOptions.pattern, self.tokenizerOptions.definition, self.tokenizerOptions.callbacks);
-                    };
-                    _.bindAll(self, 'template', 'observify', 'Handlers', 'beginEdit');
-                    _.bind(self.tokenizerOptions.insertMsgFormatText, self);
-                    _.bind(self.tokenizerOptions.callbacks.select, self);
-                    donow = _.compose(self.Handlers, self.beginEdit, createTokenizerInstance, self.observify, self.template);
-                    donow();
-                },
-                keys: [],
-                tokenizer: null,
-                Handlers: function(editable) {
-                    var result, self;
-                    //reset outerself to parrent
-                    self = this;
-                    self.handlers = {
-                        viewModel: this,
-                        cancel: function(mdl, ev) {
-                            // Restore the original values
-                            editable.msgBackColor(alarmMessagesViewModel.alarmMessageState.msgBackColor);
-                            editable.msgTextColor(alarmMessagesViewModel.alarmMessageState.msgTextColor);
-                            editable.msgName(alarmMessagesViewModel.alarmMessageState.msgName);
-
-                            // msgFormat included only if this is a non-system message
-                            if (editable.msgFormat)
-                                editable.msgFormat(alarmMessagesViewModel.alarmMessageState.msgFormat);
-
-                            setter(null);
-                        },
-                        saveable: ko.computed({
-                            read: function() {
-                                return (editable.hasChanges() && editable.isValid());
-                            },
-                            deferEvaluation: true
-                        }),
-                        undo: function() {
-                            var self;
-                            self = this;
-                            editable.rollback();
-                            editable.beginEdit();
-                        },
-                        hasChanges: ko.computed({
-                            read: function() {
-                                return editable.hasChanges();
-                            },
-                            deferEvaluation: true
-                        }),
-                        save: function(mdl, ev) {
-                            var col;
-                            editable.commit();
-                            col = editor.model().get('definitionCollection');
-                            col.presave(mdl.viewModel.viewModel.model, {
-                                success: function(data) {
-                                    var result, mdl;
-                                    result = data.result;
-                                    mdl = col.get(result.id);
-                                    if (!mdl) {
-                                        mdl = new col.model(result);
-                                    }
-                                    col.reset(col.toJSON());
-                                    setter(null);
-                                },
-                                error: function(e) {
-
-                                }
-                            });
-                        },
-                        isValid: ko.computed({
-                            read: function() {
-                                return editable.isValid();
-                            },
-                            deferEvaluation: true
-                        })
-
-                    };
-                    return self.handlers;
-                },
-                insertMsgFormatText: function(txt, position) {
-                    var beforeTxt, afterTxt, format, msgFormat, startPos;
-                    format = '%s %s %s';
-                    msgFormat = self.msgFormat();
-                    beforeText = msgFormat.substr(0, position);
-                    afterText = msgFormat(position + 1);
-                    msgFormat = _.sprintf(format, beforeText, txt, afterText);
-                    self.msgFormat(msgFormat);
-                    return msgFormat;
-                },
-                //checkMsgFormat:function(mdl,ev){
-                //    //this.msgFormatCaret($(ev.currentTarget).caret());
-                //    //this.tokenizer.msgFormatUpdate(mdl.msgFormat(),this.msgFormatCaret());
-                //},
-                //msgFormatCaret:ko.observable(0),
-                editNameAndFormat: ko.computed({
-                    read: function() {
-                        if (_.isObject(self.editor())) {
-                            return _.isFunction(self.editor().viewModel.editable.msgFormat);
-                        }
-                        return false;
-                    },
-                    deferEvaluation: true
-                }),
-                beginEdit: function() {
-                    var self;
-                    self = this;
-                    ko.editable(self.viewModel.editable);
-                    self.viewModel.editable.beginEdit();
-                    ko.validatedObservable(self.viewModel.editable);
-                    return self.viewModel.editable;
-                },
-                template: function() {
-                    var template, keys, self, result, model;
-                    self = this;
-                    model = self.viewModel.model.toJSON();
-                    template = templates[model.template];
-                    self.keys = _.keys(template);
-                    return template;
-                },
-                observify: function(template) {
-                    var self, editables, viewModel, keys, result;
-                    self = this;
-                    viewModel = self.viewModel;
-                    viewModel.editable = {};
-                    keys = _.keys(template);
-                    editables = function(template, viewModel) {
-                        var eachProp;
-                        eachProp = function(v, i) {
-                            var extension, validator;
-                            validator = _.findWhere(validators, {
-                                name: v
-                            }) || {};
-                            viewModel.editable[v] = kb.observable(viewModel.model, v);
-                            if (!_.isEmpty(validator)) {
-                                viewModel.editable[v].extend(validator);
-                            }
-                        };
-                        _.each(keys, eachProp);
-                        return viewModel;
-                    };
-                    result = editables(template, viewModel);
-                    return result;
-                },
-                tokenizerOptions: {
-                    pattern: function() {
-                        var _reg = /\%([A-Za-z0-9])\w+/g;
-                        _reg.multiline = true;
-                        _reg.ignoreCase = true;
-                        _reg.global = true;
-                        return _reg;
-                    }(),
-                    definition: toEdit,
-                    insertMsgFormatText: function(position, value) {
-                        var self;
-                        self = this;
-                        return;
-                    },
-                    callbacks: {
-                        select: function(value) {
-                            var position, self;
-                            self = this;
-                        }
-                    }
-                }
-            });
-            return new BaseViewModel({
-                viewModel: toEdit
-            });
-        };
-        editorViewModel = _.partial(EditorViewModel, alarmMessageDefinitionsViewModel.supportModel().templates(), alarmMessageDefinitionsViewModel.supportModel().validators());
-        editorViewModel = _.bind(editorViewModel, alarmMessageDefinitionsViewModel);
-        alarmDefinitionsModel.set('gridViewModel', new gridViewModel({
-            setEditor: function(toEdit) {
-                // Save the alarm message parameters so we can restore them if the alarm edit is cancelled
-                // Depending if we're cloning or editing, msgName/msgFormat may or may not be observables. Use unwrap to safely get the value
-                self.alarmMessageState.msgName = ko.utils.unwrapObservable(toEdit.msgName);
-                self.alarmMessageState.msgFormat = ko.utils.unwrapObservable(toEdit.msgFormat);
-                self.alarmMessageState.msgTextColor = toEdit.msgTextColor;
-                self.alarmMessageState.msgBackColor = toEdit.msgBackColor;
-
-                alarmMessageDefinitionsViewModel.editor(editorViewModel(toEdit, alarmMessageDefinitionsViewModel.editor));
-            },
-            clearEditor: function() {
-                var vm;
-                vm = alarmMessageDefinitionsViewModel.editor();
-                kb.release(vm);
-                alarmMessageDefinitionsViewModel.editor(null);
-            },
-            deletor: alarmMessageDefinitionsViewModel.deletor,
-            getEditor: function() {
-                return alarmMessageDefinitionsViewModel.editor();
-            },
-            isEditing: ko.computed({
-                read: function() {
-                    return _.isObject(alarmMessageDefinitionsViewModel.editor());
-                }
-            }),
-            modelConstructor: function(model, options) {
-                var self;
-                self = this;
-                self.msgCatName = model.get('msgCatName');
-                self.msgTypeName = model.get('msgTypeName');
-                self.msgType = model.get('msgType');
-                self.msgCat = model.get('msgCat');
-                self.msgFormat = kb.observable(model, 'msgFormat');
-                self.msgName = model.get('msgName');
-                self.msgBackColor = _.sprintf('%s', model.get('msgBackColor'));
-                self.msgTextColor = _.sprintf('%s', model.get('msgTextColor'));
-                self.systemMessage = model.get('systemMessage');
-                self.isSystemMessage = model.get('isSystemMessage');
-                self.cloneable = (self.msgCatName !== 'Event');
-                self.deletable = !model.get('isSystemMessage');
-                self._id = model.id;
-                self.model = model;
-                self.template = model.get('template');
-                return self;
-
-            },
-            definitions: alarmMessageDefinitionsViewModel.supportModel().definitions()
-        }));
-        return alarmMessageDefinitionsViewModel;
-    };
-
-    // Create descriptions for all possible alarm message tokens
-    self.tokenDescriptions = {
-        "%NAME": "Point name",
-        "%PV": "Present value",
-        "%AV": "Alarm value",
-        "%UT": "Engineering units",
-        "%RC": "Reliability code"
-    };
-
-    self.alarmMessageState = {};
+    self.displayName = 'Alarm Templates';
     self.dirty = ko.observable(false);
-    self.name = 'AlarmMessageDefinitions';
     self.hasError = ko.observable(false);
-    self.displayName = 'Alarm Messages';
-    self.section = 'AlarmMessageDefinitions';
-    self.viewModel = ko.observable(null);
-    $.get('/alarmMessageDefinitions/helperData', function(d) {
-        var $kgTopPanel,
-            topPanelPosition;
-
-        self.viewModel(new Amd(d));
-
-        // JDR - Tomfoolery to get our table header correctly position. We have to do this after the table is rendered
-        // so the header doesn't cover up our first row.
-        $kgTopPanel = $('.kgTopPanel');
-        $kgTopPanel.css("top", 120);
-        // Also extend its width to extend over the vertical scroll bar
-        $kgTopPanel.css("width", $("#gridCont").css("width"));
-    });
-    return self;
-}, sysPrefsViewModel);
+    self.alarmTemplateName = ko.observable();
+    self.alarmTemplateDesc = ko.observable();
+    self.alarmTemplates = ko.observableArray();
+    self.showEntryForm = ko.observable(false);
+    dirs[NAME] = -1;
+    dirs[ID] = -1;
+    dirs.Description = -1;
+    self.init = function() {
+        $alarmTemplateContainer = $("#alarmTemplateContainer");
+        $alarmTemplateDataTable = $alarmTemplateContainer.find(".dataTablePlaceHolder");
+        getData();
+    };
+    //shows add controller form
+    self.showForm = function() {
+        self.resetForm();
+        self.showEntryForm(true);
+        $newAlarmTemplateName.focus();
+    };
+    self.resetForm = function() {
+        $addAlarmTemplateForm.jqxValidator('hide');
+        self.alarmTemplateName('');
+        self.alarmTemplateDesc('');
+        self.showEntryForm(false);
+    };
+    self.save = function() {
+        var alarmTemplates = ko.toJS(self.alarmTemplates()),
+            sanitizedAlarmTemplates = [],
+            sanitize = function() {
+                var c,
+                    row,
+                    obj;
+                for (c = 0; c < alarmTemplates.length; c++) {
+                    row = alarmTemplates[c];
+                    obj = {};
+                    obj[ID] = row[ID];
+                    obj[NAME] = row[NAME];
+                    obj.Description = row.Description;
+                    obj.isUser = row.isUser;
+                    if(!!row[NAME])
+                        sanitizedAlarmTemplates.push(obj);
+                }
+            };
+        sanitize();
+        $.ajax({
+            url: saveUrl,
+            data: {
+                Entries: sanitizedAlarmTemplates
+            },
+            dataType: 'json',
+            type: 'post'
+        }).done(function(response) {
+            self.dirty(false);
+            originalData = sanitizedAlarmTemplates;
+            showMessage('Save alarmTemplates: ' + response.message);
+        });
+    };
+    self.cancel = function() {
+        setData(originalData);
+    };
+};
 
 // Weather screen -------------------------------------------------------------
 var weatherViewModel = function() {
@@ -2237,12 +2063,16 @@ var notificationsViewModel = function() {
                 var members = self.bindings.currPolicy.members,
                     $memberList = $('#memberList');
 
-                self.memberDT = $memberList.DataTable({
-                    columns: columns,
-                    paging: false,
-                    searching: false,
-                    bInfo: false
-                });
+                if ($.fn.DataTable.isDataTable($memberList)) {
+                    $memberList.DataTable().destroy();
+                } else {
+                    self.memberDT = $memberList.DataTable({
+                        columns: columns,
+                        paging: false,
+                        searching: false,
+                        bInfo: false
+                    });
+                }
 
                 $memberList.on('click', '.firstName', function (event) {
                     var rowIdx = self.memberDT.cell(this).index().row,
@@ -3359,7 +3189,7 @@ $(function() {
             sysPrefsViewModel.registerSection(customColorCodesViewModel, 'init');
             sysPrefsViewModel.registerSection(telemetryViewModel, 'init');
             sysPrefsViewModel.registerSection(backupViewModel, 'init');
-            sysPrefsViewModel.registerSection(alarmMessageDefinitions);
+            sysPrefsViewModel.registerSection(alarmTemplateViewModel, 'init');
             sysPrefsViewModel.registerSection(weatherViewModel, 'init');
             sysPrefsViewModel.registerSection(notificationsViewModel, 'init');
 
