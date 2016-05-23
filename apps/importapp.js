@@ -5,6 +5,7 @@ var modelUtil = require('../public/js/modelUtil.js');
 var ObjectID = mongo.ObjectID;
 var util = require('util');
 var lodash = require('lodash');
+var moment = require('moment');
 var config = require('config');
 var logger = require('../helpers/logger')(module);
 var importconfig = require('./importconfig.js');
@@ -16,7 +17,7 @@ var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.por
 
 var conn = connectionString.join('');
 var xmlPath = importconfig.xmlPath;
-
+console.log(conn, xmlPath);
 var pointsCollection = "points";
 var systemInfoCollection = "SystemInfo";
 
@@ -39,6 +40,8 @@ process.argv.forEach(function(val, index, array) {
 			processFlag = "innerloop";
 		} else if (val === "updategpl") {
 			processFlag = "updategpl";
+		} else if (val === "test") {
+			processFlag = "test";
 		} else {
 			logger.info("No args passed. Proceeding with default import process.");
 		}
@@ -64,17 +67,23 @@ if (processFlag === "gpl") {
 			logger.info("done", err, new Date());
 		});
 	});
+} else if (processFlag === 'test') {
+	dbModel.connect(connectionString.join(''), function(err) {
+		doGplImport(db, xmlPath, function(err) {
+			updateIndexes(function(err) {
+				setupPointRefsArray(db, function(err) {
+					changeUpis(function(err) {
+						console.log('done');
+					});
+				});
+			});
+		});
+	});
 } else {
 	mongo.connect(conn, function(err, db) {
-	importProcess.start();
-		/*fixUpisCollection(db, function(err) {
-			console.log('done', err);
-		});*/
+		importProcess.start();
 	});
-	// testHistory();
 }
-//fixUpisCollection();
-//testSchedules();
 
 function importUpdate() {
 	this.start = function() {
@@ -87,7 +96,7 @@ function importUpdate() {
 				logger.info("starting", new Date());
 				doGplImport(db, xmlPath, function(err) {
 					initImport(db, function(err) {
-						updateIndexes(db, function(err) {
+						updateIndexes(function(err) {
 							fixUpisCollection(db, function(err) {
 								convertHistoryReports(db, function(err) {
 									convertScheduleEntries(db, function(err) {
@@ -133,14 +142,19 @@ function importUpdate() {
 		}, function(err) {
 			logger.info('innerLoop cursor done', err);
 			updateGPLReferences(db, function(err) {
-				cleanupDB(db, function(err) {
-					if (err) {
-						logger.info("updateGPLReferences err:", err);
-					}
-					logger.info("!!Check Port 1-4 Timeouts on devices!!");
-					logger.info("done", err, new Date());
-					process.exit(0);
+				logger.info("before changeUpis", err, new Date());
+				changeUpis(function(err) {
+					fixUpisCollection(db, function(err) {
+						// cleanupDB(db, function(err) {
+						if (err) {
+							logger.info("updateGPLReferences err:", err);
+						}
+						logger.info("!!Check Port 1-4 Timeouts on devices!!");
+						logger.info("done", err, new Date());
+						process.exit(0);
 
+						// });
+					});
 				});
 			});
 		});
@@ -461,6 +475,125 @@ function setupPointRefsArray(db, callback) {
 	});
 }
 
+function changeUpis(callback) {
+	// rename schedule entries
+	// drop pointinst and devinst indexes
+	var newPoints = 'new_points';
+	var points = 'points';
+	var newUpi = 0;
+	var lowest = 1;
+	var lowestDevice = 50000;
+
+	var updateDependencies = function(oldId, newId, collection, cb) {
+		Utility.iterateCursor({
+				collection: collection,
+				query: {
+					$or: [{
+						'Point Refs.Value': oldId
+					}, {
+						'Point Refs.PointInst': oldId
+					}, {
+						'Point Refs.DevInst': oldId
+					}]
+				}
+			},
+			function(err, dep, cb2) {
+				var refs = dep['Point Refs'];
+				for (var i = 0; i < refs.length; i++) {
+					if (refs[i].Value === oldId) {
+						// console.log('changing Value', oldId, collection);
+						refs[i].Value = newId;
+					}
+					if (refs[i].PointInst === oldId) {
+						// console.log('changing PointInst', oldId, collection);
+						refs[i].PointInst = newId;
+					}
+					if (refs[i].DevInst === oldId) {
+						// console.log('changing DevInst', oldId, collection);
+						refs[i].DevInst = newId;
+					}
+				}
+				// console.log(dep['Point Refs']);
+				Utility.update({
+					collection: collection,
+					updateObj: dep,
+					query: {
+						_id: dep._id
+					}
+				}, cb2);
+			}, cb);
+	};
+
+	var doHistory = function() {};
+
+	Utility.iterateCursor({
+			collection: points,
+			query: {},
+			sort: {
+				_id: 1
+			}
+		}, function(err, doc, cb) {
+			var oldId = doc._id;
+			if (doc['Point Type'].Value === 'Device') {
+				newUpi = lowestDevice;
+				lowestDevice++;
+			} else {
+				newUpi = lowest;
+				lowest++;
+			}
+			doc._newUpi = newUpi;
+			doc['Point Instance'].Value = newUpi;
+			doc._oldUpi = oldId;
+			if (newUpi % 200 === 0) {
+				console.log(newUpi);
+			}
+			Utility.update({
+				query: {
+					_id: oldId
+				},
+				updateObj: doc,
+				collection: points
+			}, function(err, result) {
+				cb();
+			});
+		},
+		function(err, count) {
+			Utility.iterateCursor({
+				collection: points,
+				query: {}
+			}, function(err, doc, cb) {
+				doc._id = doc._newUpi;
+
+				if (doc._id % 200 === 0) {
+					console.log(doc._id);
+				}
+				Utility.insert({
+					collection: newPoints,
+					insertObj: doc
+				}, function(err) {
+					cb(err);
+				});
+			}, function(err, count) {
+
+				console.log('count', count);
+				Utility.iterateCursor({
+					collection: newPoints,
+					query: {}
+				}, function(err, doc, cb) {
+
+					if (doc._id % 200 === 0) {
+						console.log(doc._id);
+					}
+					updateDependencies(doc._oldUpi, doc._newUpi, newPoints, function(err, count) {
+						cb(err);
+					});
+				}, function(err, count) {
+					callback(err);
+				});
+			});
+		});
+}
+
 function fixUpisCollection(db, callback) {
 	logger.info("starting fixUpisCollection");
 
@@ -557,7 +690,7 @@ function fixUpisCollection(db, callback) {
 						callback(err);
 					});
 				}, function(err) {
-					if (err) logger.info("err", err);
+					if (err) logger.info("fixUpisCollection err", err);
 					logger.info("finished fixUpisCollection");
 					return callback(err);
 				});
@@ -570,17 +703,13 @@ function testHistory() {
 	logger.info('testing history');
 	mongo.connect(conn, function(err, db) {
 		convertHistoryReports(db, function(err) {
-			logger.info("err", err);
+			logger.info("testHistory err", err);
 		});
 	});
 }
 
 function convertHistoryReports(db, callback) {
-	db.collection('OldHistLogs').find({
-		_id: {
-			$in: [887992, 50774, 50775, 605715, 90838]
-		}
-	}, function(err, cursor) {
+	db.collection('OldHistLogs').find({}, function(err, cursor) {
 		function processPoint(err, point) {
 			if (point === null) {
 				callback(err);
@@ -615,16 +744,30 @@ function convertHistoryReports(db, callback) {
 						Name: 1,
 						Value: 1,
 						"Point Type": 1,
-						"Point Refs": 1
+						"Point Refs": 1,
+						'Engineering Units': 1
 					}, function(err, ref) {
-						report["Report Config"].dataSources.History.columns.push({
+						report["Report Config"].columns.push({
 							"colName": ref.Name,
-							"valueType": "String",
-							"upi": ref._id
+							"colDisplayName": ref.Name,
+							"valueType": "None",
+							"operator": "",
+							"calculation": "Mean",
+							"canCalculate": true,
+							"includeInReport": true,
+							"includeInChart": true,
+							"multiplier": 1,
+							"precision": 5,
+							"upi": ref._id,
+							"pointType": ref['Point Type'].Value,
+							"units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
+							"canBeCharted": true,
+							"yaxisGroup": "A",
+							"AppIndex": index + 1
 						});
 						report["Point Refs"].push({
-							"PropertyName": "Qualifier Point",
-							"PropertyEnum": 130,
+							"PropertyName": "Column Point",
+							"PropertyEnum": 131,
 							"AppIndex": index + 1,
 							"isDisplayable": true,
 							"isReadOnly": false,
@@ -660,7 +803,7 @@ function convertHistoryReports(db, callback) {
 function testSchedules() {
 	mongo.connect(conn, function(err, db) {
 		convertScheduleEntries(db, function(err) {
-			logger.info("err", err);
+			logger.info("convertScheduleEntries err", err);
 		});
 	});
 }
@@ -734,7 +877,7 @@ function convertScheduleEntries(db, callback) {
 				});
 			});
 		}, function(err) {
-			logger.info('err', err);
+			logger.info('convertScheduleEntries err', err);
 			return callback(err);
 		});
 	});
@@ -776,7 +919,7 @@ function updateGPLReferences(db, callback) {
 				_id: gplBlock._id
 			}, gplBlock, function(err, result) {
 				if (err)
-					logger.info('err', err);
+					logger.info('updateGPLReferences1 err', err);
 
 				db.collection(pointsCollection).find({
 					"Point Refs.Value": gplBlock._id
@@ -797,7 +940,7 @@ function updateGPLReferences(db, callback) {
 							}
 						}, function(err, result) {
 							if (err)
-								logger.info('err', err);
+								logger.info('updateGPLReferences2 err', err);
 							cb2(null);
 						});
 					}, function(err) {
@@ -854,7 +997,7 @@ function initImport(db, callback) {
 
 }
 
-function updateIndexes(db, callback) {
+function updateIndexes(callback) {
 	var indexes = [{
 		index: {
 			name1: 1,
@@ -886,6 +1029,36 @@ function updateIndexes(db, callback) {
 		},
 		options: {},
 		collection: pointsCollection
+	}, {
+		index: {
+			"Point Refs.DevInst": 1
+		},
+		options: {},
+		collection: pointsCollection
+	}, {
+		index: {
+			"Point Refs.PointInst": 1
+		},
+		options: {},
+		collection: pointsCollection
+	}, {
+		index: {
+			"Point Refs.Value": 1
+		},
+		options: {},
+		collection: 'new_points'
+	}, {
+		index: {
+			"Point Refs.DevInst": 1
+		},
+		options: {},
+		collection: 'new_points'
+	}, {
+		index: {
+			"Point Refs.PointInst": 1
+		},
+		options: {},
+		collection: 'new_points'
 	}, {
 		index: {
 			"Point Refs.PropertyName": 1
@@ -1011,7 +1184,11 @@ function updateIndexes(db, callback) {
 	}];
 
 	async.forEachSeries(indexes, function(index, indexCB) {
-		db.createIndex(index.collection, index.index, index.options, function(err, IndexName) {
+		Utility.ensureIndex({
+			collection: index.collection,
+			index: index.index,
+			options: index.options
+		}, function(err, IndexName) {
 			logger.info(IndexName, "err:", err);
 			indexCB(null);
 		});

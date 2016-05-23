@@ -528,7 +528,33 @@ function createMathBlocks() {
 // createMathBlocks();
 
 function test() {
-  var pjson = require('../package.json');
-  console.log(pjson.version);
+  var wrong = 0;
+  db.connect(connectionString.join(''), function(err) {
+    Utility.iterateCursor({
+      collection: 'new_points',
+      query: {
+        'Point Refs': {
+          $ne: []
+        }
+      },
+      fields: {
+        'Point Refs': 1
+      }
+    }, function(err, doc, cb) {
+      var bad = false;
+      for (var i = 0; i < doc['Point Refs'].length; i++) {
+        if(doc['Point Refs'][i].Value > 847 && doc['Point Refs'][i].Value <50000 || doc['Point Refs'][i].Value > 51000){
+          bad = true;
+          console.log(doc['Point Refs'][i].Value, doc._id);
+        }
+      }
+      if(!!bad){
+        wrong++;
+      }
+      cb();
+    }, function(err, count) {
+      console.log('done', wrong, count);
+    });
+  });
 }
 test();
