@@ -1,8 +1,9 @@
 var stephen = {
     'Infoscan': {
         'dbConfig': {
-            // 'host': '192.168.1.88'
-            'host': '127.0.0.1'
+            // 'host': '192.168.1.88',
+            'host': '127.0.0.1',
+            'dbName': 'infoscan'
         },
         'files': {
             'driveLetter': 'C'

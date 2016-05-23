@@ -36,9 +36,14 @@ $bodyBG: #eee;
 $darkBG: #2E3135;
 $materialGreenBlue: #4CB59D;
 
+html,
+body {
+    height: 100%;
+}
+
 body {
     margin: 0;
-    background-color: $darkBG;
+    background-color: $darkBG !important;
     display: flex;
     flex-direction: column;
 }
@@ -71,7 +76,7 @@ body {
 /* END GLOBAL */
 
 
-/* left navbar code */
+/* left navbar code
 .navbar {
     max-width:200px;
     margin-right:0;
@@ -104,9 +109,9 @@ body {
     left:0;
     right: auto;
 }
-/* left navbar code */
+ left navbar code */
 
-/* responsive side menu */
+/* responsive side menu
 
 @mixin fadeEase() {
     -webkit-transition:all 1s ease;
@@ -271,4 +276,46 @@ body {
     margin:0px;
     padding: 0px;
 }
-/* responsive side menu */
+ responsive side menu */
+
+
+/* bootstrap side menu */
+
+/* make sidebar nav vertical */
+@media (min-width: 768px) {
+    .sidebar-nav {
+        position: fixed;
+        width: 150px;
+        height: 100%;
+
+        .navbar {
+            height: 100%;
+
+            .navbar-collapse {
+                padding: 0;
+                max-height: none;
+            }
+
+            ul {
+                float: none;
+
+                &:not {
+                    display: block;
+                }
+            }
+
+            li {
+                float: none;
+                display: block;
+
+                a {
+                    padding-top: 12px;
+                    padding-bottom: 12px;
+                }
+            }
+
+        }
+    }
+}
+
+/* bootstrap side menu */

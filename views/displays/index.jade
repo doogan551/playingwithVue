@@ -10,57 +10,52 @@ html
         link(rel='stylesheet', href='/css/lib/font-awesome.4.6.1.css')
 
     body
-        .nav-side-menu
-            .brand Infoscan
-            i.fa.fa-bars.fa-2x.toggle-btn(data-toggle='collapse', data-target='#menu-content')
-            .menu-list
-                ul#menu-content.menu-content.collapse.out
-                    //- li
-                    //-     a(href='javascript://')
-                    //-         i.fa.fa-dashboard.fa-lg
-                    //-         |  Dashboard
-                    li.collapsed.active(data-toggle='collapse', data-target='#products')
-                        a(href='javascript://')
-                            i.fa.fa-gift.fa-lg
-                            |  UI Elements
-                            span.arrow
-                    ul#products.sub-menu.collapse.in
+        //- .row
+        //-     .col-sm-3
+        .sidebar-nav
+            .navbar.navbar-default(role='navigation')
+                .navbar-header
+                    button.navbar-toggle(type='button', data-toggle='collapse', data-target='.sidebar-navbar-collapse')
+                        span.sr-only Toggle navigation
+                        span.icon-bar
+                        span.icon-bar
+                        span.icon-bar
+                    span.visible-xs.navbar-brand Sidebar menu
+                .navbar-collapse.collapse.sidebar-navbar-collapse
+                    ul.nav.navbar-nav
+                        li.active
+                            a(href='#') Menu Item 1
                         li
-                            a(href='javascript://') Dynamic
+                            a(href='#') Menu Item 2
+                        li.dropdown
+                            a.dropdown-toggle(href='#', data-toggle='dropdown')
+                                | Dropdown
+                                b.caret
+                            ul.dropdown-menu
+                                li
+                                    a(href='#') Action
+                                li
+                                    a(href='#') Another action
+                                li
+                                    a(href='#') Something else here
+                                li.divider
+                                li.dropdown-header Nav header
+                                li
+                                    a(href='#') Separated link
+                                li
+                                    a(href='#') One more separated link
                         li
-                            a(href='javascript://') Animation
+                            a(href='#') Menu Item 4
                         li
-                            a(href='javascript://') Text
-                        li
-                            a(href='javascript://') Action Button
-                        li
-                            a(href='javascript://') Link Button
-                    //- li.collapsed(data-toggle='collapse', data-target='#service')
-                    //-     a(href='javascript://')
-                    //-         i.fa.fa-globe.fa-lg
-                    //-         |  Services
-                    //-         span.arrow
-                    //- ul#service.sub-menu.collapse
-                    //-     li New Service 1
-                    //-     li New Service 2
-                    //-     li New Service 3
-                    //- li.collapsed(data-toggle='collapse', data-target='#new')
-                    //-     a(href='javascript://')
-                    //-         i.fa.fa-car.fa-lg
-                    //-         |  New
-                    //-         span.arrow
-                    //- ul#new.sub-menu.collapse
-                    //-     li New New 1
-                    //-     li New New 2
-                    //-     li New New 3
-                    li
-                        a(href='javascript://')
-                            i.fa.fa-user.fa-lg
-                            |  Profile
-                    //- li
-                    //-     a(href='javascript://')
-                    //-         i.fa.fa-users.fa-lg
-                    //-         |  Users
+                            a(href='#')
+                                | Reviews
+                                span.badge 1,118
+                // /.nav-collapse
+
+        .test Test
+            //- .col-sm-9
+            //-     | Main content goes here
+
 
 
     script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
