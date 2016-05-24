@@ -6614,7 +6614,7 @@ tou.utilityPages.Electricity = function() {
                                 timeStamp: collectionItem.timeStamp
                             };
                         } else {
-                            //console.log(" --- setGridData() NOT FOUND ---- i = ", i,  "   itemData = ", new Date(collectionData[i].timeStamp));
+                            console.log(" --- setGridData() NOT FOUND ---- i = ", i,  "   collectionItem timestamp = ", new Date(collectionItem.timeStamp));
                         }
                     }
                     myBindings.koGridReportCollection(gridData);

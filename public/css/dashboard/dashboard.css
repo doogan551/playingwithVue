@@ -1068,13 +1068,13 @@ Opera */
 .reportsContent .reportsgrid table td {
     padding: 2px 15px;
 }
-.reportsContent .reportsgrid table td div.itemValue {
-    display: inline-block;
-    padding-right: 5px;
-}
-.reportsContent .reportsgrid table td span.itemTimeStamp {
-    color: #757575;
-}
+/*.reportsContent .reportsgrid table td div.itemValue {*/
+    /*display: inline-block;*/
+    /*padding-right: 5px;*/
+/*}*/
+/*.reportsContent .reportsgrid table td span.itemTimeStamp {*/
+    /*color: #757575;*/
+/*}*/
 .reportsContent .reportsgrid table th:not(:first-child),
 .reportsContent .reportsgrid table td:not(:first-child) {
     text-align: right;

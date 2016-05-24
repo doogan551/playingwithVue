@@ -1,7 +1,8 @@
 var jeff = {
     'Infoscan': {
         'dbConfig': {
-            'host': 'localhost'
+            'host': 'localhost',
+            'dbName': 'infoscan'
         },
         'files': {
             'driveLetter': 'C'
