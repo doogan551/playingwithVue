@@ -24,17 +24,13 @@
 /* END FONTS FOR MATERIALIZE */
 
 
-/* OVERRIDES */
-.navbar-no-margin {
-    margin-bottom: 0 !important;
-}
-/* END OVERRIDES */
-
-
 /* GLOBAL */
 $bodyBG: #eee;
 $darkBG: #2E3135;
 $materialGreenBlue: #4CB59D;
+$blueGreyDarken1: #546e7a;
+
+$materializeLeftOffset: 80px;
 
 html,
 body {
@@ -43,279 +39,51 @@ body {
 
 body {
     margin: 0;
-    background-color: $darkBG !important;
+    background-color: $bodyBG !important;
     display: flex;
     flex-direction: column;
 }
 
 .mainContent {
-    height: calc(100vh - 60px);
-    padding: 15px;
+    padding-left: $materializeLeftOffset;
+    background-image: url(/img/test/display.png);
+    background-position-x: $materializeLeftOffset;
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 100%;
+    height: 100%;
 }
 
-.panel-heading {
-    cursor: move;
+.side-nav {
+    width: $materializeLeftOffset !important;
 }
 
-.window {
-    margin: 0;
+/* OVERRIDES */
 
-    .panel-body {
-        padding: 0;
-        overflow: hidden;
-        width: 100% !important;
+.side-nav a {
+    padding: 10px !important;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
 
-        .panel-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
+// .backdrop {
+//     background-color: $blueGreyDarken1;
+// }
+
+.ui-draggable-dragging {
+    // background-color: $blueGreyDarken1 !important;
+    z-index: 1000;
+    width: $materializeLeftOffset/2;
+    height: $materializeLeftOffset/2;
+    text-align: center;
+    padding: 5px;
+
+    .item {
+        span {
+            display: none;
         }
     }
 }
 
-/* END GLOBAL */
-
-
-/* left navbar code
-.navbar {
-    max-width:200px;
-    margin-right:0;
-    margin-left:0;
-}
-.navbar-collapse {
-    height:auto;
-    border-top:0;
-    box-shadow:none;
-    max-height:none;
-    padding-left:0;
-    padding-right:0;
-    .collapse {
-        display:block !important;
-        width:auto !important;
-        padding-bottom:0;
-        overflow:visible !important;
-    }
-    .in {
-        overflow-x:visible;
-    }
-    .navbar-nav.navbar-right:last-child {
-        margin-right:0;
-    }
-}
-.navbar-nav,.navbar-nav>li,.navbar-left,.navbar-right,.navbar-header {
-    float:none !important;
-}
-.navbar-right .dropdown-menu {
-    left:0;
-    right: auto;
-}
- left navbar code */
-
-/* responsive side menu
-
-@mixin fadeEase() {
-    -webkit-transition:all 1s ease;
-    -moz-transition:all 1s ease;
-    -o-transition:all 1s ease;
-    -ms-transition:all 1s ease;
-    transition:all 1s ease;
-}
-
-.nav-side-menu {
-    overflow:auto;
-    font-family:verdana;
-    font-size:12px;
-    font-weight:200;
-    background-color:#2E3135;
-    //#2e353d;
-    position:fixed;
-    top:0px;
-    width:150px;
-    height:100%;
-    color:#e1ffff;
-
-    .brand {
-        background-color:#23282e;
-        line-height:50px;
-        display:block;
-        text-align:center;
-        font-size:16px;
-    }
-
-    .toggle-btn {
-        display:none;
-    }
-
-    ul,
-    li {
-        list-style:none;
-        padding:0px;
-        margin:0px;
-        line-height:35px;
-        cursor:pointer;
-    }
-
-    ul:not(collapsed) .arrow:before,
-    li:not(collapsed) .arrow:before {
-        font-family:FontAwesome;
-        content:"\f078";
-        display:inline-block;
-        padding-left:10px;
-        padding-right:10px;
-        vertical-align:middle;
-        float:right;
-    }
-
-    ul .active,
-    li .active {
-        border-left:3px solid $materialGreenBlue;
-        background-color:#4f5b69;
-    }
-
-    ul .sub-menu li.active,
-    li .sub-menu li.active,
-    ul .sub-menu li.active a,
-    li .sub-menu li.active a {
-        color:$materialGreenBlue;
-    }
-
-    ul .sub-menu li,
-    li .sub-menu li {
-        background-color:#181c20;
-        border:none;
-        line-height:28px;
-        border-bottom:1px solid #23282e;
-        margin-left:0px;
-    }
-
-    ul .sub-menu li:hover,
-    li .sub-menu li:hover {
-        background-color:#020203;
-    }
-
-    ul .sub-menu li:before {
-        font-family:FontAwesome;
-        content:"";
-        display:inline-block;
-        padding-left:10px;
-        padding-right:10px;
-        vertical-align:middle;
-    }
-
-    li {
-        .sub-menu li:before {
-            font-family:FontAwesome;
-            content:"";
-            display:inline-block;
-            padding-left:10px;
-            padding-right:10px;
-            vertical-align:middle;
-        }
-
-        padding-left:0px;
-        border-left:3px solid #2e353d;
-        border-bottom:1px solid #23282e;
-
-        &:hover:not(.active) {
-            a {
-                // @include fadeEase();
-                color: $materialGreenBlue;
-            }
-        }
-
-        a {
-            text-decoration:none;
-            color:#e1ffff;
-
-            i {
-                padding-left:10px;
-                width:20px;
-                padding-right:20px;
-            }
-        }
-
-        &:hover {
-            border-left:3px solid lighten($materialGreenBlue, 25%);
-            background-color:#4f5b69;
-            @include fadeEase();
-        }
-    }
-}
-@media (max-width:767px) {
-    .nav-side-menu {
-        position:relative;
-        width:100%;
-        margin-bottom:10px;
-        .toggle-btn {
-            display:block;
-            cursor:pointer;
-            position:absolute;
-            right:10px;
-            top:10px;
-            z-index:10 !important;
-            padding:3px;
-            background-color:#ffffff;
-            color:#000;
-            width:40px;
-            text-align:center;
-        }
-    }
-    .brand {
-        text-align:left !important;
-        font-size:22px;
-        padding-left:20px;
-        line-height:50px !important;
-    }
-}
-@media (min-width:767px) {
-    .nav-side-menu .menu-list .menu-content {
-        display:block;
-    }
-}
-body {
-    margin:0px;
-    padding: 0px;
-}
- responsive side menu */
-
-
-/* bootstrap side menu */
-
-/* make sidebar nav vertical */
-@media (min-width: 768px) {
-    .sidebar-nav {
-        position: fixed;
-        width: 150px;
-        height: 100%;
-
-        .navbar {
-            height: 100%;
-
-            .navbar-collapse {
-                padding: 0;
-                max-height: none;
-            }
-
-            ul {
-                float: none;
-
-                &:not {
-                    display: block;
-                }
-            }
-
-            li {
-                float: none;
-                display: block;
-
-                a {
-                    padding-top: 12px;
-                    padding-bottom: 12px;
-                }
-            }
-
-        }
-    }
-}
-
-/* bootstrap side menu */
+/* END OVERRIDES */

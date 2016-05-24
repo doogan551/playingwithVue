@@ -3,67 +3,60 @@ html
     head
         title
             | Infoscan by Dorsett Technologies
-        link(rel='stylesheet', href='/css/lib/bootstrap.css')
+        //- link(rel='stylesheet', href='/css/lib/bootstrap.css')
+        link(rel='stylesheet', href='/css/lib/materialize.css')
         link(rel='stylesheet', href='/sass/v2/bootstrap')
-        link(rel='stylesheet', href='/sass/bootstrap/bootstrap-material-design')
-        link(rel='stylesheet', href='/sass/bootstrap/ripples')
+        //- link(rel='stylesheet', href='/sass/bootstrap/bootstrap-material-design')
+        //- link(rel='stylesheet', href='/sass/bootstrap/ripples')
         link(rel='stylesheet', href='/css/lib/font-awesome.4.6.1.css')
 
     body
-        //- .row
-        //-     .col-sm-3
-        .sidebar-nav
-            .navbar.navbar-default(role='navigation')
-                .navbar-header
-                    button.navbar-toggle(type='button', data-toggle='collapse', data-target='.sidebar-navbar-collapse')
-                        span.sr-only Toggle navigation
-                        span.icon-bar
-                        span.icon-bar
-                        span.icon-bar
-                    span.visible-xs.navbar-brand Sidebar menu
-                .navbar-collapse.collapse.sidebar-navbar-collapse
-                    ul.nav.navbar-nav
-                        li.active
-                            a(href='#') Menu Item 1
-                        li
-                            a(href='#') Menu Item 2
-                        li.dropdown
-                            a.dropdown-toggle(href='#', data-toggle='dropdown')
-                                | Dropdown
-                                b.caret
-                            ul.dropdown-menu
-                                li
-                                    a(href='#') Action
-                                li
-                                    a(href='#') Another action
-                                li
-                                    a(href='#') Something else here
-                                li.divider
-                                li.dropdown-header Nav header
-                                li
-                                    a(href='#') Separated link
-                                li
-                                    a(href='#') One more separated link
-                        li
-                            a(href='#') Menu Item 4
-                        li
-                            a(href='#')
-                                | Reviews
-                                span.badge 1,118
-                // /.nav-collapse
+        ul#slide-out.side-nav.fixed.blue-grey.darken-3.z-depth-2
+            li
+                a.tooltipped.waves-effect1.waves-light.white-text(href='javascript://', data-position="right", data-tooltip="Dynamic")
+                    span.item
+                        btn.btn-floating.white
+                            i.fa.fa-2x.fa-cog.blue-grey-text.text-darken-3
+                        span Dynamic
+            li
+                a.tooltipped.waves-effect1.waves-light.white-text(href='javascript://', data-position="right", data-tooltip="Image")
+                    span.item
+                        btn.btn-floating.white
+                            i.fa.fa-2x.fa-picture-o.blue-grey-text.text-darken-3
+                        span Image
+            li
+                a.tooltipped.waves-effect1.waves-light.white-text(href='javascript://', data-position="right", data-tooltip="Trend Plot")
+                    span.item
+                        btn.btn-floating.white
+                            i.fa.fa-2x.fa-line-chart.blue-grey-text.text-darken-3
+                        span Trend
 
-        .test Test
-            //- .col-sm-9
-            //-     | Main content goes here
+        a.button-collapse.show-on-large.show-on-med(href='javascript://', data-activates='slide-out')
+            i.mdi-navigation-menu
 
+        .mainContent
+            //- .row
+            //-     .col.s12.m6
+            //-         .card.blue-grey.darken-1
+            //-             .card-content.white-text
+            //-                 span.card-title Card Title
+            //-                 p
+            //-                     | I am a very simple card. I am good at containing small bits of information.
+            //-                     | I am convenient because I require little markup to use effectively.
+            //-             .card-action
+            //-                 a(href='javascript://') This is a link
+            //-                 a(href='javascript://') This is a link
 
 
     script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
+    script(type='text/javascript', src='/js/lib/jquery-ui.js')
     script(type='text/javascript', src='/js/lib/config.js')
     script(type='text/javascript', src='/js/lib/moment.js')
     script(type='text/javascript', src="/js/lib/knockout-3.2.0.js")
     script(type='text/javascript', src='/js/lib/socket.io.js')
-    script(type='text/javascript', src='/js/lib/bootstrap.js')
+    //- script(type='text/javascript', src='/js/lib/bootstrap.js')
+
+    //- script(type='text/javascript', src='/js/lib/ripples.js')
+    script(type='text/javascript', src='/js/lib/materialize.js')
     script(type='text/javascript', src='/js/lib/material.js')
-    script(type='text/javascript', src='/js/lib/ripples.js')
     script(type='text/javascript', src='/js/v2/material.js')
