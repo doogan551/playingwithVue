@@ -7268,8 +7268,7 @@ gpl.Manager = function () {
             name3 = names[2],
             name4 = names[3] || '',
             handler = function (obj) {
-                var oldPoint = $.extend(true, {}, obj),
-                    newPoint;
+                var oldPoint = $.extend(true, {}, obj);
 
                 // gpl.unblockUI();
 
@@ -7301,12 +7300,12 @@ gpl.Manager = function () {
 
                 block.setPointData(obj, true);
 
-                log(block.gplId, 'save callback', newPoint);
+                log(block.gplId, 'save callback', obj);
                 gpl.fire('newblock', block);
                 called = true;
 
                 managerSelf.socket.emit('updatePoint', JSON.stringify({
-                    'newPoint': newPoint,
+                    'newPoint': obj,
                     'oldPoint': oldPoint
                 }));
             };
