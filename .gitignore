@@ -14,3 +14,4 @@ npm-debug.log
 daemon/
 node_modules/grunt*
 aclient.js
+node_modules/node-sass/vendor/win32-x64-14/binding.node
