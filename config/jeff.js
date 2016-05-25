@@ -2,13 +2,18 @@ var jeff = {
     'Infoscan': {
         'dbConfig': {
             'host': 'localhost',
-            'dbName': 'infoscan'
+            'port': 27017,
+            'dbName': 'yadkinville',
+            'driver': 'mongodb'
         },
         'files': {
-            'driveLetter': 'C'
+            'driveLetter': 'c',
+            'archiveLocation': '/InfoScan/Archive/History/'
         },
         'location': {
-            'site': 'Jeff'
+            'site': 'jeff',
+            'email': null,
+            'timezone': 5
         },
         'email': {
             'onError': {

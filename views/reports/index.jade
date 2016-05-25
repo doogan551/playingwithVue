@@ -89,7 +89,6 @@ block content
 													th.medium.strong Column Key
 													// ko if: (reportType !== 'Property')
 													th.medium.strong Display Name
-													// /ko
 													th.medium.strong.multiplierColumn(style="display:none") Multiplier
 													th.medium.strong.calculateColumn(style="display:none") Calculate
 													th.medium.strong.typeColumn(style="display:none") Type
@@ -99,6 +98,7 @@ block content
 														.includeInChartColumn(style="display:none") Chart
 													th.medium.strong
 														.yaxisChartGroupColumn(style="display:none") Group
+													// /ko
 													th.medium.strong
 											tbody.sortablecolums(data-bind="foreach: listOfColumns()")
 												tr.columnRowData(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
@@ -130,7 +130,6 @@ block content
 													// ko if: ($parent.reportType !== 'Property')
 													td.displayName
 														input.form-control.columnDisplayName(data-bind="value: colDisplayName, enable: $parent.canEdit(), event: { change: function() { $parent.designChanged(true) } }", type="text", required)
-													// /ko
 													td.columnMultiplier
 														// ko if: ($data.canCalculate)
 														input.form-control.inputMultiplier(data-bind="value: multiplier, enable: $root.canEdit()", type="number")
@@ -195,6 +194,9 @@ block content
 																// /ko
 															// /ko
 														// /ko
+													// /ko
+													// /ko
+													// ko if: ($root.canEdit())
 													td.removecolumn
 														a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
 													// /ko
@@ -301,13 +303,15 @@ block content
 											.errorMessage.alert-danger
 											.successMessage.alert-success
 					.tabViewReport.well.tab-pane.workingPane
+						// ko if: (reportType !== 'Property')
 						ul.nav.nav-tabs
+							// ko if: (chartable())
 							li.gridData.active(role="presentation")
 								a.strong.toggleTab(data-bind="click: function () { $root.focusGridView() }", href="#gridData", data-toggle="tab") Grid View
-							// ko if: (chartable())
 							li.reportChart(data-bind="click: function () { $root.requestChart() }", role="presentation")
 								a.strong.toggleTab(href="#chartData", data-toggle="tab") Chart View
 							// /ko
+						// /ko
 						div.tab-content
 							div#gridData.active.tab-pane
 								.row
