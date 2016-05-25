@@ -3,330 +3,48 @@ html
     head
         title
             | Infoscan by Dorsett Technologies
-        meta(http-equiv='X-UA-Compatible', content='IE=edge')
-        link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css')
-        link(rel='stylesheet', href='/css/lib/font-awesome-4.3.0/css/font-awesome.min.css')
-        link(rel='stylesheet', href='/css/lib/animations.css')
-        link(rel='stylesheet', href='/css/baseui/workspace.css')
-        script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
-        script(type='text/javascript', src='/js/lib/underscore.js')
-        script(type='text/javascript', src='/js/lib/lodash.min.js')
-        script(type='text/javascript', src='/js/lib/config.js')
-        script(type='text/javascript', src='/js/lib/bootstrap3.min.js')
-        script(type='text/javascript', src='/js/lib/bootstrap3-hover-dropdown.min.js')
-        script(type='text/javascript', src='/js/lib/jquery.easing.1.3.js')
-        script(type='text/javascript', src='/js/lib/jquery.transit.min.js')
-        script(type='text/javascript', src="/js/lib/knockout-3.2.0.js")
-        script(type='text/javascript', src='/js/lib/ko.validation.js')
-        script(type='text/javascript', src='/js/lib/store.min.js')
-        script(type='text/javascript', src='/js/lib/socket.io.js')
-        script(type='text/javascript', src='/js/baseui/workspace/workspaceManager.js')
-        script.
-            var isAuthenticated = !{isAuthenticated};
-            var userData = !{user};
+        link(rel='stylesheet', href='/css/lib/materialize.css')
+        link(rel='stylesheet', href='/sass/v2/materialize')
+        link(rel='stylesheet', href='/css/lib/font-awesome.4.6.1.css')
+
     body
-        #appContainer
-            .navbar.navbar-default.topNav
-                .container-fluid
-                    .navbar-header.logo
-                       img(src='/img/workspace/infoscanLogoNew.png', width='252', height='47', alt='InfoScan')
-                    ul.nav.navbar-nav
-                        li
-                            a(href='javascript://', data-bind='click: toggleWorkspace')
-                                span.fa.fa-desktop.fa-2x
-                                span#workspaceToggle.fa.inner-icon
-                        li.dropdown(style='margin-right: 20px;')
-                            a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("all") }', title='Show Navigator')
-                                span.fa.fa-compass.fa-2x
-                            ul.dropdown-menu(data-bind='foreach: workspace.getRecentXPoints(20), visible: workspace.getRecentXPoints(20)().length, setMaxHeight: appHeight, reduceBy: 100')
+        .navbar-fixed
+            nav.blue-grey
+                .nav-wrapper
+                    .row
+                        .col.s12
+                            a.brand-logo(href='javascript://') Infoscan
+                            ul.right.hide-on-med-and-down
                                 li
-                                    a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
-                        li.dropdown
-                            a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("Display") }', title='Open Display')
-                                span.fa.fa-laptop.fa-2x
-                            ul.dropdown-menu(data-bind='setMaxHeight: appHeight, reduceBy: 100, css: {"hasItems": workspace.filteredWindowsByType.display().length > 2}')
+                                    a.waves-effect(href='javascript://') Sass
                                 li
-                                    ul.sysMenu
-                                        li
-                                            a(href='javascript://', data-bind='click: showDisplays')
-                                                span.sysIcon.fa.fa-laptop
-                                                = 'Show open displays'
-                                    ul.list
-                                        // ko foreach: workspace.filteredWindowsByType.display
-                                        li
-                                            a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
-                                        // /ko
-                        li
-                            a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("Sequence") }', title='Open Sequence')
-                                span.fa.fa-code-fork.fa-2x
-                            ul.dropdown-menu(data-bind='setMaxHeight: appHeight, reduceBy: 100, css: {"hasItems": workspace.filteredWindowsByType.sequence().length > 2}')
-                                li
-                                    ul.sysMenu
-                                        li
-                                            a(href='javascript://', data-bind='click: showGPLs')
-                                                span.sysIcon.fa.fa-code-fork
-                                                = 'Show open GPLs'
-                                    ul.list
-                                        // ko foreach: workspace.filteredWindowsByType.sequence
-                                        li
-                                            a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
-                                        // /ko
-                        li
-                            a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("Alarm") }', title='Open Alarm')
-                                span.fa.fa-bell-o.fa-2x
-                            ul.dropdown-menu(data-bind='setMaxHeight: appHeight, reduceBy: 100, css: {"hasItems": workspace.filteredWindowsByType.alarm().length > 2}')
-                                li
-                                    ul.sysMenu
-                                        li
-                                            a(href='javascript://', data-bind='click: showAlarms')
-                                                span.sysIcon.fa.fa-bell-o
-                                                = 'Show open alarms'
-                                    ul.list
-                                        // ko foreach: workspace.filteredWindowsByType.alarm
-                                        li
-                                            a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
-                                        // /ko
-                        li
-                            a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("Activity") }', title='Open Activity Log')
-                                span.fa.fa-comments-o.fa-2x
-                            ul.dropdown-menu(data-bind='setMaxHeight: appHeight, reduceBy: 100, css: {"hasItems": workspace.filteredWindowsByType.activitylog().length > 2}')
-                                li
-                                    ul.sysMenu
-                                        li
-                                            a(href='javascript://', data-bind='click: showActivities')
-                                                span.sysIcon.fa.fa-comments-o
-                                                = 'Show open Activity Logs'
-                                    ul.list
-                                        // ko foreach: workspace.filteredWindowsByType.activity
-                                        li
-                                            a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
-                                        // /ko
-                        li
-                            a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("Trend Plot") }', title='Open Trend Plot')
-                                span.fa.fa-line-chart.fa-2x
-                            ul.dropdown-menu(data-bind='setMaxHeight: appHeight, reduceBy: 100, css: {"hasItems": workspace.filteredWindowsByType.trendplot().length > 2}')
-                                li
-                                    ul.sysMenu
-                                        li
-                                            a(href='javascript://', data-bind='click: showTrendPlot')
-                                                span.sysIcon.fa.fa-line-chart
-                                                = 'Show open Trend Plots'
-                                    ul.list
-                                        // ko foreach: workspace.filteredWindowsByType.trendplot
-                                        li
-                                            a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
-                                        // /ko
-                         li
-                            a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("Dashboard") }', title='Open Dashboard')
-                                span.fa.fa-tachometer.fa-2x
-                            ul.dropdown-menu(data-bind='setMaxHeight: appHeight, reduceBy: 100, css: {"hasItems": workspace.filteredWindowsByType.dashboard().length > 2}')
-                                li
-                                    ul.sysMenu
-                                        li
-                                            a(href='javascript://', data-bind='click: showDashboard')
-                                                span.sysIcon.fa.fa-tachometer
-                                                = 'Show open Dashboards'
-                                    ul.list
-                                        // ko foreach: workspace.filteredWindowsByType.dashboard
-                                        li
-                                            a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
-                                        // /ko
-                        li
-                            a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("Report") }', title="Open Report")
-                              span.fa.fa-file-text-o.fa-2x
-                            ul.dropdown-menu(data-bind='setMaxHeight: appHeight, reduceBy: 100, css: {"hasItems": workspace.filteredWindowsByType.report().length > 2}')
-                              li
-                                  ul.sysMenu
-                                      li
-                                          a(href='javascript://', data-bind='click: showReports')
-                                              span.sysIcon.fa.fa-file-text-o
-                                              = 'Show open reports'
-                                      ul.list
-                                          // ko foreach: workspace.filteredWindowsByType.report
-                                          li
-                                              a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
-                                          // /ko
-                        li
-                            a.dropdown-toggle(href='javascript://', data-hover='dropdown', data-bind='click: function() { showNavigatorFiltered("Device Tree") }', title='Open Device Tree')
-                                span.fa.fa-sitemap.fa-2x
-                            ul.dropdown-menu(data-bind='setMaxHeight: appHeight, reduceBy: 100, css: {"hasItems": workspace.filteredWindowsByType.devicetree().length > 2}')
-                                li
-                                    ul.sysMenu
-                                        li
-                                            a(href='javascript://', data-bind='click: showDeviceTree')
-                                                span.sysIcon.fa.fa-sitemap
-                                                = 'Show open Device Trees'
-                                    ul.list
-                                        // ko foreach: workspace.filteredWindowsByType.devicetree
-                                        li
-                                            a(href='javascript://', data-bind='click: function(){ $root.openWindow(url, title(), type, target(), upi(), width(), height()) }, text: title')
-                                        // /ko
-                    ul.nav.navbar-nav.navbar-right
-                        // ko if: workspaceManager.user()['System Admin'].Value
-                        li
-                            a(href='javascript://', data-bind='click: function() { openWindow("/syspref", "syspref", "syspref", "mainWindow") }')
-                                i.fa.fa-cogs
-                                | Settings
-                        li
-                            a(href='javascript://', title='User Management', data-bind='click: function() { openWindow("/securityadmin", "securityadmin", "securityadmin", "mainWindow") }')
-                                span.fa.fa-lock
-                                | Security
-                        // /ko
-                        li.dropdown
-                            a.dropdown-toggle(href='javascript://', data-toggle='dropdown')
-                                img(data-bind='attr: { src: "/img/users/" + (user().photo.length > 0 ? user().photo : "userLarge.png")}', style='width: 24px;margin-right: 8px;float: left;position: relative;top: -6px;')
-                                span(data-bind='text: user().firstName + " " + user().lastName')
-                                // b class="caret"></b
-                            ul.dropdown-menu
-                                li
-                                    //a(href='javascript://', data-bind='click: function() { openWindow("/userpref", "userpref", "userpref", "mainWindow") }')
-                                    a(href='javascript://')
-                                        i.fa.fa-cog
-                                        span Preferences
-                                li
-                                    a(href='/logout')
-                                        i.fa.fa-power-off
-                                        span Logout
-            #workspace
-                .navbar.navbar-default#workspaceTitle
-                    .container-fluid
-                        .navbar-header
-                            .navbar-brand(data-bind='fadeInText: workspace.filters[workspace.activeSet()].name')
-                        button.btn.btn-sm.navbar-btn.toolbar-btn(data-bind='click: closeAll')
-                            span.fa.fa-times
-                            |  Close All
-                //h1#workspaceTitle(data-bind='text: workspace.filters[workspace.activeSet()].name')
-                //#noWindows
-                //    p
-                //        a(href='javascript://', data-bind='click: showNavigatorFiltered') Open a new window
-                .leftNav
-                    .header Workspace
-                    ul.navByStat
-                        li(data-bind='click: function() { workspace.showSet("fav") }, css: { active: workspace.isActiveSet("fav") }')
-                            span.fa.fa-fw.fa-star
-                            | Favorites
-                        li(data-bind='click: function() { workspace.showSet("recent") }, css: { active: workspace.isActiveSet("recent") }')
-                            span.fa.fa-fw.fa-reply
-                            | Recent
-                    ul.navByCat
-                        li(data-bind='click: function() { workspace.showSet("open") }, css: { active: workspace.isActiveSet("open") }')
-                            span.fa
-                            | All
-                        li(data-bind='click: function() { workspace.showSet("display") }, css: { active: workspace.isActiveSet("display") }')
-                            span.fa.fa-fw.fa-laptop
-                            | Displays
-                        li(data-bind='click: function() { workspace.showSet("report") }, css: { active: workspace.isActiveSet("report") }')
-                            span.fa.fa-fw.fa-file-text-o
-                            | Reports
-                        li(data-bind='click: function() { workspace.showSet("gpl") }, css: { active: workspace.isActiveSet("gpl") }')
-                            span.fa.fa-fw.fa-code-fork
-                            | GPL
-                        li(data-bind='click: function() { workspace.showSet("alarm") }, css: { active: workspace.isActiveSet("alarm") }')
-                            span.fa.fa-fw.fa-bell-o
-                            | Alarms
-                        li(data-bind='click: function() { workspace.showSet("activitylog") }, css: { active: workspace.isActiveSet("activitylog") }')
-                            span.fa.fa-fw.fa-comments-o
-                            | Logs
-                        li(data-bind='click: function() { workspace.showSet("devicetree") }, css: { active: workspace.isActiveSet("devicetree") }')
-                            span.fa.fa-fw.fa-sitemap
-                            | Device Tree
-                        .footer
+                                    a.waves-effect(href='javascript://') Components
+                    //- form.right
+                    //-     .input-field
+                    //-         input#search(type='search', required='')
+                    //-         label(for='search')
+                    //-             i.material-icons search
+                    //-         i.material-icons close
 
-                ul.thumbs
-                    // ko template: {foreach: workspace.filteredWindows, afterAdd: workspace.animateIn, beforeMove: workspace.beforeMove, afterMove: workspace.afterMove}
-                    li.thumb
-                        .thumbContent(data-bind='click: function() { $root.focusWindow(upi()) }')
-                            img.thumbImg(data-bind='dataSrc: upi')
-                            //img.thumbImg(data-bind='attr: {src: "/img/thumbs/" + upi() + ".png"}, event: { error: $root.workspace.thumbError }')
-                            div.thumbIcon(data-bind='attr: { class: $root.workspace.applyThumbClass($data) }', style='display:none')
-                        .thumbControls
-                            // ko if: isOpen
-                            div(data-bind='click: $root.close', title="Close")
-                                .fa.fa-times.closeThumb
-                            // /ko
+        .mainContent
+            //- .row
+            //-     .col.s12.m6
+            //-         .card.blue-grey.darken-1
+            //-             .card-content.white-text
+            //-                 span.card-title Card Title
+            //-                 p
+            //-                     | I am a very simple card. I am good at containing small bits of information.
+            //-                     | I am convenient because I require little markup to use effectively.
+            //-             .card-action
+            //-                 a(href='javascript://') This is a link
+            //-                 a(href='javascript://') This is a link
 
-                            // ko if: isOpen
-                            // ko if: target() == "mainWindow"
-                            div(data-bind='click: function() { $root.openWindow(url, title(), type, "", upi(), width(), height()) }', title='Pop Out')
-                                .fa.fa-arrow-circle-up.popOut
-                            // /ko
-                            // ko ifnot: target() == "mainWindow"
-                            div(data-bind='click: function() { $root.openWindow(url, title(), type, "mainWindow", upi(), width(), height()) }', title='Pop In')
-                                .fa.fa-arrow-circle-up.popIn
-                            // /ko
-                            // /ko
 
-                            // ko ifnot: isFav
-                            div(data-bind='click: $root.workspace.fav', title='Add To Favorites')
-                                .fa.fa-star-o.gold
-                            // /ko
-                            // ko if: isFav
-                            div(data-bind='click: $root.workspace.unfav', title='Remove From Favorites')
-                                .fa.fa-star.gold
-                            // /ko
-                        .titleBar
-                            .title(data-bind='text: title') &period;&period;&period;
-                    // /ko
-            #mainWindowWrapper.appSeam
-                iframe#mainWindow(src='about:blank', name='mainWindow', seamless='')
-            #mainWindowClose
-                button.btn.btn-danger.btn-sm.btn-close.fa.fa-times(type='button', data-bind='click: function() { closeMainWindow() }', aria-hidden='true')
-            #navigatorWrapper(data-bind='click: hideNavigator')
-            #navigatorWindow.panel.panel-default
-                #navigatorBody.panel-body
-                    iframe#navigator(src='about:blank', name='navigator', seamless='')
-                .panel-heading
-                    button.btn.btn-danger.btn-sm.btn-close.fa.fa-times(type='button', data-bind='click: hideNavigator', aria-hidden='true')
-                    h3.panel-title
-                        span.fa.fa-compass
-                        | &nbsp;Point Navigator
-            #thumbnailWrapper
-                iframe#thumbnailFrame(src='about:blank', name='pid_thumbnailframe')
-                iframe#fetcher(src='about:blank', name='fetcher')
-        #login
-            fieldset
-                .errorMessage.animated(data-bind='visible: errorMessage, css: animate', style='display: none')
-                    span(data-bind='text: " " + errorMessage()')
-                .logo
-                    img(src='/img/workspace/infoscanLogoLightTrimmed.png', alt='InfoScan', style='width:170px;height:27px;')
-                .topShadow
-                .form-group(data-bind="visible: isLogIn, enable: isLogIn")
-                    .control.email
-                        label(for='user') Username
-                        input#user(type='text', required='required', autocapitalize="off", autocorrect="off", data-bind='value: username', data-err-req-message='Please enter your username.')
-                        .col1.validationMessage(data-bind='validationMessage: username', style='display: none;')
-                .form-group(data-bind="visible: isLogIn, enable: isLogIn")
-                    .control.password
-                        label(for='password') Password
-                        input#password(type='password', name='password', required='required', data-bind='value: password', data-err-req-message='Please enter a password.')
-                        .col1.validationMessage(data-bind='validationMessage: password', style='display: none;')
-                .form-group(data-bind="visible: !isLogIn(), enable: !isLogIn()")
-                    .control.password
-                        label(for='password') Old Password
-                        input#oldPassword(type='password', name='oldPassword', required='required', data-bind='value: oldPassword', data-err-req-message='Please enter a password.')
-                        .col1.validationMessage(data-bind='validationMessage: oldPassword', style='display: none;')
-                .form-group(data-bind="visible: !isLogIn(), enable: !isLogIn()")
-                    .control.password
-                        label(for='password') New Password
-                        input#newPassword1(type='password', name='newPassword1', required='required', data-bind='value: newPassword1', data-err-req-message='Please enter a password.')
-                        .col1.validationMessage(data-bind='validationMessage: newPassword1', style='display: none;')
-                .form-group(data-bind="visible: !isLogIn(), enable: !isLogIn()")
-                    .control.password
-                        label(for='password') Repeat New Password
-                        input#newPassword2(type='password', name='newPassword2', required='required', data-bind='value: newPassword2', data-err-req-message='Please enter a password.')
-                        .col1.validationMessage(data-bind='validationMessage: newPassword2', style='display: none;')
-                //.form-group
-                //    a.help(href='javascript://', data-bind='click: passwordReset') Forgot password&quest;
-                //    label.rememberMe.pull-right
-                //        input#staySignedIn.msCheckbox.white.left(type='checkbox', name='rememberMe', data-bind='checked: rememberMe')
-                //        span
-                //        | &nbsp;Remember Me
-                .bottomShadow
-                button.btn.btn-primary.pull-right.signIn(data-bind='click: signIn, visible: isLogIn, enable: isLogIn') Sign In
-                button.btn.btn-primary.pull-right.resetPass(data-bind='click: passwordReset, visible: !isLogIn(), enable: !isLogIn()') Reset
-        #statusBar
-            .systemStatus
-                span.text System Status
-                .led(title='System Status')
-            span.text(data-bind="visible: showThumbnailLink")
-                button.thumbnailButton(data-bind="click: openThumbnailBatch") Thumbs
+    script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
+    script(type='text/javascript', src='/js/lib/jquery-ui.js')
+    script(type='text/javascript', src='/js/lib/config.js')
+    script(type='text/javascript', src='/js/lib/moment.js')
+    script(type='text/javascript', src="/js/lib/knockout-3.2.0.js")
+    script(type='text/javascript', src='/js/lib/socket.io.js')
+    script(type='text/javascript', src='/js/lib/materialize.js')
+    script(type='text/javascript', src='/js/v2/home.js')
