@@ -10,8 +10,6 @@ module.exports = {
             base = __dirname + '/../sass/' + dirs + '/',
             sassPath = base + filename + '.scss';
 
-        console.log('rendering sass');
-
         sass.render({
             file: sassPath
         }, cb);

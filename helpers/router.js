@@ -21,11 +21,11 @@ module.exports = function(controllers) {
 
   // ALL ROUTES BELOW THIS WILL REQUIRE AUTHENTICATION
   router.use(function(req, res, next) {
-    if (req.isAuthenticated()) {
+    // if (req.isAuthenticated()) {
       return next();
-    }
+    // }
 
-    res.redirect('/');
+    // res.redirect('/');
   });
 
   router.use('/', controllers.loadviews);

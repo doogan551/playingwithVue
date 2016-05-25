@@ -10,8 +10,6 @@ router.get('/:dir/:filename', function(req, res, next) {
     var data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    console.log('Rendering sass');
-
     Sass.renderSass(data, function(err, result) {
         if (err) {
             console.log('Error rendering sass:', err);
