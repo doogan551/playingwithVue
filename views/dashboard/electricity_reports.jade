@@ -234,12 +234,20 @@
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     th(data-bind="text: (selectedMonthYear().season ? selectedMonthYear().season : '') + ' Peak Demand (kW)'")
+<<<<<<< HEAD
                                     th Occurrent
+=======
+                                    th Occurrent Time
+>>>>>>> feature/TOU_Phase2
                                     th(data-bind="text: 'Coinciding ' + (selectedMonthYear().season ? selectedMonthYear().season : '') + ' Reactive (kVAR)'")
                                     // /ko
 
                                     th Off Peak Demand (kW)
+<<<<<<< HEAD
                                     th Occurrent
+=======
+                                    th Occurrent Time
+>>>>>>> feature/TOU_Phase2
                                     th Coinciding Off Peak Reactive (kVAR)
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
@@ -263,7 +271,11 @@
                                     // ko if: ($parent.selectedMonthYear().season !== 'Transition' || !!$parent.rateTablePeriod().enablePeakSelection)
                                     td.gridonpeakdemand
                                         .itemValue(data-bind="text: tou.numberWithCommas(OnPeakDemand.value)")
+<<<<<<< HEAD
                                     td.occurent
+=======
+                                    td.occurrent
+>>>>>>> feature/TOU_Phase2
                                         // ko if: OnPeakDemand.value !== 0 && OnPeakDemand.timeStamp > 0
                                         span.itemTimeStamp(data-bind="text: moment(OnPeakDemand.timeStamp).format('HH:mm')")
                                         // /ko
@@ -273,7 +285,11 @@
 
                                     td.gridoffpeakdemand
                                         .itemValue(data-bind="text: tou.numberWithCommas(OffPeakDemand.value)")
+<<<<<<< HEAD
                                     td.occurent
+=======
+                                    td.occurrent
+>>>>>>> feature/TOU_Phase2
                                         // ko if: OffPeakDemand.value !== 0 && OffPeakDemand.timeStamp > 0
                                         span.itemTimeStamp(data-bind="text: moment(OffPeakDemand.timeStamp).format('HH:mm')")
                                         // /ko
