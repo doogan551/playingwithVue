@@ -425,6 +425,9 @@ var gpl = {
             gpl.socketWaitFn = null;
         }
     },
+    hideMessage: function () {
+        gpl.$messageModal.modal('hide');
+    },
     on: function (event, handler) {
         gpl.eventHandlers[event] = gpl.eventHandlers[event] || [];
         gpl.eventHandlers[event].push(handler);
@@ -7268,7 +7271,7 @@ gpl.Manager = function () {
                 var oldPoint = $.extend(true, {}, obj),
                     newPoint;
 
-                gpl.unblockUI();
+                // gpl.unblockUI();
 
                 if (obj && obj.target) { //is event
                     if (!called) {
@@ -7309,7 +7312,7 @@ gpl.Manager = function () {
             };
 
         if (block.isNonPoint !== true && !(block instanceof gpl.blocks.TextBlock)) {
-            gpl.blockUI();
+            // gpl.blockUI();
 
             windowRef = gpl.openWindow('/api/points/newPoint/restrictTo/' + pointType, 'New Point', '', '', 'newPoint', {
                 width: 980,
@@ -7408,6 +7411,7 @@ gpl.Manager = function () {
 
     managerSelf.doSaveForLater = function () {
         var continueEditingCb = function () {
+            gpl.hideMessage();
             gpl.unblockUI();
             gpl.$saveForLaterConfirmModal.modal('show');
         };
