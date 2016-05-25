@@ -198,6 +198,10 @@ var scripts = {
 							updatedCol.includeInChart = false;
 							updateDoc = true;
 						}
+						if (updatedCol.yaxisGroup === undefined) {
+							updatedCol.yaxisGroup = "A";
+							updateDoc = true;
+						}
 						updatedColumns.push(updatedCol);
 					}
 					doc["Report Config"].columns = updatedColumns;
