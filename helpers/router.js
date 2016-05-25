@@ -55,6 +55,7 @@ module.exports = function(controllers) {
   router.use('/pointlookup', controllers.pointlookup);
   router.use('/reports1', controllers.reports);
   router.use('/report', controllers.reports);
+  router.use('/sass', controllers.sass);
   router.use('/thumbnail', controllers.thumbnails);
   router.use('/toolbag', controllers.toolbag);
 

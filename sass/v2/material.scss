@@ -1,0 +1,99 @@
+/* FONTS FOR MATERIALIZE */
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Material Icons'), local('MaterialIcons-Regular') format('woff2');
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+/* END FONTS FOR MATERIALIZE */
+
+/* GLOBAL */
+$primaryBG: #333;
+$secondaryBG: #ccc;
+$bodyBG: #eee;
+
+html {
+
+}
+
+body {
+    margin: 0;
+    background-color: $bodyBG;
+}
+/* END GLOBAL */
+
+/* TASKBAR */
+$taskbarHeight: 32px;
+$activeColor: #49C535;
+
+.taskbar {
+    background-color: $primaryBG;
+    color: #fff;
+    height: $taskbarHeight;
+    width: 100%;
+    padding: 0 5px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: relative;
+    // font-size: 0.9em;
+
+    .start {
+        margin-right: 15px;
+        margin-left: 5px;
+    }
+
+    .clock {
+        position: absolute;
+        right: 15px;
+        top: 5px;
+    }
+
+    .taskbarButtons {
+
+        .taskbarButton {
+            color: #fff;
+            display: inline-block;
+            margin: 0 5px;
+            padding: 1px 5px;
+            border: 2px solid $primaryBG;
+            border-left: none;
+            border-right: none;
+            border-bottom-color: #fff;
+        }
+
+        .taskbarButton:hover,
+        .taskbarButton:active {
+            background-color: lighten($primaryBG, 10%);
+        }
+
+        .active {
+            background-color: $primaryBG;
+            border-bottom-color: $activeColor;
+        }
+    }
+}
+
+.taskbar-top {
+    position: absolute;
+    top: 0;
+}
+
+
+/* END TASKBAR */
