@@ -7864,11 +7864,7 @@ tou.utilityPages.Electricity = function() {
                             myBindings.activeDataRequest(true);
                             tou.socket.emit("getUsage", {options: options});
 
-                            if (monthYearPeriod === 'month') {
-                                timerDuration = 10000;  // 10 seconds
-                            } else {
-                                timerDuration = 200000; // 200 seconds
-                            }
+                            timerDuration = 120000;  // 2 mins
 
                             myBindings.dataRequestTimer = setTimeout(function () {
                                 myBindings.$reportsContent.hide();
