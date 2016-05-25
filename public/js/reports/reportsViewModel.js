@@ -448,9 +448,9 @@ var reportsViewModel = function () {
         resizeTimer = 400,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
-        formatPoint = window.workspaceManager.config.Update.formatPoint,
+        // formatPoint = window.workspaceManager.config.Update.formatPoint,
         setNewPointReference = function (refPointUPI, property) {
-            console.log("- - - - setNewPointReference() called....   refPointUPI = " + refPointUPI + " property = " + property);
+            // console.log("- - - - setNewPointReference() called....   refPointUPI = " + refPointUPI + " property = " + property);
             var refPoint,
                 appIndex = getMaxAppIndexUsed(),
                 tempRef,
@@ -527,8 +527,21 @@ var reportsViewModel = function () {
                 }
             }
         },
+        getPointRefByAppIndex = function (appIndex) {
+            var result = -1,
+                i;
+
+            for (i = 0; i < point["Point Refs"].length; i++) {
+                if (point["Point Refs"][i].AppIndex === appIndex) {
+                    result = i;
+                    break;
+                }
+            }
+
+            return result;
+        },
         getPointRef = function (item, referenceType) {
-            console.log("- - - - getPointRef() called....   item.upi = " + item.upi + " item.AppIndex = " + item.AppIndex);
+            // console.log("- - - - getPointRef() called....   item.upi = " + item.upi + " item.AppIndex = " + item.AppIndex);
             var result,
                 upi = item.upi,
                 appIndex = item.AppIndex;
@@ -882,11 +895,11 @@ var reportsViewModel = function () {
                     tempObject.yaxisGroup = "A";
                     updateColumnFromPointRefs(tempObject);  // sets AppIndex;
                     if (tempObject.AppIndex) {
-                        tempPoint = formatPoint({
+                        tempPoint = window.workspaceManager.config.Update.formatPoint({
                             point: point,
                             oldPoint: point,
                             refPoint: selectedPoint,
-                            property: tempObject.AppIndex
+                            property: getPointRefByAppIndex(tempObject.AppIndex)
                         });
                         updatedList[objIndex] = tempObject;
                         updateListOfColumns(updatedList);
@@ -926,11 +939,11 @@ var reportsViewModel = function () {
                     tempObject.value = name;
                     tempObject.pointType = type;
                     updateFilterFromPointRefs(tempObject);  // sets AppIndex;
-                    tempPoint = formatPoint({
+                    tempPoint = window.workspaceManager.config.Update.formatPoint({
                         point: point,
                         oldPoint: point,
                         refPoint: selectedPoint,
-                        property: tempObject.AppIndex
+                        property: getPointRefByAppIndex(tempObject.AppIndex)
                     });
                     updatedList[objIndex] = tempObject;
                     updateListOfFilters(updatedList);
@@ -2317,7 +2330,7 @@ var reportsViewModel = function () {
                 columnsArray.splice(details.iTo, 0, swapColumnFrom);
                 updateListOfColumns(columnsArray);
                 $dataTablePlaceHolder.DataTable().draw("current");
-                console.log("moved column '" + details.from + "' to column '" + details.to + "'");
+                // console.log("moved column '" + details.from + "' to column '" + details.to + "'");
             });
 
             $dataTablePlaceHolder.on('column-resize.dt', function (event, settings, details) {
@@ -2325,7 +2338,7 @@ var reportsViewModel = function () {
                 columnsArray[details.resizedColumn].width = details.width;
                 updateListOfColumns(columnsArray);
                 $dataTablePlaceHolder.DataTable().draw("current");
-                console.log("column '" + details.resizedColumn + "' width set to '" + details.width + "'");
+                // console.log("column '" + details.resizedColumn + "' width set to '" + details.width + "'");
             });
 
             $dataTablePlaceHolder.on('length.dt', function (e, settings, len) {
