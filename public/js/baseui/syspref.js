@@ -2832,7 +2832,7 @@ var notificationsViewModel = function() {
         dayHolidays: ko.observable(false),
 
         savePolicy: function() {
-            self.savePolicy();
+            _local.savePolicy();
         },
 
         updateScheduleEvents: function() {
