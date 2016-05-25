@@ -3037,7 +3037,7 @@ var notificationsViewModel = function() {
         },
 
         getAlertType: function(contactInfo, type, name) {
-            var contact = self.getContact({
+            var contact = _local.getContact({
                 Value: contactInfo(),
                 Name: name()
             });
