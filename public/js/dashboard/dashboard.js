@@ -8091,7 +8091,7 @@ tou.utilityPages.Electricity = function() {
                     qualifier: ko.observable(data.rateQualifier),
                     peak: ko.observable(data.peak),
                     threshold: ko.observable(data.threshold),
-                    qualifierDemand: ko.observable(data.qualifierDemand)
+                    qualifierDemand: ko.observable(data.qualifierDemand || 'Peak Demand')
                 };
 
             rateTable.addRate(rate, data.isUpdate, data.rateIdx);
@@ -9399,7 +9399,7 @@ tou.utilityPages.Electricity = function() {
                 rateName: rate.name,
                 rateQualifier: rate.qualifier,
                 threshold: rate.threshold,
-                qualifierDemand: rate.qualifierDemand
+                qualifierDemand: rate.qualifierDemand || 'Peak Demand'
             };
 
             return ret;
