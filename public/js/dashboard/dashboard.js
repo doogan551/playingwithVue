@@ -4420,7 +4420,7 @@ tou.utilityPages.Electricity = function() {
                             // for the total consumption and maximum demand.
                             // Set the masterRateType so we know that the data received actually belongs to this rate element
                             masterRateType = _rateType;
-                            createConsumptionAndDemandRequest((data.rate.qualifierDemand === 'Peak Demand') ? 'on' : 'both');
+                            createConsumptionAndDemandRequest((data.rate.qualifierDemand === 'On Peak Demand') ? 'on' : 'both');
                             // Clear the masterRateType
                             masterRateType = null;
                         }
