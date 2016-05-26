@@ -3,7 +3,7 @@
   font-family: 'Material Icons';
   font-style: normal;
   font-weight: 400;
-  src: local('Material Icons'), local('MaterialIcons-Regular'),  url('/font/material-design-icons/Material-Design-Icons.woff2') format('woff2');
+  src: local('Material Icons'), local('MaterialIcons-Regular'),  url(../../font/Material-Icons/Material-Icons.woff2) format('woff2');
 }
 
 .material-icons {
@@ -40,13 +40,33 @@ body {
     background-color: $bodyBG !important;
 }
 
+.dorsett-logo {
+    height: 75%;
+    width: 75%;
+    margin-top: 10%;
+    cursor: pointer;
+}
+
 .mainContent {
+
 }
 
 /* global */
 
 /* overrides */
 
-.nav-wrapper, .nav-wrapper form, .nav-wrapper form .input-field{ height: 100%; }
+.nav-wrapper,
+.nav-wrapper form,
+.nav-wrapper form .input-field {
+    height: 100%;
+}
+
+nav {
+    ul {
+        li {
+            margin-right: 10px;
+        }
+    }
+}
 
 /* overrides */

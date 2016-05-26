@@ -1,6 +1,6 @@
 var dti = {
     clock: {
-        $el: $('.taskbar > .clock'),
+        $el: $('.taskbar .clock'),
         checkTime: function (initial) {
             var now = moment(),
                 setText = function () {
@@ -21,3 +21,4 @@ var dti = {
     }
 };
 
+dti.clock.checkTime();
