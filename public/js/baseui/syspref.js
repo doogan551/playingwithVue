@@ -1384,7 +1384,7 @@ var alarmTemplateViewModel = function() {
             cols.push({
                 columnKey: "msgType",
                 columnName: "Type",
-                width: 230,
+                width: 190,
                 display: true
             });
             cols.push({
