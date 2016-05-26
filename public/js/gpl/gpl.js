@@ -8697,10 +8697,10 @@ gpl.Manager = function () {
                 });
             }
 
-            if (!line.isNew || gpl.isEdit) {
+            // if (!line.isNew || gpl.isEdit) { all 'new' lines should be in editVersion now
                 newLine = new gpl.ConnectionLine(coords, managerSelf.canvas, line.isNew || false);
                 managerSelf.shapes.push(newLine);
-            }
+            // }
         }
 
         managerSelf.renderAll();
@@ -9003,20 +9003,26 @@ gpl.Manager = function () {
                 var pointer = managerSelf.canvas.getPointer(event.e),
                     x = pointer.x,
                     y = pointer.y,
-                    obj;
+                    obj,
+                    canvasObj;
 
                 gpl._rightClickTargets = gpl._rightClickTargets || [];
 
                 if (event.e.which === 3) {
-                    obj = gpl.manager.getObject({
+                    canvasObj = gpl.manager.getObject({
                         left: x,
                         top: y
                     });
 
-                    if (obj) {
-                        obj = gpl.blockManager.getBlock(obj.gplId);
+                    if (canvasObj) {
+                        obj = gpl.blockManager.getBlock(canvasObj.gplId);
                         if (obj) {
                             log(obj);
+                        } else {
+                            obj = gpl.lineManager.getLine(canvasObj.gplId);
+                            if (obj) {
+                                log(obj);
+                            }
                         }
                     }
                 }
