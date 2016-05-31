@@ -4691,15 +4691,18 @@ tou.utilityPages.Electricity = function() {
                     yearBillData.source.sort(function (a, b) {
                         return a.start > b.start ? 1:-1;
                     });
-                    self.postProcessYearData();
-                    callback();
+                    self.postProcessYearData_step1(callback);
                 },
                 addToSource = function (_bill, billData) {
                     yearBillData.source.push({
                         month: _bill.month,
                         start: _bill.start,
+                        end: _bill.end,
                         season: _bill.season,
-                        data: billData
+                        data: billData,
+                        fullDate: _bill.fullDate,
+                        fiscalyear: _bill.fiscalYear,
+                        rateTable: _bill.rateTable
                     });
                 },
                 getMonthlyBill = function (_bill) {
@@ -4896,11 +4899,72 @@ tou.utilityPages.Electricity = function() {
                 done();
             }
         },
-        postProcessYearData: function () {
+        // When you have no idea what to name a function, make it as long as possible
+        postProcessYearDataReceiveDataHandler: function (data) {
+            // This routine is called after data requested by self.postProcessYearData_step1() is received 
+
+            // Throw it away if we don't have a request matching this touid
+            if (this.dataRequests.hasOwnProperty(data.touid) === false)
+                return;
+
             var self = this,
-                yearData = self.yearBillData,
-                source = yearData.source,
-                collections = yearData.collections,
+                result = data.results,
+                request = this.dataRequests[data.touid],
+                usage = request.usage,
+                rateType = request.rateType,
+                arrLookup = {
+                    consumption: 'sums',
+                    demand: 'maxes'
+                },
+                keyLookup = {
+                    consumption: 'sum',
+                    demand: 'max'
+                },
+                value = 0;
+
+
+            // Check for error first (it's a string); data.result is not present if the 'error' key is present
+            // The only time I know this happens is if we have meters defined but all UPI's are unassigned
+            if (data.error) {
+                // Inform the user we had an error; usage.value is already 0
+                usage.displayValue = 'Error';
+            } else {
+                if (rateType === 'reactive') {
+                    if (typeof result === 'object') {
+                        // The reactiveMax is actually the corresponding reactive value that occurred at the demand max (which really is the period's max)
+                        // Get reactive and demand max value pair; the '|| 0' is because the server doesn't always send the the 'max' keys; *1000 converts MVAR to kVAR
+                        value = (result[0].reactive.max || 0);
+                    }
+                } else {
+                    // Must be a consumption or demand charge
+                    // The server's response is formated differently depending on the data requested
+                    // The '|| 0' is because the server doesn't always send the 'max' or 'sum' key
+                    value = result[arrLookup[rateType]][0][keyLookup[rateType]] || 0;
+                }
+
+                // Convert M to k (i.e. MW to kW, MWh to kWh, MVAR to kVAR), round to nearest whole number, and store on usage object
+                usage.value = tou.toFixed(value * 1000, 0);
+                // Get a "commetized" display value
+                usage.displayValue = self.prettyValue({value: usage.value, digits: 0});
+            }
+
+            // Remove the notFound flag from our usage object
+            delete usage.notFound;
+
+            // Clean up our dataRequst object
+            delete self.dataRequests[data.touid];
+
+            // If all requests have been received we need to perform some final processing
+            // We check against 1 because our callback occupies 1 key
+            if (Object.keys(self.dataRequests).length === 1) {
+                // We have to pass our 'this' into the _step2 function because this function was bound to 'this'
+                // 'this' would have been the window if not for the binding. So when we call the _step2 function,
+                // 'this' returns to the window object
+                self.postProcessYearData_step2(self);
+            }
+        },
+        postProcessYearData_step1: function (callback) {
+            var self = this,
                 addedLineItems = {},
                 chargesLineItems = [],
                 monthShortLookup = {
@@ -4917,12 +4981,17 @@ tou.utilityPages.Electricity = function() {
                     November: 'Nov',
                     December: 'Dec'
                 },
+                activeMeters = self.activeMeters || self.buildActiveMeters(),
+                dataRequest = {
+                    options: [],
+                    handler: self.postProcessYearDataReceiveDataHandler.bind(self)
+                },
                 buildChargesCollection = function () {
-                    var chargesCollection = getCollection(collections, 'charges'),
+                    var chargesCollection = getCollection(self.yearBillData.collections, 'charges'),
                         chargesRows = chargesCollection.rows,
                         chargeTotals = [];
 
-                    yearData.source.forEach(function (source, index) {
+                    self.yearBillData.source.forEach(function (source, index) {
                         var sourceCollection = getCollection(source.data.collections, 'Total Charges'),
                             sourceRows = (sourceCollection && sourceCollection.rows) || [],
                             total = 0;
@@ -4978,10 +5047,300 @@ tou.utilityPages.Electricity = function() {
                         isTotalRow: true
                     });
                 },
-                buildNetCosts = function () {
-                    var netCostData = getRow(getCollection(collections, 'netCost').rows, 'kwh').data, // empty array
-                        chargeTotals = getRow(getCollection(collections, 'charges').rows, 'Total', 'displayValue').data, // array
-                        totalKwhData = getRow(getCollection(collections, 'consumption').rows, 'total').data; // array
+                getRowOrCollection = function (data, name, key) {
+                    var _name;
+
+                    for (var i = 0, len = data.length; i < len; i++) {
+                        _name = data[i].name;
+
+                        if (typeof _name === 'object') {
+                            _name = _name[key || 'id'];
+                        }
+
+                        if (_name === name) {
+                            return data[i];
+                        }
+                    }
+                },
+                getCollection = function (collections, name, key) {
+                    return getRowOrCollection(collections, name, key);
+                },
+                getRow = function (rows, name, key) {
+                    return getRowOrCollection(rows, name, key);
+                },
+                getUsage = function (data, type, peak) {
+                    var collections = data.collections,
+                        unitsLookup = {
+                            demand: 'kW',
+                            consumption: 'kWh',
+                            reactive: 'kVAR'
+                        },
+                        collection,
+                        row,
+                        usage,
+                        returnData;
+                    for (var i = 0, len = collections.length; i < len; i++) {
+                        collection = collections[i];
+                        for (var j = 0, jlen = collection.rows.length; j < jlen; j++) {
+                            row = collection.rows[j];
+                            if (row.rateElement && (row.rateElement.type === type) && (row.rateElement.peak === peak)) {
+                                usage = row.usage;
+
+                                if (type === 'reactive') {
+                                    usage = usage.contributors.reactiveMax;
+                                } else if (type === 'demand') {
+                                    usage = usage.contributors.demand;
+                                } else { // consumption
+                                    usage = usage.contributors.consumption;
+                                }
+
+                                usage = tou.toFixed(usage, 0);
+                                returnData = {
+                                    value: usage,
+                                    displayValue: self.prettyValue({value: usage, digits: 0})
+                                };
+
+                                returnData.units = {
+                                    displayValue: row.usage.units.displayValue,
+                                    visible: false
+                                };
+                                returnData.rateElement = row.rateElement;
+
+                                return returnData;
+                            }
+                        }
+                    }
+                    return {
+                        value: 0,
+                        displayValue: '0',
+                        units: {
+                            displayValue: unitsLookup[type],
+                            visible: false
+                        },
+                        notFound: true
+                    };
+                },
+                getLoadFactor = function (data) {
+                    var loadFactor = data.loadFactor;
+                    return {
+                        value: loadFactor.value,
+                        displayValue: loadFactor.displayValue
+                    };
+                },
+                buildRequestOptions = function (params) {
+                    // params is object with keys: source, peak, fx, and upis
+                    var source = params.source,
+                        obj = {
+                            utilityName: self.utilityName,
+                            // rateCollectionName: rateCollectionKey,
+                            fiscalYear: source.fiscalyear,
+                            touid: tou.makeId(),
+                            scale: 'month',
+                            peak: params.peak,
+                            fx: params.fx,
+                            upis: params.upis,
+                            range: {
+                                start: parseInt(source.start / 1000, 10),
+                                end: parseInt(source.end / 1000, 10)
+                            }
+                        };
+
+                    if (params.secondUpis) {
+                        obj.secondUpis = params.secondUpis;
+                    }
+                    return obj;
+                },
+                process = {
+                    'demand': function (collection, source, index) {
+                        var sourceData = source.data,
+                            row,
+                            usage,
+                            requestOptions;
+
+                        usage = getUsage(sourceData, 'demand', 'on');
+                        row = getRow(collection.rows, 'onPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            // Add the data request
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'on',
+                                fx: 'max',
+                                upis: activeMeters.demand
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'demand'
+                            };
+                        }
+
+                        usage = getUsage(sourceData, 'demand', 'off');
+                        row = getRow(collection.rows, 'offPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            // Add the data request
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'off',
+                                fx: 'max',
+                                upis: activeMeters.demand
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'demand'
+                            };
+                        }
+
+                        usage = getUsage(sourceData, 'reactive', 'both');
+                        row = getRow(collection.rows, 'reactiveAtPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'both',
+                                fx: 'reactiveCharge',
+                                upis: activeMeters.demand,
+                                secondUpis: activeMeters.reactive
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'reactive'
+                            };
+                        }
+                    },
+                    'consumption': function (collection, source, index) {
+                        var sourceData = source.data,
+                            row,
+                            usage,
+                            requestOptions;
+
+                        usage = getUsage(sourceData, 'consumption', 'both');
+                        usage.isTotal = true;   // Total consumption needs the 'isTotal' key also
+                        row = getRow(collection.rows, 'total');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'both',
+                                fx: 'sum',
+                                upis: activeMeters.consumption
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'consumption'
+                            };
+                        }
+
+                        usage = getUsage(sourceData, 'consumption', 'on');
+                        row = getRow(collection.rows, 'onPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'on',
+                                fx: 'sum',
+                                upis: activeMeters.consumption
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'consumption'
+                            };
+                        }
+
+                        usage = getUsage(sourceData, 'consumption', 'off');
+                        row = getRow(collection.rows, 'offPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'off',
+                                fx: 'sum',
+                                upis: activeMeters.consumption
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'consumption'
+                            };
+                        }
+                    },
+                    'loadFactor': function (collection, source, index) {
+                        getRow(collection.rows, 'loadFactor').data.push(getLoadFactor(source.data));
+                    },
+                    'charges': function (collection, source, index) {
+                        var billTotalChargesCollection = getCollection(source.data.collections, 'Total Charges'),
+                            rows = (billTotalChargesCollection && billTotalChargesCollection.rows) || [];
+                        rows.forEach(function (row) {
+                            var lineItem = row.name.displayValue;
+                            if ((lineItem !== 'Total') && !addedLineItems[lineItem]) {
+                                addedLineItems[lineItem] = true;
+                                chargesLineItems.push(lineItem);
+                            }
+                        });
+                    },
+                    'netCost': function (collection, source, index) {
+                        // nothing to do with this collection yet
+                    }
+                };
+
+            // Clear all of our server request references
+            self.dataRequests = {
+                callback: callback
+            };
+
+            self.yearBillData.source.forEach(function (source, index) {
+                self.yearBillData.collections.forEach(function (collection) {
+                    collection.columns.push({
+                        name: {
+                            title: monthShortLookup[source.month],
+                            visible: true,
+                        },
+                        season: source.season,
+                        start: source.start,
+                        end: source.end,
+                        fullDate: source.fullDate
+                    });
+                    process[collection.name.id](collection, source, index);
+                });
+            });
+
+            // Build the charges collection
+            buildChargesCollection();
+
+            // If we finished the post processing and didn't need any additional data
+            if (dataRequest.options.length === 0) {
+                // See the comment just before the call to postProcessYearData_step2 in postProcessYearDataReceiveDataHandler()
+                // for why we pass 'self' to our _step2 function...
+                self.postProcessYearData_step2(self);
+            } else {
+                // Launch the miss-aisles
+                self.bindings.gettingData(true);
+                tou.addDataRequest(dataRequest);
+                tou.makeDataRequest();
+            }
+        },
+        postProcessYearData_step2: function (self) {
+            var buildNetCosts = function () {
+                    var netCostData = getRow(getCollection(self.yearBillData.collections, 'netCost').rows, 'kwh').data, // empty array
+                        chargeTotals = getRow(getCollection(self.yearBillData.collections, 'charges').rows, 'Total', 'displayValue').data, // array
+                        totalKwhData = getRow(getCollection(self.yearBillData.collections, 'consumption').rows, 'total').data; // array
 
                     chargeTotals.forEach(function (total, index) {
                         var value = total.value / totalKwhData[index].value,
@@ -5002,7 +5361,7 @@ tou.utilityPages.Electricity = function() {
                         netCostData.push(data);
                     });
                 },
-                getMaxAvgAndTotals = function () {
+                getMaxAvgTotalsAndDisplayUnits = function () {
                     var lookupTable = {
                             'demand': {
                                 calc: 'Average',
@@ -5036,9 +5395,13 @@ tou.utilityPages.Electricity = function() {
                                 prepend: '$',
                                 append: ''
                             }
-                        };
+                        },
+                        consumptionCollection,
+                        totalConsumptionRow,
+                        chargesCollection,
+                        totalChargeRow;
 
-                    yearData.collections.forEach(function (collection) {
+                    self.yearBillData.collections.forEach(function (collection) {
                         var lookup = lookupTable[collection.name.id];
 
                         // Add column for calculation output
@@ -5087,7 +5450,17 @@ tou.utilityPages.Electricity = function() {
                                 data.value = sum;
                                 data.isTotal = true;
                             } else { // Average
-                                data.value = sum / cnt;
+                                // The average NET Cost is not an average of each month's net cost. It is:
+                                // total year's cost / total year's consumption
+                                if (collection.name.id === 'netCost') {
+                                    consumptionCollection = getCollection(self.yearBillData.collections, 'consumption');
+                                    totalConsumptionRow = getRow(consumptionCollection.rows, 'total');
+                                    chargesCollection = getCollection(self.yearBillData.collections, 'charges');
+                                    totalChargeRow = getRow(chargesCollection.rows, 'Total', 'displayValue');
+                                    data.value = totalChargeRow.data[totalChargeRow.data.length - 1].value / totalConsumptionRow.data[totalConsumptionRow.data.length - 1].value;
+                                } else {
+                                    data.value = sum / cnt;
+                                }
                             }
                             data.displayValue = self.prettyValue({
                                 value: data.value,
@@ -5139,119 +5512,16 @@ tou.utilityPages.Electricity = function() {
                 },
                 getRow = function (rows, name, key) {
                     return getRowOrCollection(rows, name, key);
-                },
-                getUsage = function (data, type, peak) {
-                    var collections = data.collections,
-                        collection,
-                        row,
-                        usage,
-                        returnData;
-                    for (var i = 0, len = collections.length; i < len; i++) {
-                        collection = collections[i];
-                        for (var j = 0, jlen = collection.rows.length; j < jlen; j++) {
-                            row = collection.rows[j];
-                            if (row.rateElement && (row.rateElement.type === type) && (row.rateElement.peak === peak)) {
-                                usage = row.usage;
-
-                                if (type === 'reactive') {
-                                    usage = usage.contributors.reactiveMax;
-                                } else if (type === 'demand') {
-                                    usage = usage.contributors.demand;
-                                } else { // consumption
-                                    usage = usage.contributors.consumption;
-                                }
-
-                                usage = tou.toFixed(usage, 0);
-                                returnData = {
-                                    value: usage,
-                                    displayValue: self.prettyValue({value: usage, digits: 0})
-                                };
-
-                                returnData.units = {
-                                    displayValue: row.usage.units.displayValue,
-                                    visible: false
-                                };
-                                returnData.rateElement = row.rateElement;
-
-                                return returnData;
-                            }
-                        }
-                    }
-                    return {
-                        value: 0,
-                        displayValue: '0',
-                        units: {
-                            displayValue: '',
-                            visible: false
-                        }
-                    };
-                },
-                getLoadFactor = function (data) {
-                    var loadFactor = data.loadFactor;
-                    return {
-                        value: loadFactor.value,
-                        displayValue: loadFactor.displayValue
-                    };
-                },
-                process = {
-                    'demand': function (collection, sourceData, index) {
-                        getRow(collection.rows, 'onPeak').data.push(getUsage(sourceData, 'demand', 'on'));
-                        getRow(collection.rows, 'offPeak').data.push(getUsage(sourceData, 'demand', 'off'));
-                        getRow(collection.rows, 'reactiveAtPeak').data.push(getUsage(sourceData, 'reactive', 'both'));
-                    },
-                    'consumption': function (collection, sourceData, index) {
-                        var data;
-
-                        // We handle our total consumption a bit differently because we need to add the 'isTotal' key to our data set
-                        data = getUsage(sourceData, 'consumption', 'both');
-                        data.isTotal = true;
-                        getRow(collection.rows, 'total').data.push(data);
-
-                        getRow(collection.rows, 'onPeak').data.push(getUsage(sourceData, 'consumption', 'on'));
-                        getRow(collection.rows, 'offPeak').data.push(getUsage(sourceData, 'consumption', 'off'));
-                    },
-                    'loadFactor': function (collection, sourceData, index) {
-                        getRow(collection.rows, 'loadFactor').data.push(getLoadFactor(sourceData));
-                    },
-                    'charges': function (collection, sourceData, index) {
-                        var billTotalChargesCollection = getCollection(sourceData.collections, 'Total Charges'),
-                            rows = (billTotalChargesCollection && billTotalChargesCollection.rows) || [];
-                        rows.forEach(function (row) {
-                            var lineItem = row.name.displayValue;
-                            if ((lineItem !== 'Total') && !addedLineItems[lineItem]) {
-                                addedLineItems[lineItem] = true;
-                                chargesLineItems.push(lineItem);
-                            }
-                        });
-                    },
-                    'netCost': function (collection, sourceData, index) {
-                        // nothing to do with this collection yet
-                    }
                 };
 
-            yearData.source.forEach(function (source, index) {
-                yearData.collections.forEach(function (collection) {
-                    collection.columns.push({
-                        name: {
-                            title: monthShortLookup[source.month],
-                            visible: true,
-                        },
-                        season: source.season,
-                        start: source.start
-                    });
-                    process[collection.name.id](collection, source.data, index);
-                });
-            });
-
-            // Build the charges collection
-            buildChargesCollection();
             // Build the net cost pwer kwh collection
             buildNetCosts();
-            // Identify the maximums in each row & add total/average column
-            getMaxAvgAndTotals();
-            //
-
-            delete yearData.source;
+            // Identify the maximums in each row, add total/average column, and display units as needed
+            getMaxAvgTotalsAndDisplayUnits();
+            // Delete source data - was going to keep it but it's too big for the ajax post and we don't have to have it...
+            delete self.yearBillData.source;
+            // Now we're finally ready to call the callback and display the yearly bill to the user
+            self.dataRequests.callback();
         },
         prettyValue: function (data) {
             // data is expected to take the following form
