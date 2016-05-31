@@ -25,20 +25,22 @@ html
                             li
                                 img.circle.dorsett-logo(src='/img/Dorsett_icon.png')
                             li.active
-                                a.dropdown-button(href='#!', data-activates='dropdown1', data-beloworigin="true", data-hover="true")
+                                a.dropdown-button(href='javascript://', data-activates='dropdown1', data-beloworigin='true', data-hover='true')
                                     | Displays
                                     i.material-icons.right arrow_drop_down
                             li.active
-                                a.waves-effect(href="javascript://") 4250 AH5 ZONE CONTROL SEQ
+                                a.waves-effect(href='javascript://') 4250 AH5 ZONE CONTROL SEQ
                         ul.right.hide-on-med-and-down
+                            //- li
+                            //-     form
+                            //-         .input-field
+                            //-             input#search(type='search', required='')
+                            //-             label(for='search')
+                            //-                 i.material-icons search
+                            //-             i.material-icons close
                             li
                                 span.clock 10:10
-                        //- form.right
-                        //-     .input-field
-                        //-         input#search(type='search', required='')
-                        //-         label(for='search')
-                        //-             i.material-icons search
-                        //-         i.material-icons close
+
 
         main
             .mainContent
@@ -61,15 +63,15 @@ html
                                     | I am a very simple card. I am good at containing small bits of information.
                                     | I am convenient because I require little markup to use effectively.
                             .card-action
-                                a(href='javascript://') This is a link
-                                a(href='javascript://') This is a link
+                                a(href='javascript://') Cancel
+                                a(href='javascript://') Confirm
         footer
 
     script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
     script(type='text/javascript', src='/js/lib/jquery-ui.js')
     script(type='text/javascript', src='/js/lib/config.js')
     script(type='text/javascript', src='/js/lib/moment.js')
-    script(type='text/javascript', src="/js/lib/knockout-3.2.0.js")
+    script(type='text/javascript', src='/js/lib/knockout-3.2.0.js')
     script(type='text/javascript', src='/js/lib/socket.io.js')
     script(type='text/javascript', src='/js/lib/materialize.js')
     script(type='text/javascript', src='/js/v2/home.js')
