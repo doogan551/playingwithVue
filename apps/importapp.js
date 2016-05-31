@@ -40,8 +40,8 @@ process.argv.forEach(function(val, index, array) {
 			processFlag = "innerloop";
 		} else if (val === "updategpl") {
 			processFlag = "updategpl";
-		} else if (val === "test") {
-			processFlag = "test";
+		} else if (val === "updateHistory") {
+			processFlag = "updateHistory";
 		} else {
 			logger.info("No args passed. Proceeding with default import process.");
 		}
@@ -67,17 +67,11 @@ if (processFlag === "gpl") {
 			logger.info("done", err, new Date());
 		});
 	});
-} else if (processFlag === 'test') {
+} else if (processFlag === 'updateHistory') {
 	dbModel.connect(connectionString.join(''), function(err) {
-		doGplImport(db, xmlPath, function(err) {
-			updateIndexes(function(err) {
-				setupPointRefsArray(db, function(err) {
-					changeUpis(function(err) {
-						console.log('done');
-					});
-				});
-			});
-		});
+		updateHistory(function(err) {
+			console.log('done');
+		})
 	});
 } else {
 	mongo.connect(conn, function(err, db) {
@@ -99,12 +93,14 @@ function importUpdate() {
 						updateIndexes(function(err) {
 							fixUpisCollection(db, function(err) {
 								convertHistoryReports(db, function(err) {
-									convertScheduleEntries(db, function(err) {
-										updateAllProgramPoints(db, function(err) {
-											updateAllSensorPoints(db, function(err) {
+									convertTotalizerReports(function(err) {
+										convertScheduleEntries(db, function(err) {
+											updateAllProgramPoints(db, function(err) {
+												updateAllSensorPoints(db, function(err) {
 
-												self.innerLoop(db, limit, skip);
-												// logger.info('done');
+													self.innerLoop(db, limit, skip);
+													//logger.info('done');
+												});
 											});
 										});
 									});
@@ -709,6 +705,7 @@ function testHistory() {
 }
 
 function convertHistoryReports(db, callback) {
+	console.log('converting history reports');
 	db.collection('OldHistLogs').find({}, function(err, cursor) {
 		function processPoint(err, point) {
 			if (point === null) {
@@ -747,43 +744,45 @@ function convertHistoryReports(db, callback) {
 						"Point Refs": 1,
 						'Engineering Units': 1
 					}, function(err, ref) {
-						report["Report Config"].columns.push({
-							"colName": ref.Name,
-							"colDisplayName": ref.Name,
-							"valueType": "None",
-							"operator": "",
-							"calculation": "Mean",
-							"canCalculate": true,
-							"includeInReport": true,
-							"includeInChart": true,
-							"multiplier": 1,
-							"precision": 5,
-							"upi": ref._id,
-							"pointType": ref['Point Type'].Value,
-							"units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
-							"canBeCharted": true,
-							"yaxisGroup": "A",
-							"AppIndex": index + 1
-						});
-						report["Point Refs"].push({
-							"PropertyName": "Column Point",
-							"PropertyEnum": 131,
-							"AppIndex": index + 1,
-							"isDisplayable": true,
-							"isReadOnly": false,
-							"Value": ref._id,
-							"PointName": "",
-							"PointType": 0,
-							"PointInst": 0,
-							"DevInst": 0
-						});
-						report = Config.EditChanges.applyUniquePIDLogic({
-							point: report,
-							refPoint: ref
-						}, index);
-						report._actvAlmId = ObjectID("000000000000000000000000");
-						report._curAlmId = ObjectID("000000000000000000000000");
-						index++;
+						if (!!ref) {
+							report["Report Config"].columns.push({
+								"colName": ref.Name,
+								"colDisplayName": ref.Name,
+								"valueType": "None",
+								"operator": "",
+								"calculation": "Mean",
+								"canCalculate": true,
+								"includeInReport": true,
+								"includeInChart": true,
+								"multiplier": 1,
+								"precision": 5,
+								"upi": ref._id,
+								"pointType": ref['Point Type'].Value,
+								"units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
+								"canBeCharted": true,
+								"yaxisGroup": "A",
+								"AppIndex": index + 1
+							});
+							report["Point Refs"].push({
+								"PropertyName": "Column Point",
+								"PropertyEnum": 131,
+								"AppIndex": index + 1,
+								"isDisplayable": true,
+								"isReadOnly": false,
+								"Value": ref._id,
+								"PointName": "",
+								"PointType": 0,
+								"PointInst": 0,
+								"DevInst": 0
+							});
+							report = Config.EditChanges.applyUniquePIDLogic({
+								point: report,
+								refPoint: ref
+							}, index);
+							report._actvAlmId = ObjectID("000000000000000000000000");
+							report._curAlmId = ObjectID("000000000000000000000000");
+							index++;
+						}
 						cb(null);
 
 					});
@@ -797,6 +796,109 @@ function convertHistoryReports(db, callback) {
 		}
 
 		cursor.nextObject(processPoint);
+	});
+}
+
+function convertTotalizerReports(callback) {
+	console.log('converting totalizer reports');
+	var criteria = {
+		collection: 'Totalizers',
+		query: {}
+	};
+	Utility.iterateCursor(criteria, function(err, doc, cb) {
+		var guide = importconfig.reportGuide;
+		var template = Config.Templates.getTemplate("Report");
+		var report = lodash.merge(template, guide);
+		var refIds = [];
+
+		report["Report Type"].Value = "Totalizer";
+		report["Report Type"].eValue = Config.Enums["Report Types"]["Totalizer"].enum;
+		report["Point Refs"] = [];
+		report._pStatus = 0;
+		report._id = doc._id;
+		report.Name = doc.Name;
+		//report._Name = point.Name.toLowerCase();
+		delete report._Name;
+
+		var names = report.Name.split('_');
+		var index = 0;
+
+		for (var i = 1; i <= names.length; i++) {
+			report["name" + i] = names[i - 1];
+			report["_name" + i] = names[i - 1].toLowerCase();
+		}
+		report["Report Config"].reportTitle = report.Name;
+
+		async.forEachSeries(doc.Monitors, function(monitor, cb2) {
+			var monitorCriteria = {
+				collection: 'points',
+				query: {
+					_id: monitor['Monitor upi']
+				},
+				fields: {
+					Name: 1,
+					Value: 1,
+					"Point Type": 1,
+					"Point Refs": 1,
+					'Engineering Units': 1
+				}
+			};
+
+			Utility.getOne(monitorCriteria, function(err, ref) {
+				if (!!ref) {
+					if (refIds.indexOf(ref._id) < 0) {
+						refIds.push(ref._id);
+
+						report["Point Refs"].push({
+							"PropertyName": "Column Point",
+							"PropertyEnum": 131,
+							"AppIndex": report["Point Refs"].length + 1,
+							"isDisplayable": true,
+							"isReadOnly": false,
+							"Value": monitor['Monitor upi'],
+							"PointName": "",
+							"PointType": 0,
+							"PointInst": 0,
+							"DevInst": 0
+						});
+					}
+					report["Report Config"].columns.push({
+						"colName": ref.Name,
+						"colDisplayName": ref.Name,
+						"valueType": "None",
+						"operator": monitor['Monitor Property'],
+						"calculation": "",
+						"canCalculate": true,
+						"includeInReport": true,
+						"includeInChart": true,
+						"multiplier": 1,
+						"precision": 3,
+						"upi": ref._id,
+						"pointType": ref['Point Type'].Value,
+						"units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
+						"canBeCharted": true,
+						"yaxisGroup": "A",
+						"AppIndex": refIds.indexOf(ref._id)
+					});
+					report = Config.EditChanges.applyUniquePIDLogic({
+						point: report,
+						refPoint: ref
+					}, refIds.indexOf(ref._id));
+					report._actvAlmId = ObjectID("000000000000000000000000");
+					report._curAlmId = ObjectID("000000000000000000000000");
+				}
+				cb2(null);
+
+			});
+		}, function(err) {
+			Utility.insert({
+				collection: pointsCollection,
+				insertObj: report
+			}, cb);
+		});
+	}, function(err, count) {
+		console.log('convertTotalizerReports', err, count);
+		callback(err);
 	});
 }
 
@@ -896,7 +998,9 @@ function cleanupDB(db, callback) {
 		if (err) {
 			return callback(err);
 		}
-		db.dropCollection('OldHistLogs', callback);
+		db.dropCollection('OldHistLogs', function() {
+			db.dropCollection('Totalizers', callback);
+		});
 	});
 }
 
@@ -2819,5 +2923,50 @@ function doGplImport(db, xmlPath, cb) {
 			});
 			parser.parseString(filedata, handler(filename));
 		}*/
+	});
+}
+
+function updateHistory(cb) {
+	var Archive = require('../models/archiveutility');
+	var now = moment().endOf('month');
+	var start = moment('2000/01', 'YYYY/MM');
+	var count = 0;
+	Utility.get({
+		collection: 'new_points',
+		query: {},
+		fields: {
+			_oldUpi: 1
+		},
+		sort: {
+			_id: 1
+		}
+	}, function(err, results) {
+		async.whilst(function() {
+			return now.isAfter(start);
+		}, function(callback) {
+			async.eachSeries(results, function(doc, eachCB) {
+				var criteria = {
+					year: now.year(),
+					statement: ['UPDATE History_', now.year(), now.format('MM'), ' SET UPI=? WHERE UPI=?'].join('')
+				};
+				Archive.prepare(criteria, function(stmt) {
+					criteria = {
+						year: now.year(),
+						statement: stmt,
+						parameters: [doc._id, doc._oldUpi]
+					};
+					Archive.runStatement(criteria, function() {
+						count += this.changes;
+						Archive.finalizeStatement(criteria, function() {
+							eachCB();
+						});
+					});
+				});
+			}, function(err) {
+				now = now.subtract(1, 'month');
+				console.log(count);
+				callback(err);
+			});
+		}, cb);
 	});
 }

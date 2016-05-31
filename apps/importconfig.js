@@ -8,7 +8,7 @@ module.exports = {
 	// conn: 'mongodb://localhost/infoscan',
 	conn: 'mongodb://localhost/msfcimport',
 	// xmlPath: "//192.168.1.88/d$/InfoAdmin/MSFC GPL/XML",
-	xmlPath: "//scada1-v/d$/InfoAdmin/uploads/GPL",
+	xmlPath: "C:/import/msfc/GPLConvert",
 	// xmlPath: "C:/Users/rob/Documents/MSFC_GPL/MSFC_GPL",
 	ctrlrs: {
 		"Name": "Controllers",
