@@ -104,7 +104,7 @@
                 .sectionTitle Statistics
                 .sectionBody
                     .entry.bm15px #[span(data-bind="text: displayPercentageOfValidData")]% of possible data was collected to create this report.
-                    // ko if: percentageOfMissingData() > 0.0
+                    // ko if: percentageOfMissingData() > 0.0 && percentageOfMissingData() < 100
                     .entry.bm15px Meters with data missing and % missing:
                     table.table.table-striped
                         thead
@@ -298,17 +298,17 @@
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     td
-                                        .itemValue(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
                                     td
                                     td
-                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMVAR().value)")
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMaxMVAR().value)")
                                     // /ko
 
                                     td
-                                        .itemValue(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
                                     td
                                     td
-                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMVAR().value)")
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMaxMVAR().value)")
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     td
@@ -320,7 +320,7 @@
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     td
-                                        .itemValue(data-bind="text: tou.numberWithCommas(maxPeriodUsage().value)")
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(maxPeriodUsage().value)")
                                     // /ko
                                 tr
                                     td.bold Totals

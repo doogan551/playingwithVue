@@ -6150,6 +6150,14 @@ tou.utilityPages.Electricity = function() {
                 timestamp: null,
                 value: null
             }),
+            duOffPeakMaxMVAR: ko.observable({
+                timestamp: null,
+                value: null
+            }),
+            duOnPeakMaxMVAR: ko.observable({
+                timestamp: null,
+                value: null
+            }),
             duOffPeakMWH: ko.observable({
                 timestamp: null,
                 value: null
@@ -6681,10 +6689,10 @@ tou.utilityPages.Electricity = function() {
                     myBindings.setGridData("OffPeakReactive");
                     myBindings.duOnPeakMW(myBindings.findMax(myBindings.reportData["OnPeakDemand"]));
                     myBindings.duOffPeakMW(myBindings.findMax(myBindings.reportData["OffPeakDemand"]));
-                    myBindings.duOnPeakMVAR(myBindings.findMax(myBindings.reportData["OnPeakReactive"]));
-                    myBindings.duOffPeakMVAR(myBindings.findMax(myBindings.reportData["OffPeakReactive"]));
-                    //myBindings.duOnPeakMVAR(myBindings.findByTimestamp(myBindings.reportData["OnPeakReactive"], myBindings.duOnPeakMW().timeStamp));
-                    //myBindings.duOffPeakMVAR(myBindings.findByTimestamp(myBindings.reportData["OffPeakReactive"], myBindings.duOffPeakMW().timeStamp));
+                    myBindings.duOnPeakMaxMVAR(myBindings.findMax(myBindings.reportData["OnPeakReactive"]));
+                    myBindings.duOffPeakMaxMVAR(myBindings.findMax(myBindings.reportData["OffPeakReactive"]));
+                    myBindings.duOnPeakMVAR(myBindings.findByTimestamp(myBindings.reportData["OnPeakReactive"], myBindings.duOnPeakMW().timeStamp));
+                    myBindings.duOffPeakMVAR(myBindings.findByTimestamp(myBindings.reportData["OffPeakReactive"], myBindings.duOffPeakMW().timeStamp));
 
                     myBindings.renderOnPeakDemand(myBindings.reportData["OnPeakDemand"]);
                     myBindings.renderDemand(myBindings.reportData["MaxForOnOffPeakDemandArray"]);
