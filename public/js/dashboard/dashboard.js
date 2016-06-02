@@ -7152,7 +7152,7 @@ tou.utilityPages.Electricity = function() {
                     highestTempVerbiage,
                     lowestTempVerbiage,
                     chartWidth = myBindings.getChartWidth(printFormat),
-                    $highlowTemperaturesPeriodChart = $(myBindings.$reportsContent).find(' .highlowTemperaturesPeriodChart');
+                    $highlowTemperaturesPeriodChart = $(myBindings.$reportsContent).find('.highlowTemperaturesPeriodChart');
 
                 titleVerbiage = "High/Low " + periodVerbiage + " Temperatures - " + myBindings.selectedMonthYear().prettyDate;
                 myBindings.temperatureTitle(titleVerbiage);
@@ -7222,6 +7222,7 @@ tou.utilityPages.Electricity = function() {
                             yAxisTitle: 'F'
                         });
                     }
+                    myBindings.$highlowTemperatures.show();
                 } else {
                     myBindings.$highlowTemperatures.hide();
                     myBindings.temperatureTitle("");
