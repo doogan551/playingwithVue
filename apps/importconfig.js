@@ -6,8 +6,8 @@ module.exports = {
 	//var conn = 'mongodb://10.250.0.10/infoscan';
 	//var conn = 'mongodb://ROBERT4/infoscan';
 	// conn: 'mongodb://localhost/infoscan',
-	conn: 'mongodb://localhost/msfcimport',
-	xmlPath: "//192.168.1.88/d$/InfoAdmin/MSFC GPL/XML",
+	conn: 'mongodb://localhost/infoscan',
+	xmlPath: "C:/import/msfc/GPLConvert",
 	// xmlPath: "C:/Users/rob/Documents/MSFC_GPL/MSFC_GPL",
 	ctrlrs: {
 		"Name": "Controllers",
@@ -94,75 +94,44 @@ module.exports = {
 	}],
 	reportGuide: {
 		"Report Config": {
-			"reportType": "History",
-			"reportTitle": "a_ghdrh",
-			"reportTemplate": "",
-			"includeFilter": false,
-			"includeReportName": false,
-			"returnLimit": "0",
-			"interval": "1",
-			"offset": "6",
-			"dataSources": {
-				"History": {
-					"columns": [{
-						"colName": "Date",
-						"valueType": "DateTime",
-						"upi": "0"
-					}],
-					"filterMode": "And",
-					"filterOn": false,
-					"groups": [],
-					"sort": [],
-					"totals": {},
-					"filters": {
-						"0": {
-							"column": "Start_Date",
-							"condition": "EqualTo",
-							"dataType": "Numeric",
-							"value1": "1430242902",
-							"value2": "",
-							"fieldIs": "Value",
-							"expression": "",
-							"valueList": "",
-							"value3": "4/28/2015 1:41 PM"
-						},
-						"1": {
-							"column": "End_Date",
-							"condition": "EqualTo",
-							"dataType": "Numeric",
-							"value1": "1430242902",
-							"value2": "",
-							"fieldIs": "Value",
-							"expression": "",
-							"valueList": "",
-							"value3": "4/28/2015 1:41 PM"
-						}
-					}
-				}
+			"columns": [{
+				"colName": "Date",
+				"valueType": "DateTime",
+				"operator": "",
+				"calculation": "",
+				"canCalculate": false,
+				"precision": 0,
+				"upi": 0,
+				"Appindex": -1,
+				"colDisplayName": "Date",
+				"canBeCharted": false,
+				"includeInChart": false,
+				"multiplier": 1
+			}],
+			"filters": [],
+			"pointFilter": {
+				"name1": "",
+				"name2": "",
+				"name3": "",
+				"name4": "",
+				"selectedPointTypes": []
 			},
-			"reportOptions": {
-				"componentType": "Data",
-				"dataSourcesOrder": [
-					"History"
-				],
-				"language": "C",
-				"orientation": "Portrait",
-				"relations": {},
-				"theme": "Green_50",
-				"unit": "in"
-			}
-		},
-		"Filter Data": [{
-			"filterName": "Start Date",
-			"operator": "EqualTo",
-			"value": 1430242901800.0000000000000000,
-			"valueType": "DateTime"
-		}, {
-			"filterName": "End Date",
-			"operator": "EqualTo",
-			"value": 1430242901801.0000000000000000,
-			"valueType": "DateTime"
-		}]
+			"returnLimit": 2000,
+			"interval": {
+				"text": "Day",
+				"value": 1
+			},
+			"duration": {
+				"startDate": 0, // default values here are "today - 1"
+				"endDate": 0, // default of "tomorrow"
+				"startTimeOffSet": "00:00",
+				"endTimeOffSet": "00:00",
+				"duration": 0.0,
+				"selectedRange": "Today"
+			},
+			"selectedPageLength": 48,
+			"selectedChartType": "Line"
+		}
 	},
 	timeZones: {
 		"Name": "Time Zones",

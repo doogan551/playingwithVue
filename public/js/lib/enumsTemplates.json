@@ -1408,7 +1408,7 @@
                 "enum": 166,
                 "lists": ["default"],
                 "endpoint": "gpl",
-                "ptRefProps": ["Sequence Device", "GPLBlock"],
+                "ptRefProps": ["Device Point", "GPLBlock"],
                 "schedProps": []
             },
             "Setpoint Adjust": {
@@ -2904,11 +2904,6 @@
                 "valueType": "HourMin",
                 "reportEnable": true
             },
-            "Point Instance": {
-                "enum": 159,
-                "valueType": "Unsigned",
-                "reportEnable": true
-            },
             "Point Refs": {
                 "enum": 277,
                 "valueType": "Array",
@@ -3332,11 +3327,6 @@
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": "Sensor Types"
-            },
-            "Sequence Device": {
-                "enum": 276,
-                "valueType": "UniquePID",
-                "reportEnable": true
             },
             "Serial Number": {
                 "enum": 93,
@@ -3805,12 +3795,6 @@
             "_name3": "",
             "_name4": "",
             "_Name": "",
-            "Point Instance": {
-                "isDisplayable": true,
-                "isReadOnly": true,
-                "ValueType": 4,
-                "Value": 0
-            },
             "Point Type": {
                 "isDisplayable": true,
                 "isReadOnly": true,
@@ -7899,7 +7883,7 @@
                     "Value": ""
                 },
                 "Point Refs": [{
-                    "PropertyName": "Sequence Device",
+                    "PropertyName": "Device Point",
                     "PropertyEnum": 276,
                     "AppIndex": 0,
                     "isDisplayable": true,

@@ -17,7 +17,7 @@ var staging = {
     'letsencrypt': {
       'enabled': false
     },
-    'domains': ['']
+    'domains': ['www.dorsett-tech.org', 'dorsett-tech.org']
   },
   runNotifications: false
 };
