@@ -865,7 +865,7 @@ var getSums = function(operation, option, values, range, callback) {
 				var periodRange = ranges[r];
 				for (var v = 0; v < values.length; v++) {
 					var value = values[v];
-					if (option.fx === 'weather') {
+					if (option.ops[0].fx === 'weather') {
 						if (value.timestamp >= scaleRange.start && value.timestamp < scaleRange.end && value.timestamp >= periodRange.start && value.timestamp < periodRange.end) {
 							newResult.sum += value.Value;
 							values.splice(v, 1);

@@ -742,15 +742,15 @@ var reportsViewModel = function () {
         checkForColumnCalculations = function () {
             for (var i = 0; i < self.listOfColumns().length; i++) {
                 if (!!self.listOfColumns()[i].canCalculate && self.listOfColumns()[i].canCalculate) {
-                    $columnsGrid.find(".multiplierColumn").show();
-                    $columnsGrid.find(".calculateColumn").show();
-                    $columnsGrid.find(".precisionColumn").show();
+                    $columnsGrid.find(".multiplierColumn").html("Multiplier");
+                    $columnsGrid.find(".calculateColumn").html("Calculate");
+                    $columnsGrid.find(".precisionColumn").html("Precision");
                     break;
                 }
             }
 
             if (self.reportType === "Totalizer") {
-                $columnsGrid.find(".typeColumn").show();
+                $columnsGrid.find(".typeColumn").html("Type");
             }
         },
         checkForIncludeInChart = function () {
@@ -764,15 +764,15 @@ var reportsViewModel = function () {
                     if (!activateCharting && self.listOfColumns()[i].includeInChart) {
                         activateCharting = true;
                     }
-                    if (!self.listOfColumns()[i].includeInChart) {
+                    if (i > 0 && !self.listOfColumns()[i].includeInChart) {
                         allChecked = false;
                     }
                 }
             }
 
             if (displayChartingHeader) {
-                $columnsGrid.find(".includeInChartColumn").show();
-                $columnsGrid.find(".yaxisChartGroupColumn").show();
+                $columnsGrid.find("th .includeInChartColumn").html("Chart");
+                $columnsGrid.find("th .yaxisChartGroupColumn").html("Group");
             }
 
             self.chartable(activateCharting);
@@ -2417,13 +2417,13 @@ var reportsViewModel = function () {
                 }
             });
 
-            $columnsGrid.find(".includeInChartColumn").on('mousedown', function (e) {
+            $columnsGrid.find("th .includeInChartColumn").on('mousedown', function (e) {
                 if (self.canEdit()) {
                     longClickStart = moment();
                 }
             });
 
-            $columnsGrid.find(".includeInChartColumn").on('click', function (e) {
+            $columnsGrid.find("th .includeInChartColumn").on('click', function (e) {
                 if (self.canEdit()) {
                     if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
                         if (!includeInChartEventsSet) {
