@@ -878,8 +878,8 @@ window.workspaceManager = (function($) {
             document.documentElement.clientHeight ? document.documentElement.clientHeight :
             screen.height,
             settings = {
-                width: 800,
-                height: 600,
+                width: 1250,
+                height: 750,
                 callback: function() {}
             };
 

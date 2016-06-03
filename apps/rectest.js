@@ -22,17 +22,19 @@ function newHistory() {
   var end = moment.unix(start).add(1, 'month').unix();
 
   var options = [{
-    "touid": "tou_14",
-    "utilityName": "Electricity",
     "range": {
-      "start": start,
-      "end": end
+      "start": 1454306400,
+      "end": 1456812000
     },
-    "fiscalYear": 2015,
-    "type": "demand",
+    "upis": [918926, 918928, 918927, 918923, 918930, 918931, 918932, 918938, 918937, 918936, 918935, 918934, 918940, 918952, 918941, 918942, 918943, 918944, 918919, 918920, 918921, 918922, 918933, 918924, 918925, 918939, 918949, 918953, 918947, 918945, 918951, 918950, 918929],
+    "secondUpis": ["918981", "918979", "918980", "918984", "918977", "918976", "918975", "918973", "918972", "918971", "918970", "918969", "918967", "918966", "918965", "918964", "918963", "918962", "918986", "918987", "918988", "918989", "918974", "918983", "918982", "918968", "918958", "918957", "918956", "918961", "918960", "918959", "918978"],
+    "rateCollectionName": "Reactive Power Charges",
+    "fiscalYear": "2016",
+    "touid": "tou_11_both_reactive",
     "scale": "month",
-    "fx": "max",
-    "upis": upis.demand
+    "peak": "both",
+    "fx": "reactiveCharge",
+    "utilityName": "Electricity"
   }];
 
   // options  = [{"range":{"start":1417410000,"end":1420088400},"scale":"half-hour","fx":"missingData","upis":[919009,918929,918978]}];
@@ -48,7 +50,8 @@ function newHistory() {
         console.log('doXne with csv', err);
       });*/
       result = history.unbuildOps(result);
-      console.log(JSON.stringify(result));
+      // console.log(JSON.stringify(result));
+      console.log(result[0].results[0].reactive);
       /*var peakSum = 0;
       var totalSum = 0;
       for (var r = 0; r < result.length; r++) {
@@ -70,7 +73,7 @@ function newHistory() {
     });
   });
 }
-// newHistory();
+newHistory();
 
 function fixDbDoubles() {
   db.connect(connectionString.join(''), function(err) {
@@ -531,4 +534,4 @@ function test() {
   var pjson = require('../package.json');
   console.log(pjson.version);
 }
-test();
+// test();

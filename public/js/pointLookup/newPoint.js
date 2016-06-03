@@ -227,8 +227,8 @@ window.newPoint = (function(module, ko, $) {
                     endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint(params.pointType, data._id);
                     handoffMode = endPoint.edit || endPoint.review;
                     workspaceManager.openWindowPositioned(handoffMode.url, data.Name, params.pointType, handoffMode.target, data._id, {
-                        width: 750,
-                        height: screen.availHeight - 100,
+                        width: 1250,
+                        height: 750,
                         callback: function() {
                             if (window) {
                                 window.close();
