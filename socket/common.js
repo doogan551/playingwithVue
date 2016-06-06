@@ -893,6 +893,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
         } else if (newPoint._pStatus !== Config.Enums["Point Statuses"].Active.enum ||
           newPoint._devModel === Config.Enums["Device Model Types"].Unknown.enum ||
           newPoint._devModel === Config.Enums["Device Model Types"]["Central Device"].enum ||
+          newPoint["Point Type"].Value === "Sequence" ||
           (newPoint["Point Type"].Value !== "Device" &&
             (Config.Utility.getPropertyObject("Device Point", newPoint) === null ||
               Config.Utility.getPropertyObject("Device Point", newPoint).PointInst === 0))) {
