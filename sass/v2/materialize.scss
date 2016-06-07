@@ -24,6 +24,75 @@
 /* END FONTS FOR MATERIALIZE */
 
 
+/* overrides */
+
+$navbarHeight: 48px;
+
+.nav-wrapper,
+.nav-wrapper form,
+.nav-wrapper form .input-field {
+    height: $navbarHeight;
+}
+
+.navbar-fixed {
+    height: $navbarHeight;
+}
+
+nav {
+    height: $navbarHeight;
+    line-height: $navbarHeight;
+
+    i, [class^="mdi-"], [class*="mdi-"], i.material-icons, .button-collapse i {
+        height: $navbarHeight;
+        line-height: $navbarHeight;
+    }
+
+    .brand-logo {
+        font-size: 1.6rem;
+    }
+}
+
+@media only screen and (min-width: 601px) {
+    nav {
+        height: $navbarHeight;
+        line-height: $navbarHeight;
+
+        .nav-wrapper i {
+            height: $navbarHeight;
+            line-height: $navbarHeight;
+        }
+
+        a.button-collapse {
+            height: $navbarHeight;
+            line-height: $navbarHeight;
+            i {
+                height: $navbarHeight;
+                line-height: $navbarHeight;
+            }
+        }
+    }
+}
+
+nav {
+    .nav-wrapper {
+        & > ul {
+            & > li {
+                margin-left: 5px;
+                margin-right: 5px;
+                height: $navbarHeight;
+
+                a {
+                    max-width: 180px;
+                    height: $navbarHeight;
+                }
+            }
+        }
+    }
+}
+
+/* overrides */
+
+
 /* GLOBAL */
 $bodyBG: #eee;
 $darkBG: #2E3135;
@@ -38,36 +107,68 @@ body {
 body {
     margin: 0;
     background-color: $bodyBG !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .dorsett-logo {
-    height: 75%;
-    width: 75%;
+    height: $navbarHeight * 0.75;
+    width: $navbarHeight * 0.75;
     margin-top: 10%;
     cursor: pointer;
 }
 
-.mainContent {
+main {
+    flex-grow: 1;
+    padding: 0.5rem;
+    max-height: calc(100vh - #{$navbarHeight});
+}
 
+.noHover:hover {
+    background: none !important;
 }
 
 /* global */
 
-/* overrides */
-
-.nav-wrapper,
-.nav-wrapper form,
-.nav-wrapper form .input-field {
-    height: 100%;
+.activeCard {
+    z-index: 1;
 }
 
-nav {
-    ul {
-        li {
-            margin-left: 5px;
-            margin-right: 5px;
+.dti-card-panel {
+    max-width: 50%;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    margin: 0;
+
+    .card-toolbar {
+        cursor: move;
+        line-height: 1;
+        font-size: 24px;
+        border-bottom: 1px solid rgba(160, 160, 160, 0.2);
+
+        .card-title {
+            font-size: 16px;
+            position: absolute;
+            left: 50%;
+            top: 6px;
+
+            div {
+                position: relative;
+                left: -50%;
+            }
         }
+    }
+
+    .card-action-right {
+        padding-right: 0;
+        text-align: right;
     }
 }
 
-/* overrides */
+
+
+
+

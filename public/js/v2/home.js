@@ -18,7 +18,51 @@ var dti = {
                 }, (60 - now.seconds()) * 1000 - now.milliseconds());
             }
         }
+    },
+    panels: {
+        init: function () {
+            dti.panels.elementSelector = '.card, .card-panel';
+            dti.panels.$elements = $(dti.panels.elementSelector);
+
+            dti.panels.$elements.draggable({
+                containment: 'main',
+                scroll: false
+            });
+
+            // dti.panels.$elements.resizable({
+            //     helper: 'ui-resizable-helper',
+            //     containment: 'main'
+            // });
+
+            $('main').on('mousedown', dti.panels.elementSelector, function handleCardClick (event) {
+                dti.panels.activate($(event.currentTarget));
+            });
+
+            // $('.material-tooltip .backdrop').addClass('blue-grey');
+        },
+        activate: function ($target) {
+            $('.activeCard').removeClass('activeCard').addClass('lighten-3');
+            $target.removeClass('lighten-3').addClass('activeCard');
+        }
+    },
+    startButton: {
+        init: function () {
+            dti.startButton.$el = $('#startButton');
+
+            dti.startButton.$el.click(function startClick () {
+                var $newPanel = $('#newPanel');
+
+                $newPanel.removeClass('hide');
+                dti.panels.activate($newPanel);
+            });
+        }
     }
 };
 
-dti.clock.checkTime();
+$(function initWorkspaceV2 () {
+    // dti.clock.checkTime();
+
+    dti.panels.init();
+
+    dti.startButton.init();
+});
