@@ -90,7 +90,7 @@ module.exports = {
                 for (var n = 1; n <= portNs.length; n++) {
                     if (n !== currentUplinkPort) {
                         var portN = 'Port ' + n + ' ';
-                        if (device['Ethernet Network'].Value !== 0 && validEthProtocols.indexOf(device['Ethernet Protocol'].eValue) > -1) {
+                        if (device[portN + 'Network'].Value !== 0 && validPortProtocols.indexOf(device[portN + 'Protocol'].eValue) > -1) {
                             addToNetworks(deviceNetwork, device[portN + 'Network'].Value);
                         }
                     }
