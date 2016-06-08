@@ -1,5 +1,13 @@
 var async = require('async');
 var moment = require('moment');
+var config = require('config');
+
+var infoscanConfig = config.get('Infoscan');
+var twilioConfig = config.get('Twilio');
+var plivoConfig = config.get('Plivo');
+
+var inboundId = infoscanConfig.siteConfig.inboundId;
+var inboundUrl = (infoscanConfig.letsencrypt.enabled ? 'https://':'http://') + infoscanConfig.domains[0] + '/' + inboundId;
 
 var NotifierUtility = function() {
   this.Twilio = require('./twilio');
@@ -14,7 +22,13 @@ NotifierUtility.prototype.testText = function(number, message, cb) {
 
 NotifierUtility.prototype.fixPhoneNumbers = function(number) {
   number = number.toString();
-  number = (number.search(/\+/) >= 0) ? number : '+' + number;
+  
+  // Add US country code if not already present
+  if (number.length === 10) {
+    number = '+1' + number;
+  } else if (number.length === 11) {
+    number = '+' + number;
+  }
   return number;
 };
 
@@ -31,52 +45,63 @@ NotifierUtility.prototype.sendVoice = function(options, cb) {
   // https://www.plivo.com/docs/api/call/#make-an-outbound-call
   //
   // options {
-  //   to: <target phone number>,
-  //   url: <A URL that produces an XML document which contains instructions for the call>,
+  //   to: <string - target phone number>,
+  //   app: <string - the calling application; see config.Twilio.voice for valid applications>,
   //   [urlParams: <JSON object of params to be appended to url; requires method be set to GET>],
-  //   [method: <POST or GET; defaults to POST>],
-  //   [fallbackUrl: <Fallback url for XML document containing call instructions>],
-  //   [statusCallbackUrl: <url that should be called to provide a status update after the call is finished>],
   // }
-  var twilioOptions = {
-      to: this.fixPhoneNumbers(options.to),
-      url: options.url
+  var app = twilioConfig.voice[options.app],
+    to = this.fixPhoneNumbers(options.to),
+    queryString = '',
+    key,
+    twilioOptions,
+    plivoOptions,
+    buildOptions = function () {
+      var obj = {},
+        keyValue;
+      for (var key in app) {
+        keyValue = app[key];
+
+        // If this is a URL
+        if ((typeof keyValue === 'string') && (keyValue.charAt(0) === '/')) {
+          // Prefix the URL with our domain/inboundId & add to our object
+          obj[key] = inboundUrl + keyValue;
+        } else {
+          obj[key] = keyValue;
+        }
+      }
+      obj.to = to;
+
+      return obj;
     };
-  var httpGet = options.method === 'GET';
-  var params = '';
-  var key;
 
-  // Check for URL parameters
-  if (httpGet && options.urlParams) {
-    params = '?';
+  // An invalid app object is a programmer bug
+  if (!app) {
+    return cb('options.app is invalid. See config.Twilio.voice for valid applications');
+  }
+
+  // Get our options object
+  twilioOptions = buildOptions();
+
+  // Add query string if needed
+  if ((twilioOptions.Method === 'GET') && options.urlParams && Object.keys(options.urlParams).length) {
+    // Build query string; Object.keys returns empty array if argument is not an object type
+    queryString = '?';
     for (key in options.urlParams) {
-      params += (key + '=' + options.urlParams[key] + '&');
+      queryString += (key + '=' + options.urlParams[key] + '&');
     }
-    twilioOptions.url += params;
-  }
 
-  // Check for a fallback URL
-  if (options.fallbackUrl) {
-    twilioOptions.fallbackUrl = options.fallbackUrl;
-    if (httpGet) {
-      twilioOptions.fallbackMethod = 'GET';
-      twilioOptions.fallbackUrl += params;
+    twilioOptions.Url += queryString;
+    if (twilioOptions.StatusCallback) {
+      twilioOptions.StatusCallback += queryString;
     }
   }
 
-  // Check for a status callback URL
-  if (options.statusCallbackUrl) {
-    twilioOptions.statusCallback = options.statusCallbackUrl;
-    if (httpGet) {
-      twilioOptions.statusCallbackMethod = 'GET';
-      twilioOptions.statusCallback += params;
-    }
-  }
-
-  this.Twilio.sendVoice(options, function(err, response) {
+  // Do voice notification
+  this.Twilio.sendVoice(twilioOptions, function (err, response) {
     // TODO Check for error and fallback to Plivo if necessary
-    if (cb)
+    if (cb) {
       return cb(err, response);
+    }
   });
 };
 

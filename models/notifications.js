@@ -678,7 +678,7 @@ var dbAlarmQueueLocked = false,
 								if (!notifyLookup.hasOwnProperty(key) || thread._state === ADDED) {
 									notification = {
 										userId: userId,
-										userCanAck: getUserPermissions(userId) & accessFlagsEnums.Acknowledge.enum,
+										userCanAck: !!(getUserPermissions(userId) & accessFlagsEnums.Acknowledge.enum),
 										nextAction: actions.utility.getTimestamp(info, userAlert.delay),
 										Type: userAlert.Type, // email, voice, sms
 										Value: userAlert.Value // phone number or email
@@ -1407,7 +1407,7 @@ var dbAlarmQueueLocked = false,
 				//	Name2: queueEntry.Name2,
 				//	Name3: queueEntry.Name3,
 				//	Name4: queueEntry.Name4,
-				//	pointType: queueEntry.pointType,
+				//	PointType: queueEntry.PointType,
 				//	Security: queueEntry.Security
 				// },
 
@@ -1472,10 +1472,7 @@ var dbAlarmQueueLocked = false,
 						var date = new Date(timestamp),
 							hours = date.getHours(),
 							minutes = date.getMinutes();
-						return [formatHours(hours), ':', formatMinutes(minutes), getPeriod(hours)].join('');
-					},
-					getAorAn = function (text) {
-						return !!~['a', 'e', 'i', 'o', 'u'].indexOf(text.charAt(0)) ? 'an':'a';
+						return [formatHours(hours), ':', formatMinutes(minutes), ' ', getPeriod(hours)].join('');
 					},
 					getVoiceReturnNormalMessage = function (timestamp) {
 						return ['It returned normal' + getVoiceMsgDate(timestamp), 'at', getMsgTime(timestamp) + '.'].join(' ');
@@ -1507,8 +1504,6 @@ var dbAlarmQueueLocked = false,
 					getMessage = function () {
 						// thread, notification, and notifyingReturnNormal variables were set before this routine was called
 						var trigger = thread.trigger,
-							isNormalAlarmClass = trigger.almClass === alarmClassEnums.Normal.enum,
-							alarmClassText = alarmClassRevEnums[trigger.almClass],
 							msg = '',
 							timestamp,
 							obj;
@@ -1521,21 +1516,16 @@ var dbAlarmQueueLocked = false,
 						timestamp = obj.timestamp;
 
 						if (notification.Type === VOICE) {
-							if (!isNormalAlarmClass) {
-								msg = ["Hello, this is" + getAorAn(alarmClassText) + alarmClassText + "message from info-scan."].join(' ');
-							} else {
-								msg = "Hello, this is a message from info-scan.";
-							}
-							msg = [msg, obj.msgText, 'occurred', getVoiceMsgDate(timestamp), 'at', getMsgTime(timestamp) + '.',].join(' ');
+							msg = [obj.msgText + '.', 'This alarm occurred', getVoiceMsgDate(timestamp), 'at', getMsgTime(timestamp) + '.',].join(' ');
 
 							if (thread.status.isReturnedNormal && !notifyingReturnNormal) {
 								msg += ' ' + getVoiceReturnNormalMessage(thread.returnNormal.timestamp);
 							}
 						} else { // SMS or EMAIL
-							if (!isNormalAlarmClass) {
-								msg = alarmClassText + ':';
+							if (trigger.almClass !== alarmClassEnums.Normal.enum) {
+								msg = alarmClassRevEnums[trigger.almClass] + ': ';
 							}
-							msg = [msg, obj.msgText, '(' + getMsgDate(timestamp), getMsgTime(timestamp) + ')'].join(' ');
+							msg += [obj.msgText, '(' + getMsgDate(timestamp), getMsgTime(timestamp) + ')'].join(' ');
 							
 							if (thread.status.isReturnedNormal && !notifyingReturnNormal) {
 								msg += '. ' + getReturnNormalMessage(thread.returnNormal.timestamp);
@@ -1555,6 +1545,7 @@ var dbAlarmQueueLocked = false,
 								username: userObj && userObj.username,
 								userFirstName: userObj && userObj['First Name'].Value,
 								userLastName: userObj && userObj['Last Name'].Value,
+								userCanAck: notification.userCanAck,
 
 								upi: trigger.upi,
 								alarmCat: trigger.msgCat,
@@ -1657,7 +1648,7 @@ var dbAlarmQueueLocked = false,
 						notifyMsg += '</p><br />';
 
 						notifyMsg += '<table cellpadding=”0″ cellspacing=”0″ style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #666; background-color: #EEE; border: 1px solid #CCC; border-collapse: collapse"><tr><td style="padding: 10px;">';
-						notifyMsg += 'You are receiving this email at the account <a href="mailto:' + to + '" style="color: #15C;">' + to + '</a> because you are subscribed for alarm notifications on InfoScan. ';
+						notifyMsg += 'You are receiving this email at the account <a href="mailto:' + to + '" style="color: #15C;">' + to + '</a> because you are subscribed to alarm notifications on InfoScan. ';
 						notifyMsg += 'To stop receiving these emails, please log in to InfoScan at <a href="http://' + siteDomain + '" style="color: #15C;">' + siteDomain + '</a> and change your alarm notification settings.';
 
 						if (showReplyToAckMsg) {
@@ -1672,15 +1663,15 @@ var dbAlarmQueueLocked = false,
 							html: notifyMsg,
 							generateTextFromHTML: true
 						}, createCallback(notifyEntry)];
+					} else if (notification.Type === VOICE) {
+						notifyParams = [{
+							app: 'alarms',
+							to: to
+						}, createCallback(notifyEntry)];
 					} else {
-						// TOOD if notifying via voice, create a unique id which will be stored with the notify log and
-						// sent to Twilio. When Twilio requests the XML document (Twiml), it will send this id with the 
-						// request which will give us all the info we need for creating the voice message, and so we can
-						// know who acknowledged if the user acknowledges the alarm via voice.
-
-						notifyParams = [(to.length === 10) ? '1' + to : to, notifyMsg, createCallback(notifyEntry)];
+						notifyParams = [to, notifyMsg, createCallback(notifyEntry)];
 					}
-					// notifier[notifierFnLookup[notification.Type]].apply(notifier, notifyParams);
+					notifier[notifierFnLookup[notification.Type]].apply(notifier, notifyParams);
 				}
 				cb(null, data);
 			}
@@ -1936,7 +1927,7 @@ var dbAlarmQueueLocked = false,
 					Name3: alarm.Name3,
 					Name4: alarm.Name4,
 					Name: name,
-					pointType: alarm.PointType,
+					PointType: alarm.PointType,
 					Security: alarm.Security,
 					notifyReturnNormal: getNotifyReturnNormal(info.point['Alarm Messages'])
 				};
