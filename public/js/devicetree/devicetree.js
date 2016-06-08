@@ -95,6 +95,18 @@ function TreeViewModel() {
         }
     });
 
+    self.devAddress = function(data){
+        // if ethernet uplink
+        // dev address : eth ip port #
+        // else just dev add
+        if(data.uplinkPort()===0){
+            return ['(',data.deviceAddress(),':',data.ethIPPort(),')'].join('');
+        }else{
+            return ['(',data.deviceAddress(),')'].join('');
+        }
+        return 'test';
+    };
+
     self.showDevice = function(item, e, t) {
         var rightSide = $(e.target).offset().left + $(e.target).context.offsetWidth;
 
