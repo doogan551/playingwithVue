@@ -2758,8 +2758,6 @@ var Config = (function(obj) {
                 ],
                 val = data.propertyObject.Value; // Property value
 
-            point["Ethernet IP Port"].isDisplayable = (val === "Ethernet") ? true : false;
-            point["Ethernet IP Port"].isReadOnly = (modbusRemoteUnitTypes.indexOf(point._rmuModel) > -1) ? false : true;
             return point;
         },
 
@@ -4059,7 +4057,6 @@ var Config = (function(obj) {
         applyDeviceTypeUplinkPort: function(data) {
             var point = data.point;
 
-            point["Downlink IP Port"].isReadOnly = true;
             if (point["Uplink Port"].Value == "Ethernet") {
                 point["Ethernet Protocol"].isReadOnly = true;
                 point["Ethernet Protocol"].Value = "IP";
@@ -4183,7 +4180,6 @@ var Config = (function(obj) {
         applyDeviceTypeEthernetProtocol: function(data) {
             var point = data.point;
 
-            point["Ethernet IP Port"].isReadOnly = true;
             if (point["Ethernet Protocol"].Value == "None") {
                 point["Ethernet Address"].isDisplayable = false;
                 point["Ethernet IP Port"].isDisplayable = false;

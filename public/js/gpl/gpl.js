@@ -425,6 +425,9 @@ var gpl = {
             gpl.socketWaitFn = null;
         }
     },
+    hideMessage: function () {
+        gpl.$messageModal.modal('hide');
+    },
     on: function (event, handler) {
         gpl.eventHandlers[event] = gpl.eventHandlers[event] || [];
         gpl.eventHandlers[event].push(handler);
@@ -7265,10 +7268,9 @@ gpl.Manager = function () {
             name3 = names[2],
             name4 = names[3] || '',
             handler = function (obj) {
-                var oldPoint = $.extend(true, {}, obj),
-                    newPoint;
+                var oldPoint = $.extend(true, {}, obj);
 
-                gpl.unblockUI();
+                // gpl.unblockUI();
 
                 if (obj && obj.target) { //is event
                     if (!called) {
@@ -7298,18 +7300,18 @@ gpl.Manager = function () {
 
                 block.setPointData(obj, true);
 
-                log(block.gplId, 'save callback', newPoint);
+                log(block.gplId, 'save callback', obj);
                 gpl.fire('newblock', block);
                 called = true;
 
                 managerSelf.socket.emit('updatePoint', JSON.stringify({
-                    'newPoint': newPoint,
+                    'newPoint': obj,
                     'oldPoint': oldPoint
                 }));
             };
 
         if (block.isNonPoint !== true && !(block instanceof gpl.blocks.TextBlock)) {
-            gpl.blockUI();
+            // gpl.blockUI();
 
             windowRef = gpl.openWindow('/api/points/newPoint/restrictTo/' + pointType, 'New Point', '', '', 'newPoint', {
                 width: 980,
@@ -7408,6 +7410,7 @@ gpl.Manager = function () {
 
     managerSelf.doSaveForLater = function () {
         var continueEditingCb = function () {
+            gpl.hideMessage();
             gpl.unblockUI();
             gpl.$saveForLaterConfirmModal.modal('show');
         };
@@ -8694,10 +8697,10 @@ gpl.Manager = function () {
                 });
             }
 
-            if (!line.isNew || gpl.isEdit) {
+            // if (!line.isNew || gpl.isEdit) { all 'new' lines should be in editVersion now
                 newLine = new gpl.ConnectionLine(coords, managerSelf.canvas, line.isNew || false);
                 managerSelf.shapes.push(newLine);
-            }
+            // }
         }
 
         managerSelf.renderAll();
@@ -9000,20 +9003,26 @@ gpl.Manager = function () {
                 var pointer = managerSelf.canvas.getPointer(event.e),
                     x = pointer.x,
                     y = pointer.y,
-                    obj;
+                    obj,
+                    canvasObj;
 
                 gpl._rightClickTargets = gpl._rightClickTargets || [];
 
                 if (event.e.which === 3) {
-                    obj = gpl.manager.getObject({
+                    canvasObj = gpl.manager.getObject({
                         left: x,
                         top: y
                     });
 
-                    if (obj) {
-                        obj = gpl.blockManager.getBlock(obj.gplId);
+                    if (canvasObj) {
+                        obj = gpl.blockManager.getBlock(canvasObj.gplId);
                         if (obj) {
                             log(obj);
+                        } else {
+                            obj = gpl.lineManager.getLine(canvasObj.gplId);
+                            if (obj) {
+                                log(obj);
+                            }
                         }
                     }
                 }

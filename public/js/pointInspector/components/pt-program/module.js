@@ -70,8 +70,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             workspaceManager = vm.utility.workspace,
             win = workspaceManager.openWindowPositioned(pointSelectorEndPoint, 'Point Selector', 'pointSelector', '', 'pointSelector' + self.parentType,
                 {
-                    width: 980,
-                    height: 550,
+                    width: 1250,
+                    height: 750,
                     callback: function() {
                         win.pointLookup.init(callback);
                     }

@@ -161,7 +161,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
     };
   readOnlyProps = ["_id", "_cfgDevice", "_updTOD", "_pollTime",
     "_forceAllCOV", "_actvAlmId", "Alarm State", "Control Pending", "Device Status",
-    "Last Report Time", "Point Instance", "Point Type", "Reliability"
+    "Last Report Time", "Point Type", "Reliability"
   ];
   // JDR - Removed "Authorized Value" from readOnlyProps because it changes when ValueOptions change. Keep this note.
 
@@ -893,6 +893,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
         } else if (newPoint._pStatus !== Config.Enums["Point Statuses"].Active.enum ||
           newPoint._devModel === Config.Enums["Device Model Types"].Unknown.enum ||
           newPoint._devModel === Config.Enums["Device Model Types"]["Central Device"].enum ||
+          newPoint["Point Type"].Value === "Sequence" ||
           (newPoint["Point Type"].Value !== "Device" &&
             (Config.Utility.getPropertyObject("Device Point", newPoint) === null ||
               Config.Utility.getPropertyObject("Device Point", newPoint).PointInst === 0))) {
@@ -1231,7 +1232,6 @@ function updateDependencies(refPoint, flags, user, callback) {
     }
     return temp;
   };
-
 
   Utility.get({
     collection: constants('pointsCollection'),
@@ -2259,7 +2259,6 @@ function addPoint(point, user, options, callback) {
       callback(err);
 
     point._pStatus = 0;
-    point["Point Instance"].Value = point._id;
 
     var searchQuery = {};
     var updateObj = {};

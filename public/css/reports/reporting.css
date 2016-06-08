@@ -533,7 +533,7 @@ input.form-control.inputPrecision {
     width: 40px;
 }
 .includeInChartColumn {
-    width: 17px;
+    width: 30px;
 }
 .includeInChartColumn:hover {
     cursor: pointer;
@@ -569,6 +569,10 @@ ul.yaxisGroups.dropdown-menu li a {
 input.form-control.globalPrecision {
     width: 30px;
     padding: 2px 2px 2px 5px;
+}
+input.form-control.globalChartCheckbox {
+    width: 14px;
+    margin-left: 7px;
 }
 .inputSearch {
     margin-left: 6px;

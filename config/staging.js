@@ -2,7 +2,7 @@ var staging = {
   'Infoscan': {
     'dbConfig': {
       'host': 'localhost',
-      'dbName': 'staging'
+      'dbName': 'msfc'
     },
     'zmqConfig': {
       'server': '127.0.0.1'
@@ -15,9 +15,9 @@ var staging = {
       'email': 'rkendall@dorsett-tech.com'
     },
     'letsencrypt': {
-      'enabled': false
+      'enabled': true
     },
-    'domains': ['']
+    'domains': ['www.dorsett-tech.org', 'dorsett-tech.org']
   },
   runNotifications: false
 };

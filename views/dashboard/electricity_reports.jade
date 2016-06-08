@@ -104,7 +104,7 @@
                 .sectionTitle Statistics
                 .sectionBody
                     .entry.bm15px #[span(data-bind="text: displayPercentageOfValidData")]% of possible data was collected to create this report.
-                    // ko if: percentageOfMissingData() > 0.0
+                    // ko if: percentageOfMissingData() > 0.0 && percentageOfMissingData() < 100
                     .entry.bm15px Meters with data missing and % missing:
                     table.table.table-striped
                         thead
@@ -234,10 +234,13 @@
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     th(data-bind="text: (selectedMonthYear().season ? selectedMonthYear().season : '') + ' Peak Demand (kW)'")
+                                    th Occurrent Time
+
                                     th(data-bind="text: 'Coinciding ' + (selectedMonthYear().season ? selectedMonthYear().season : '') + ' Reactive (kVAR)'")
                                     // /ko
-
                                     th Off Peak Demand (kW)
+                                    th Occurrent Time
+
                                     th Coinciding Off Peak Reactive (kVAR)
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
@@ -261,8 +264,9 @@
                                     // ko if: ($parent.selectedMonthYear().season !== 'Transition' || !!$parent.rateTablePeriod().enablePeakSelection)
                                     td.gridonpeakdemand
                                         .itemValue(data-bind="text: tou.numberWithCommas(OnPeakDemand.value)")
-                                        // ko if: OnPeakDemand.value !== 0
-                                        span.itemTimeStamp.small(data-bind="text: moment.unix(OnPeakDemand.timeStamp).format('HH:mm')")
+                                    td.occurrent
+                                        // ko if: OnPeakDemand.value !== 0 && OnPeakDemand.timeStamp > 0
+                                        span.itemTimeStamp(data-bind="text: moment(OnPeakDemand.timeStamp).format('HH:mm')")
                                         // /ko
                                     td.gridonpeakreactive
                                         .itemValue(data-bind="text: tou.numberWithCommas(OnPeakReactive.value)")
@@ -270,8 +274,9 @@
 
                                     td.gridoffpeakdemand
                                         .itemValue(data-bind="text: tou.numberWithCommas(OffPeakDemand.value)")
-                                        // ko if: OffPeakDemand.value !== 0
-                                        span.itemTimeStamp.small(data-bind="text: moment.unix(OffPeakDemand.timeStamp).format('HH:mm')")
+                                    td.occurrent
+                                        // ko if: OffPeakDemand.value !== 0 && OffPeakDemand.timeStamp > 0
+                                        span.itemTimeStamp(data-bind="text: moment(OffPeakDemand.timeStamp).format('HH:mm')")
                                         // /ko
                                     td.gridoffpeakreactive
                                         .itemValue(data-bind="text: tou.numberWithCommas(OffPeakReactive.value)")
@@ -294,21 +299,17 @@
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     td
-                                        .itemValue(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
-                                        // ko if: duOnPeakMW().value !== 0
-                                        span.maxWithTimeBlankOffset &nbsp;
-                                        // /ko
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
                                     td
-                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMVAR().value)")
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMaxMVAR().value)")
                                     // /ko
 
                                     td
-                                        .itemValue(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
-                                        // ko if: duOffPeakMW().value !== 0
-                                        span.maxWithTimeBlankOffset &nbsp;
-                                        // /ko
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
                                     td
-                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMVAR().value)")
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMaxMVAR().value)")
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     td
@@ -320,14 +321,16 @@
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     td
-                                        .itemValue(data-bind="text: tou.numberWithCommas(maxPeriodUsage().value)")
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(maxPeriodUsage().value)")
                                     // /ko
                                 tr
                                     td.bold Totals
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     td
                                     td
+                                    td
                                     // /ko
+                                    td
                                     td
                                     td
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
