@@ -2575,19 +2575,23 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
             c,
             len;
 
-        this.value = val;
-        this.valueText.setText(gpl.formatValue(this, val));
+        if (this.value !== val) {
+            this.value = val;
+            this.valueText.setText(gpl.formatValue(this, val));
 
-        lines = this.outputAnchor.getLines();
-        len = lines.length;
+            lines = this.outputAnchor.getLines();
+            len = lines.length;
 
-        for (c = 0; c < len; c++) {
-            anchor = lines[c].getOtherAnchor(this.outputAnchor);
-            block = gpl.blockManager.getBlock(anchor.gplId);
-            block.syncAnchorValue(anchor, val);
+            for (c = 0; c < len; c++) {
+                anchor = lines[c].getOtherAnchor(this.outputAnchor);
+                block = gpl.blockManager.getBlock(anchor.gplId);
+                block.syncAnchorValue(anchor, val);
+            }
+
+            this.renderAll();
+
+            gpl.manager.bindings.hasEdits(true);
         }
-
-        this.renderAll();
     }
 });
 
@@ -6152,7 +6156,7 @@ gpl.BlockManager = function (manager) {
         }
 
         delete bmSelf.blocks[oldBlock.gplId];
-        oldBlock.delete(true);
+        oldBlock.delete();
 
         delete bmSelf.editedBlocks[oldBlock.upi];
 
@@ -7282,7 +7286,7 @@ gpl.Manager = function () {
                 }
 
                 block.upi = obj._id;
-                obj['Point Instance'].Value = obj._id;
+                // obj['Point Instance'].Value = obj._id;
 
                 // if (obj['Reverse Action'])
 
