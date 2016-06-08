@@ -1,6 +1,9 @@
 var express = require('express');
 var router = express.Router();
 var passport = require('passport');
+var config = require('config');
+
+var inboundId = config.get('Infoscan').siteConfig.inboundId;
 
 module.exports = function(controllers) {
   router.all('*', function(req, res, next) {
@@ -17,7 +20,8 @@ module.exports = function(controllers) {
   });
 
   router.use('/', controllers.workspace);
-  router.use('/inbound', controllers.inbound);
+  // Our inbound route is a random id so it's not guessable
+  router.use('/' + inboundId, controllers.inbound);
 
   // ALL ROUTES BELOW THIS WILL REQUIRE AUTHENTICATION
   router.use(function(req, res, next) {

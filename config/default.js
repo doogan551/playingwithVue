@@ -15,7 +15,8 @@ var defaults = {
         'siteConfig': {
             'port': 80,
             'siteTitle': 'Info Scan',
-            'appname': 'infoscan'
+            'appname': 'infoscan',
+            'inboundId': 'moclx0qr65a3' // Must update 3rd party services utilizing our inbound if we change this
         },
         'socketConfig': {
             'ioPort': 8085,
@@ -54,7 +55,16 @@ var defaults = {
     'Twilio': {
         'accountSid': 'AC0fc63c36f70cccee175fc2427d8ec2be',
         'authToken': '4da6ed7c8aee56285e2b25b8441a6d39',
-        'phoneNumbers': ['+18556887778', '+13367702223']
+        'phoneNumbers': ['+18556887778', '+13367702223'],
+        'voice': {
+            'alarms': {                                         // Alarms application 
+                'Url': '/twilio/voiceAlarmsAnswer',             // All urls prefixed with the domain & inboundId by notifierUtility.js
+                'StatusCallback': '/twilio/voiceAlarmsStatus',  // A relative path keeps these urls valid for all customers
+                'StatusCallbackEvent': ['ringing', 'answered', 'completed'],
+                'IfMachine': 'Continue',
+                'Method': 'POST'
+            }
+        }
     },
     'Plivo': {
         'authId': 'MAOTAYY2RKNJU5MMQWZT',
