@@ -1953,9 +1953,6 @@ var reportsViewModel = function () {
                 columnDataFound;
 
             for (i = 0; i < data.length; i++) {
-                if (!!data[i]._id) {
-                    delete data[i]._id;
-                }
                 for (j = 0; j < columnArray.length; j++) {
                     columnConfig = columnArray[j];
                     columnName = (columnConfig.dataColumnName !== undefined ? columnConfig.dataColumnName : columnConfig.colName);
@@ -2661,7 +2658,7 @@ var reportsViewModel = function () {
                             break;
                         case "Property":
                             if (columnConfig.colName === "Name") {
-                                $(tdField).attr("upi", data["Point Instance"].Value);
+                                $(tdField).attr("upi", data._id);
                                 $(tdField).attr("columnIndex", columnIndex);
                                 if (data["Point Type"] && data["Point Type"].Value) {
                                     $(tdField).attr('title', data["Point Type"].Value);
@@ -3633,8 +3630,8 @@ var reportsViewModel = function () {
         var openWindow = window.workspaceManager.openWindowPositioned,
             upi = parseInt(data.upi, 10),
             options = {
-                width: 850,
-                height: 600
+                width: 1250,
+                height: 750
             };
         if (upi > 0) {
             if (data.pointType === "Display") {
