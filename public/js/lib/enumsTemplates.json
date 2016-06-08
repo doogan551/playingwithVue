@@ -3950,7 +3950,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 7,
-                    "Value": true
+                    "Value": false
                 },
                 "COV Period": {
                     "isDisplayable": true,
@@ -4427,7 +4427,7 @@
                     "eValue": 0
                 },
                 "Ethernet IP Port": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 4,
                     "Value": 47808

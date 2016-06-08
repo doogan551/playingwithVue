@@ -2124,11 +2124,11 @@ function updateDevices(point, callback) {
 		}
 
 		point["Ethernet IP Port"].Value = 47808;
-		point["Ethernet IP Port"].isReadOnly = true;
-		point["Ethernet IP Port"].isDisplayable = false;
+		point["Ethernet IP Port"].isReadOnly = false;
+		point["Ethernet IP Port"].isDisplayable = true;
 		point["Downlink IP Port"].Value = 47808;
-		point["Downlink IP Port"].isReadOnly = true;
-		point["Downlink IP Port"].isDisplayable = false;
+		point["Downlink IP Port"].isReadOnly = false;
+		point["Downlink IP Port"].isDisplayable = true;
 		point["Downlink Broadcast Delay"].Value = 0;
 
 		delete point["Device Address"].Min;

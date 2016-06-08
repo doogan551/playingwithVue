@@ -220,7 +220,6 @@ module.exports = {
           updateObj: {
             $set: {
               "Ethernet IP Port.Value": ipPort,
-              "Downlink IP Port.Value": ipPort,
               _cfgRequired: true
             }
           },
