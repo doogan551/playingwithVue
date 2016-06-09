@@ -221,15 +221,22 @@ var CustomColorsPicker = function ($colorPickerDiv, callback, currentColor, call
 };
 
 
-if(typeof ko !== 'undefined' && ko.bindingHandlers) {
+if(typeof ko !== 'undefined' && ko.bindingHandlers && !ko.bindingHandlers.diColorpicker) {
     ko.bindingHandlers.diColorpicker = {
         init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
             var functionColor = valueAccessor(),
                 hexColor = ko.unwrap(functionColor),
                 $colorPickerDiv = $(element),
-                customColorsPicker = new CustomColorsPicker($colorPickerDiv, functionColor, hexColor);
+                customColorsPicker;
 
-            customColorsPicker.render();
+            if (!!functionColor && !!hexColor) {
+                customColorsPicker = new CustomColorsPicker($colorPickerDiv, functionColor, hexColor);
+                customColorsPicker.render();
+
+                functionColor.subscribe(function (newValue) {
+                    customColorsPicker.updateColor(newValue);
+                });
+            }
         }
     };
 }
