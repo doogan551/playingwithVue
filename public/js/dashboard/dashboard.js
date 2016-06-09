@@ -996,6 +996,7 @@ var tou = {
                     } else {//statistic
                         row = results.results[props].slice(-1)[0];
                         getVal(row);
+                        isEmpty = false;
                         row = results.results[props][0];
                         when = moment.unix(row.timestamp || row.range.start);
                         when = when.format('MM/DD/YY HH:mm:SS');
