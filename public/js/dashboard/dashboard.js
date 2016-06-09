@@ -4536,11 +4536,15 @@ tou.utilityPages.Electricity = function() {
                             }
                         } else if (rateType === 'reactive') {
                             // Peak is not selectable for reactive rate elments; it defaults to 'on' which is not always what we want
-                            // If this is a transition period we need the period's maximum
                             if (period.rangeType === 'transition') {
-                                peak = 'both';  // We could set this to 'off' & get the same effect
-                            } else {            // We use this period's highest on-peak if this is an on-peak period
-                                peak = 'on';    // It should already be set to on but just CYB
+                                // If peak times enabled we need the period's highest on-peak
+                                if (period.enablePeakSelection) {
+                                    peak = 'on';
+                                } else {
+                                    peak = 'both';  // We could set this to 'off' & get the same effect
+                                }
+                            } else {
+                                peak = 'on';        // It should already be set to on but just CYB
                             }
                             // Also update the rate element stored on our row
                             row.rateElement.peak = peak;
