@@ -4534,9 +4534,15 @@ tou.utilityPages.Electricity = function() {
                                 collection.tempData.onPeakDemandRow = row;
                             }
                         } else if (rateType === 'reactive') {
-                            peak = 'both'; // For reactive rate elements, peak is not selectable and defaults to 'on' which is incorrect
+                            // Peak is not selectable for reactive rate elments; it defaults to 'on' which is not always what we want
+                            // If this is a transition period we need the period's maximum
+                            if (period.rangeType === 'transition') {
+                                peak = 'both';  // We could set this to 'off' & get the same effect
+                            } else {            // We use this period's highest on-peak if this is an on-peak period
+                                peak = 'on';    // It should already be set to on but just CYB
+                            }
                             // Also update the rate element stored on our row
-                            row.rateElement.peak = 'both';
+                            row.rateElement.peak = peak;
                         }
                         // Get this rate element's units
                         unit = units[rateType];
@@ -5651,13 +5657,19 @@ tou.utilityPages.Electricity = function() {
                     } else if (tier.multiplier !== null) {
                         // Our formula is: (off-peak consumption / total consumption) * demand * multiplier, where demand is the peak demand (highest
                         // demand during on peak periods) or max demand (highest demand regardless of on peak or off peak)
+                        
+                        // row.usage.value has already been rounded; all contributors are non-rounded numbers
+                        // TOU Phase 1 Calculations used the non-rounded contributor numbers
+                        // TOU Phase 2 uses rounded contributor numbers for the following reason:
+                        // While raw numbers provide a more accurate tiered number, it creates a number that is not reproducible by plugging the
+                        // numbers shown on the bill into the tier formula.
 
                         // We use || 0 to recover from undefined; for example, we saw this in testing: if maxDemand was 0 and peakDemand
                         // was undefined, this would resolve to undefined if we didn't include the trailing '|| 0'
-                        demand = (contributors.maxDemand || contributors.peakDemand) || 0;
+                        demand = tou.toFixed((contributors.maxDemand || contributors.peakDemand) || 0, 0);
 
                         // The '|| 0' part here is to recover from divide by 0 which generates NaN
-                        usage = tou.toFixed(((row.usage.value / contributors.totalConsumption) || 0) * demand * tier.multiplier, 0);
+                        usage = tou.toFixed(((row.usage.value / tou.toFixed(contributors.totalConsumption, 0)) || 0) * demand * tier.multiplier, 0);
                         usage = Math.min(usage, offPeakLessTiers);
 
                         offPeakLessTiers -= usage;
