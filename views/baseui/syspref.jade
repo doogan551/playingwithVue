@@ -46,8 +46,6 @@ html
         script(type='text/javascript', src='/js/lib/date.js')
         script(type='text/javascript', src='/js/lib/moment.js')
         script(type='text/javascript', src='/js/lib/underscore.js')
-        //script(type='text/javascript', src='/js/lib/backbone.min.js')
-        //script(type='text/javascript', src='/js/lib/knockback.min.js')
         script(type='text/javascript', src='/js/lib/fullcalendar.js')
         script(type='text/javascript', src='/js/lib/scheduler.js')
         script(type='text/javascript', src='/js/util/components/colorpicker/diColorPicker.js')
@@ -267,7 +265,7 @@ html
                                 td IP Port
                                 td.clickToEdit(data-bind="clickEdit: $data['IP Port']")
                                     span(data-bind="text: $data['IP Port']")
-                                    input#telemetryIPPort.hide.form-control(type="text", data-bind="value: $data['IP Port']")
+                                    input#telemetryIPNetworkSegment.hide.form-control(type="text", data-bind="value: $data['IP Port']")
                             tr
                                 td APDU Timeout (seconds)
                                 td.clickToEdit(data-bind="clickEdit: $data['APDU Timeout']")
@@ -306,6 +304,7 @@ html
                     button(id='backup', type='button', class='btn btn-primary btn-sm', data-bind='click: startBackup') Backup Now
                     br
                     div#backupMessage(data-bind="text: backupMsg, visible: showBackupMsg")
+
             // ------ Weather ---------------------------------------------------------------------------------------
             div#weather(data-bind="visible: section() == 'Weather'")
                 div(data-bind="with: weatherViewModel")
@@ -321,7 +320,6 @@ html
                             // ko if: $data.point() !== null
                             a(data-bind="text: $data.point().Name, click: $parent.openPointRef")
                             // /ko
-<<<<<<< HEAD
 
 
             // ------ About -----------------------------------------------------------------------------------------
@@ -338,8 +336,6 @@ html
                                     td.col-sm-4 InfoscanJS Version
                                     td.col-sm-9(data-bind="text: $data.ijsVer")
 
-=======
->>>>>>> feature/alarmMessages
             // ------ Notifications ---------------------------------------------------------------------------------
             .notifications(data-bind="visible: section() == 'Notifications'")
                 div(data-bind="with: notificationsViewModel.bindings")
