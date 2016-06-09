@@ -56,6 +56,38 @@ var dti = {
                 dti.panels.activate($newPanel);
             });
         }
+    },
+    globalSearch: {
+        init: function () {
+            dti.globalSearch.$el = $('#search');
+
+            dti.globalSearch.rawResults = ['4250 AH5 DISP', '4200 PARKING LOT LIGHTS', 'AIR HANDLERS', 'MONTHLY REPORT'];
+
+            dti.globalSearch.results = new Bloodhound({
+                datumTokenizer: Bloodhound.tokenizers.whitespace,
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                local: dti.globalSearch.rawResults
+            });
+
+            dti.globalSearch.$el.typeahead({
+                hint: true,
+                highlight: true,
+                minLength: 1
+            }, {
+                name: 'Results',
+                source: dti.globalSearch.results
+            });
+        }
+    },
+    menu: {
+        init: function () {
+            var highlightClass = 'z-depth-3';
+            $('.dti-menu-tile').hover(function handleMenuTileHover () {
+                $(this).addClass(highlightClass);
+            }, function handleMenuTileHoverOut () {
+                $(this).removeClass(highlightClass);
+            });
+        }
     }
 };
 
@@ -65,4 +97,8 @@ $(function initWorkspaceV2 () {
     dti.panels.init();
 
     dti.startButton.init();
+
+    dti.menu.init();
+
+    // dti.globalSearch.init();
 });

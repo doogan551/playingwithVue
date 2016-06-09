@@ -9,7 +9,7 @@ html
         //- link(rel='stylesheet', href='/css/lib/jquery-ui.css')
 
 
-    body
+    body.grey.lighten-3
         ul#dropdown1.dropdown-content
             li
                 a.blue-grey-text.truncate.tooltipped(href='javascript://', data-position='right', data-tooltip='4194 DXAC DISP', data-delay='10') 4194 DXAC DISP
@@ -60,38 +60,122 @@ html
             .card-panel.dti-card-panel.blue-grey.z-depth-2.lighten-3(style="left: 5px; top: 55px;")
                 .card-toolbar
                     .card-title.center-align.white-text
-                        div 4194 DXAC DISP
+                        div
+                            a.white-text(href="javascript://")
+                                i.material-icons.popInOutIcon call_made
+                            | 4194 DXAC DISP
                     a.white-text(href="javascript://")
                         i.material-icons skip_previous
                     a.white-text(href="javascript://")
                         i.material-icons skip_next
-                    a.right.white-text(href="javascript://")
-                        i.material-icons close
+                    .right
+                        a.white-text(href="javascript://")
+                            i.material-icons remove
+                        a.white-text(href="javascript://")
+                            i.material-icons add
+                        a.white-text(href="javascript://")
+                            i.material-icons close
                 img(src="/img/test/display.png", style="height: 100%; width: 100%;")
 
             .card-panel.dti-card-panel.blue-grey.z-depth-2.activeCard(style="left: 55px; top: 105px;")
                 .card-toolbar
                     .card-title.center-align.white-text
-                        div 4200 PARKING LOT LIGHTS
+                        div
+                            a.white-text(href="javascript://")
+                                i.material-icons.popInOutIcon call_made
+                            | 4200 PARKING LOT LIGHTS
                     a.white-text(href="javascript://")
                         i.material-icons skip_previous
                     a.white-text(href="javascript://")
                         i.material-icons skip_next
-                    a.right.white-text(href="javascript://")
-                        i.material-icons close
+                    .right
+                        a.white-text(href="javascript://")
+                            i.material-icons remove
+                        a.white-text(href="javascript://")
+                            i.material-icons add
+                        a.white-text(href="javascript://")
+                            i.material-icons close
                 img(src="/img/test/sequence.png", style="height: 100%; width: 100%;")
 
-            #newPanel.card-panel.dti-card-panel.blue-grey.z-depth-2.hide(style="left: 110px; top: 155px;")
+            #newPanel.card-panel.dti-card-panel.blue-grey.z-depth-2.hide(style="left: 110px; top: 155px; width: 600px;")
                 .card-toolbar
                     .card-title.center-align.white-text
-                        div New Window
+                        div
+                            a.white-text(href="javascript://")
+                                i.material-icons.popInOutIcon call_made
+                            | New Window
                     a.white-text(href="javascript://")
                         i.material-icons skip_previous
                     a.white-text(href="javascript://")
                         i.material-icons skip_next
-                    a.right.white-text(href="javascript://")
-                        i.material-icons close
-                img(src="/img/test/newwindow.png", style="height: 100%; width: 100%;")
+                    .right
+                        a.white-text(href="javascript://")
+                            i.material-icons remove
+                        a.white-text(href="javascript://")
+                            i.material-icons add
+                        a.white-text(href="javascript://")
+                            i.material-icons close
+                .grey.lighten-3.white-text
+                    .row
+                        .col.s6
+                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
+                                i.material-icons.center-align device_hub
+                                span Sequence
+                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
+                                i.material-icons.center-align tv
+                                span Display
+                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
+                                i.material-icons.center-align notifications
+                                span Alarms
+                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
+                                i.material-icons.center-align assignment
+                                span Reports
+
+                        .col.s6.recentItems
+                            .collection.blue-grey-text
+                                a.collection-item(href="javascript://")
+                                    span.title 4200 PARKING LOT LIGHTS
+                                        i.left.material-icons device_hub
+                                a.collection-item(href="javascript://")
+                                    span.title 4200 CRU1 DISP
+                                        i.left.material-icons tv
+                                a.collection-item(href="javascript://")
+                                    span.title DEVICE ADDRESS REPORT
+                                        i.left.material-icons assignment
+                                    //- p
+                                    //-     | First Line
+                                    //-     br
+                                    //-     |                    Second Line
+                                    //- a.secondary-content(href='#!')
+                                    //-     i.material-icons grade
+                                //- li.collection-item.avatar
+                                //-     i.material-icons.circle folder
+                                //-     span.title Title
+                                //-     p
+                                //-         | First Line
+                                //-         br
+                                //-         |                    Second Line
+                                //-     a.secondary-content(href='#!')
+                                //-         i.material-icons grade
+                                //- li.collection-item.avatar
+                                //-     i.material-icons.circle.green insert_chart
+                                //-     span.title Title
+                                //-     p
+                                //-         | First Line
+                                //-         br
+                                //-         |                    Second Line
+                                //-     a.secondary-content(href='#!')
+                                //-         i.material-icons grade
+                                //- li.collection-item.avatar
+                                //-     i.material-icons.circle.red play_arrow
+                                //-     span.title Title
+                                //-     p
+                                //-         | First Line
+                                //-         br
+                                //-         |                    Second Line
+                                //-     a.secondary-content(href='#!')
+                                //-         i.material-icons grade
+
 
                 //- .card.blue-grey.z-depth-2
                 //-     .card-content.white-text

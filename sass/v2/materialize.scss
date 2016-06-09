@@ -106,7 +106,7 @@ body {
 
 body {
     margin: 0;
-    background-color: $bodyBG !important;
+    // background-color: $bodyBG !important;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -136,6 +136,7 @@ main {
 }
 
 .dti-card-panel {
+    min-width: 300px;
     max-width: 50%;
     padding: 0;
     display: flex;
@@ -158,6 +159,13 @@ main {
             div {
                 position: relative;
                 left: -50%;
+
+                .popInOutIcon {
+                    position: absolute;
+                    left: -20px;
+                    top: -1px;
+                    font-size: 16px;
+                }
             }
         }
     }
@@ -165,6 +173,37 @@ main {
     .card-action-right {
         padding-right: 0;
         text-align: right;
+    }
+}
+
+.dti-menu-tile {
+    width: 100px;
+    margin-right: 15px;
+
+    cursor: pointer;
+    text-align: center;
+    display: inline-block;
+
+    & > i {
+        display: block;
+    }
+}
+
+.recentItems {
+    & > .collection {
+        & > .collection-item {
+            .title {
+                i {
+                    font-size: 20px;
+                }
+            }
+        }
+    }
+
+    .collection-item.avatar {
+        .circle {
+            // background-color:
+        }
     }
 }
 
