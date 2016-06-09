@@ -1332,7 +1332,6 @@ var backupViewModel = function() {
     });
 };
 
-<<<<<<< .merge_file_a07440
 // About screen ---------------------------------------------------------------
 var versionsViewModel = function() {
     var self = this;
@@ -1360,32 +1359,6 @@ var versionsViewModel = function() {
     };
 };
 
-// Alarm messages screen ------------------------------------------------------
-var alarmMessageDefinitions = _.partial(function(masterVm) {
-    _.mixin(_.str.exports());
-    var Amd, initialize, self, facadeViewModel;
-    self = this;
-    if (!_.isObject(masterVm)) {
-        masterVm = self;
-    }
-    Amd = function(bootStrapped) {
-        var alarmMessageDefinitionsViewModel,
-            gridViewModel,
-            EditorViewModel,
-            editorViewModel,
-            supportModel,
-            HierarchyViewModel,
-            masterViewModel,
-            ValueTokenizer,
-            boundValueTokenizer,
-            DefinitionQueryCollection,
-            alarmDefinitionsModel = new Backbone.Model({
-                supportModel: new Backbone.Model(bootStrapped),
-                gridViewModel: null,
-                editor: null,
-                definitionCollection: {},
-                error: null
-=======
 // Alarm Messages Screen ---------------------------------------------------------
 var alarmTemplateViewModel = function() {
     var self = this,
@@ -1466,7 +1439,6 @@ var alarmTemplateViewModel = function() {
                 width: 350,
                 sortable: true,
                 display: true
->>>>>>> .merge_file_a06408
             });
             cols.push({
                 columnKey: "msgTextColor",
@@ -2239,25 +2211,22 @@ var notificationsViewModel = function() {
                 var members = _local.bindings.currPolicy.members,
                     $memberList = $('#memberList');
 
-<<<<<<< .merge_file_a07440
                 _local.memberDT = $memberList.DataTable({
                     columns: columns,
                     paging: false,
                     searching: false,
                     bInfo: false
                 });
-=======
                 if ($.fn.DataTable.isDataTable($memberList)) {
                     $memberList.DataTable().destroy();
                 } else {
-                    self.memberDT = $memberList.DataTable({
+                    _local.memberDT = $memberList.DataTable({
                         columns: columns,
                         paging: false,
                         searching: false,
                         bInfo: false
                     });
                 }
->>>>>>> .merge_file_a06408
 
                 $memberList.on('click', '.firstName', function(event) {
                     var rowIdx = _local.memberDT.cell(this).index().row,
