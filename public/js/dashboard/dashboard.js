@@ -6514,9 +6514,7 @@ tou.utilityPages.Electricity = function() {
                     $maxTD,
                     gridColumns = [
                         "gridonpeakdemand",
-                        "gridonpeakreactive",
                         "gridoffpeakdemand",
-                        "gridoffpeakreactive",
                         "gridonpeakconsumption",
                         "gridoffpeakconsumption",
                         "gridconsumptiontotal"],
@@ -6539,6 +6537,14 @@ tou.utilityPages.Electricity = function() {
                     });
                     if ($maxTD) {
                         $maxTD.addClass("danger");
+
+                        if (gridColumns[i] === "gridonpeakdemand") {
+                            $maxTD.parent().find(".occurrent.onpeakdemand").addClass("danger");
+                            $maxTD.parent().find(".gridonpeakreactive").addClass("danger");
+                        } else if (gridColumns[i] === "gridoffpeakdemand") {
+                            $maxTD.parent().find(".occurrent.offpeakdemand").addClass("danger");
+                            $maxTD.parent().find(".gridoffpeakreactive").addClass("danger");
+                        }
                     }
                 }
 

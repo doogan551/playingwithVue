@@ -264,7 +264,7 @@
                                     // ko if: ($parent.selectedMonthYear().season !== 'Transition' || !!$parent.rateTablePeriod().enablePeakSelection)
                                     td.gridonpeakdemand
                                         .itemValue(data-bind="text: tou.numberWithCommas(OnPeakDemand.value)")
-                                    td.occurrent
+                                    td.occurrent.onpeakdemand
                                         // ko if: OnPeakDemand.value !== 0 && OnPeakDemand.timeStamp > 0
                                         span.itemTimeStamp(data-bind="text: moment(OnPeakDemand.timeStamp).format('HH:mm')")
                                         // /ko
@@ -274,7 +274,7 @@
 
                                     td.gridoffpeakdemand
                                         .itemValue(data-bind="text: tou.numberWithCommas(OffPeakDemand.value)")
-                                    td.occurrent
+                                    td.occurrent.offpeakdemand
                                         // ko if: OffPeakDemand.value !== 0 && OffPeakDemand.timeStamp > 0
                                         span.itemTimeStamp(data-bind="text: moment(OffPeakDemand.timeStamp).format('HH:mm')")
                                         // /ko
