@@ -31,7 +31,6 @@ module.exports = function(controllers) {
   router.use('/', controllers.loadviews);
   router.use('/', controllers.workspace);
 
-  router.use('/api/alarmMessageDefinitions', controllers.alarmmessageapi);
   router.use('/api/activitylogs', controllers.activitylogs);
   router.use('/api/calendar', controllers.calendar);
   router.use('/api/curvefit', controllers.curvefit);
@@ -48,7 +47,6 @@ module.exports = function(controllers) {
   router.use('/api/trenddata', controllers.trenddata);
   router.use('/api/trendplots', controllers.trendplots);
 
-  router.use('/alarmMessageDefinitions', controllers.alarmmessagedefinitions);
   router.use('/dashboard', controllers.dashboard);
   router.use('/displays', controllers.display);
   router.use('/gpl', controllers.gpl);

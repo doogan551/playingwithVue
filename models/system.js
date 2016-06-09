@@ -4,6 +4,7 @@ var db = require('../helpers/db');
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config');
 var logger = require('../helpers/logger')(module);
+var ObjectId = require('mongodb').ObjectID;
 
 module.exports = {
   getSystemInfoByName: function(name, cb) {
@@ -335,29 +336,73 @@ module.exports = {
     });
   },
   updateAlarmTemplate: function(data, cb) {
+    var searchCriteria,
+        criteria;
+
+    if (!!data.newObject) {
+      var alarmTemplateNew = {
+          "_id": new ObjectId(),
+          "isSystemMessage" : false,
+          "msgType" : data.newObject.msgType,
+          "msgCat" : data.newObject.msgCat,
+          "msgTextColor" : data.newObject.msgTextColor,
+          "msgBackColor" : data.newObject.msgBackColor,
+          "msgName" : data.newObject.msgName,
+          "msgFormat" : data.newObject.msgFormat
+      };
+
+      criteria = {
+        collection: 'AlarmDefs',
+        saveObj: alarmTemplateNew
+      };
+
+      console.log("new criteria = " + JSON.stringify(criteria));
+      Utility.save(criteria, cb);
+
+    } else if (!!data.updatedObject) {
+      searchCriteria = {
+        "_id": ObjectId(data.updatedObject._id)
+      };
+
+      var alarmTemplateUpdate = {
+        $set: {
+          "isSystemMessage" : (data.updatedObject.isSystemMessage == "true"),
+          "msgType" : data.updatedObject.msgType,
+          "msgCat" : data.updatedObject.msgCat,
+          "msgTextColor" : data.updatedObject.msgTextColor,
+          "msgBackColor" : data.updatedObject.msgBackColor,
+          "msgName" : data.updatedObject.msgName,
+          "msgFormat" : data.updatedObject.msgFormat
+        }
+      };
+
+      criteria = {
+        query: searchCriteria,
+        collection: 'AlarmDefs',
+        updateObj: alarmTemplateUpdate
+      };
+
+      console.log("updated criteria = " + JSON.stringify(criteria));
+      Utility.update(criteria, cb);
+    }
+  },
+  deleteAlarmTemplate: function(data, cb) {
     var searchCriteria = {
-      "_id": data._id
+      "_id": ObjectId(data.deleteObject._id)
     };
-
-    var alarmTemplateUpdate = {
-      $set: {
-        "isSystemMessage" : data.isSystemMessage,
-        "msgType" : data.msgType,
-        "msgCat" : data.msgCat,
-        "msgTextColor" : data.msgTextColor,
-        "msgBackColor" : data.msgBackColor,
-        "msgName" : data.msgName,
-        "msgFormat" : data.msgFormat
-      }
-    };
-
     var criteria = {
       query: searchCriteria,
-      collection: 'AlarmDefs',
-      updateObj: alarmTemplateUpdate
+      collection: 'AlarmDefs'
     };
+    Utility.remove(criteria, function(err, data) {
 
-    Utility.update(criteria, cb);
+      if (err) {
+        return cb(err.message);
+      }
+
+      var entries = data;
+      return cb(null, entries);
+    });
   },
   weather: function(cb) {
     var returnData;

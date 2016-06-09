@@ -559,7 +559,6 @@ var calendarViewModel = function() {
     return viewModel;
 };
 
-
 // Controllers Screen ---------------------------------------------------------
 var controllerViewModel = function() {
     var self = this,
@@ -851,7 +850,6 @@ var controllerViewModel = function() {
     };
 };
 
-
 // Control Priority Text Screen ----------------------------------------------
 var controlPriorityTextViewModel = function() {
     var self = this,
@@ -922,7 +920,6 @@ var controlPriorityTextViewModel = function() {
         self.dirty(false);
     };
 };
-
 
 // Quality Codes Screen -------------------------------------------------------
 var qualityCodesViewModel = function() {
@@ -1023,7 +1020,6 @@ var qualityCodesViewModel = function() {
     };
 };
 
-
 // Custom Color Codes Screen --------------------------------------------------
 var customColorCodesViewModel = function () {
     var self = this,
@@ -1085,7 +1081,6 @@ var customColorCodesViewModel = function () {
     self.dirty = ko.observable(false);
     self.customColorCodes = ko.observableArray();
 };
-
 
 // Telemetry Screen -----------------------------------------------------------
 var telemetryViewModel = function() {
@@ -1337,19 +1332,23 @@ var backupViewModel = function() {
 // Alarm Messages Screen ---------------------------------------------------------
 var alarmTemplateViewModel = function() {
     var self = this,
-        originalData,
         alarmTemplateCategories = window.opener.workspaceManager.config.Enums["Alarm Categories"],
         alarmTemplateTypes = window.opener.workspaceManager.config.Enums["Alarm Types"],
+        $alarmTemplateModal,
+        $alarmTokens,
+        $alarmToken,
+        $alarmTemplateDeleteConfirm,
         $alarmTemplateContainer,
         $alarmTemplateDataTable,
-        $addAlarmTemplateForm,
-        $newAlarmTemplateName,
-        ID = 'AlarmTemplate ID',
-        NAME = 'AlarmTemplate Name',
+        $msgFormat,
         dataUrl = '/api/system/getAlarmTemplates',
         saveUrl = '/api/system/updateAlarmTemplate',
-        dirs = {},
+        deleteUrl = '/api/system/deleteAlarmTemplate',
         alarmTemplateData,
+        columnsArray,
+        getRawHexColor = function (theColor) {
+            return theColor.replace(/#/g , "");
+        },
         getColumnByRenderIndex = function (index) {
             var result;
             result = columnsArray.filter(function (col) {
@@ -1365,7 +1364,7 @@ var alarmTemplateViewModel = function() {
                     }
                 }
             }
-            return "-blank-";
+            return "System Message";
         },
         getColumns = function () {
             var cols = [];
@@ -1373,56 +1372,69 @@ var alarmTemplateViewModel = function() {
                 columnKey: "_id",
                 columnName: "ID",
                 width: 2,
+                sortable: false,
                 display: false
+            });
+            cols.push({
+                columnKey: "msgEditLevel",
+                columnName: "",
+                width: 15,
+                sortable: false,
+                display: true
             });
             cols.push({
                 columnKey: "msgCat",
                 columnName: "Category",
                 width: 55,
+                sortable: true,
                 display: true
             });
             cols.push({
                 columnKey: "msgType",
                 columnName: "Type",
-                width: 190,
+                width: 175,
+                sortable: true,
                 display: true
             });
             cols.push({
                 columnKey: "msgName",
                 columnName: "Name",
                 width: 200,
+                sortable: true,
                 display: true
             });
             cols.push({
                 columnKey: "msgFormat",
                 columnName: "Definition",
                 width: 350,
+                sortable: true,
                 display: true
             });
             cols.push({
                 columnKey: "msgTextColor",
                 columnName: "Text Color",
+                sortable: false,
                 display: false
             });
             cols.push({
                 columnKey: "msgBackColor",
                 columnName: "Background Color",
+                sortable: false,
                 display: false
             });
             cols.push({
                 columnKey: "isSystemMessage",
                 columnName: "System",
-                width: 55,
+                width: 45,
+                sortable: true,
                 display: true
             });
             return cols;
         },
-        columnsArray = getColumns(),
-        setDirty = function() {
-            self.dirty(true);
-        },
         configureDataTable = function (destroy, clearData, columns) {
-            var aoColumns = [],
+            var $cloneButton = "<div class='btn-group'><button type='button' data-bind='click:function() { $parent.clone($parent.$index);}' class='btn btn-xs cloneTemplate'><span class='fa fa-clipboard'></span></button></div>",
+                $deleteButton = "<div class='btn-group'><button type='button' data-bind='click:function() { $parent.delete($parent.$index);}' class='btn btn-xs deleteTemplate'><span class='fa fa-trash'></span></button></div>",
+                aoColumns = [],
                 i,
                 renderedIndex = 0,
                 setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
@@ -1430,6 +1442,26 @@ var alarmTemplateViewModel = function() {
                         case "msgFormat":
                             $(tdField).css('background-color', data.msgBackColor.Value);
                             $(tdField).css('color', data.msgTextColor.Value);
+                            break;
+                        case "msgEditLevel":
+                            var editLevel = data[columnConfig.columnKey].rawValue,
+                                $html = "";
+
+                            switch (editLevel) {
+                                case 0:
+                                    $html = "";
+                                    break;
+                                case 1:
+                                    $html = $cloneButton;
+                                    break;
+                                case 2:
+                                    $html = $deleteButton + $cloneButton;
+                                    break;
+                                default:
+                                    $html = "";
+                                    break;
+                            }
+                            $(tdField).html($html);
                             break;
                         default:
                             //console.log(" - - - DEFAULT  setTdAttribs()");
@@ -1463,7 +1495,7 @@ var alarmTemplateViewModel = function() {
                 buildColumnObject = function (columnConfig, columnIndex) {
                     var result,
                         columnTitle = columnConfig.columnName,
-                        sortAbleColumn = true;
+                        sortAbleColumn = columnConfig.sortable;
 
                     result = {
                         title: columnTitle,
@@ -1482,15 +1514,6 @@ var alarmTemplateViewModel = function() {
                     return result;
                 };
 
-            //if ($.fn.DataTable.isDataTable($alarmTemplateDataTable)) {
-            //    $alarmTemplateDataTable.DataTable().destroy();
-            //    $alarmTemplateDataTable.find("thead").empty();
-            //    $alarmTemplateDataTable.find("tbody").empty(); // leaving dynamic footer
-            //}
-            //if (clearData === true) {
-            //    alarmTemplateData = {};
-            //}
-
             for (i = 0; i < columns.length; i++) {
                 delete columns[i].renderedIndex;
                 if (columns[i].display) {
@@ -1501,77 +1524,6 @@ var alarmTemplateViewModel = function() {
 
             if (aoColumns.length > 0) {
                 $alarmTemplateDataTable.DataTable({
-                    //api: true,
-                    //dom: 'BRlfrtip',
-                    //buttons: [
-                    //    {
-                    //        extend: 'collection',
-                    //        text: 'Export',
-                    //        buttons: [
-                    //            {
-                    //                extend: 'copyHtml5',
-                    //                text: '<i class="fa fa-files-o"></i> Copy',
-                    //                key: {
-                    //                    altKey: true,
-                    //                    key: '1'
-                    //                }
-                    //            },
-                    //            {
-                    //                extend: 'csvHtml5',
-                    //                text: '<i class="fa fa-file-o"></i> CSV',
-                    //                key: {
-                    //                    altKey: true,
-                    //                    key: '2'
-                    //                }
-                    //            },
-                    //            {
-                    //                extend: 'excelHtml5',
-                    //                text: '<i class="fa fa-file-excel-o"></i> Excel',
-                    //                key: {
-                    //                    altKey: true,
-                    //                    key: '3'
-                    //                }
-                    //            },
-                    //            {
-                    //                extend: 'pdfHtml5',
-                    //                text: '<i class="fa fa-file-pdf-o"></i> PDF',
-                    //                footer: true,
-                    //                key: {
-                    //                    altKey: true,
-                    //                    key: '4'
-                    //                },
-                    //                customize: function (doc, thisButton) {
-                    //                    // could insert TrendPlots here
-                    //                }
-                    //            }
-                    //        ]
-                    //    },
-                    //    {
-                    //        extend: 'print',
-                    //        text: '<i class="fa fa-print"></i> Print',
-                    //        key: {
-                    //            altKey: true,
-                    //            key: '5'
-                    //        },
-                    //        customize: function (win) {
-                    //            var $documentBody = $(win.document.body),
-                    //                $documentHead = $(win.document.head),
-                    //                $table = $documentBody.find("table"),
-                    //                classes,
-                    //                hostAndProtocol = window.location.protocol + '//' + window.location.host;
-                    //
-                    //            $documentHead.find('link[rel=stylesheet]').remove();
-                    //            $documentHead.append('<link rel="stylesheet" href="' + hostAndProtocol + '/css/reports/reportprinting.css" type="text/css" />');
-                    //            $table.removeClass("table-striped dataTablePlaceHolder dataTable");
-                    //            $table.addClass('table').addClass('table-sm');
-                    //            $table.css("padding", "2px");
-                    //            for (i = 0; i < columns.length; i++) {
-                    //                classes = setColumnClasses(columns[i], i);
-                    //                $table.find("td:nth-child(" + (i + 1) + ")").addClass(classes);
-                    //            }
-                    //        }
-                    //    }
-                    //],
                     data: alarmTemplateData,
                     columns: aoColumns,
                     headerCallback: function (thead, data, start, end, display) {
@@ -1587,53 +1539,80 @@ var alarmTemplateViewModel = function() {
                     lengthChange: true,
                     lengthMenu: [[10, 18, 30, 50, 75, 100, -1], [10, 18, 30, 50, 75, 100, "All"]],
                     //bFiler: false,  // search box
-                    pageLength: 18
+                    pageLength: 100
                 });
             }
         },
         renderAlarmTemplates = function () {
             if (alarmTemplateData) {
-                configureDataTable(true, true, columnsArray);
+                // configureDataTable(true, true, columnsArray);
                 $alarmTemplateDataTable.DataTable().clear();
                 $alarmTemplateDataTable.DataTable().rows.add(alarmTemplateData);
                 $alarmTemplateDataTable.DataTable().draw();
             }
         },
-        buildAlarmTemplate = function(row, idx) {
-            var result = {
-                _id: {
-                    Value: row._id,
-                    rawValue: row._id
-                },
-                msgCat: {
-                    Value: getKeyBasedOnEnumValue(alarmTemplateCategories, row.msgCat),
-                    rawValue: row.msgCat
-                },
-                msgType: {
-                    Value: getKeyBasedOnEnumValue(alarmTemplateTypes, row.msgType),
-                    rawValue: row.msgCat
-                },
-                msgName: {
-                    Value: row.msgName,
-                    rawValue: row.msgName
-                },
-                msgFormat: {
-                    Value: row.msgFormat,
-                    rawValue: row.msgFormat
-                },
-                msgTextColor: {
-                    Value: "#" + row.msgTextColor,
-                    rawValue: row.msgTextColor
-                },
-                msgBackColor: {
-                    Value: "#" + row.msgBackColor,
-                    rawValue: row.msgBackColor
-                },
-                isSystemMessage: {
-                    Value: row.isSystemMessage,
-                    rawValue: row.isSystemMessage
-                }
-            };
+        buildAlarmTemplate = function (row, cloneRow) {
+            var editLevel = 0,
+                result;
+
+            if (getKeyBasedOnEnumValue(alarmTemplateCategories, row.msgCat) === "Event") {
+                editLevel = 0;  // Events can't be cloned or deleted
+            } else if (row.isSystemMessage) {
+                editLevel = 1;  // non Events that are System messages can be cloned
+            } else {
+                editLevel = 2;  // this is user generated content.  cloneable and deletable
+            }
+
+            if (typeof row._id !== 'object') { // if it's not an object then reading raw data from DB
+                result = {
+                    _id: {
+                        Value: row._id,
+                        rawValue: row._id
+                    },
+                    msgEditLevel: {
+                        Value: "",
+                        rawValue: editLevel
+                    },
+                    msgCat: {
+                        Value: getKeyBasedOnEnumValue(alarmTemplateCategories, row.msgCat),
+                        rawValue: row.msgCat
+                    },
+                    msgType: {
+                        Value: getKeyBasedOnEnumValue(alarmTemplateTypes, row.msgType),
+                        rawValue: row.msgType
+                    },
+                    msgName: {
+                        Value: row.msgName,
+                        rawValue: row.msgName
+                    },
+                    msgFormat: {
+                        Value: row.msgFormat,
+                        rawValue: row.msgFormat
+                    },
+                    msgTextColor: {
+                        Value: "#" + row.msgTextColor,
+                        rawValue: row.msgTextColor
+                    },
+                    msgBackColor: {
+                        Value: "#" + row.msgBackColor,
+                        rawValue: row.msgBackColor
+                    },
+                    isSystemMessage: {
+                        Value: (row.isSystemMessage ? "Yes" : "No"),
+                        rawValue: row.isSystemMessage
+                    }
+                };
+            } else {
+                result = $.extend(true, {}, row);
+            }
+
+            if (cloneRow) {
+                result._id = null;
+                result.isSystemMessage = {
+                    Value: "No",
+                    rawValue: false
+                };
+            }
             return result;
         },
         setData = function(data) {
@@ -1641,90 +1620,222 @@ var alarmTemplateViewModel = function() {
 
             alarmTemplateData = [];
             for (i = 0; i < data.length; i++) {
-                alarmTemplateData.push(buildAlarmTemplate(data[i], i));
+                alarmTemplateData.push(buildAlarmTemplate(data[i], false));
+            }
+            if (alarmTemplateData.length > 0) {
+                self.alarmTemplate(alarmTemplateData[0]);
+                self.alarmTemplateBackgroundColor(getRawHexColor(self.alarmTemplate().msgBackColor.Value));
+                self.alarmTemplateTextColor(getRawHexColor(self.alarmTemplate().msgTextColor.Value));
             }
             self.alarmTemplates(alarmTemplateData);
-            self.dirty(false);
             renderAlarmTemplates();
         },
         getData = function() {
             $.ajax({
                 url: dataUrl
             }).done(function(data) {
-                originalData = data;
                 setData(data);
             });
         },
-    //display status message on saving
         showMessage = function(text) {
             var message = text.charAt(0).toUpperCase() + text.substring(1);
-            $controllerMessage.stop(true)
-                .html(message)
-                .show(0)
-                .delay(2000)
-                .fadeOut();
+            console.log("save message = " + message);
+        },
+        promptDelete = function (row) {
+            self.alarmTemplate(buildAlarmTemplate(row, false));
+            $alarmTemplateDeleteConfirm.modal("show");
         };
+
     self.displayName = 'Alarm Templates';
-    self.dirty = ko.observable(false);
     self.hasError = ko.observable(false);
+    self.alarmTemplate = ko.observable("");
+    self.alarmTemplateBackgroundColor = ko.observable();
+    self.alarmTemplateTextColor = ko.observable();
     self.alarmTemplateName = ko.observable();
     self.alarmTemplateDesc = ko.observable();
     self.alarmTemplates = ko.observableArray();
+    self.alarmTemplateTokens = ko.observableArray([{
+        code: 'AV',
+        name: 'Alarm Value',
+        description: 'Include point name in alarm message'
+    }, {
+        code: 'NAME',
+        name: 'Point Name',
+        description: 'Include point name in alarm message'
+    }, {
+        code: 'PE',
+        name: 'Program Error',
+        description: 'Include point name in alarm message'
+    }, {
+        code: 'PV',
+        name: 'Point Value',
+        description: 'Include point name in alarm message'
+    }, {
+        code: 'RC',
+        name: 'Reliability Value',
+        description: 'Include point name in alarm message'
+    }, {
+        code: 'UT',
+        name: 'Units Value',
+        description: 'Include point name in alarm message'
+    }]);
     self.showEntryForm = ko.observable(false);
-    dirs[NAME] = -1;
-    dirs[ID] = -1;
-    dirs.Description = -1;
     self.init = function() {
+        columnsArray = getColumns();
+        self.alarmTemplateBackgroundColor.subscribe(function (newValue) {
+            $msgFormat.css('background-color', "#" + newValue);
+        });
+        self.alarmTemplateTextColor.subscribe(function (newValue) {
+            $msgFormat.css('color', "#" + newValue);
+        });
         $alarmTemplateContainer = $("#alarmTemplateContainer");
         $alarmTemplateDataTable = $alarmTemplateContainer.find(".dataTablePlaceHolder");
+        $alarmTemplateModal = $alarmTemplateContainer.find(".sysprefAlarmTemplateModel");
+        $alarmTemplateDeleteConfirm = $alarmTemplateContainer.find(".alarmTemplateDeleteConfirm");
+        $msgFormat = $alarmTemplateContainer.find(".msgFormat");
+        $alarmTemplateModal.modal("hide");
+        $alarmTemplateDeleteConfirm.modal("hide");
+        configureDataTable(true, true, columnsArray);
+
+        $alarmTemplateDataTable.find('tbody').on('click', 'tr', function (e) {
+            self.alarmTemplate($alarmTemplateDataTable.DataTable().row(this).data());
+            self.displayPopupEditor();
+        });
+
+        $alarmTemplateDataTable.find('tbody').on('click', '.cloneTemplate', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            self.clone($alarmTemplateDataTable.DataTable().row($(this).parent().parent().parent()).data());
+        });
+
+        $alarmTemplateDataTable.find('tbody').on('click', '.deleteTemplate', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            promptDelete($alarmTemplateDataTable.DataTable().row($(this).parent().parent().parent()).data());
+        });
+
+        $alarmTemplateDataTable.on('draw.dt', function (e, settings) {
+            var numberOfPages = $alarmTemplateDataTable.DataTable().page.info().pages,
+                $tablePagination,
+                $pagination,
+                $paginate_buttons;
+            $tablePagination = $alarmTemplateContainer.find(".dataTables_paginate");
+            $pagination = $tablePagination.find("ul.pagination");
+            $paginate_buttons = $pagination.find(".paginate_button");
+            $paginate_buttons = $paginate_buttons.not("li.active");
+
+            if (numberOfPages === 1) {
+                $tablePagination.hide();
+                $paginate_buttons.hide();
+            } else {
+                $tablePagination.show();
+                $paginate_buttons.show();
+            }
+        });
+
+
         getData();
     };
-    //shows add controller form
-    self.showForm = function() {
-        self.resetForm();
-        self.showEntryForm(true);
-        $newAlarmTemplateName.focus();
-    };
-    self.resetForm = function() {
-        $addAlarmTemplateForm.jqxValidator('hide');
-        self.alarmTemplateName('');
-        self.alarmTemplateDesc('');
-        self.showEntryForm(false);
-    };
     self.save = function() {
-        var alarmTemplates = ko.toJS(self.alarmTemplates()),
-            sanitizedAlarmTemplates = [],
+        var alarmTemplate = $.extend(true, {}, self.alarmTemplate()),
+            data = {},
             sanitize = function() {
-                var c,
-                    row,
-                    obj;
-                for (c = 0; c < alarmTemplates.length; c++) {
-                    row = alarmTemplates[c];
-                    obj = {};
-                    obj[ID] = row[ID];
-                    obj[NAME] = row[NAME];
-                    obj.Description = row.Description;
-                    obj.isUser = row.isUser;
-                    if(!!row[NAME])
-                        sanitizedAlarmTemplates.push(obj);
+                var key;
+
+                alarmTemplate.msgTextColor.rawValue = getRawHexColor(self.alarmTemplateTextColor());
+                alarmTemplate.msgBackColor.rawValue = getRawHexColor(self.alarmTemplateBackgroundColor());
+                alarmTemplate.msgName.rawValue = $alarmTemplateContainer.find(".msgName").val();
+                if (alarmTemplate.isSystemMessage.rawValue) {
+                    alarmTemplate.msgFormat.rawValue = $alarmTemplateContainer.find(".msgFormat").text();
+                } else {
+                    alarmTemplate.msgFormat.rawValue = $alarmTemplateContainer.find(".msgFormat").val();
+                }
+
+                alarmTemplate.msgFormat.rawValue = alarmTemplate.msgFormat.rawValue.replace(/\r?\n|\r/g, "");
+
+                for (key in alarmTemplate) {
+                    if (alarmTemplate.hasOwnProperty(key)) {
+                        alarmTemplate[key] = (!!alarmTemplate[key] ? alarmTemplate[key].rawValue : null);
+                        delete alarmTemplate["msgEditLevel"];
+                    }
                 }
             };
+
         sanitize();
+
+        if (alarmTemplate._id === null) {
+            data.newObject = alarmTemplate;
+        } else {
+            data.updatedObject = alarmTemplate;
+        }
+
         $.ajax({
             url: saveUrl,
-            data: {
-                Entries: sanitizedAlarmTemplates
-            },
+            data: data,
             dataType: 'json',
             type: 'post'
         }).done(function(response) {
-            self.dirty(false);
-            originalData = sanitizedAlarmTemplates;
-            showMessage('Save alarmTemplates: ' + response.message);
+            showMessage('Save alarmTemplate: ' + response.message);
+            getData();
         });
+        $alarmTemplateModal.modal("hide");
     };
-    self.cancel = function() {
-        setData(originalData);
+    self.displayPopupEditor = function() {
+        var draggedToken = {};
+        self.alarmTemplateBackgroundColor(getRawHexColor(self.alarmTemplate().msgBackColor.Value));
+        self.alarmTemplateTextColor(getRawHexColor(self.alarmTemplate().msgTextColor.Value));
+
+        $alarmTemplateModal.modal("show");
+        $msgFormat = $alarmTemplateContainer.find(".msgFormat");
+        $msgFormat.css('background-color', "#" + self.alarmTemplateBackgroundColor());
+        $msgFormat.css('color', "#" + self.alarmTemplateTextColor());
+        $alarmTokens = $alarmTemplateModal.find(".alarmTokens");
+        $alarmToken = $alarmTokens.find(".alarmToken");
+
+        if (!self.alarmTemplate().isSystemMessage.rawValue) {
+            $($alarmToken).dblclick(function() {
+                var alarmToken = $(this).find(".alarmTokenCode").text();
+                $($msgFormat).val($($msgFormat).val() + alarmToken);
+            });
+
+            $($alarmToken).draggable({
+                cursor: 'move',
+                helper: "clone",
+                start: function(event, ui) {
+                    draggedToken.tr = this;
+                    draggedToken.helper = ui.helper;
+                }
+            });
+
+            $($msgFormat).droppable({
+                drop: function(event, ui) {
+                    var alarmToken = ui.draggable.find(".alarmTokenCode").text();
+                    $(this).val($(this).val() + alarmToken);
+                }
+            });
+        }
+    };
+    self.deleteAlarmTemplate = function() {
+        var data = {},
+            alarmTemplate = $.extend(true, {}, self.alarmTemplate());
+
+        data.deleteObject = {};
+        data.deleteObject._id = alarmTemplate._id.rawValue;
+
+        $.ajax({
+            url: deleteUrl,
+            data: data,
+            dataType: 'json',
+            type: 'post'
+        }).done(function(response) {
+            showMessage('Delete alarmTemplate: ' + response.message);
+            getData();
+        });
+        $alarmTemplateDeleteConfirm.modal("hide");
+    };
+    self.clone = function (row) {
+        self.alarmTemplate(buildAlarmTemplate(row, true));
+        self.displayPopupEditor();
     };
 };
 

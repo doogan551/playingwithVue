@@ -4,7 +4,7 @@ html
         meta(name='viewport',content='width=device-width,initial-scale=1')
         title= title
         link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.base.css')
-        link(rel='stylesheet', href='/css/lib/font-awesome-4.1.0/css/font-awesome.min.css')
+        link(rel='stylesheet', href='/css/lib/font-awesome-4.3.0/css/font-awesome.min.css')
         link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css')
         link(rel='stylesheet', href='/css/lib/fullcalendar.css')
         link(rel='stylesheet', href='/css/lib/scheduler.css')
@@ -14,13 +14,13 @@ html
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.10/dataTables.bootstrap.min.css')
         // syspref.css must follow after bootstrap.min.css so we can override bootstrap themes
         link(rel='stylesheet', href='/css/baseui/syspref.css')
-        link(rel='stylesheet', href='/css/alarmMessageDefinitions/alarmMessageDefinitions.css')
+        link(rel='stylesheet', href='/css/baseui/alarmTemplate.css')
         script(type='text/javascript', src='/js/lib/json2.js')
         script(type='text/javascript', src='/js/lib/jquery.min.js')
         script(type='text/javascript', src='/js/lib/jquery-clockpicker.min.js')
         script(type='text/javascript', src='/js/lib/jquery-ui.js')
         script(type='text/javascript', src='/js/lib/jquery.toast.min.js')
-        script(type='text/javascript', src='/js/lib/knockout-2.3.0.js')
+        script(type='text/javascript', src='/js/lib/knockout-3.2.0.js')
         script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
         script(type='text/javascript', src='/js/lib/knockout.mapping-2.3.5.js')
         script(type='text/javascript', src='/js/lib/knockout-sortable.js')
@@ -46,20 +46,13 @@ html
         script(type='text/javascript', src='/js/lib/date.js')
         script(type='text/javascript', src='/js/lib/moment.js')
         script(type='text/javascript', src='/js/lib/underscore.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/underscore.string.min.js')
-        script(type='text/javascript', src='/js/lib/backbone.min.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.hoverIntent.min.js')
-        script(type='text/javascript', src='/js/lib/knockback.min.js')
+        //script(type='text/javascript', src='/js/lib/backbone.min.js')
+        //script(type='text/javascript', src='/js/lib/knockback.min.js')
         script(type='text/javascript', src='/js/lib/fullcalendar.js')
         script(type='text/javascript', src='/js/lib/scheduler.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/ko.editables.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.caret.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/knockout-inline-confirm.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/koGrid-2.1.1.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/ko.bindingHandler.definitionColorPicker.js')
         script(type='text/javascript', src='/js/util/components/colorpicker/diColorPicker.js')
-        script(type="text/javascript" src='/js/lib/DataTables-1.10.10/jquery.dataTables.js')
-        script(type="text/javascript" src='/js/lib/DataTables-1.10.10/dataTables.bootstrap.min.js')
+        script(type="text/javascript", src='/js/lib/DataTables-1.10.10/jquery.dataTables.js')
+        script(type="text/javascript", src='/js/lib/DataTables-1.10.10/dataTables.bootstrap.min.js')
         script(type='text/javascript', src='/js/baseui/syspref.js')
 
     body.whitebg
@@ -298,11 +291,13 @@ html
                                     input#telemetryPublicIP.hide.form-control.input-sm(type="text", data-bind="value: $data['Public IP']")
             // ------ Alarm Templates ---------------------------------------------------------------------
             #alarmTemplateContainer(data-bind="visible: section() == 'Alarm Templates'")
-                .title(data-bind="visible: section()")
-                br
-                div(data-bind='with:alarmTemplateViewModel')
-                    table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
-                    //include ../AlarmMessageDefinition/AlarmMessageDefinitionModule.jade
+                div(data-bind='with: alarmTemplatesViewModel')
+                    .title(data-bind="text: displayName")
+                    br
+                    div
+                        table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
+                        include ../alarmTemplate/templates.jade
+                        include ../alarmTemplate/_confirm.jade
             // ------ Backup ----------------------------------------------------------------------------------------
             div#backupContainer(data-bind="visible: section() == 'Backup'")
                 .title Backup

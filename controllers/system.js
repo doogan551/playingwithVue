@@ -212,6 +212,21 @@ router.post('/updateAlarmTemplate', function(req, res, next) {
   });
 });
 
+router.post('/deleteAlarmTemplate', function(req, res, next) {
+  var data = _.merge(req.params, req.body);
+  data.user = req.user;
+
+  System.deleteAlarmTemplate(data, function(err, result) {
+    if (err) {
+      return utils.sendResponse(res, {
+        err: err
+      });
+    } else {
+      return utils.sendResponse(res, {message:'success'});
+    }
+  });
+});
+
 // Checked
 router.get('/weather', function(req, res, next) {
   var data = _.merge(req.params, req.body);

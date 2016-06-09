@@ -1,4 +1,14 @@
-#confirm(data-states='{"confirm":"0"}',data-bind='if:state()==="confirm"')
-    .btn-group(data-bind='with:machine.states["confirm"]')
-        button#confirmOkay.btn.btn-success(data-bind='click:handlers.okay') I definitely want to do this
-        button#cancelOkay.btn.btn-warning(data-bind='click:handlers.cancel') I changed my mind
+.modal.fade.alarmTemplateDeleteConfirm(tabindex="-1", role="dialog", aria-hidden="true")
+    .modal-dialog.modal-sm
+        .modal-content
+            .modal-body(data-bind="with: alarmTemplate()")
+                .form-group
+                    label.confirmMessage Delete this Alarm Message Definition?
+                    br
+                    .form-group.deletionCandidate
+                        label Alarm Message
+                        div.msgFormat(data-bind="text: msgFormat.Value, style: {'background-color' : msgBackColor.Value, 'color': msgTextColor.Value}")
+
+            .modal-footer.alarmTemplateControls
+                    button.btn.btn-primary.btn-sm(data-bind='click: deleteAlarmTemplate') OK
+                    button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
