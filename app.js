@@ -49,9 +49,11 @@ app.use(morgan(':remote-addr :method :url :status :res[content-length] :response
   'stream': loggerStream.stream
 }));
 app.use(cookieParser());
-app.use(bodyParser.json());
+
+app.use(bodyParser.json({limit:10000}));
 app.use(bodyParser.urlencoded({
-  extended: true
+  extended: true,
+  parameterLimit: 4500
 }));
 app.use(multer({
   inMemory: true

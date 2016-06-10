@@ -5094,7 +5094,10 @@ tou.utilityPages.Electricity = function() {
                         collection = collections[i];
                         for (var j = 0, jlen = collection.rows.length; j < jlen; j++) {
                             row = collection.rows[j];
-                            if (row.rateElement && (row.rateElement.type === type) && (row.rateElement.peak === peak)) {
+                            // Type and peak must match for consumption and demand. For reactives, only the type must match. This is because
+                            // the monthly bill's reactive may be 'on' or 'off' peak depending if the period has peak times. The user can't configure
+                            // this, therefore all reactives in the bill will be the same, so we just need to get the first reactive element we find
+                            if (row.rateElement && (row.rateElement.type === type) && ((type === 'reactive') || (row.rateElement.peak === peak))) {
                                 usage = row.usage;
 
                                 if (type === 'reactive') {
@@ -5208,7 +5211,10 @@ tou.utilityPages.Electricity = function() {
                             };
                         }
 
-                        usage = getUsage(sourceData, 'reactive', 'both');
+                        // The monthly bill's reactive may be 'on' or 'off' peak depending if the period has peak times
+                        // The user can't configure this, therefore all reactives in the bill will be the same, so we
+                        // just need to get the first reactive element we find
+                        usage = getUsage(sourceData, 'reactive');
                         row = getRow(collection.rows, 'reactiveAtPeak');
                         row.data.push(usage);
 
