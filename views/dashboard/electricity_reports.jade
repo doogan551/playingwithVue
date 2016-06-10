@@ -250,11 +250,11 @@
                                     th Off Peak Usage (kWh)
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
-                                    // ko if: (selectedMonthYear().childPeriod.toLowerCase() === "day")
-                                    th(data-bind="text: Total Daily Usage (kWh)")
+                                    // ko if: (selectedMonthYear().childPeriod === "Day")
+                                    th Total Daily Usage (kWh)
                                     // /ko
-                                    // ko if: (selectedMonthYear().childPeriod.toLowerCase() !== "day")
-                                    th(data-bind="text: Total Yearly Usage (kWh)")
+                                    // ko if: (selectedMonthYear().childPeriod !== "Day")
+                                    th Total Monthy Usage (kWh)
                                     // /ko
                                     // /ko
                             tbody(data-bind="foreach: koGridReportCollection()")
