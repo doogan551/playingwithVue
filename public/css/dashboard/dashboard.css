@@ -1289,6 +1289,9 @@ Opera */
     .billingBar {
         display: none;
     }
+    .yearBillTable .max {
+        color: red !important;
+    }
 }
 /* End Electricity Billing ----------------------- */
 
