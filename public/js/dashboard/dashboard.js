@@ -7606,14 +7606,14 @@ tou.utilityPages.Electricity = function() {
                     }
 
                     $.each(maxes, function (key, temperature) {
-                        if (temperature.value > highestTemp.value || highestTemp.value === null) {
+                        if (!!temperature.value && (temperature.value > highestTemp.value || highestTemp.value === null)) {
                             highestTemp.value = tou.toFixed(temperature.value, 1);
                             highestTemp.timeStamp = temperature.timeStamp / 1000;
                         }
                     });
 
                     $.each(mins, function (key, temperature) {
-                        if (temperature.value < lowestTemp.value || lowestTemp.value === null) {
+                        if (!!temperature.value && (temperature.value < lowestTemp.value || lowestTemp.value === null)) {
                             lowestTemp.value = tou.toFixed(temperature.value, 1);
                             lowestTemp.timeStamp = temperature.timeStamp / 1000;
                         }
