@@ -49,11 +49,50 @@ var dti = {
         init: function () {
             dti.startButton.$el = $('#startButton');
 
-            dti.startButton.$el.click(function startClick () {
+            // dti.startButton.$el.on('mousedown', function startClick (event) {
+            //     var $newPanel = $('#newPanel');
+
+            //     if (event.which === 3) {
+            //         $newPanel.removeClass('hide');
+            //         dti.panels.activate($newPanel);
+            //         event.preventDefault();
+            //         return false;
+            //     } else if (event.which === 1) {
+            //         $('#startmenu').removeClass('hide');
+            //     }
+            // });
+
+            $('body').mousedown(function hideStartMenu (event) {
                 var $newPanel = $('#newPanel');
 
-                $newPanel.removeClass('hide');
-                dti.panels.activate($newPanel);
+                if ($(event.target).parent('#startButton').length === 0) {
+                    $('#startmenu').fadeOut(300);
+                } else {
+                    if (event.which === 3) {
+                        $newPanel.removeClass('hide');
+                        dti.panels.activate($newPanel);
+                        event.preventDefault();
+                        return false;
+                    } else if (event.which === 1) {
+                        $('#startmenu').removeClass('hide')
+                            .stop(true, true).css('opacity', 0)
+                            .slideDown({
+                                queue: false,
+                                duration: 300,
+                                easing: 'easeOutCubic',
+                                complete: function () {
+                                    $(this).css('height', '');
+                                }
+                            })
+                            .animate({
+                                opacity: 1
+                            }, {
+                                queue: false,
+                                duration: 300,
+                                easing: 'easeOutSine'
+                            });
+                    }
+                }
             });
         }
     },

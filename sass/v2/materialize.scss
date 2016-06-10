@@ -191,7 +191,16 @@ main {
 
 .recentItems {
     & > .collection {
+        & > .recentHeader {
+            font-size: 1.2rem;
+        }
+
         & > .collection-item {
+
+            // & :not(.active) {
+            //     background-color: #c3c3c3 !important;
+            // }
+
             .title {
                 i {
                     font-size: 20px;
@@ -204,6 +213,23 @@ main {
         .circle {
             // background-color:
         }
+    }
+}
+
+#startmenu {
+    width: 600px;
+    min-height: 200px;
+    z-index: 2;
+    position: absolute;
+    top: $navbarHeight;
+    left: 0;
+
+    & > div {
+        height: 100%;
+    }
+
+    .dti-menu-tile {
+        line-height: 1.5;
     }
 }
 

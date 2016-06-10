@@ -9,7 +9,7 @@ html
         //- link(rel='stylesheet', href='/css/lib/jquery-ui.css')
 
 
-    body.grey.lighten-3
+    body.grey.lighten-3(oncontextmenu="return false;")
         ul#dropdown1.dropdown-content
             li
                 a.blue-grey-text.truncate.tooltipped(href='javascript://', data-position='right', data-tooltip='4194 DXAC DISP', data-delay='10') 4194 DXAC DISP
@@ -25,7 +25,7 @@ html
                     .nav-wrapper
                         ul.left
                             li
-                                a#startButton.noHover.tooltipped(href="javascript://", data-position='bottom', data-tooltip='New Window')
+                                a#startButton.dropdown-button.noHover(href="javascript://", data-position='bottom', data-tooltip='New Window')
                                     img.circle.dorsett-logo(src='/img/Dorsett_icon.png')
                             li.active
                                 a.dropdown-button(href='javascript://', data-activates='dropdown1', data-beloworigin='true', data-hover='true')
@@ -45,6 +45,37 @@ html
                             //-     span.clock 10:10
 
         main
+            #startmenu.hide.z-depth-3
+                .grey.lighten-3.white-text
+                    .row
+                        .col.s6
+                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
+                                i.material-icons.center-align device_hub
+                                span Sequence
+                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
+                                i.material-icons.center-align tv
+                                span Display
+                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
+                                i.material-icons.center-align notifications
+                                span Alarms
+                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
+                                i.material-icons.center-align assignment
+                                span Reports
+
+                        .col.s6.recentItems
+                            .collection.z-depth-2
+                                .recentHeader.collection-item.blue-grey-text
+                                    .center-align Recent Items
+                                a.blue-grey-text.collection-item(href="javascript://")
+                                    span.title 4200 PARKING LOT LIGHTS
+                                        i.left.material-icons device_hub
+                                a.blue-grey-text.collection-item(href="javascript://")
+                                    span.title 4200 CRU1 DISP
+                                        i.left.material-icons tv
+                                a.blue-grey-text.collection-item(href="javascript://")
+                                    span.title DEVICE ADDRESS REPORT
+                                        i.left.material-icons assignment
+
             #modal1.modal
                 .modal-content
                     h4 Modal Header
@@ -132,50 +163,18 @@ html
                                 span Reports
 
                         .col.s6.recentItems
-                            .collection.blue-grey-text
-                                a.collection-item(href="javascript://")
+                            .collection.z-depth-2
+                                .recentHeader.collection-item.blue-grey-text
+                                    .center-align Recent Items
+                                a.blue-grey-text.collection-item(href="javascript://")
                                     span.title 4200 PARKING LOT LIGHTS
                                         i.left.material-icons device_hub
-                                a.collection-item(href="javascript://")
+                                a.blue-grey-text.collection-item(href="javascript://")
                                     span.title 4200 CRU1 DISP
                                         i.left.material-icons tv
-                                a.collection-item(href="javascript://")
+                                a.blue-grey-text.collection-item(href="javascript://")
                                     span.title DEVICE ADDRESS REPORT
                                         i.left.material-icons assignment
-                                    //- p
-                                    //-     | First Line
-                                    //-     br
-                                    //-     |                    Second Line
-                                    //- a.secondary-content(href='#!')
-                                    //-     i.material-icons grade
-                                //- li.collection-item.avatar
-                                //-     i.material-icons.circle folder
-                                //-     span.title Title
-                                //-     p
-                                //-         | First Line
-                                //-         br
-                                //-         |                    Second Line
-                                //-     a.secondary-content(href='#!')
-                                //-         i.material-icons grade
-                                //- li.collection-item.avatar
-                                //-     i.material-icons.circle.green insert_chart
-                                //-     span.title Title
-                                //-     p
-                                //-         | First Line
-                                //-         br
-                                //-         |                    Second Line
-                                //-     a.secondary-content(href='#!')
-                                //-         i.material-icons grade
-                                //- li.collection-item.avatar
-                                //-     i.material-icons.circle.red play_arrow
-                                //-     span.title Title
-                                //-     p
-                                //-         | First Line
-                                //-         br
-                                //-         |                    Second Line
-                                //-     a.secondary-content(href='#!')
-                                //-         i.material-icons grade
-
 
                 //- .card.blue-grey.z-depth-2
                 //-     .card-content.white-text
