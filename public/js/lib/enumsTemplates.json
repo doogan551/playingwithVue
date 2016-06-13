@@ -2145,6 +2145,11 @@
                 "valueType": "String",
                 "reportEnable": true
             },
+            "Firmware 2 Version": {
+                "enum": 133,
+                "valueType": "String",
+                "reportEnable": true
+            },
             "Float Alarm Point": {
                 "enum": 408,
                 "valueType": "UniquePID",
@@ -4027,6 +4032,12 @@
                     "isReadOnly": true,
                     "ValueType": 2,
                     "Value": "V1.93"
+                },
+                "Firmwarwe 2 Version": {
+                    "isDisplayable": true,
+                    "isReadOnly": true,
+                    "ValueType": 2,
+                    "Value": "N/A"
                 },
                 "Inactive Text": {
                     "isDisplayable": true,
