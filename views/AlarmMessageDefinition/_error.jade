@@ -1,5 +1,0 @@
-div#error(data-states='{"error":3}',data-bind='if:state()==="error"')
-    .panel.panel-danger(data-bind='with:machine.states["error"]')
-        h4.panel-title.title An Error Occurred
-        p.content(data-bind='text: data.temp().message.details')
-        button.btn.btn-danger(data-bind='click:handlers.okay') okay

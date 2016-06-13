@@ -996,6 +996,7 @@ var tou = {
                     } else {//statistic
                         row = results.results[props].slice(-1)[0];
                         getVal(row);
+                        isEmpty = false;
                         row = results.results[props][0];
                         when = moment.unix(row.timestamp || row.range.start);
                         when = when.format('MM/DD/YY HH:mm:SS');
@@ -4534,9 +4535,19 @@ tou.utilityPages.Electricity = function() {
                                 collection.tempData.onPeakDemandRow = row;
                             }
                         } else if (rateType === 'reactive') {
-                            peak = 'both'; // For reactive rate elements, peak is not selectable and defaults to 'on' which is incorrect
+                            // Peak is not selectable for reactive rate elments; it defaults to 'on' which is not always what we want
+                            if (period.rangeType === 'transition') {
+                                // If peak times enabled we need the period's highest on-peak
+                                if (period.enablePeakSelection) {
+                                    peak = 'on';
+                                } else {
+                                    peak = 'both';  // We could set this to 'off' & get the same effect
+                                }
+                            } else {
+                                peak = 'on';        // It should already be set to on but just CYB
+                            }
                             // Also update the rate element stored on our row
-                            row.rateElement.peak = 'both';
+                            row.rateElement.peak = peak;
                         }
                         // Get this rate element's units
                         unit = units[rateType];
@@ -5083,7 +5094,10 @@ tou.utilityPages.Electricity = function() {
                         collection = collections[i];
                         for (var j = 0, jlen = collection.rows.length; j < jlen; j++) {
                             row = collection.rows[j];
-                            if (row.rateElement && (row.rateElement.type === type) && (row.rateElement.peak === peak)) {
+                            // Type and peak must match for consumption and demand. For reactives, only the type must match. This is because
+                            // the monthly bill's reactive may be 'on' or 'off' peak depending if the period has peak times. The user can't configure
+                            // this, therefore all reactives in the bill will be the same, so we just need to get the first reactive element we find
+                            if (row.rateElement && (row.rateElement.type === type) && ((type === 'reactive') || (row.rateElement.peak === peak))) {
                                 usage = row.usage;
 
                                 if (type === 'reactive') {
@@ -5197,7 +5211,10 @@ tou.utilityPages.Electricity = function() {
                             };
                         }
 
-                        usage = getUsage(sourceData, 'reactive', 'both');
+                        // The monthly bill's reactive may be 'on' or 'off' peak depending if the period has peak times
+                        // The user can't configure this, therefore all reactives in the bill will be the same, so we
+                        // just need to get the first reactive element we find
+                        usage = getUsage(sourceData, 'reactive');
                         row = getRow(collection.rows, 'reactiveAtPeak');
                         row.data.push(usage);
 
@@ -5651,13 +5668,19 @@ tou.utilityPages.Electricity = function() {
                     } else if (tier.multiplier !== null) {
                         // Our formula is: (off-peak consumption / total consumption) * demand * multiplier, where demand is the peak demand (highest
                         // demand during on peak periods) or max demand (highest demand regardless of on peak or off peak)
+                        
+                        // row.usage.value has already been rounded; all contributors are non-rounded numbers
+                        // TOU Phase 1 Calculations used the non-rounded contributor numbers
+                        // TOU Phase 2 uses rounded contributor numbers for the following reason:
+                        // While raw numbers provide a more accurate tiered number, it creates a number that is not reproducible by plugging the
+                        // numbers shown on the bill into the tier formula.
 
                         // We use || 0 to recover from undefined; for example, we saw this in testing: if maxDemand was 0 and peakDemand
                         // was undefined, this would resolve to undefined if we didn't include the trailing '|| 0'
-                        demand = (contributors.maxDemand || contributors.peakDemand) || 0;
+                        demand = tou.toFixed((contributors.maxDemand || contributors.peakDemand) || 0, 0);
 
                         // The '|| 0' part here is to recover from divide by 0 which generates NaN
-                        usage = tou.toFixed(((row.usage.value / contributors.totalConsumption) || 0) * demand * tier.multiplier, 0);
+                        usage = tou.toFixed(((row.usage.value / tou.toFixed(contributors.totalConsumption, 0)) || 0) * demand * tier.multiplier, 0);
                         usage = Math.min(usage, offPeakLessTiers);
 
                         offPeakLessTiers -= usage;
@@ -6502,9 +6525,7 @@ tou.utilityPages.Electricity = function() {
                     $maxTD,
                     gridColumns = [
                         "gridonpeakdemand",
-                        "gridonpeakreactive",
                         "gridoffpeakdemand",
-                        "gridoffpeakreactive",
                         "gridonpeakconsumption",
                         "gridoffpeakconsumption",
                         "gridconsumptiontotal"],
@@ -6527,6 +6548,14 @@ tou.utilityPages.Electricity = function() {
                     });
                     if ($maxTD) {
                         $maxTD.addClass("danger");
+
+                        if (gridColumns[i] === "gridonpeakdemand") {
+                            $maxTD.parent().find(".occurrent.onpeakdemand").addClass("danger");
+                            $maxTD.parent().find(".gridonpeakreactive").addClass("danger");
+                        } else if (gridColumns[i] === "gridoffpeakdemand") {
+                            $maxTD.parent().find(".occurrent.offpeakdemand").addClass("danger");
+                            $maxTD.parent().find(".gridoffpeakreactive").addClass("danger");
+                        }
                     }
                 }
 
@@ -7583,14 +7612,14 @@ tou.utilityPages.Electricity = function() {
                     }
 
                     $.each(maxes, function (key, temperature) {
-                        if (temperature.value > highestTemp.value || highestTemp.value === null) {
+                        if (!!temperature.value && (temperature.value > highestTemp.value || highestTemp.value === null)) {
                             highestTemp.value = tou.toFixed(temperature.value, 1);
                             highestTemp.timeStamp = temperature.timeStamp / 1000;
                         }
                     });
 
                     $.each(mins, function (key, temperature) {
-                        if (temperature.value < lowestTemp.value || lowestTemp.value === null) {
+                        if (!!temperature.value && (temperature.value < lowestTemp.value || lowestTemp.value === null)) {
                             lowestTemp.value = tou.toFixed(temperature.value, 1);
                             lowestTemp.timeStamp = temperature.timeStamp / 1000;
                         }
@@ -8142,7 +8171,7 @@ tou.utilityPages.Electricity = function() {
                             myBindings.activeDataRequest(true);
                             tou.socket.emit("getUsage", {options: options});
 
-                            timerDuration = 120000;  // 2 mins
+                            timerDuration = 180000;  // 3 mins
 
                             myBindings.dataRequestTimer = setTimeout(function () {
                                 myBindings.$reportsContent.hide();

@@ -1786,7 +1786,6 @@ var reportsViewModel = function () {
                         break;
                     case "Float":
                     case "Integer":
-                    case "Unsigned":
                         if ($.isNumeric(rawValue)) {
                             result.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
                         } else if (rawValue === "") {
@@ -1797,12 +1796,17 @@ var reportsViewModel = function () {
                             result.Value = rawValue;
                         }
                         break;
-                    case "String":
-                        if ($.isNumeric(rawValue)) {
-                            result.Value = toFixedComma(rawValue, columnConfig.precision);
+                    case "Unsigned":
+                        if (rawValue === "") {
+                            result.Value = 0;
+                            result.rawValue = 0;
+                            rawValue = 0;
                         } else {
                             result.Value = rawValue;
                         }
+                        break;
+                    case "String":
+                        result.Value = rawValue;
                         break;
                     case "Bool":
                         if (result.Value !== "") {
