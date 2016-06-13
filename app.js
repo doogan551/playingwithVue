@@ -37,10 +37,10 @@ require('./helpers/passport')(passport); // pass passport for configuration
 
 //if production, use dist folders
 if (config.minifyFiles !== false) {
-    //no need to test for existence of directories, it falls back to public/...
-    logger.info('Using minified files');
-    app.use('/js', express.static(__dirname + '/dist/public/js'));
-    app.use('/css', express.static(__dirname + '/dist/public/css'));
+  //no need to test for existence of directories, it falls back to public/...
+  logger.info('Using minified files');
+  app.use('/js', express.static(__dirname + '/dist/public/js'));
+  app.use('/css', express.static(__dirname + '/dist/public/css'));
 }
 
 app.use(express.static(__dirname + '/public'));
@@ -62,17 +62,17 @@ app.set('view engine', 'jade');
 
 //if production, use dist folders
 if (config.minifyFiles !== false) {
-    try {
-        var stat = fs.statSync(__dirname + '/dist/views/');
-        if (stat.isDirectory()) {
-            logger.info('Found prod directory, redirecting views');
-            app.set('views', __dirname + '/dist/views');
-        } else {
-            logger.info('Prod view folder not found, skipping view redirect');
-        }
-    } catch (ex) {
-        logger.info('Prod view folder not found, skipping view redirect');
+  try {
+    var stat = fs.statSync(__dirname + '/dist/views/');
+    if (stat.isDirectory()) {
+      logger.info('Found prod directory, redirecting views');
+      app.set('views', __dirname + '/dist/views');
+    } else {
+      logger.info('Prod view folder not found, skipping view redirect');
     }
+  } catch (ex) {
+    logger.info('Prod view folder not found, skipping view redirect');
+  }
 }
 
 
@@ -111,6 +111,15 @@ require('./helpers/mongooseconn.js')(function() {
                   email: 'rkendall@dorsett-tech.com', // 'user@example.com'
                   agreeTos: true
                 });
+              },
+              handleRenewFailure: function(err, hostname, certInfo) {
+                logger.error("ERROR: Failed to renew domain '", hostname, "':");
+                if (err) {
+                  logger.error(err.stack || err);
+                }
+                if (certInfo) {
+                  logger.error(certInfo);
+                }
               }
             });
 
