@@ -108,6 +108,8 @@ var dti = {
                 local: dti.globalSearch.rawResults
             });
 
+            // on keydown, take string and get results from bloodhound, replace string in results with span.searchHighlight, then populate dropdown and show if not shown already
+
             dti.globalSearch.$el.typeahead({
                 hint: true,
                 highlight: true,

@@ -88,7 +88,12 @@ html
                     //- .card-panel.blue-grey.z-depth-2
                     //-     span.white-text This is a simple panel
 
-            .card-panel.dti-card-panel.blue-grey.z-depth-2.lighten-3(style="left: 5px; top: 55px;")
+            #desktop
+                .dti-desktop-item
+                    .item-content
+                    .item-text Test
+
+            .card-panel.dti-card-panel.blue-grey.z-depth-2.lighten-3(style="left: 105px; top: 105px;")
                 .card-toolbar
                     .card-title.center-align.white-text
                         div
@@ -108,7 +113,7 @@ html
                             i.material-icons close
                 img(src="/img/test/display.png", style="height: 100%; width: 100%;")
 
-            .card-panel.dti-card-panel.blue-grey.z-depth-2.activeCard(style="left: 55px; top: 105px;")
+            .card-panel.dti-card-panel.blue-grey.z-depth-2.activeCard(style="left: 155px; top: 155px;")
                 .card-toolbar
                     .card-title.center-align.white-text
                         div
@@ -128,7 +133,7 @@ html
                             i.material-icons close
                 img(src="/img/test/sequence.png", style="height: 100%; width: 100%;")
 
-            #newPanel.card-panel.dti-card-panel.blue-grey.z-depth-2.hide(style="left: 110px; top: 155px; width: 600px;")
+            #newPanel.card-panel.dti-card-panel.blue-grey.z-depth-2.hide(style="left: 210px; top: 205px; width: 600px;")
                 .card-toolbar
                     .card-title.center-align.white-text
                         div
@@ -190,6 +195,7 @@ html
     script(type='text/javascript', src='/js/lib/jquery-ui.js')
     //- script(type='text/javascript', src='/js/lib/config.js')
     script(type='text/javascript', src='/js/lib/moment.js')
+    //- script(type='text/javascript', src='/js/lib/typeahead.bundle.js')
     //- script(type='text/javascript', src='/js/lib/knockout-3.2.0.js')
     //- script(type='text/javascript', src='/js/lib/socket.io.js')
     script(type='text/javascript', src='/js/lib/materialize.js')
