@@ -146,6 +146,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
     updateReferences = false,
     downloadPoint = false,
     updateDownlinkNetwk = false,
+    updateEthernetNetwk = false,
     configRequired,
     updateObject = {},
     //activityLogObject = {},
