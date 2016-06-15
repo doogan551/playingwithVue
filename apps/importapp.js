@@ -2112,6 +2112,13 @@ function updateDevices(point, callback) {
 		point["Device Address"] = Config.Templates.getTemplate("Device")["Device Address"];
 		point["Network Segment"] = Config.Templates.getTemplate("Device")["Network Segment"];
 		point['Trend Interval'] = Config.Templates.getTemplate("Device")["Trend Interval"];
+		point['Firmware 2 Version'] = Config.Templates.getTemplate("Device")["Firmware 2 Version"];
+
+		if ([Config.Enums['Device Model Types']['MicroScan 5 UNV'].enum, Config.Enums['Device Model Types']['SCADA Vio'].enum].indexOf(point['Model Type'].eValue) >= 0) {
+			point['Firmware 2 Version'].isDisplayable = true;
+		} else {
+			point['Firmware 2 Version'].isDisplayable = false;
+		}
 
 		var propertyNetwork = point["Uplink Port"].Value + " Network",
 			propertyAddress = point["Uplink Port"].Value + " Address";
