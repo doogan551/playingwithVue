@@ -1344,7 +1344,7 @@ var Config = (function(obj) {
             return data;
         },
 
-        "Firmware Version": function(data) {
+        "Firmware 2 Version": function(data) {
             // TODO Add validation (to be determined)
             return data;
         },
@@ -2608,7 +2608,7 @@ var Config = (function(obj) {
                 prop = point['Broadcast Period'],
                 isDisplayable = false;
             if (val) isDisplayable = true;
-            prop && (prop.isDisplayable = isDisplayable);
+            if (prop) prop.isDisplayable = isDisplayable;
             return point;
         },
 
@@ -3712,8 +3712,12 @@ var Config = (function(obj) {
             point["Port 4 Network"].Max = 65534;
 
             point["Time Zone"].isReadOnly = true;
+            // Init Firmware 2 to not displayable - we'll set it displayable when it is needed
+            point["Firmware 2 Version"].isDisplayable = false;
 
             if (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "Unknown" || point["Model Type"].Value == "MicroScan 5 xTalk" || point["Model Type"].Value == "SCADA Vio") {
+                // Firmware 2 (baseboard fw) is displayable on MS5-UNV and SCADA Vio products
+                point["Firmware 2 Version"].isDisplayable = (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "SCADA Vio");
 
                 if (point["Model Type"].Value !== "Unknown") {
                     point["Time Zone"].isReadOnly = false;
