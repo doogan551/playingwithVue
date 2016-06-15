@@ -1145,11 +1145,11 @@ function updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
           "Downlink Network.Value": {
             $ne: 0
           }
-        }, $or: [{
+        }, {$or: [{
           'Downlink Network.Value': newPoint["Ethernet Network"].Value
         }, {
           'Downlink Network.Value': oldPoint["Ethernet Network"].Value
-        }]]
+        }]}]
       },
       updateObj: {
         $set: {
