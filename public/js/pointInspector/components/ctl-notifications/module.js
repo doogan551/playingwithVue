@@ -42,7 +42,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
 
     function getAlarmMessages(id) {
         return $.ajax({
-            url: apiEndpoint + 'alarmMessageDefinitions',
+            url: '/api/system/getAlarmTemplates',
             contentType: 'application/json',
             dataType: 'json',
             type: 'get'
@@ -55,7 +55,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         getAlarmMessages().done(function(data) {
             self.gettingData(false);
 
-            self.alarmMessages(data.result);
+            self.alarmMessages(data);
             self.buildAlarmArrays();
         });
     };

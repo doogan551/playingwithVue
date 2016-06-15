@@ -11,15 +11,20 @@ var rob = {
       'driveLetter': 'C'
     },
     'location': {
-      'site': 'Rob',
-      'email': 'rkendall@dorsett-tech.com'
+      'site': 'Rob'
+    },
+    'email': {
+      'onError': {
+        'to': 'rkendall@dorsett-tech.com',
+        'enabled': true
+      }
     },
     'processes': {
       'zmqProcess': '',
       'smProcess': ''
     }
   },
-    runNotifications: false
+  runNotifications: false
 };
 
 rob.Infoscan.files.firmwareLocation = "\\\\192.168.1.88/d$/InfoScan/Firmware/";

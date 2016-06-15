@@ -1,7 +1,8 @@
 var msfc = {
   'Infoscan': {
     'dbConfig': {
-      'host': 'localhost'
+      'host': 'localhost',
+      'dbName': 'infoscan'
     },
     'zmqConfig': {
       'server': '127.0.0.1',
@@ -10,9 +11,13 @@ var msfc = {
       'driveLetter': 'D'
     },
     'location': {
-      'site': 'MSFC',
-      'email': 'rkendall@dorsett-tech.com'
-
+      'site': 'MSFC'
+    },
+    'email': {
+      'onError': {
+          'to': 'rkendall@dorsett-tech.com',
+          'enabled': true
+      }
     }
   },
   runNotifications: false

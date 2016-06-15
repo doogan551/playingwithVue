@@ -1,6 +1,9 @@
 var express = require('express');
 var router = express.Router();
 var passport = require('passport');
+var config = require('config');
+
+var inboundId = config.get('Infoscan').siteConfig.inboundId;
 
 module.exports = function(controllers) {
   router.all('*', function(req, res, next) {
@@ -17,7 +20,8 @@ module.exports = function(controllers) {
   });
 
   router.use('/', controllers.workspace);
-  router.use('/inbound', controllers.inbound);
+  // Our inbound route is a random id so it's not guessable
+  router.use('/' + inboundId, controllers.inbound);
 
   // ALL ROUTES BELOW THIS WILL REQUIRE AUTHENTICATION
   router.use(function(req, res, next) {
@@ -31,7 +35,6 @@ module.exports = function(controllers) {
   router.use('/', controllers.loadviews);
   router.use('/', controllers.workspace);
 
-  router.use('/api/alarmMessageDefinitions', controllers.alarmmessageapi);
   router.use('/api/activitylogs', controllers.activitylogs);
   router.use('/api/calendar', controllers.calendar);
   router.use('/api/curvefit', controllers.curvefit);
@@ -48,7 +51,6 @@ module.exports = function(controllers) {
   router.use('/api/trenddata', controllers.trenddata);
   router.use('/api/trendplots', controllers.trendplots);
 
-  router.use('/alarmMessageDefinitions', controllers.alarmmessagedefinitions);
   router.use('/dashboard', controllers.dashboard);
   router.use('/displays', controllers.display);
   router.use('/gpl', controllers.gpl);

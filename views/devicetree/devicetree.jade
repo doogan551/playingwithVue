@@ -30,7 +30,7 @@ html
           i.fa.fa-circle-o-notch.fa-4x.fa-spin.loadingIcon
           ul#tree2(data-bind="foreach: tree()")
             li
-              span(data-bind="text:networkSegment, attr:{'id':networkSegment}")
+              span.searchable(data-bind="text:networkSegment, css:{badNetwork: $root.badNetworks().indexOf(networkSegment()) > -1}, attr:{'id':networkSegment}")
               ul(data-bind="template:{name:'branchTemplate', foreach:branches()}")
         
       .col-sm-2
@@ -87,11 +87,12 @@ html
         // ko if: ($parent.networkSegment && $parent.networkSegment() == networkSegment()) || ($data.networkSegment && $data.networkSegment() == $parent)
         li
           i.fa.fa-building.noselect(data-bind="style:{color:$root.statusColor($data)}") &nbsp;
-          span.hoverCursor.noselect(data-bind="text:$data.text(), click:$root.openDevice, event:{mouseover:$root.showDevice, mouseout:$root.hideDevice}, attr:{'id':$data.text().split(' ').join('_')}")
+          span.searchable.hoverCursor.noselect(data-bind="text:$data.text(), click:$root.openDevice, event:{mouseover:$root.showDevice, mouseout:$root.hideDevice}, attr:{'id':$data.text().split(' ').join('_')}")
+          span.inlineDevAddr(data-bind="text:$root.devAddress($data)")
           //ko if:networks().length >0
           ul(data-bind="foreach: networks()")
             li
-              span(data-bind="text:$data, css:{badNetwork: $root.badNetworks().indexOf($data) > -1}, attr:{'id':$data, 'class':$data}")
+              span.searchable(data-bind="text:$data, css:{badNetwork: $root.badNetworks().indexOf($data) > -1}, attr:{'id':$data}")
               // ko if:$parent.branches().length >0
               ul(data-bind="template:{name:'branchTemplate', foreach:$parent.branches()}")
               // /ko

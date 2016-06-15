@@ -128,12 +128,12 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         if(!!col){
             pointType = col;
             data = data.Device;
-            width = 820;
-            height = 542;
+            width = 1250;
+            height = 750;
         } else if(data['Point Type'] !== 'Schedule Entry' && data['Point Type'] !== 'Schedule'){
             pointType = data['Point Type'];
-            width = 820;
-            height = 542;
+            width = 1250;
+            height = 750;
         }else{
             pointType = 'Schedule';
             width = 1250;

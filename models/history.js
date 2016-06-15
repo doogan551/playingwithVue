@@ -530,9 +530,7 @@ var getValues = function(option, callback) {
 					console.log('error', err);
 					return callback(err);
 				}
-				// console.log('sql', sResults.length);
 				// findInMongo(mdb, option, function(err, mResults) {
-				// console.log('mongo', err, mResults.length);
 				fixResults(sResults, [], function(err, results) {
 					callback(err, results);
 				});
@@ -779,7 +777,7 @@ var buildRanges = function(periods, holidays, op, _range, callback) {
 			peakStart = period.start.peak;
 			peakEnd = period.end.peak;
 
-			if (peakStart !== null && peakStart !== undefined) {
+			if (peakStart !== null && peakStart !== undefined && (period.rangeType !== 'transition' || (period.rangeType === 'transition' && !!period.enablePeakSelection)) ) {
 				var minutes = peakStart % 100;
 				var hours = peakStart / 100;
 				currentRangeStart.hour(hours).minute(minutes);
@@ -867,7 +865,7 @@ var getSums = function(operation, option, values, range, callback) {
 				var periodRange = ranges[r];
 				for (var v = 0; v < values.length; v++) {
 					var value = values[v];
-					if (option.fx === 'weather') {
+					if (option.ops[0].fx === 'weather') {
 						if (value.timestamp >= scaleRange.start && value.timestamp < scaleRange.end && value.timestamp >= periodRange.start && value.timestamp < periodRange.end) {
 							newResult.sum += value.Value;
 							values.splice(v, 1);
@@ -1192,7 +1190,6 @@ var findInSql = function(options, tables, callback) {
 		}
 
 		statement = statement.join(' ');
-		// console.log('!!!statement', statement, year);
 		criteria = {
 			year: parseInt(year, 10),
 			statement: statement
@@ -1312,7 +1309,6 @@ var countInSql = function(options, tables, callback) {
 			}
 		}
 		statement = statement.join(' ');
-		// console.log('???count', statement);
 		criteria = {
 			year: parseInt(year, 10),
 			statement: statement
@@ -1873,7 +1869,6 @@ module.exports = historyModel = {
 		// JS console.log('%%%%%%%%%%%', JSON.stringify(options));
 		getTables(options, function(err, tables) {
 			findInSql(options, tables, function(err, sResults) {
-				// console.log('***********', err, sResults);
 				fixResults(sResults || [], [], function(err, results) {
 					callback(err, results);
 				});
@@ -1891,13 +1886,11 @@ module.exports = historyModel = {
 
 		getTables(options, function(err, tables) {
 			findInSql(options, tables, function(err, sResults) {
-				// console.log(err);
 				fixResults(sResults || [], [], function(err, results) {
 					if (!results.length && moment.unix(range.start).year() > 2000) {
 						range.end = range.start - 1;
 						historyModel.findLatest(options, callback);
 					} else {
-						// console.log(options.upis, moment.unix(range.end).format(), moment.unix(results[0].timestamp).format());
 						return callback(err, results);
 					}
 				});
@@ -1915,13 +1908,11 @@ module.exports = historyModel = {
 
 		getTables(options, function(err, tables) {
 			findInSql(options, tables, function(err, sResults) {
-				// console.log(err);
 				fixResults(sResults || [], [], function(err, results) {
 					if (!results.length && range.end <= moment().unix()) {
 						range.start = range.end + 1;
 						historyModel.findEarliest(options, callback);
 					} else {
-						// console.log(options.upis, moment.unix(range.end).format(), moment.unix(results[0].timestamp).format());
 						return callback(err, results);
 					}
 				});

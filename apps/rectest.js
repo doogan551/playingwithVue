@@ -21,19 +21,19 @@ function newHistory() {
   var start = moment('10/01/15', 'MM/DD/YY').unix();
   var end = moment.unix(start).add(1, 'month').unix();
 
-  var options = [{
-    "touid": "tou_14",
-    "utilityName": "Electricity",
-    "range": {
-      "start": start,
-      "end": end
-    },
-    "fiscalYear": 2015,
-    "type": "demand",
-    "scale": "month",
-    "fx": "max",
-    "upis": upis.demand
-  }];
+  var options = [ {
+   "touid": "tou_64",
+   "utilityName": "Electricity",
+   "range": {
+     "start": 1443675600,
+     "end": 1446354000
+   },
+   "scale": "month",
+   "fx": "tempRange",
+   "upis": [
+     65696
+   ]
+ }];
 
   // options  = [{"range":{"start":1417410000,"end":1420088400},"scale":"half-hour","fx":"missingData","upis":[919009,918929,918978]}];
   // console.log('before range', options.length);
@@ -48,7 +48,8 @@ function newHistory() {
         console.log('doXne with csv', err);
       });*/
       result = history.unbuildOps(result);
-      console.log(JSON.stringify(result));
+      // console.log(JSON.stringify(result));
+      console.log(result[0].results.tempRanges);
       /*var peakSum = 0;
       var totalSum = 0;
       for (var r = 0; r < result.length; r++) {
@@ -70,7 +71,7 @@ function newHistory() {
     });
   });
 }
-// newHistory();
+newHistory();
 
 function fixDbDoubles() {
   db.connect(connectionString.join(''), function(err) {
@@ -525,4 +526,10 @@ function createMathBlocks() {
     });
   });
 }
-createMathBlocks();
+// createMathBlocks();
+
+function test() {
+  var pjson = require('../package.json');
+  console.log(pjson.version);
+}
+// test();

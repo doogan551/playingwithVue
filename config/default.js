@@ -1,9 +1,10 @@
 var defaults = {
     'Infoscan': {
+        'domains': ['dorsettnc.dtscada.com'],
         'dbConfig': {
             'host': '192.168.1.88',
             'port': 27017,
-            'dbName': 'infoscan',
+            'dbName': 'development',
             'driver': 'mongodb'
         },
         'zmqConfig': {
@@ -14,7 +15,8 @@ var defaults = {
         'siteConfig': {
             'port': 80,
             'siteTitle': 'Info Scan',
-            'appname': 'infoscan'
+            'appname': 'infoscan',
+            'inboundId': 'moclx0qr65a3' // Must update 3rd party services utilizing our inbound if we change this
         },
         'socketConfig': {
             'ioPort': 8085,
@@ -31,6 +33,16 @@ var defaults = {
             'email': null,
             'timezone': 5
         },
+        'email': {
+            'onError': {
+                'to': 'engineering@dorsett-tech.com',
+                'enabled': true
+            },
+            'accounts': {
+                'default': 'infoscan', // Local/user part of email address; domain is appended in mailer.js
+                'alarms': 'alarms'
+            }
+        },
         'letsencrypt': {
             'directory': '/letsencrypt/etc',
             'enabled': false
@@ -43,12 +55,27 @@ var defaults = {
     'Twilio': {
         'accountSid': 'AC0fc63c36f70cccee175fc2427d8ec2be',
         'authToken': '4da6ed7c8aee56285e2b25b8441a6d39',
-        'phoneNumbers': ['+18556887778', '+13367702223']
+        'phoneNumbers': ['+18556887778', '+13367702223'],
+        'voice': {
+            'alarms': {                                         // Alarms application 
+                'Url': '/twilio/voiceAlarmsAnswer',             // All urls prefixed with the domain & inboundId by notifierUtility.js
+                'StatusCallback': '/twilio/voiceAlarmsStatus',  // A relative path keeps these urls valid for all customers
+                'StatusCallbackEvent': ['ringing', 'answered', 'completed'],
+                'IfMachine': 'Continue',
+                'Method': 'POST'
+            }
+        }
     },
     'Plivo': {
         'authId': 'MAOTAYY2RKNJU5MMQWZT',
         'authToken': 'NmFkN2M0MWVjYjI4YTQ2ZmZkMDVkOTRiNGI5ODA4',
         'phoneNumber': '16623384486'
+    },
+    'SparkPost': {
+        "smtpAuth": {
+            'user': "SMTP_Injection",
+            'pass': 'f72bbcb40e28f4387831edaa35afab90caa66d01'
+        }
     },
     runNotifications: true
 };

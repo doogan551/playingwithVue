@@ -93,8 +93,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     ViewModel.prototype.openWindow = function() {
         var self = this,
             proposedCoords = {
-                width: 820,
-                height: 542,
+                width: 1250,
+                height: 750,
                 left: (typeof window.screenLeft == 'undefined' ? screen.left : window.screenLeft) + 20,
                 top: (typeof window.screenTop == 'undefined' ? screen.top : window.screenTop) + 20
             };
@@ -168,8 +168,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             },
             workspaceManager = self.utility.workspace,
             win = workspaceManager.openWindowPositioned(pointSelectorEndPoint, 'Point Selector', 'pointSelector', '', 'pointSelector' + self.parentType, {
-                width: 980,
-                height: 550,
+                width: 1250,
+                height: 750,
                 callback: function() {
                     win.pointLookup.init(callback);
                 }

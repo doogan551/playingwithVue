@@ -326,6 +326,22 @@ td.filterName {
     display: inline-block;
     margin-left: 50px;
 }
+.tabViewReport .chartButtons {
+    display: inline-flex;
+    padding: 3px;
+    margin-left: 50px;
+    margin-top: -6px;
+}
+.tabViewReport .chartButtons a.btn.btn-default {
+    padding: 4px 6px 0px 6px;
+    margin-left: -6px;
+    border-radius: 0px 4px 4px 0px;
+    height: 30px;
+    margin-top: 2px;
+}
+.tabViewReport .chartButtons i.fa-print {
+    padding-right: 3px;
+}
 #reportColumns {
     overflow-y: auto;
 }
@@ -354,6 +370,11 @@ ul.totalizerOperators.dropdown-menu li a:hover {
 ul.calculations.dropdown-menu li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
+}
+ul.yaxisGroups.dropdown-menu li a:hover {
+    background-color: #d5e1f2;
+    cursor: pointer;
+    width: 30px;
 }
 ul.chartTypes.dropdown-menu li a:hover {
     background-color: #d5e1f2;
@@ -481,6 +502,10 @@ div.dataTables_wrapper div.dataTables_length select {
 .availablePropertiesContainer {
     display: inline-block;
 }
+.availableAxisGroupsContainer button.btn.btn-default.dropdown-toggle {
+    width: 35px;
+    padding: 6px 2px;
+}
 .precision {
     width: 60px;
 }
@@ -508,7 +533,7 @@ input.form-control.inputPrecision {
     width: 40px;
 }
 .includeInChartColumn {
-    width: 17px;
+    width: 30px;
 }
 .includeInChartColumn:hover {
     cursor: pointer;
@@ -527,9 +552,27 @@ input.form-control.inputPrecision {
     /*margin-left: 9px;*/
     margin-bottom: 10px;
 }
+.yaxisChartGroup {
+    width: 32px;
+    text-align: center;
+}
+.yaxisGroups.dropdown-menu {
+    width: 32px;
+    min-width: 8px;
+    margin-left: 15px;
+    margin-top: -2px;
+}
+ul.yaxisGroups.dropdown-menu li a {
+    padding: 3px 1px 3px 1px;
+    text-align: -webkit-center;
+}
 input.form-control.globalPrecision {
     width: 30px;
     padding: 2px 2px 2px 5px;
+}
+input.form-control.globalChartCheckbox {
+    width: 14px;
+    margin-left: 7px;
 }
 .inputSearch {
     margin-left: 6px;
@@ -623,6 +666,7 @@ input.form-control.globalPrecision {
 .availableChartTypes.chartTab > .btn {
     padding: 4px;
     margin-top: 2px;
+    border-radius: 4px 0px 0px 4px;
 }
 .panel-heading a.panel-anchor:after {
     font-family:'Glyphicons Halflings';

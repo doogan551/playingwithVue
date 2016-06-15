@@ -693,7 +693,6 @@ module.exports = Rpt = {
                 }
             }
             fields["Point Type.Value"] = 1;
-            fields["Point Instance.Value"] = 1;
         }
 
         if (selectedPointTypes && selectedPointTypes.length > 0) {

@@ -30,6 +30,7 @@ function TreeViewModel() {
     var i;
     var matchedSpans = [];
     var searchIndex = 0;
+    var regex;
 
     var networkSearch = false;
 
@@ -93,6 +94,18 @@ function TreeViewModel() {
             self.clearSearch();
         }
     });
+
+    self.devAddress = function(data){
+        // if ethernet uplink
+        // dev address : eth ip port #
+        // else just dev add
+        if(data.uplinkPort()===0){
+            return ['(',data.deviceAddress(),':',data.ethIPPort(),')'].join('');
+        }else{
+            return ['(',data.deviceAddress(),')'].join('');
+        }
+        return 'test';
+    };
 
     self.showDevice = function(item, e, t) {
         var rightSide = $(e.target).offset().left + $(e.target).context.offsetWidth;
@@ -189,7 +202,7 @@ function TreeViewModel() {
 
     self.deviceSearch = function() {
         if (!networkSearch) {
-            var regex = new RegExp('.*' + self.searchValue().toString().split(' ').join('_') + '.*', 'i');
+            regex = new RegExp('.*' + self.searchValue().toString().split(' ').join('_') + '.*', 'i');
             self.scrollToElement(regex);
         }
     };
@@ -198,7 +211,7 @@ function TreeViewModel() {
         // TODO: keep class, when searching for network, iterate over the matching network names when bad is clicked(multiple present)
         networkSearch = true;
         self.searchValue(val);
-        var regex = new RegExp('^' + val + '$');
+        regex = new RegExp('^' + val + '$');
         self.scrollToElement(regex);
     };
 
@@ -208,19 +221,19 @@ function TreeViewModel() {
         matchedSpans = [];
         self.resetTree();
 
-        $('span').filter(function() {
-            if (!!this.id.match(elem)) {
+        $('span.searchable').filter(function() {
+            if (!!this.textContent.match(elem)) {
                 matchedSpans.push(this);
             }
-            return this.id.match(elem);
+            return this.textContent.match(elem);
         }).css('background-color', '#86E2D5');
 
         if (matchedSpans.length > searchIndex) {
-            $scrollTo = $('body').find('#' + matchedSpans[searchIndex].id);
+            $scrollTo = $(matchedSpans[searchIndex]);
             $scrollTo.css('background-color', '#FDE3A7');
             self.exapandAll();
             $('.treePane').animate({
-                scrollTop: $scrollTo.offset().top - $('.treePane').offset().top - 35,
+                scrollTop: $scrollTo.offset().top - $('.treePane').offset().top - 135,
                 scrollLeft: 0
             }, 0);
 
@@ -257,7 +270,7 @@ function TreeViewModel() {
     };
 
     self.search = function(direction) {
-        var regex = new RegExp('.*' + self.searchValue() + '.*', 'i');
+        // var regex = new RegExp('.*' + self.searchValue() + '.*', 'i');
         var newIndex = searchIndex + direction;
 
         if (!!matchedSpans.length) {

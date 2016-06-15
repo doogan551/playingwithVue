@@ -64,6 +64,9 @@ var tou = {
                 defaultTitle: '',
                 committedBills: {}
             },
+            Reports: {
+                committedReports: {}
+            },
             Security: []
         }
     },
@@ -689,6 +692,7 @@ var tou = {
                 height: ko.observable(cfg.height),
                 title: ko.observable(cfg.title),
                 value: ko.observable('0'),
+                when: ko.observable(''),
                 currDate: ko.observable(currDate),
                 dataSource: ko.observable(cfg.dataSource),
                 withDataSource: ko.observable(cfg.withDataSource || 'None'),
@@ -831,6 +835,7 @@ var tou = {
                     multiply = prop !== 'tempRange' && prop !== 'weather',
                     row,
                     val,
+                    when,
                     isEmpty = true,
                     withData = self.bindings.withDataSource(),
                     processData = function (result) {
@@ -901,7 +906,7 @@ var tou = {
                             val = 0;
                             return;
                         }
-                        if (isEmpty && row.timestamp !== 0) {
+                        if (isEmpty && row.timestamp !== 0 && row.timestamp !== undefined) {
                             isEmpty = false;
                         }
                         if (row.value !== undefined) {
@@ -991,6 +996,10 @@ var tou = {
                     } else {//statistic
                         row = results.results[props].slice(-1)[0];
                         getVal(row);
+                        isEmpty = false;
+                        row = results.results[props][0];
+                        when = moment.unix(row.timestamp || row.range.start);
+                        when = when.format('MM/DD/YY HH:mm:SS');
 
                         if (isNaN(val)) {
                             val = '';
@@ -1002,7 +1011,8 @@ var tou = {
                         }
 
                         newData = [{
-                            Value: tou.numberWithCommas(Math.round(val))
+                            Value: tou.numberWithCommas(Math.round(val)),
+                            when: when
                         }];
 
                         self.mainData = newData;
@@ -1027,8 +1037,10 @@ var tou = {
                 } else {
                     if (!isEmpty) {
                         self.bindings.value(newData[0].Value);
+                        self.bindings.when(newData[0].when);
                     } else {
                         self.bindings.value(0);
+                        self.bindings.when('');
                     }
                 }
             },
@@ -1394,9 +1406,7 @@ var tou = {
                     monthIndex,
                     fullDate,
                     prettyDate;
-                if (end > now) {
-                    end = now;
-                }
+
                 while (date < end) {
                     year = date.getFullYear();
                     monthIndex = date.getMonth();
@@ -1404,32 +1414,35 @@ var tou = {
                     fullDate = [month, ', ', year].join('');
                     // If we haven't already added this billing period
                     if (processedPeriods.hasOwnProperty(fullDate) === false) {
-                        processedPeriods[fullDate] = true;
-                        if (year === thisYear) {
-                            if (monthIndex === thisMonth) {
-                                prettyDate = 'This month';
-                            } else {
-                                prettyDate = fullDate.split(', ')[0];
-                            }
-                        } else {
-                            prettyDate = fullDate;
-                        }
                         periodEnd = new Date(date).setMonth(monthIndex + 1); // Period end timestamp - setMonth returns a timestamp
-                        availablePeriods.push({
-                            period: 'Month', // This is a month period (as opposed to a 'Fiscal Year')
-                            childPeriod: 'Day',
-                            childFormatCode: 'D',
-                            start: date.getTime(), // Period start timestamp
-                            end: periodEnd,
-                            fullDate: fullDate, // i.e. "August, 2015"
-                            prettyDate: prettyDate, // i.e. "This month", "July", or "July, 2014"
-                            searchDate: fullDate.toLowerCase().replace(',', ''),
-                            month: month, // i.e. "August"
-                            year: year,
-                            fiscalYear: fiscalYear,
-                            season: [rangeType.charAt(0).toUpperCase(), rangeType.slice(1)].join(''), // i.e. Winter, Summer, or Transition
-                            rateTable: $.extend(true, {}, rateTable)
-                        });
+                        // Only add the month if it's not in the future
+                        if (date < now) {
+                            processedPeriods[fullDate] = true;
+                            if (year === thisYear) {
+                                if (monthIndex === thisMonth) {
+                                    prettyDate = 'This month';
+                                } else {
+                                    prettyDate = fullDate.split(', ')[0];
+                                }
+                            } else {
+                                prettyDate = fullDate;
+                            }
+                            availablePeriods.push({
+                                period: 'Month', // This is a month period (as opposed to a 'Fiscal Year')
+                                childPeriod: 'Day',
+                                childFormatCode: 'D',
+                                start: date.getTime(), // Period start timestamp
+                                end: periodEnd,
+                                fullDate: fullDate, // i.e. "August, 2015"
+                                prettyDate: prettyDate, // i.e. "This month", "July", or "July, 2014"
+                                searchDate: fullDate.toLowerCase().replace(',', ''),
+                                month: month, // i.e. "August"
+                                year: year,
+                                fiscalYear: fiscalYear,
+                                season: [rangeType.charAt(0).toUpperCase(), rangeType.slice(1)].join(''), // i.e. Winter, Summer, or Transition
+                                rateTable: $.extend(true, {}, rateTable)
+                            });
+                        }
 
                         if (fiscalYearRanges.hasOwnProperty(fiscalYear) === false) {
                             fullDate = ['Fiscal Year', fiscalYear].join(' ');
@@ -3755,6 +3768,15 @@ tou.utilityPages.Electricity = function() {
                 user: ''
             }
         },
+        yearBillData: {
+            title: '',
+            commit: {
+                done: false,
+                timestamp: 0,
+                user: ''
+            },
+            collections: []
+        },
         bills: [],
         rawUtility: null,
         activeMeters: [],
@@ -3784,8 +3806,20 @@ tou.utilityPages.Electricity = function() {
                     user: ''
                 }
             }),
+            yearBillData: ko.observable({
+                title: '',
+                commit: {
+                    done: false,
+                    timestamp: 0,
+                    user: ''
+                },
+                collections: [],
+            }),
             billsFilter: ko.observable(""),
-            selectedBill: ko.observable(),
+            selectedBill: ko.observable({
+                period: '',
+                prettyDate: ''
+            }),
             billsAvailable: ko.observable(false),
             billingCycle: ko.observable({
                 completedDays: 'Working...',
@@ -3875,7 +3909,7 @@ tou.utilityPages.Electricity = function() {
                 var self = this,
                     now = parseInt(new Date().getTime() / 1000, 10),
                     bill = self.bindings.selectedBill(),
-                    billData = self.billData,
+                    billData = (bill.period === 'Month') ? self.billData : self.yearBillData,
                     _billData = $.extend(true, {}, billData), // Get a copy of billData
                     committedBills = self.committedBills,
                     user = tou.workspaceManager.user(),
@@ -4049,6 +4083,18 @@ tou.utilityPages.Electricity = function() {
                 user: ''
             };
         },
+        clearYearBillData: function () {
+            var yearBillData = this.yearBillData;
+
+
+            yearBillData.title = '';
+            yearBillData.commit = {
+                done: false,
+                timestamp: 0,
+                user: ''
+            };
+            yearBillData.collections.length = 0;
+        },
         saveBilling: function (self, opts) {
             var nonData = {
                 utilityName: self.utilityName,
@@ -4130,14 +4176,27 @@ tou.utilityPages.Electricity = function() {
         },
         processBillTitle: function (title, bill) {
             var titleVariables = {
-                '{Season}': bill.season,
-                '{Month}': bill.month,
-                '{Year}': bill.year,
-                '{Fiscal Year}': bill.fiscalYear
-            };
-            return title.replace(/{Month}|{Season}|{Year}|{Fiscal Year}/g, function (variable) {
-                return titleVariables[variable];
+                    Month: {
+                        '{Season}': bill.season,
+                        '{Month}': bill.month,
+                        '{Year}': bill.year,
+                        '{Fiscal Year}': bill.fiscalYear
+                    },
+                    Year: {
+                        '{Season}': '', // We remove {Season}, {Month}, and {Year} placeholders because they don't apply in a fiscal year bill
+                        '{Month}': '',
+                        '{Year}': '', // This one is null (which one would you choose if the fiscal year spanned two years?)
+                        '{Fiscal Year}': bill.fiscalYear
+                    }
+                },
+                variableLookup = titleVariables[bill.period];
+
+            title = title.replace(/{Month}|{Season}|{Year}|{Fiscal Year}/g, function (variable) {
+                return variableLookup[variable];
             });
+            // Convert double spaces to single spaces (this could happen if we remove {Season} and/or {Month} placeholders)
+            // Tried using a year key of '  ' in our titleVariable but JS converts the object key '  ' to a single space ' '
+            return title.replace(/  /g, ' ');
         },
         buildActiveMeters: function () {
             var self = this;
@@ -4157,6 +4216,29 @@ tou.utilityPages.Electricity = function() {
             if (bill === undefined) {
                 return;
             }
+            var self = this;
+
+            if (bill.period === 'Month') {
+                self.getMonthData(bill, function callback () {
+                    // self.billData holds our processed bill result
+
+                    // Stuff the result in our observable
+                    self.bindings.billData(self.billData);
+                    // Clear the gettingData flag - this will cause the bill to be displayed
+                    self.bindings.gettingData(false);
+                });
+            } else {
+                self.getYearData(bill, function callback () {
+                    // self.yearBillData holds our processed bill result
+
+                    // Stuff the result in our observable
+                    self.bindings.yearBillData(self.yearBillData);
+                    // Clear the gettingData flag - this will cause the bill to be displayed
+                    self.bindings.gettingData(false);
+                });
+            }
+        },
+        getMonthData: function (bill, callback) {
             var self = this,
                 rateTable = bill.rateTable,
                 fiscalYear = rateTable['Fiscal Year'],
@@ -4177,7 +4259,6 @@ tou.utilityPages.Electricity = function() {
                     end: parseInt(bill.end / 1000, 10)
                 },
                 touidTotalConsumption = [touidPrefix, 'both', 'consumption'].join('_'),
-                touidMaximumDemand = [touidPrefix, 'both', 'demand'].join('_'),
                 masterRateType = null,
                 activeMeters = self.activeMeters || self.buildActiveMeters(),
                 processedTiers,
@@ -4243,7 +4324,7 @@ tou.utilityPages.Electricity = function() {
                     }
                 },
                 validateTieredCosnumptions = function () {
-                    var tierError = false,
+                    var tierError,
                         qualifier,
                         conditions,
                         isFirstOpLessThan,
@@ -4256,6 +4337,7 @@ tou.utilityPages.Electricity = function() {
                     // Verify each tier
                     for (i = 0, len = uniqueTieredConsumptions.length; i < len; i++) {
                         tier = uniqueTieredConsumptions[i];
+                        tierError = tier.tierError;
                         qualifier = tier.qualifier;
                         conditions = getConditions(qualifier);
                         firstNumber = getNumber(conditions[0]);
@@ -4276,20 +4358,26 @@ tou.utilityPages.Electricity = function() {
                                 tierError = true;
                             }
                         }
-                        tier.tierError = tierError;
-                        // Get our tier multiplier
-                        if (firstNumber && lastNumber) { // i.e. '> x AND <= y'
-                            tier.multiplier = lastNumber - firstNumber;
-                        } else { // i.e. '<= x', '< x', '> x', or '>= x'
-                            if (isFirstOpLessThan) {
-                                tier.multiplier = +firstNumber;
-                            } else {
-                                tier.multiplier = null;
+
+                        if (tierError) {
+                            for (i; i < len; i++) {
+                                uniqueTieredConsumptions[i].tierError = true;
+                            }
+                        } else {
+                            // Get our tier multiplier
+                            if (firstNumber && lastNumber) { // i.e. '> x AND <= y'
+                                tier.multiplier = lastNumber - firstNumber;
+                            } else { // i.e. '<= x', '< x', '> x', or '>= x'
+                                if (isFirstOpLessThan) {
+                                    tier.multiplier = +firstNumber;
+                                } else {
+                                    tier.multiplier = null;
+                                }
                             }
                         }
                     }
                 },
-                createTotalConsumptionAndMaxDemandDataRequest = function () {
+                createConsumptionAndDemandRequest = function (demandPeak) {
                     // Add off-peak consumption request
                     createDataRequest({
                         touid: touidTotalConsumption,
@@ -4301,9 +4389,9 @@ tou.utilityPages.Electricity = function() {
                     });
                     // Add max demand request
                     createDataRequest({
-                        touid: touidMaximumDemand,
+                        touid: [touidPrefix, demandPeak, 'demand'].join('_'),
                         rateType: 'demand',
-                        peak: 'both'
+                        peak: demandPeak
                     });
                 },
                 createDataRequest = function (data) {
@@ -4333,7 +4421,7 @@ tou.utilityPages.Electricity = function() {
                             // for the total consumption and maximum demand.
                             // Set the masterRateType so we know that the data received actually belongs to this rate element
                             masterRateType = _rateType;
-                            createTotalConsumptionAndMaxDemandDataRequest();
+                            createConsumptionAndDemandRequest((data.rate.qualifierDemand === 'On Peak Demand') ? 'on' : 'both');
                             // Clear the masterRateType
                             masterRateType = null;
                         }
@@ -4345,7 +4433,7 @@ tou.utilityPages.Electricity = function() {
                         // Load factor is actually a calculation based on the following data: total consumption and maximum demand (on or off-peak)
                         // Set the masterRateType so we know that the data received actually belongs to the load factor element
                         masterRateType = _rateType;
-                        createTotalConsumptionAndMaxDemandDataRequest();
+                        createConsumptionAndDemandRequest('both');
                         // Clear the masterRateType
                         masterRateType = null;
                     } else {
@@ -4373,8 +4461,10 @@ tou.utilityPages.Electricity = function() {
                     }
                 },
                 processRate = function (rate) { // This function adds a billing line item for the rate element
-                    // Make sure this rate element is applicable to this bill (do not show on-peak rate elements in transition periods)
-                    if ((period.rangeType === 'transition') && (rate.showInTransition === false)) {
+                    // Make sure this rate element is applicable to this bill
+                    // We do NOT normally show on-peak rate elements in transition periods - this is checked by rangeType and showInTransition
+                    // We DO show on-peak rate elements in transition periods if enablePeakSelection is true
+                    if ((period.rangeType === 'transition') && !!!rate.showInTransition && !!!period.enablePeakSelection) {
                         return;
                     }
 
@@ -4396,6 +4486,8 @@ tou.utilityPages.Electricity = function() {
                     row.tempData = {
                         rate: rate
                     };
+                    // Save the original rate element with our row data
+                    row.rateElement = $.extend({}, rate);
 
                     if (rateType === 'ratemodifier') { // This element only affects the columns
                         rateModifierColumn.visible = true;
@@ -4407,19 +4499,24 @@ tou.utilityPages.Electricity = function() {
                         row.rate.value = 1;
                     } else { // Must be consumption, demand, or reactive types
                         if (rateType === 'consumption') {
-                            if (qualifier.length) {
+                            // Qualifier is only valid in off-peak periods (user can change peak but qualifier is still present)
+                            if (qualifier.length && peak === 'off') {
                                 if (processedTiers.hasOwnProperty(qualifier) === false) {
                                     tier = {
                                         rows: [row],
                                         qualifier: qualifier,
                                         tierError: false,
-                                        tierNumber: null
+                                        qualifierDemand: rate.qualifierDemand
                                     };
                                     processedTiers[qualifier] = tier;
                                     // Add to our uniqueTieredConsumptions array
                                     uniqueTieredConsumptions.push(tier);
                                 } else {
-                                    processedTiers[qualifier].rows.push(row);
+                                    tier = processedTiers[qualifier];
+                                    tier.rows.push(row);
+                                    if (tier.qualifierDemand !== rate.qualifierDemand) {
+                                        tier.tierError = true;
+                                    }
                                 }
                             }
                             if (peak === 'off') {
@@ -4438,7 +4535,19 @@ tou.utilityPages.Electricity = function() {
                                 collection.tempData.onPeakDemandRow = row;
                             }
                         } else if (rateType === 'reactive') {
-                            peak = 'both'; // For reactive rate elements, peak is not selectable and defaults to 'on' which is incorrect.
+                            // Peak is not selectable for reactive rate elments; it defaults to 'on' which is not always what we want
+                            if (period.rangeType === 'transition') {
+                                // If peak times enabled we need the period's highest on-peak
+                                if (period.enablePeakSelection) {
+                                    peak = 'on';
+                                } else {
+                                    peak = 'both';  // We could set this to 'off' & get the same effect
+                                }
+                            } else {
+                                peak = 'on';        // It should already be set to on but just CYB
+                            }
+                            // Also update the rate element stored on our row
+                            row.rateElement.peak = peak;
                         }
                         // Get this rate element's units
                         unit = units[rateType];
@@ -4474,7 +4583,11 @@ tou.utilityPages.Electricity = function() {
                 };
 
             // Clear all of our server request references
-            self.dataRequests = {};
+            self.dataRequests = {
+                // This callback will be called after all of our data requests have been sent, received, and processed
+                callback: callback
+            };
+
             // Clear our current bill data
             self.clearBillData();
 
@@ -4530,7 +4643,7 @@ tou.utilityPages.Electricity = function() {
                 }
             }
 
-            // Remove undfined entries
+            // Remove undefined entries
             for (i = 0, len = billDataCollections.length; i < len; i++) {
                 collection = billDataCollections[i];
                 if (collection === undefined) {
@@ -4548,6 +4661,23 @@ tou.utilityPages.Electricity = function() {
                 touid: null,
                 rateType: 'loadFactor'
             });
+            // Add the period hours to the load factor contributors - we must calculate and store
+            // on the loadFactor contributors instead of pulling from our billingCycle observerable
+            // for yearly billing purposes (billingCycle for yearly bill != month)
+            self.billData.loadFactor.contributors.hours = (function () {
+                var selectedDate = new Date(bill.start),
+                    selectedMonth = selectedDate.getMonth(),
+                    selectedYear = selectedDate.getFullYear(),
+                    days;
+
+                // Get total days in the billing cycle
+                days = self.daysInMonth[selectedMonth];
+                // Adjust total days if billing cycle is February and it's a leap year
+                if ((selectedMonth === 1) && ((selectedYear % 4) === 0)) {
+                    days++;
+                }
+                return (days * 24);
+            })();
 
             if (billDataCollections.length > 0) {
                 // Launch the miss-aisles
@@ -4559,6 +4689,857 @@ tou.utilityPages.Electricity = function() {
                 self.bindings.billData(self.billData);
             }
         },
+        getYearData: function (bill, callback) {
+            var self = this,
+                fiscalYear = bill.fiscalYear,
+                fiscalYearBills = self.bills.filter(function (_bill) {
+                    return (_bill.fiscalYear === fiscalYear) && (_bill.period === 'Month');
+                }),
+                billsToRequest = [],
+                yearBillData = self.yearBillData,
+                done = function () { // This function called after all data for the year has been received
+                    // Sort our source data from earliest to latest
+                    yearBillData.source.sort(function (a, b) {
+                        return a.start > b.start ? 1:-1;
+                    });
+                    self.postProcessYearData_step1(callback);
+                },
+                addToSource = function (_bill, billData) {
+                    yearBillData.source.push({
+                        month: _bill.month,
+                        start: _bill.start,
+                        end: _bill.end,
+                        season: _bill.season,
+                        data: billData,
+                        fullDate: _bill.fullDate,
+                        fiscalyear: _bill.fiscalYear,
+                        rateTable: _bill.rateTable
+                    });
+                },
+                getMonthlyBill = function (_bill) {
+                    self.getMonthData(_bill, getMonthlyBillCallback);
+                },
+                getMonthlyBillCallback = function () {
+                    // self.billData holds our processed bill result
+                    addToSource(billsToRequest[0], $.extend(true, {}, self.billData));
+
+                    // Remove the first array element
+                    billsToRequest.shift();
+                    // If more monthly data to get
+                    if (billsToRequest.length) {
+                        getMonthlyBill(billsToRequest[0]);
+                    } else {
+                        done();
+                    }
+                };
+
+            self.clearYearBillData();
+
+            // If this bill has been committed
+            if (self.committedBills.hasOwnProperty(bill.fullDate)) {
+                //  We don't have to build it, we just need to push the committed data into our billData object
+                self.bindings.yearBillData(self.committedBills[bill.fullDate]);
+                return;
+            }
+
+            yearBillData.source = []; // Add a source array - this will be deleted after we're done processing
+
+            yearBillData.title = self.processBillTitle(self.defaultTitle, bill);
+
+            Array.prototype.push.apply(yearBillData.collections, [{
+                name: {
+                    displayValue: 'Demand',
+                    id: 'demand'
+                },
+                columns: [{
+                    name: {
+                        title:'Name',
+                        visible: true
+                    }
+                }],
+                rows: [{
+                    name: {
+                        id: 'onPeak',
+                        displayValue: 'On Peak Demand',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
+                    data: []
+                }, {
+                    name: {
+                        id: 'offPeak',
+                        displayValue: 'Off Peak Demand',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
+                    data: []
+                }, {
+                    name: {
+                        id: 'reactiveAtPeak',
+                        displayValue: 'Reactive Power at Peak Demand',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
+                    data: []
+                }]
+            }, {
+                name: {
+                    displayValue: 'Consumption',
+                    id: 'consumption'
+                },
+                columns: [{
+                    name: {
+                        title:'Name',
+                        visible: true
+                    }
+                }],
+                rows: [{
+                    name: {
+                        id: 'total',
+                        displayValue: 'Total Consumption',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
+                    data: []
+                }, {
+                    name: {
+                        id: 'onPeak',
+                        displayValue: 'On Peak Consumption',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
+                    data: [],
+                }, {
+                    name: {
+                        id: 'offPeak',
+                        displayValue: 'Off Peak Consumption',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
+                    data: []
+                }]
+            }, {
+                name: {
+                    displayValue: 'Load Factor',
+                    id: 'loadFactor'
+                },
+                columns: [{
+                    name: {
+                        title:'Name',
+                        visible: true
+                    }
+                }],
+                rows: [{
+                    name: {
+                        id: 'loadFactor',
+                        displayValue: 'Load Factor',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
+                    data: []
+                }]
+            }, {
+                name: {
+                    displayValue: 'Charges',
+                    id: 'charges'
+                },
+                columns: [{
+                    name: {
+                        title:'Name',
+                        visible: true
+                    }
+                }],
+                rows: []
+            }, {
+                name: {
+                    displayValue: 'NET Cost',
+                    id: 'netCost'
+                },
+                columns: [{
+                    name: {
+                        title:'Name',
+                        visible: true
+                    }
+                }],
+                rows: [{
+                    name: {
+                        id: 'kwh',
+                        displayValue: 'NET Cost Per kWh',
+                        visible: true
+                    },
+                    units: {
+                        displayValue: '',
+                        visible: false
+                    },
+                    data: []
+                }]
+            }]);
+
+            fiscalYearBills.forEach(function (_bill) {
+                if (_bill.isCommitted()) {
+                    addToSource(_bill, self.committedBills[_bill.fullDate]);
+                } else {
+                    billsToRequest.push(_bill);
+                }
+            });
+
+            if (billsToRequest.length) {
+                getMonthlyBill(billsToRequest[0]);
+            } else {
+                done();
+            }
+        },
+        // When you have no idea what to name a function, make it as long as possible
+        postProcessYearDataReceiveDataHandler: function (data) {
+            // This routine is called after data requested by self.postProcessYearData_step1() is received 
+
+            // Throw it away if we don't have a request matching this touid
+            if (this.dataRequests.hasOwnProperty(data.touid) === false)
+                return;
+
+            var self = this,
+                result = data.results,
+                request = this.dataRequests[data.touid],
+                usage = request.usage,
+                rateType = request.rateType,
+                arrLookup = {
+                    consumption: 'sums',
+                    demand: 'maxes'
+                },
+                keyLookup = {
+                    consumption: 'sum',
+                    demand: 'max'
+                },
+                value = 0;
+
+
+            // Check for error first (it's a string); data.result is not present if the 'error' key is present
+            // The only time I know this happens is if we have meters defined but all UPI's are unassigned
+            if (data.error) {
+                // Inform the user we had an error; usage.value is already 0
+                usage.displayValue = 'Error';
+            } else {
+                if (rateType === 'reactive') {
+                    if (typeof result === 'object') {
+                        // The reactiveMax is actually the corresponding reactive value that occurred at the demand max (which really is the period's max)
+                        // Get reactive and demand max value pair; the '|| 0' is because the server doesn't always send the the 'max' keys; *1000 converts MVAR to kVAR
+                        value = (result[0].reactive.max || 0);
+                    }
+                } else {
+                    // Must be a consumption or demand charge
+                    // The server's response is formated differently depending on the data requested
+                    // The '|| 0' is because the server doesn't always send the 'max' or 'sum' key
+                    value = result[arrLookup[rateType]][0][keyLookup[rateType]] || 0;
+                }
+
+                // Convert M to k (i.e. MW to kW, MWh to kWh, MVAR to kVAR), round to nearest whole number, and store on usage object
+                usage.value = tou.toFixed(value * 1000, 0);
+                // Get a "commetized" display value
+                usage.displayValue = self.prettyValue({value: usage.value, digits: 0});
+            }
+
+            // Remove the notFound flag from our usage object
+            delete usage.notFound;
+
+            // Clean up our dataRequst object
+            delete self.dataRequests[data.touid];
+
+            // If all requests have been received we need to perform some final processing
+            // We check against 1 because our callback occupies 1 key
+            if (Object.keys(self.dataRequests).length === 1) {
+                // We have to pass our 'this' into the _step2 function because this function was bound to 'this'
+                // 'this' would have been the window if not for the binding. So when we call the _step2 function,
+                // 'this' returns to the window object
+                self.postProcessYearData_step2(self);
+            }
+        },
+        postProcessYearData_step1: function (callback) {
+            var self = this,
+                addedLineItems = {},
+                chargesLineItems = [],
+                monthShortLookup = {
+                    January: 'Jan',
+                    February: 'Feb',
+                    March: 'Mar',
+                    April: 'Apr',
+                    May: 'May',
+                    June: 'Jun',
+                    July: 'Jul',
+                    August: 'Aug',
+                    September: 'Sep',
+                    October: 'Oct',
+                    November: 'Nov',
+                    December: 'Dec'
+                },
+                activeMeters = self.activeMeters || self.buildActiveMeters(),
+                dataRequest = {
+                    options: [],
+                    handler: self.postProcessYearDataReceiveDataHandler.bind(self)
+                },
+                buildChargesCollection = function () {
+                    var chargesCollection = getCollection(self.yearBillData.collections, 'charges'),
+                        chargesRows = chargesCollection.rows,
+                        chargeTotals = [];
+
+                    self.yearBillData.source.forEach(function (source, index) {
+                        var sourceCollection = getCollection(source.data.collections, 'Total Charges'),
+                            sourceRows = (sourceCollection && sourceCollection.rows) || [],
+                            total = 0;
+
+                        chargesLineItems.forEach(function (lineItem) {
+                            var sourceRow = getRow(sourceRows, lineItem, 'displayValue'),
+                                chargeRow = getRow(chargesRows, lineItem, 'displayValue'),
+                                data = {
+                                    value: (sourceRow && sourceRow.amount.value) || 0,
+                                    displayValue: (sourceRow && sourceRow.amount.displayValue) || '-'
+                                },
+                                j;
+
+                            if (!chargeRow) {
+                                chargesRows.push({
+                                    name: {
+                                        displayValue: lineItem,
+                                        visible: true
+                                    },
+                                    data: []
+                                });
+
+                                chargeRow = chargesRows[chargesRows.length - 1];
+                                for (j = 0; j < index; j++) {
+                                    chargeRow.data.push({
+                                        value: 0,
+                                        displayValue: '-',
+                                        isTotal: true
+                                    });
+                                }
+                            }
+                            chargeRow.data.push(data);
+                            total += data.value;
+                        });
+
+                        total = tou.toFixed(total, 2);
+                        chargeTotals.push({
+                            value: total,
+                            displayValue: self.prettyValue({
+                                value: total,
+                                minDigits: 2
+                            }),
+                            isTotal: true
+                        });
+                    });
+
+                    chargesRows.push({
+                        name: {
+                            displayValue: 'Total',
+                            visible: true
+                        },
+                        data: chargeTotals,
+                        isTotalRow: true
+                    });
+                },
+                getRowOrCollection = function (data, name, key) {
+                    var _name;
+
+                    for (var i = 0, len = data.length; i < len; i++) {
+                        _name = data[i].name;
+
+                        if (typeof _name === 'object') {
+                            _name = _name[key || 'id'];
+                        }
+
+                        if (_name === name) {
+                            return data[i];
+                        }
+                    }
+                },
+                getCollection = function (collections, name, key) {
+                    return getRowOrCollection(collections, name, key);
+                },
+                getRow = function (rows, name, key) {
+                    return getRowOrCollection(rows, name, key);
+                },
+                getUsage = function (data, type, peak) {
+                    var collections = data.collections,
+                        unitsLookup = {
+                            demand: 'kW',
+                            consumption: 'kWh',
+                            reactive: 'kVAR'
+                        },
+                        collection,
+                        row,
+                        usage,
+                        returnData;
+                    for (var i = 0, len = collections.length; i < len; i++) {
+                        collection = collections[i];
+                        for (var j = 0, jlen = collection.rows.length; j < jlen; j++) {
+                            row = collection.rows[j];
+                            // Type and peak must match for consumption and demand. For reactives, only the type must match. This is because
+                            // the monthly bill's reactive may be 'on' or 'off' peak depending if the period has peak times. The user can't configure
+                            // this, therefore all reactives in the bill will be the same, so we just need to get the first reactive element we find
+                            if (row.rateElement && (row.rateElement.type === type) && ((type === 'reactive') || (row.rateElement.peak === peak))) {
+                                usage = row.usage;
+
+                                if (type === 'reactive') {
+                                    usage = usage.contributors.reactiveMax;
+                                } else if (type === 'demand') {
+                                    usage = usage.contributors.demand;
+                                } else { // consumption
+                                    usage = usage.contributors.consumption;
+                                }
+
+                                usage = tou.toFixed(usage, 0);
+                                returnData = {
+                                    value: usage,
+                                    displayValue: self.prettyValue({value: usage, digits: 0})
+                                };
+
+                                returnData.units = {
+                                    displayValue: row.usage.units.displayValue,
+                                    visible: false
+                                };
+                                returnData.rateElement = row.rateElement;
+
+                                return returnData;
+                            }
+                        }
+                    }
+                    return {
+                        value: 0,
+                        displayValue: '0',
+                        units: {
+                            displayValue: unitsLookup[type],
+                            visible: false
+                        },
+                        notFound: true
+                    };
+                },
+                getLoadFactor = function (data) {
+                    var loadFactor = data.loadFactor;
+                    return {
+                        value: loadFactor.value,
+                        displayValue: loadFactor.displayValue
+                    };
+                },
+                buildRequestOptions = function (params) {
+                    // params is object with keys: source, peak, fx, and upis
+                    var source = params.source,
+                        obj = {
+                            utilityName: self.utilityName,
+                            // rateCollectionName: rateCollectionKey,
+                            fiscalYear: source.fiscalyear,
+                            touid: tou.makeId(),
+                            scale: 'month',
+                            peak: params.peak,
+                            fx: params.fx,
+                            upis: params.upis,
+                            range: {
+                                start: parseInt(source.start / 1000, 10),
+                                end: parseInt(source.end / 1000, 10)
+                            }
+                        };
+
+                    if (params.secondUpis) {
+                        obj.secondUpis = params.secondUpis;
+                    }
+                    return obj;
+                },
+                process = {
+                    'demand': function (collection, source, index) {
+                        var sourceData = source.data,
+                            row,
+                            usage,
+                            requestOptions;
+
+                        usage = getUsage(sourceData, 'demand', 'on');
+                        row = getRow(collection.rows, 'onPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            // Add the data request
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'on',
+                                fx: 'max',
+                                upis: activeMeters.demand
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'demand'
+                            };
+                        }
+
+                        usage = getUsage(sourceData, 'demand', 'off');
+                        row = getRow(collection.rows, 'offPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            // Add the data request
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'off',
+                                fx: 'max',
+                                upis: activeMeters.demand
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'demand'
+                            };
+                        }
+
+                        // The monthly bill's reactive may be 'on' or 'off' peak depending if the period has peak times
+                        // The user can't configure this, therefore all reactives in the bill will be the same, so we
+                        // just need to get the first reactive element we find
+                        usage = getUsage(sourceData, 'reactive');
+                        row = getRow(collection.rows, 'reactiveAtPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'both',
+                                fx: 'reactiveCharge',
+                                upis: activeMeters.demand,
+                                secondUpis: activeMeters.reactive
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'reactive'
+                            };
+                        }
+                    },
+                    'consumption': function (collection, source, index) {
+                        var sourceData = source.data,
+                            row,
+                            usage,
+                            requestOptions;
+
+                        usage = getUsage(sourceData, 'consumption', 'both');
+                        usage.isTotal = true;   // Total consumption needs the 'isTotal' key also
+                        row = getRow(collection.rows, 'total');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'both',
+                                fx: 'sum',
+                                upis: activeMeters.consumption
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'consumption'
+                            };
+                        }
+
+                        usage = getUsage(sourceData, 'consumption', 'on');
+                        row = getRow(collection.rows, 'onPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'on',
+                                fx: 'sum',
+                                upis: activeMeters.consumption
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'consumption'
+                            };
+                        }
+
+                        usage = getUsage(sourceData, 'consumption', 'off');
+                        row = getRow(collection.rows, 'offPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'off',
+                                fx: 'sum',
+                                upis: activeMeters.consumption
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'consumption'
+                            };
+                        }
+                    },
+                    'loadFactor': function (collection, source, index) {
+                        getRow(collection.rows, 'loadFactor').data.push(getLoadFactor(source.data));
+                    },
+                    'charges': function (collection, source, index) {
+                        var billTotalChargesCollection = getCollection(source.data.collections, 'Total Charges'),
+                            rows = (billTotalChargesCollection && billTotalChargesCollection.rows) || [];
+                        rows.forEach(function (row) {
+                            var lineItem = row.name.displayValue;
+                            if ((lineItem !== 'Total') && !addedLineItems[lineItem]) {
+                                addedLineItems[lineItem] = true;
+                                chargesLineItems.push(lineItem);
+                            }
+                        });
+                    },
+                    'netCost': function (collection, source, index) {
+                        // nothing to do with this collection yet
+                    }
+                };
+
+            // Clear all of our server request references
+            self.dataRequests = {
+                callback: callback
+            };
+
+            self.yearBillData.source.forEach(function (source, index) {
+                self.yearBillData.collections.forEach(function (collection) {
+                    collection.columns.push({
+                        name: {
+                            title: monthShortLookup[source.month],
+                            visible: true,
+                        },
+                        season: source.season,
+                        start: source.start,
+                        end: source.end,
+                        fullDate: source.fullDate
+                    });
+                    process[collection.name.id](collection, source, index);
+                });
+            });
+
+            // Build the charges collection
+            buildChargesCollection();
+
+            // If we finished the post processing and didn't need any additional data
+            if (dataRequest.options.length === 0) {
+                // See the comment just before the call to postProcessYearData_step2 in postProcessYearDataReceiveDataHandler()
+                // for why we pass 'self' to our _step2 function...
+                self.postProcessYearData_step2(self);
+            } else {
+                // Launch the miss-aisles
+                self.bindings.gettingData(true);
+                tou.addDataRequest(dataRequest);
+                tou.makeDataRequest();
+            }
+        },
+        postProcessYearData_step2: function (self) {
+            var buildNetCosts = function () {
+                    var netCostData = getRow(getCollection(self.yearBillData.collections, 'netCost').rows, 'kwh').data, // empty array
+                        chargeTotals = getRow(getCollection(self.yearBillData.collections, 'charges').rows, 'Total', 'displayValue').data, // array
+                        totalKwhData = getRow(getCollection(self.yearBillData.collections, 'consumption').rows, 'total').data; // array
+
+                    chargeTotals.forEach(function (total, index) {
+                        var value = total.value / totalKwhData[index].value,
+                            data;
+                        if (value === Infinity) {
+                            value = 0;
+                        }
+
+                        data = {
+                            value: value,
+                            displayValue: self.prettyValue({
+                                value: value,
+                                digits: 4,
+                                minDigits: 4
+                            })
+                        };
+
+                        netCostData.push(data);
+                    });
+                },
+                getMaxAvgTotalsAndDisplayUnits = function () {
+                    var lookupTable = {
+                            'demand': {
+                                calc: 'Average',
+                                digits: 0,
+                                prepend: '',
+                                append: ''
+                            },
+                            'consumption': {
+                                calc: 'Total',
+                                digits: 0,
+                                prepend: '',
+                                append: ''
+                            },
+                            'loadFactor': {
+                                calc: 'Average',
+                                digits: 1,
+                                prepend: '',
+                                append: '%'
+                            },
+                            'charges': {
+                                calc: 'Total',
+                                digits: 2,
+                                minDigits: 2,
+                                prepend: '$',
+                                append: ''
+                            },
+                            'netCost': {
+                                calc: 'Average',
+                                digits: 4,
+                                minDigits: 4,
+                                prepend: '$',
+                                append: ''
+                            }
+                        },
+                        consumptionCollection,
+                        totalConsumptionRow,
+                        chargesCollection,
+                        totalChargeRow;
+
+                    self.yearBillData.collections.forEach(function (collection) {
+                        var lookup = lookupTable[collection.name.id];
+
+                        // Add column for calculation output
+                        collection.columns.push({
+                            name: {
+                                title: lookup.calc,
+                                visible: true
+                            }
+                        });
+
+                        collection.rows.forEach(function (row) {
+                            var max = {
+                                    value: 0,
+                                    index: null
+                                },
+                                sum = 0,
+                                cnt = 0,
+                                data = {},
+                                unitsUsed = {},
+                                unitValue;
+
+                            row.data.forEach(function (item, index) {
+                                // Get maximum
+                                if (item.value > max.value) {
+                                    max.value = item.value;
+                                    max.index = index;
+                                }
+                                // Get sum - assuming same units for all data - we'll need to evaluate this when we add support
+                                // for meters with different units
+                                sum += item.value;
+                                cnt++;
+
+                                // Evaluate units
+                                unitValue = item.units && item.units.displayValue;
+                                if (unitValue && unitValue.length && !unitsUsed[unitValue]) {
+                                    unitsUsed[item.units.displayValue] = true;
+                                }
+                            });
+                            // Update the isMax key on the maximum entry
+                            if (max.index !== null) {
+                                row.data[max.index].isMax = true;
+                            }
+
+                            // Add the average/total result to our data set
+                            if (lookup.calc === 'Total') {
+                                data.value = sum;
+                                data.isTotal = true;
+                            } else { // Average
+                                // The average NET Cost is not an average of each month's net cost. It is:
+                                // total year's cost / total year's consumption
+                                if (collection.name.id === 'netCost') {
+                                    consumptionCollection = getCollection(self.yearBillData.collections, 'consumption');
+                                    totalConsumptionRow = getRow(consumptionCollection.rows, 'total');
+                                    chargesCollection = getCollection(self.yearBillData.collections, 'charges');
+                                    totalChargeRow = getRow(chargesCollection.rows, 'Total', 'displayValue');
+                                    data.value = totalChargeRow.data[totalChargeRow.data.length - 1].value / totalConsumptionRow.data[totalConsumptionRow.data.length - 1].value;
+                                } else {
+                                    data.value = sum / cnt;
+                                }
+                            }
+                            data.displayValue = self.prettyValue({
+                                value: data.value,
+                                digits: lookup.digits,
+                                minDigits: lookup.minDigits,
+                                prepend: lookup.prepend,
+                                append: lookup.append
+                            });
+                            row.data.push(data);
+
+                            // Add units to our demand and consumption rows
+                            if (collection.name.id === 'demand' || collection.name.id === 'consumption') {
+                                // Convert to array
+                                unitsUsed = Object.keys(unitsUsed);
+                                // If only one unit type used
+                                if (unitsUsed.length === 1) {
+                                    // Set the units visible once for the entire row
+                                    row.units.displayValue = unitsUsed[0];
+                                    row.units.visible = true;
+                                } else {
+                                    // Set the units visible for each entry
+                                    row.data.forEach(function (item) {
+                                        if (item.units && item.units.displayValue.length) {
+                                            item.units.visible = true;
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    });
+                },
+                getRowOrCollection = function (data, name, key) {
+                    var _name;
+
+                    for (var i = 0, len = data.length; i < len; i++) {
+                        _name = data[i].name;
+
+                        if (typeof _name === 'object') {
+                            _name = _name[key || 'id'];
+                        }
+
+                        if (_name === name) {
+                            return data[i];
+                        }
+                    }
+                },
+                getCollection = function (collections, name, key) {
+                    return getRowOrCollection(collections, name, key);
+                },
+                getRow = function (rows, name, key) {
+                    return getRowOrCollection(rows, name, key);
+                };
+
+            // Build the net cost pwer kwh collection
+            buildNetCosts();
+            // Identify the maximums in each row, add total/average column, and display units as needed
+            getMaxAvgTotalsAndDisplayUnits();
+            // Delete source data - was going to keep it but it's too big for the ajax post and we don't have to have it...
+            delete self.yearBillData.source;
+            // Now we're finally ready to call the callback and display the yearly bill to the user
+            self.dataRequests.callback();
+        },
         prettyValue: function (data) {
             // data is expected to take the following form
             // {
@@ -4568,7 +5549,7 @@ tou.utilityPages.Electricity = function() {
             //     digits: #        (optional - defualts to 2)
             //     minDigits: #  (optional - 0 fills digits to attain this many digits)
             // }
-            var digits = data.hasOwnProperty('digits') ? data.digits : 2,
+            var digits = data.hasOwnProperty('digits') ? (data.digits || 0) : 2,
                 value = tou.toFixed(data.value, digits).toString().split('.'),
                 integerValue = value[0],
                 decimalValue = value[1],
@@ -4610,12 +5591,14 @@ tou.utilityPages.Electricity = function() {
                     }
                 },
                 calculateAndSaveLoadFactor = function () {
-                    var periodDays = self.bindings.billingCycle().totalDays,
-                        periodHours = periodDays * 24,
-                        loadFactor = self.billData.loadFactor,
+                    // var periodDays = self.bindings.billingCycle().totalDays,
+                    //     periodHours = periodDays * 24,
+                    //     loadFactor = self.billData.loadFactor,
+                    var loadFactor = self.billData.loadFactor,
+                        contributors = loadFactor.contributors,
                         value;
                     // Standard load factor equation - || 0 is to replace NaN if the denominator resolves to 0
-                    value = (loadFactor.contributors.totalConsumption / (periodHours * loadFactor.contributors.maxDemand)) || 0;
+                    value = (contributors.totalConsumption / (contributors.hours * contributors.maxDemand)) || 0;
                     // Convert to %
                     value *= 100;
                     // Store the result in billData
@@ -4643,6 +5626,7 @@ tou.utilityPages.Electricity = function() {
                     processedRows = {},
                     totalUsage = 0,
                     tierTotalUsage = 0,
+                    demand,
                     diff,
                     value,
                     digits,
@@ -4682,9 +5666,21 @@ tou.utilityPages.Electricity = function() {
                         usage = 0;
                         value = 'Error';
                     } else if (tier.multiplier !== null) {
-                        // Our formula is: (off-peak consumption / total consumption) * peak demand * multiplier
-                        // The '|| 0' part is to recover from divide by 0 which generates NaN
-                        usage = tou.toFixed(((row.usage.value / contributors.totalConsumption) || 0) * contributors.maxDemand * tier.multiplier, 0);
+                        // Our formula is: (off-peak consumption / total consumption) * demand * multiplier, where demand is the peak demand (highest
+                        // demand during on peak periods) or max demand (highest demand regardless of on peak or off peak)
+                        
+                        // row.usage.value has already been rounded; all contributors are non-rounded numbers
+                        // TOU Phase 1 Calculations used the non-rounded contributor numbers
+                        // TOU Phase 2 uses rounded contributor numbers for the following reason:
+                        // While raw numbers provide a more accurate tiered number, it creates a number that is not reproducible by plugging the
+                        // numbers shown on the bill into the tier formula.
+
+                        // We use || 0 to recover from undefined; for example, we saw this in testing: if maxDemand was 0 and peakDemand
+                        // was undefined, this would resolve to undefined if we didn't include the trailing '|| 0'
+                        demand = tou.toFixed((contributors.maxDemand || contributors.peakDemand) || 0, 0);
+
+                        // The '|| 0' part here is to recover from divide by 0 which generates NaN
+                        usage = tou.toFixed(((row.usage.value / tou.toFixed(contributors.totalConsumption, 0)) || 0) * demand * tier.multiplier, 0);
                         usage = Math.min(usage, offPeakLessTiers);
 
                         offPeakLessTiers -= usage;
@@ -4928,8 +5924,7 @@ tou.utilityPages.Electricity = function() {
             // Calculate load factor
             calculateAndSaveLoadFactor();
 
-            // Stuff the result in our observable
-            self.bindings.billData(self.billData);
+            self.dataRequests.callback();
         },
         receiveDataHandler: function (data) {
             if (this.dataRequests.hasOwnProperty(data.touid) === false)
@@ -4947,10 +5942,7 @@ tou.utilityPages.Electricity = function() {
                     consumption: 'sum',
                     demand: 'max'
                 },
-                keyLookup2 = {
-                    consumption: 'totalConsumption',
-                    demand: 'maxDemand'
-                },
+                key,
                 loadFactor,
                 usage,
                 dollars;
@@ -5037,10 +6029,21 @@ tou.utilityPages.Electricity = function() {
                     usage *= 1000;
                 }
 
-                if (dataRequest.masterRateType === 'loadFactor') {
-                    billDataLoadFactor.contributors[keyLookup2[rateType]] = usage;
-                } else if (dataRequest.masterRateType === 'consumption') {
-                    contributors[keyLookup2[rateType]] = usage;
+                // If masterRateType is not null
+                if (!!dataRequest.masterRateType) {
+                    if (rateType === 'consumption') {
+                        key = 'totalConsumption';
+                    } else if (dataRequest.requestOptions.peak === 'both') { // rateType = 'demand'
+                        key = 'maxDemand';
+                    } else { // dataRequest.requestOptions.peak === 'on'
+                        key = 'peakDemand';
+                    }
+
+                    if (dataRequest.masterRateType === 'loadFactor') {
+                        billDataLoadFactor.contributors[key] = usage;
+                    } else { // dataRequest.masterRateType === 'consumption'
+                        contributors[key] = usage;
+                    }
                 } else {
                     // Store raw usage received from the server
                     contributors[rateType] = usage;
@@ -5058,11 +6061,9 @@ tou.utilityPages.Electricity = function() {
             delete self.dataRequests[data.touid];
 
             // If all requests have been received we need to perform some final processing
-            if (Object.keys(self.dataRequests).length === 0) {
+            // We check against 1 because our callback occupies 1 key
+            if (Object.keys(self.dataRequests).length === 1) {
                 self.applyPostProcessing();
-
-                // Clear the gettingData flag - this will cause the bill to be displayed
-                self.bindings.gettingData(false);
             }
         },
         initSubscriptions: function () {
@@ -5085,27 +6086,46 @@ tou.utilityPages.Electricity = function() {
                 if (!bill)
                     return;
 
-                var billingCycle = {},
+                var billingCycle = {
+                        complete: false
+                    },
                     selectedDate = new Date(bill.start),
                     selectedMonth = selectedDate.getMonth(),
-                    selectedYear = selectedDate.getFullYear();
+                    selectedYear = selectedDate.getFullYear(),
+                    billingCycleCompleted = false;
 
-                // Get total days in the billing cycle
-                billingCycle.totalDays = self.daysInMonth[selectedMonth];
-                // Adjust total days if billing cycle is February and it's a leap year
-                if ((selectedMonth === 1) && ((selectedYear % 4) === 0)) {
-                    billingCycle.totalDays++;
+                if (bill.period === 'Month') {
+                    // Get total days in the billing cycle
+                    billingCycle.totalDays = self.daysInMonth[selectedMonth];
+                    // Adjust total days if billing cycle is February and it's a leap year
+                    if ((selectedMonth === 1) && ((selectedYear % 4) === 0)) {
+                        billingCycle.totalDays++;
+                    }
+
+                    if ((thisYear === selectedYear) && (thisMonth === selectedMonth)) {
+                        billingCycle.completedDays = now.getDate();
+                    } else {
+                        billingCycle.complete = true;
+                    }
+                } else { // year bill
+                    // Get total days
+                    billingCycle.totalDays = (bill.end - bill.start) / 86400000;
+
+                    // If current year
+                    if (now >= bill.start && now < bill.end) {
+                        billingCycle.completedDays = Math.ceil((now - bill.start) / 86400000);
+                    } else { // Old fiscal year (it's complete)
+                        billingCycle.complete = true;
+                    }
                 }
 
-                if ((thisYear === selectedYear) && (thisMonth === selectedMonth)) {
-                    billingCycle.completedDays = now.getDate();
-                    billingCycle.complete = false;
-                    billingCycle.percentComplete = [parseInt(billingCycle.completedDays / billingCycle.totalDays * 100, 10), '%'].join('');
-                } else {
+                if (billingCycle.complete) {
                     billingCycle.completedDays = billingCycle.totalDays;
-                    billingCycle.complete = true;
                     billingCycle.percentComplete = '100%';
+                } else {
+                    billingCycle.percentComplete = [parseInt(billingCycle.completedDays / billingCycle.totalDays * 100, 10), '%'].join('');
                 }
+
                 bindings.billingCycle(billingCycle);
 
                 // This actually builds the new bill and requests data from the server
@@ -5130,7 +6150,8 @@ tou.utilityPages.Electricity = function() {
             var self = this,
                 bindings = self.bindings,
                 classPrefix = '.' + self.utilityNameShort + ' ',
-                billSearchInput = $(classPrefix + '.billingTopBar .dropdown-menu.availablePeriods input'),
+                $availablePeriods = $(classPrefix + '.billingTopBar .dropdown-menu.availablePeriods'),
+                $billSearchInput = $availablePeriods.find('input'),
                 noMeters = (tou.getMeters(true).length === 0),
                 configRequired,
                 findBill = function (selectedBill) {
@@ -5144,13 +6165,14 @@ tou.utilityPages.Electricity = function() {
                 },
                 postInit = function () {
                     var bill;
-                    // Filter available periods to only include months (filter out fiscal year entries)
-                    self.bills = ko.utils.arrayFilter(tou.availablePeriods[self.utilityName], function (period) {
-                        // This is a convenient time to add a committed flag since we're iterating the array
-                        period.isCommitted = ko.observable(self.committedBills.hasOwnProperty(period.fullDate) ? true:false);
-                        // We only want the month entries
-                        return period.period === 'Month';
+
+                    // Get available periods - we get a copy so our changes don't affect the original
+                    self.bills = $.extend(true, [], tou.availablePeriods[self.utilityName]);
+                    // Add and compute the isCommitted observalbe
+                    self.bills.forEach(function (bill) {
+                        bill.isCommitted = ko.observable(self.committedBills.hasOwnProperty(bill.fullDate) ? true:false);
                     });
+
                     // Get configuraiton required flag - if true, billing UI is pretty much disabled
                     configRequired = noMeters || (self.bills.length === 0);
 
@@ -5161,9 +6183,13 @@ tou.utilityPages.Electricity = function() {
                         // Populate our filtered bill list (filteredBills computed)
                         bindings.billsFilter.valueHasMutated();
 
+                        // Find the selected bill again
                         bill = findBill(bindings.selectedBill());
+                        // If no bill was selected or we couldn't find the previously selected bill
                         if (!bill) {
-                            bill = self.bills[0];
+                            // Our bills first entry should be the fiscal year, followed by the current month; we default
+                            // select the first month ('|| self.bills[0]' is just CYB)
+                            bill = self.bills[1] || self.bills[0];
                         }
                         // Select the bill (also forces bill to render)
                         bindings.selectedBill(bill);
@@ -5200,13 +6226,16 @@ tou.utilityPages.Electricity = function() {
             });
 
             // Prevent the bill-select drop-down from closing when selecting the search input
-            billSearchInput.click(function (e) {
+            $billSearchInput.click(function (e) {
                 e.stopPropagation();
             });
             // Automatically focus the search box when the bill-select drop-down is activated
             $(classPrefix + 'button.billSelect').click(function (e) {
                 window.setTimeout(function () { // Delay the focus for drop down transition to finish
-                    billSearchInput.focus();
+                    // If we're scrolled to the top of the list
+                    if ($availablePeriods.scrollTop() === 0) {
+                        $billSearchInput.focus();
+                    }
                 }, 50);
             });
         }
@@ -5215,7 +6244,13 @@ tou.utilityPages.Electricity = function() {
         isActive: ko.observable(false),
         delayLoad: true,
         background: 'woodbackgroundtile.jpg',
-        listOfMonthYears: [],
+        listOfMonthYears: ko.observableArray([]),
+        modalTemplates: {
+            reportingUncommitReport: {
+                commitInfo: ''
+            },
+            reportingCommitReport: {}
+        },
         blockUI: function (state) {
             var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
             // If we're blocking the UI (i.e. we're getting data)
@@ -5229,21 +6264,50 @@ tou.utilityPages.Electricity = function() {
             // Disable/enable all top bar controls (month select, print, etc.)
             myBindings.$topBarControls.attr('disabled', state);
         },
+        saveReport: function (self, opts) {
+            var nonData = {
+                utilityName: self.utilityName,
+                path: opts.path,
+                remove: opts.remove
+            };
+            tou.saveUtility(nonData, opts.data, function (response) {
+                tou.log('saveresponse', response);
+                if (opts.callback !== undefined) {
+                    if (response.message && response.message === 'success') {
+                        opts.callback(false);
+                    } else {
+                        opts.callback(true);
+                    }
+                }
+            }, true);
+        },
         initReportSocket: function(cb) {
             tou.socket.on('returnUsage', function (data) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
                 if (data.err === null) {
                     myBindings.parseReturnedData(data.results);
                 } else {
-                    tou.alert("Error while retrieving data");
+                    tou.alert("Error while retrieving data.  (" + data.err + ")");
                 }
             });
+        },
+        refreshMonthYear: function () {
+            var self = this,
+                copyOfListOfMonthYears = $.extend(true, [], self.listOfMonthYears());
+            if (!!self.bindings.$page.committedReports) {
+                self.reportPeriods = ko.utils.arrayFilter(copyOfListOfMonthYears, function (period) {
+                    period.isReportCommitted = ko.observable(self.bindings.$page.committedReports.hasOwnProperty(period.fullDate) ? true : false);
+                    return period;
+                });
+                self.listOfMonthYears(copyOfListOfMonthYears);
+            }
         },
         init: function () {
             var self = this,
                 filteredReportMonthYear,
-                $availablePeriodsInput = $('.' + self.utilityNameShort + ' .reportsTopBar .availablePeriods input'),
-                setDefaultMonthYear = function () {
+                $availablePeriods = $('.' + self.utilityNameShort + ' .reportsTopBar .availablePeriods'),
+                $availablePeriodsInput = $availablePeriods.find('input'),
+                setDefaultMonth = function () {
                     if (self.bindings.selectedMonthYear() === "") {
                         filteredReportMonthYear = self.bindings.filteredReportMonthYear();
                         for (var i = 0, len = filteredReportMonthYear.length, done = false; i < len && !done; i++) {
@@ -5255,12 +6319,20 @@ tou.utilityPages.Electricity = function() {
                     }
                 },
                 postInit = function () {
-                    var configRequired = (self.bindings.listOfMeters().length === 0) || (self.listOfMonthYears.length === 0);
-                    // Set the config required flag - if true, reports is disabled
+                    var configRequired = (self.bindings.listOfMeters().length === 0) || (self.listOfMonthYears().length === 0),
+                        listOfDates,
+                        monthYear;
+
                     self.bindings.configRequired(configRequired);
+                    self.refreshMonthYear();
+                    listOfDates = self.bindings.$page.listOfMonthYears();
                     if (!configRequired) {
-                        setDefaultMonthYear();
-                        self.bindings.getData();
+                        setDefaultMonth();
+                        monthYear = ko.utils.arrayFilter(listOfDates, function (monthYearObj) {
+                            return monthYearObj.searchDate === self.bindings.selectedMonthYear().searchDate;
+                        });
+                        self.bindings.selectedMonthYear(monthYear[0]);
+                        self.bindings.rateTablePeriod(self.bindings.findPeriod(self.bindings.selectedMonthYear().rateTable["Demand Charges"].periods));
                     }
                 };
             self.initReportSocket(self.bindings.getData);
@@ -5279,6 +6351,7 @@ tou.utilityPages.Electricity = function() {
                 $meterstotals: $('.' + self.utilityNameShort + ' .section.meterstotals'),
                 $reportsChartsContent: $('.' + self.utilityNameShort + ' .reportsContent .reportsChartsContent'),
                 $reportsGridContent: $('.' + self.utilityNameShort + ' .reportsContent .reportsGridContent'),
+                $individualMetersData: $('.' + self.utilityNameShort + ' .reportsContent .individualMetersData'),
                 $topBarControls: $('.' + self.utilityNameShort + ' .reportsTopBar').find('button'),
                 $reportsGettingData: $('.' + self.utilityNameShort + ' .reportsGettingData')
             });
@@ -5294,31 +6367,30 @@ tou.utilityPages.Electricity = function() {
             // Automatically focus the search box when the drop-down is activated
             $('.' + self.utilityNameShort + ' .reportsTopBar .availablePeriodsSelect').click(function (e) {
                 window.setTimeout(function () { // Delay the focus for drop down transition to finish
-                    $availablePeriodsInput.focus();
+                    // If we're scrolled to the top of the list
+                    if ($availablePeriods.scrollTop() === 0) {
+                        $availablePeriodsInput.focus();
+                    }
                 }, 50);
             });
 
+            self.committedReports = (!!self.rawUtility.Reports ? self.rawUtility.Reports.committedReports : tou.utilityTemplates[self.utilityNameShort].Reports.committedReports);
             self.bindings.$busySpinner.hide();
             self.bindings.listOfMeters(tou.getMeters(true));
             self.bindings.inactiveMeters(tou.getMeters(false));
-            self.listOfMonthYears = tou.availablePeriods[self.utilityName];
-            self.bindings.reportDateFilter.valueHasMutated();
+            self.listOfMonthYears(tou.availablePeriods[self.utilityName]);
             self.bindings.numberOfInactiveMeters(self.bindings.inactiveMeters().length);
             self.bindings.meterIndexArray = self.bindings.indexMeters();
             self.bindings.$reportsContent.hide();
             self.bindings.$reportsGridContent.hide();
-            self.bindings.decimalPlaces((self.bindings.electricalUnit() === "kW") ? 0 : 3);
+            self.bindings.decimalPlaces = (self.bindings.electricalUnit === "kW") ? 0 : 3;
 
             // Set the config required flag - if true, reports is disabled
-            self.bindings.configRequired((self.bindings.listOfMeters().length === 0) || (self.listOfMonthYears.length === 0));
-
-            if (!self.bindings.configRequired()) {
-                // We don't do the followign if config is requried because it causes us to try and get a report (monthSelected fires it off),
-                // which was causing the UI busy spinner to become visible.
-
-                // Default select the most recent month
-                setDefaultMonthYear();
+            self.bindings.configRequired((self.bindings.listOfMeters().length === 0) || (self.listOfMonthYears().length === 0));
+            if (self.bindings.selectedMonthYear() === "") {
+                postInit();
             }
+            self.bindings.reportDateFilter.valueHasMutated();
 
             tou.on('meterssaved', function (utilityName) {
                 if (utilityName === self.utilityName) {
@@ -5332,22 +6404,20 @@ tou.utilityPages.Electricity = function() {
             });
             tou.on('ratetablesaved', function (utilityName) {
                 if (utilityName === self.utilityName) {
-                    self.listOfMonthYears = tou.availablePeriods[self.utilityName];
+                    self.listOfMonthYears(tou.availablePeriods[self.utilityName]);
                     self.bindings.reportDateFilter.valueHasMutated();
-
                     postInit();
                 }
             });
         },
         bindings: {
+            activeDataRequests: [],
             configRequired: ko.observable(false),
-            errorWithRequest: ko.observable(false),
-            highestOnPeakDemandNow: ko.observable(''),
-            highestOnPeakDemandLastYear: ko.observable(''),
-            highestDemandNow: ko.observable(''),
-            highestDemandLastYear: ko.observable(''),
-            highestConsumptionNow: ko.observable(''),
-            highestConsumptionLastYear: ko.observable(''),
+            activeDataRequest: ko.observable(false),
+            committedReports: {},
+            dataRequestTimer: null,
+            decimalPlaces: 0,
+            displayPercentageOfValidData: ko.observable(0),
             duOffPeakMW: ko.observable({
                 timestamp: null,
                 value: null
@@ -5364,6 +6434,14 @@ tou.utilityPages.Electricity = function() {
                 timestamp: null,
                 value: null
             }),
+            duOffPeakMaxMVAR: ko.observable({
+                timestamp: null,
+                value: null
+            }),
+            duOnPeakMaxMVAR: ko.observable({
+                timestamp: null,
+                value: null
+            }),
             duOffPeakMWH: ko.observable({
                 timestamp: null,
                 value: null
@@ -5372,51 +6450,60 @@ tou.utilityPages.Electricity = function() {
                 timestamp: null,
                 value: null
             }),
-            sumOfOnPeakConsumption: ko.observable(0),
-            sumOfOffPeakConsumption: ko.observable(0),
-            sumOfTotalPeriodUsage: ko.observable(0),
+            electricalUnit: "kW",
+            endTime: 0,
+            errorWithRequest: ko.observable(false),
+            gridReportCollection: [],
+            highestConsumptionLastYear: ko.observable(''),
+            highestConsumptionNow: ko.observable(''),
+            highestDemandLastYear: ko.observable(''),
+            highestDemandNow: ko.observable(''),
+            highestOnPeakDemandLastYear: ko.observable(''),
+            highestOnPeakDemandNow: ko.observable(''),
+            highestTemperatureNow: ko.observable(""),
+            inactiveMeters: ko.observableArray([]),
+            koGridReportCollection: ko.observableArray([]),
+            lastResize: null,
+            listOfMeters: ko.observableArray(),
+            lowestTemperatureNow: ko.observable(""),
             maxPeriodUsage: ko.observable(0),
-            numberOfTimeSlotsPerDay: (24 * 2),
+            meterIndexArray: [],
+            MeterReportCollection: ko.observableArray([]),
+            missingDataCollection: ko.observableArray([]),
             numberOfDaysInCurrentPeriod: 0,
             numberOfInactiveMeters: ko.observable(0),
-            missingDataCollection: ko.observableArray([]),
-            demandAndReactiveDataCollection: ko.observableArray([]),
-            temperatureCollection: ko.observableArray([]),
-            summedDataCollection: ko.observableArray([]),
-            MeterReportCollection: ko.observableArray([]),
-            koGridReportCollection: ko.observableArray([]),
-            maxForOnOffPeakDemandArray: [],
-            totaledOnOffPeakConsumptionArray: [],
-            temperatureDataArray: [],
-            gridReportCollection: [],
-            inactiveMeters: ko.observableArray([]),
+            numberOfTimeSlotsPerDay: (24 * 2),
             percentageOfMissingData: ko.observable(0),
-            displayPercentageOfValidData: ko.observable(0),
-            highestTemperatureNow: ko.observable(""),
-            lowestTemperatureNow: ko.observable(""),
-            temperatureVerbiage: ko.observable(""),
-            temperatureVerbiageHDDCDD: ko.observable(""),
-            fetchingData: ko.observableArray(false),
-            listOfMeters: ko.observableArray(),
+            rateTablePeriod: ko.observable({}),
+            reportData: {},
+            reportDateFilter: ko.observable(""),
+            reportModes: ["Chart", "Grid"],
+            resizeTimer: 500,
             selectedMonthYear: ko.observable(""),
             selectedReportsMode: ko.observable("Chart"),
-            reportsModes: ko.observableArray(["Chart", "Grid"]),
-            reportDateFilter: ko.observable(""),
-            electricalUnit: ko.observable("kW"),
-            decimalPlaces: ko.observable(0),
-            temperatureTitle: ko.observable(""),
-            dataRequestTimer: null,
-            myRateTable: {},
-            meterIndexArray: [],
-            activeDataRequests: [],
-            hddValue: null,
-            cddValue: null,
             startTime: 0,
-            endTime: 0,
-            totalTime: 0,
-            resizeTimer: 500,
-            measurements: 0,
-            lastResize: null,
+            summedDataCollection: ko.observableArray([]),
+            sumOfOffPeakConsumption: ko.observable(0),
+            sumOfOnPeakConsumption: ko.observable(0),
+            sumOfTotalPeriodUsage: ko.observable(0),
+            temperatureCollection: ko.observableArray([]),
+            temperatureTitle: ko.observable(""),
+            highestTemperatureVerbiage: ko.observable(""),
+            lowestTemperatureVerbiage: ko.observable(""),
+            temperatureVerbiageHDDCDD: ko.observable(""),
+            findPeriod: function (periods) {
+                var selectedDate = new Date(this.selectedMonthYear().start).setDate(15),
+                    rtPeriod,
+                    result,
+                    i;
+                for (i = 0, len = periods.length; i < len; i++) {
+                    rtPeriod = periods[i];
+                    if ((selectedDate > new Date(rtPeriod.start.date)) && (selectedDate < new Date(rtPeriod.end.date))) {
+                        result = rtPeriod;
+                    }
+                }
+                return result;
+            },
             getUnitsInPeriod: function () {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
                     answer = 0,
@@ -5430,35 +6517,63 @@ tou.utilityPages.Electricity = function() {
 
                 return answer;
             },
-            gridHighlightMaxes: function () {
+            highlightMaxes: function () {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
                     max,
                     numValue,
                     noCommas,
                     $maxTD,
-                    columns = [
+                    gridColumns = [
                         "gridonpeakdemand",
-                        "gridonpeakreactive",
                         "gridoffpeakdemand",
-                        "gridoffpeakreactive",
                         "gridonpeakconsumption",
                         "gridoffpeakconsumption",
                         "gridconsumptiontotal"],
+                    individualMeterColumns = [
+                        "meterOffPeakSum",
+                        "meterOnPeakSum",
+                        "meterOnAndOffPeakSum"],
                     i;
 
-                for(i = 0; i < columns.length; i++) {
+                for(i = 0; i < gridColumns.length; i++) {
                     $maxTD = null;
                     max = null;
-                    $(myBindings.$reportsGridContent).find('.' + columns[i]).each(function () {
+                    $(myBindings.$reportsGridContent).find('.' + gridColumns[i] + " .itemValue").each(function () {
                         noCommas = $(this).html().replace(/,/g, '');
                         numValue = parseFloat(noCommas);
                         if (numValue > max) {
                             max = numValue;
-                            $maxTD = $(this);
+                            $maxTD = $(this).parent();
                         }
                     });
                     if ($maxTD) {
                         $maxTD.addClass("danger");
+
+                        if (gridColumns[i] === "gridonpeakdemand") {
+                            $maxTD.parent().find(".occurrent.onpeakdemand").addClass("danger");
+                            $maxTD.parent().find(".gridonpeakreactive").addClass("danger");
+                        } else if (gridColumns[i] === "gridoffpeakdemand") {
+                            $maxTD.parent().find(".occurrent.offpeakdemand").addClass("danger");
+                            $maxTD.parent().find(".gridoffpeakreactive").addClass("danger");
+                        }
+                    }
+                }
+
+                for(i = 0; i < individualMeterColumns.length; i++) {
+                    $maxTD = null;
+                    max = null;
+                    $(myBindings.$individualMetersData).find('.' + individualMeterColumns[i]).each(function () {
+                        if ($(this).parent().find(".individualMeterName").html() !== "Totals") {
+                            noCommas = $(this).html().replace(/,/g, '');
+                            numValue = parseFloat(noCommas);
+                            if (numValue > max) {
+                                max = numValue;
+                                $maxTD = $(this);
+                            }
+                        }
+                    });
+                    if ($maxTD) {
+                        //$maxTD.addClass("danger");
                     }
                 }
             },
@@ -5476,16 +6591,16 @@ tou.utilityPages.Electricity = function() {
 
                 if (myBindings.selectedMonthYear() !== "" && myBindings.listOfMeters().length > 0) {
                     setTimeout(function () {
-                        myBindings.renderOnPeakDemand(myBindings.demandAndReactiveDataCollection().onPeakDemandData, printFormat);
+                        myBindings.renderOnPeakDemand(myBindings.reportData["OnPeakDemand"], printFormat);
                     }, 1);
                     setTimeout(function () {
-                        myBindings.renderDemand(myBindings.maxForOnOffPeakDemandArray, printFormat);
+                        myBindings.renderDemand(myBindings.reportData["MaxForOnOffPeakDemandArray"], printFormat);
                     }, 1);
                     setTimeout(function () {
-                        myBindings.renderConsumption(myBindings.totaledOnOffPeakConsumptionArray, printFormat);
+                        myBindings.renderConsumption(myBindings.reportData["TotaledOnOffPeakConsumption"], printFormat);
                     }, 1);
                     setTimeout(function () {
-                        myBindings.renderTemperatures(myBindings.temperatureDataArray, printFormat);
+                        myBindings.renderTemperatures(myBindings.reportData["TemperatureData"], printFormat);
                     }, 1);
                 }
             },
@@ -5499,13 +6614,118 @@ tou.utilityPages.Electricity = function() {
             exportPDF: function () {
                 tou.exportPDF($('.' + this.$page.utilityNameShort + ' .' + this.$page.title.toLowerCase() + ' .reportsContent'));
             },
+            commitReport: function () {
+                var self = this,
+                    myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
+                    now = parseInt(new Date().getTime() / 1000, 10),
+                    _reportData = $.extend(true, {}, myBindings.reportData),
+                    committedReports = self.committedReports,
+                    user = tou.workspaceManager.user(),
+                    $modalControls = $('.reportingCommitReportModal .commitControls button'),
+                    $spinner = $modalControls.find('i'),
+                    timerid,
+                    updateCommit = function (reportData) {
+                        reportData.commit = {
+                            done: true,
+                            timestamp: now,
+                            user: [user.firstName, user.lastName].join(' ')
+                        };
+                    };
+
+                updateCommit(_reportData);
+                $modalControls.attr('disabled', true);
+                timerid = setTimeout(function () {
+                    $spinner.show();
+                }, 100);
+
+                self.saveReport(self, {
+                    path: [self.title, 'committedReports', myBindings.selectedMonthYear().fullDate].join('.'),
+                    remove: false,
+                    data: _reportData,
+                    callback: function (error) {
+                        clearTimeout(timerid);
+                        $spinner.hide();
+                        $modalControls.attr('disabled', false);
+                        if (!error) {
+                            updateCommit(_reportData);
+                            myBindings.reportData = _reportData;
+                            committedReports[myBindings.selectedMonthYear().fullDate] = _reportData;
+                            myBindings.selectedMonthYear().isReportCommitted(true);
+                            tou.hideModal();
+                            self.refreshMonthYear();
+                        } else {
+                            tou.alert('There was a problem committing this report. Please try again. If the problem persists please reload the page and try again.');
+                        }
+                    }
+                });
+            },
+            uncommitReport: function () {
+                // This routine called from a modal which has bound $page to "this"
+                var self = this,
+                    myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
+                    committedReports = self.committedReports,
+                    $modalControls = $('.reportingUncommitBillModal .uncommitControls button'),
+                    $spinner = $modalControls.find('i'),
+                    timerid;
+
+                $modalControls.attr('disabled', true);
+                timerid = setTimeout(function () {
+                    $spinner.show();
+                }, 100);
+                self.saveReport(self, {
+                    path: [self.title, 'committedReports', myBindings.selectedMonthYear().fullDate].join('.'),
+                    remove: true,
+                    data: null,
+                    callback: function (error) {
+                        clearTimeout(timerid);
+                        $spinner.hide();
+                        $modalControls.attr('disabled', false);
+
+                        if (!error) {
+                            delete committedReports[myBindings.selectedMonthYear().fullDate];
+                            myBindings.selectedMonthYear().isReportCommitted(false);
+                            tou.hideModal();
+                            self.refreshMonthYear();
+                            myBindings.getData();
+                        } else {
+                            tou.alert('There was a problem uncommitting this report. Please try again. If the problem persists please reload the page and try again.');
+                        }
+                    }
+                });
+            },
+            showCommitModal: function () {
+                tou.showModal('reportingCommitReport', null, this.$page);
+            },
+            showUncommitModal: function () {
+                var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
+                tou.showModal('reportingUncommitReport', {
+                    commitInfo: 'This report was committed by Nikola Tesla' + 'on' + myBindings.selectedMonthYear().start
+                }, this.$page);
+            },
+            getCommitInfoString: function (data) {
+                var self = this,
+                    committedReport = self.$page.committedReports[data.fullDate],
+                    date = new Date(committedReport.commit.timestamp * 1000),
+                    now = new Date(),
+                    day = date.getDate(),
+                    month = tou.fullMonthList[date.getMonth()],
+                    year = date.getFullYear(),
+                    dateString = [month, day].join(' ');
+
+                if (year !== now.getFullYear()) {
+                    dateString = [dateString, ', ', year].join('');
+                }
+                dateString += '.';
+
+                return ['This report was committed by', committedReport.commit.user, 'on', dateString].join(' ');
+            },
             getChartWidth: function (printFormat) {
                 return (printFormat === true) ? 725 : window.innerWidth - 210;
             },
             adjustPrecision: function (value) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
                 value = isNaN(value) ? 0: value;
-                value = (myBindings.electricalUnit() === "kW") ? value * 1000 : value;
+                value = (myBindings.electricalUnit === "kW") ? value * 1000 : value;
                 return value;
             },
             findMax: function (data) {
@@ -5522,7 +6742,7 @@ tou.utilityPages.Electricity = function() {
                         //console.log("   data[" + i + "].timeStamp = " + moment(data[i].timeStamp).format("MM/DD/YYYY"));
                         if (data[i].value !== null) {
                             if ((answer.value === null) || (answer.value < data[i].value)) {
-                                answer.value = tou.toFixed(data[i].value, myBindings.decimalPlaces());
+                                answer.value = tou.toFixed(data[i].value, myBindings.decimalPlaces);
                                 answer.timeStamp = data[i].timeStamp;
                             }
                         }
@@ -5550,7 +6770,42 @@ tou.utilityPages.Electricity = function() {
                 for (i = 0; i < lenData; i++) {
                     answer += data[i].value;
                 }
-                return tou.toFixed(answer, myBindings.decimalPlaces());
+                return tou.toFixed(answer, myBindings.decimalPlaces);
+            },
+            initGridData: function () {
+                var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
+                if (myBindings.koGridReportCollection().length === 0) {
+                    var monthYear = this.selectedMonthYear(),
+                        monthYearPeriod = monthYear.period.toLowerCase(),
+                        indexedDate,
+                        startIndex,
+                        periodIndex,
+                        periodMax,
+                        gridData = [];
+
+                    if (monthYearPeriod === "month") {
+                        startIndex = 1;
+                        periodMax = (myBindings.numberOfDaysInCurrentPeriod + 1);
+                    } else if (monthYearPeriod === "year") {
+                        startIndex = 0;
+                        periodMax = 12;
+                    }
+                    indexedDate = moment(monthYear.start).startOf("month").endOf("day");
+                    for (periodIndex = startIndex; periodIndex < periodMax; periodIndex++) {
+                        gridData.push({
+                            date: indexedDate.unix(),
+                            OnPeakDemand: 0,
+                            OnPeakReactive: 0,
+                            OffPeakDemand: 0,
+                            OffPeakReactive: 0,
+                            OnPeakConsumption: 0,
+                            OffPeakConsumption: 0,
+                            TotaledOnOffPeakConsumption: 0
+                        });
+                        indexedDate = moment(indexedDate).add(1, monthYear.childPeriod);
+                    }
+                    myBindings.koGridReportCollection(gridData);
+                }
             },
             initPeriodArray: function () {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
@@ -5575,14 +6830,14 @@ tou.utilityPages.Electricity = function() {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
                     answer,
                     monthYear = myBindings.selectedMonthYear(),
-                    displayValue = tou.toFixed(value, myBindings.decimalPlaces()),
+                    displayValue = tou.toFixed(value, myBindings.decimalPlaces),
                     timeStampFormat = includeTimeStamp ? "dddd, MMMM Do YYYY, HH:00" : "dddd, MMMM Do YYYY";
 
                 if (timeStamp !== null && displayValue > 0) {
                     if (monthYear.period.toLowerCase() === "month") {
-                        answer = moment(timeStamp).format(timeStampFormat) + " and was " + tou.numberWithCommas(displayValue) + myBindings.electricalUnit();
+                        answer = moment(timeStamp).format(timeStampFormat) + " and was " + tou.numberWithCommas(displayValue) + myBindings.electricalUnit;
                     } else if (monthYear.period.toLowerCase() === "year") {
-                        answer = moment(timeStamp).format("MMMM, YYYY") + " and was " + tou.numberWithCommas(displayValue) + myBindings.electricalUnit();
+                        answer = moment(timeStamp).format("MMMM, YYYY") + " and was " + tou.numberWithCommas(displayValue) + myBindings.electricalUnit;
                     }
                 } else {
                     answer = "- no data available -";
@@ -5635,19 +6890,19 @@ tou.utilityPages.Electricity = function() {
                 }
                 return result;
             },
-            setGridData: function (fieldName, collectionData) {
-                if (collectionData) {
-                    var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
-                        gridData = $.extend(true, [], myBindings.koGridReportCollection()),
+            setGridData: function (fieldName) {
+                var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
+                if (myBindings.reportData[fieldName]) {
+                    var gridData = $.extend(true, [], myBindings.koGridReportCollection()),
                         monthYear = myBindings.selectedMonthYear(),
                         i,
-                        len = collectionData.length,
+                        len = myBindings.reportData[fieldName].length,
                         collectionItem,
                         gridItem,
                         gridItemDate,
                         collectionItemDate;
                     for (i = 0; i < len; i++) {
-                        collectionItem = collectionData[i];
+                        collectionItem = myBindings.reportData[fieldName][i];
                         collectionItemDate = new Date(collectionItem.timeStamp);
                         gridItem = ko.utils.arrayFirst(gridData, function (item) {
                             gridItemDate = new Date(item.date * 1000);
@@ -5661,9 +6916,12 @@ tou.utilityPages.Electricity = function() {
                         });
 
                         if (gridItem) {
-                            gridItem[fieldName] = tou.toFixed(collectionItem.value, 0);
+                            gridItem[fieldName] = {
+                                value: tou.toFixed(collectionItem.value, 0),
+                                timeStamp: collectionItem.timeStamp
+                            };
                         } else {
-                            //console.log(" --- setGridData() NOT FOUND ---- i = ", i,  "   itemData = ", new Date(collectionData[i].timeStamp));
+                            console.log(" --- setGridData() NOT FOUND ---- i = ", i,  "   collectionItem timestamp = ", new Date(collectionItem.timeStamp));
                         }
                     }
                     myBindings.koGridReportCollection(gridData);
@@ -5688,6 +6946,50 @@ tou.utilityPages.Electricity = function() {
                 }
 
                 return metersIndex;
+            },
+            renderCompleteReport: function () {
+                var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
+                if (!!myBindings.reportData) {
+                    myBindings.highestOnPeakDemandLastYear(myBindings.reportData["LastYearsOnPeakDemand"]);
+                    myBindings.highestDemandLastYear(myBindings.reportData["LastYearsDemand"]);
+                    myBindings.duOnPeakMWH(myBindings.findMax(myBindings.reportData["OnPeakConsumption"]));
+                    myBindings.duOffPeakMWH(myBindings.findMax(myBindings.reportData["OffPeakConsumption"]));
+                    myBindings.maxPeriodUsage(myBindings.findMax(myBindings.reportData["TotaledOnOffPeakConsumption"]));
+
+                    myBindings.sumOfOnPeakConsumption(myBindings.sumCollection(myBindings.reportData["OnPeakConsumption"]));
+                    myBindings.sumOfOffPeakConsumption(myBindings.sumCollection(myBindings.reportData["OffPeakConsumption"]));
+                    myBindings.sumOfTotalPeriodUsage(myBindings.sumCollection(myBindings.reportData["TotaledOnOffPeakConsumption"]));
+
+                    myBindings.setGridData("OnPeakConsumption");
+                    myBindings.setGridData("OffPeakConsumption");
+                    myBindings.setGridData("TotaledOnOffPeakConsumption");
+
+                    myBindings.renderConsumption(myBindings.reportData["TotaledOnOffPeakConsumption"]);
+                    myBindings.highestConsumptionLastYear(myBindings.reportData["HighestConsumptionLastYear"]);
+                    myBindings.renderTemperatures(myBindings.reportData["TemperatureData"]);
+                    myBindings.setCddAndHddVerbiage();
+
+                    myBindings.missingDataCollection(myBindings.reportData["MissingMeterData"]);
+                    myBindings.percentageOfMissingData(myBindings.reportData["PercentageMissingMeterData"]);
+                    myBindings.displayPercentageOfValidData(tou.toFixed(myBindings.percentageOfMissingData(), 2));
+
+                    myBindings.setGridData("OnPeakDemand");
+                    myBindings.setGridData("OffPeakDemand");
+                    myBindings.setGridData("OnPeakReactive");
+                    myBindings.setGridData("OffPeakReactive");
+                    myBindings.duOnPeakMW(myBindings.findMax(myBindings.reportData["OnPeakDemand"]));
+                    myBindings.duOffPeakMW(myBindings.findMax(myBindings.reportData["OffPeakDemand"]));
+                    myBindings.duOnPeakMaxMVAR(myBindings.findMax(myBindings.reportData["OnPeakReactive"]));
+                    myBindings.duOffPeakMaxMVAR(myBindings.findMax(myBindings.reportData["OffPeakReactive"]));
+                    myBindings.duOnPeakMVAR(myBindings.findByTimestamp(myBindings.reportData["OnPeakReactive"], myBindings.duOnPeakMW().timeStamp));
+                    myBindings.duOffPeakMVAR(myBindings.findByTimestamp(myBindings.reportData["OffPeakReactive"], myBindings.duOffPeakMW().timeStamp));
+
+                    myBindings.renderOnPeakDemand(myBindings.reportData["OnPeakDemand"]);
+                    myBindings.renderDemand(myBindings.reportData["MaxForOnOffPeakDemandArray"]);
+
+                    myBindings.MeterReportCollection(myBindings.reportData["IndividualMeterData"]);
+                    myBindings.highlightMaxes();
+                }
             },
             renderOnPeakDemand: function (arrayOfData, printFormat) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
@@ -5714,7 +7016,21 @@ tou.utilityPages.Electricity = function() {
                         target: $highestOnPeakDemandPeriodChart,
                         y: 'value',
                         x: 'timeStamp',
+                        rawX: 'timeStamp',
                         highlightMax: true,
+                        tooltip: {
+                            formatter: function () {
+                                var ret = '',
+                                    self = this;
+                                $.each(this.points, function (idx) {
+                                    ret += '<span style="font-size: 10px">' + moment(this.point.rawX).format("dddd, MMM DD, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + ' ' + myBindings.electricalUnit + '</b>';
+                                    if (idx < self.points.length - 1) {
+                                        ret += '<br/>';
+                                    }
+                                });
+                                return ret;
+                            },
+                        },
                         data: {
                             data: arrayOfData,
                             name: 'Demand'
@@ -5723,7 +7039,7 @@ tou.utilityPages.Electricity = function() {
                         xAxis: {
                             allowDecimals: false
                         },
-                        yAxisTitle: myBindings.electricalUnit(),
+                        yAxisTitle: myBindings.electricalUnit,
                         xValueFormatter: function(timestamp) {
                             var date = new Date(timestamp);
                             date.setHours(0);
@@ -5731,7 +7047,7 @@ tou.utilityPages.Electricity = function() {
                             date.setSeconds(0);
                             date.setMilliseconds(0);
                             if (monthYear.period === "Year") {
-                                date.setDate(15);
+                                date.setDate(1);
                             }
                             return date.getTime();
                         }
@@ -5763,7 +7079,21 @@ tou.utilityPages.Electricity = function() {
                         target: $highestDemandPeriodChart,
                         y: 'value',
                         x: 'timeStamp',
+                        rawX: 'timeStamp',
                         highlightMax: true,
+                        tooltip: {
+                            formatter: function () {
+                                var ret = '',
+                                    self = this;
+                                $.each(this.points, function (idx) {
+                                    ret += '<span style="font-size: 10px">' + moment(this.point.rawX).format("dddd, MMM DD, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + ' ' + myBindings.electricalUnit + '</b>';
+                                    if (idx < self.points.length - 1) {
+                                        ret += '<br/>';
+                                    }
+                                });
+                                return ret;
+                            },
+                        },
                         data: {
                             data: arrayOfData,
                             name: 'Demand'
@@ -5772,7 +7102,7 @@ tou.utilityPages.Electricity = function() {
                         xAxis: {
                             allowDecimals: false
                         },
-                        yAxisTitle: myBindings.electricalUnit(),
+                        yAxisTitle: myBindings.electricalUnit,
                         xValueFormatter: function(timestamp) {
                             var date = new Date(timestamp);
                             date.setHours(0);
@@ -5780,7 +7110,7 @@ tou.utilityPages.Electricity = function() {
                             date.setSeconds(0);
                             date.setMilliseconds(0);
                             if (monthYear.period === "Year") {
-                                date.setDate(15);
+                                date.setDate(1);
                             }
                             return date.getTime();
                         }
@@ -5808,7 +7138,7 @@ tou.utilityPages.Electricity = function() {
 
                 // Round it
                 for (i = 0; i < arrayOfData; i++) {
-                    arrayOfData[i].value = tou.toFixed(arrayOfData[i].value, myBindings.decimalPlaces());
+                    arrayOfData[i].value = tou.toFixed(arrayOfData[i].value, myBindings.decimalPlaces);
                 }
 
                 if ($highestConsumptionPeriodChart.length > 0) {
@@ -5828,7 +7158,7 @@ tou.utilityPages.Electricity = function() {
                         xAxis: {
                             allowDecimals: false
                         },
-                        yAxisTitle: myBindings.electricalUnit() + "h",
+                        yAxisTitle: myBindings.electricalUnit + "h",
                         xValueFormatter: function(timestamp) {
                             var date = new Date(timestamp);
                             date.setHours(0);
@@ -5836,7 +7166,7 @@ tou.utilityPages.Electricity = function() {
                             date.setSeconds(0);
                             date.setMilliseconds(0);
                             if (monthYear.period === "Year") {
-                                date.setDate(15);
+                                date.setDate(1);
                             }
                             return date.getTime();
                         }
@@ -5848,9 +7178,10 @@ tou.utilityPages.Electricity = function() {
                     trendPlot,
                     titleVerbiage,
                     periodVerbiage = (myBindings.selectedMonthYear().childPeriod.toLowerCase() === "day" ? "Daily" : myBindings.selectedMonthYear().childPeriod + "ly"),
-                    verbiage = "no data available",
+                    highestTempVerbiage,
+                    lowestTempVerbiage,
                     chartWidth = myBindings.getChartWidth(printFormat),
-                    $highlowTemperaturesPeriodChart = $(myBindings.$reportsContent).find(' .highlowTemperaturesPeriodChart');
+                    $highlowTemperaturesPeriodChart = $(myBindings.$reportsContent).find('.highlowTemperaturesPeriodChart');
 
                 titleVerbiage = "High/Low " + periodVerbiage + " Temperatures - " + myBindings.selectedMonthYear().prettyDate;
                 myBindings.temperatureTitle(titleVerbiage);
@@ -5866,8 +7197,8 @@ tou.utilityPages.Electricity = function() {
                             timeStamp: arrayOfData.lowestTemp.timeStamp
                         });
 
-                        verbiage = "The high temperature on " + moment.unix(arrayOfData.highestTemp.timeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.highestTemp.value).toFixed(1) + " degrees ";
-                        //verbiage += ", Lowest temperature " + (arrayOfData.lowestTemp.value).toFixed(1) + " degrees, " + moment.unix(arrayOfData.lowestTemp.timeStamp).format("dddd, MMMM Do YYYY, HH") + ":00";
+                        highestTempVerbiage = "The high temperature on " + moment.unix(arrayOfData.highestTemp.timeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.highestTemp.value).toFixed(1) + " degrees. ";
+                        lowestTempVerbiage = "The low temperature on " + moment.unix(arrayOfData.lowestTemp.timeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.lowestTemp.value).toFixed(1) + " degrees. ";
                     } else {
                         myBindings.highestTemperatureNow({
                             value: null,
@@ -5878,11 +7209,13 @@ tou.utilityPages.Electricity = function() {
                             timeStamp: null
                         });
 
-                        verbiage = "no data available";
+                        highestTempVerbiage = "no data available";
+                        lowestTempVerbiage = "no data available";
                     }
 
 
-                    myBindings.temperatureVerbiage(verbiage);
+                    myBindings.highestTemperatureVerbiage(highestTempVerbiage);
+                    myBindings.lowestTemperatureVerbiage(lowestTempVerbiage);
 
                     if (arrayOfData.trendPlotData.maxes) {
                         arrayOfData.trendPlotData.maxes.sort(function (a, b) {
@@ -5918,11 +7251,13 @@ tou.utilityPages.Electricity = function() {
                             yAxisTitle: 'F'
                         });
                     }
+                    myBindings.$highlowTemperatures.show();
                 } else {
                     myBindings.$highlowTemperatures.hide();
                     myBindings.temperatureTitle("");
                     $highlowTemperaturesPeriodChart.html("");
-                    myBindings.temperatureVerbiage("");
+                    myBindings.highestTemperatureVerbiage("");
+                    myBindings.lowestTemperatureVerbiage("");
                     myBindings.temperatureVerbiageHDDCDD("");
                 }
             },
@@ -5931,42 +7266,17 @@ tou.utilityPages.Electricity = function() {
                     var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
                         calculatedData = myBindings.buildOnOffSumArray(data, "sums", "sum");
 
-                    myBindings.totaledOnOffPeakConsumptionArray = myBindings.totalOnOffPeak(calculatedData.onPeakData, calculatedData.offPeakData);
-
-                    myBindings.duOffPeakMWH(myBindings.findMax(calculatedData.offPeakData));
-                    myBindings.duOnPeakMWH(myBindings.findMax(calculatedData.onPeakData));
-                    myBindings.maxPeriodUsage(myBindings.findMax(myBindings.totaledOnOffPeakConsumptionArray));
-
-                    myBindings.sumOfOnPeakConsumption(myBindings.sumCollection(calculatedData.onPeakData));
-                    myBindings.sumOfOffPeakConsumption(myBindings.sumCollection(calculatedData.offPeakData));
-                    myBindings.sumOfTotalPeriodUsage(myBindings.sumCollection(myBindings.totaledOnOffPeakConsumptionArray));
-
-                    myBindings.setGridData("onPeakConsumption", calculatedData.onPeakData);
-                    myBindings.setGridData("offPeakConsumption", calculatedData.offPeakData);
-                    myBindings.setGridData("totalPeriodUsage", myBindings.totaledOnOffPeakConsumptionArray);
-
-                    myBindings.renderConsumption(myBindings.totaledOnOffPeakConsumptionArray);
+                    myBindings.reportData["OffPeakConsumption"] = calculatedData.offPeakData;
+                    myBindings.reportData["OnPeakConsumption"] = calculatedData.onPeakData;
+                    myBindings.reportData["TotaledOnOffPeakConsumption"] = myBindings.totalOnOffPeak(myBindings.reportData["OnPeakConsumption"], myBindings.reportData["OffPeakConsumption"]);
                 }
             },
             buildDemandAndReactiveArray: function (data) {
                 if (data) {
-                    var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
-                        theData;
+                    var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
 
-                    myBindings.demandAndReactiveDataCollection(myBindings.parseDemandAndReactiveArrays(data));
-                    theData = myBindings.demandAndReactiveDataCollection();
-                    myBindings.setGridData("onPeakDemand", theData.onPeakDemandData);
-                    myBindings.setGridData("offPeakDemand", theData.offPeakDemandData);
-                    myBindings.setGridData("onPeakReactive", theData.onPeakReactiveData);
-                    myBindings.setGridData("offPeakReactive", theData.offPeakReactiveData);
-                    myBindings.duOnPeakMW(myBindings.findMax(theData.onPeakDemandData));
-                    myBindings.duOffPeakMW(myBindings.findMax(theData.offPeakDemandData));
-                    myBindings.duOnPeakMVAR(myBindings.findByTimestamp(theData.onPeakReactiveData, myBindings.duOnPeakMW().timeStamp));
-                    myBindings.duOffPeakMVAR(myBindings.findByTimestamp(theData.offPeakReactiveData, myBindings.duOffPeakMW().timeStamp));
-
-                    myBindings.renderOnPeakDemand(theData.onPeakDemandData);
-                    myBindings.maxForOnOffPeakDemandArray = myBindings.maxForOnOffPeak(theData.onPeakDemandData, theData.offPeakDemandData);
-                    myBindings.renderDemand(myBindings.maxForOnOffPeakDemandArray);
+                    myBindings.parseDemandAndReactiveArrays(data);
+                    myBindings.reportData["MaxForOnOffPeakDemandArray"] = myBindings.maxForOnOffPeak(myBindings.reportData["OnPeakDemand"], myBindings.reportData["OffPeakDemand"]);
                 }
             },
             buildOnOffSumArray: function (data, arrayName, fieldName) {
@@ -5992,7 +7302,7 @@ tou.utilityPages.Electricity = function() {
                             sumData = dataRow.results[arrayName][index];
                             if (!!sumData) {
                                 unitValue = myBindings.adjustPrecision(sumData[fieldName]);
-                                ts = moment(sumData.range.start * 1000),
+                                ts = moment(sumData.range.start * 1000);
                                 unitIndex = (parseInt(moment(ts).format(monthYear.childFormatCode), 10) - 1);
                                 if (dataRow.peak === "on") {
                                     onPeakData[unitIndex].timeStamp = (sumData.range.start * 1000);
@@ -6012,10 +7322,10 @@ tou.utilityPages.Electricity = function() {
             },
             parseDemandAndReactiveArrays: function (data) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
-                    onPeakDemandData,
-                    offPeakDemandData,
-                    onPeakReactiveData,
-                    offPeakReactiveData,
+                    onPeakDemand,
+                    offPeakDemand,
+                    onPeakReactive,
+                    offPeakReactive,
                     getTimeStamp = function (ts, endOfRange) {
                         // if the data exists in the last unit of the Period (back up one second)
                         if (ts === endOfRange) {
@@ -6032,7 +7342,7 @@ tou.utilityPages.Electricity = function() {
                             if (arrayOfData[i].value !== null) {
                                 arrayContainsOnlyNulls = false;
                             }
-                            arrayOfData[i].value = (arrayOfData[i].value === null) ? 0 : tou.toFixed(arrayOfData[i].value, myBindings.decimalPlaces());
+                            arrayOfData[i].value = (arrayOfData[i].value === null) ? 0 : tou.toFixed(arrayOfData[i].value, myBindings.decimalPlaces);
                         }
 
                         return arrayOfData;
@@ -6041,7 +7351,7 @@ tou.utilityPages.Electricity = function() {
                 if (data) {
                     var monthYear = myBindings.selectedMonthYear(),
                         i,
-                        lenData = data.length,
+                        j,
                         dataRow,
                         itemData,
                         unitIndex,
@@ -6049,25 +7359,25 @@ tou.utilityPages.Electricity = function() {
                         demandTS,
                         reactiveTS;
 
-                    onPeakDemandData = myBindings.initPeriodArray();
-                    offPeakDemandData = myBindings.initPeriodArray();
-                    onPeakReactiveData = myBindings.initPeriodArray();
-                    offPeakReactiveData = myBindings.initPeriodArray();
-                    for (i = 0; i < lenData; i++) {
+                    onPeakDemand = myBindings.initPeriodArray();
+                    offPeakDemand = myBindings.initPeriodArray();
+                    onPeakReactive = myBindings.initPeriodArray();
+                    offPeakReactive = myBindings.initPeriodArray();
+                    for (i = 0; i < data.length; i++) {
                         dataRow = data[i];
-                        for (var index in dataRow.results) {
-                            itemData = dataRow.results[index];
+                        for (j = 0; j < dataRow.results.length; j++) {
+                            itemData = dataRow.results[j];
                             if (!!itemData.demand.max) {
                                 demandTS = getTimeStamp(itemData.demand.timestamp, itemData.demand.range.end);
                                 childIndex = moment(demandTS).format(monthYear.childFormatCode);
                                 unitIndex = (parseInt(childIndex, 10) - 1);
                                 if (dataRow.peak === "on") {
-                                    onPeakDemandData[unitIndex] = {
+                                    onPeakDemand[unitIndex] = {
                                         timeStamp: demandTS,
                                         value: myBindings.adjustPrecision(itemData.demand.max)
                                     };
                                 } else {
-                                    offPeakDemandData[unitIndex] = {
+                                    offPeakDemand[unitIndex] = {
                                         timeStamp: demandTS,
                                         value: myBindings.adjustPrecision(itemData.demand.max)
                                     };
@@ -6078,12 +7388,12 @@ tou.utilityPages.Electricity = function() {
                                 childIndex = moment(reactiveTS).format(monthYear.childFormatCode);
                                 unitIndex = (parseInt(childIndex, 10) - 1);
                                 if (dataRow.peak === "on") {
-                                    onPeakReactiveData[unitIndex] = {
+                                    onPeakReactive[unitIndex] = {
                                         timeStamp: reactiveTS,
                                         value: myBindings.adjustPrecision(itemData.reactive.max)
                                     };
                                 } else {
-                                    offPeakReactiveData[unitIndex] = {
+                                    offPeakReactive[unitIndex] = {
                                         timeStamp: reactiveTS,
                                         value: myBindings.adjustPrecision(itemData.reactive.max)
                                     };
@@ -6091,25 +7401,22 @@ tou.utilityPages.Electricity = function() {
                             }
                         }
                     }
-                    onPeakDemandData = validateArray(onPeakDemandData);
-                    offPeakDemandData = validateArray(offPeakDemandData);
-                    onPeakReactiveData = validateArray(onPeakReactiveData);
-                    offPeakReactiveData = validateArray(offPeakReactiveData);
+                    onPeakDemand = validateArray(onPeakDemand);
+                    offPeakDemand = validateArray(offPeakDemand);
+                    onPeakReactive = validateArray(onPeakReactive);
+                    offPeakReactive = validateArray(offPeakReactive);
                 }
-                return {
-                    onPeakDemandData: onPeakDemandData,
-                    offPeakDemandData: offPeakDemandData,
-                    onPeakReactiveData: onPeakReactiveData,
-                    offPeakReactiveData: offPeakReactiveData
-                };
+                myBindings.reportData["OnPeakDemand"] = onPeakDemand;
+                myBindings.reportData["OffPeakDemand"] = offPeakDemand;
+                myBindings.reportData["OnPeakReactive"] = onPeakReactive;
+                myBindings.reportData["OffPeakReactive"] = offPeakReactive;
             },
             buildLastYearsConsumptionArray: function (data) {
                 if (data) {
                     var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
-                        calculatedData = myBindings.buildMetersTrendPlotArray(data),
-                        highestValueVerbiage = myBindings.formatHighestValueVerbiage(calculatedData.highestValue.value, calculatedData.highestValue.timeStamp, false);
+                        calculatedData = myBindings.buildMetersTrendPlotArray(data);
 
-                    myBindings.highestConsumptionLastYear(highestValueVerbiage);
+                    myBindings.reportData["HighestConsumptionLastYear"] = myBindings.formatHighestValueVerbiage(calculatedData.highestValue.value, calculatedData.highestValue.timeStamp, false);
                 }
             },
             buildLastYearsOnPeakDemandArray: function (data) {
@@ -6117,7 +7424,7 @@ tou.utilityPages.Electricity = function() {
                     var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
                         maxes = data.results.maxes[0],
                         maxValue = myBindings.adjustPrecision(maxes.max);
-                    myBindings.highestOnPeakDemandLastYear(myBindings.formatHighestValueVerbiage(maxValue, (maxes.timestamp * 1000), true));
+                    myBindings.reportData["LastYearsOnPeakDemand"] = myBindings.formatHighestValueVerbiage(maxValue, (maxes.timestamp * 1000), true);
                 }
             },
             buildLastYearsDemandArray: function (data) {
@@ -6125,26 +7432,25 @@ tou.utilityPages.Electricity = function() {
                     var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
                         maxes = data.results.maxes[0],
                         maxValue = myBindings.adjustPrecision(maxes.max);
-                    myBindings.highestDemandLastYear(myBindings.formatHighestValueVerbiage(maxValue, (maxes.timestamp * 1000), true));
+                    myBindings.reportData["LastYearsDemand"] = myBindings.formatHighestValueVerbiage(maxValue, (maxes.timestamp * 1000), true);
                 }
             },
             buildTemperatureArray: function (data) {
                 if (data) {
                     var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
 
-                    myBindings.temperatureDataArray = myBindings.parseTemperatureArray(data);
-                    myBindings.renderTemperatures(myBindings.temperatureDataArray);
+                    myBindings.reportData["TemperatureData"] = myBindings.parseTemperatureArray(data);
                 }
             },
             setCddAndHddVerbiage: function (error) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
                     hddcddVerbiage;
                 if (error === undefined) {
-                    if (myBindings.hddValue === null || myBindings.cddValue === null) {
+                    if (myBindings.reportData["HddValue"] === null || myBindings.reportData["CddValue"] === null) {
                         hddcddVerbiage = "";
                     } else {
-                        hddcddVerbiage = " and there was " + tou.numberWithCommas(tou.toFixed(myBindings.cddValue, 0)) + " CDD and ";
-                        hddcddVerbiage += tou.numberWithCommas(tou.toFixed(myBindings.hddValue, 0)) + " HDD in this ";
+                        hddcddVerbiage = "There were " + tou.numberWithCommas(tou.toFixed(myBindings.reportData["CddValue"], 0)) + " CDD and ";
+                        hddcddVerbiage += tou.numberWithCommas(tou.toFixed(myBindings.reportData["HddValue"], 0)) + " HDD in this ";
                         hddcddVerbiage += myBindings.selectedMonthYear().period + '.';
                     }
                 } else {
@@ -6155,18 +7461,20 @@ tou.utilityPages.Electricity = function() {
             setCDDValue: function (data) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
                 if (data && data.error === undefined) {
-                    myBindings.cddValue = data.results.sums[0].sum;
+                    myBindings.reportData["CddValue"] = data.results.sums[0].sum;
                     myBindings.setCddAndHddVerbiage();
                 } else if (data.error) {
+                    myBindings.reportData["CddValue"] = data.error;
                     myBindings.setCddAndHddVerbiage(data.error);
                 }
             },
             setHDDValue: function (data) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
                 if (data && data.error === undefined) {
-                    myBindings.hddValue = data.results.sums[0].sum;
+                    myBindings.reportData["HddValue"] = data.results.sums[0].sum;
                     myBindings.setCddAndHddVerbiage();
                 } else if (data.error) {
+                    myBindings.reportData["HddValue"] = data.error;
                     myBindings.setCddAndHddVerbiage(data.error);
                 }
             },
@@ -6214,10 +7522,10 @@ tou.utilityPages.Electricity = function() {
                 // tally up results.. and round it
                 for (unitIndex = 0; unitIndex < trendPlotData.length; unitIndex++) {
                     if (highestValue.value < trendPlotData[unitIndex].value) {
-                        highestValue.value = tou.toFixed(trendPlotData[unitIndex].value, myBindings.decimalPlaces());
+                        highestValue.value = tou.toFixed(trendPlotData[unitIndex].value, myBindings.decimalPlaces);
                         highestValue.timeStamp = trendPlotData[unitIndex].timeStamp;
                     }
-                    trendPlotData[unitIndex].value = tou.toFixed(trendPlotData[unitIndex].value, myBindings.decimalPlaces());
+                    trendPlotData[unitIndex].value = tou.toFixed(trendPlotData[unitIndex].value, myBindings.decimalPlaces);
                 }
 
                 return {
@@ -6249,14 +7557,14 @@ tou.utilityPages.Electricity = function() {
                     for (i = 0; i < summedData.length; i++) {
                         if (summedData[i].missingPercentage !== undefined && summedData[i].missingPercentage > 0) {
                             if (summedData[i].missingPercentage > 0) {
+                                delete summedData[i]["meterPoints"]; // not needed for reporting
                                 missingData.push(summedData[i]);
                             }
                         }
                     }
 
-                    myBindings.missingDataCollection(missingData);
-                    myBindings.percentageOfMissingData(((maxPossibleSumOfPercentage - totalMissingPercentage) / maxPossibleSumOfPercentage) * 100);
-                    myBindings.displayPercentageOfValidData(tou.toFixed(myBindings.percentageOfMissingData(), 2));
+                    myBindings.reportData["MissingMeterData"] = missingData;
+                    myBindings.reportData["PercentageMissingMeterData"] = ((maxPossibleSumOfPercentage - totalMissingPercentage) / maxPossibleSumOfPercentage) * 100;
                 }
             },
             parseTemperatureArray: function (data) {
@@ -6297,21 +7605,21 @@ tou.utilityPages.Electricity = function() {
                         maxes[unitIndex].value = ($.isNumeric(maxMinData.max)) ? tou.toFixed(maxMinData.max, 2) : null;
                         maxes[unitIndex].timeStamp = maxMinData.range.start * 1000;
                         mins[unitIndex].value = ($.isNumeric(maxMinData.min)) ? tou.toFixed(maxMinData.min, 2) : null;
-                        mins[unitIndex].timeStamp = maxMinData.range.start * 1000
+                        mins[unitIndex].timeStamp = maxMinData.range.start * 1000;
                         if (maxes[unitIndex].value !== null || mins[unitIndex].value !== null) {
                             trendPlotData.valid = true;
                         }
                     }
 
                     $.each(maxes, function (key, temperature) {
-                        if (temperature.value > highestTemp.value) {
+                        if (!!temperature.value && (temperature.value > highestTemp.value || highestTemp.value === null)) {
                             highestTemp.value = tou.toFixed(temperature.value, 1);
                             highestTemp.timeStamp = temperature.timeStamp / 1000;
                         }
                     });
 
                     $.each(mins, function (key, temperature) {
-                        if (temperature.value < lowestTemp.value) {
+                        if (!!temperature.value && (temperature.value < lowestTemp.value || lowestTemp.value === null)) {
                             lowestTemp.value = tou.toFixed(temperature.value, 1);
                             lowestTemp.timeStamp = temperature.timeStamp / 1000;
                         }
@@ -6364,7 +7672,7 @@ tou.utilityPages.Electricity = function() {
                             meter = summedData[myBindings.meterIndexArray[meterPointUPI].meterIndex];
                             sumData = dataRow.results.sums[meterPointUPI];
                             if (!!sumData) {
-                                unitValue = ((myBindings.electricalUnit() === "kW") ? sumData.sum * 1000 : sumData.sum);
+                                unitValue = ((myBindings.electricalUnit === "kW") ? sumData.sum * 1000 : sumData.sum);
                                 if (dataRow.peak === "on") {
                                     meter.onPeakSum = unitValue;
                                     summedData[lenSumData].onPeakSum += unitValue; // for last row in table  "Totals"
@@ -6378,49 +7686,61 @@ tou.utilityPages.Electricity = function() {
 
                     // Round it
                     for (i = 0; i < summedData.length; i++) {
-                        summedData[i].onPeakSum = tou.toFixed(summedData[i].onPeakSum, (myBindings.electricalUnit() === "kW") ? 1 : 3);
-                        summedData[i].offPeakSum = tou.toFixed(summedData[i].offPeakSum, (myBindings.electricalUnit() === "kW") ? 1 : 3);
+                        delete summedData[i].meterPoints;
+                        summedData[i].onPeakSum = tou.toFixed(summedData[i].onPeakSum, (myBindings.electricalUnit === "kW") ? 1 : 3);
+                        summedData[i].offPeakSum = tou.toFixed(summedData[i].offPeakSum, (myBindings.electricalUnit === "kW") ? 1 : 3);
                     }
-                    myBindings.MeterReportCollection(summedData);
+                    myBindings.reportData["IndividualMeterData"] = summedData;
                 }
             },
             parseReturnedData: function (data) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
-                    len = this.activeDataRequests.length,
-                    lenData = data.length,
+                    len = myBindings.activeDataRequests.length,
                     i,
                     j,
+                    renderReport = false,
                     matchingRequestData;
 
-                if (lenData > 0) {
-                    for (j = 0; j < len; j++) {
-                        matchingRequestData = [];
-                        for (i = 0; i < lenData; i++) {
-                            if (myBindings.activeDataRequests[j].touid === data[i].touid.split('-')[0]) {
-                                matchingRequestData.push(data[i]);
-                            }
-                        }
-                        if (matchingRequestData.length > 0) {
-                            this.$page.blockUI(true);
-                            //console.log(" - - - myBindings.activeDataRequests[" + j + "] = ", myBindings.activeDataRequests[j].fx.prototype);
-                            if (matchingRequestData.length === 1) {
-                                myBindings.activeDataRequests[j].fx(matchingRequestData[0]);
-                            } else {
-                                myBindings.activeDataRequests[j].fx(matchingRequestData);
-                            }
+                myBindings.reportData = {};
+                this.$page.blockUI(true);
+                for (j = 0; j < len; j++) {
+                    matchingRequestData = [];
+                    for (i = 0; i < data.length; i++) {
+                        delete data[i].upis; // trimming data
+                        //console.log(" - - - myBindings.activeDataRequests[" + j + "].touid = [" + myBindings.activeDataRequests[j].touid + "]   data[" + i + "].touid.split('-')[0] = [" + data[i].touid.split('-')[0] + "]");
+                        if (myBindings.activeDataRequests[j].touid === data[i].touid.split('-')[0]) {
+                            //console.log(" - PUSH  i = " + i);
+                            matchingRequestData.push(data[i]);
+                            renderReport = true;
                         }
                     }
-
                     if (matchingRequestData.length > 0) {
-                        myBindings.gridHighlightMaxes();
-                        if (myBindings.dataRequestTimer) {
-                            clearTimeout(myBindings.dataRequestTimer);
-                            myBindings.dataRequestTimer = null;
+                        //console.log(" - - - matchingRequestData.length = ", matchingRequestData.length);
+                        //console.log(" - - - myBindings.activeDataRequests[" + j + "] = ", myBindings.activeDataRequests[j].fx.prototype);
+                        if (matchingRequestData.length === 1) {
+                            myBindings.activeDataRequests[j].fx(matchingRequestData[0]);
+                        } else {
+                            myBindings.activeDataRequests[j].fx(matchingRequestData);
                         }
-                        this.$page.blockUI(false);
                     }
+                }
+
+                if (renderReport) {
+                    myBindings.renderCompleteReport();
+                    this.$page.blockUI(false);
+                    myBindings.activeDataRequests = [];
                 } else {
-                    tou.alert("no data returned from request");
+                    tou.alert("no matching data returned from request");
+                    this.$page.blockUI(false);
+                    myBindings.errorWithRequest(true);
+                    myBindings.$reportsContent.hide();
+                }
+
+                myBindings.activeDataRequest(false);
+
+                if (myBindings.dataRequestTimer) {
+                    clearTimeout(myBindings.dataRequestTimer);
+                    myBindings.dataRequestTimer = null;
                 }
             },
             buildMissingDataRequestObject: function (startDay, endDay, touID) {
@@ -6743,6 +8063,7 @@ tou.utilityPages.Electricity = function() {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
                 if (myBindings.selectedMonthYear() !== "" && myBindings.listOfMeters().length > 0) {
                     myBindings.startTime = moment();
+                    myBindings.errorWithRequest(false);
                     this.$page.blockUI(true);
                     var monthYear = this.selectedMonthYear(),
                         monthYearPeriod = monthYear.period.toLowerCase(),
@@ -6750,148 +8071,107 @@ tou.utilityPages.Electricity = function() {
                         lastYearStartDay = moment(startDay).subtract(1, "year"),
                         endDay = moment(monthYear.end).startOf("month").startOf("day"),
                         lastYearEndDay = moment(lastYearStartDay).add(1, monthYear.period.toLowerCase()),
-                        missingDataReqObj,
-                        meterReportReqObj,
-                        reactiveReqObj,
-                        lastYearsOnPeakDemandReqObj,
-                        lastYearsDemandReqObj,
-                        consumptionReqObj,
-                        lastYearsConsumptionReqObj,
-                        temperatureReqObj,
-                        cddReqObj,
-                        hddReqObj,
+                        reqObj,
                         timerDuration = 0,
-                        options = [],
-                        initGridData = function () {
-                            if (myBindings.koGridReportCollection().length === 0) {
-                                var indexedDate,
-                                    startIndex,
-                                    periodIndex,
-                                    periodMax,
-                                    gridData = [];
+                        options = [];
 
-                                if (monthYearPeriod === "month") {
-                                    startIndex = 1;
-                                    periodMax = (myBindings.numberOfDaysInCurrentPeriod + 1);
-                                } else if (monthYearPeriod === "year") {
-                                    startIndex = 0;
-                                    periodMax = 12;
-                                }
-                                indexedDate = moment(monthYear.start).startOf("month").endOf("day");
-                                for (periodIndex = startIndex; periodIndex < periodMax; periodIndex++) {
-                                    gridData.push({
-                                        date: indexedDate.unix(),
-                                        onPeakDemand: 0,
-                                        onPeakReactive: 0,
-                                        offPeakDemand: 0,
-                                        offPeakReactive: 0,
-                                        onPeakConsumption: 0,
-                                        offPeakConsumption: 0,
-                                        totalPeriodUsage: 0
-                                    });
-                                    indexedDate = moment(indexedDate).add(1, monthYear.childPeriod);
-                                }
-                                myBindings.koGridReportCollection(gridData);
-                            }
-                        };
-                    initGridData.call(this);
+                    myBindings.initGridData();
                     if (myBindings.dataRequestTimer) {
                         clearTimeout(myBindings.dataRequestTimer);
                         myBindings.dataRequestTimer = null;
                     }
                     myBindings.activeDataRequests = [];
 
-                    lastYearsOnPeakDemandReqObj = myBindings.buildMeterPointRequestObject(lastYearStartDay, lastYearEndDay, (monthYear.fiscalYear - 1), "demand", "max", "on", monthYear.period.toLowerCase(), tou.makeId());
-                    if (lastYearsOnPeakDemandReqObj) {
-                        options.push.apply(options, lastYearsOnPeakDemandReqObj);
+                    reqObj = myBindings.buildMeterPointRequestObject(lastYearStartDay, lastYearEndDay, (monthYear.fiscalYear - 1), "demand", "max", "on", monthYear.period.toLowerCase(), tou.makeId());
+                    if (reqObj) {
+                        options.push.apply(options, reqObj);
                         myBindings.activeDataRequests.push({
                             fx: myBindings.buildLastYearsOnPeakDemandArray,
-                            touid: lastYearsOnPeakDemandReqObj[0].touid
+                            touid: reqObj[0].touid
                         });
                     }
 
-                    lastYearsDemandReqObj = myBindings.buildMeterPointRequestObject(lastYearStartDay, lastYearEndDay, (monthYear.fiscalYear - 1), "demand", "max", "na", monthYear.period.toLowerCase(), tou.makeId());
-                    if (lastYearsDemandReqObj) {
-                        options.push.apply(options, lastYearsDemandReqObj);
+                    reqObj = myBindings.buildMeterPointRequestObject(lastYearStartDay, lastYearEndDay, (monthYear.fiscalYear - 1), "demand", "max", "na", monthYear.period.toLowerCase(), tou.makeId());
+                    if (reqObj) {
+                        options.push.apply(options, reqObj);
                         myBindings.activeDataRequests.push({
                             fx: myBindings.buildLastYearsDemandArray,
-                            touid: lastYearsDemandReqObj[0].touid
+                            touid: reqObj[0].touid
                         });
                     }
 
-                    consumptionReqObj = myBindings.buildMeterPointOnOffRequestObject(startDay, endDay, "consumption", "sum", tou.makeId());
-                    if (consumptionReqObj) {
-                        options.push.apply(options, consumptionReqObj);
+                    reqObj = myBindings.buildMeterPointOnOffRequestObject(startDay, endDay, "consumption", "sum", tou.makeId());
+                    if (reqObj) {
+                        options.push.apply(options, reqObj);
                         myBindings.activeDataRequests.push({
                             fx: myBindings.buildConsumptionArray,
-                            touid: consumptionReqObj[0].touid.split('-')[0]
+                            touid: reqObj[0].touid.split('-')[0]
                         });
                     }
 
-                    lastYearsConsumptionReqObj = myBindings.buildMeterPointRequestObject(lastYearStartDay, lastYearEndDay, (monthYear.fiscalYear - 1), "consumption", "sum", "na", monthYear.childPeriod.toLowerCase(), tou.makeId());
-                    if (lastYearsConsumptionReqObj) {
-                        options.push.apply(options, lastYearsConsumptionReqObj);
+                    reqObj = myBindings.buildMeterPointRequestObject(lastYearStartDay, lastYearEndDay, (monthYear.fiscalYear - 1), "consumption", "sum", "na", monthYear.childPeriod.toLowerCase(), tou.makeId());
+                    if (reqObj) {
+                        options.push.apply(options, reqObj);
                         myBindings.activeDataRequests.push({
                             fx: myBindings.buildLastYearsConsumptionArray,
-                            touid: lastYearsConsumptionReqObj[0].touid
+                            touid: reqObj[0].touid
                         });
                     }
 
-                    temperatureReqObj = myBindings.buildTemperaturesRequestObject(startDay, endDay, tou.makeId());
-                    options.push.apply(options, temperatureReqObj);
+                    reqObj = myBindings.buildTemperaturesRequestObject(startDay, endDay, tou.makeId());
+                    options.push.apply(options, reqObj);
                     myBindings.activeDataRequests.push({
                         fx: myBindings.buildTemperatureArray,
-                        touid: temperatureReqObj[0].touid
+                        touid: reqObj[0].touid
                     });
 
-                    cddReqObj = myBindings.buildCDDRequestObject(startDay, endDay, tou.makeId());
-                    options.push.apply(options, cddReqObj);
+                    reqObj = myBindings.buildCDDRequestObject(startDay, endDay, tou.makeId());
+                    options.push.apply(options, reqObj);
                     myBindings.activeDataRequests.push({
                         fx: myBindings.setCDDValue,
-                        touid: cddReqObj[0].touid
+                        touid: reqObj[0].touid
                     });
-                    hddReqObj = myBindings.buildHDDRequestObject(startDay, endDay, tou.makeId());
-                    options.push.apply(options, hddReqObj);
+
+                    reqObj = myBindings.buildHDDRequestObject(startDay, endDay, tou.makeId());
+                    options.push.apply(options, reqObj);
                     myBindings.activeDataRequests.push({
                         fx: myBindings.setHDDValue,
-                        touid: hddReqObj[0].touid
+                        touid: reqObj[0].touid
                     });
-                    missingDataReqObj = myBindings.buildMissingDataRequestObject(startDay, endDay, tou.makeId());
-                    if (missingDataReqObj) {
-                        options.push.apply(options, missingDataReqObj);
+
+                    reqObj = myBindings.buildMissingDataRequestObject(startDay, endDay, tou.makeId());
+                    if (reqObj) {
+                        options.push.apply(options, reqObj);
                         myBindings.activeDataRequests.push({
                             fx: myBindings.buildMissingDataArray,
-                            touid: missingDataReqObj[0].touid
+                            touid: reqObj[0].touid
                         });
                     }
 
-                    reactiveReqObj = myBindings.buildReactiveRequestObject(startDay, endDay, monthYear.childPeriod.toLowerCase(), tou.makeId());
-                    if (reactiveReqObj) {
-                        options.push.apply(options, reactiveReqObj);
+                    reqObj = myBindings.buildReactiveRequestObject(startDay, endDay, monthYear.childPeriod.toLowerCase(), tou.makeId());
+                    if (reqObj) {
+                        options.push.apply(options, reqObj);
                         myBindings.activeDataRequests.push({
                             fx: myBindings.buildDemandAndReactiveArray,
-                            touid: reactiveReqObj[0].touid.split('-')[0]
+                            touid: reqObj[0].touid.split('-')[0]
                         });
                     }
 
-                    meterReportReqObj = myBindings.buildMetersTotalsRequestObject(startDay, endDay, tou.makeId());
-                    if (meterReportReqObj) {
-                        options.push.apply(options, meterReportReqObj);
+                    reqObj = myBindings.buildMetersTotalsRequestObject(startDay, endDay, tou.makeId());
+                    if (reqObj) {
+                        options.push.apply(options, reqObj);
                         myBindings.activeDataRequests.push({
                             fx: myBindings.buildMetersReportArray,
-                            touid: meterReportReqObj[0].touid.split('-')[0]
+                            touid: reqObj[0].touid.split('-')[0]
                         });
                     }
 
                     if (options.length > 0) {
                         if (tou.socket) {
+                            myBindings.activeDataRequest(true);
                             tou.socket.emit("getUsage", {options: options});
 
-                            if (monthYearPeriod === 'month') {
-                                timerDuration = 10000;  // 10 seconds
-                            } else {
-                                timerDuration = 200000; // 200 seconds
-                            }
+                            timerDuration = 180000;  // 3 mins
 
                             myBindings.dataRequestTimer = setTimeout(function () {
                                 myBindings.$reportsContent.hide();
@@ -6912,9 +8192,20 @@ tou.utilityPages.Electricity = function() {
 
                 myBindings.numberOfDaysInCurrentPeriod = tou.toFixed(moment.duration(endDay.diff(startDay)).asDays(), 0);
                 myBindings.selectedMonthYear(selectedDate);
+                myBindings.rateTablePeriod(myBindings.findPeriod(myBindings.selectedMonthYear().rateTable["Demand Charges"].periods));
                 if (myBindings.selectedReportsMode() !== "") {
                     myBindings.koGridReportCollection([]);
-                    myBindings.getData();
+                    if (!!selectedDate.isReportCommitted && selectedDate.isReportCommitted()) {
+                        myBindings.reportData = myBindings.$page.committedReports[selectedDate.fullDate];
+                        if (!!myBindings.reportData) {
+                            myBindings.initGridData();
+                            myBindings.renderCompleteReport();
+                        } else {
+                            myBindings.$reportsContent.html("No data found for committed report '" + selectedDate.fullDate + "'");
+                        }
+                    } else {
+                        myBindings.getData();
+                    }
                 }
             },
             modeSelected: function (selectedMode) {
@@ -6939,7 +8230,7 @@ tou.utilityPages.Electricity = function() {
             filteredReportMonthYear: function () {
                 var self = this,
                     filter = self.reportDateFilter().toLowerCase(),
-                    listOfDates = self.$page.listOfMonthYears;
+                    listOfDates = self.$page.listOfMonthYears();
 
                 if (filter === "") {
                     return listOfDates;
@@ -7054,10 +8345,12 @@ tou.utilityPages.Electricity = function() {
                 rangeType: data.season,
                 title: data.seasonName || this.getTitle(data.season),
                 days: [],
-                rates: {}
+                rates: {},
+                enablePeakSelection: data.enablePeakSelection || false,
+                touid: data.touid
             };
 
-            if (data.season !== 'transition') {
+            // if (data.season !== 'transition') {
                 tou.forEachArray(tou.fullDayList, function (day, idx) {
                     if (data['day' + day]) {
                         ret.days.push(tou.shortDayList[idx]);
@@ -7065,7 +8358,7 @@ tou.utilityPages.Electricity = function() {
                 });
                 ret.start.peak = parseInt(data.timeFrom.replace(':', ''), 10);
                 ret.end.peak = parseInt(data.timeTo.replace(':', ''), 10);
-            }
+            // }
 
             if (!data.isUpdate) {
                 if (!ret.touid) {
@@ -7104,7 +8397,8 @@ tou.utilityPages.Electricity = function() {
                     type: ko.observable(data.type),
                     qualifier: ko.observable(data.rateQualifier),
                     peak: ko.observable(data.peak),
-                    threshold: ko.observable(data.threshold)
+                    threshold: ko.observable(data.threshold),
+                    qualifierDemand: ko.observable(data.qualifierDemand)
                 };
 
             rateTable.addRate(rate, data.isUpdate, data.rateIdx);
@@ -7222,13 +8516,22 @@ tou.utilityPages.Electricity = function() {
                     rate.touid = rate.touid || tou.makeId();
 
                     rate.showInTransition = showInTransition;
+                },
+                processPeriod = function (period) {
+                    var props = ['start', 'end', 'rangeType', 'title', 'days', 'rates', 'touid', 'enablePeakSelection'];
+
+                    tou.forEach(period, function (val, property) {
+                        if (props.indexOf(property) === -1) {
+                            delete period[property];
+                        }
+                    });
+
+                    period.touid = period.touid || tou.makeId();
                 };
 
             tou.forEachArray(rates, processRate);
 
-            tou.forEachArray(rawPeriods, function (period) {
-                period.touid = period.touid || tou.makeId();
-            });
+            tou.forEachArray(rawPeriods, processPeriod);
 
             observableRates = ko.mapping.fromJS($.extend(true, [], rates));
 
@@ -7242,6 +8545,8 @@ tou.utilityPages.Electricity = function() {
                 observablePeriods: observablePeriods,
                 observableRates: observableRates,
 
+                hidePeakInfo: rawCfg.hidePeakInfo || false,
+
                 cfg: rawCfg,
 
                 getBindings: function () {
@@ -7251,6 +8556,7 @@ tou.utilityPages.Electricity = function() {
                         title: ko.observable(title),
                         touid: touid,
                         modifierQueue: modifierQueue,
+                        hidePeakInfo: ko.observable(self.hidePeakInfo),
                         isChild: ko.observable(self.parentTable !== null)
                     };
 
@@ -7292,6 +8598,7 @@ tou.utilityPages.Electricity = function() {
                     rawCfg.title = title;
                     rawCfg.parentTable = parentTitle;
                     rawCfg.rates = self.rawRates;
+                    rawCfg.hidePeakInfo = self.hidePeakInfo;
 
                     return rawCfg;
                 },
@@ -7472,6 +8779,8 @@ tou.utilityPages.Electricity = function() {
                     delete data.rates;
                     delete convertedPeriod.rates;
 
+
+
                     this.rawPeriods[idx] = $.extend(this.rawPeriods[idx], data);
                     periods[idx] = $.extend(periods[idx], convertedPeriod);
                     // periods[idx].rates = rates;
@@ -7568,7 +8877,8 @@ tou.utilityPages.Electricity = function() {
                     return {
                         title: self.title,
                         isChild: self.parentTable !== null,
-                        parentTableName: title || ''
+                        parentTableName: title || '',
+                        hidePeakInfo: self.hidePeakInfo
                     };
                 }
             });
@@ -7614,12 +8924,14 @@ tou.utilityPages.Electricity = function() {
                 dayThursday: false,
                 dayFriday: false,
                 daySaturday: false,
+                enablePeakSelection: false,
                 timeFrom: '',
                 timeTo: '',
                 seasonName: '',
                 isUpdate: false,
                 periodIdx: '',
                 saveText: 'Add',
+                touid: 0,
                 computeds: {
                     atLeastOneDay: function (scope) {
                         return function () {
@@ -7646,6 +8958,7 @@ tou.utilityPages.Electricity = function() {
                 isUpdate: false,
                 rateIdx: '',
                 saveText: 'Add',
+                qualifierDemand: 'Peak Demand',
                 addQualifier: function (scope, event) {
                     var qualifier = this.rateQualifier();
 
@@ -7659,14 +8972,16 @@ tou.utilityPages.Electricity = function() {
                 title: '',
                 isChild: false,
                 unlink: false,
-                parentTableName: ''
+                parentTableName: '',
+                hidePeakInfo: false
             },
             electricityAddRateTable: {
                 tableName: '',
                 copyPeriods: false,
                 linkPeriods: false,
                 linkedTable: '',
-                rateTablesUsable: []
+                rateTablesUsable: [],
+                hidePeakInfo: false
             },
             electricityAddOffPeakDay: {
                 date: '',
@@ -8158,7 +9473,8 @@ tou.utilityPages.Electricity = function() {
                         order: idx,
                         periods: data.periods,
                         rates: data.rates,
-                        parentTable: data.parentTable
+                        parentTable: data.parentTable,
+                        hidePeakInfo: data.hidePeakInfo
                     };
                 } else { //holiday table
                     tou.forEachArray(boundTable.holidays, function (holiday) {
@@ -8236,6 +9552,8 @@ tou.utilityPages.Electricity = function() {
             if (data.unlink) {
                 table.unlinkTable();
             }
+            table.bindings.hidePeakInfo(data.hidePeakInfo || false);
+            table.hidePeakInfo = data.hidePeakInfo || false;
             tou.hideModal();
         },
         checkForOverlap: function (table, start, end, isUpdate, data) {
@@ -8387,7 +9705,8 @@ tou.utilityPages.Electricity = function() {
                 peak: rate.peak,
                 rateName: rate.name,
                 rateQualifier: rate.qualifier,
-                threshold: rate.threshold
+                threshold: rate.threshold,
+                qualifierDemand: rate.qualifierDemand
             };
 
             return ret;
@@ -8397,6 +9716,7 @@ tou.utilityPages.Electricity = function() {
                 season: period.rangeType,
                 dateFrom: new Date(period.start.date),
                 dateTo: new Date(period.end.date),
+                enablePeakSelection: period.enablePeakSelection,
                 daySunday: false,
                 dayMonday: false,
                 dayTuesday: false,
@@ -8488,6 +9808,8 @@ tou.utilityPages.Electricity = function() {
                     return startStr + ' - ' + endStr;
                 };
 
+
+
             if (!period.touid) {
                 period.touid = tou.makeId();
             }
@@ -8505,11 +9827,12 @@ tou.utilityPages.Electricity = function() {
                 periodType: period.rangeType,
                 rangeText: getShortDate(period.start.date) + ' - ' + getShortDate(period.end.date),
                 daysText: getDaysText(period.days),
-                timeText: period.rangeType !== 'transition' ? getTimeText(period) : '',
-                peakText: period.rangeType === 'transition' ? '' : 'On-Peak',
+                timeText: getTimeText(period),
+                peakText: 'On-Peak',
                 _rawStart: period.start.date,
                 _rawEnd: period.end.date,
-                touid: period.touid
+                touid: period.touid || tou.makeId(),
+                enablePeakSelection: period.enablePeakSelection || false
             };
 
             out.rates = rates;
@@ -9043,13 +10366,17 @@ tou.utilityPages.Electricity = function() {
                 classPrefix = '.' + self.utilityNameShort,
                 addDropDownHandlers = function (selector) {
                     var $el = $(selector),
+                        $dropdown = $el.find('.dropdown-menu'),
                         $input = $el.find('input');
 
                     // Automatically focus the search box when the drop-down is activated
                     $el.click(function (e) {
                         // Delay the focus for drop down transition to finish
                         window.setTimeout(function () {
-                            $input.focus();
+                            // If we're scrolled to the top of the list
+                            if ($dropdown.scrollTop() === 0) {
+                                $input.focus();
+                            }
                         }, 50);
                     });
 
@@ -9175,7 +10502,6 @@ tou.utilityPages.Electricity = function() {
             currentDatatablesPage: 1,
             listOfDataTypes: ["All Data", "Missing Data"],
             resizeTimer: 500,
-            measurements: 0,
             lastResize: null,
             handleResize: function (self) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].datastoreBindings;
@@ -9894,14 +11220,18 @@ tou.utilityPages.Electricity = function() {
                 meters,
                 classPrefix = '.' + self.utilityNameShort + ' ',
                 addDropDownHandlers = function (selector) {
-                    var $el = $(classPrefix + selector),
+                    var $el = $(selector),
+                        $dropdown = $el.find('.dropdown-menu'),
                         $input = $el.find('input');
 
                     // Automatically focus the search box when the drop-down is activated
                     $el.click(function (e) {
                         // Delay the focus for drop down transition to finish
                         window.setTimeout(function () {
-                            $input.focus();
+                            // If we're scrolled to the top of the list
+                            if ($dropdown.scrollTop() === 0) {
+                                $input.focus();
+                            }
                         }, 50);
                     });
 

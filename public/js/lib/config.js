@@ -204,7 +204,7 @@ var Config = (function(obj) {
                         added = {},
                         i,
                         len,
-                        doFilter = function (_filter) {
+                        doFilter = function(_filter) {
                             var prop,
                                 item,
                                 arr = [];
@@ -224,7 +224,7 @@ var Config = (function(obj) {
                         filtered = doFilter(filter);
                     } else {
                         len = filter.length;
-                        for (i=0; i<len; i++) {
+                        for (i = 0; i < len; i++) {
                             filtered = filtered.concat(doFilter(filter[i]));
                         }
                     }
@@ -239,9 +239,18 @@ var Config = (function(obj) {
                         //return all default point types
                         return filterPointTypes('default');
                     }
+                    // gplblock
                     switch (property) {
+                        case 'Qualifier Point':
+                        case 'Display Button':
+                            return filterPointTypes('default');
+                        case 'Display Trend':
+                        case 'Display Animation':
+                        case 'Display Dynamic':
                         case 'Dynamic':
                             return filterPointTypes('dynamic');
+                        case 'GPLBlock':
+                            return filterPointTypes('gpl');
                         case 'Alarm Adjust Point':
                         case 'Dry Bulb Point':
                         case 'Humidity Point':
@@ -413,7 +422,7 @@ var Config = (function(obj) {
                             return filterPointTypes('enumControl');
                         case "Column Point":
                             return filterPointTypes('value');
-                        // Begin Lift Station point properties
+                            // Begin Lift Station point properties
                         case "High Level Float Point":
                         case "Lag Level Float Point":
                         case "Lead Level Float Point":
@@ -437,7 +446,7 @@ var Config = (function(obj) {
                         case "Pump 1 Control Point":
                         case "Pump 2 Control Point":
                             return filterPointTypes(['bi', 'bo', 'bv']);
-                        // End Lift Station point properties
+                            // End Lift Station point properties
                         default:
                             return {
                                 error: 'Property not recognized. Received "' + property + '".'
@@ -761,18 +770,9 @@ var Config = (function(obj) {
             if (pointTemplate.hasOwnProperty(data.property) === true) {
                 data.ok = true;
             } else {
-                if ((pointType === "Program") && (data.property === "Point Register")) {
-                    // There may be 0 to 32 point registers in each program point, so they are not included in the template.
-                    // Therefore we always treat the Point Register property as valid for the Program point type.
+                var ptRefProps = obj.Enums['Point Types'][pointType].ptRefProps;
+                if (ptRefProps.indexOf(data.property) >= 0) {
                     data.ok = true;
-                } else {
-                    len = pointTemplate["Point Refs"].length;
-                    for (var a = 0; a < len; a++) {
-                        if (pointTemplate["Point Refs"][a].PropertyName === data.property) {
-                            data.ok = true;
-                            break;
-                        }
-                    }
                 }
             }
 
@@ -1344,7 +1344,7 @@ var Config = (function(obj) {
             return data;
         },
 
-        "Firmware Version": function(data) {
+        "Firmware 2 Version": function(data) {
             // TODO Add validation (to be determined)
             return data;
         },
@@ -2094,6 +2094,9 @@ var Config = (function(obj) {
             if (data.ok === true) {
                 data = this.validateNetworkNumber(data);
             }
+            if (data.ok === true) {
+                data.point = obj.EditChanges.applyEthernetNetworkNumber(data);
+            }
             return data;
         },
 
@@ -2234,7 +2237,7 @@ var Config = (function(obj) {
 
         "Control Point": function(data) {
             var pointType = data.point["Point Type"].Value;
-            console.log('inside control point', !!data.refPoint, !!data.point, !!obj.Utility.getPropertyObject("Device Point", data.point));
+            // console.log('inside control point', !!data.refPoint, !!data.point, !!obj.Utility.getPropertyObject("Device Point", data.point));
             if (obj.Utility.getPropertyObject("Device Point", data.point) === null) {
                 if (pointType === "Schedule Entry") {
                     if (!!data.refPoint && !obj.Utility.isPropInSchedProps(data.refPoint["Point Type"].Value, data.point["Control Property"].Value)) { //failing *ref - fixed?
@@ -2525,13 +2528,13 @@ var Config = (function(obj) {
 
     obj.EditChanges = {
 
-        addFakeValueOptions: function(pointProp){
-            if(!pointProp.hasOwnProperty('eValue')){
+        addFakeValueOptions: function(pointProp) {
+            if (!pointProp.hasOwnProperty('eValue')) {
                 pointProp.eValue = 0;
             }
-            if(!pointProp.hasOwnProperty('ValueOptions')){
+            if (!pointProp.hasOwnProperty('ValueOptions')) {
                 pointProp.ValueOptions = {
-                    'Off':0,
+                    'Off': 0,
                     'On': 1
                 };
             }
@@ -2608,7 +2611,7 @@ var Config = (function(obj) {
                 prop = point['Broadcast Period'],
                 isDisplayable = false;
             if (val) isDisplayable = true;
-            prop && (prop.isDisplayable = isDisplayable);
+            if (prop) prop.isDisplayable = isDisplayable;
             return point;
         },
 
@@ -2758,8 +2761,6 @@ var Config = (function(obj) {
                 ],
                 val = data.propertyObject.Value; // Property value
 
-            point["Ethernet IP Port"].isDisplayable = (val === "Ethernet") ? true : false;
-            point["Ethernet IP Port"].isReadOnly = (modbusRemoteUnitTypes.indexOf(point._rmuModel) > -1) ? false : true;
             return point;
         },
 
@@ -2804,12 +2805,12 @@ var Config = (function(obj) {
             }
             obj.Utility.getPropertyObject("Level Sensor Point", point).isDisplayable = isDisplayable;
             point['Emergency Pump Down Time'].isDisplayable = isDisplayable;
-            for (i=0, len=props.length; i<len; i++) {
+            for (i = 0, len = props.length; i < len; i++) {
                 point[props[i]].isDisplayable = isDisplayable;
             }
 
             isDisplayable = !isDisplayable;
-            for (i=0, len=refProps.length; i<len; i++) {
+            for (i = 0, len = refProps.length; i < len; i++) {
                 obj.Utility.getPropertyObject(refProps[i], point).isDisplayable = isDisplayable;
             }
             return point;
@@ -3160,6 +3161,24 @@ var Config = (function(obj) {
             return data.point;
         },
 
+        applyEthernetNetworkNumber: function(data) {
+            if (!data.hasOwnProperty('systemNetwork') || !data.hasOwnProperty('systemIPPort')) {
+                data.ok = false;
+                data.result = "systemNetwork and systemIPPort must be supplied.";
+            }
+            if (data.point['Ethernet Network'].Value !== data.systemNetwork) {
+                data.point['Ethernet IP Port'].isReadOnly = false;
+            } else {
+                data.point['Ethernet IP Port'].isReadOnly = true;
+                data.point['Ethernet IP Port'].Value = data.systemIPPort;
+            }
+
+            if (data.oldPoint['Ethernet Network'].Value !== data.point['Ethernet Network'].Value) {
+                data.point._cfgRequired = true;
+            }
+            return data.point;
+        },
+
         applyConfigureDevice: function(data) {
             data.point["Configure Device"].Value = false;
             return data.point;
@@ -3284,7 +3303,6 @@ var Config = (function(obj) {
                         point["Control Value"] = refPoint[point["Control Property"].Value];
                     } else if (point["Control Value"].ValueType === 5) {
                         //point["Control Value"].ValueOptions = refPoint.Value.ValueOptions;
-                        console.log("chaning control value", point.Name);
                         for (var prop in refPoint.Value.ValueOptions) {
                             tempOption = {
                                 eValue: refPoint.Value.ValueOptions[prop],
@@ -3343,7 +3361,7 @@ var Config = (function(obj) {
                         point.Value.eValue = tempOption.eValue;
                     }
                 }
-            } else {
+            } else if (refPoint !== null) {
                 applyScheduleEntry();
             }
             return point;
@@ -3715,8 +3733,12 @@ var Config = (function(obj) {
             point["Port 4 Network"].Max = 65534;
 
             point["Time Zone"].isReadOnly = true;
+            // Init Firmware 2 to not displayable - we'll set it displayable when it is needed
+            point["Firmware 2 Version"].isDisplayable = false;
 
             if (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "Unknown" || point["Model Type"].Value == "MicroScan 5 xTalk" || point["Model Type"].Value == "SCADA Vio") {
+                // Firmware 2 (baseboard fw) is displayable on MS5-UNV and SCADA Vio products
+                point["Firmware 2 Version"].isDisplayable = (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "SCADA Vio");
 
                 if (point["Model Type"].Value !== "Unknown") {
                     point["Time Zone"].isReadOnly = false;
@@ -4060,7 +4082,6 @@ var Config = (function(obj) {
         applyDeviceTypeUplinkPort: function(data) {
             var point = data.point;
 
-            point["Downlink IP Port"].isReadOnly = true;
             if (point["Uplink Port"].Value == "Ethernet") {
                 point["Ethernet Protocol"].isReadOnly = true;
                 point["Ethernet Protocol"].Value = "IP";
@@ -4184,7 +4205,6 @@ var Config = (function(obj) {
         applyDeviceTypeEthernetProtocol: function(data) {
             var point = data.point;
 
-            point["Ethernet IP Port"].isReadOnly = true;
             if (point["Ethernet Protocol"].Value == "None") {
                 point["Ethernet Address"].isDisplayable = false;
                 point["Ethernet IP Port"].isDisplayable = false;
@@ -4680,14 +4700,17 @@ var Config = (function(obj) {
             if (point["Network Type"].Value == "Unknown") {
                 point["Device Address"].isDisplayable = false;
                 point["Network Segment"].isDisplayable = false;
+                point["Ethernet IP Port"].isDisplayable = false;
             } else if (point["Network Type"].Value == "MS/TP") {
                 point["Device Address"].isDisplayable = true;
                 point["Device Address"].Max = 127;
                 point["Network Segment"].isDisplayable = true;
+                point["Ethernet IP Port"].isDisplayable = false;
             } else {
                 point["Device Address"].isDisplayable = true;
                 point["Device Address"].Max = -1;
                 point["Network Segment"].isDisplayable = true;
+                point["Ethernet IP Port"].isDisplayable = true;
             }
             return point;
         },

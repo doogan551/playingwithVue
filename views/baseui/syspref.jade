@@ -4,23 +4,23 @@ html
         meta(name='viewport',content='width=device-width,initial-scale=1')
         title= title
         link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.base.css')
-        link(rel='stylesheet', href='/css/lib/font-awesome-4.1.0/css/font-awesome.min.css')
+        link(rel='stylesheet', href='/css/lib/font-awesome-4.3.0/css/font-awesome.min.css')
         link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css')
         link(rel='stylesheet', href='/css/lib/fullcalendar.css')
         link(rel='stylesheet', href='/css/lib/scheduler.css')
         link(rel='stylesheet', href='/css/lib/jquery-clockpicker.css')
         link(rel='stylesheet', href='/css/lib/jquery.toast.min.css')
         link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
-        link(rel='stylesheet', href='/css/lib/DataTables-1.10.10/dataTables.bootstrap.min.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.bootstrap.min.css')
         // syspref.css must follow after bootstrap.min.css so we can override bootstrap themes
         link(rel='stylesheet', href='/css/baseui/syspref.css')
-        link(rel='stylesheet', href='/css/alarmMessageDefinitions/alarmMessageDefinitions.css')
+        link(rel='stylesheet', href='/css/baseui/alarmTemplate.css')
         script(type='text/javascript', src='/js/lib/json2.js')
         script(type='text/javascript', src='/js/lib/jquery.min.js')
         script(type='text/javascript', src='/js/lib/jquery-clockpicker.min.js')
         script(type='text/javascript', src='/js/lib/jquery-ui.js')
         script(type='text/javascript', src='/js/lib/jquery.toast.min.js')
-        script(type='text/javascript', src='/js/lib/knockout-2.3.0.js')
+        script(type='text/javascript', src='/js/lib/knockout-3.2.0.js')
         script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
         script(type='text/javascript', src='/js/lib/knockout.mapping-2.3.5.js')
         script(type='text/javascript', src='/js/lib/knockout-sortable.js')
@@ -46,22 +46,12 @@ html
         script(type='text/javascript', src='/js/lib/date.js')
         script(type='text/javascript', src='/js/lib/moment.js')
         script(type='text/javascript', src='/js/lib/underscore.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/underscore.string.min.js')
-        script(type='text/javascript', src='/js/lib/backbone.min.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.hoverIntent.min.js')
-        script(type='text/javascript', src='/js/lib/knockback.min.js')
         script(type='text/javascript', src='/js/lib/fullcalendar.js')
         script(type='text/javascript', src='/js/lib/scheduler.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/ko.editables.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.caret.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/knockout-inline-confirm.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/koGrid-2.1.1.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/ko.bindingHandler.definitionColorPicker.js')
         script(type='text/javascript', src='/js/util/components/colorpicker/diColorPicker.js')
-        script(type="text/javascript" src='/js/lib/DataTables-1.10.10/jquery.dataTables.js')
-        script(type="text/javascript" src='/js/lib/DataTables-1.10.10/dataTables.bootstrap.min.js')
+        script(type="text/javascript", src='/js/lib/DataTables-1.10.12/media/js/jquery.dataTables.min.js')
+        script(type="text/javascript", src='/js/lib/DataTables-1.10.12/media/js/dataTables.bootstrap.min.js')
         script(type='text/javascript', src='/js/baseui/syspref.js')
-        include ../AlarmMessageDefinition/templates.jade
 
     body.whitebg
         div#navbar
@@ -297,16 +287,17 @@ html
                                 td.clickToEdit(data-bind="clickEdit: $data['Public IP']")
                                     span(data-bind="text: $data['Public IP']")
                                     input#telemetryPublicIP.hide.form-control.input-sm(type="text", data-bind="value: $data['Public IP']")
-
-            // ------ Alarm Message Definitions ---------------------------------------------------------------------
-            #alarmMessageDefinitionContainer(data-bind="visible: section() == 'Alarm Messages'")
-                .title Alarm Messages
-                br
-                div(data-bind='with:alarmMessagesViewModel.viewModel()')
-                    include ../AlarmMessageDefinition/AlarmMessageDefinitionModule.jade
-
+            // ------ Alarm Messages ---------------------------------------------------------------------
+            #alarmTemplateContainer(data-bind="visible: section() == 'Alarm Messages'")
+                div(data-bind='with: alarmMessagesViewModel')
+                    .title(data-bind="text: displayName")
+                    br
+                    div
+                        table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
+                        include ../alarmTemplate/templates.jade
+                        include ../alarmTemplate/_confirm.jade
             // ------ Backup ----------------------------------------------------------------------------------------
-            div#telemetry(data-bind="visible: section() == 'Backup'")
+            div#backupContainer(data-bind="visible: section() == 'Backup'")
                 .title Backup
                 br
                 div#backupForm(data-bind="with: backupViewModel")
@@ -329,6 +320,21 @@ html
                             // ko if: $data.point() !== null
                             a(data-bind="text: $data.point().Name, click: $parent.openPointRef")
                             // /ko
+
+
+            // ------ About -----------------------------------------------------------------------------------------
+            div#versions(data-bind="visible: section() == 'Versions'")
+                div(data-bind="with: versionsViewModel")
+                    .title Versions
+                    .versionsContainer
+                        table#versionList.linedTable
+                            tbody
+                                tr
+                                    td.col-sm-4 Server Processes Version
+                                    td.col-sm-9(data-bind="text: $data.processVer")
+                                tr
+                                    td.col-sm-4 InfoscanJS Version
+                                    td.col-sm-9(data-bind="text: $data.ijsVer")
 
             // ------ Notifications ---------------------------------------------------------------------------------
             .notifications(data-bind="visible: section() == 'Notifications'")
@@ -821,25 +827,6 @@ html
                         button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
                         button.btn.btn-success.btn-sm(data-bind="click: updateDays") Update
 
-
-
-            // ------ About -----------------------------------------------------------------------------------------
-            //div#about(data-bind="visible: section() == 'About InfoScan'")
-                img#infologo(src='/img/InfoScanLogoBlue.png')
-                #rev Version x.xx
-                br
-                br
-                |For help, please contact us via email or phone:
-                br
-                a(href='mailto:support@dorsett-tech.com') support@dorsett-tech.com
-                br
-                |P: 800-331-7605
-                br
-                br
-                br
-                img#dorlogo(src='/img/dorsett_logoGraphic_small.png')
-                |Copyright 2013 Dorsett Technologies, Inc. All rights reserved.
-
         script#notificationTableTpl(type="text/html")
             .notificationTableContainer(data-bind="visible: $parent.notificationOptions[name] || name === 'Normal'")
                 .notificationRowHeader.alternativeNotification(data-bind="visible: name !== 'Normal', text: name" )
@@ -847,7 +834,7 @@ html
                     .notificationRow
                         .notificationIcon.smsIcon
                             .fa-stack
-                                i.fa.fa-stack-2x(data-bind="css: $parents[3].getAlertIcon($parents[3].getAlertType(Value, Type))")
+                                i.fa.fa-stack-2x(data-bind="css: $parents[3].getAlertIcon($data)")
                                 i.fa.fa-stack-1x.fa-stack-text
                         .notificationAlert
                             div
@@ -855,7 +842,7 @@ html
                                 input.form-control.input-sm.input-xs.editableInput(data-bind="disable: $index() === 0, value: delay")
                                 span minute(s) after I receive an alert
                                 span.editable(data-bind="text: $parents[3].getContactAlertString($data)")
-                                select.editableInput(data-bind="value: Value, options: $parents[1].contactInfo, optionsText: function (item) {return $parents[3].getContactString(item);}, optionsValue: function (item) { return item.Value(); } ")
+                                select.editableInput(data-bind="value: Name, options: $parents[1].contactInfo, optionsText: function (item) {return $parents[3].getContactString(item);}, optionsValue: function (item) { return item.Name(); } ")
                         span.pull-right.editableInput
                             a(href="#", data-bind="click: function () { $parents[3].deleteAlert($parent, $index); }")
                                 i.fa.fa-times.deleteIcon

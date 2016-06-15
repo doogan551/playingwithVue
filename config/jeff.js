@@ -1,14 +1,25 @@
 var jeff = {
     'Infoscan': {
         'dbConfig': {
-            'host': 'localhost'
+            'host': 'localhost',
+            'port': 27017,
+            'dbName': 'yadkinville',
+            'driver': 'mongodb'
         },
         'files': {
-            'driveLetter': 'C'
+            'driveLetter': 'c',
+            'archiveLocation': '/InfoScan/Archive/History/'
         },
         'location': {
-            'site': 'Jeff',
-            'email': 'jshore@dorsett-tech.com'
+            'site': 'jeff',
+            'email': null,
+            'timezone': 5
+        },
+        'email': {
+            'onError': {
+                'to': 'jshore@dorsett-tech.com',
+                'enabled': true
+            }
         }
     },
     runNotifications: false

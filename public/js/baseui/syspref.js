@@ -559,7 +559,6 @@ var calendarViewModel = function() {
     return viewModel;
 };
 
-
 // Controllers Screen ---------------------------------------------------------
 var controllerViewModel = function() {
     var self = this,
@@ -642,7 +641,7 @@ var controllerViewModel = function() {
             dirs[field] = -dir;
         },
 
-    //display status message on saving
+        //display status message on saving
         showMessage = function(text) {
             var message = text.charAt(0).toUpperCase() + text.substring(1);
             $controllerMessage.stop(true)
@@ -825,7 +824,7 @@ var controllerViewModel = function() {
                     obj[NAME] = row[NAME];
                     obj.Description = row.Description;
                     obj.isUser = row.isUser;
-                    if(!!row[NAME])
+                    if (!!row[NAME])
                         sanitizedControllers.push(obj);
                 }
             };
@@ -850,7 +849,6 @@ var controllerViewModel = function() {
         setData(originalData);
     };
 };
-
 
 // Control Priority Text Screen ----------------------------------------------
 var controlPriorityTextViewModel = function() {
@@ -922,7 +920,6 @@ var controlPriorityTextViewModel = function() {
         self.dirty(false);
     };
 };
-
 
 // Quality Codes Screen -------------------------------------------------------
 var qualityCodesViewModel = function() {
@@ -1023,24 +1020,23 @@ var qualityCodesViewModel = function() {
     };
 };
 
-
 // Custom Color Codes Screen --------------------------------------------------
-var customColorCodesViewModel = function () {
+var customColorCodesViewModel = function() {
     var self = this,
         originalData,
-        makeDirty = function () {
+        makeDirty = function() {
             self.dirty(true);
         },
-        CustomColorCode = function (index, hexColor) {
+        CustomColorCode = function(index, hexColor) {
             this['hexColor'] = ko.observable(hexColor);
             this['hexColor'].subscribe(makeDirty);
         },
-        saveCustomColors = function (input, url) {
+        saveCustomColors = function(input, url) {
             var i,
                 len = input.length;
-                rawHexColor = [];
+            rawHexColor = [];
 
-            for(i = 0; i < len; i++) {
+            for (i = 0; i < len; i++) {
                 rawHexColor.push(input[i].hexColor());
             }
 
@@ -1048,7 +1044,7 @@ var customColorCodesViewModel = function () {
                 url: url,
                 type: 'POST',
                 dataType: 'json',
-                success: function (returnData) {
+                success: function(returnData) {
                     //console.log(url, "input = " + JSON.stringify(input));
                     //console.log(url, "returnData = " + JSON.stringify(returnData));
                 },
@@ -1057,7 +1053,7 @@ var customColorCodesViewModel = function () {
                 }
             });
         },
-        setData = function (customColors) {
+        setData = function(customColors) {
             var i,
                 len = customColors.length,
                 ret = [];
@@ -1070,13 +1066,13 @@ var customColorCodesViewModel = function () {
             self.customColorCodes(ret);
             self.dirty(false);
         };
-    self.init = function () {
+    self.init = function() {
         $.getJSON('/api/system/getCustomColors', setData);
     };
-    self.cancel = function () {
+    self.cancel = function() {
         setData(originalData);
     };
-    self.save = function () {
+    self.save = function() {
         saveCustomColors(self.customColorCodes(), '/api/system/updateCustomColors');
         self.dirty(false);
     };
@@ -1085,7 +1081,6 @@ var customColorCodesViewModel = function () {
     self.dirty = ko.observable(false);
     self.customColorCodes = ko.observableArray();
 };
-
 
 // Telemetry Screen -----------------------------------------------------------
 var telemetryViewModel = function() {
@@ -1172,6 +1167,7 @@ var telemetryViewModel = function() {
                 ret[field] = self[field]();
             }
             ret.ipPortChanged = (self['IP Port']() === originalValues['IP Port']) ? false : true;
+            ret.originalValues = originalValues;
             console.log(ret);
 
             return ret;
@@ -1188,7 +1184,7 @@ var telemetryViewModel = function() {
                 value = fullData[name];
 
                 self[name](value);
-                if(name === 'Time Zone'){
+                if (name === 'Time Zone') {
                     self.selectedTimeZoneText(getZoneFromEnum(value));
                 }
                 // Original values saved as a string because that's how they're formatted after they are changed in the UI
@@ -1253,8 +1249,11 @@ var telemetryViewModel = function() {
     self.timeZones = function() {
         var timezones = [];
 
-        for(var prop in tzEnums){
-            timezones.push({name:prop, value:tzEnums[prop].enum});
+        for (var prop in tzEnums) {
+            timezones.push({
+                name: prop,
+                value: tzEnums[prop].enum
+            });
         }
 
         return timezones;
@@ -1287,9 +1286,9 @@ var telemetryViewModel = function() {
     self.cancel = function() {
         setData();
     };
-    self.changeTimezone = function(e){
-        for(var prop in tzEnums){
-            if(tzEnums[prop].enum === self.selectedTimeZone()){
+    self.changeTimezone = function(e) {
+        for (var prop in tzEnums) {
+            if (tzEnums[prop].enum === self.selectedTimeZone()) {
                 self['Time Zone'](self.selectedTimeZone());
                 self.selectedTimeZoneText(prop);
                 self.dirty(true);
@@ -1325,582 +1324,551 @@ var backupViewModel = function() {
     socket.on('returnFromField', function(data) {
         // data = $.parseJSON(data);
 
-        if(data.err){
+        if (data.err) {
             self.backupMsg('Error: ' + data.err);
-        }else{
+        } else {
             self.backupMsg(data);
         }
         self.showBackupMsg(true);
     });
 };
 
-// Alarm messages screen ------------------------------------------------------
-var alarmMessageDefinitions = _.partial(function(masterVm) {
-    _.mixin(_.str.exports());
-    var Amd, initialize, self, facadeViewModel;
-    self = this;
-    if (!_.isObject(masterVm)) {
-        masterVm = self;
-    }
-    Amd = function(bootStrapped) {
-        var alarmMessageDefinitionsViewModel,
-            gridViewModel,
-            EditorViewModel,
-            editorViewModel,
-            supportModel,
-            HierarchyViewModel,
-            masterViewModel,
-            ValueTokenizer,
-            boundValueTokenizer,
-            DefinitionQueryCollection,
-            alarmDefinitionsModel = new Backbone.Model({
-                supportModel: new Backbone.Model(bootStrapped),
-                gridViewModel: null,
-                editor: null,
-                definitionCollection: {},
-                error: null
-            });
-
-        DefinitionQueryCollection = Backbone.Collection.extend({
-            initialize: function(models, options) {
-                var self;
-                self = this;
-                this.add(models);
-                alarmMessageDefinitionsViewModel.definitionCollection(this);
-                _.bindAll(this, 'presave', 'remove', 'removeDefinition');
-            },
-            url: 'api/alarmMessageDefinitions',
-            parse: function(response) {
-                return response.results;
-            },
-            removeDefinition: function(definition) {
-                var self, toRemove, collection;
-                self = this;
-                collection = definition.model.collection;
-                toRemove = function(data) {
-                    collection.remove(definition.model);
-                    //collection.reset(collection.toJSON());
-                    //console.log(definition.dispose());
-                };
-                self.sync('delete', definition.model).done(toRemove).fail(toRemove);
-            },
-            presave: function(mdl, callbacks) {
-                var col;
-                col = this;
-                mdl.url = col.url;
-                mdl.save().done(function(result, message) {
-                    if (message === 'success') {
-                        if (mdl.isNew()) {
-                            col.add(mdl);
-                        }
-                        mdl.set(result.result);
-                        callbacks.success(result);
-                        col.reset(col.toJSON());
-                    } else {
-                        callbacks.error(result);
-                    }
-                }).fail(callbacks.error);
-            }
-        });
-
-        alarmMessageDefinitionsViewModel = kb.viewModel(alarmDefinitionsModel, {}, {
-            keys: ['error', 'gridViewModel', 'editor', 'deletor', 'supportModel', 'definitionCollection']
-        });
-
-        alarmMessageDefinitionsViewModel.editor = ko.observable(null);
-        alarmMessageDefinitionsViewModel.deletor = ko.observable(null);
-
-        alarmMessageDefinitionsViewModel.clearSelectedRow = function(mdl, ev) {
-            alarmMessageDefinitionsViewModel.gridViewModel().definitions().gridOptions.selectedItems([]);
-            $('#grid .selected').removeClass('selected');
-        };
-
-        alarmMessageDefinitionsViewModel.editorSubscription = alarmMessageDefinitionsViewModel.editor.subscribe(function(val) {
-            if (!_.isObject(val)) {
-                alarmMessageDefinitionsViewModel.clearSelectedRow();
-            }
-        });
-
-        gridViewModel = function(options) {
-            var $el, grid, definitions, self,
-                definitionViewModelBase, DefinitionsViewModel;
-            self = this;
-            definitions = new DefinitionQueryCollection(options.definitions, {
-                url: '/api/alarmMessageDefinitions',
-                idAttribute: '_id'
-            });
-            DefinitionsViewModel = function(model) {
-                var self, vm;
-                self = this;
-                vm = new definitionViewModelBase(model);
-                vm.sortOn = ko.observable(null);
-                vm.searchResults = kb.collectionObservable(definitions, {
-                    filters: function(mdl) {
-                        var result;
-                        if ((_.isString(vm.searchFilter()) && vm.searchFilter().length > 0)) {
-                            result = _.str.include(_.values(mdl.toJSON()).join('').toLowerCase(), vm.searchFilter().toLowerCase());
-                            return result;
-                        }
-                        result = true;
-                        return result;
-                    },
-                    sort_attributes: vm.sortOn,
-                    view_model: function(model) {
-                        return new function() {
-                            var self;
-                            self = this;
-                            self.msgCatName = model.get('msgCatName');
-                            self.msgTypeName = model.get('msgTypeName');
-                            self.msgType = model.get('msgType');
-                            self.msgCat = model.get('msgCat');
-                            self.msgFormat = model.get('msgFormat');
-                            self.msgName = kb.observable(model, 'msgName');
-                            self.msgBackColor = _.sprintf('%s', model.get('msgBackColor'));
-                            self.msgTextColor = _.sprintf('%s', model.get('msgTextColor'));
-                            self.systemMessage = model.get('systemMessage');
-                            self.cloneable = (self.msgCatName !== 'Event');
-                            self.deletable = !model.get('isSystemMessage');
-                            self.isSystemMessage = model.get('isSystemMessage') === true ? 'Yes' : 'No';
-                            self.template = model.get('template');
-                            self._id = model.id;
-                            self.model = model;
-                            self.dispose = function() {
-                                kb.release(self);
-                            };
-                            return self;
-                        };
-                    }
-                });
-                vm.gridOptions.data = vm.searchResults;
-                vm.resultLength = ko.computed({
-                    read: function() {
-                        return vm.searchResults().length;
-                    }
-                });
-                return vm;
-            };
-            definitionViewModelBase = kb.ViewModel.extend({
-                filterResults: function(crit) {
-                    var result, vm;
-                    vm = this;
-                    if (!_.isString(crit) || crit.length < 1) {
-                        result = this.data.where({});
-                        return result;
-                    }
-                    result = this.data.filter(function(v, i) {
-                        var searchData, found;
-                        searchData = _.values(v.attributes);
-                        found = _.str.include(searchData.join(''), crit);
-                        if (found) {
-                            return v;
-                        }
-                    });
-                    return result;
-                },
-                setEditor: function(definition) {
-                    if (options.setEditor) {
-                        options.setEditor(definition);
-                    }
-                    return definition;
-                },
-                gridOptions: {
-                    showGroupPanel: false,
-                    columnWidth: 100,
-                    keepLastSelected: false,
-                    data: ko.observable(),
-                    width: 100,
-                    multiSelect: false,
-                    columnDefs: [{
-                        field: 'systemMessage',
-                        width: 60,
-                        displayName: ' ',
-                        cellFilter: function(data) {
-                            if (_.isNull(data)) {
-                                data = false;
-                            }
-                            return data;
-                        },
-                        headerClass: '.definitions-sys-header-color',
-                        cellTemplate: $('#tmplIsSystemMessage').html()
-                    }, {
-                        field: "msgCatName",
-                        displayName: "Category",
-                        width: 120,
-                        cellTemplate: $('#tmplGridMsgCat').html()
-                    }, {
-                        field: "msgTypeName",
-                        displayName: "Type",
-                        width: 230,
-                        cellTemplate: $('#tmplGridMsgType').html()
-                    }, {
-                        field: "msgName",
-                        displayName: "Name",
-                        width: 300,
-                        cellTemplate: $('#tmplGridMsgName').html()
-                    }, {
-                        field: "msgFormat",
-                        displayName: "Definition",
-                        width: 500,
-                        cellTemplate: $('#tmplGridMsgFormat').html()
-                    }, {
-                        field: "isSystemMessage",
-                        displayName: "System Message",
-                        width: 150,
-                        cellTemplate: $('#tmplSystemMessage').html()
-                    }],
-                    displaySelectionCheckbox: false,
-                    enableSorting: ko.observable(true),
-                    canSelectRows: false,
-                    selectedItems: ko.observableArray(),
-                    footerVisible: false,
-                    rowHeight: 30,
-                    rowTemplate: $("#tmplGridRow").html(),
-                    showColumnMenu: false,
-                    showFilter: false
-                },
-                clearSearchFilter: function(mdl, ev) {
-                    mdl.searchFilter(null);
-                },
-                clone: function(definition) {
-                    var newDefinition, newDefVals;
-                    newDefVals = _.omit(definition.model.toJSON(), '_id', 'id');
-                    newDefVals.template = 'newMessage';
-                    newDefVals.isSystemMessage = false;
-                    newDefVals.systemMessage = false;
-                    newDefinition = new options.modelConstructor(new Backbone.Model(newDefVals));
-                    this.setEditor(newDefinition);
-                },
-                remove: function(definition) {
-                    //var toRemove,collection;
-                    //collection = definition.model.collection;
-                    //collection.removeDefinition(definition);
-                },
-                setDeletable: _.bind(function(definition) {
-                    var subscription, self;
-                    self = this;
-                    this.deletor({
-                        definition: definition,
-                        buttons: {
-                            cancel: {
-                                text: 'cancel',
-                                fn: function() {
-                                    self.deletor(null);
-                                }
-                            },
-                            okay: {
-                                text: 'okay',
-                                fn: function() {
-                                    var collection;
-                                    collection = definition.model.collection;
-                                    collection.removeDefinition(definition);
-                                    console.log(definition);
-                                }
-                            }
-                        }
-                    });
-
-                }, alarmMessageDefinitionsViewModel)
-            });
-            self.vm = kb.viewModel(new Backbone.Model({
-                definitions: new DefinitionsViewModel(new Backbone.Model({
-                    collection: definitions,
-                    searchFilter: '',
-                    gridOptions: definitionViewModelBase.gridOptions,
-                    resultLength: 0,
-                }))
-            }));
-
-            return self.vm;
-        };
-        ValueTokenizer = function(valueTokens, pattern, definition, callbacks) {
-            var self, crit, eachValueTokens, tokens;
-            self = this;
-            tokens = ['%NAME'];
-            crit = {
-                Category: definition.msgCatName,
-                'Type Value': definition.msgType
-            };
-            eachValueTokens = function(token, i) {
-                if (token.Category.toLowerCase() == crit.Category.toLowerCase() && token['Type Value'] == crit['Type Value']) {
-                    tokens.push(_.map(token['Value Tags'].split(','), function(v) {
-                        return _.str.trim(v);
-                    }));
-                }
-            };
-            self.model = new Backbone.Model({
-                selectedValueToken: null,
-                showing: false,
-                searchToken: ''
-            });
-            self.result = kb.viewModel(self.model);
-            self.result.valueTokens = ko.observableArray([]);
-            _.each(valueTokens, eachValueTokens);
-            self.result.valueTokens(_.flatten(tokens));
-            return self.result;
-        };
-        boundValueTokenizer = _.partial(ValueTokenizer, alarmMessageDefinitionsViewModel.supportModel().hierarchy());
-        EditorViewModel = function(templates, validators, toEdit, setter) {
-            var self, editor, BaseViewModel, ValueTokenViewModel, caretPos;
-            self = this;
-            editor = this;
-            caretPos = 0;
-            BaseViewModel = kb.ViewModel.extend({
-                constructor: function(options) {
-                    var self, donow, createTokenizerInstance;
-                    self = this;
-                    _.extend(self, options);
-                    createTokenizerInstance = function() {
-                        self.tokenizer = new boundValueTokenizer(self.tokenizerOptions.pattern, self.tokenizerOptions.definition, self.tokenizerOptions.callbacks);
-                    };
-                    _.bindAll(self, 'template', 'observify', 'Handlers', 'beginEdit');
-                    _.bind(self.tokenizerOptions.insertMsgFormatText, self);
-                    _.bind(self.tokenizerOptions.callbacks.select, self);
-                    donow = _.compose(self.Handlers, self.beginEdit, createTokenizerInstance, self.observify, self.template);
-                    donow();
-                },
-                keys: [],
-                tokenizer: null,
-                Handlers: function(editable) {
-                    var result, self;
-                    //reset outerself to parrent
-                    self = this;
-                    self.handlers = {
-                        viewModel: this,
-                        cancel: function(mdl, ev) {
-                            // Restore the original values
-                            editable.msgBackColor(alarmMessagesViewModel.alarmMessageState.msgBackColor);
-                            editable.msgTextColor(alarmMessagesViewModel.alarmMessageState.msgTextColor);
-                            editable.msgName(alarmMessagesViewModel.alarmMessageState.msgName);
-
-                            // msgFormat included only if this is a non-system message
-                            if (editable.msgFormat)
-                                editable.msgFormat(alarmMessagesViewModel.alarmMessageState.msgFormat);
-
-                            setter(null);
-                        },
-                        saveable: ko.computed({
-                            read: function() {
-                                return (editable.hasChanges() && editable.isValid());
-                            },
-                            deferEvaluation: true
-                        }),
-                        undo: function() {
-                            var self;
-                            self = this;
-                            editable.rollback();
-                            editable.beginEdit();
-                        },
-                        hasChanges: ko.computed({
-                            read: function() {
-                                return editable.hasChanges();
-                            },
-                            deferEvaluation: true
-                        }),
-                        save: function(mdl, ev) {
-                            var col;
-                            editable.commit();
-                            col = editor.model().get('definitionCollection');
-                            col.presave(mdl.viewModel.viewModel.model, {
-                                success: function(data) {
-                                    var result, mdl;
-                                    result = data.result;
-                                    mdl = col.get(result.id);
-                                    if (!mdl) {
-                                        mdl = new col.model(result);
-                                    }
-                                    col.reset(col.toJSON());
-                                    setter(null);
-                                },
-                                error: function(e) {
-
-                                }
-                            });
-                        },
-                        isValid: ko.computed({
-                            read: function() {
-                                return editable.isValid();
-                            },
-                            deferEvaluation: true
-                        })
-
-                    };
-                    return self.handlers;
-                },
-                insertMsgFormatText: function(txt, position) {
-                    var beforeTxt, afterTxt, format, msgFormat, startPos;
-                    format = '%s %s %s';
-                    msgFormat = self.msgFormat();
-                    beforeText = msgFormat.substr(0, position);
-                    afterText = msgFormat(position + 1);
-                    msgFormat = _.sprintf(format, beforeText, txt, afterText);
-                    self.msgFormat(msgFormat);
-                    return msgFormat;
-                },
-                //checkMsgFormat:function(mdl,ev){
-                //    //this.msgFormatCaret($(ev.currentTarget).caret());
-                //    //this.tokenizer.msgFormatUpdate(mdl.msgFormat(),this.msgFormatCaret());
-                //},
-                //msgFormatCaret:ko.observable(0),
-                editNameAndFormat: ko.computed({
-                    read: function() {
-                        if (_.isObject(self.editor())) {
-                            return _.isFunction(self.editor().viewModel.editable.msgFormat);
-                        }
-                        return false;
-                    },
-                    deferEvaluation: true
-                }),
-                beginEdit: function() {
-                    var self;
-                    self = this;
-                    ko.editable(self.viewModel.editable);
-                    self.viewModel.editable.beginEdit();
-                    ko.validatedObservable(self.viewModel.editable);
-                    return self.viewModel.editable;
-                },
-                template: function() {
-                    var template, keys, self, result, model;
-                    self = this;
-                    model = self.viewModel.model.toJSON();
-                    template = templates[model.template];
-                    self.keys = _.keys(template);
-                    return template;
-                },
-                observify: function(template) {
-                    var self, editables, viewModel, keys, result;
-                    self = this;
-                    viewModel = self.viewModel;
-                    viewModel.editable = {};
-                    keys = _.keys(template);
-                    editables = function(template, viewModel) {
-                        var eachProp;
-                        eachProp = function(v, i) {
-                            var extension, validator;
-                            validator = _.findWhere(validators, {
-                                name: v
-                            }) || {};
-                            viewModel.editable[v] = kb.observable(viewModel.model, v);
-                            if (!_.isEmpty(validator)) {
-                                viewModel.editable[v].extend(validator);
-                            }
-                        };
-                        _.each(keys, eachProp);
-                        return viewModel;
-                    };
-                    result = editables(template, viewModel);
-                    return result;
-                },
-                tokenizerOptions: {
-                    pattern: function() {
-                        var _reg = /\%([A-Za-z0-9])\w+/g;
-                        _reg.multiline = true;
-                        _reg.ignoreCase = true;
-                        _reg.global = true;
-                        return _reg;
-                    }(),
-                    definition: toEdit,
-                    insertMsgFormatText: function(position, value) {
-                        var self;
-                        self = this;
-                        return;
-                    },
-                    callbacks: {
-                        select: function(value) {
-                            var position, self;
-                            self = this;
-                        }
-                    }
-                }
-            });
-            return new BaseViewModel({
-                viewModel: toEdit
-            });
-        };
-        editorViewModel = _.partial(EditorViewModel, alarmMessageDefinitionsViewModel.supportModel().templates(), alarmMessageDefinitionsViewModel.supportModel().validators());
-        editorViewModel = _.bind(editorViewModel, alarmMessageDefinitionsViewModel);
-        alarmDefinitionsModel.set('gridViewModel', new gridViewModel({
-            setEditor: function(toEdit) {
-                // Save the alarm message parameters so we can restore them if the alarm edit is cancelled
-                // Depending if we're cloning or editing, msgName/msgFormat may or may not be observables. Use unwrap to safely get the value
-                self.alarmMessageState.msgName = ko.utils.unwrapObservable(toEdit.msgName);
-                self.alarmMessageState.msgFormat = ko.utils.unwrapObservable(toEdit.msgFormat);
-                self.alarmMessageState.msgTextColor = toEdit.msgTextColor;
-                self.alarmMessageState.msgBackColor = toEdit.msgBackColor;
-
-                alarmMessageDefinitionsViewModel.editor(editorViewModel(toEdit, alarmMessageDefinitionsViewModel.editor));
-            },
-            clearEditor: function() {
-                var vm;
-                vm = alarmMessageDefinitionsViewModel.editor();
-                kb.release(vm);
-                alarmMessageDefinitionsViewModel.editor(null);
-            },
-            deletor: alarmMessageDefinitionsViewModel.deletor,
-            getEditor: function() {
-                return alarmMessageDefinitionsViewModel.editor();
-            },
-            isEditing: ko.computed({
-                read: function() {
-                    return _.isObject(alarmMessageDefinitionsViewModel.editor());
-                }
-            }),
-            modelConstructor: function(model, options) {
-                var self;
-                self = this;
-                self.msgCatName = model.get('msgCatName');
-                self.msgTypeName = model.get('msgTypeName');
-                self.msgType = model.get('msgType');
-                self.msgCat = model.get('msgCat');
-                self.msgFormat = kb.observable(model, 'msgFormat');
-                self.msgName = model.get('msgName');
-                self.msgBackColor = _.sprintf('%s', model.get('msgBackColor'));
-                self.msgTextColor = _.sprintf('%s', model.get('msgTextColor'));
-                self.systemMessage = model.get('systemMessage');
-                self.isSystemMessage = model.get('isSystemMessage');
-                self.cloneable = (self.msgCatName !== 'Event');
-                self.deletable = !model.get('isSystemMessage');
-                self._id = model.id;
-                self.model = model;
-                self.template = model.get('template');
-                return self;
-
-            },
-            definitions: alarmMessageDefinitionsViewModel.supportModel().definitions()
-        }));
-        return alarmMessageDefinitionsViewModel;
-    };
-
-    // Create descriptions for all possible alarm message tokens
-    self.tokenDescriptions = {
-        "%NAME": "Point name",
-        "%PV": "Present value",
-        "%AV": "Alarm value",
-        "%UT": "Engineering units",
-        "%RC": "Reliability code"
-    };
-
-    self.alarmMessageState = {};
+// About screen ---------------------------------------------------------------
+var versionsViewModel = function() {
+    var self = this;
+    self.displayName = 'Versions';
     self.dirty = ko.observable(false);
-    self.name = 'AlarmMessageDefinitions';
     self.hasError = ko.observable(false);
+    self.processVer = ko.observable('');
+    self.ijsVer = ko.observable('');
+
+    self.getData = function() {
+        $.ajax({
+            url: '/api/system/versions'
+        }).done(function(data) {
+            if (!!data.err) {
+                console.log(data);
+                alert('There was an error getting versions.');
+            } else {
+                self.ijsVer(data.infoscanjs);
+                self.processVer(data.Processes);
+            }
+        });
+    };
+    self.init = function() {
+        self.getData();
+    };
+};
+
+// Alarm Messages Screen ---------------------------------------------------------
+var alarmMessageViewModel = function() {
+    var self = this,
+        alarmTemplateCategories = window.opener.workspaceManager.config.Enums["Alarm Categories"],
+        alarmTemplateTypes = window.opener.workspaceManager.config.Enums["Alarm Types"],
+        $alarmTemplateModal,
+        $alarmTokens,
+        $alarmToken,
+        $alarmTemplateDeleteConfirm,
+        $alarmTemplateContainer,
+        $alarmTemplateDataTable,
+        $msgFormat,
+        dataUrl = '/api/system/getAlarmTemplates',
+        saveUrl = '/api/system/updateAlarmTemplate',
+        deleteUrl = '/api/system/deleteAlarmTemplate',
+        alarmTemplateData,
+        columnsArray,
+        getRawHexColor = function (theColor) {
+            return theColor.replace(/#/g , "");
+        },
+        getColumnByRenderIndex = function (index) {
+            var result;
+            result = columnsArray.filter(function (col) {
+                return (col.renderedIndex === index);
+            });
+            return result[0];
+        },
+        getKeyBasedOnEnumValue = function (obj, value) {
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    if (obj[key].enum === parseInt(value, 10)) {
+                        return key;
+                    }
+                }
+            }
+            return "System Message";
+        },
+        getColumns = function () {
+            var cols = [];
+            cols.push({
+                columnKey: "_id",
+                columnName: "ID",
+                width: 2,
+                sortable: false,
+                display: false
+            });
+            cols.push({
+                columnKey: "msgEditLevel",
+                columnName: "",
+                width: 15,
+                sortable: false,
+                display: true
+            });
+            cols.push({
+                columnKey: "msgCat",
+                columnName: "Category",
+                width: 55,
+                sortable: true,
+                display: true
+            });
+            cols.push({
+                columnKey: "msgType",
+                columnName: "Type",
+                width: 175,
+                sortable: true,
+                display: true
+            });
+            cols.push({
+                columnKey: "msgName",
+                columnName: "Name",
+                width: 200,
+                sortable: true,
+                display: true
+            });
+            cols.push({
+                columnKey: "msgFormat",
+                columnName: "Definition",
+                width: 350,
+                sortable: true,
+                display: true
+            });
+            cols.push({
+                columnKey: "msgTextColor",
+                columnName: "Text Color",
+                sortable: false,
+                display: false
+            });
+            cols.push({
+                columnKey: "msgBackColor",
+                columnName: "Background Color",
+                sortable: false,
+                display: false
+            });
+            cols.push({
+                columnKey: "isSystemMessage",
+                columnName: "System",
+                width: 45,
+                sortable: true,
+                display: true
+            });
+            return cols;
+        },
+        configureDataTable = function (destroy, clearData, columns) {
+            var $cloneButton = "<div class='btn-group' title='Clone'><button type='button' data-bind='click:function() { $parent.clone($parent.$index);}' class='btn btn-xs cloneTemplate'><span class='fa fa-clipboard'></span></button></div>",
+                $deleteButton = "<div class='btn-group' title='Delete'><button type='button' data-bind='click:function() { $parent.delete($parent.$index);}' class='btn btn-xs deleteTemplate'><span class='fa fa-trash'></span></button></div>",
+                aoColumns = [],
+                i,
+                renderedIndex = 0,
+                setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
+                    switch (columnConfig.columnKey) {
+                        case "msgFormat":
+                            $(tdField).css('background-color', data.msgBackColor.Value);
+                            $(tdField).css('color', data.msgTextColor.Value);
+                            break;
+                        case "msgEditLevel":
+                            var editLevel = data[columnConfig.columnKey].rawValue,
+                                $html = "";
+
+                            switch (editLevel) {
+                                case 0:
+                                    $html = "";
+                                    break;
+                                case 1:
+                                    $html = $cloneButton;
+                                    break;
+                                case 2:
+                                    $html = $deleteButton + $cloneButton;
+                                    break;
+                                default:
+                                    $html = "";
+                                    break;
+                            }
+                            $(tdField).html($html);
+                            break;
+                        default:
+                            //console.log(" - - - DEFAULT  setTdAttribs()");
+                            break;
+                    }
+                },
+                setColumnClasses = function (columnKey) {
+                    var result = "";
+                    switch (columnKey) {
+                        case "msgCat":
+                            result = "col-md-1";
+                            break;
+                        case "msgType":
+                            result = "col-md-2";
+                            break;
+                        case "msgName":
+                            result = "col-md-2";
+                            break;
+                        case "msgFormat":
+                            result = "col-md-4";
+                            break;
+                        case "isSystemMessage":
+                            result = "col-md-1";
+                            break;
+                        default:
+                            //console.log(" - - - DEFAULT  setColumnClasses()");
+                            break;
+                    }
+                    return result;
+                },
+                buildColumnObject = function (columnConfig, columnIndex) {
+                    var result,
+                        columnTitle = columnConfig.columnName,
+                        sortAbleColumn = columnConfig.sortable;
+
+                    result = {
+                        title: columnTitle,
+                        data: columnConfig.columnKey,
+                        //className: setColumnClasses(columnConfig.columnKey),
+                        width: (!!columnConfig.width ? columnConfig.width : "auto"),
+                        render: {
+                            _: "Value"
+                        },
+                        fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
+                            setTdAttribs(nTd, getColumnByRenderIndex(iCol), oData, iCol);
+                        },
+                        bSortable: sortAbleColumn
+                    };
+
+                    return result;
+                };
+
+            for (i = 0; i < columns.length; i++) {
+                delete columns[i].renderedIndex;
+                if (columns[i].display) {
+                    columns[i].renderedIndex = renderedIndex++;
+                    aoColumns.push(buildColumnObject(columns[i], i));
+                }
+            }
+
+            if (aoColumns.length > 0) {
+                $alarmTemplateDataTable.DataTable({
+                    data: alarmTemplateData,
+                    columns: aoColumns,
+                    headerCallback: function (thead, data, start, end, display) {
+                        for (i = 0; i < aoColumns.length; i++) {
+                            $(thead).find('th').eq(i).css("background-color", "rgb(234, 234, 234)");
+                            $(thead).find('th').eq(i).addClass("strong");
+                        }
+                    },
+                    order: [[1, "asc"]], // always default sort by 2nd column
+                    scrollY: true,
+                    scrollX: true,
+                    scrollCollapse: true,
+                    lengthChange: true,
+                    lengthMenu: [[10, 18, 30, 50, 75, 100, -1], [10, 18, 30, 50, 75, 100, "All"]],
+                    //bFiler: false,  // search box
+                    pageLength: 100
+                });
+            }
+        },
+        renderAlarmTemplates = function () {
+            if (alarmTemplateData) {
+                // configureDataTable(true, true, columnsArray);
+                $alarmTemplateDataTable.DataTable().clear();
+                $alarmTemplateDataTable.DataTable().rows.add(alarmTemplateData);
+                $alarmTemplateDataTable.DataTable().draw();
+            }
+        },
+        buildAlarmTemplate = function (row, cloneRow) {
+            var editLevel = 0,
+                result;
+
+            if (getKeyBasedOnEnumValue(alarmTemplateCategories, row.msgCat) === "Event") {
+                editLevel = 0;  // Events can't be cloned or deleted
+            } else if (row.isSystemMessage) {
+                editLevel = 1;  // non Events that are System messages can be cloned
+            } else {
+                editLevel = 2;  // this is user generated content.  cloneable and deletable
+            }
+
+            if (typeof row._id !== 'object') { // if it's not an object then reading raw data from DB
+                result = {
+                    _id: {
+                        Value: row._id,
+                        rawValue: row._id
+                    },
+                    msgEditLevel: {
+                        Value: "",
+                        rawValue: editLevel
+                    },
+                    msgCat: {
+                        Value: getKeyBasedOnEnumValue(alarmTemplateCategories, row.msgCat),
+                        rawValue: row.msgCat
+                    },
+                    msgType: {
+                        Value: getKeyBasedOnEnumValue(alarmTemplateTypes, row.msgType),
+                        rawValue: row.msgType
+                    },
+                    msgName: {
+                        Value: row.msgName,
+                        rawValue: row.msgName
+                    },
+                    msgFormat: {
+                        Value: row.msgFormat,
+                        rawValue: row.msgFormat
+                    },
+                    msgTextColor: {
+                        Value: "#" + row.msgTextColor,
+                        rawValue: row.msgTextColor
+                    },
+                    msgBackColor: {
+                        Value: "#" + row.msgBackColor,
+                        rawValue: row.msgBackColor
+                    },
+                    isSystemMessage: {
+                        Value: (row.isSystemMessage ? "Yes" : "No"),
+                        rawValue: row.isSystemMessage
+                    }
+                };
+            } else {
+                result = $.extend(true, {}, row);
+            }
+
+            if (cloneRow) {
+                result._id = null;
+                result.isSystemMessage = {
+                    Value: "No",
+                    rawValue: false
+                };
+            }
+            return result;
+        },
+        setData = function(data) {
+            var i;
+
+            alarmTemplateData = [];
+            for (i = 0; i < data.length; i++) {
+                alarmTemplateData.push(buildAlarmTemplate(data[i], false));
+            }
+            if (alarmTemplateData.length > 0) {
+                self.alarmTemplate(alarmTemplateData[0]);
+                self.alarmTemplateBackgroundColor(getRawHexColor(self.alarmTemplate().msgBackColor.Value));
+                self.alarmTemplateTextColor(getRawHexColor(self.alarmTemplate().msgTextColor.Value));
+            }
+            self.alarmTemplates(alarmTemplateData);
+            renderAlarmTemplates();
+        },
+        getData = function() {
+            $.ajax({
+                url: dataUrl
+            }).done(function(data) {
+                setData(data);
+            });
+        },
+        showMessage = function(text) {
+            var message = text.charAt(0).toUpperCase() + text.substring(1);
+            console.log("save message = " + message);
+        },
+        promptDelete = function (row) {
+            self.alarmTemplate(buildAlarmTemplate(row, false));
+            $alarmTemplateDeleteConfirm.modal("show");
+        };
+
     self.displayName = 'Alarm Messages';
-    self.section = 'AlarmMessageDefinitions';
-    self.viewModel = ko.observable(null);
-    $.get('/alarmMessageDefinitions/helperData', function(d) {
-        var $kgTopPanel,
-            topPanelPosition;
+    self.hasError = ko.observable(false);
+    self.alarmTemplate = ko.observable("");
+    self.alarmTemplateBackgroundColor = ko.observable();
+    self.alarmTemplateTextColor = ko.observable();
+    self.alarmTemplateName = ko.observable();
+    self.alarmTemplateDesc = ko.observable();
+    self.alarmTemplates = ko.observableArray();
+    self.alarmTemplateTokens = ko.observableArray([{
+        code: 'AV',
+        name: 'Alarm Value',
+        description: 'Include point name in alarm message'
+    }, {
+        code: 'NAME',
+        name: 'Point Name',
+        description: 'Include point name in alarm message'
+    }, {
+        code: 'PE',
+        name: 'Program Error',
+        description: 'Include point name in alarm message'
+    }, {
+        code: 'PV',
+        name: 'Point Value',
+        description: 'Include point name in alarm message'
+    }, {
+        code: 'RC',
+        name: 'Reliability Value',
+        description: 'Include point name in alarm message'
+    }, {
+        code: 'UT',
+        name: 'Units Value',
+        description: 'Include point name in alarm message'
+    }]);
+    self.showEntryForm = ko.observable(false);
+    self.init = function() {
+        columnsArray = getColumns();
+        self.alarmTemplateBackgroundColor.subscribe(function (newValue) {
+            $msgFormat.css('background-color', "#" + newValue);
+        });
+        self.alarmTemplateTextColor.subscribe(function (newValue) {
+            $msgFormat.css('color', "#" + newValue);
+        });
+        $alarmTemplateContainer = $("#alarmTemplateContainer");
+        $alarmTemplateDataTable = $alarmTemplateContainer.find(".dataTablePlaceHolder");
+        $alarmTemplateModal = $alarmTemplateContainer.find(".sysprefAlarmTemplateModel");
+        $alarmTemplateDeleteConfirm = $alarmTemplateContainer.find(".alarmTemplateDeleteConfirm");
+        $msgFormat = $alarmTemplateContainer.find(".msgFormat");
+        $alarmTemplateModal.modal("hide");
+        $alarmTemplateDeleteConfirm.modal("hide");
+        configureDataTable(true, true, columnsArray);
 
-        self.viewModel(new Amd(d));
+        $alarmTemplateDataTable.find('tbody').on('click', 'tr', function (e) {
+            self.alarmTemplate($alarmTemplateDataTable.DataTable().row(this).data());
+            self.displayPopupEditor();
+        });
 
-        // JDR - Tomfoolery to get our table header correctly position. We have to do this after the table is rendered
-        // so the header doesn't cover up our first row.
-        $kgTopPanel = $('.kgTopPanel');
-        $kgTopPanel.css("top", 120);
-        // Also extend its width to extend over the vertical scroll bar
-        $kgTopPanel.css("width", $("#gridCont").css("width"));
-    });
-    return self;
-}, sysPrefsViewModel);
+        $alarmTemplateDataTable.find('tbody').on('click', '.cloneTemplate', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            self.clone($alarmTemplateDataTable.DataTable().row($(this).parent().parent().parent()).data());
+        });
+
+        $alarmTemplateDataTable.find('tbody').on('click', '.deleteTemplate', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            promptDelete($alarmTemplateDataTable.DataTable().row($(this).parent().parent().parent()).data());
+        });
+
+        $alarmTemplateDataTable.on('draw.dt', function (e, settings) {
+            var numberOfPages = $alarmTemplateDataTable.DataTable().page.info().pages,
+                $tablePagination,
+                $pagination,
+                $paginate_buttons;
+            $tablePagination = $alarmTemplateContainer.find(".dataTables_paginate");
+            $pagination = $tablePagination.find("ul.pagination");
+            $paginate_buttons = $pagination.find(".paginate_button");
+            $paginate_buttons = $paginate_buttons.not("li.active");
+
+            if (numberOfPages === 1) {
+                $tablePagination.hide();
+                $paginate_buttons.hide();
+            } else {
+                $tablePagination.show();
+                $paginate_buttons.show();
+            }
+        });
+
+
+        getData();
+    };
+    self.save = function() {
+        var alarmTemplate = $.extend(true, {}, self.alarmTemplate()),
+            data = {},
+            sanitize = function() {
+                var key;
+
+                alarmTemplate.msgTextColor.rawValue = getRawHexColor(self.alarmTemplateTextColor());
+                alarmTemplate.msgBackColor.rawValue = getRawHexColor(self.alarmTemplateBackgroundColor());
+                alarmTemplate.msgName.rawValue = $alarmTemplateContainer.find(".msgName").val();
+                if (alarmTemplate.isSystemMessage.rawValue) {
+                    alarmTemplate.msgFormat.rawValue = $alarmTemplateContainer.find(".msgFormat").text();
+                } else {
+                    alarmTemplate.msgFormat.rawValue = $alarmTemplateContainer.find(".msgFormat").val();
+                }
+
+                alarmTemplate.msgFormat.rawValue = alarmTemplate.msgFormat.rawValue.replace(/\r?\n|\r/g, "");
+
+                for (key in alarmTemplate) {
+                    if (alarmTemplate.hasOwnProperty(key)) {
+                        alarmTemplate[key] = (!!alarmTemplate[key] ? alarmTemplate[key].rawValue : null);
+                        delete alarmTemplate["msgEditLevel"];
+                    }
+                }
+            };
+
+        sanitize();
+
+        if (alarmTemplate._id === null) {
+            data.newObject = alarmTemplate;
+        } else {
+            data.updatedObject = alarmTemplate;
+        }
+
+        $.ajax({
+            url: saveUrl,
+            data: data,
+            dataType: 'json',
+            type: 'post'
+        }).done(function(response) {
+            showMessage('Save alarmTemplate: ' + response.message);
+            getData();
+        });
+        $alarmTemplateModal.modal("hide");
+    };
+    self.displayPopupEditor = function() {
+        var draggedToken = {};
+        self.alarmTemplateBackgroundColor(getRawHexColor(self.alarmTemplate().msgBackColor.Value));
+        self.alarmTemplateTextColor(getRawHexColor(self.alarmTemplate().msgTextColor.Value));
+
+        $alarmTemplateModal.modal("show");
+        $msgFormat = $alarmTemplateContainer.find(".msgFormat");
+        $msgFormat.css('background-color', "#" + self.alarmTemplateBackgroundColor());
+        $msgFormat.css('color', "#" + self.alarmTemplateTextColor());
+        $alarmTokens = $alarmTemplateModal.find(".alarmTokens");
+        $alarmToken = $alarmTokens.find(".alarmToken");
+
+        if (!self.alarmTemplate().isSystemMessage.rawValue) {
+            $($alarmToken).dblclick(function() {
+                var alarmToken = $(this).find(".alarmTokenCode").text();
+                $($msgFormat).val($($msgFormat).val() + alarmToken);
+            });
+
+            $($alarmToken).draggable({
+                cursor: 'move',
+                helper: "clone",
+                start: function(event, ui) {
+                    draggedToken.tr = this;
+                    draggedToken.helper = ui.helper;
+                }
+            });
+
+            $($msgFormat).droppable({
+                drop: function(event, ui) {
+                    var alarmToken = ui.draggable.find(".alarmTokenCode").text();
+                    $(this).val($(this).val() + alarmToken);
+                }
+            });
+        }
+    };
+    self.deleteAlarmTemplate = function() {
+        var data = {},
+            alarmTemplate = $.extend(true, {}, self.alarmTemplate());
+
+        data.deleteObject = {};
+        data.deleteObject._id = alarmTemplate._id.rawValue;
+
+        $.ajax({
+            url: deleteUrl,
+            data: data,
+            dataType: 'json',
+            type: 'post'
+        }).done(function(response) {
+            showMessage('Delete alarmTemplate: ' + response.message);
+            getData();
+        });
+        $alarmTemplateDeleteConfirm.modal("hide");
+    };
+    self.clone = function (row) {
+        self.alarmTemplate(buildAlarmTemplate(row, true));
+        self.displayPopupEditor();
+    };
+};
 
 // Weather screen -------------------------------------------------------------
 var weatherViewModel = function() {
@@ -1908,17 +1876,17 @@ var weatherViewModel = function() {
         dataUrl = '/api/system/weather',
         saveUrl = '/api/system/updateWeather',
         workspaceManager = window.opener && window.opener.workspaceManager,
-        openWindow =  workspaceManager && window.opener.workspaceManager.openWindowPositioned,
+        openWindow = workspaceManager && window.opener.workspaceManager.openWindowPositioned,
         activePointStatus = workspaceManager && workspaceManager.config.Enums["Point Statuses"].Active.enum,
         originalData,
-        openPointSelector = function (callback) {
+        openPointSelector = function(callback) {
             var windowRef,
-                pointSelectedCallback = function (pid, name, type) {
+                pointSelectedCallback = function(pid, name, type) {
                     if (!!pid) {
                         callback(pid, name, type);
                     }
                 },
-                windowOpenedCallback = function () {
+                windowOpenedCallback = function() {
                     windowRef.pointLookup.MODE = 'select';
                     windowRef.pointLookup.init(pointSelectedCallback);
                 };
@@ -1928,11 +1896,11 @@ var weatherViewModel = function() {
                 width: 1000
             });
         },
-        setData = function (data) {
+        setData = function(data) {
             var newData = [];
 
             if (Array.isArray(data)) {
-                data.forEach(function (weatherPoint) {
+                data.forEach(function(weatherPoint) {
                     newData.push({
                         title: weatherPoint.title,
                         point: ko.observable(weatherPoint.point)
@@ -1952,21 +1920,21 @@ var weatherViewModel = function() {
         getData = function() {
             $.ajax({
                 url: dataUrl
-            }).done(function (data) {
+            }).done(function(data) {
                 originalData = data;
                 setData(data);
             });
         },
-        getDataToSave = function () {
+        getDataToSave = function() {
             var data = {};
-            self.weatherPoints().forEach(function (weatherPoint) {
+            self.weatherPoints().forEach(function(weatherPoint) {
                 var point = weatherPoint.point(),
                     upi = (point && point._id) || null;
                 data[weatherPoint.title] = upi;
             });
             return data;
         },
-        saveData = function () {
+        saveData = function() {
             // Create a snapshot in case the user modifies the data before save is completed
             var snapshot = ko.toJS(self.weatherPoints);
             // Save the data
@@ -1975,7 +1943,7 @@ var weatherViewModel = function() {
                 data: getDataToSave(),
                 dataType: 'json',
                 type: 'post'
-            }).done(function (response) {
+            }).done(function(response) {
                 var err;
                 console.log(response);
                 if (response.message && response.message === 'success') {
@@ -1996,24 +1964,24 @@ var weatherViewModel = function() {
 
     self.weatherPoints = ko.observableArray([]);
 
-    self.init = function () {
+    self.init = function() {
         getData();
     };
 
-    self.save = function () {
+    self.save = function() {
         saveData();
     };
 
-    self.cancel = function () {
+    self.cancel = function() {
         setData(originalData);
     };
 
-    self.removePointRef = function (data) {
+    self.removePointRef = function(data) {
         data.point(null);
         self.dirty(true);
     };
 
-    self.editPointRef = function (data) {
+    self.editPointRef = function(data) {
         openPointSelector(function(upi, name, pointType) {
             data.point({
                 _id: upi,
@@ -2027,7 +1995,7 @@ var weatherViewModel = function() {
         });
     };
 
-    self.openPointRef = function (data) {
+    self.openPointRef = function(data) {
         var point = data.point(),
             upi = point._id,
             pointType = point['Point Type'].Value,
@@ -2047,34 +2015,11 @@ var notificationsViewModel = function() {
         _webendpointURI = _webendpoint + '/api/security/',
         _idCounter = 0,
         $scheduleCalendar = $('#scheduleCalendar'),
-        makeId = function () {
+        makeId = function() {
             _idCounter++;
             return 'nid_' + _idCounter;
         },
-        Member = function (data, dt) {
-            var ret = {
-                    id: data._id,
-                    firstName: data['First Name'].Value,
-                    lastName: data['Last Name'].Value,
-                    contactInfo: data['Contact Info'].Value,
-                    securityGroup: null,
-                    alerts: data.alerts,
-                    notificationsEnabled: data.notificationsEnabled,
-                    notificationOptions: data.notificationOptions || self.getTemplate('notificationOptions')
-                },
-                processAlert = function (alert, idx) {
-                    if (alert.delay === undefined) {
-                        alert.delay = idx === 0 ? 0 : 1;
-                    }
-                };
-
-            for (var alertType in data.alerts) {
-                data.alerts[alertType].forEach(processAlert);
-            }
-
-            return ret;
-        },
-        self = {
+        _local = {
             displayName: 'Notifications',
             dirty: ko.observable(false),
             hasError: ko.observable(false),
@@ -2169,7 +2114,7 @@ var notificationsViewModel = function() {
                 }
             },
 
-            forEachArray: function (arr, fn) {
+            forEachArray: function(arr, fn) {
                 var c,
                     list = arr || [],
                     len = list.length,
@@ -2185,8 +2130,8 @@ var notificationsViewModel = function() {
                 return errorFree;
             },
 
-            getTemplate: function (template) {
-                var tpl = $.extend(true, {}, self.templates[template]),
+            getTemplate: function(template) {
+                var tpl = $.extend(true, {}, _local.templates[template]),
                     copyProperties = ['repeatConfig', 'rotateConfig'],
                     idProperties = {
                         alertConfig: '_currAlertID',
@@ -2196,14 +2141,14 @@ var notificationsViewModel = function() {
                     newID,
                     idProperty;
 
-                copyProperties.forEach(function (property) {
+                copyProperties.forEach(function(property) {
                     if (tpl.hasOwnProperty(property)) {
-                        tpl[property] = self.getTemplate(property);
+                        tpl[property] = _local.getTemplate(property);
                     }
                 });
 
                 if (idProperties[template]) {
-                    idProperty = self.bindings.currPolicy[idProperties[template]];
+                    idProperty = _local.bindings.currPolicy[idProperties[template]];
 
                     newID = idProperty() + 1;
                     idProperty(newID);
@@ -2214,14 +2159,44 @@ var notificationsViewModel = function() {
                 return tpl;
             },
             policies: []
+        },
+        createMember = function(data, dt) {
+            var ret = {
+                    id: data._id,
+                    firstName: data['First Name'].Value,
+                    lastName: data['Last Name'].Value,
+                    contactInfo: data['Contact Info'].Value,
+                    securityGroup: null,
+                    alerts: data.alerts,
+                    notificationsEnabled: data.notificationsEnabled,
+                    notificationOptions: data.notificationOptions || _local.getTemplate('notificationOptions')
+                },
+                processAlert = function(alert, idx) {
+                    var contact;
+
+                    if (alert.delay === undefined) {
+                        alert.delay = idx === 0 ? 0 : 1;
+                    }
+
+                    if (alert.name === undefined) {
+                        contact = _local.getContact(alert, data['Contact Info'].Value);
+                        alert.Name = contact.Name;
+                    }
+                };
+
+            for (var alertType in data.alerts) {
+                _local.forEachArray(data.alerts[alertType], processAlert);
+            }
+
+            return ret;
         };
 
-    self.init = function (reset) {
+    _local.init = function(reset) {
         var columns = [{
                 data: 'firstName()',
                 title: 'First Name',
                 className: 'firstName',
-                render: function (data, type, full, meta) {
+                render: function(data, type, full, meta) {
                     return '<a href="#">' + data + '</a>';
                 }
             }, {
@@ -2233,61 +2208,71 @@ var notificationsViewModel = function() {
                 title: 'Member By Way Of Security Group',
                 className: 'securityGroup'
             }],
-            initMemberDataTable = function () {
-                var members = self.bindings.currPolicy.members,
+            initMemberDataTable = function() {
+                var members = _local.bindings.currPolicy.members,
                     $memberList = $('#memberList');
 
-                self.memberDT = $memberList.DataTable({
+                _local.memberDT = $memberList.DataTable({
                     columns: columns,
                     paging: false,
                     searching: false,
                     bInfo: false
                 });
+                if ($.fn.DataTable.isDataTable($memberList)) {
+                    $memberList.DataTable().destroy();
+                } else {
+                    _local.memberDT = $memberList.DataTable({
+                        columns: columns,
+                        paging: false,
+                        searching: false,
+                        bInfo: false
+                    });
+                }
 
-                $memberList.on('click', '.firstName', function (event) {
-                    var rowIdx = self.memberDT.cell(this).index().row,
-                        member = self.memberDT.rows(rowIdx).data()[0];
+                $memberList.on('click', '.firstName', function(event) {
+                    var rowIdx = _local.memberDT.cell(this).index().row,
+                        member = _local.memberDT.rows(rowIdx).data()[0];
 
-                    self.editMember(member);
+                    _local.editMember(member);
 
                     event.preventDefault();
                 });
 
-                members.subscribe(function (members) {
-                    self.memberDT.clear();
-                    self.memberDT.rows.add(members);
-                    self.memberDT.draw();
+                members.subscribe(function(members) {
+                    _local.memberDT.clear();
+                    _local.memberDT.rows.add(members);
+                    _local.memberDT.draw();
                 });
             };
 
         initMemberDataTable();
 
-        self.$tabs = $('.notificationsContent').on('click', '.nav a', function (e) {
+        _local.$tabs = $('.notificationsContent').on('click', '.nav a', function(e) {
             e.preventDefault();
 
             $(this).tab('show');
 
             if ($(this).attr('href').toLowerCase().match('schedule')) {
                 $scheduleCalendar.fullCalendar('render');
-                self.updateScheduleEvents();
+                _local.updateScheduleEvents();
             }
         });
 
         $scheduleCalendar.fullCalendar({
             schedulerLicenseKey: '0890776600-fcs-1460400855',
-            eventClick: function (calEvent, jsEvent, view) {
+            eventClick: function(calEvent, jsEvent, view) {
                 console.log(calEvent);
                 jsEvent.preventDefault();
             },
             header: {
-                left: '',//prev,next',
-                center: '',//title',
-                right: ''//agendaWeek,agendaDay'
+                left: '', //prev,next',
+                center: '', //title',
+                right: '' //agendaWeek,agendaDay'
             },
             // titleFormat: '[Schedule Preview]',
             // eventColor: '#7156FB',
             allDaySlot: false,
-            defaultDate:  moment().format('YYYY-MM-DD'),//'2016-01-12',
+            defaultDate: moment().format('YYYY-MM-DD'), //'2016-01-12',
             defaultView: 'agendaDay',
             editable: false,
             eventLimit: false, // allow "more" link when too many events
@@ -2335,79 +2320,80 @@ var notificationsViewModel = function() {
             }],
             slotDuration: '01:00:00',
             slotLabelInterval: '02:00:00'
-            // events: [
-            //     // {
-            //     //     title: 'All Day Event',
-            //     //     start: '2016-01-01'
-            //     // },
-            //     // {
-            //     //     title: 'Long Event',
-            //     //     start: '2016-01-07',
-            //     //     end: '2016-01-10'
-            //     // },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-10T08:00:00',
-            //         end: '2016-01-10T17:00:00'
-            //     },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-11T08:00:00',
-            //         end: '2016-01-11T17:00:00'
-            //     },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-12T08:00:00',
-            //         end: '2016-01-12T17:00:00'
-            //     },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-13T08:00:00',
-            //         end: '2016-01-13T17:00:00'
-            //     },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-14T08:00:00',
-            //         end: '2016-01-14T17:00:00'
-            //     },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-15T08:00:00',
-            //         end: '2016-01-15T17:00:00'
-            //     },
-            //     {
-            //         id: 999,
-            //         start: '2016-01-16T08:00:00',
-            //         end: '2016-01-16T17:00:00'
-            //     }
-            // ]
+                // events: [
+                //     // {
+                //     //     title: 'All Day Event',
+                //     //     start: '2016-01-01'
+                //     // },
+                //     // {
+                //     //     title: 'Long Event',
+                //     //     start: '2016-01-07',
+                //     //     end: '2016-01-10'
+                //     // },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-10T08:00:00',
+                //         end: '2016-01-10T17:00:00'
+                //     },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-11T08:00:00',
+                //         end: '2016-01-11T17:00:00'
+                //     },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-12T08:00:00',
+                //         end: '2016-01-12T17:00:00'
+                //     },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-13T08:00:00',
+                //         end: '2016-01-13T17:00:00'
+                //     },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-14T08:00:00',
+                //         end: '2016-01-14T17:00:00'
+                //     },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-15T08:00:00',
+                //         end: '2016-01-15T17:00:00'
+                //     },
+                //     {
+                //         id: 999,
+                //         start: '2016-01-16T08:00:00',
+                //         end: '2016-01-16T17:00:00'
+                //     }
+                // ]
         });
 
         if (!reset) {
-            $.getJSON('/api/policies/get').done(function (response) {
-                self._rawPolicies = response;
-                self.buildPolicies(response);
+            $.getJSON('/api/policies/get').done(function(response) {
+                _local._rawPolicies = response;
+                _local.buildPolicies(response);
             });
         } else {
-            self.buildPolicies(self._rawPolicies);
+            _local.buildPolicies(_local._rawPolicies);
         }
     };
 
-    self.updateScheduleEvents = function () {
-        var colors = ['#FDA46E', '#8666FB'],//, '#7DC551'],
+    _local.updateScheduleEvents = function() {
+        var colors = ['#FDA46E', '#8666FB'], //, '#7DC551'],
             datePrefix = moment().format('YYYY-MM-DDT'),
             tomorrowPrefix = moment().add(1, 'd').format('YYYY-MM-DDT'),
             events = [],
-            convertTime = function (time) {
+            convertTime = function(time) {
                 var hr = time / 100,
                     min = time % 100;
 
                 return ('0' + hr).slice(-2) + ':' + ('0' + min).slice(-2) + ':00';
             },
-            createEvents = function (schedule, color, title) {
+            createEvents = function(schedule, color, title) {
                 var start = datePrefix + convertTime(schedule.startTime || 0),
                     end = convertTime(schedule.endTime || 0),
-                    _events = [];
+                    _events = [],
+                    loops = false;
 
                 if (schedule.allDay) {
                     start = datePrefix + convertTime(0);
@@ -2418,25 +2404,54 @@ var notificationsViewModel = function() {
                     } else {
                         end = datePrefix + end;
                     }
+
+                    if (schedule.endTime !== undefined && schedule.startTime !== undefined && schedule.startTime > schedule.endTime) {
+                        loops = true;
+                    }
                 }
 
-                self.forEachArray(schedule.days, function (day) {
-                    _events.push({
-                        id: makeId(),
-                        start: start,
-                        end: end,
-                        resourceId: day,
-                        backgroundColor: color,
-                        borderColor: '#666666',
-                        title: title
-                    });
+                _local.forEachArray(schedule.days, function(day) {
+                    if (loops) {
+                        if (schedule.endTime !== 0) {
+                            _events.push({
+                                id: makeId(),
+                                start: datePrefix + convertTime(0),
+                                end: end,
+                                resourceId: day,
+                                backgroundColor: color,
+                                borderColor: '#666666',
+                                title: title
+                            });
+                        }
+
+                        _events.push({
+                            id: makeId(),
+                            start: start,
+                            end: tomorrowPrefix + convertTime(0),
+                            resourceId: day,
+                            backgroundColor: color,
+                            borderColor: '#666666',
+                            title: title
+                        });
+
+                    } else {
+                        _events.push({
+                            id: makeId(),
+                            start: start,
+                            end: end,
+                            resourceId: day,
+                            backgroundColor: color,
+                            borderColor: '#666666',
+                            title: title
+                        });
+                    }
                 });
 
                 return _events;
             };
 
-        self.forEachArray(self.bindings.currPolicy.scheduleLayers(), function (layer, idx) {
-            self.forEachArray(ko.toJS(layer.schedules), function (schedule) {
+        _local.forEachArray(_local.bindings.currPolicy.scheduleLayers(), function(layer, idx) {
+            _local.forEachArray(ko.toJS(layer.schedules), function(schedule) {
                 events = events.concat(createEvents(schedule, colors[idx % 2], 'Layer ' + (idx + 1)));
             });
         });
@@ -2445,41 +2460,41 @@ var notificationsViewModel = function() {
         $scheduleCalendar.fullCalendar('addEventSource', events);
     };
 
-    self.translateMember = function (id) {
-        return self.userLookup[id];
+    _local.translateMember = function(id) {
+        return _local.userLookup[id];
     };
 
-    self.translateMembers = function (arr) {
+    _local.translateMembers = function(arr) {
         var c,
             len = arr.length,
             ret = [];
 
-        for(c=0; c<len; c++) {
-            ret.push(self.translateMember(arr[c]));
+        for (c = 0; c < len; c++) {
+            ret.push(_local.translateMember(arr[c]));
         }
 
         return ret;
     };
 
-    self.unTranslateMembers = function (policy) {
+    _local.unTranslateMembers = function(policy) {
         var rawPolicy = ko.toJS(policy);
-        self.forEachArray(rawPolicy.members, function (member, idx) {
+        _local.forEachArray(rawPolicy.members, function(member, idx) {
             rawPolicy.members[idx] = member.id;
         });
 
         return rawPolicy;
     };
 
-    self.buildPolicy = function (policy) {
-        policy.members = self.translateMembers(policy.members);
+    _local.buildPolicy = function(policy) {
+        policy.members = _local.translateMembers(policy.members);
 
 
-        self.forEachArray(policy.alertConfigs, function (alertConfig) {
+        _local.forEachArray(policy.alertConfigs, function(alertConfig) {
             var newGroups = [];
             alertConfig.groups = alertConfig.groups || [];
-            self.forEachArray(alertConfig.groups, function (group) {
+            _local.forEachArray(alertConfig.groups, function(group) {
                 group.escalations = group.escalations || [];
-                self.forEachArray(group.escalations, function (escalation) {
+                _local.forEachArray(group.escalations, function(escalation) {
                     escalation.members = escalation.members || [];
                 });
                 if (group.active) {
@@ -2493,23 +2508,23 @@ var notificationsViewModel = function() {
 
     };
 
-    self.buildPolicies = function (policies) {
+    _local.buildPolicies = function(policies) {
         var c,
             len = policies.length;
 
-        self.bindings.policyList.removeAll();
+        _local.bindings.policyList.removeAll();
 
-        for(c=0; c<len; c++) {
-            self.buildPolicy(policies[c]);
-            self.bindings.policyList.push(ko.viewmodel.fromModel(policies[c]));
+        for (c = 0; c < len; c++) {
+            _local.buildPolicy(policies[c]);
+            _local.bindings.policyList.push(ko.viewmodel.fromModel(policies[c]));
         }
     };
 
-    self.prepPolicyForSave = function (policy) {
-        self.forEachArray(policy.alertConfigs, function (config) {
+    _local.prepPolicyForSave = function(policy) {
+        _local.forEachArray(policy.alertConfigs, function(config) {
             var foundActive = false;
 
-            self.forEachArray(config.groups, function (group, idx) {
+            _local.forEachArray(config.groups, function(group, idx) {
                 if (group.active) {
                     foundActive = true;
                 }
@@ -2521,17 +2536,17 @@ var notificationsViewModel = function() {
         });
     };
 
-    self.cancel = function () {
-        self.dirty(false);
-        self.bindings.home();
-        self.init(true);
+    _local.cancel = function() {
+        _local.dirty(false);
+        _local.bindings.home();
+        _local.init(true);
     };
 
-    self.save = function () {
-        self.forEachArray(self.bindings.policyList(), function (policy, idx) {
-            var data = self.unTranslateMembers(policy);
+    _local.save = function() {
+        _local.forEachArray(_local.bindings.policyList(), function(policy, idx) {
+            var data = _local.unTranslateMembers(policy);
 
-            self.prepPolicyForSave(data);
+            _local.prepPolicyForSave(data);
 
             $.ajax({
                 url: '/api/policies/save',
@@ -2539,11 +2554,11 @@ var notificationsViewModel = function() {
                 type: 'POST',
                 dataType: 'json',
                 contentType: 'application/json'
-            }).done(function (response) {
+            }).done(function(response) {
                 if (policy._new && policy._new() === true) {
                     delete policy._new;
-                    if (policy._id() === self.bindings.currPolicy._id()) {
-                        self.bindings.currPolicy._id(response.id);
+                    if (policy._id() === _local.bindings.currPolicy._id()) {
+                        _local.bindings.currPolicy._id(response.id);
                     }
                     policy._id(response.id);
                 }
@@ -2551,109 +2566,117 @@ var notificationsViewModel = function() {
             });
         });
 
-        self.dirty(false);
+        _local.dirty(false);
     };
 
-    self.clearEdits = function (resetAll) {
+    _local.clearEdits = function(resetAll) {
         var binding;
 
-        for (binding in self.bindings) {
+        for (binding in _local.bindings) {
             if (binding.match('isEditing')) {
                 if (binding !== 'isEditingPolicy' || resetAll) {
-                    self.bindings[binding](false);
+                    _local.bindings[binding](false);
                 }
             }
         }
     };
 
-    self.editMember = function (member) {
-        self._originalMember = ko.toJS(member);
-        self.bindings.currMember(member);
-        self.bindings.isEditingMember(true);
+    _local.editMember = function(member) {
+        _local._originalMember = ko.toJS(member);
+        _local.bindings.currMember(member);
+        _local.bindings.isEditingMember(true);
     };
 
-    self.editMembers = function (primary, secondary) {
+    _local.editMembers = function(primary, secondary) {
         var c,
             cc,
             len = secondary.length,
             plen = primary.length,
             found = false;
 
-        for(c=0; c<plen; c++) {
+        for (c = 0; c < plen; c++) {
             primary[c].selected = false;
             found = false;
 
-            for(cc=0; cc<len && !found; cc++) {
-                 if (primary[c].id === secondary[cc].id) {
+            for (cc = 0; cc < len && !found; cc++) {
+                if (primary[c].id === secondary[cc].id) {
                     primary[c].selected = true;
                     found = true;
                 }
             }
         }
 
-        self.bindings.primaryMemberList(primary);
-        self.bindings.chosenMembers(secondary);
-        self.$modal.modal('show');
+        _local.bindings.primaryMemberList(primary);
+        _local.bindings.chosenMembers(secondary);
+        _local.$modal.modal('show');
     };
 
-    self.updateAlertConfigMembers = function () {
-        var arr = ko.toJS(self.bindings.primaryMemberList()),
+    _local.updateAlertConfigMembers = function() {
+        var arr = ko.toJS(_local.bindings.primaryMemberList()),
             newMembers = [];
 
-        arr.forEach(function (member) {
+        arr.forEach(function(member) {
             if (member.selected) {
                 newMembers.push(member.id);
             }
         });
 
-        ko.viewmodel.updateFromModel(self._currEscalation.members, newMembers);
+        ko.viewmodel.updateFromModel(_local._currEscalation.members, newMembers);
     };
 
-    self.updatePolicyMembers = function () {
-        var arr = ko.toJS(self.bindings.primaryMemberList()),
+    _local.updatePolicyMembers = function() {
+        var arr = ko.toJS(_local.bindings.primaryMemberList()),
             newMembers = [];
 
-        arr.forEach(function (member) {
+        arr.forEach(function(member) {
             if (member.selected) {
                 newMembers.push(member);
             }
         });
 
-        ko.viewmodel.updateFromModel(self.bindings.currPolicy.members, newMembers);
-        self.forEachArray(self.bindings.policyList(), function (policy) {
-            if (policy._id() === self.bindings.currPolicy._id()) {
+        ko.viewmodel.updateFromModel(_local.bindings.currPolicy.members, newMembers);
+        _local.forEachArray(_local.bindings.policyList(), function(policy) {
+            if (policy._id() === _local.bindings.currPolicy._id()) {
                 policy.members(newMembers);
             }
         });
     };
 
-    self.getContact = function (alert) {
+    _local.getContact = function(alert, userContactInfo) {
         var contact,
+            secondContact,
             rawAlert = ko.toJS(alert),
             value = rawAlert.Value,
-            type = rawAlert.Type;
+            type = rawAlert.Type,
+            name = rawAlert.Name;
 
-        self.forEachArray(self.bindings.currMember().contactInfo(), function (contactInfo) {
-            if (contactInfo.Value() === value && contactInfo.Type() === type) {
-                contact = contactInfo;
+        _local.forEachArray(userContactInfo || _local.bindings.currMember().contactInfo(), function(koContactInfo) {
+            var contactInfo = ko.toJS(koContactInfo);
+
+            if (name && contactInfo.Name === name) {
+                contact = koContactInfo;
                 return false;
             }
-        });
 
-        return contact;
-    };
-
-    self.savePolicy = function () {
-        self.forEachArray(self.bindings.policyList(), function (policy, idx) {
-            if (policy._id() === self.bindings.currPolicy._id()) {
-                ko.viewmodel.updateFromModel(self.bindings.policyList()[idx], ko.toJS(self.bindings.currPolicy));
+            if (contactInfo.Value === value && contactInfo.Type === type) {
+                secondContact = koContactInfo;
             }
         });
 
-        self.dirty(true);
+        return contact || secondContact;
     };
 
-    self.saveUser = function (user) {
+    _local.savePolicy = function() {
+        _local.forEachArray(_local.bindings.policyList(), function(policy, idx) {
+            if (policy._id() === _local.bindings.currPolicy._id()) {
+                ko.viewmodel.updateFromModel(_local.bindings.policyList()[idx], ko.toJS(_local.bindings.currPolicy));
+            }
+        });
+
+        _local.dirty(true);
+    };
+
+    _local.saveUser = function(user) {
         var me = this,
             data = {
                 userid: user.id,
@@ -2663,7 +2686,7 @@ var notificationsViewModel = function() {
                     notificationsEnabled: user.notificationsEnabled
                 }
             },
-            processUser = function (alert, idx, list) {
+            processUser = function(alert, idx, list) {
                 list[idx] = ko.toJS(me.getContact(alert));
                 list[idx].delay = alert.delay;
             };
@@ -2678,7 +2701,7 @@ var notificationsViewModel = function() {
             dataType: 'json',
             contentType: 'application/json',
             data: JSON.stringify(data),
-            success: function (returnData) {
+            success: function(returnData) {
                 if (returnData.err) {
                     console.log('Error saving user', returnData.err);
                 } else {
@@ -2688,10 +2711,10 @@ var notificationsViewModel = function() {
         });
     };
 
-    self.checkAlertConfigNames = function (id, name, configs) {
+    _local.checkAlertConfigNames = function(id, name, configs) {
         var duplicate = false;
 
-        self.forEachArray(configs, function (config) {
+        _local.forEachArray(configs, function(config) {
             if (config.name() === name && (id !== undefined && id !== config.id())) {
                 duplicate = true;
                 return false;
@@ -2710,8 +2733,8 @@ var notificationsViewModel = function() {
         return duplicate;
     };
 
-    self.bindings = {
-        currPolicy: ko.viewmodel.fromModel(self.templates.policy),
+    _local.bindings = {
+        currPolicy: ko.viewmodel.fromModel(_local.templates.policy),
         currAlertConfig: ko.observable(),
         policyList: ko.observableArray(),
 
@@ -2756,55 +2779,59 @@ var notificationsViewModel = function() {
         daySunday: ko.observable(false),
         dayHolidays: ko.observable(false),
 
-        updateScheduleEvents: function () {
-            self.updateScheduleEvents();
+        savePolicy: function() {
+            _local.savePolicy();
+        },
+
+        updateScheduleEvents: function() {
+            _local.updateScheduleEvents();
 
             return true;
         },
 
-        editDays: function (schedule) {
-            self.forEachArray(self.bindings.days, function (day, idx) {
-                self.bindings['day' + day](false);
+        editDays: function(schedule) {
+            _local.forEachArray(_local.bindings.days, function(day, idx) {
+                _local.bindings['day' + day](false);
             });
 
-            self.forEachArray(schedule.days(), function (day) {
-                var idx = self.bindings.shortDays.indexOf(day);
+            _local.forEachArray(schedule.days(), function(day) {
+                var idx = _local.bindings.shortDays.indexOf(day);
 
                 if (idx !== -1) {
-                    self.bindings['day' + self.bindings.days[idx]](true);
+                    _local.bindings['day' + _local.bindings.days[idx]](true);
                 }
             });
 
-            self.bindings.dayHolidays(schedule.holidays());
+            _local.bindings.dayHolidays(schedule.holidays());
 
-            self._currSchedule = schedule;
+            _local._currSchedule = schedule;
 
             $('#notificationsEditDaysModal').modal('show');
         },
 
-        updateDays: function () {
+        updateDays: function() {
             var ret = [];
-            self.forEachArray(self.bindings.days, function (day, idx) {
-                if (self.bindings['day' + day]()) {
-                    ret.push(self.bindings.shortDays[idx]);
+            _local.forEachArray(_local.bindings.days, function(day, idx) {
+                if (_local.bindings['day' + day]()) {
+                    ret.push(_local.bindings.shortDays[idx]);
                 }
             });
 
-            self._currSchedule.holidays(self.bindings.dayHolidays());
+            _local._currSchedule.holidays(_local.bindings.dayHolidays());
 
-            if (self.bindings.dayHolidays()) {
+            if (_local.bindings.dayHolidays()) {
                 ret.push('Holidays');
             }
 
-            self._currSchedule.days(ret);
+            _local._currSchedule.days(ret);
 
             $('#notificationsEditDaysModal').modal('hide');
-            self.updateScheduleEvents();
+            _local.updateScheduleEvents();
         },
 
-        getAlertStyleText: function (value) {
+        getAlertStyleText: function(value) {
             var ret;
-            self.forEachArray(self.bindings.alertStyles, function (style) {
+            _local.forEachArray(_local.bindings.alertStyles, function(style) {
                 if (style.value === value) {
                     ret = style.text;
                 }
@@ -2813,29 +2840,29 @@ var notificationsViewModel = function() {
             return ret;
         },
 
-        getUserName: function (id) {
-            var user = self.translateMember(id);
+        getUserName: function(id) {
+            var user = _local.translateMember(id);
 
             return user.firstName + ' ' + user.lastName;
         },
 
-        addAlertConfig: function (layer) {
+        addAlertConfig: function(layer) {
             layer.$parent.alertConfigs.push(layer.$data.id());
         },
 
-        deleteAlertConfig: function (config) {
-            self.bindings.currPolicy.alertConfigs.remove(function (item) {
+        deleteAlertConfig: function(config) {
+            _local.bindings.currPolicy.alertConfigs.remove(function(item) {
                 return item.id() === config.id();
             });
-            self.savePolicy();
-            self.dirty(true);
+            _local.savePolicy();
+            _local.dirty(true);
             //needs validation
         },
 
-        convertTime: function (scheduleTime) {
+        convertTime: function(scheduleTime) {
             var ret,
                 fullTime = scheduleTime(),
-                hr = fullTime/100,
+                hr = fullTime / 100,
                 ampm = hr >= 12 ? 'PM' : 'AM';
 
             if (hr > 12) {
@@ -2849,7 +2876,7 @@ var notificationsViewModel = function() {
             return hr + ' ' + ampm;
         },
 
-        convertDate: function (scheduleDays) {
+        convertDate: function(scheduleDays) {
             var _days = scheduleDays().join(';'),
                 days = [],
                 weekdays = 'mon;tues;wed;thur;fri',
@@ -2879,98 +2906,116 @@ var notificationsViewModel = function() {
                 }
             }
 
-            days = days.filter(function (el, idx, arr) {
+            days = days.filter(function(el, idx, arr) {
                 return el !== '';
+            });
+
+            days.forEach(function(day, idx, arr) {
+                arr[idx] = day.charAt(0).toUpperCase() + day.slice(1);
             });
 
             return days.join(',');
         },
 
-        deleteSchedule: function (context) {
+        deleteSchedule: function(context) {
             var scheduleIndex = context.$index(),
                 layerIndex = context.$parentContext.$index();
 
-            self.bindings.currPolicy.scheduleLayers()[layerIndex].schedules.splice(scheduleIndex, 1);
-            self.dirty(true);
-            self.updateScheduleEvents();
+            _local.bindings.currPolicy.scheduleLayers()[layerIndex].schedules.splice(scheduleIndex, 1);
+            _local.dirty(true);
+            _local.updateScheduleEvents();
         },
 
-        addSchedule: function (scheduleLayer) {
-            scheduleLayer.schedules.push(ko.viewmodel.fromModel(self.getTemplate('schedule')));
-            self.updateScheduleEvents();
+        addSchedule: function(scheduleLayer) {
+            scheduleLayer.schedules.push(ko.viewmodel.fromModel(_local.getTemplate('schedule')));
+            _local.updateScheduleEvents();
         },
 
-        addScheduleLayer: function () {
-            self.bindings.currPolicy.scheduleLayers.push(ko.viewmodel.fromModel(self.getTemplate('scheduleLayer')));
-            self.updateScheduleEvents();
+        addScheduleLayer: function() {
+            _local.bindings.currPolicy.scheduleLayers.push(ko.viewmodel.fromModel(_local.getTemplate('scheduleLayer')));
+            _local.updateScheduleEvents();
         },
 
-        deleteScheduleLayer: function (layer, idx) {
+        deleteScheduleLayer: function(layer, idx) {
             layer.scheduleLayers.splice(idx(), 1);
-            self.dirty(true);
-            self.updateScheduleEvents();
+            _local.dirty(true);
+            _local.updateScheduleEvents();
         },
 
-        editSchedule: function () {
-            self.bindings.isEditingSchedule(true);
+        editSchedule: function() {
+            _local.bindings.isEditingSchedule(true);
         },
 
-        cancelEditSchedule: function () {
-            ko.viewmodel.updateFromModel(self.bindings.currPolicy.scheduleLayers, self._currPolicy.scheduleLayers);
-            self.bindings.isEditingSchedule(false);
-            self.updateScheduleEvents();
+        cancelEditSchedule: function() {
+            ko.viewmodel.updateFromModel(_local.bindings.currPolicy.scheduleLayers, _local._currPolicy.scheduleLayers);
+            _local.bindings.isEditingSchedule(false);
+            _local.updateScheduleEvents();
         },
 
-        saveSchedule: function () {
-            self._currPolicy = ko.toJS(self.bindings.currPolicy);
-            self.bindings.isEditingSchedule(false);
+        saveSchedule: function() {
+            _local._currPolicy = ko.toJS(_local.bindings.currPolicy);
+            _local.bindings.isEditingSchedule(false);
 
-            self.savePolicy();
+            _local.savePolicy();
         },
 
-        editAlertConfigMembers: function (escalation) {
-            self.memberCb = self.updateAlertConfigMembers;
-            self._currEscalation = escalation;
-            self.editMembers(ko.toJS(self.bindings.currPolicy.members()), self.translateMembers(escalation.members()));
+        editAlertConfigMembers: function(escalation) {
+            _local.memberCb = _local.updateAlertConfigMembers;
+            _local._currEscalation = escalation;
+            _local.editMembers(ko.toJS(_local.bindings.currPolicy.members()), _local.translateMembers(escalation.members()));
         },
 
-        editPolicyMembers: function () {
-            self.memberCb = self.updatePolicyMembers;
-            self.editMembers(self.users, ko.toJS(self.bindings.currPolicy.members()));
+        editPolicyMembers: function() {
+            _local.memberCb = _local.updatePolicyMembers;
+            _local.editMembers(_local.users, ko.toJS(_local.bindings.currPolicy.members()));
         },
 
-        getAlertIcon: function (type) {
-            return 'fa-' + self.iconLookup[type()];
+        getAlertIcon: function(alert) {
+            var contact;
+
+            if (alert.Name) {
+                contact = _local.getContact({
+                    Name: alert.Name()
+                });
+            } else {
+                contact = _local.getContact(ko.toJS(alert));
+            }
+
+            return 'fa-' + _local.iconLookup[contact && contact.Type()];
         },
 
-        getAlertType: function (contactInfo, type) {
-            var contact = self.getContact({Value: contactInfo(), Type: type()});
+        getAlertType: function(contactInfo, type, name) {
+            var contact = _local.getContact({
+                Value: contactInfo(),
+                Name: name()
+            });
 
-            return contact.Type;
+            return contact && contact.Type;
         },
 
-        addNewAlert: function (data) {
-            var alert = self.getTemplate('alertNotification'),
-                firstContact = self.bindings.currMember().contactInfo()[0],
-                alerts = self.bindings.currMember().alerts[data.name];
+        addNewAlert: function(data) {
+            var alert = _local.getTemplate('alertNotification'),
+                firstContact = _local.bindings.currMember().contactInfo()[0],
+                alerts = _local.bindings.currMember().alerts[data.name];
 
             alert.Value = firstContact.Value();
             alert.Type = firstContact.Type();
+            alert.Name = firstContact.Name();
 
             if (alerts().length === 0) {
                 alert.delay = 0;
             }
 
-            self.bindings.currMember().alerts[data.name].push(ko.viewmodel.fromModel(alert));
+            _local.bindings.currMember().alerts[data.name].push(ko.viewmodel.fromModel(alert));
         },
 
-        deleteAlert: function (alertType, idx) {
+        deleteAlert: function(alertType, idx) {
             var _idx = idx(),
                 row;
 
             alertType.alerts.splice(_idx, 1);
 
-            if (_idx === 0) {//deleted first one
+            if (_idx === 0) { //deleted first one
                 row = alertType.alerts()[0];
                 if (row) {
                     row.delay(0);
@@ -2978,47 +3023,47 @@ var notificationsViewModel = function() {
             }
         },
 
-        getContactString: function (contact) {
-            var type = self.alertTypeLookup[contact.Type()],
+        getContactString: function(contact) {
+            var type = _local.alertTypeLookup[contact.Type()],
                 val = contact.Value(),
-                name = contact.Name();
+                name = contact.Name && contact.Name();
 
             return [type, name, 'at', val].join(' ');
         },
 
-        getContactAlertString: function (alert) {
-            var contact = self.getContact(alert);
+        getContactAlertString: function(alert) {
+            var contact = _local.getContact(alert);
 
-            return self.bindings.getContactString(contact);
+            return _local.bindings.getContactString(contact);
         },
 
-        editAlertNotifications: function () {
-            self.bindings.isEditingAlertNotifications(true);
+        editAlertNotifications: function() {
+            _local.bindings.isEditingAlertNotifications(true);
         },
 
-        cancelEditAlertNotifications: function () {
-            self.bindings.currMember(ko.viewmodel.fromModel(self._originalMember));
-            self.bindings.isEditingAlertNotifications(false);
-            ko.viewmodel.updateFromModel(self.bindings.currMember().alerts, self._originalMember.alerts);
+        cancelEditAlertNotifications: function() {
+            _local.bindings.currMember(ko.viewmodel.fromModel(_local._originalMember));
+            _local.bindings.isEditingAlertNotifications(false);
+            ko.viewmodel.updateFromModel(_local.bindings.currMember().alerts, _local._originalMember.alerts);
         },
 
-        saveAlertNotifications: function (user) {
-            self.bindings.isEditingAlertNotifications(false);
-            self.saveUser(ko.toJS(user));
+        saveAlertNotifications: function(user) {
+            _local.bindings.isEditingAlertNotifications(false);
+            _local.saveUser(ko.toJS(user));
 
-            self.savePolicy();
+            _local.savePolicy();
         },
 
-        updateMembers: function () {
-            if (self.memberCb) {
-                self.memberCb();
-                self.memberCb = null;
-                self.savePolicy();
+        updateMembers: function() {
+            if (_local.memberCb) {
+                _local.memberCb();
+                _local.memberCb = null;
+                _local.savePolicy();
             }
-            self.$modal.modal('hide');
+            _local.$modal.modal('hide');
         },
 
-        doDeletePolicy: function (id, cb) {
+        doDeletePolicy: function(id, cb) {
             $.ajax({
                 url: '/api/policies/delete',
                 data: {
@@ -3026,165 +3071,165 @@ var notificationsViewModel = function() {
                 },
                 type: 'POST',
                 dataType: 'json'
-            }).done(function (response) {
+            }).done(function(response) {
                 console.log('Deleted');
                 cb();
             });
         },
 
-        deletePolicy: function (policy) {
-            self.forEachArray(self.bindings.policyList(), function (boundPolicy, idx) {
+        deletePolicy: function(policy) {
+            _local.forEachArray(_local.bindings.policyList(), function(boundPolicy, idx) {
                 if (boundPolicy._id() === policy._id()) {
                     if (policy._new && policy._new()) {
-                        self.bindings.policyList.splice(idx, 1);
+                        _local.bindings.policyList.splice(idx, 1);
                     } else {
-                        self.bindings.doDeletePolicy(policy._id(), function () {
-                            self.bindings.policyList.splice(idx, 1);
+                        _local.bindings.doDeletePolicy(policy._id(), function() {
+                            _local.bindings.policyList.splice(idx, 1);
                         });
                     }
                 }
             });
         },
-        selectPolicy: function (policy) {
+        selectPolicy: function(policy) {
             var rawPolicy = ko.toJS(policy);
-            self.bindings.currAlertConfig(null);
-            self.bindings.isEditingMember(false);
-            self._currPolicy = ko.toJS(policy);
-            ko.viewmodel.updateFromModel(self.bindings.currPolicy, rawPolicy);
-            self.bindings.isEditingPolicy(true);
+            _local.bindings.currAlertConfig(null);
+            _local.bindings.isEditingMember(false);
+            _local._currPolicy = ko.toJS(policy);
+            ko.viewmodel.updateFromModel(_local.bindings.currPolicy, rawPolicy);
+            _local.bindings.isEditingPolicy(true);
         },
-        addPolicy: function () {
-            self.bindings.newPolicyName('');
-            self.bindings.isEditingNewPolicy(true);
+        addPolicy: function() {
+            _local.bindings.newPolicyName('');
+            _local.bindings.isEditingNewPolicy(true);
         },
-        doAddNewPolicy: function () {
-            var newPolicy = self.getTemplate('policy'),
-                name = self.bindings.newPolicyName();
+        doAddNewPolicy: function() {
+            var newPolicy = _local.getTemplate('policy'),
+                name = _local.bindings.newPolicyName();
 
             // validation
             newPolicy.name = name;
-            self.bindings.policyList.push(ko.viewmodel.fromModel(newPolicy));
-            self.bindings.isEditingNewPolicy(false);
-            ko.viewmodel.updateFromModel(self.bindings.currPolicy, newPolicy);
-            self.bindings.selectPolicy(newPolicy);
-            self.dirty(true);
+            _local.bindings.policyList.push(ko.viewmodel.fromModel(newPolicy));
+            _local.bindings.isEditingNewPolicy(false);
+            ko.viewmodel.updateFromModel(_local.bindings.currPolicy, newPolicy);
+            _local.bindings.selectPolicy(newPolicy);
+            _local.dirty(true);
         },
-        editPolicyName: function () {
-            self.bindings.currPolicyName(self.bindings.currPolicy.name());
-            self.bindings.isEditingPolicyName(true);
+        editPolicyName: function() {
+            _local.bindings.currPolicyName(_local.bindings.currPolicy.name());
+            _local.bindings.isEditingPolicyName(true);
         },
-        savePolicyName: function () {
-            self.bindings.currPolicy.name(self.bindings.currPolicyName());
-            self.bindings.isEditingPolicyName(false);
-            self.savePolicy();
+        savePolicyName: function() {
+            _local.bindings.currPolicy.name(_local.bindings.currPolicyName());
+            _local.bindings.isEditingPolicyName(false);
+            _local.savePolicy();
         },
-        cancelPolicyNameEdit: function () {
-            self.bindings.isEditingPolicyName(false);
-        },
-
-        cancelEditMember: function () {
-            self.bindings.currMember(null);
-            self.bindings.isEditingMember(false);
+        cancelPolicyNameEdit: function() {
+            _local.bindings.isEditingPolicyName(false);
         },
 
-        editPolicyEnabled: function () {
-            self.bindings.currPolicyEnabled(self.bindings.currPolicy.enabled());
-            self.bindings.isEditingPolicyEnabled(true);
-        },
-        savePolicyEnabled: function () {
-            self.bindings.currPolicy.enabled(!self.bindings.currPolicyEnabled());
-            self.bindings.isEditingPolicyEnabled(false);
-            self.savePolicy();
-        },
-        cancelPolicyEnabledEdit: function () {
-            self.bindings.isEditingPolicyEnabled(false);
+        cancelEditMember: function() {
+            _local.bindings.currMember(null);
+            _local.bindings.isEditingMember(false);
         },
 
-        addConfiguration: function () {
-            self.bindings.newConfigurationName('');
-            self.bindings.isEditingNewConfiguration(true);
+        editPolicyEnabled: function() {
+            _local.bindings.currPolicyEnabled(_local.bindings.currPolicy.enabled());
+            _local.bindings.isEditingPolicyEnabled(true);
         },
-        doAddNewConfiguration: function () {
-            var configurationTemplate = self.getTemplate('alertConfig'),
+        savePolicyEnabled: function() {
+            _local.bindings.currPolicy.enabled(!_local.bindings.currPolicyEnabled());
+            _local.bindings.isEditingPolicyEnabled(false);
+            _local.savePolicy();
+        },
+        cancelPolicyEnabledEdit: function() {
+            _local.bindings.isEditingPolicyEnabled(false);
+        },
+
+        addConfiguration: function() {
+            _local.bindings.newConfigurationName('');
+            _local.bindings.isEditingNewConfiguration(true);
+        },
+        doAddNewConfiguration: function() {
+            var configurationTemplate = _local.getTemplate('alertConfig'),
                 duplicate;
 
-            duplicate = self.checkAlertConfigNames(null, self.bindings.newConfigurationName(), self.bindings.currPolicy.alertConfigs());
+            duplicate = _local.checkAlertConfigNames(null, _local.bindings.newConfigurationName(), _local.bindings.currPolicy.alertConfigs());
 
             if (!duplicate) {
-                configurationTemplate.name = self.bindings.newConfigurationName();
-                self.bindings.currPolicy.alertConfigs.push(ko.viewmodel.fromModel(configurationTemplate));
-                self.bindings.currAlertConfig(ko.viewmodel.fromModel(ko.toJS(self.bindings.currPolicy.alertConfigs.slice(-1)[0])));
-                self.bindings.isEditingNewConfiguration(false);
-                self.bindings.isEditingAlertConfig(true);
-                self.savePolicy();
+                configurationTemplate.name = _local.bindings.newConfigurationName();
+                _local.bindings.currPolicy.alertConfigs.push(ko.viewmodel.fromModel(configurationTemplate));
+                _local.bindings.currAlertConfig(ko.viewmodel.fromModel(ko.toJS(_local.bindings.currPolicy.alertConfigs.slice(-1)[0])));
+                _local.bindings.isEditingNewConfiguration(false);
+                _local.bindings.isEditingAlertConfig(true);
+                _local.savePolicy();
             }
         },
 
-        editAlertConfig: function (alertConfig) {
-            self.bindings.currAlertConfig(alertConfig);
+        editAlertConfig: function(alertConfig) {
+            _local.bindings.currAlertConfig(alertConfig);
         },
-        cancelEditAlertConfig: function () {
-            self.bindings.cancelDoEditAlertConfig();
-            self.bindings.currAlertConfig(null);
+        cancelEditAlertConfig: function() {
+            _local.bindings.cancelDoEditAlertConfig();
+            _local.bindings.currAlertConfig(null);
         },
 
-        doEditAlertConfig: function () {
-            self._originalAlertConfig = ko.toJS(self.bindings.currAlertConfig);
+        doEditAlertConfig: function() {
+            _local._originalAlertConfig = ko.toJS(_local.bindings.currAlertConfig);
 
-            self.bindings.isEditingAlertConfig(true);
+            _local.bindings.isEditingAlertConfig(true);
         },
-        cancelDoEditAlertConfig: function () {
-            ko.viewmodel.updateFromModel(self.bindings.currAlertConfig, self._originalAlertConfig);
-            self.bindings.isEditingAlertConfig(false);
+        cancelDoEditAlertConfig: function() {
+            ko.viewmodel.updateFromModel(_local.bindings.currAlertConfig, _local._originalAlertConfig);
+            _local.bindings.isEditingAlertConfig(false);
         },
-        saveEditAlertConfig: function () {
-            var id = self.bindings.currAlertConfig().id(),
+        saveEditAlertConfig: function() {
+            var id = _local.bindings.currAlertConfig().id(),
                 duplicate;
 
-            duplicate = self.checkAlertConfigNames(self.bindings.currAlertConfig().id(), self.bindings.currAlertConfig().name(), self.bindings.currPolicy.alertConfigs());
+            duplicate = _local.checkAlertConfigNames(_local.bindings.currAlertConfig().id(), _local.bindings.currAlertConfig().name(), _local.bindings.currPolicy.alertConfigs());
 
             if (!duplicate) {
-                self.forEachArray(self.bindings.currPolicy.alertConfigs(), function (config) {
+                _local.forEachArray(_local.bindings.currPolicy.alertConfigs(), function(config) {
                     if (config.id() === id) {
-                        ko.viewmodel.updateFromModel(config, ko.toJS(self.bindings.currAlertConfig));
-                        // ko.viewmodel.updateFromModel(self.bindings.currPolicy.alertConfigs)
+                        ko.viewmodel.updateFromModel(config, ko.toJS(_local.bindings.currAlertConfig));
+                        // ko.viewmodel.updateFromModel(_local.bindings.currPolicy.alertConfigs)
                         return false;
                     }
                 });
 
-                self._originalAlertConfig = ko.toJS(self.bindings.currAlertConfig);
+                _local._originalAlertConfig = ko.toJS(_local.bindings.currAlertConfig);
 
-                self.savePolicy();
+                _local.savePolicy();
 
-                self.bindings.isEditingAlertConfig(false);
+                _local.bindings.isEditingAlertConfig(false);
             }
         },
 
-        addAlertGroup: function () {
-            self.bindings.currAlertConfig().groups.push(ko.viewmodel.fromModel(self.getTemplate('group')));
+        addAlertGroup: function() {
+            _local.bindings.currAlertConfig().groups.push(ko.viewmodel.fromModel(_local.getTemplate('group')));
         },
 
-        deleteAlertGroup: function (alertConfig, idx) {
+        deleteAlertGroup: function(alertConfig, idx) {
             alertConfig.groups.splice(idx(), 1);
-            self.dirty(true);
+            _local.dirty(true);
         },
 
-        addEscalation: function (group) {
-            group.escalations.push(ko.viewmodel.fromModel(self.getTemplate('escalation')));
+        addEscalation: function(group) {
+            group.escalations.push(ko.viewmodel.fromModel(_local.getTemplate('escalation')));
         },
 
-        deleteEscalation: function (group, idx) {
+        deleteEscalation: function(group, idx) {
             group.escalations.splice(idx(), 1);
         },
 
-        home: function () {
-            // self.forEachArray(self.bindings.policyList(), function (policy, idx) {
-            //     if (policy._id === self.bindings.currPolicy._id()) {
-            //         ko.viewmodel.updateFromModel(self.bindings.policyList()[idx], ko.toJS(self.bindings.currPolicy));
+        home: function() {
+            // _local.forEachArray(_local.bindings.policyList(), function (policy, idx) {
+            //     if (policy._id === _local.bindings.currPolicy._id()) {
+            //         ko.viewmodel.updateFromModel(_local.bindings.policyList()[idx], ko.toJS(_local.bindings.currPolicy));
             //     }
             // });
-            self.clearEdits(true);
-            // ko.viewmodel.updateFromModel(self.bindings.currPolicy, self.templates.policy);// check for unsaved changes?
+            _local.clearEdits(true);
+            // ko.viewmodel.updateFromModel(_local.bindings.currPolicy, _local.templates.policy);// check for unsaved changes?
         }
     };
 
@@ -3193,8 +3238,8 @@ var notificationsViewModel = function() {
         contentType: 'application/json',
         dataType: 'json',
         type: 'post'
-    }).done(function (data){
-        self.groups = data;
+    }).done(function(data) {
+        _local.groups = data;
     });
 
     $.ajax({
@@ -3202,23 +3247,23 @@ var notificationsViewModel = function() {
         contentType: 'application/json',
         dataType: 'json',
         type: 'post'
-    }).done(function (data){
+    }).done(function(data) {
         var c,
             users = data.Users,
             len = users.length,
             member;
 
-        self.users = [];
-        self.userLookup = {};
+        _local.users = [];
+        _local.userLookup = {};
 
-        for (c=0; c<len; c++) {
-            member = new Member(users[c]);
-            self.users.push(member);
-            self.userLookup[member.id] = member;
+        for (c = 0; c < len; c++) {
+            member = createMember(users[c]);
+            _local.users.push(member);
+            _local.userLookup[member.id] = member;
         }
     });
 
-    $('body').on('shown.bs.dropdown', '.daySelect input', function (e) {
+    $('body').on('shown.bs.dropdown', '.daySelect input', function(e) {
 
     });
 
@@ -3232,7 +3277,7 @@ var notificationsViewModel = function() {
                 len = alertConfigs.length,
                 done = false;
 
-            for(c=0; c<len && !done; c++) {
+            for (c = 0; c < len && !done; c++) {
                 if (alertConfigs[c].id() === configID) {
                     alertConfig = alertConfigs[c];
                     done = true;
@@ -3244,29 +3289,30 @@ var notificationsViewModel = function() {
     };
 
     ko.bindingHandlers.timepicker = {
-        init: function (element, valueAccessor, allBindingsAccessor, viewModel, context) {
+        init: function(element, valueAccessor, allBindingsAccessor, viewModel, context) {
             //initialize timepicker with some optional options
             var observable = valueAccessor(),
                 options = {
                     doneText: 'Done',
                     autoclose: true,
-                    afterDone: function () {
+                    afterDone: function() {
                         var time = $(element).val().split(':'),
                             hr = parseInt(time[0], 10),
                             min = parseInt(time[1], 10);
                         observable(hr * 100 + min);
                         context.$parents[2].updateScheduleEvents();
+                        context.$parents[2].savePolicy();
                     }
                 };
 
             $(element).clockpicker(options);
 
-            $(element).change(function (event) {
+            $(element).change(function(event) {
                 $(element).clockpicker('resetclock');
             });
         },
 
-        update: function (element, valueAccessor) {
+        update: function(element, valueAccessor) {
             var value = ko.utils.unwrapObservable(valueAccessor()),
                 hr,
                 min;
@@ -3282,26 +3328,12 @@ var notificationsViewModel = function() {
     };
 
 
-    return self;
+    return _local;
 };
-
-// About Infoscan -------------------------------------------------------------
-/*
-var aboutInfoScanViewModel = function() {
-    this.displayName = 'About InfoScan';
-
-    this.dirty = ko.observable(false);
-
-    this.hasError = ko.observable(false);
-};
-
-sysPrefsViewModel.registerSection(aboutInfoScanViewModel);
-*/
-
 // Shortcut for $(document).ready(function()...
 $(function() {
 
-    function postInit () {
+    function postInit() {
         var year,
             calendarVM,
             hash;
@@ -3318,9 +3350,10 @@ $(function() {
             sysPrefsViewModel.registerSection(customColorCodesViewModel, 'init');
             sysPrefsViewModel.registerSection(telemetryViewModel, 'init');
             sysPrefsViewModel.registerSection(backupViewModel, 'init');
-            sysPrefsViewModel.registerSection(alarmMessageDefinitions);
+            sysPrefsViewModel.registerSection(alarmMessageViewModel, 'init');
             sysPrefsViewModel.registerSection(weatherViewModel, 'init');
             sysPrefsViewModel.registerSection(notificationsViewModel, 'init');
+            sysPrefsViewModel.registerSection(versionsViewModel, 'init');
 
             year = new Date().getFullYear();
             calendarVM = sysPrefsViewModel.getSection('Calendar');

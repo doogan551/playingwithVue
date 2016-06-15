@@ -89,11 +89,12 @@ router.post('/removeutility', function(req, res, next) {
 	});
 });
 // NOT CHECKED
-router.post('/getmarkup', function(req, res, next) {
+router.get('/getmarkup', function(req, res, next) {
 	var data = _.merge(req.params, req.body);
 	data.user = req.user;
+    data.type = req.query.type;
 
-	Utilities.getMarkup(data, function(err, result) {
+	Utilities.getMarkup(data, function(result, err) {
 		if (err) {
 			return utils.sendResponse(res, {
 				err: err

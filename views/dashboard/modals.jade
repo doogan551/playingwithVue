@@ -311,32 +311,36 @@
                                 .col-xs-3 To
                                 .col-xs-6
                                     input.input-sm.form-control(type="text", data-bind="datepicker: dateTo", required)
-                .row(data-bind="visible: season() !== 'transition'")
+                .row
                     .col-sm-6
                         .form-inline.days
-                            .title 3. Choose peak days
-                            .day S
-                                .checkbox
-                                    input(type="checkbox", data-bind="checked: daySunday")
-                            .day M
-                                .checkbox
-                                    input(type="checkbox", data-bind="checked: dayMonday")
-                            .day T
-                                .checkbox
-                                    input(type="checkbox", data-bind="checked: dayTuesday")
-                            .day W
-                                .checkbox
-                                    input(type="checkbox", data-bind="checked: dayWednesday")
-                            .day TH
-                                .checkbox
-                                    input(type="checkbox", data-bind="checked: dayThursday")
-                            .day F
-                                .checkbox
-                                    input(type="checkbox", data-bind="checked: dayFriday")
-                            .day S
-                                .checkbox
-                                    input(type="checkbox", data-bind="checked: daySaturday")
-                    .col-sm-6
+                            .checkbox(data-bind="visible: season() === 'transition'")
+                                input#enablePeakSelection(type="checkbox", data-bind="checked: enablePeakSelection")
+                                label(for="enablePeakSelection") Enable Peak Selection
+                            span(data-bind="visible: season() !== 'transition' || (season() === 'transition' && enablePeakSelection() === true)")
+                                .title 3. Choose peak days
+                                .day S
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: daySunday")
+                                .day M
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: dayMonday")
+                                .day T
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: dayTuesday")
+                                .day W
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: dayWednesday")
+                                .day TH
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: dayThursday")
+                                .day F
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: dayFriday")
+                                .day S
+                                    .checkbox
+                                        input(type="checkbox", data-bind="checked: daySaturday")
+                    .col-sm-6(data-bind="visible: season() !== 'transition' || (season() === 'transition' && enablePeakSelection() === true)")
                         .form-inline
                             .title 4. Choose peak time
                             .row
@@ -402,6 +406,10 @@
                 .row.bm15px
                     .col-xs-6
                         input.input-sm.form-control(type="text", data-bind="value: title")
+                        .checkbox
+                            label
+                                input(type="checkbox", data-bind="checked: hidePeakInfo")
+                                | Do not show peak information
                 //- .checkbox(data-bind="visible: isChild")
                 //-     label
                 //-         input(type="checkbox", data-bind="checked: unlink")
@@ -488,18 +496,25 @@
                             option % Multiplier
 
                 .row.bm15px.form-inline(data-bind="visible: type().match('consumption') && peak() === 'off'")
-                    .col-xs-12
+                    .col-xs-6
                         .title 3. Choose Qualifier (optional)
-                    .col-xs-12
+                    .col-xs-6
+                        .title(data-bind="visible: rateQualifier() === '' || rateQualifier() === null") &nbsp;
+                        .title(data-bind="visible: rateQualifier() !== '' && rateQualifier() !== null") 4. Choose Qualifier Demand
+                    .col-xs-6
                         input.input-sm.rateQualifier.form-control(type="text", data-bind="value: rateQualifier")
                         select.selectSm.form-control
                             option hrs
-                    .col-xs-5.flexrow.flexaround
-                        button(data-val="<=", data-bind="click: addQualifier") &le;
-                        button(data-val="<", data-bind="click: addQualifier") &lt;
-                        button(data-val="AND", data-bind="click: addQualifier") AND
-                        button(data-val=">=", data-bind="click: addQualifier") &ge;
-                        button(data-val=">", data-bind="click: addQualifier") &gt;
+                        .flexrow.flexaround
+                            button(data-val="<=", data-bind="click: addQualifier") &le;
+                            button(data-val="<", data-bind="click: addQualifier") &lt;
+                            button(data-val="AND", data-bind="click: addQualifier") AND
+                            button(data-val=">=", data-bind="click: addQualifier") &ge;
+                            button(data-val=">", data-bind="click: addQualifier") &gt;
+                    .col-xs-6(data-bind="visible: rateQualifier() !== '' && rateQualifier() !== null")
+                        select.selectSm.form-control(data-bind="value: qualifierDemand")
+                            option Max Demand
+                            option On Peak Demand
 
                 .title Final Step.  Choose rate element name.
                 .row
@@ -529,6 +544,10 @@
                 .row.bm15px
                     .col-xs-6
                         input.input-sm.form-control(type="text", data-bind="value: tableName")
+                        .checkbox
+                            label
+                                input(type="checkbox", data-bind="checked: hidePeakInfo")
+                                | Do not show peak information
                 // ko if: rateTablesUsable().length > 0
                 // ko onlyOneCheck: true
                 .title 2. Rate Periods
@@ -552,7 +571,7 @@
 // Billing Modals
 .modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'billingDefaultTitle', touPage: 'Electricity-Billing'")
     .modal-dialog.modal-sm
-        .modal-content.billingModal
+        .modal-content
             .modal-header
                 h3.panel-title Update Bill Title Template
             .modal-body
@@ -575,12 +594,14 @@
 
 .modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'billingUncommitBill', touPage: 'Electricity-Billing'")
     .modal-dialog.modal-sm
-        .modal-content.billingModal
+        .modal-content.commitUncommit
             .modal-header(style="background-color: #000")
                 h3.panel-title Uncommit Bill
             .modal-body
-                //- span(data-bind="text: commitInfo")
-                span Select 'Uncommit' below to remove this committment and recreate the bill using data from the data store.
+                span Select 'Uncommit' to remove this committment and recreate the bill&nbsp;
+                span(data-bind="if: $page.bindings.selectedBill().period === 'Month'") using data from the data store.
+                span(data-bind="if: $page.bindings.selectedBill().period === 'Year'") using data from committed monthly bills and/or data from the data store when the monthly bills have not been committed.
+
                 .warning
                     i.fa.fa-exclamation-triangle
                     span Warning: this cannot be undone.
@@ -591,7 +612,7 @@
 
 .modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'billingCommitBill', touPage: 'Electricity-Billing'")
     .modal-dialog.modal-sm
-        .modal-content.billingModal
+        .modal-content.commitUncommit
             .modal-header
                 h3.panel-title Commit Bill
             .modal-body
@@ -605,7 +626,43 @@
                 button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.commitBill.bind($page)")
                     i.fa.fa-spin.fa-spinner
                     span Commit
+
 // End Billing Modals
+
+// Report Modals
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'reportingUncommitReport', touPage: 'Electricity-Reports'")
+    .modal-dialog.modal-sm
+        .modal-content.commitUncommit
+            .modal-header(style="background-color: #000")
+                h3.panel-title Uncommit Report
+            .modal-body
+                span Select 'Uncommit' to remove this commitment and recreate the report using data from the data store.
+                .warning
+                    i.fa.fa-exclamation-triangle
+                    span Warning: this cannot be undone.
+
+            .modal-footer.uncommitControls
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.uncommitReport.bind($page)") Uncommit
+
+.modal.fade(tabindex="-1", role="dialog", aria-hidden="true", data-bind="touModal: 'reportingCommitReport', touPage: 'Electricity-Reports'")
+    .modal-dialog.modal-sm
+        .modal-content.commitUncommit
+            .modal-header
+                h3.panel-title Commit Report
+            .modal-body
+                span Are you sure you want to commit this report?
+                .info
+                    i.fa.fa-info-circle
+                    span This can be undone in the future.
+
+            .modal-footer.commitControls
+                button.btn.btn-default.btn-sm(data-dismiss="modal") Cancel
+                button.btn.btn-primary.btn-sm(data-bind="click: $page.bindings.commitReport.bind($page)")
+                    i.fa.fa-spin.fa-spinner
+                    span Commit
+// End Report Modals
+
 
 //- Template.  touModal: modalName/property.
 
