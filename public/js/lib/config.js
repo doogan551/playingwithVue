@@ -2094,6 +2094,9 @@ var Config = (function(obj) {
             if (data.ok === true) {
                 data = this.validateNetworkNumber(data);
             }
+            if (data.ok === true) {
+                data.point = obj.EditChanges.applyEthernetNetworkNumber(data);
+            }
             return data;
         },
 
@@ -3154,6 +3157,24 @@ var Config = (function(obj) {
             } else {
                 data.point["High Warning Limit"].isReadOnly = true;
                 data.point["Low Warning Limit"].isReadOnly = true;
+            }
+            return data.point;
+        },
+
+        applyEthernetNetworkNumber: function(data) {
+            if (!data.hasOwnProperty('systemNetwork') || !data.hasOwnProperty('systemIPPort')) {
+                data.ok = false;
+                data.result = "systemNetwork and systemIPPort must be supplied.";
+            }
+            if (data.point['Ethernet Network'].Value !== data.systemNetwork) {
+                data.point['Ethernet IP Port'].isReadOnly = false;
+            } else {
+                data.point['Ethernet IP Port'].isReadOnly = true;
+                data.point['Ethernet IP Port'].Value = data.systemIPPort;
+            }
+
+            if (data.oldPoint['Ethernet Network'].Value !== data.point['Ethernet Network'].Value) {
+                data.point._cfgRequired = true;
             }
             return data.point;
         },
@@ -4675,14 +4696,17 @@ var Config = (function(obj) {
             if (point["Network Type"].Value == "Unknown") {
                 point["Device Address"].isDisplayable = false;
                 point["Network Segment"].isDisplayable = false;
+                point["Ethernet IP Port"].isDisplayable = false;
             } else if (point["Network Type"].Value == "MS/TP") {
                 point["Device Address"].isDisplayable = true;
                 point["Device Address"].Max = 127;
                 point["Network Segment"].isDisplayable = true;
+                point["Ethernet IP Port"].isDisplayable = false;
             } else {
                 point["Device Address"].isDisplayable = true;
                 point["Device Address"].Max = -1;
                 point["Network Segment"].isDisplayable = true;
+                point["Ethernet IP Port"].isDisplayable = true;
             }
             return point;
         },

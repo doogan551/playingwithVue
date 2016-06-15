@@ -185,6 +185,7 @@ module.exports = {
     var ipSegment = parseInt(data["IP Network Segment"], 10);
     var ipPort = parseInt(data["IP Port"], 10);
     var ipPortChanged = (typeof data.ipPortChanged === 'string') ? ((data.ipPortChanged === 'true') ? true : false) : data.ipPortChanged;
+    var origVals = data.originalValues;
 
     var searchCriteria = {
       "Name": "Preferences"
@@ -216,12 +217,19 @@ module.exports = {
       if (ipPortChanged === true) {
         criteria = {
           query: {
-            "Point Type.Value": "Device"
+            $or: [{
+              "Point Type.Value": "Device"
+            }, {
+              "Point Type.Value": "Remote Unit",
+              'Model Type.Value': 'BACnet',
+              'Network Type.eValue': 4
+            }],
+            'Network Segment.Value': origVals['IP Network Segment']
           },
           updateObj: {
             $set: {
               "Ethernet IP Port.Value": ipPort,
-              _cfgRequired: true
+              "Ethernet IP Port.isReadOnly": true
             }
           },
           options: {
@@ -336,18 +344,18 @@ module.exports = {
   },
   updateAlarmTemplate: function(data, cb) {
     var searchCriteria,
-        criteria;
+      criteria;
 
     if (!!data.newObject) {
       var alarmTemplateNew = {
-          "_id": new ObjectId(),
-          "isSystemMessage" : false,
-          "msgType" : data.newObject.msgType,
-          "msgCat" : data.newObject.msgCat,
-          "msgTextColor" : data.newObject.msgTextColor,
-          "msgBackColor" : data.newObject.msgBackColor,
-          "msgName" : data.newObject.msgName,
-          "msgFormat" : data.newObject.msgFormat
+        "_id": new ObjectId(),
+        "isSystemMessage": false,
+        "msgType": data.newObject.msgType,
+        "msgCat": data.newObject.msgCat,
+        "msgTextColor": data.newObject.msgTextColor,
+        "msgBackColor": data.newObject.msgBackColor,
+        "msgName": data.newObject.msgName,
+        "msgFormat": data.newObject.msgFormat
       };
 
       criteria = {
@@ -365,13 +373,13 @@ module.exports = {
 
       var alarmTemplateUpdate = {
         $set: {
-          "isSystemMessage" : (data.updatedObject.isSystemMessage == "true"),
-          "msgType" : data.updatedObject.msgType,
-          "msgCat" : data.updatedObject.msgCat,
-          "msgTextColor" : data.updatedObject.msgTextColor,
-          "msgBackColor" : data.updatedObject.msgBackColor,
-          "msgName" : data.updatedObject.msgName,
-          "msgFormat" : data.updatedObject.msgFormat
+          "isSystemMessage": (data.updatedObject.isSystemMessage == "true"),
+          "msgType": data.updatedObject.msgType,
+          "msgCat": data.updatedObject.msgCat,
+          "msgTextColor": data.updatedObject.msgTextColor,
+          "msgBackColor": data.updatedObject.msgBackColor,
+          "msgName": data.updatedObject.msgName,
+          "msgFormat": data.updatedObject.msgFormat
         }
       };
 
