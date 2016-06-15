@@ -35,13 +35,19 @@ var dti = {
             // });
 
             $('main').on('mousedown', dti.panels.elementSelector, function handleCardClick (event) {
-                dti.panels.activate($(event.currentTarget));
+                if (!$(event.target).hasClass('minimizePanel')) {
+                    dti.panels.activate($(event.currentTarget));
+                }
+            });
+
+            $('.dti-card-panel .card-toolbar .right a:first-child').click(function (event) {
+                $(event.target).parents('.dti-card-panel').addClass('hide');
             });
 
             // $('.material-tooltip .backdrop').addClass('blue-grey');
         },
         activate: function ($target) {
-            $('.activeCard').removeClass('activeCard').addClass('lighten-3');
+            $('.activeCard').removeClass('activeCard hide').addClass('lighten-3');
             $target.removeClass('lighten-3').addClass('activeCard');
         }
     },
@@ -62,15 +68,27 @@ var dti = {
             //     }
             // });
 
+            $('.taskbar a:not(#startButton)').click(function (event) {
+                var target = $(event.target).data('target');
+
+                dti.panels.activate($('#' + target));
+            });
+
             $('body').mousedown(function hideStartMenu (event) {
                 var $newPanel = $('#newPanel');
+
+                if ($(event.target).parents('#startmenu').length === 1) {
+                    return;
+                }
 
                 if ($(event.target).parent('#startButton').length === 0) {
                     $('#startmenu').fadeOut(300);
                 } else {
                     if (event.which === 3) {
+                        $('#startmenu').fadeOut(300);
                         $newPanel.removeClass('hide');
                         dti.panels.activate($newPanel);
+                        $('.newPanelButton').removeClass('hide');
                         event.preventDefault();
                         return false;
                     } else if (event.which === 1) {
@@ -99,24 +117,44 @@ var dti = {
     globalSearch: {
         init: function () {
             dti.globalSearch.$el = $('#search');
+            dti.globalSearch.$resultsEl = $('#globalSearchResults');
 
             dti.globalSearch.rawResults = ['4250 AH5 DISP', '4200 PARKING LOT LIGHTS', 'AIR HANDLERS', 'MONTHLY REPORT'];
 
-            dti.globalSearch.results = new Bloodhound({
-                datumTokenizer: Bloodhound.tokenizers.whitespace,
-                queryTokenizer: Bloodhound.tokenizers.whitespace,
-                local: dti.globalSearch.rawResults
+            // dti.globalSearch.results = new Bloodhound({
+            //     datumTokenizer: Bloodhound.tokenizers.whitespace,
+            //     queryTokenizer: Bloodhound.tokenizers.whitespace,
+            //     local: dti.globalSearch.rawResults
+            // });
+
+            // // on keydown, take string and get results from bloodhound, replace string in results with span.searchHighlight, then populate dropdown and show if not shown already
+
+            dti.globalSearch.$el.on('keyup', function () {
+                dti.globalSearch.$resultsEl.css('display', 'block');
             });
 
-            // on keydown, take string and get results from bloodhound, replace string in results with span.searchHighlight, then populate dropdown and show if not shown already
+            dti.globalSearch.$el.on('blur', function () {
+                dti.globalSearch.$resultsEl.css('display', 'none');
+                dti.globalSearch.$el.val(null);
+            });
 
-            dti.globalSearch.$el.typeahead({
-                hint: true,
-                highlight: true,
-                minLength: 1
-            }, {
-                name: 'Results',
-                source: dti.globalSearch.results
+            // dti.globalSearch.$el.typeahead({
+            //     hint: true,
+            //     highlight: true,
+            //     minLength: 1
+            // }, {
+            //     name: 'Results',
+            //     source: dti.globalSearch.results
+            // });
+
+            $('#globalSearchResults').dropdown({
+                // inDuration: 300,
+                // outDuration: 225,
+                // constrain_width: false, // Does not change width of dropdown to that of the activator
+                hover: true, // Activate on hover
+                gutter: 0, // Spacing from edge
+                belowOrigin: true, // Displays dropdown below the button
+                alignment: 'left' // Displays dropdown with edge aligned to the left of button
             });
         }
     },
@@ -141,5 +179,5 @@ $(function initWorkspaceV2 () {
 
     dti.menu.init();
 
-    // dti.globalSearch.init();
+    dti.globalSearch.init();
 });

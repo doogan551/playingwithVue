@@ -5,7 +5,7 @@ html
             | Infoscan by Dorsett Technologies
         link(rel='stylesheet', href='/css/lib/materialize.css')
         link(rel='stylesheet', href='/sass/v2/materialize')
-        link(rel='stylesheet', href='/css/lib/font-awesome.4.6.1.css')
+        //- link(rel='stylesheet', href='/css/lib/font-awesome.4.6.1.css')
         //- link(rel='stylesheet', href='/css/lib/jquery-ui.css')
 
 
@@ -14,10 +14,7 @@ html
             li
                 a.blue-grey-text.truncate.tooltipped(href='javascript://', data-position='right', data-tooltip='4194 DXAC DISP', data-delay='10') 4194 DXAC DISP
             li
-                a.blue-grey-text.truncate.tooltipped(href='javascript://', data-position='right', data-tooltip='4200 AH1 DISP', data-delay='10') 4200 AH1 DISP
-            //- li.divider
-            li
-                a.blue-grey-text.truncate.tooltipped(href='javascript://', data-position='right', data-tooltip='4250 FLR DISP', data-delay='10') 4250 FLR DISP
+                a.blue-grey-text.truncate.tooltipped(href='javascript://', data-position='right', data-tooltip='4201MDM MAIN DISP', data-delay='10') 4201MDM MAIN DISP
 
         header
             .navbar-fixed.taskbar
@@ -27,12 +24,16 @@ html
                             li
                                 a#startButton.dropdown-button.noHover(href="javascript://", data-position='bottom', data-tooltip='New Window')
                                     img.circle.dorsett-logo(src='/img/Dorsett_icon.png')
+                            //- li.active
+                            //-     a.dropdown-button(href='javascript://', data-activates='dropdown1', data-beloworigin='true', data-hover='true')
+                            //-         | Displays
+                            //-         i.material-icons.right arrow_drop_down
                             li.active
-                                a.dropdown-button(href='javascript://', data-activates='dropdown1', data-beloworigin='true', data-hover='true')
-                                    | Displays
-                                    i.material-icons.right arrow_drop_down
+                                a.waves-effect.truncate.tooltipped(href='javascript://', data-position='bottom', data-tooltip='4194 DXAC DISP', data-delay='10', data-target='displayPanel') 4194 DXAC DISP
                             li.active
-                                a.waves-effect.truncate.tooltipped(href='javascript://', data-position='bottom', data-tooltip='4200 PARKING LOT LIGHTS', data-delay='10') 4200 PARKING LOT LIGHTS
+                                a.waves-effect.truncate.tooltipped(href='javascript://', data-position='bottom', data-tooltip='4200 PARKING LOT LIGHTS', data-delay='10', data-target='gplPanel') 4200 PARKING LOT LIGHTS
+                            li.active.hide.newPanelButton
+                                a.waves-effect.truncate.tooltipped(href='javascript://', data-position='bottom', data-tooltip='New Window', data-delay='10', data-target='newPanel') New Window
                         ul.right.hide-on-med-and-down
                             li
                                 form
@@ -45,8 +46,27 @@ html
                             //-     span.clock 10:10
 
         main
-            #startmenu.hide.z-depth-3
-                .grey.lighten-3.white-text
+            ul#globalSearchResults.dropdown-content.active(style="display: none; position: absolute; right: 5px; top: 48px; opacity: 1; width: 264px;")
+                li
+                    a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='4250 AH5 DISP', data-delay='10') 4250 AH5 DISP
+                li
+                    a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='AIR HANDLERS', data-delay='10') AIR HANDLERS
+                li
+                    a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='MONTHLY REPORT', data-delay='10') MONTHLY REPORT
+            #startmenu.hide.z-depth-3.grey.lighten-3.white-text
+                div
+                    .row
+                        .col.s9.staticSearch
+                            form
+                                 .input-field
+                                    input#search1(type='search', required='', placeholder='search')
+                                    label(for='search1')
+                                        i.material-icons search
+                                    i.material-icons close
+                        .col.s3(style="text-align: center; margin-top: 15px;")
+                            a.valign.blue-grey-text(href="javascript://")
+                                i.material-icons explore
+                                div Navigator
                     .row
                         .col.s6
                             span.dti-menu-tile.card-panel.z-depth-2.blue-grey
@@ -89,11 +109,35 @@ html
                     //-     span.white-text This is a simple panel
 
             #desktop
-                .dti-desktop-item
-                    .item-content
-                    .item-text Test
+                img.desktop-background(src="/img/test/weather.png")
+                //- .dti-desktop-item
+                //-     .item-content
+                //-     .item-text Test
+                //- img.z-depth-1(src='/img/test/chart.png', style="position: absolute; right: 15px; top: 65px; height: 200px; width: 360px;")
 
-            .card-panel.dti-card-panel.blue-grey.z-depth-2.lighten-3(style="left: 105px; top: 105px;")
+                //- img.z-depth-1(src='/img/test/alarms.png', style="position: absolute; right: 15px; bottom: 15px;")
+
+            //- .card-panel.dti-card-panel.blue-grey.z-depth-2.lighten-3(style="left: 55px; top: 55px;")
+            //-     .card-toolbar
+            //-         .card-title.center-align.white-text
+            //-             div
+            //-                 a.white-text(href="javascript://")
+            //-                     i.material-icons.popInOutIcon call_made
+            //-                 | 4201MDM MAIN DISP
+            //-         a.white-text(href="javascript://")
+            //-             i.material-icons skip_previous
+            //-         a.white-text(href="javascript://")
+            //-             i.material-icons skip_next
+            //-         .right
+            //-             a.white-text(href="javascript://")
+            //-                 i.minimizePanel.material-icons(style="position: absolute; top: 8px; right: 48px;") remove
+            //-             a.white-text(href="javascript://")
+            //-                 i.material-icons zoom_out_map
+            //-             a.white-text(href="javascript://")
+            //-                 i.material-icons close
+            //-     img(src="/img/test/display2.png", style="height: 100%; width: 100%;")
+
+            #displayPanel.card-panel.dti-card-panel.blue-grey.z-depth-2.lighten-3(style="left: 105px; top: 105px;")
                 .card-toolbar
                     .card-title.center-align.white-text
                         div
@@ -106,14 +150,14 @@ html
                         i.material-icons skip_next
                     .right
                         a.white-text(href="javascript://")
-                            i.material-icons remove
+                            i.minimizePanel.material-icons(style="position: absolute; top: 8px; right: 48px;") remove
                         a.white-text(href="javascript://")
-                            i.material-icons add
+                            i.material-icons zoom_out_map
                         a.white-text(href="javascript://")
                             i.material-icons close
                 img(src="/img/test/display.png", style="height: 100%; width: 100%;")
 
-            .card-panel.dti-card-panel.blue-grey.z-depth-2.activeCard(style="left: 155px; top: 155px;")
+            #gplPanel.card-panel.dti-card-panel.blue-grey.z-depth-2.activeCard(style="left: 155px; top: 155px;")
                 .card-toolbar
                     .card-title.center-align.white-text
                         div
@@ -126,9 +170,9 @@ html
                         i.material-icons skip_next
                     .right
                         a.white-text(href="javascript://")
-                            i.material-icons remove
+                            i.minimizePanel.material-icons(style="position: absolute; top: 8px; right: 48px;") remove
                         a.white-text(href="javascript://")
-                            i.material-icons add
+                            i.material-icons zoom_out_map
                         a.white-text(href="javascript://")
                             i.material-icons close
                 img(src="/img/test/sequence.png", style="height: 100%; width: 100%;")
@@ -146,12 +190,24 @@ html
                         i.material-icons skip_next
                     .right
                         a.white-text(href="javascript://")
-                            i.material-icons remove
+                            i.minimizePanel.material-icons(style="position: absolute; top: 8px; right: 48px;") remove
                         a.white-text(href="javascript://")
-                            i.material-icons add
+                            i.material-icons zoom_out_map
                         a.white-text(href="javascript://")
                             i.material-icons close
                 .grey.lighten-3.white-text
+                    .row
+                        .col.s9.staticSearch
+                            form
+                                 .input-field
+                                    input#search1(type='search', required='', placeholder='search')
+                                    label(for='search1')
+                                        i.material-icons search
+                                    i.material-icons close
+                        .col.s3(style="text-align: center; margin-top: 15px;")
+                            a.valign.blue-grey-text(href="javascript://")
+                                i.material-icons explore
+                                div Navigator
                     .row
                         .col.s6
                             span.dti-menu-tile.card-panel.z-depth-2.blue-grey
