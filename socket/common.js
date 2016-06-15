@@ -146,6 +146,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
     updateReferences = false,
     downloadPoint = false,
     updateDownlinkNetwk = false,
+    updateEthernetNetwk = false,
     configRequired,
     updateObject = {},
     //activityLogObject = {},
@@ -415,7 +416,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Demand Interval":
               case "Disable Limit Fault":
               case "Downlink Broadcast":
-              case "Downlink Network":
               case "Enable Warning Alarms":
               case "Fail Action":
               case "Fan Off CFM Setpoint":
@@ -648,6 +648,10 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                   configRequired = true;
                 break;
 
+              case 'Ethernet Network':
+              case 'Downlink Network':
+
+
               case "Point Refs":
                 var pointRefProps = Config.Utility.getPointRefProperties(newPoint);
                 for (var r = 0; r < pointRefProps.length; r++) {
@@ -711,8 +715,15 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                 break;
 
               case "Ethernet Network":
-                if (newPoint["Point Type"].Value === "Device")
+                if (newPoint["Point Type"].Value === "Device") {
                   updateDownlinkNetwk = true;
+                }
+                break;
+              case "Downlink Network":
+                downloadPoint = true;
+                if (newPoint["Point Type"].Value === "Device") {
+                  updateEthernetNetwk = true;
+                }
                 break;
               default:
                 break;
@@ -923,39 +934,45 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
             err: err
           }, null);
           var error = null;
-          updDownlinkNetwk(updateDownlinkNetwk, newPoint, function(err) {
+          updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, function(err) {
             if (err)
               return callback({
                 err: err
               }, result);
-            updPoint(downloadPoint, newPoint, function(err, msg) {
+            updEthernetNetwk(updateEthernetNetwk, newPoint, function(err) {
               if (err)
-                error = err;
-              signalExecTOD(executeTOD, function(err) {
+                return callback({
+                  err: err
+                }, result);
+              updPoint(downloadPoint, newPoint, function(err, msg) {
                 if (err)
-                  error = error;
-                doActivityLogs(generateActivityLog, activityLogObjects, function(err) {
+                  error = err;
+                signalExecTOD(executeTOD, function(err) {
                   if (err)
-                    return callback({
-                      err: err
-                    }, result);
-                  updateRefs(updateReferences, newPoint, flags, user, function(err) {
+                    error = error;
+                  doActivityLogs(generateActivityLog, activityLogObjects, function(err) {
                     if (err)
                       return callback({
                         err: err
                       }, result);
-                    else if (error)
-                      return callback({
-                        err: error
-                      }, result);
-                    else {
-                      msg = (msg !== undefined && msg !== null) ? msg : "success";
-                      return callback({
-                        message: msg
-                      }, result);
-                    }
-                  });
+                    updateRefs(updateReferences, newPoint, flags, user, function(err) {
+                      if (err)
+                        return callback({
+                          err: err
+                        }, result);
+                      else if (error)
+                        return callback({
+                          err: error
+                        }, result);
+                      else {
+                        msg = (msg !== undefined && msg !== null) ? msg : "success";
+                        return callback({
+                          message: msg
+                        }, result);
+                      }
+                    });
 
+                  });
                 });
               });
             });
@@ -1118,14 +1135,22 @@ function doActivityLogs(generateActivityLog, logs, callback) {
   }
 }
 // newupdate
-function updDownlinkNetwk(updateDownlinkNetwk, newPoint, callback) {
+function updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
   if (updateDownlinkNetwk) {
     Utility.update({
       collection: constants('pointsCollection'),
       query: {
         "Point Type.Value": "Device",
         "Uplink Port.Value": "Ethernet",
-        "Downlink Network.Value": newPoint["Ethernet Network"].Value
+        $and: [{
+          "Downlink Network.Value": {
+            $ne: 0
+          }
+        }, {$or: [{
+          'Downlink Network.Value': newPoint["Ethernet Network"].Value
+        }, {
+          'Downlink Network.Value': oldPoint["Ethernet Network"].Value
+        }]}]
       },
       updateObj: {
         $set: {
@@ -1139,6 +1164,28 @@ function updDownlinkNetwk(updateDownlinkNetwk, newPoint, callback) {
     callback(null);
   }
 }
+
+function updEthernetNetwk(updateEthernetNetwk, newPoint, callback) {
+  if (updateEthernetNetwk) {
+    Utility.update({
+      collection: constants('pointsCollection'),
+      query: {
+        'Point Type.Value': 'Device',
+        'Network Segment.Value': newPoint['Downlink Network'].Value
+      },
+      updateObj: {
+        $set: {
+          'Ethernet IP Port.Value': newPoint['Downlink IP Port'].Value
+        }
+      }
+    }, function(err, result) {
+      callback(err);
+    });
+  } else {
+    callback(null);
+  }
+}
+
 // newupdate
 function updPoint(downloadPoint, newPoint, callback) {
   var errVar;

@@ -1167,6 +1167,7 @@ var telemetryViewModel = function() {
                 ret[field] = self[field]();
             }
             ret.ipPortChanged = (self['IP Port']() === originalValues['IP Port']) ? false : true;
+            ret.originalValues = originalValues;
             console.log(ret);
 
             return ret;

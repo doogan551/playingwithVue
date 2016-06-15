@@ -1344,7 +1344,7 @@ var Config = (function(obj) {
             return data;
         },
 
-        "Firmware Version": function(data) {
+        "Firmware 2 Version": function(data) {
             // TODO Add validation (to be determined)
             return data;
         },
@@ -2094,6 +2094,9 @@ var Config = (function(obj) {
             if (data.ok === true) {
                 data = this.validateNetworkNumber(data);
             }
+            if (data.ok === true) {
+                data.point = obj.EditChanges.applyEthernetNetworkNumber(data);
+            }
             return data;
         },
 
@@ -2608,7 +2611,7 @@ var Config = (function(obj) {
                 prop = point['Broadcast Period'],
                 isDisplayable = false;
             if (val) isDisplayable = true;
-            prop && (prop.isDisplayable = isDisplayable);
+            if (prop) prop.isDisplayable = isDisplayable;
             return point;
         },
 
@@ -3154,6 +3157,24 @@ var Config = (function(obj) {
             } else {
                 data.point["High Warning Limit"].isReadOnly = true;
                 data.point["Low Warning Limit"].isReadOnly = true;
+            }
+            return data.point;
+        },
+
+        applyEthernetNetworkNumber: function(data) {
+            if (!data.hasOwnProperty('systemNetwork') || !data.hasOwnProperty('systemIPPort')) {
+                data.ok = false;
+                data.result = "systemNetwork and systemIPPort must be supplied.";
+            }
+            if (data.point['Ethernet Network'].Value !== data.systemNetwork) {
+                data.point['Ethernet IP Port'].isReadOnly = false;
+            } else {
+                data.point['Ethernet IP Port'].isReadOnly = true;
+                data.point['Ethernet IP Port'].Value = data.systemIPPort;
+            }
+
+            if (data.oldPoint['Ethernet Network'].Value !== data.point['Ethernet Network'].Value) {
+                data.point._cfgRequired = true;
             }
             return data.point;
         },
@@ -3712,8 +3733,12 @@ var Config = (function(obj) {
             point["Port 4 Network"].Max = 65534;
 
             point["Time Zone"].isReadOnly = true;
+            // Init Firmware 2 to not displayable - we'll set it displayable when it is needed
+            point["Firmware 2 Version"].isDisplayable = false;
 
             if (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "Unknown" || point["Model Type"].Value == "MicroScan 5 xTalk" || point["Model Type"].Value == "SCADA Vio") {
+                // Firmware 2 (baseboard fw) is displayable on MS5-UNV and SCADA Vio products
+                point["Firmware 2 Version"].isDisplayable = (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "SCADA Vio");
 
                 if (point["Model Type"].Value !== "Unknown") {
                     point["Time Zone"].isReadOnly = false;
@@ -4675,14 +4700,17 @@ var Config = (function(obj) {
             if (point["Network Type"].Value == "Unknown") {
                 point["Device Address"].isDisplayable = false;
                 point["Network Segment"].isDisplayable = false;
+                point["Ethernet IP Port"].isDisplayable = false;
             } else if (point["Network Type"].Value == "MS/TP") {
                 point["Device Address"].isDisplayable = true;
                 point["Device Address"].Max = 127;
                 point["Network Segment"].isDisplayable = true;
+                point["Ethernet IP Port"].isDisplayable = false;
             } else {
                 point["Device Address"].isDisplayable = true;
                 point["Device Address"].Max = -1;
                 point["Network Segment"].isDisplayable = true;
+                point["Ethernet IP Port"].isDisplayable = true;
             }
             return point;
         },
