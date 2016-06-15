@@ -1361,7 +1361,7 @@ var versionsViewModel = function() {
 };
 
 // Alarm Messages Screen ---------------------------------------------------------
-var alarmTemplateViewModel = function() {
+var alarmMessageViewModel = function() {
     var self = this,
         alarmTemplateCategories = window.opener.workspaceManager.config.Enums["Alarm Categories"],
         alarmTemplateTypes = window.opener.workspaceManager.config.Enums["Alarm Types"],
@@ -1463,8 +1463,8 @@ var alarmTemplateViewModel = function() {
             return cols;
         },
         configureDataTable = function (destroy, clearData, columns) {
-            var $cloneButton = "<div class='btn-group'><button type='button' data-bind='click:function() { $parent.clone($parent.$index);}' class='btn btn-xs cloneTemplate'><span class='fa fa-clipboard'></span></button></div>",
-                $deleteButton = "<div class='btn-group'><button type='button' data-bind='click:function() { $parent.delete($parent.$index);}' class='btn btn-xs deleteTemplate'><span class='fa fa-trash'></span></button></div>",
+            var $cloneButton = "<div class='btn-group' title='Clone'><button type='button' data-bind='click:function() { $parent.clone($parent.$index);}' class='btn btn-xs cloneTemplate'><span class='fa fa-clipboard'></span></button></div>",
+                $deleteButton = "<div class='btn-group' title='Delete'><button type='button' data-bind='click:function() { $parent.delete($parent.$index);}' class='btn btn-xs deleteTemplate'><span class='fa fa-trash'></span></button></div>",
                 aoColumns = [],
                 i,
                 renderedIndex = 0,
@@ -1677,7 +1677,7 @@ var alarmTemplateViewModel = function() {
             $alarmTemplateDeleteConfirm.modal("show");
         };
 
-    self.displayName = 'Alarm Templates';
+    self.displayName = 'Alarm Messages';
     self.hasError = ko.observable(false);
     self.alarmTemplate = ko.observable("");
     self.alarmTemplateBackgroundColor = ko.observable();
@@ -3350,7 +3350,7 @@ $(function() {
             sysPrefsViewModel.registerSection(customColorCodesViewModel, 'init');
             sysPrefsViewModel.registerSection(telemetryViewModel, 'init');
             sysPrefsViewModel.registerSection(backupViewModel, 'init');
-            sysPrefsViewModel.registerSection(alarmTemplateViewModel, 'init');
+            sysPrefsViewModel.registerSection(alarmMessageViewModel, 'init');
             sysPrefsViewModel.registerSection(weatherViewModel, 'init');
             sysPrefsViewModel.registerSection(notificationsViewModel, 'init');
             sysPrefsViewModel.registerSection(versionsViewModel, 'init');
