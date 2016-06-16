@@ -2011,7 +2011,7 @@ var reportsViewModel = function () {
                 foundValues = [];
 
             for (i = 0; i < chartData.length; i++) {
-                if (!foundValues.includes(chartData[i].yAxis)) {
+                if (foundValues.indexOf(chartData[i].yAxis, 0) === -1) {
                     foundValues.push(chartData[i].yAxis);
                 }
             }
@@ -2879,7 +2879,7 @@ var reportsViewModel = function () {
             if (aoColumns.length > 0) {
                 $dataTablePlaceHolder.DataTable({
                     api: true,
-                    dom: 'BRlfrtip',
+                    dom: 'Blfrtip',
                     buttons: [
                         {
                             extend: 'collection',
