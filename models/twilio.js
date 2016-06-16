@@ -135,8 +135,11 @@ module.exports = {
       });
     };
 
+    // Make sure the callback is defined
+    cb = cb || function () {};
+
     if (!numberSids) {
-      return cb && cb('Property "numberSids is not present or invalid (should be an array)');
+      return cb('Property "numberSids is not present or invalid (should be an array)');
     }
 
     if (data.masterAccountSid && data.masterAuthToken) {
@@ -144,7 +147,7 @@ module.exports = {
     }
 
     async.each(numberSids, transfer, function done (err) {
-      return cb && cb(null, results);
+      return cb(null, results);
     });
   }
 };
