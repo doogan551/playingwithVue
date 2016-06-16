@@ -1100,6 +1100,12 @@ tr:hover .showOnHover {
 .smsIcon .fa-stack-text {
     font-size: 0.8em;
 }
+.displayDiv {
+    display: inline-block;
+}
+.hideDiv {
+    display: none;
+}
 /*.policyList .policyTitle,
 .policyList .policyInfo {
     display: inline-block;
