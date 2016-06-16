@@ -75,13 +75,14 @@ var dti = {
             });
 
             $('body').mousedown(function hideStartMenu (event) {
-                var $newPanel = $('#newPanel');
+                var $newPanel = $('#newPanel'),
+                    $target = $(event.target);
 
-                if ($(event.target).parents('#startmenu').length === 1) {
+                if ($target.parents('#startmenu').length === 1) {
                     return;
                 }
 
-                if ($(event.target).parent('#startButton').length === 0) {
+                if ($target.parent('#startButton').length === 0 && $target.attr('id') !== 'startButton') {
                     $('#startmenu').fadeOut(300);
                 } else {
                     if (event.which === 3) {
