@@ -1,4 +1,5 @@
 var https = require('https');
+var async = require('async');
 var xml2js = require('xml2js');
 var config = require('config');
 var logger = require('../helpers/logger')(module);
@@ -92,5 +93,58 @@ module.exports = {
 
   parseXml: function(xml, cb) {
     xml2js.parseString(xml, cb);
+  },
+
+  transferNumbers: function (data, cb) {
+    // This function transfers phone numbers between Twilio subaccounts, or between a subaccount and the master account
+    // data is expected to be an object with keys fromAccountSid (string), toAccountSid (string), and numberSids (array of strings)
+    // cb is optional
+    // Twilio's documentation for this API is here: https://www.twilio.com/docs/api/rest/subaccounts
+
+    // !!!!!! The Twilio client must be authenticated using the master account credentials to perform this function
+    //        The data object may optionally include the master account credentials
+
+    var numberSids = Array.isArray(data.numberSids) && data.numberSids;
+    var fromAccountSid = data.fromAccountSid;
+    var toAccountSid = data.toAccountSid;
+    var results = [];
+    var localClient;
+    var transfer = function (numberSid, callback) {
+      var number = (localClient || client).accounts(fromAccountSid).incomingPhoneNumbers(numberSid);
+      var msg;
+
+      number.update({
+        accountSid: toAccountSid
+      }, function (err, result) {
+        if (err) {
+          msg = 'The number associated with sid "' + numberSid + '" was NOT transferred due to an error';
+        } else {
+          msg = 'Number ' + result.phone_number + ' transferred successfully';
+        }
+        logger.info(msg);
+        
+        results.push({
+          numberSid: numberSid,
+          msg: msg,
+          result: result,
+          err: err
+        });
+
+        // Callback with no error (continue transferring numbers even if we had an error)
+        callback(null);
+      });
+    };
+
+    if (!numberSids) {
+      return cb && cb('Property "numberSids is not present or invalid (should be an array)');
+    }
+
+    if (data.masterAccountSid && data.masterAuthToken) {
+      localClient = require('twilio')(data.masterAccountSid, data.masterAuthToken);
+    }
+
+    async.each(numberSids, transfer, function done (err) {
+      return cb && cb(null, results);
+    });
   }
 };
