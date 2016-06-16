@@ -245,6 +245,7 @@ emailHandler[alarmsEmailAddress] = function (relay_message) {
         }
 
         var criteria = {
+            ackMethod: 'Email',
             ids: [data.alarm._id],
             username: data.user.username
         };
@@ -417,6 +418,7 @@ module.exports = {
                                 sendResponse();
                             } else {
                                 criteria = {
+                                    ackMethod: 'Voice',
                                     ids: [info.alarm._id],
                                     username: info.notifyLog.username
                                 };
