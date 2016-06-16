@@ -2844,7 +2844,7 @@ var reportsViewModel = function () {
                             break;
                         case "std dev":
                             calc.totalCalc = getColumnStandardDeviation(allRawValues);
-                            calc.pageCalc = (!sameDataSet ? getColumnMean(currentPageRawValues) : calc.totalCalc);
+                            calc.pageCalc = (!sameDataSet ? getColumnStandardDeviation(currentPageRawValues) : calc.totalCalc);
                             break;
                         default:
                             console.log(" - - - DEFAULT  getCalcForColumn()");
