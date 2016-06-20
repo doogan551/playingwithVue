@@ -202,6 +202,8 @@ ko.validation.registerExtenders();
 var calendarViewModel = function() {
     var viewModel = {
 
+        $calendarData : "",
+
         displayName: 'Calendar',
 
         dirty: ko.observable(false),
@@ -397,11 +399,13 @@ var calendarViewModel = function() {
                     vm.season(data['Current Season']);
                     vm.originalSeason = vm.season();
                     vm.gettingData(false);
+                    viewModel.$calendarData.show();
                     return data;
                 },
                 fail: function(jqXHR, status, error) {
                     vm.gettingData(false);
                     vm.hasError(true);
+                    viewModel.$calendarData.show();
                     return error;
                 }
             };
@@ -552,6 +556,8 @@ var calendarViewModel = function() {
     };
 
     viewModel.year.subscribe(function(value) {
+        viewModel.$calendarData = $("#calendar").find(".calendarData");
+        viewModel.$calendarData.hide();
         viewModel.getData();
         viewModel.dirty(false);
     });
@@ -1370,6 +1376,7 @@ var alarmMessageViewModel = function() {
         $alarmToken,
         $alarmTemplateDeleteConfirm,
         $alarmTemplateContainer,
+        $alarmMessagesData,
         $alarmTemplateDataTable,
         $msgFormat,
         dataUrl = '/api/system/getAlarmTemplates',
@@ -1377,6 +1384,14 @@ var alarmMessageViewModel = function() {
         deleteUrl = '/api/system/deleteAlarmTemplate',
         alarmTemplateData,
         columnsArray,
+        blockUI = function ($control, state) {
+            if (state === true) {
+                $control.hide();
+            } else {
+                $control.show();
+            }
+            $control.attr('disabled', state);
+        },
         getRawHexColor = function (theColor) {
             return theColor.replace(/#/g , "");
         },
@@ -1575,7 +1590,9 @@ var alarmMessageViewModel = function() {
             }
         },
         renderAlarmTemplates = function () {
+            self.activeDataRequest(false);
             if (alarmTemplateData) {
+                blockUI($alarmMessagesData, false);
                 // configureDataTable(true, true, columnsArray);
                 $alarmTemplateDataTable.DataTable().clear();
                 $alarmTemplateDataTable.DataTable().rows.add(alarmTemplateData);
@@ -1662,6 +1679,7 @@ var alarmMessageViewModel = function() {
             renderAlarmTemplates();
         },
         getData = function() {
+            self.activeDataRequest(true);
             $.ajax({
                 url: dataUrl
             }).done(function(data) {
@@ -1679,6 +1697,7 @@ var alarmMessageViewModel = function() {
 
     self.displayName = 'Alarm Messages';
     self.hasError = ko.observable(false);
+    self.activeDataRequest = ko.observable(true);
     self.alarmTemplate = ko.observable("");
     self.alarmTemplateBackgroundColor = ko.observable();
     self.alarmTemplateTextColor = ko.observable();
@@ -1720,12 +1739,14 @@ var alarmMessageViewModel = function() {
             $msgFormat.css('color', "#" + newValue);
         });
         $alarmTemplateContainer = $("#alarmTemplateContainer");
+        $alarmMessagesData = $alarmTemplateContainer.find(".alarmMessagesData");
         $alarmTemplateDataTable = $alarmTemplateContainer.find(".dataTablePlaceHolder");
         $alarmTemplateModal = $alarmTemplateContainer.find(".sysprefAlarmTemplateModel");
         $alarmTemplateDeleteConfirm = $alarmTemplateContainer.find(".alarmTemplateDeleteConfirm");
         $msgFormat = $alarmTemplateContainer.find(".msgFormat");
         $alarmTemplateModal.modal("hide");
         $alarmTemplateDeleteConfirm.modal("hide");
+        blockUI($alarmMessagesData, true);
         configureDataTable(true, true, columnsArray);
 
         $alarmTemplateDataTable.find('tbody').on('click', 'tr', function (e) {
@@ -1763,7 +1784,6 @@ var alarmMessageViewModel = function() {
                 $paginate_buttons.show();
             }
         });
-
 
         getData();
     };
@@ -3343,6 +3363,7 @@ $(function() {
         if (window.opener === undefined) {
             window.setTimeout(postInit, 10);
         } else {
+            sysPrefsViewModel.registerSection(alarmMessageViewModel, 'init');
             sysPrefsViewModel.registerSection(calendarViewModel);
             sysPrefsViewModel.registerSection(controllerViewModel, 'init');
             sysPrefsViewModel.registerSection(controlPriorityTextViewModel, 'getData');
@@ -3350,7 +3371,6 @@ $(function() {
             sysPrefsViewModel.registerSection(customColorCodesViewModel, 'init');
             sysPrefsViewModel.registerSection(telemetryViewModel, 'init');
             sysPrefsViewModel.registerSection(backupViewModel, 'init');
-            sysPrefsViewModel.registerSection(alarmMessageViewModel, 'init');
             sysPrefsViewModel.registerSection(weatherViewModel, 'init');
             sysPrefsViewModel.registerSection(notificationsViewModel, 'init');
             sysPrefsViewModel.registerSection(versionsViewModel, 'init');

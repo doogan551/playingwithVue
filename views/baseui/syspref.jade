@@ -69,7 +69,7 @@ html
             div#calendar(data-bind="visible: section() == 'Calendar'")
                 .title Season Control
 
-                div(data-bind="with: calendarViewModel")
+                div.calendarData(data-bind="with: calendarViewModel", style="display: none")
                     #season
                         input(type='radio', data-bind='checked: season,click:changeSeason,attr:{disabled:gettingData()}' name='season', id='heatingSeason', value='Heating')
                         label(for='heatingSeason') Heating
@@ -292,7 +292,10 @@ html
                 div(data-bind='with: alarmMessagesViewModel')
                     .title(data-bind="text: displayName")
                     br
-                    div
+                    .gettingDataSpinner(data-bind="css: { displayDiv: activeDataRequest(), hideDiv: !activeDataRequest()} ", title="Requesting Data")
+                        i.fa.fa-spinner.fa-spin.fa-3x
+                        span.spinnertext Getting Data
+                    div.alarmMessagesData
                         table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
                         include ../alarmTemplate/templates.jade
                         include ../alarmTemplate/_confirm.jade
