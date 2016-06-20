@@ -2396,6 +2396,10 @@ var reportsViewModel = function () {
                 }
             });
 
+            // $dataTablePlaceHolder.on( 'buttons-action', function ( e, buttonApi, dataTable, node, config ) {
+            //     console.log( 'Button '+buttonApi.text()+' was activated' );
+            // });
+
             $columnsGrid.find(".precisionColumn").on('mousedown', function (e) {
                 if (self.canEdit()) {
                     longClickStart = moment();
@@ -3146,7 +3150,7 @@ var reportsViewModel = function () {
         },
         renderChart = function (formatForPrint) {
             var trendPlot,
-                maxDataRowsForChart = 1000,
+                maxDataRowsForChart = 50000,
                 chartType,
                 chartTitle = self.reportDisplayTitle(),
                 subTitle = "",
