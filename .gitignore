@@ -12,4 +12,5 @@ Cpp_API*.log
 public/js/reports/deleteme.json
 npm-debug.log
 daemon/
+node_modules/grunt*
 aclient.js
