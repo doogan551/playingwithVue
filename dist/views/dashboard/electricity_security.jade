@@ -1,0 +1,72 @@
+.topBar
+    .title Security
+    .buttonBar
+        //ko if:$root.canWrite(security)
+        button.btn.btn-primary.btn-sm(type="button", data-bind="click:editPage, visible:!isInEditMode()") Edit
+        button.btn.btn-link.btn-sm(type="button", data-bind="click:cancelEdit, visible:isInEditMode()") Cancel
+        button.btn.btn-success.btn-sm(type="button", data-bind="click:savePage, visible:isInEditMode()") Save
+        // /ko
+
+//template
+.mainContent.securitySection
+    //content goes here
+    div.noAccess(data-bind="visible: showPermissionsTable() === false")
+        i.fa.fa-lock
+        div
+            h3 No Permissions Assigned
+            p Only administrators can access this utility. Select 'Edit' to begin adding groups to this utility.
+    table(data-bind='visible: showPermissionsTable')
+        thead
+            tr
+                th(data-bind='visible: showRemoveGroupIcon')
+                th.group(data-bind='click: toggleAllUsers')
+                    i.fa.fa-folder
+                    span.groupTitle User Groups
+                th Read
+                th Write
+        // Groups assigned to the point
+        tbody(data-bind='foreach: groupsOnPoint')
+            tr
+                td(data-bind='visible: $parent.showRemoveGroupIcon, click: $parent.removeGroup.bind($data, $parent)', title="Click to remove this group's access to this point.")
+                    i.fa.fa-minus-square.removeGroup
+                td.group(data-bind='click: $parent.toggleUsers', title='Click to show/hide users')
+                    i.fa.fa-folder
+                    span.groupTitle(data-bind='text: name')
+                    .userList(data-bind='foreach: $parent.getGroupUsers(_id)')
+                        div(data-bind='html: $data')
+                td
+                    i(data-bind="css: { 'fa fa-check': $data.canRead }")
+                td
+                    i(data-bind="css: { 'fa fa-check': $data.canWrite }")
+        // Groups not on point
+        tbody(data-bind='visible: showGroupsNotOnPoint')
+            tr
+                td.deep.header(colspan='5') Add Group
+            // ko foreach: groupsNotOnPoint
+            tr
+                td(data-bind='click: $parent.addGroup.bind($data, $parent)', title='Click to allow this group to access this point.')
+                    i.fa.fa-plus-square.addGroup
+                td.group(data-bind='click: $parent.toggleUsers', title='Click to show/hide users')
+                    i.fa.fa-folder
+                    span.groupTitle(data-bind='text: name')
+                    .userList(data-bind='foreach: $parent.getGroupUsers(_id)')
+                        div(data-bind='html: $data')
+                td
+                    i(data-bind="css: { 'fa fa-check': $data.canRead }")
+                td
+                    i(data-bind="css: { 'fa fa-check': $data.canWrite }")
+            // /ko
+        // Users on Point
+        tbody.calcUsers(data-bind='visible: showUsers')
+            tr
+                td.deep.header(colspan='5')
+                    i.fa.fa-user.userIcon
+                    | Calculated User Permissions
+            // ko foreach: usersOnPoint
+            tr
+                td.user(data-bind='html: $parent.getUserName($data)')
+                td
+                    i(data-bind="css: { 'fa fa-check': canRead }")
+                td
+                    i(data-bind="css: { 'fa fa-check': canWrite }")
+            // /ko

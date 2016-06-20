@@ -1,0 +1,1 @@
+$(document).ready(function(){primaryTest=function(a,b,c){$.ajax({url:b,type:"POST",contentType:"application/json",dataType:"json",success:function(a){return console.log(b,JSON.stringify(a)),c(a)},data:JSON.stringify(a)})},primaryTestGet=function(a,b,c){$.ajax({url:b,type:"get",dataType:"json",success:function(a){return console.log(b,JSON.stringify(a)),c(!0)},data:a})}});

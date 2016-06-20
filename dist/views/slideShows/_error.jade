@@ -1,0 +1,11 @@
+div#error(data-states='{"error":3}',class='modal',data-bind='visible:visibilize($element),attr:{"data-show":visibilize($element),"data-toggle":"modal","data-target":"#confirm"}',role='dialog',aria-labeledby='myModalLabel')
+    .modal-dialog
+        .modal-content
+            .modal-header.bg-danger
+                button.close(data-dismiss='modal') x
+                h4.modal-title Error
+            .modal-body
+                p An Error Occurred
+            .modal-footer
+                button#errorRetry.btn.btn-primary(data-bind='click: confirm.okay') Retry
+                button#errorCancel.btn.btn-default(data-bind='click: confirm.cancel',data-dismiss='modal') Cancel

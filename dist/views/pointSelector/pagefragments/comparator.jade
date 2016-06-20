@@ -1,0 +1,35 @@
+.row
+.container.well.well-sm
+    .row
+        .form-group
+            .col-xs-12
+                label Calculation Type
+                select.input-medium(data-bind='event: {change: changeSelect.bind($element, $data,\'Calculation Type\', true) }, options:dropdownRange(\'Calculation Type\'), optionsText: \'key\', optionsValue:\'val\', optionsCaption: \'[Not Selected]\', value:getSelectedDPropEvalue(\'Calculation Type\')')
+
+    .row
+        .col-xs-6
+            .form-group
+                label True Output Value
+                select.input-medium(data-bind='event: {change: changeSelect.bind($element, $data,\'Active Value\', false) }, options:dropdownRange(\'Value\'), optionsText: \'key\', optionsValue:\'val\', optionsCaption: \'[Not Selected]\', value:getSelectedDPropEvalue(\'Active Value\')')
+            .form-group
+                label.checkbox
+                    input(type='checkbox', data-bind='event: { click: changeChecked.bind($element, $data, \'Active Control\', false) }, checked:getSelectedDProp(\'Active Control\')')
+                    | Enable
+            .form-group
+                label.checkbox
+                    input(type='checkbox', data-bind='event: { click: changeChecked.bind($element, $data, \'Active Release\', false) }, checked:getSelectedDProp(\'Active Release\')')
+                    | Relinquish
+
+        .col-xs-6
+            .form-group
+                label False Output Value
+                select.input-medium(data-bind='event: {change: changeSelect.bind($element, $data,\'Inactive Value\', false) }, options:dropdownRange(\'Value\'), optionsText: \'key\', optionsValue:\'val\', optionsCaption: \'[Not Selected]\', value:getSelectedDPropEvalue(\'Inactive Value\')')
+            .form-group
+                label.checkbox
+                    input(type='checkbox', data-bind='event: { click: changeChecked.bind($element, $data, \'Inactive Control\', false) }, checked:getSelectedDProp(\'Inactive Control\')')
+                    | Enable
+            .form-group
+                label.checkbox
+                    input(type='checkbox', data-bind='event: { click: changeChecked.bind($element, $data, \'Inactive Release\', false) }, checked:getSelectedDProp(\'Inactive Release\')')
+                    | Relinquish
+

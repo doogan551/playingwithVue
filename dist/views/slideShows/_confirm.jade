@@ -1,0 +1,11 @@
+div#confirm(data-states='{"confirm":3}',class='modal',data-bind='visible:visibilize($element),attr:{"data-show":visibilize($element),"data-toggle":"modal","data-target":"#confirm"}',role='dialog',aria-labeledby='myModalLabel')
+    .modal-dialog
+        .modal-content
+            .modal-header
+                button.close(data-dismiss='modal') x
+                h4.modal-title Confirm
+            .modal-body
+                p(data-bind='text: confirm.message')
+            .modal-footer
+                button#confirmOkay.btn.btn-primary(data-bind='click: confirm.okay') Okay
+                button#cancelOkay.btn.btn-default(data-bind='click: confirm.cancel',data-dismiss='modal') Cancel

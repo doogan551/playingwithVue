@@ -1,0 +1,56 @@
+include main
+body(data-role="page", data-theme='a')
+	#content(data-role="content", data-theme='a')
+		#apititle(data-role="header", data-theme='b')
+			|Title
+			.titlelink
+				a(href="/documentation/template") Permalink
+		p
+		#summary This is a brief description of what the api call expects and returns.
+		p
+		#url /api/points/search
+		p
+		.tableheading(data-role="collapsible", data-content-theme='a')
+			h3 test
+			#tablearea
+				.columnheading Heading 1
+					.columntext this is a string of placeholder text to fill up space in order to test the amount of room needed in each column for css adjustments.
+				.columnheading Heading 2
+					.columntext this is a string of placeholder text to fill up space in order to test the amount of room needed in each column for css adjustments.
+				.columnheading Heading 3
+					.columntext this is a string of placeholder text to fill up space in order to test the amount of room needed in each column for css adjustments.
+		p
+		.tableheading Heading for table
+		#tablearea(data-role="content", data-theme='a')
+			.columnheading Heading 1
+				.columntext this is a string of placeholder text to fill up space in order to test the amount of room needed in each column for css adjustments.
+			.columnheading Heading 2
+				.columntext this is a string of placeholder text to fill up space in order to test the amount of room needed in each column for css adjustments.
+			.columnheading Heading 3
+				.columntext this is a string of placeholder text to fill up space in order to test the amount of room needed in each column for css adjustments.
+		p
+		.exampleheading Heading for examples
+		#examplearea
+			#examplesummary This is a string of placeholder text to fill up space in order to test the amount of room need in the summary area for examples. This is a string of placeholder text to fill up space in order to test the amount of room need in the summary area for examples. This is a string of placeholder text to fill up space in order to test the amount of room need in the summary area for examples.
+				p Example in:
+					.codesnippet
+						|{ <br />
+						|	objType: 'all',<br />
+						|	name1: { value: '', searchType: 'contain' },<br />
+						|	name2: { value: '', searchType: 'contain' },<br />
+						|	name3: { value: '', searchType: 'contain' },<br />
+						|	itemsPerPage: '10',<br />
+						|	currentPage: '1' <br />
+						|}<br />
+
+				p Example out:
+					.codesnippet
+						|{<br />
+						|"endResultsFlag":false,<br />
+						|"points":[<br />
+						|{"_id":26427,"name1":"SHOP","name2":"JID01","name3":"IFC02","name4":"AI06","objecttype":"Analog Input","modifylevel":4,"reviewlevel":6,"accessgroup":"SHOP","taglist":["shop","jid01","ifc02","ai06","ai06"]},<br />
+						|	<br />
+						|...<br />
+						|<br />
+						|{"_id":26437,"name1":"4493","name2":"AH3","name3":"SAT","name4":"","objecttype":"Analog Input","modifylevel":4,"reviewlevel":6,"accessgroup":"POINTS","taglist":["4493","ah3","sat","sat"]}<br />
+						|]}<br />

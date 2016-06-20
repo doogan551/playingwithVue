@@ -1374,12 +1374,12 @@ var reportsViewModel = function () {
                         case "History":
                             currentColumn.valueList = "";
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
-                            currentColumn.dataColumnName = (i === 0 && currentColumn.colName === "Date" ? currentColumn.colName : currentColumn.upi);
+                            currentColumn.dataColumnName = (i === 0 && currentColumn.colName === "Date" ? currentColumn.colName : "point-" + currentColumn.upi);
                             break;
                         case "Totalizer":
                             currentColumn.valueList = getTotalizerValueList(currentColumn.pointType);
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
-                            currentColumn.dataColumnName = (i === 0 && currentColumn.colName === "Date" ? currentColumn.colName : currentColumn.upi + " - " + currentColumn.operator.toLowerCase());
+                            currentColumn.dataColumnName = (i === 0 && currentColumn.colName === "Date" ? currentColumn.colName : "point-" + currentColumn.upi + " - " + currentColumn.operator.toLowerCase());
                             break;
                         default:
                             console.log(" - - - DEFAULT  initColumns()");
@@ -1890,6 +1890,7 @@ var reportsViewModel = function () {
         pivotHistoryData = function (historyData) {
             var columnConfig,
                 columnUPI,
+                columnKey,
                 pivotedData = [],
                 tempPivot,
                 lenHistoryData = historyData.length,
@@ -1905,17 +1906,18 @@ var reportsViewModel = function () {
                 tempPivot["Date"].rawValue = historyData[i].timestamp;
                 for (j = 0; j < historyResults.length; j++) {
                     columnUPI = historyResults[j].upi;
-                    tempPivot[columnUPI] = {};
+                    columnKey = "point-" + columnUPI;
+                    tempPivot[columnKey] = {};
                     if (historyResults[j].Value === undefined) {
-                        tempPivot[columnUPI].Value = "";
-                        tempPivot[columnUPI].rawValue = "";
+                        tempPivot[columnKey].Value = "";
+                        tempPivot[columnKey].rawValue = "";
                     } else {
                         columnConfig = getColumnConfigByUPI(columnUPI);
                         if (columnConfig === undefined) {
                             console.log("ERROR: columnConfig is undefined for columnName = " + columnUPI);
                         }
                         //console.log("[" + i + "] ==>  historyResults[" + j + "].Value = " + historyResults[j].Value);
-                        tempPivot[columnUPI] = formatDataField(historyResults[j], columnConfig);
+                        tempPivot[columnKey] = formatDataField(historyResults[j], columnConfig);
                     }
                 }
                 pivotedData.push(tempPivot);
@@ -1926,6 +1928,7 @@ var reportsViewModel = function () {
         pivotTotalizerData = function (totalizerData) {
             var columnConfig,
                 columnUPI,
+                columnKey,
                 pivotedData = [],
                 tempPivot,
                 rawValue,
@@ -1944,19 +1947,20 @@ var reportsViewModel = function () {
                         operator = totalizerData[i].op.toLowerCase();
                         columnConfig = getColumnConfigByOperatorAndUPI(operator, totalizerData[i].upi);
                         columnUPI = columnConfig.upi + " - " + operator;
+                        columnKey = "point-" + columnUPI;
                         rawValue = totalizerData[i].totals[j].total;
-                        tempPivot[columnUPI] = {};
+                        tempPivot[columnKey] = {};
                         //console.log("totalizerData[" + i + "].totals[" + j + "].total = " + totalizerData[i].totals[j]);
                         if (totalizerData[i].totals[j].total === undefined) {
-                            tempPivot[columnUPI].Value = "";
-                            tempPivot[columnUPI].rawValue = "";
+                            tempPivot[columnKey].Value = "";
+                            tempPivot[columnKey].rawValue = "";
                         } else {
                             if (operator === "runtime") {
-                                tempPivot[columnUPI].Value = (rawValue === 0 ? 0 : getDurationText(columnConfig.multiplier * rawValue, columnConfig.precision, totalizerDurationInHours));
+                                tempPivot[columnKey].Value = (rawValue === 0 ? 0 : getDurationText(columnConfig.multiplier * rawValue, columnConfig.precision, totalizerDurationInHours));
                             } else {
-                                tempPivot[columnUPI].Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
+                                tempPivot[columnKey].Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
                             }
-                            tempPivot[columnUPI].rawValue = parseFloat(rawValue);
+                            tempPivot[columnKey].rawValue = parseFloat(rawValue);
                         }
                     }
                     pivotedData.push(tempPivot);
@@ -2007,7 +2011,7 @@ var reportsViewModel = function () {
                 foundValues = [];
 
             for (i = 0; i < chartData.length; i++) {
-                if (!foundValues.includes(chartData[i].yAxis)) {
+                if (foundValues.indexOf(chartData[i].yAxis, 0) === -1) {
                     foundValues.push(chartData[i].yAxis);
                 }
             }
@@ -2107,7 +2111,6 @@ var reportsViewModel = function () {
                     data: columnData
                 });
             }
-            self.activeRequestForChart(false);
             return setYaxisValues(result);
         },
         adjustViewReportTabHeightWidth = function () {
@@ -2348,7 +2351,7 @@ var reportsViewModel = function () {
                 columnsArray.splice(details.iTo, 0, swapColumnFrom);
                 updateListOfColumns(columnsArray);
                 $dataTablePlaceHolder.DataTable().draw("current");
-                // console.log("moved column '" + details.from + "' to column '" + details.to + "'");
+                console.log("moved column '" + details.from + "' to column '" + details.to + "'");
             });
 
             $dataTablePlaceHolder.on('column-resize.dt', function (event, settings, details) {
@@ -2391,6 +2394,10 @@ var reportsViewModel = function () {
                     $paginate_buttons.hide();
                 }
             });
+
+            // $dataTablePlaceHolder.on( 'buttons-action', function ( e, buttonApi, dataTable, node, config ) {
+            //     console.log( 'Button '+buttonApi.text()+' was activated' );
+            // });
 
             $columnsGrid.find(".precisionColumn").on('mousedown', function (e) {
                 if (self.canEdit()) {
@@ -2713,7 +2720,7 @@ var reportsViewModel = function () {
                                 result += "pointInstance ";
                                 break;
                             default:
-                                console.log(" - - - DEFAULT  setTdAttribs()");
+                                console.log(" - - - DEFAULT  setColumnClasses()");
                                 break;
                         }
                     }
@@ -2763,7 +2770,7 @@ var reportsViewModel = function () {
                             break;
                         default:
                             columnTitle = "Default";
-                            console.log(" - - - DEFAULT  configureDataTable()");
+                            console.log(" - - - DEFAULT  buildColumnObject()");
                             break;
                     }
 
@@ -2774,12 +2781,14 @@ var reportsViewModel = function () {
                     result = {
                         title: columnTitle,
                         data: columnConfig.dataColumnName,
+                        // data: columnConfig.dataColumnName + ".Value",
                         width: (!!columnConfig.width ? columnConfig.width : "auto"),
                         render: {
                             _: "Value",
+                            type: "rawValue",
                             sort: "rawValue",
-                            type: "rawValue"
-                            //filter: "filterValue"
+                            filter: "Value",
+                            display: "Value"
                         },
                         className: setColumnClasses(columnsArray[columnIndex], columnIndex),
                         fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
@@ -2838,7 +2847,10 @@ var reportsViewModel = function () {
                             break;
                         case "std dev":
                             calc.totalCalc = getColumnStandardDeviation(allRawValues);
-                            calc.pageCalc = (!sameDataSet ? getColumnMean(currentPageRawValues) : calc.totalCalc);
+                            calc.pageCalc = (!sameDataSet ? getColumnStandardDeviation(currentPageRawValues) : calc.totalCalc);
+                            break;
+                        default:
+                            console.log(" - - - DEFAULT  getCalcForColumn()");
                             break;
                     }
                     return calc;
@@ -2846,6 +2858,15 @@ var reportsViewModel = function () {
 
             // if the design of the data collected has changed then we need to adjust the design of the DataTable.
             if ($.fn.DataTable.isDataTable($dataTablePlaceHolder)) {
+                var buttons = [];
+                $.each($dataTablePlaceHolder.DataTable().buttons()[0].inst.s.buttons,
+                    function () {
+                        buttons.push(this);
+                    });
+                $.each(buttons,
+                    function () {
+                        $dataTablePlaceHolder.DataTable().buttons()[0].inst.remove(this.node);
+                    });
                 $dataTablePlaceHolder.DataTable().destroy();
                 $dataTablePlaceHolder.find("thead").empty();
                 $dataTablePlaceHolder.find("tbody").empty(); // leaving dynamic footer
@@ -2861,7 +2882,7 @@ var reportsViewModel = function () {
             if (aoColumns.length > 0) {
                 $dataTablePlaceHolder.DataTable({
                     api: true,
-                    dom: 'BRlfrtip',
+                    dom: 'Blfrtip',
                     buttons: [
                         {
                             extend: 'collection',
@@ -3128,7 +3149,7 @@ var reportsViewModel = function () {
         },
         renderChart = function (formatForPrint) {
             var trendPlot,
-                maxDataRowsForChart = 1000,
+                maxDataRowsForChart = 50000,
                 chartType,
                 chartTitle = self.reportDisplayTitle(),
                 subTitle = "",
@@ -3269,9 +3290,11 @@ var reportsViewModel = function () {
                     }, 110);
                 } else {
                     $reportChartDiv.html("Too many data rows for " + self.selectedChartType() + " Chart. Max = " + maxDataRowsForChart);
+                    self.activeRequestForChart(false);
                 }
             } else {
                 $reportChartDiv.html("Chart data not available");
+                self.activeRequestForChart(false);
             }
         };
 

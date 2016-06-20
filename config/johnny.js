@@ -17,7 +17,8 @@ var johnny = {
       }
     }
   },
-  runNotifications: false
+  runNotifications: false,
+  minifyFiles: false
 };
 
 johnny.redisConfig = {

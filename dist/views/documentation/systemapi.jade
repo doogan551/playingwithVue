@@ -1,0 +1,369 @@
+include main
+
+body(data-role='page', data-theme='a')
+		#content(data-role='content', data-theme='')
+			#apititle(data-role='header', data-theme='d')
+				|System API Documentation
+				.titlelink
+					a(href='/documentation/systemapi') Permalink
+			p
+			#summary This API is used for configuring and reading system information
+			p
+			#url(data-role='collapsible')
+				h3 /api/system/calendar
+				#summary This call will return all calendar entries in the database.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c points
+						.ui-block-b
+							.ui-bar.ui-bar-c An array of JSON objects containing all calendar entries.
+						.ui-block-c
+							.ui-bar.ui-bar-c [{}]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of JSON Objects
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Request:
+							.codesnippet
+								/api/system/calendar
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								[{"_id":"515ee9fe005585ef3c2427bd","Month":"January","Day":2,"Year":2013,"Comment":"New Years Day"},{"_id":"515ee9fe005585ef3c2427be","Month":"January","Day":16,"Year":2013,"Comment":"Dr. Martin Luther King's Birthday"},{"_id":"515ee9fe005585ef3c2427bf","Month":"February","Day":20,"Year":2013,"Comment":"President's Day"},{"_id":"515ee9fe005585ef3c2427c0","Month":"May","Day":28,"Year":2013,"Comment":"Memorial Day"},{"_id":"515ee9fe005585ef3c2427c1","Month":"July","Day":4,"Year":2013,"Comment":"Independence Day"},{"_id":"515ee9fe005585ef3c2427c2","Month":"September","Day":3,"Year":2013,"Comment":"Labor Day"},{"_id":"515ee9fe005585ef3c2427c3","Month":"October","Day":8,"Year":2013,"Comment":"Columbus Day"},{"_id":"515ee9fe005585ef3c2427c4","Month":"November","Day":12,"Year":2013,"Comment":"Veteran's Day"},{"_id":"515ee9fe005585ef3c2427c5","Month":"November","Day":22,"Year":2013,"Comment":"Thanksgiving Day"},{"_id":"515ee9fe005585ef3c2427c6","Month":"December","Day":25,"Year":2013,"Comment":"Christmas Day"},{"Month":"January","Day":1,"Year":2014,"Comment":"New Year's Day","_id":"516304d11e7a3e4041000001"},{"Month":"December","Day":25,"Year":2014,"Comment":"Christmas","_id":"516304d11e7a3e4041000002"}]
+			
+			#url(data-role='collapsible')
+				h3 /api/system/calendar/add
+				#summary This call will add calendar entries from an array based on month, day, year and comment. An array will be sent containing each date object to be added.
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Dates
+						.ui-block-b
+							.ui-bar.ui-bar-c Array of date objects [{Month, Day, Year, Comment},{Month, Day, Year, Comment}]. It will look like { Dates: [{Month, Day, Year, Comment}, {Month, Day, Year, Comment}] }
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of Objects
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Month
+						.ui-block-b
+							.ui-bar.ui-bar-c Month of calendar entry
+						.ui-block-c
+							.ui-bar.ui-bar-c Required for each calendar entry
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Day
+						.ui-block-b
+							.ui-bar.ui-bar-c Day of calendar entry
+						.ui-block-c
+							.ui-bar.ui-bar-c Required for each calendar entry
+						.ui-block-d
+							.ui-bar.ui-bar-c Integer
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Year
+						.ui-block-b
+							.ui-bar.ui-bar-c Year of calendar entry
+						.ui-block-c
+							.ui-bar.ui-bar-c Required for each calendar entry
+						.ui-block-d
+							.ui-bar.ui-bar-c Integer
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Comment
+						.ui-block-b
+							.ui-bar.ui-bar-c Title of calendadr entry
+						.ui-block-c
+							.ui-bar.ui-bar-c Required for each calendar entry
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c "done"
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								[{"Month":"January","Day":"1","Year":"2014","Comment":"New Year's Day"},{"Month":"December","Day":"25","Year":"2014","Comment":"Christmas"}]
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{ message: "done" }
+			
+			#url(data-role='collapsible')
+				h3 /api/system/calendar/:year
+				#summary This call will retrieve all calendar entries that occur in the year given through the request parameter.
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c :year
+						.ui-block-b
+							.ui-bar.ui-bar-c The desired year to be search for calendar entries. Given as URL parameter
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c Int
+				
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Request:
+							.codesnippet
+								/api/system/calendar/2014
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								[{"Month":"January","Day":1,"Year":2014,"Comment":"New Year's Day","_id":"516304d11e7a3e4041000001"},{"Month":"December","Day":25,"Year":2014,"Comment":"Christmas","_id":"516304d11e7a3e4041000002"}]
+			#url(data-role='collapsible')
+				h3 /api/system/controlpriorities
+				#summary This call will return all Control Priorities entries in the database.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c points
+						.ui-block-b
+							.ui-bar.ui-bar-c An array of JSON objects containing all control priorities entries.
+						.ui-block-c
+							.ui-bar.ui-bar-c [{}]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of JSON Objects
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Request:
+							.codesnippet
+								/api/system/controlpriorities
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								[{"Priority Level":"1","Priority Text":"Manual Life Safety (1)"},{"Priority Level":"2","Priority Text":"Automatic Life Safety (2)"},{"Priority Level":"3","Priority Text":"Equipment Out of Service (3)"},{"Priority Level":"4","Priority Text":"Asbestos (4)"},{"Priority Level":"5","Priority Text":"Critical Equipment Control (5)"},{"Priority Level":"6","Priority Text":"Minimum On/Off (6)"},{"Priority Level":"7","Priority Text":"Level (7)"},{"Priority Level":"8","Priority Text":"Manual Operator (8)"},{"Priority Level":"9","Priority Text":"Level (9)"},{"Priority Level":"10","Priority Text":"Level (10)"},{"Priority Level":"11","Priority Text":"Continuous Run (11)"},{"Priority Level":"12","Priority Text":"Extended Run Time (12)"},{"Priority Level":"13","Priority Text":"Continuous Run (Winter Only) (13)"},{"Priority Level":"14","Priority Text":"Summer Steam (14)"},{"Priority Level":"15","Priority Text":"Level (15)"},{"Priority Level":"16","Priority Text":"Default (16)"}]
+			
+			#url(data-role='collapsible')
+				h3 /api/system/qualitycodes
+				#summary This call will return all Quality Codes entries in the database.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c points
+						.ui-block-b
+							.ui-bar.ui-bar-c An array of JSON objects containing all quality codes entries.
+						.ui-block-c
+							.ui-bar.ui-bar-c [{}]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of JSON Objects
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Request:
+							.codesnippet
+								/api/system/qualitycodes
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								[{"Quality Code Label":"Stop Scan","Quality Code":"S","Quality Code Font HTML Color":255},{"Quality Code Label":"Out of Service","Quality Code":"","Quality Code Font HTML Color":8454016},{"Quality Code Label":"Fault","Quality Code":"F","Quality Code Font HTML Color":16776960},{"Quality Code Label":"Alarms Off             ","Quality Code":" ","Quality Code Font HTML Color":8421504},{"Quality Code Label":"Shutdown","Quality Code":"D","Quality Code Font HTML Color":33023},{"Quality Code Label":"Analog Alarm Low Limit","Quality Code":"L","Quality Code Font HTML Color":16711680},{"Quality Code Label":"Analog Alarm High Limit","Quality Code":"H","Quality Code Font HTML Color":16711680},{"Quality Code Label":"Abnormal","Quality Code":"A","Quality Code Font HTML Color":16711680},{"Quality Code Label":"Control Pending","Quality Code":"P","Quality Code Font HTML Color":33023},{"Quality Code Label":"Overridden","Quality Code":" ","Quality Code Font HTML Color":0},{"Quality Code Label":"COV Enable","Quality Code":"C","Quality Code Font HTML Color":65280},{"Quality Code Label":"Analog Low Warning","Quality Code":"L","Quality Code Font HTML Color":32960},{"Quality Code Label":"Analog High Warning","Quality Code":"H","Quality Code Font HTML Color":16744576}]
+			
+			#url(data-role='collapsible')
+				h3 /api/system/controllers
+				#summary This call will return all Controllers entries in the database.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c points
+						.ui-block-b
+							.ui-bar.ui-bar-c An array of JSON objects containing all controllers entries.
+						.ui-block-c
+							.ui-bar.ui-bar-c [{}]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of JSON Objects
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Request:
+							.codesnippet
+								/api/system/controllers
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								[{"Controller ID":"1","Controller Name":"Dennis","Description":"Dennis Bailey"},{"Controller ID":"2","Controller Name":"OSS","Description":"Optimized Start / Stop"},{"Controller ID":"3","Controller Name":"HostTOD","Description":"Host Based Time of Day"},{"Controller ID":"4","Controller Name":"CPC","Description":"Continuous Process Control"},{"Controller ID":"5","Controller Name":"NWS","Description":"Night / Weekend Setback"},{"Controller ID":"6","Controller Name":"RemTOD","Description":"Remote Time-of-Day controller"},{"Controller ID":"7","Controller Name":"Spare2","Description":"Dorsett controller ID - disabled 6-10-10"},{"Controller ID":"8","Controller Name":"Wade","Description":"Wade Robinson"},{"Controller ID":"9","Controller Name":"Tim","Description":"Tim Austin"},{"Controller ID":"10","Controller Name":"Doug","Description":"Doug Faust                                                                      "},{"Controller ID":"11","Controller Name":"KendraW","Description":"Kendra Ware"},{"Controller ID":"12","Controller Name":"TempTOD","Description":"Temporary Time of Day"},{"Controller ID":"13","Controller Name":"Harry","Description":"Harry Powell"},{"Controller ID":"14","Controller Name":"Skip","Description":"Skip Pearson"},{"Controller ID":"15","Controller Name":"RandyM","Description":"Randy Medley"},{"Controller ID":"16","Controller Name":"Sid","Description":"Sidney Morris"},{"Controller ID":"17","Controller Name":"Spare1","Description":"Jack Pennington - Disabled 8-26-08"},{"Controller ID":"18","Controller Name":"VAV","Description":"Variable Air Volume Control"},{"Controller ID":"19","Controller Name":"D-CYCLE","Description":"DUTY CYCLE"},{"Controller ID":"20","Controller Name":"DSL","Description":"Dorsett Script Language"},{"Controller ID":"21","Controller Name":"UCS","Description":"General Controller"},{"Controller ID":"22","Controller Name":"AS24","Description":"Controller to identify NASA Facilities O&M Users"},{"Controller ID":"23","Controller Name":"AS22","Description":"Controller to identify NASA Facilities Engineering Users"},{"Controller ID":"24","Controller Name":"guest","Description":"Controller for guest account."},{"Controller ID":"25","Controller Name":"Claude","Description":"Claude McGovern"},{"Controller ID":"26","Controller Name":"Wes","Description":"Wesley Norton"},{"Controller ID":"27","Controller Name":"SHOP","Description":"Controller for UCS Shop personnel (associated with SHOP user name)"},{"Controller ID":"28","Controller Name":"NISC","Description":"Controller to identify NISC personnel at 4629"},{"Controller ID":"29","Controller Name":"OSS/NWS","Description":"Optimized Start Stop / Night Weekend Setback"},{"Controller ID":"30","Controller Name":"Spare3","Description":"Jeff Bennett - Disabled 8-26-08"},{"Controller ID":"31","Controller Name":"","Description":"Empty record, not assigned"},{"Controller ID":"32","Controller Name":"Lee F","Description":"Lee Finney"},{"Controller ID":"33","Controller Name":"GPL","Description":"Graphical Programming Language"},{"Controller ID":"34","Controller Name":"Morris","Description":"Morris Healy"},{"Controller ID":"35","Controller Name":"JasonS","Description":"Dorsett Technologies - Jason S"},{"Controller ID":"36","Controller Name":"SteveS","Description":"Steve Swinford"},{"Controller ID":"37","Controller Name":"ChrisN","Description":"Chris Neal"},{"Controller ID":"38","Controller Name":"CullerR","Description":"Randy Culler - Dorsett Tech"},{"Controller ID":"39","Controller Name":"Default","Description":"Identifies objects controlled by ex-UCS Operators"},{"Controller ID":"40","Controller Name":"CaseyB","Description":"Casey L. Bishop"},{"Controller ID":"41","Controller Name":"Robert","Description":"Robert Barrett"},{"Controller ID":"42","Controller Name":"JbSaint","Description":"Jason Brian Saint"},{"Controller ID":"43","Controller Name":"","Description":""},{"Controller ID":"44","Controller Name":"NONE","Description":"No Controller"},{"Controller ID":"45","Controller Name":"Admin","Description":"MSFC System Administrator user account"},{"Controller ID":"46","Controller Name":"DBorder","Description":"Dustin Border"}]
+			
+			#url(data-role='collapsible')
+				h3 /api/system/customcolors
+				#summary This call will return all Custom Colors HTML Colors in the database.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c points
+						.ui-block-b
+							.ui-bar.ui-bar-c An array of JSON objects containing all Custom Colors HTML Colors.
+						.ui-block-c
+							.ui-bar.ui-bar-c [{}]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of JSON Objects
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Request:
+							.codesnippet
+								/api/system/customcolors
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								[13156010,12233095,12436686,7903656,25233,4227200,6842472,0,0,0,0,0,0,0,0,0]
+			
+			#url(data-role='collapsible')
+				h3 /api/system/accessgroups
+				#summary This call will return all Access Groups entries in the database.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c points
+						.ui-block-b
+							.ui-bar.ui-bar-c An array of JSON objects containing all access groups entries.
+						.ui-block-c
+							.ui-bar.ui-bar-c [{}]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of JSON Objects
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Request:
+							.codesnippet
+								/api/system/accessgroups
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								[{"Group ID":0,"Group Name":"DEFAULT","Group Description":"Default"},{"Group ID":1,"Group Name":"ADMIN","Group Description":"Administrative Group"},{"Group ID":2,"Group Name":"CONSOLE","Group Description":"Console Group"},{"Group ID":3,"Group Name":"SHOP","Group Description":"Shop Points Group"},{"Group ID":4,"Group Name":"UCS_OPS","Group Description":"UCS Operator Group"},{"Group ID":5,"Group Name":"POINTS","Group Description":"Points Group (excludes display points)"},{"Group ID":6,"Group Name":"DISPLAYS","Group Description":"Displays Group"},{"Group ID":7,"Group Name":"NISC","Group Description":"NASA Information Support Center"},{"Group ID":9,"Group Name":"Simulator","Group Description":"Contains chiller plant simulation points & displays"},{"Group ID":10,"Group Name":"WSTA","Group Description":"MSFC Weather Station Group"},{"Group ID":11,"Group Name":"GPL","Group Description":"Graphic Programming Language access group"},{"Group ID":12,"Group Name":"UTILITIES","Group Description":"Utilities metering, monitoring, rates & costs"},{"Group ID":13,"Group Name":"3D_AHU","Group Description":"Holds 3D-style displays"},{"Group ID":14,"Group Name":"FLR_PLAN","Group Description":"Holds building floor plans"},{"Group ID":15,"Group Name":"DEMO","Group Description":"Holds demonstration database for UCS public showings"}]
+			

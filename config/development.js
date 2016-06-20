@@ -24,7 +24,8 @@ var development = {
     },
     'domains': ['']
   },
-  runNotifications: false
+  runNotifications: false,
+  minifyFiles: false
 };
 
 development.redisConfig = {

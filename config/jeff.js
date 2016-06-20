@@ -22,7 +22,8 @@ var jeff = {
             }
         }
     },
-    runNotifications: false
+    runNotifications: false,
+    minifyFiles: false
 };
 
 jeff.redisConfig = {

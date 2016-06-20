@@ -1,0 +1,106 @@
+include main
+
+body(data-role='page', data-theme='a')
+		#content(data-role='content', data-theme='')
+			#apititle(data-role='header', data-theme='d')
+				|History API Documentation
+				.titlelink
+					a(href='/documentation/historyapi') Permalink
+			p
+			#summary This API is used for configuring and reading point history information
+			p
+			#url(data-role='collapsible')
+				h3 /api/history/:upi
+				#summary This call will return all history based on incoming point upi.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c 
+						.ui-block-b
+							.ui-bar.ui-bar-c An array of JSON objects containing all history entries.
+						.ui-block-c
+							.ui-bar.ui-bar-c [{}]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of JSON Objects
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Request:
+							.codesnippet
+								/api/history/22460
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								[{"_id":"517e8c4a12bb5808101de60f","upi":22460,"timestamp":1352440800,"value":31.98482894897461,"ValueType":1,"statusflags":0},{"_id":"517e8c4a12bb5808101de610","upi":22460,"timestamp":1352448000,"value":30.47779083251953,"ValueType":1,"statusflags":0},{"_id":"517e8c4a12bb5808101de611","upi":22460,"timestamp":1352458800,"value":28.97075653076172,"ValueType":1,"statusflags":0},{"_id":"517e8c4b12bb5808101de612","upi":22460,"timestamp":1352471400,"value":30.540584564208984,"ValueType":1,"statusflags":0},{"_id":"517e8c4b12bb5808101de613","upi":22460,"timestamp":1352475000,"value":32.04762268066406,"ValueType":1,"statusflags":0},{"_id":"517e8c4b12bb5808101de614","upi":22460,"timestamp":1352480400,"value":33.55466079711914,"ValueType":1,"statusflags":0}]
+			
+			#url(data-role='collapsible')
+				h3 /api/history/search
+				#summary This call will add calendar entries from an array based on month, day, year and comment. An array will be sent containing each date object to be added.
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c points
+						.ui-block-b
+							.ui-bar.ui-bar-c Array of point upis ["21085", "22460"]
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of Objects
+					
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c 
+						.ui-block-b
+							.ui-bar.ui-bar-c A JSON object with the pointid as the key and the history data in an array as the value. (See example)
+						.ui-block-c
+							.ui-bar.ui-bar-c {}
+						.ui-block-d
+							.ui-bar.ui-bar-c JSON
+
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ points: [21085, 22460] }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"21085":[{"_id":"517e8c4a12bb5808101de60e","upi":21085,"timestamp":1352440800,"value":"Normal","ValueType":14,"statusflags":0}],"22460":[{"_id":"517e8c4a12bb5808101de60f","upi":22460,"timestamp":1352440800,"value":31.98482894897461,"ValueType":1,"statusflags":0},{"_id":"517e8c4a12bb5808101de610","upi":22460,"timestamp":1352448000,"value":30.47779083251953,"ValueType":1,"statusflags":0},{"_id":"517e8c4a12bb5808101de611","upi":22460,"timestamp":1352458800,"value":28.97075653076172,"ValueType":1,"statusflags":0},{"_id":"517e8c4b12bb5808101de612","upi":22460,"timestamp":1352471400,"value":30.540584564208984,"ValueType":1,"statusflags":0},{"_id":"517e8c4b12bb5808101de613","upi":22460,"timestamp":1352475000,"value":32.04762268066406,"ValueType":1,"statusflags":0},{"_id":"517e8c4b12bb5808101de614","upi":22460,"timestamp":1352480400,"value":33.55466079711914,"ValueType":1,"statusflags":0}]}

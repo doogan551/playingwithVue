@@ -1,0 +1,1 @@
+$(document).ready(function(){testRun=function(a,b){$.ajax({url:"/api/reporting/run/",type:"post",dataType:"json",success:function(a){return a.err?b(!1):a?(console.log(a.length),b(!0)):b(!1)},data:a})}});

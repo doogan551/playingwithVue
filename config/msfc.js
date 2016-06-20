@@ -2,7 +2,7 @@ var msfc = {
   'Infoscan': {
     'dbConfig': {
       'host': 'localhost',
-      'dbName': 'infoscan'
+      'dbName': 'dorsett'
     },
     'zmqConfig': {
       'server': '127.0.0.1',

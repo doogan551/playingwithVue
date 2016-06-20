@@ -53,9 +53,9 @@ var defaults = {
         }
     },
     'Twilio': {
-        'accountSid': 'AC0fc63c36f70cccee175fc2427d8ec2be',
-        'authToken': '4da6ed7c8aee56285e2b25b8441a6d39',
-        'phoneNumbers': ['+18556887778', '+13367702223'],
+        'accountSid': 'ACc4b5dfa06be0935819e752674222e02b',
+        'authToken': '7318295319a25ce15b05c57d13909d0c',
+        'phoneNumbers': ['+13362213360'],
         'voice': {
             'alarms': {                                         // Alarms application 
                 'Url': '/twilio/voiceAlarmsAnswer',             // All urls prefixed with the domain & inboundId by notifierUtility.js
@@ -77,7 +77,8 @@ var defaults = {
             'pass': 'f72bbcb40e28f4387831edaa35afab90caa66d01'
         }
     },
-    runNotifications: true
+    runNotifications: true,
+    minifyFiles: true
 };
 
 defaults.Infoscan.files.firmwareLocation = defaults.Infoscan.files.driveLetter + ":/InfoScan/Firmware/";

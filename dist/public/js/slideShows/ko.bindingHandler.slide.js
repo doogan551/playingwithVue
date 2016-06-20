@@ -1,0 +1,1 @@
+!function(a){ko.bindingHandlers.slide={update:function(b,c,d){var e,f,g,h;return e=a(b),f=d().slide||{},h=f.viewModel,g=f.slide,e.hasClass("showing")?(h.progressBarViewModel.$progress.progressbar("reset").progressbar("setMaximum",g.duration/1e3).progressbar("setStep",1),g.$container=e,e):e}}}(jQuery);
