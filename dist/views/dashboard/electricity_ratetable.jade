@@ -1,0 +1,92 @@
+.topBar(data-bind="if: initialized, css: {viewMode: !isEditMode(), editMode: isEditMode()}")
+    //dropdown template
+    .dropdown
+        .btn-group
+            button.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
+                span(data-bind="text: 'Fiscal Year ' + currFiscalYear()")
+                .caret.lm10px
+            ul.dropdown-menu(data-bind="foreach: previousYears")
+                li
+                    a(href="javascript://", data-bind="text: $data, click: $parent.loadYear.bind($parent)")
+
+    .dropdown
+        button.btn.btn-default(type='button' data-bind="click:print") Print
+
+    .buttonBar(data-bind="if: $root.canWrite($parent.securityBindings.security) && shouldShowEdit")
+        button.hideInEdit.btn.btn-primary.btn-sm(type="button", data-bind="click: addNewFiscalYearRateTable") Add New Rate Table
+        button.hideInEdit.btn.btn-primary.btn-sm(type="button", data-bind="click: toEditMode") Edit
+        button.showInEdit.btn.btn-link.btn-sm(type="button", data-bind="click: cancelEditMode") Cancel
+        button.showInEdit.btn.btn-success.btn-sm(type="button", data-bind="click: save") Save
+//template
+.mainContent
+    .rateTableContent(data-bind="if: !initialized() && !$root.canWrite($parent.securityBindings.security)") No fiscal year selected, and you have no edit permissions.
+    .rateTableContent.showInPrint.currentFiscalYear
+        span FY
+        span(data-bind="text: currFiscalYear()")
+        span &nbsp;Rate Table
+    .rateTableContent(data-bind="if: initialized, sortableArray: rateTables, sortIf: isEditMode, handle: '.outerHandle', css: {viewMode: !isEditMode(), editMode: isEditMode()}")
+        // ko foreach: rateTables
+
+        // ko if: $data.isHoliday
+        .rateTablePortlet.holidays
+            div
+                .outerHandle.handle.showInEdit
+                .calendar
+                .tableTitle Additional Off Peak Days
+                .rateTableSection
+                    table.table
+                        tbody
+                            //ko foreach:holidays
+                            tr(data-bind="click: $parentContext.$parent.editHoliday.bind($parentContext.$parent)")
+                                td
+                                    .rateDate.editPointer(data-bind="text: date")
+                                td
+                                    .rateName.editPointer(data-bind="text: name")
+                            // /ko
+                    .addHoliday
+                        a.showInEdit(href="javascript://", data-bind="click: $parent.addHoliday.bind($parent)") Add Holiday
+        // /ko
+
+        // ko ifnot: $data.isHoliday
+        .rateTablePortlet
+            input.hidden(type="text", data-bind="value: touid")
+            .outerHandle.handle.showInEdit
+            a.editLink.tableTitle(data-bind="text: title, click: $parent.editRateTable.bind($parent)")
+            .rateTableSection.rateTable
+                table.table.table-striped.table-fixed
+                    tbody(data-bind="sortableArray: rates, sortIf: $parent.isEditMode, handle: '.innerHandle', indexOffset: 1")
+                        tr.static
+                            td &nbsp;
+                            // ko foreach: periods
+                            td.tooltip(data-toggle="tooltip", data-placement="top", data-bind="attr: { title: periodTitle, class: periodType }")
+                                .dateRange.editPointer(data-bind="style: { cursor: $parent.isChild()?'default':'pointer' }, text: rangeText, click: function() {$parentContext.$parent.editRatePeriod($parentContext, $data)}")
+                                .onPeak(data-bind="text: peakText, visible: !$parent.hidePeakInfo() && (periodType() !== 'transition' || enablePeakSelection() === true)")
+                                .days(data-bind="text: daysText, visible: !$parent.hidePeakInfo() && (periodType() !== 'transition' || enablePeakSelection() === true)")
+                                .time(data-bind="text: timeText, visible: !$parent.hidePeakInfo() && (periodType() !== 'transition' || enablePeakSelection() === true)")
+                            // /ko
+                            td.addPeriod.showInEdit
+                                a(href="javascript://", data-bind="click: $parent.addRatePeriod.bind($parent)") Add Period
+                        // ko foreach: rates
+                        tr
+                            td
+                                .innerHandle.handle.showInEdit
+                                .editPointer(data-bind="text: name, click: function() {$parentContext.$parent.editRateElement($parentContext, $data)}")
+                            //ko foreach: $parent.periods
+                            td
+                                span.hideInEdit(data-bind="visible: (periodType() === 'transition' && (enablePeakSelection() === true || $parent.showInTransition())) || (periodType() !== 'transition'),text: $data.rates[$parent.name()]() || 0")
+                                input.input-sm.form-control.showInEdit(type="number", data-bind="visible: (periodType() === 'transition' && (enablePeakSelection() === true || $parent.showInTransition())) || (periodType() !== 'transition'), editableText: $data.rates[$parent.name()]")
+                            // /ko
+                            td.showInEdit &nbsp;
+                        // /ko
+                        tr.showInEdit
+                            td(data-bind="attr: {colspan: periods().length + 2}").addRateElement
+                                a(href="javascript://", data-bind="click: $parent.addRateElement.bind($parent)") Add Rate Element
+        // /ko
+
+        // /ko
+
+        .rateTablePortlet.showInEdit.dashed
+            .rateTableSection.text-center
+                a.addCollection(href="javascript://", data-bind="click: addRateTable") Add Collection
+
+

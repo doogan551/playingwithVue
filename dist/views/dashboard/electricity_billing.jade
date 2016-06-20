@@ -1,0 +1,190 @@
+.topBar.billingTopBar(data-bind="css: {viewMode: !isEditMode(), editMode: isEditMode()}")
+    // ko if: configRequired()
+    .title Billing
+    // /ko
+
+    // ko if: !configRequired()
+    .dropdown.viewControls
+        button.btn.btn-default.dropdown-toggle.billSelect(data-toggle="dropdown")
+            span(data-bind="text: selectedBill().prettyDate")
+            span.caret.lm10px
+        ul.dropdown-menu.availablePeriods
+            input.form-control(data-bind="textInput: billsFilter", type="text", placeholder="Search...")
+            li(role="separator", class="divider")
+            // ko foreach: filteredBills
+            li(data-bind="css: {'month': $data.period === 'Month', 'year': $data.period === 'Year', selected : $parent.selectedBill().prettyDate === prettyDate }")
+                a(data-bind="click: $parent.selectBill.bind($parent)")
+                    i.fa.fa-check(data-bind="css: { notCommitted: !isCommitted() }")
+                    span(data-bind="text: prettyDate")
+            // /ko
+
+    .dropdown.viewControls
+        button.btn.btn-default(type='button' data-bind="click:print") Print
+
+    .buttonBar.editControls(data-bind="if: $root.canWrite($parent.securityBindings.security)")
+        // ko ifnot: selectedBill().period === 'Month' ? billData().commit.done : yearBillData().commit.done
+        button.hideInEdit.btn.btn-primary.btn-sm.committ(type="button", data-bind="click: showCommitModal, visible: billingCycle().complete") Commit
+        button.hideInEdit.btn.btn-primary.btn-sm(type="button", data-bind="click: toEditMode") Edit
+        button.showInEdit.editControl.btn.btn-link.btn-sm(type="button", data-bind="click: cancelEditMode") Cancel
+        button.showInEdit.editControl.btn.btn-success.btn-sm(type="button", data-bind="click: save")
+            i.fa.fa-spin.fa-spinner
+            span Save
+        // /ko
+
+    //- I was using a visible binding on the div below but I saw strange behavior - sometimes the committed
+    //- block was visible even though billData().done was false, so I switched to the if binding. This occurred
+    //- when the bill data was receved from the server while the Billing page was not selected. If the billing
+    //- page was selected when the data was returned I did not see this behavior.
+    // ko with: selectedBill().period === 'Month' ? billData().commit : yearBillData().commit
+    // ko if: done === true && !$parent.gettingData()
+    .buttonBar.billing.committed
+        i.fa.fa-check-square
+        //- The following is dumb but it's the best I can do until we re-architecture checking security permissions (currently geared so that you 
+        //- can't access it within the JS file)
+        //- If user has write access, our commit info includes a click binding, otherwise it does not
+        // ko if: $root.canWrite($parents[1].securityBindings.security)
+        .commitInfo(data-bind="click: $parent.showUncommitModal.bind($parent), text: $parent.getCommitInfoString($data)")
+        // /ko
+        // ko if: !$root.canWrite($parents[1].securityBindings.security)
+        .commitInfo(data-bind="text: $parent.getCommitInfoString($data)", style="cursor: default; text-decoration: none;")
+        // /ko
+    // /ko
+    // /ko
+    // /ko
+
+//template
+.mainContent(data-bind="css: {viewMode: !isEditMode(), editMode: isEditMode()}")
+    // ko if: !gettingData() && !configRequired()
+    //- Monthly bill
+    .innerContent(data-bind="if: selectedBill().period === 'Month'")
+        .billingContent
+            .billingHeader(data-bind="if: billData().collections.length > 0")
+                // ko with: billData()
+                .pull-right Load Factor:&nbsp;
+                    span(data-bind="text: loadFactor.displayValue")
+
+                .billTitle(data-bind="click: $parent.showDefaultTitleModal.bind($parent)")
+                    i.fa.fa-gear.showInEdit
+                    span(data-bind="text: title")
+                    // ko if: !title.length
+                    span.hideInEdit Select Edit to set the default bill title template
+                    span.showInEdit Click here to set the bill title template
+                    // /ko
+                // /ko
+
+                .billDays Days in Billing Cycle:&nbsp;
+                    // ko with: billingCycle()
+                    span(data-bind="text: completedDays")
+                    span(data-bind="visible: !complete")
+                        span &nbsp;of&nbsp;
+                        span(data-bind="text: totalDays")
+                        .billingBar
+                            .progress
+                                .progress-bar(role="progressbar", aria-valuenow="18", aria-valuemin="1", aria-valuemax="31", data-bind="style: {width: percentComplete}")
+                                    span.sr-only &nbsp;
+                    // /ko
+
+            .infoMessage(data-bind="visible: billData().collections.length == 0")
+                i.fa.fa-info-circle
+                span No billing line items found. Please review this billing period's corresponding rate table (the bill's line items are derived from the rate table).
+
+            // ko foreach: billData().collections
+            .billingPortlet
+                .title(data-bind="text: name")
+                .billTable
+                    table
+                        tr
+                            // ko with: columns
+                            th
+                                span(data-bind="text: name.title, visible: name.visible")
+                            th
+                                span(data-bind="text: usage.title, visible: usage.visible")
+                            th
+                                span(data-bind="text: rate.title, visible: rate.visible")
+                            th
+                                span(data-bind="text: rateModifier.title, visible: rateModifier.visible")
+                            th
+                                span(data-bind="text: amount.title, visible: amount.visible")
+                            // /ko
+                        // ko foreach: rows
+                        tr
+                            td
+                                span(data-bind="text: name.displayValue, visible: name.visible")
+                            td
+                                span(data-bind="text: usage.displayValue, visible: usage.visible")
+                                span(data-bind="visible: usage.units.visible")
+                                    |&nbsp;
+                                    span(data-bind="text: usage.units.displayValue")
+                            td
+                                span(data-bind="text: rate.displayValue, visible: rate.visible")
+                            td
+                                span(data-bind="text: modifiedRate.displayValue, visible: modifiedRate.visible")
+                            td
+                                span(data-bind="text: amount.displayValue, visible: amount.visible")
+                        // /ko
+            // /ko
+    
+    //- Yearly bill
+    .innerContent(data-bind="if: selectedBill().period === 'Year'")
+        .billingContent
+            .billingHeader
+                // ko with: yearBillData()
+                .billTitle(data-bind="click: $parent.showDefaultTitleModal.bind($parent)")
+                    i.fa.fa-gear.showInEdit
+                    span(data-bind="text: title")
+                    // ko if: !title.length
+                    span.hideInEdit Select Edit to set the default bill title template
+                    span.showInEdit Click here to set the bill title template
+                    // /ko
+                // /ko
+
+                .billDays Days in Billing Cycle:&nbsp;
+                    // ko with: billingCycle()
+                    span(data-bind="text: completedDays")
+                    span(data-bind="visible: !complete")
+                        span &nbsp;of&nbsp;
+                        span(data-bind="text: totalDays")
+                        .billingBar
+                            .progress
+                                .progress-bar(role="progressbar", aria-valuenow="18", aria-valuemin="1", aria-valuemax="31", data-bind="style: {width: percentComplete}")
+                                    span.sr-only &nbsp;
+                    // /ko
+
+            // ko foreach: yearBillData().collections
+            .billingPortlet
+                .title(data-bind="text: name.displayValue")
+                .yearBillTable
+                    table(data-bind="css: $data.name.id")
+                        tr(data-bind="foreach: columns")
+                            th(data-bind="css: $data.season, attr: {title: $data.fullDate || ''} ")
+                                span(data-bind="text: name.title")
+                        // ko foreach: rows
+                        tr
+                            td
+                                span(data-bind="text: name.displayValue")
+                                // ko if: $data.units && $data.units.visible
+                                span &nbsp;(
+                                span(data-bind="text: units.displayValue")
+                                span )
+                                // /ko
+
+                            // ko foreach: data
+                            td
+                                span(data-bind="text: $data.displayValue, css: { max: $data.isMax, total: $data.isTotal }")
+                                span(class="units", data-bind="if: $data.units && $data.units.visible")
+                                    |&nbsp;
+                                    span(data-bind="text: units.displayValue")
+                            // /ko
+                        // /ko
+            // /ko
+    // /ko
+
+    .innerContent(data-bind="visible: gettingData")
+        .billing.gettingData
+            i.fa.fa-spinner.fa-spin
+            div Getting data...
+    .innerContent(data-bind="visible: configRequired")
+        .infoMessage
+            i.fa.fa-info-circle
+            span Billing is unavailable until at least one Rate Table and Meter has been configured. Please configure these items then return to this page.
+    .clearfix

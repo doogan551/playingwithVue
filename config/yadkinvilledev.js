@@ -19,7 +19,8 @@ var yadkinville = {
     },
     'domains': ['dorsettnc.dtscada.com']
   },
-  runNotifications: false
+  runNotifications: false,
+  minifyFiles: false
 };
 
 yadkinville.redisConfig = {

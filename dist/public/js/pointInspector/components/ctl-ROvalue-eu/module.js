@@ -1,0 +1,1 @@
+define(["knockout","big","text!./view.html"],function(a,b,c){function d(a){this.value=a.value.Value,this.valueType=a.value.ValueType,this.engUnit=a.engUnit,this.isInEditMode=a.rootContext.isInEditMode}return d.prototype.doSomething=function(){},d.prototype.dispose=function(){},{viewModel:d,template:c}});

@@ -10,7 +10,8 @@ var localhost = {
       'site': 'localhost'
     }
   },
-  runNotifications: false
+  runNotifications: false,
+  minifyFiles: false
 };
 
 localhost.redisConfig = {

@@ -1,0 +1,11 @@
+img#displayBg(
+    ng-src='{{bgSrcURL}}',
+    ng-dblclick="drop()",
+    ng-right-click="blur()",
+    ng-drag-over="dragOver()")
+#displayObjects
+    .object(
+        ng-repeat="object in objs",
+        ng-click="showPoint(object, $event)",
+        ng-bind-html-unsafe="object|renderObject",
+        ng-style='getStyle(object)')

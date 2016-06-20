@@ -2011,7 +2011,7 @@ var reportsViewModel = function () {
                 foundValues = [];
 
             for (i = 0; i < chartData.length; i++) {
-                if (!foundValues.includes(chartData[i].yAxis)) {
+                if (foundValues.indexOf(chartData[i].yAxis, 0) === -1) {
                     foundValues.push(chartData[i].yAxis);
                 }
             }
@@ -2111,7 +2111,6 @@ var reportsViewModel = function () {
                     data: columnData
                 });
             }
-            self.activeRequestForChart(false);
             return setYaxisValues(result);
         },
         adjustViewReportTabHeightWidth = function () {
@@ -2395,6 +2394,10 @@ var reportsViewModel = function () {
                     $paginate_buttons.hide();
                 }
             });
+
+            // $dataTablePlaceHolder.on( 'buttons-action', function ( e, buttonApi, dataTable, node, config ) {
+            //     console.log( 'Button '+buttonApi.text()+' was activated' );
+            // });
 
             $columnsGrid.find(".precisionColumn").on('mousedown', function (e) {
                 if (self.canEdit()) {
@@ -2844,7 +2847,7 @@ var reportsViewModel = function () {
                             break;
                         case "std dev":
                             calc.totalCalc = getColumnStandardDeviation(allRawValues);
-                            calc.pageCalc = (!sameDataSet ? getColumnMean(currentPageRawValues) : calc.totalCalc);
+                            calc.pageCalc = (!sameDataSet ? getColumnStandardDeviation(currentPageRawValues) : calc.totalCalc);
                             break;
                         default:
                             console.log(" - - - DEFAULT  getCalcForColumn()");
@@ -2879,7 +2882,7 @@ var reportsViewModel = function () {
             if (aoColumns.length > 0) {
                 $dataTablePlaceHolder.DataTable({
                     api: true,
-                    dom: 'BRlfrtip',
+                    dom: 'Blfrtip',
                     buttons: [
                         {
                             extend: 'collection',
@@ -3146,7 +3149,7 @@ var reportsViewModel = function () {
         },
         renderChart = function (formatForPrint) {
             var trendPlot,
-                maxDataRowsForChart = 1000,
+                maxDataRowsForChart = 50000,
                 chartType,
                 chartTitle = self.reportDisplayTitle(),
                 subTitle = "",
@@ -3287,9 +3290,11 @@ var reportsViewModel = function () {
                     }, 110);
                 } else {
                     $reportChartDiv.html("Too many data rows for " + self.selectedChartType() + " Chart. Max = " + maxDataRowsForChart);
+                    self.activeRequestForChart(false);
                 }
             } else {
                 $reportChartDiv.html("Chart data not available");
+                self.activeRequestForChart(false);
             }
         };
 

@@ -1,0 +1,197 @@
+include main
+
+body(data-role='page', data-theme='a')
+		#content(data-role='content', data-theme='')
+			#apititle(data-role='header', data-theme='d')
+				|Sessions API Documentation
+				.titlelink
+					a(href='/documentation/sessionsapi') Permalink
+			p
+			#summary This API is for controlling a user's session, allowing authentication, registration, and logging out.  
+			p
+			#url(data-role='collapsible')
+				h3 /session/login
+				#summary This call will check if the username and password combination exist in the database and return a status flag.
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c username
+						.ui-block-b
+							.ui-bar.ui-bar-c username
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c password
+						.ui-block-b
+							.ui-bar.ui-bar-c password in plain text using POST method
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c status
+						.ui-block-b
+							.ui-bar.ui-bar-c Boolean status of outcome regarding login operation. True for successful authentication.
+						.ui-block-c
+							.ui-bar.ui-bar-c False
+						.ui-block-d
+							.ui-bar.ui-bar-c Boolean
+
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "username": "user", "password": "pass" }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{ "status": true }
+			
+			#url(data-role='collapsible')
+				h3 /session/register
+				#summary This call will take the given username and now encrypted password and add to the database if possible.
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c username
+						.ui-block-b
+							.ui-bar.ui-bar-c username
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c password
+						.ui-block-b
+							.ui-bar.ui-bar-c password in plain text using POST method
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Optional Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c accesslevel
+						.ui-block-b
+							.ui-bar.ui-bar-c 
+						.ui-block-c
+							.ui-bar.ui-bar-c 1
+						.ui-block-d
+							.ui-bar.ui-bar-c Integer
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c reviewlevel
+						.ui-block-b
+							.ui-bar.ui-bar-c 
+						.ui-block-c
+							.ui-bar.ui-bar-c 1
+						.ui-block-d
+							.ui-bar.ui-bar-c Integer
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c modifylevel
+						.ui-block-b
+							.ui-bar.ui-bar-c 
+						.ui-block-c
+							.ui-bar.ui-bar-c 1
+						.ui-block-d
+							.ui-bar.ui-bar-c Integer
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c accessgroup
+						.ui-block-b
+							.ui-bar.ui-bar-c 
+						.ui-block-c
+							.ui-bar.ui-bar-c ADMIN
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c status
+						.ui-block-b
+							.ui-bar.ui-bar-c Status message of outcome regarding registration operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c "User successfully added"
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "username": "user", "password": "pass" }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{ "status": "User successfully added" }
+
+			#url(data-role='collapsible')
+				h3 /session/logout
+				#summary Upon hitting this address, the current session will be destroyed and redirected to '/'.
+				

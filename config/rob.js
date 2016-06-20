@@ -24,7 +24,8 @@ var rob = {
       'smProcess': ''
     }
   },
-  runNotifications: false
+  runNotifications: false,
+  minifyFiles: false
 };
 
 rob.Infoscan.files.firmwareLocation = "\\\\192.168.1.88/d$/InfoScan/Firmware/";

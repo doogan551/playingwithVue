@@ -1,0 +1,72 @@
+// ko if: ((valueType === "DateTime" || valueType === "Timet"))
+div(style="display:inline-block")
+   input.input.form-control.filterContainer.dateTimeDate(data-bind="reportDatePicker: date, enable: $root.canEdit(), css: {startDate: (filterName === 'Start_Date'), endDate: (filterName === 'End_Date') }", type="text", required)
+div(style="display:inline-block")
+   input.input.form-control.filterContainer.dateTimeTime(data-bind="reportTimePicker: time, enable: $root.canEdit(), css: {startDateTime: (filterName === 'Start_Date'), endDateTime: (filterName === 'End_Date') }", type="text", required)
+// /ko
+// ko if: (valueType === "Float" || valueType === "Unsigned")
+input.input.form-control.filterContainer(data-bind="value: value, enable: $root.canEdit()", type="number", required)
+// /ko
+// ko if: (valueType === "String")
+input.input.form-control.filterContainer(data-bind="value: value, enable: $root.canEdit()", type="text", required)
+// /ko
+// ko if: (valueType === "Enum")
+// ko if: (valueList.length > 0)
+.dropdown.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
+   button.btn.btn-default.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+      span(data-bind="text: value")
+      span.caret.lm10px
+   ul.filterValues.dropdown-menu
+      // ko foreach: valueList
+      li
+         a.filterContainer(data-bind="click: function(){ $root.selectedFilterEValue($parentContext.$index(), $data) }, text: $data.value", required)
+      // /ko
+// /ko
+// ko if: (valueList.length === 0)
+input.input.form-control.filterContainer(data-bind="value: value, enable: $root.canEdit()", type="text", required)
+// /ko
+// /ko
+// ko if: (valueType === "UniquePID")
+div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
+   button.btn.btn-danger.btn-xs.fa.fa-times(data-bind="click: function(){ $parent.clearFilterPoint($index()) }, tooltip: { title: 'Clear' }")
+   button.btn.btn-info.btn-xs.fa.fa-pencil(data-bind="click: function(){ $parent.selectPointForFilter($data, $index) }, tooltip: { title: 'Edit' }")
+   // ko if: (!!$data.softDeleted)
+   span [Deleted]&nbsp;
+   // /ko
+   .pointRef.filterPointName.container-fluid.filterContainer(data-bind="text: ($data.value !== 0 ? $data.value : '- blank -'), click: function(){ $parent.showPointReview($data) }")
+// /ko
+// ko if: (valueType === "Bool")
+.dropdown.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
+   button.btn.btn-default.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+      span(data-bind="text: $root.displayBool(value)")
+      span.caret.lm10px
+   ul.filterValues.dropdown-menu
+      li
+         a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'True'}, 'value') }, text: 'On'", required)
+      li
+         a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'False'}, 'value') }, text: 'Off'", required)
+// /ko
+// ko if: ((valueType === "HourMinSec") || (valueType === "HourMin") || (valueType === "MinSec"))
+div.durationCtrl
+   // ko if: ((valueType === "HourMinSec") || (valueType === "HourMin"))
+   input.hr(data-bind="value: hours, enable: $root.canEdit()", type="number", min="0", max="23")
+   span.timeSeg hr
+   // /ko
+   input.min(data-bind="value: minutes, enable: $root.canEdit()", type="number", min="0", max="59")
+   span.timeSeg min
+   // ko if: ((valueType === "HourMinSec") || (valueType === "MinSec"))
+   input.sec(data-bind="value: seconds, enable: $root.canEdit()", type="number", min="0", max="59")
+   span.timeSeg sec
+   // /ko
+// /ko
+// ko if: (valueType === "BitString")
+div.bitStringCtrl
+   // ko foreach: bitStringEnumsArray
+   input.bitStringCheckbox(data-bind="checked: checked, enable: $root.canEdit()", type="checkbox")
+   span.bitStringLabel(data-bind="text: name")
+   br
+   // /ko
+// /ko
+
+
+

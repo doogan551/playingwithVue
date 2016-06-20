@@ -1,0 +1,48 @@
+extends ../layout
+block content
+   #window
+      .container-fluid(style="display:none")
+         .col-xs-2
+            include ../tabLinks
+         .col-xs-10
+            .tab-content
+               #tabConfiguration.tab-pane.active
+                  .row.clearfix
+                     ul#panelbar
+                        li.k-state-active
+                           label Define Point
+                           .row
+                              #columnGrid
+                        li.k-state-active
+                           label Options
+                           .row
+                              .col-xs-4
+                                 h4 Select Template
+                                 input#selectTemplate(style="width:300px")
+                              .col-xs-4
+                                 h4 Run Report Button Option
+                                 .checkbox
+                                    label
+                                       input(name="alwaysRun" type="checkbox", value ="0")
+                                       | Get Fresh Report Everytime
+                  .row.clearfix(style="padding:10px")
+                     .col-xs-4
+                     .col-xs-8.pull-right
+                        button#getData(style="display:none") Undo
+                        button#scheduleReport(style="display:none") Schedule Report
+                        #runReport.btn.btn-primary(data-loading-text="<i class='fa fa-spinner fa-spin'></i>&nbsp;Setting Run Config...")
+                           i.insideButton.fa.fa-2x.fa-file-text
+                           | Run Report
+                  .row
+                     #message.alert(role="alert")
+                  .row
+                     #gridData
+                     #gridData2
+                  form#runReportForm(method="post")
+                     input#params(type="hidden", name="params", value="")
+                     input#dataChanged(type="hidden", name="dataChanged", value="false")
+               include ../tabCommons
+   include ../footer
+   include ../models/dialogScreens
+   script(src="/js/reports/dorsett.reportUI.reportConfigBase.js")
+   script(src="/js/reports/dorsett.reportUI.Test.js")

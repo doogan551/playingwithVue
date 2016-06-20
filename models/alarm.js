@@ -134,11 +134,12 @@ exports.getRecentAlarms = function(data, cb) {
 };
 
 exports.acknowledgeAlarm = function(data, cb) {
-  var ids, username, time;
+  var ids, username, time, ackMethod;
 
   ids = data.ids;
   username = data.username;
   time = Math.floor(new Date().getTime() / 1000);
+  ackMethod = data.ackMethod || 'Console';
 
   for (var j = 0; j < ids.length; j++) {
     ids[j] = ObjectID(ids[j]);
@@ -156,6 +157,7 @@ exports.acknowledgeAlarm = function(data, cb) {
       $set: {
         ackStatus: 2,
         ackUser: username,
+        ackMethod: ackMethod,
         ackTime: time
       }
     },

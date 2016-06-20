@@ -1,0 +1,350 @@
+.topBar.reportsTopBar
+    // ko if: configRequired
+    .title Reports
+    // /ko
+    // ko if: !configRequired()
+    .dropdown
+        button.btn.btn-default.availablePeriodsSelect(data-toggle="dropdown")
+            span(data-bind="text: (selectedMonthYear() !== '' ? selectedMonthYear().prettyDate : 'Select Period')")
+            span.caret.lm10px
+        ul.availablePeriods.dropdown-menu
+            input.form-control(data-bind="textInput: reportDateFilter", type="text", placeholder="Search...")
+            li(role="separator", class="divider")
+            // ko foreach: filteredReportMonthYear
+            li(data-bind="css: {'month': $data.period === 'Month', 'year': $data.period === 'Year', 'selected': $parent.selectedMonthYear().prettyDate === prettyDate }")
+                span(data-bind="id: 'datepicker-' + $index")
+                a(data-bind="click: function(){ $parent.monthSelected($data) }")
+                    i.fa.fa-check(data-bind="css: { notCommitted: ($data.isReportCommitted && !$data.isReportCommitted()) }")
+                    span(data-bind="text: prettyDate")
+            // /ko
+
+    .dropdown
+        button.btn.btn-default(data-toggle="dropdown")
+            span(data-bind="text: (selectedReportsMode() !== '' ? selectedReportsMode() : 'Select Mode')")
+            span.caret.lm10px
+        ul.reportingmode.dropdown-menu
+            // ko foreach: reportModes
+            li
+                a(data-bind="click: function(){ $parent.modeSelected($data)}, text: $data")
+            // /ko
+
+    .dropdown
+        button.btn.btn-default(type='button' data-bind="click:print") Print
+    // /ko
+
+    // ko if: (!activeDataRequest() && !errorWithRequest())
+    .buttonBar.editControls(data-bind="if: $root.canWrite($parent.securityBindings.security)")
+        // ko if: (!!selectedMonthYear().isReportCommitted && selectedMonthYear().isReportCommitted() === false && selectedMonthYear().prettyDate !== 'This month')
+        button.hideInEdit.btn.btn-primary.btn-sm.commit(type="button", data-bind="click: showCommitModal") Commit
+        // /ko
+
+    // ko if: (!!selectedMonthYear().isReportCommitted && selectedMonthYear().isReportCommitted())
+    .buttonBar.committed
+        i.fa.fa-check-square
+        // ko if: $root.canWrite($parent.securityBindings.security)
+        .commitInfo(data-bind="click: showUncommitModal.bind($parent), text: getCommitInfoString($data.selectedMonthYear())")
+        // /ko
+        // ko if: !$root.canWrite($parent.securityBindings.security)
+        .commitInfo(data-bind="text: getCommitInfoString($data.selectedMonthYear())", style="cursor: default; text-decoration: none;")
+        // /ko
+    // /ko
+    // /ko
+
+//template
+.mainContent
+    //content here
+    .reportsGettingData
+        i.fa.fa-spinner.fa-spin
+        span Getting data...
+
+    .infoMessage(data-bind="visible: configRequired")
+        i.fa.fa-info-circle
+        span Reports is unavailable until at least one Rate Table and Meter has been configured. Please configure these items then return to this page.
+    .infoMessage(data-bind="visible: errorWithRequest")
+        i.fa.fa-info-circle
+        span Error with request
+    //content here
+    .reportsContent(data-bind="visible: (!configRequired() && !errorWithRequest())")
+        .reportsChartsContent
+            img.busySpinner(src='/css/lib/jqwidgets/images/loader.gif')
+            .title(data-bind="text: selectedMonthYear().period + 'ly Electrical Metering Report - ' + selectedMonthYear().fullDate")
+
+            // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+            .section.highestOnPeakDemand
+                .sectionTitle(data-bind="text: 'On-Peak Demand Per ' + selectedMonthYear().childPeriod + ' - ' + selectedMonthYear().fullDate")
+                .sectionBody
+                    .highestOnPeakDemandPeriodChart.content
+                    .entry This #[span(data-bind="text: selectedMonthYear().period")]'s highest On-Peak Demand occurred #[span(data-bind="text: highestOnPeakDemandNow()")].
+                    .entry Last Year's highest On-Peak Demand occurred #[span(data-bind="text: highestOnPeakDemandLastYear()")].
+            // /ko
+
+            .section.highestDemand
+                .sectionTitle(data-bind="text: 'Highest Demand Per ' + selectedMonthYear().childPeriod + ' - ' + selectedMonthYear().fullDate")
+                .sectionBody
+                    .highestDemandPeriodChart.content
+                    .entry This #[span(data-bind="text: selectedMonthYear().period")]'s highest recorded Demand occurred #[span(data-bind="text: highestDemandNow()")].
+                    .entry Last Year's highest recorded Demand occurred #[span(data-bind="text: highestDemandLastYear()")].
+
+            .section.highestConsumption
+                .sectionTitle(data-bind="text: 'Consumption Per ' + selectedMonthYear().childPeriod + ' - ' + selectedMonthYear().fullDate")
+                .sectionBody
+                    .highestConsumptionPeriodChart.content
+                    .entry This #[span(data-bind="text: selectedMonthYear().period")]'s highest consumption occurred #[span(data-bind="text: highestConsumptionNow()")].
+                    .entry Last Year's highest consumption occurred #[span(data-bind="text: highestConsumptionLastYear()")].
+
+            .section.highlowTemperatures
+                .sectionTitle(data-bind="text: temperatureTitle")
+                .sectionBody
+                    .highlowTemperaturesPeriodChart.content
+                    .entry(data-bind="text: highestTemperatureVerbiage()")
+                    .entry(data-bind="text: lowestTemperatureVerbiage()")
+                    .entry(data-bind="text: temperatureVerbiageHDDCDD()")
+
+            .section.missingData
+                .sectionTitle Statistics
+                .sectionBody
+                    .entry.bm15px #[span(data-bind="text: displayPercentageOfValidData")]% of possible data was collected to create this report.
+                    // ko if: percentageOfMissingData() > 0.0 && percentageOfMissingData() < 100
+                    .entry.bm15px Meters with data missing and % missing:
+                    table.table.table-striped
+                        thead
+                            tr
+                                th Meter
+                                th(data-bind="style: {'text-align': 'right'}") % Missing
+                        tbody(data-bind="foreach: missingDataCollection")
+                            tr
+                                td
+                                    //- JDR - Uncomment below to bring back the numbers (i.e. 1. Meter name). I'm removing for consistency with the 'Monthly Electrical Meters' table
+                                    //- span(data-bind="text: $index() + 1")
+                                    //- span .&nbsp;
+                                    span(data-bind="text: displayedMeterName")
+                                td
+                                    .pull-right.span(data-bind="text: missingPercentage + '%'")
+                    // /ko
+
+            .largeGap
+
+            .section.inactiveMeters
+                .sectionTitle Inactive Meters
+                .sectionBody
+                    .entry.bm15px
+                        // ko if: numberOfInactiveMeters() !== 1
+                        span(data-bind="text: numberOfInactiveMeters")
+                        span &nbsp;meters were inactive for this report.
+                        // /ko
+
+                        // ko if: numberOfInactiveMeters() === 1
+                        span 1 meter was inactive for this report.
+                        // /ko
+
+                    // ko if: numberOfInactiveMeters() > 0
+                    table.table.table-striped
+                        thead
+                            tr
+                                th Meter
+                        tbody(data-bind="foreach: inactiveMeters")
+                            tr
+                                td
+                                    //- JDR - Uncomment below to bring back the numbers (i.e. 1. Meter name). I'm removing for consistency with the 'Monthly Electrical Meters' table
+                                    //- span(data-bind="text: $index() + 1")
+                                    //- span .&nbsp;
+                                    span(data-bind="text: displayedMeterName")
+                    // /ko
+
+            .largeGap
+
+            .section.demandandusage
+                .sectionTitle Demand &amp; Usage Summary
+                .sectionBody
+                    .entry
+                        table.table.table-striped
+                            thead
+                                tr
+                                    th
+                                    th Demand (kW)
+                                    th Reactive (kVAR)
+                                    th Usage (kWh)
+                            tbody
+                                tr
+                                    td.bold(colspan="4") Off Peak
+                                tr
+                                    td(data-bind="text: moment(duOffPeakMW().timeStamp).format('HH:00 MM/DD/YY')")
+                                    td(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
+                                    td(data-bind="text: tou.numberWithCommas(duOffPeakMVAR().value)")
+                                    td
+                                tr
+                                    td(data-bind="text: moment(duOffPeakMWH().timeStamp).format('HH:00 MM/DD/YY')")
+                                    td
+                                    td
+                                    td(data-bind="text: tou.numberWithCommas(sumOfOffPeakConsumption())")
+                                //- Peak usage is not applicable in transition months
+                                // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+                                tr
+                                    td.bold(colspan="4", data-bind="text: (selectedMonthYear().period === 'Year' ? 'On ' : selectedMonthYear().season) + ' Peak'")
+                                tr
+                                    td(data-bind="text: moment(duOnPeakMW().timeStamp).format('HH:00 MM/DD/YY')")
+                                    td(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
+                                    td(data-bind="text: tou.numberWithCommas(duOnPeakMVAR().value)")
+                                    td
+                                tr
+                                    td(data-bind="text: moment(duOnPeakMWH().timeStamp).format('HH:00 MM/DD/YY')")
+                                    td
+                                    td
+                                    td(data-bind="text: tou.numberWithCommas(sumOfOnPeakConsumption())")
+                                tr
+                                    td.bold(colspan="4") Total Peak and Off Peak
+                                tr
+                                    td
+                                    td
+                                    td
+                                    td(data-bind="text: tou.numberWithCommas(sumOfTotalPeriodUsage())")
+                                // /ko
+
+            .section.metertotals
+                .sectionTitle(data-bind="text: selectedMonthYear().period + 'ly Electrical Meters - ' + selectedMonthYear().fullDate")
+                .sectionBody
+                    .entry
+                        table.table.table-striped
+                            thead
+                                tr
+                                    th Meter
+                                    th Off Peak (kWh)
+                                    // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+                                    th On Peak (kWh)
+                                    // /ko
+                                    th Total (kWh)
+                            tbody.individualMetersData(data-bind="foreach: MeterReportCollection()")
+                                tr
+                                    td.individualMeterName(data-bind="text: displayedMeterName")
+                                    td.meterOffPeakSum(data-bind="text: tou.toFixedComma(offPeakSum, 1)")
+                                    // ko if: ($parent.selectedMonthYear().season !== 'Transition' || !!$parent.rateTablePeriod().enablePeakSelection)
+                                    td.meterOnPeakSum(data-bind="text: tou.toFixedComma(onPeakSum, 1)")
+                                    // /ko
+                                    td.meterOnAndOffPeakSum(data-bind="text: tou.toFixedComma(offPeakSum + onPeakSum, 1)")
+
+        .reportsGridContent
+            .title(data-bind="text: selectedMonthYear().period + 'ly Electrical Metering Grid Report - ' + selectedMonthYear().fullDate")
+            .section.reportsgrid
+                .sectionBody
+                    .entry
+                        table.table.table-striped
+                            thead
+                                tr
+                                    th
+
+                                    // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+                                    th(data-bind="text: (selectedMonthYear().season ? selectedMonthYear().season : '') + ' Peak Demand (kW)'")
+                                    th Occurrent Time
+
+                                    th(data-bind="text: 'Coinciding ' + (selectedMonthYear().season ? selectedMonthYear().season : '') + ' Reactive (kVAR)'")
+                                    // /ko
+                                    th Off Peak Demand (kW)
+                                    th Occurrent Time
+
+                                    th Coinciding Off Peak Reactive (kVAR)
+
+                                    // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+                                    th(data-bind="text: (selectedMonthYear().season ? selectedMonthYear().season : '') + ' Peak Usage (kWh)'")
+                                    // /ko
+
+                                    th Off Peak Usage (kWh)
+
+                                    // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+                                    // ko if: (selectedMonthYear().childPeriod === "Day")
+                                    th Total Daily Usage (kWh)
+                                    // /ko
+                                    // ko if: (selectedMonthYear().childPeriod !== "Day")
+                                    th Total Monthy Usage (kWh)
+                                    // /ko
+                                    // /ko
+                            tbody(data-bind="foreach: koGridReportCollection()")
+                                tr
+                                    // ko if: $parent.selectedMonthYear().period !== "Year"
+                                    td.meterdate(data-bind="text: moment(date * 1000).format('MM/DD/YY ddd'), attr: { title: moment(date * 1000).format('dddd') }")
+                                    // /ko
+                                    // ko if: $parent.selectedMonthYear().period === "Year"
+                                    td.meterdate(data-bind="text: moment(date * 1000).format('MM/YY'), attr: { title: moment(date * 1000).format('MMMM') }")
+                                    // /ko
+
+                                    // ko if: ($parent.selectedMonthYear().season !== 'Transition' || !!$parent.rateTablePeriod().enablePeakSelection)
+                                    td.gridonpeakdemand
+                                        .itemValue(data-bind="text: tou.numberWithCommas(OnPeakDemand.value)")
+                                    td.occurrent.onpeakdemand
+                                        // ko if: OnPeakDemand.value !== 0 && OnPeakDemand.timeStamp > 0
+                                        span.itemTimeStamp(data-bind="text: moment(OnPeakDemand.timeStamp).format('HH:mm')")
+                                        // /ko
+                                    td.gridonpeakreactive
+                                        .itemValue(data-bind="text: tou.numberWithCommas(OnPeakReactive.value)")
+                                    // /ko
+
+                                    td.gridoffpeakdemand
+                                        .itemValue(data-bind="text: tou.numberWithCommas(OffPeakDemand.value)")
+                                    td.occurrent.offpeakdemand
+                                        // ko if: OffPeakDemand.value !== 0 && OffPeakDemand.timeStamp > 0
+                                        span.itemTimeStamp(data-bind="text: moment(OffPeakDemand.timeStamp).format('HH:mm')")
+                                        // /ko
+                                    td.gridoffpeakreactive
+                                        .itemValue(data-bind="text: tou.numberWithCommas(OffPeakReactive.value)")
+
+                                    // ko if: ($parent.selectedMonthYear().season !== 'Transition' || !!$parent.rateTablePeriod().enablePeakSelection)
+                                    td.gridonpeakconsumption
+                                        .itemValue(data-bind="text: tou.numberWithCommas(OnPeakConsumption.value)")
+                                    // /ko
+
+                                    td.gridoffpeakconsumption
+                                        .itemValue(data-bind="text: tou.numberWithCommas(OffPeakConsumption.value)")
+
+                                    // ko if: ($parent.selectedMonthYear().season !== 'Transition' || !!$parent.rateTablePeriod().enablePeakSelection)
+                                    td.gridconsumptiontotal
+                                        .itemValue(data-bind="text: tou.numberWithCommas(TotaledOnOffPeakConsumption.value)")
+                                    // /ko
+                            tbody.koGridReportFooter
+                                tr
+                                    td.bold Max Values
+
+                                    // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
+                                    td
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMaxMVAR().value)")
+                                    // /ko
+
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
+                                    td
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMaxMVAR().value)")
+
+                                    // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMWH().value)")
+                                    // /ko
+
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMWH().value)")
+
+                                    // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+                                    td
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(maxPeriodUsage().value)")
+                                    // /ko
+                                tr
+                                    td.bold Totals
+                                    // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+                                    td
+                                    td
+                                    td
+                                    // /ko
+                                    td
+                                    td
+                                    td
+                                    // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+                                    td
+                                        .itemValue.total(data-bind="text: tou.numberWithCommas(sumOfOnPeakConsumption())")
+                                    // /ko
+                                    td
+                                        .itemValue.total(data-bind="text: tou.numberWithCommas(sumOfOffPeakConsumption())")
+                                    // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+                                    td
+                                        .itemValue(data-bind="text: tou.numberWithCommas(sumOfTotalPeriodUsage())")
+                                    // /ko

@@ -372,6 +372,9 @@ var scripts = {
 				$unset: {
 					'Point Instance': 1
 				}
+			},
+			options: {
+				multi: true
 			}
 		};
 		utility.update(criteria, function(err, results) {

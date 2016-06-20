@@ -1,0 +1,18 @@
+#modal-addPoint.modal.fade
+    .modal-dialog
+        .modal-content
+            .modal-header
+                button.close(type='button', data-dismiss='modal', aria-hidden='true') ×
+                h4.modal-title Add Point Wizard
+            .modal-body
+                form( method="post")#modal-addPoint.well.span5
+                    p Select Point Type
+                    div#pointType2
+                    //button(type="submit")#submit.btn.btn-primary Submit
+                    //button(data-dismiss="modal")#cancel.btn Cancel
+                    div.alert.alert-error.hide
+                    button(data-dismiss="alert").close
+            .modal-footer
+                button.btn.btn-default(type='button', data-dismiss='modal') Close
+                button.btn.btn-primary(type='button') Next
+
