@@ -717,7 +717,8 @@ var trendPlots = {
                         type: type,
                         data: data,
                         name: series.name,
-                        color: series.color
+                        color: series.color,
+                        turboThreshold: cfg.turboThreshold
                     }, tmpSeries);
 
                 if(series.yAxis !== undefined) {
