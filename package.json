@@ -1,6 +1,6 @@
 {
   "name": "InfoscanJS",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "infoscan",
   "main": "app.js",
   "dependencies": {
