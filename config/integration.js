@@ -2,7 +2,7 @@ var integration = {
   'Infoscan': {
     'dbConfig': {
       'host': 'localhost',
-      'dbName': 'integration'
+      'dbName': 'msfc'
     },
     'zmqConfig': {
       'server': '127.0.0.1'
