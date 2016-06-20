@@ -109,13 +109,41 @@ html
                     //-     span.white-text This is a simple panel
 
             #desktop
-                img.desktop-background(src="/img/test/weather.png")
+                .desktopTitle(style="font-size: 1.6em;") MSFC Utility Control System
+                img.desktop-background(src="/img/test/nasa.png", style="height: 200px; position: absolute; top: 130px; left: 50px;")
                 //- .dti-desktop-item
                 //-     .item-content
                 //-     .item-text Test
-                //- img.z-depth-1(src='/img/test/chart.png', style="position: absolute; right: 15px; top: 65px; height: 200px; width: 360px;")
+                img.z-depth-1(src='/img/test/chart2.png', style="position: absolute; left: 15px; bottom: 15px; height: 250px; width: 800px;")
 
-                //- img.z-depth-1(src='/img/test/alarms.png', style="position: absolute; right: 15px; bottom: 15px;")
+                img.z-depth-1(src='/img/test/alarms.png', style="position: absolute; right: 15px; top: 63px;")
+
+                img.z-depth-1(src='/img/test/sequence2.png', style="position: absolute; right: 15px; bottom: 15px;")
+
+                .dynamicList
+                    table
+                        tr
+                            td Outside Air Temp
+                            td 78&deg;
+                        tr
+                            td Outside Air Humidity
+                            td 45.50
+                        tr
+                            td
+                        tr
+                            td Wet Bulb
+                            td 55.28
+                        tr
+                            td Enthalpy
+                            td 23.28
+                        tr
+                            td Dew Point
+                            td 47.02
+
+                .buttonBar
+                    a.blue-grey.waves-effect.btn(href="javascript://") Master Menu Disp
+                    a.blue-grey.waves-effect.btn(href="javascript://") Active Alarms
+                    a.blue-grey.waves-effect.btn(href="javascript://") Monthly Report
 
             //- .card-panel.dti-card-panel.blue-grey.z-depth-2.lighten-3(style="left: 55px; top: 55px;")
             //-     .card-toolbar
@@ -137,7 +165,7 @@ html
             //-                 i.material-icons close
             //-     img(src="/img/test/display2.png", style="height: 100%; width: 100%;")
 
-            #displayPanel.card-panel.dti-card-panel.blue-grey.z-depth-2.lighten-3(style="left: 105px; top: 105px;")
+            #displayPanel.card-panel.dti-card-panel.blue-grey.z-depth-2.lighten-3.hide(style="left: 105px; top: 105px;")
                 .card-toolbar
                     .card-title.center-align.white-text
                         div
@@ -157,7 +185,7 @@ html
                             i.material-icons close
                 img(src="/img/test/display.png", style="height: 100%; width: 100%;")
 
-            #gplPanel.card-panel.dti-card-panel.blue-grey.z-depth-2.activeCard(style="left: 155px; top: 155px;")
+            #gplPanel.card-panel.dti-card-panel.blue-grey.z-depth-2.activeCard.hide(style="left: 155px; top: 155px;")
                 .card-toolbar
                     .card-title.center-align.white-text
                         div

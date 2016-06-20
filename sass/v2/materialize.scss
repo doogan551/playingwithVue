@@ -259,3 +259,24 @@ main {
     }
 }
 
+.dynamicList {
+    position: absolute;
+    top: 120px;
+    left: 350px;
+
+    font-size: 1.4em;
+
+    td {
+        padding: 5px;
+    }
+}
+
+.buttonBar {
+    position: absolute;
+    top: 400px;
+    z-index: 0;
+
+    & > a {
+        margin-right: 5px;
+    }
+}
