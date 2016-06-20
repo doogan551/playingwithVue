@@ -2111,7 +2111,6 @@ var reportsViewModel = function () {
                     data: columnData
                 });
             }
-            self.activeRequestForChart(false);
             return setYaxisValues(result);
         },
         adjustViewReportTabHeightWidth = function () {
@@ -3291,9 +3290,11 @@ var reportsViewModel = function () {
                     }, 110);
                 } else {
                     $reportChartDiv.html("Too many data rows for " + self.selectedChartType() + " Chart. Max = " + maxDataRowsForChart);
+                    self.activeRequestForChart(false);
                 }
             } else {
                 $reportChartDiv.html("Chart data not available");
+                self.activeRequestForChart(false);
             }
         };
 
