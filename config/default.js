@@ -77,7 +77,8 @@ var defaults = {
             'pass': 'f72bbcb40e28f4387831edaa35afab90caa66d01'
         }
     },
-    runNotifications: true
+    runNotifications: true,
+    minifyFiles: true
 };
 
 defaults.Infoscan.files.firmwareLocation = defaults.Infoscan.files.driveLetter + ":/InfoScan/Firmware/";

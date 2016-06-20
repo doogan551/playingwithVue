@@ -24,7 +24,8 @@ var integration = {
     },
     'domains': ['']
   },
-  runNotifications: false
+  runNotifications: false,
+  minifyFiles: false
 };
 
 integration.redisConfig = {

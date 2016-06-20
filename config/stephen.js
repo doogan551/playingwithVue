@@ -17,7 +17,8 @@ var stephen = {
             }
         }
     },
-    runNotifications: false
+    runNotifications: false,
+    minifyFiles: false
 };
 
 stephen.redisConfig = {
