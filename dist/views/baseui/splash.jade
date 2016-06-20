@@ -1,0 +1,54 @@
+doctype html
+html
+	head
+		title= title
+		link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css?ver=0.4.0')
+		link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css?ver=0.4.0')
+		link(rel='stylesheet', href='/css/baseui/workspace.css?ver=0.4.0')
+		link(rel='stylesheet', href='/css/baseui/splash.css?ver=0.4.0')
+		script(type='text/javascript', src='/js/lib/json2.js?ver=0.4.0')
+		script(type='text/javascript', src='/js/lib/jquery.min.js?ver=0.4.0')
+		script(type='text/javascript', src='/js/lib/knockout-2.3.0.js?ver=0.4.0')
+		script(type='text/javascript', src='/js/lib/bootstrap-3.0.3.min.js?ver=0.4.0')
+		script(type='text/javascript', src='/js/lib/ko.validation.js?ver=0.4.0')
+		script(type='text/javascript', src='/js/lib/date.js?ver=0.4.0')
+		script(type='text/javascript', src='/js/lib/underscore.js?ver=0.4.0')
+		script(type='text/javascript', src='/js/lib/backbone.min.js?ver=0.4.0')
+		script(type='text/javascript', src='/js/lib/knockback.min.js?ver=0.4.0')
+		script(type='text/javascript', src='/js/lib/ko.validation.js?ver=0.4.0')
+		script(type='text/javascript', src='/js/lib/typeahead.bundle.js?ver=0.4.0')
+		script(type='text/javascript', src='/js/lib/handlebars-v3.0.3.js?ver=0.4.0')
+		script(type='text/javascript', src='/js/baseui/splash.js?ver=0.4.0')
+
+	body.view
+		#splash
+			.masthead
+				form(action='')
+					input(type='hidden' name='mode', value='results')
+					.spacerDiv
+					#searchArea.typeahead
+						.u-posRelative
+							input.searchHint(tabindex=-1 type='text' readonly)
+							input.searchBar(tabindex=1)
+							i.fa.fa-search.searchIcon
+							i.fa.fa-times-circle.clearIcon(data-bind='click: clearSearch', title="Clear")
+							img.searchSpinner(src='/img/spinner.gif')
+						.searchMenu
+
+
+			ul.thumbs.alarms(data-bind="foreach: alarms")
+				li.thumb(data-bind="css:name")
+					.titleBar
+						.title(data-bind="text:name")
+
+					.thumbContent.active
+						.count(data-bind="text:count")
+
+			script#template(type='text/x-handlebars-template')
+				.dropdownResults
+					.resultName {{Name}}
+					.resultType {{pointType}}
+
+			script#noResults(type='text/x-handlebars-template')
+				.dropdownResults
+					.resultName Unable to find any results

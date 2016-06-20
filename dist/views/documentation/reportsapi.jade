@@ -1,0 +1,96 @@
+include main
+
+body(data-role='page', data-theme='a')
+		#content(data-role='content', data-theme='')
+			#apititle(data-role='header', data-theme='d')
+				|Reports API Documentation
+				.titlelink
+					a(href='/documentation/reportsapi') Permalink
+			p
+			#summary This API is used for running reports
+			p
+			#url(data-role='collapsible')
+				h3 /api/reporting/run
+				#summary This call will return run a query based on JSON sent.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Mode
+						.ui-block-b
+							.ui-bar.ui-bar-c Options of "Live" or "Preview". "Preview" returns up to 100 records and "Live" returns all records.
+						.ui-block-c
+							.ui-bar.ui-bar-c "Live"
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Qualifiers
+						.ui-block-b
+							.ui-bar.ui-bar-c Array of Objects that each have comparator and value. One object can have an operator key, and if this exists, all other objects need to have an index key. "Qualifiers":[{"UniqueName":{"comparator":"Containing", "value:"4200", operator:"OR", index:0}},{"COV Period":{"comparator":"EqualTo", value:"10", "index":1}}]
+						.ui-block-c
+							.ui-bar.ui-bar-c Required.
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of JSON objects
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Properties
+						.ui-block-b
+							.ui-bar.ui-bar-c Array of properties that will be returned to be shown in the report. Properties will be returned with a blank object if that property doesn't exist for the point.
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of Strings
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Sort
+						.ui-block-b
+							.ui-bar.ui-bar-c Sorting based on property, ascending(1) or descending(-1). { "COV Period": "ASC", "Value": "DESC" }
+						.ui-block-c
+							.ui-bar.ui-bar-c No sorting
+						.ui-block-d
+							.ui-bar.ui-bar-c JSON
+					
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c "done"
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								[{"Month":"January","Day":"1","Year":"2014","Comment":"New Year's Day"},{"Month":"December","Day":"25","Year":"2014","Comment":"Christmas"}]
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{ message: "done" }

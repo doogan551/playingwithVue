@@ -1,0 +1,1 @@
+$(document).ready(function(){testLogin=function(a,b){$.ajax({url:"/session/login/",type:"post",dataType:"json",success:function(a){return b(a.err?!1:1==a.status?!0:!1)},data:a})},testRegister=function(a,b){$.ajax({url:"/session/register/",type:"post",dataType:"json",success:function(a){return b(a.err?!1:"This username already exists."==a.message?!0:!1)},data:a})}});

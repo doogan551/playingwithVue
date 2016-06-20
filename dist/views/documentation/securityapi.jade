@@ -1,0 +1,1402 @@
+include main
+
+body(data-role='page', data-theme='a')
+		#content(data-role='content', data-theme='')
+			#apititle(data-role='header', data-theme='d')
+				|Security API Documentation
+				.titlelink
+					a(href='/documentation/securityapi') Permalink
+			p
+			#summary This API is used for allowing and denying access to points
+			p
+
+			#url(data-role='collapsible')
+				h3 /api/security/groups/savegroup
+				#summary This call will either update a group or add a new group based whether the property "User Group Upi" is defined. If "User Group Upi" is defined, the functionality of /api/security/groups/updategroup will be used, otherwise, /api/security/groups/newgroup will be used.
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c User Group Upi
+						.ui-block-b
+							.ui-bar.ui-bar-c Upi of the group
+						.ui-block-c
+							.ui-bar.ui-bar-c ""
+						.ui-block-d
+							.ui-bar.ui-bar-c String or Integer
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in (For Update):
+							.codesnippet
+								{ "User Group Upi": "51fa7c5f503b1ae425000001", "Update Data": { "User Group Name": "Engineer"} }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}
+
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in (For New Group):
+							.codesnippet
+								{ "User Group Name":"Test", Users:[{userid: "51fbd01ecb3588dc13000001", username:"robtest", "Group Admin":true }]}
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"Point Type":{"Value":"User Group"},"User Group Name":"Test","Users":{"51fbd01ecb3588dc13000001":{"Group Admin":true,"username":"robtest"}},"_id":"51fc0dcbe1cfdbcc0f000001"}
+
+			#url(data-role='collapsible')
+				h3 /api/security/users/saveuser
+				#summary This call will either update a user or add a new user based whether the property userid is defined. If userid is defined, the functionality of /api/security/users/updateuser will be used, otherwise, /api/security/users/newuser will be used.
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c userid
+						.ui-block-b
+							.ui-bar.ui-bar-c Upi of the user
+						.ui-block-c
+							.ui-bar.ui-bar-c ""
+						.ui-block-d
+							.ui-bar.ui-bar-c String or Integer
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in (For Update):
+							.codesnippet
+								{ "userid": "51fbd63d3a94f04018000002", "Update Data": {"System Admin":true}}
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}
+								
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in (For New User):
+							.codesnippet
+								{ "username":"user3", "password":"pass", "First Name":"Rob", "Last Name":"Kendall", "Photo URL": "p:/photos", "Title":"Engineer", "Auto Logout":0, "Contact Info":[{"Type":"Home Phone", "Value": 123456789}, {"Type":"Cell Phone", "Value":987654321}, {"Type":"Email", "Value":"rkendall@dorsett-tech.com"}, {"Type":"Pager", "Value":467991323} ], "User Groups":[{"groupid":"51fa7c5f503b1ae425000001", isAdmin:true}]}
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"Point Type":{"Value":"User","JSONWriteFlag":false},"username":"user3","Password":{"Value":"$2a$10$nrPnCd1N9mwD/egTzdZwnOxZSj0FZ0FeRp7iHoQr07rB3zfZz0D8u","JSONWriteFlag":false,"ValueType":5,"isDisplayable":false,"isReadOnly":false,"isWriteReady":false},"Username":{"Value":"user3","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Last Login Time":{"Value":0,"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Last Activity Time":{"Value":0,"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Auto Logout Duration":{"Value":"0","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"First Name":{"Value":"Rob","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Last Name":{"Value":"Kendall","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Photo":{"Value":"p:/photos","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Title":{"Value":"Engineer","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Contact Info":{"Value":[{"Type":"Home Phone","Value":"123456789"},{"Type":"Cell Phone","Value":"987654321"},{"Type":"Email","Value":"rkendall@dorsett-tech.com"},{"Type":"Pager","Value":"467991323"}],"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Description":{"Value":"","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Password Reset":{"Value":true,"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"System Admin":{"Value":false,"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"taglist":["user3","User","Rob","Kendall","p:/photos","Engineer"],"_id":"5217bfe6370987440c000001"}
+
+			#url(data-role='collapsible')
+				h3 /api/security/groups/getusers
+				#summary This call will return all users that belong to the given group.
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c User Group Upi
+						.ui-block-b
+							.ui-bar.ui-bar-c Upi of the group
+						.ui-block-c
+							.ui-bar.ui-bar-c ""
+						.ui-block-d
+							.ui-bar.ui-bar-c String or Integer
+					
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Users
+						.ui-block-b
+							.ui-bar.ui-bar-c An object containing all users that fit the criteria. The key is the userid for each user.
+						.ui-block-c
+							.ui-bar.ui-bar-c {}
+						.ui-block-d
+							.ui-bar.ui-bar-c Object
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "User Group Upi": "519e6309f7dbaa0c2f000002" }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"Users":{"51f278838f231eb81c000222":{"Group Admin":true,"username":"Chris"}}} 
+			
+			#url(data-role='collapsible')
+				h3 /api/security/groups/addusers
+				#summary This call will add users to any groups.
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c User Group Upis
+						.ui-block-b
+							.ui-bar.ui-bar-c Array of group upis.
+						.ui-block-c
+							.ui-bar.ui-bar-c []
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of strings or integers
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Users
+						.ui-block-b
+							.ui-bar.ui-bar-c User ids to be added to the user group. Can have "Group Admin" property (if not given, defaults to false) and username (defaults to empy).
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of JSON
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c "success"
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "User Group Upis": ["51fa7c5f503b1ae425000001"], Users: [{userid:"51fbd01ecb3588dc13000001", username:"robtest"}] }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}
+			
+			#url(data-role='collapsible')
+				h3 /api/security/groups/removeusers
+				#summary This call will remove given users from given user groups.
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c User Group Upis
+						.ui-block-b
+							.ui-bar.ui-bar-c Array of group upis.
+						.ui-block-c
+							.ui-bar.ui-bar-c []
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of strings or integers
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Users
+						.ui-block-b
+							.ui-bar.ui-bar-c User ids to be removed from the user group
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of strings or integers
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c "success"
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "User Group Upis": ["51fa7c5f503b1ae425000001"], Users: ["51fbd01ecb3588dc13000001"] }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}
+
+			#url(data-role='collapsible')
+				h3 /api/security/groups/newgroup
+				#summary This call create a new user group.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c User Group Name
+						.ui-block-b
+							.ui-bar.ui-bar-c String name of group
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Optional Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Users
+						.ui-block-b
+							.ui-bar.ui-bar-c Users to be added to the user group. 3 possible keys: userid, username and "Group Admin" (defaults to false). If userid is not given, user will not be added to group.
+						.ui-block-c
+							.ui-bar.ui-bar-c 
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of user objects.
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c {Object that was inserted}
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "User Group Name":"Test", Users:[{userid: "51fbd01ecb3588dc13000001", username:"robtest", "Group Admin":true }]}
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":[{"Point Type":{"Value":"User Group"},"User Group Name":"Test","Users":{"51fbd01ecb3588dc13000001":{"Group Admin":true,"username":"robtest"}},"_id":"51fc0dcbe1cfdbcc0f000001"}]} 
+						
+			#url(data-role='collapsible')
+				h3 /api/security/groups/removegroup
+				#summary This call will delete a group.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c User Group Upi
+						.ui-block-b
+							.ui-bar.ui-bar-c Upi of the group
+						.ui-block-c
+							.ui-bar.ui-bar-c ""
+						.ui-block-d
+							.ui-bar.ui-bar-c String or Integer
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c Object that was inserted
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "User Group Upi": "51a7aed3c644cdf016000001" }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}
+
+			#url(data-role='collapsible')
+				h3 /api/security/groups/getallgroups
+				#summary This call will return all user groups in the system.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c 
+						.ui-block-b
+							.ui-bar.ui-bar-c Array containing all user groups in the system as objects
+						.ui-block-c
+							.ui-bar.ui-bar-c [{}]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of Objects
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example request:
+							.codesnippet
+								/api/security/groups/getallgroups
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								[{"Point Type":{"Value":"User Group"},"User Group Name":"Engineer","Users":{"51f278838f231eb81c000222":{"Group Admin":true,"username":"Chris"}},"_id":"51fa7c5f503b1ae425000001"},{"Point Type":{"Value":"User Group"},"User Group Name":"Test","Users":{"51fbd01ecb3588dc13000001":{"Group Admin":true,"username":"robtest"}},"_id":"51fc0dcbe1cfdbcc0f000001"}] 
+			
+			#url(data-role='collapsible')
+				h3 /api/security/groups/updategroup
+				#summary This call will update a group based on the update data that is given in the request.
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c User Group Upi
+						.ui-block-b
+							.ui-bar.ui-bar-c Upi of the group
+						.ui-block-c
+							.ui-bar.ui-bar-c ""
+						.ui-block-d
+							.ui-bar.ui-bar-c String or Integer
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Update Data
+						.ui-block-b
+							.ui-bar.ui-bar-c Object containing key:value pairs of what needs to be updated
+						.ui-block-c
+							.ui-bar.ui-bar-c {}
+						.ui-block-d
+							.ui-bar.ui-bar-c Object
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c "success"
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "User Group Upi": "51fa7c5f503b1ae425000001", "Update Data": { "User Group Name": "Testers", Users:[{"userid":"5202829be3f92b4c1e000001", isAdmin:false}]} }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}
+
+			#url(data-role='collapsible')
+				h3 /api/security/groups/getpoints
+				#summary This call will return all points that a group is attached to.
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c User Group Upi
+						.ui-block-b
+							.ui-bar.ui-bar-c Upi of the group
+						.ui-block-c
+							.ui-bar.ui-bar-c ""
+						.ui-block-d
+							.ui-bar.ui-bar-c String or Integer
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Optional Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Properties
+						.ui-block-b
+							.ui-bar.ui-bar-c Properties to be returned
+						.ui-block-c
+							.ui-bar.ui-bar-c []
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of property name strings
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Points
+						.ui-block-b
+							.ui-bar.ui-bar-c Array of point objects. The object contains default selective properties for each point: _id, name1, name2, name3, name4 and Name.
+						.ui-block-c
+							.ui-bar.ui-bar-c [{}]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of objects
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "User Group Upi": "51fa7c5f503b1ae425000001", Properties: ["Name", "_id"] }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								[{"Name":"4711_AH8 E111_STATIC","_id":45018}]	 
+
+			#url(data-role='collapsible')
+				h3 /api/security/groups/:id
+				#summary This call will return the group object for a given id.
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c id in request.
+						.ui-block-b
+							.ui-bar.ui-bar-c Upi of the group
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c String or Integer
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c 
+						.ui-block-b
+							.ui-bar.ui-bar-c Object containing all properties for the group
+						.ui-block-c
+							.ui-bar.ui-bar-c {}
+						.ui-block-d
+							.ui-bar.ui-bar-c Object
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example request:
+							.codesnippet
+								/api/security/groups/51fc0dcbe1cfdbcc0f000001
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"Point Type":{"Value":"User Group"},"User Group Name":"Test","Users":{"51fbd01ecb3588dc13000001":{"Group Admin":true,"username":"robtest"}},"_id":"51fc0dcbe1cfdbcc0f000001"}
+				
+			#url(data-role='collapsible')
+				h3 /api/security/users/getgroups
+				#summary This call will return all groups that a user belongs to.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c User
+						.ui-block-b
+							.ui-bar.ui-bar-c Userid to find groups for.
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c 
+						.ui-block-b
+							.ui-bar.ui-bar-c Array containing all groups the requested user belongs to
+						.ui-block-c
+							.ui-bar.ui-bar-c []
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of objects
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "User": "51fbd01ecb3588dc13000001" }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								[{"User Group Name":"Test","User Group Id":"51fc0dcbe1cfdbcc0f000001"}] 
+			
+			#url(data-role='collapsible')
+				h3 /api/security/users/systemaccess
+				#summary Not yet implemented.
+
+			#url(data-role='collapsible')
+				h3 /api/security/users/newuser
+				#summary This call will add a user to the system, given a username and password.
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c username
+						.ui-block-b
+							.ui-bar.ui-bar-c username for the user (must be unique).
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c password
+						.ui-block-b
+							.ui-bar.ui-bar-c password for the user (plain text).
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Optional Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c First Name
+						.ui-block-b
+							.ui-bar.ui-bar-c 
+						.ui-block-c
+							.ui-bar.ui-bar-c ""
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Last Name
+						.ui-block-b
+							.ui-bar.ui-bar-c 
+						.ui-block-c
+							.ui-bar.ui-bar-c ""
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Photo URL
+						.ui-block-b
+							.ui-bar.ui-bar-c 
+						.ui-block-c
+							.ui-bar.ui-bar-c ""
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Title
+						.ui-block-b
+							.ui-bar.ui-bar-c 
+						.ui-block-c
+							.ui-bar.ui-bar-c ""
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Auto Logout
+						.ui-block-b
+							.ui-bar.ui-bar-c Length in ms for how long a user's session will last when logged in.
+						.ui-block-c
+							.ui-bar.ui-bar-c 0
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Contact Info
+						.ui-block-b
+							.ui-bar.ui-bar-c Will have possible sub documents, each with 2 keys, Type and Value.
+						.ui-block-c
+							.ui-bar.ui-bar-c ""
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c "success"
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "username":"robtest", "Password":"pass", "First Name":"Rob", "Last Name":"Kendall", "Photo URL": "p:/photos", "Title":"Engineer", "Auto Logout":0, "Contact Info":[{"Type":"Home Phone", "Value": 123456789}, {"Type":"Cell Phone", "Value":987654321}, {"Type":"Email", "Value":"rkendall@dorsett-tech.com"}, {"Type":"Pager", "Value":467991323} ]}
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}
+
+			#url(data-role='collapsible')
+				h3 /api/security/users/removeuser
+				#summary This call will remove a user based on user id.
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c userid
+						.ui-block-b
+							.ui-bar.ui-bar-c Id for the user.
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c String or Int
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c "success"
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "userid":"51fc1549648cf8f41e000001"}
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}
+
+			#url(data-role='collapsible')
+				h3 /api/security/users/getallusers
+				#summary This call will return all users on the system.
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Optional Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Properties
+						.ui-block-b
+							.ui-bar.ui-bar-c Properties to be returned
+						.ui-block-c
+							.ui-bar.ui-bar-c {}
+						.ui-block-d
+							.ui-bar.ui-bar-c JSON
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Users
+						.ui-block-b
+							.ui-bar.ui-bar-c Array of all users as objects on the system.
+						.ui-block-c
+							.ui-bar.ui-bar-c [{}]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of user objects
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example request:
+							.codesnippet
+								/api/security/users/getallusers
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"Users":[{"Point Type":{"Value":"User","JSONWriteFlag":false},"username":"user1","Password":{"Value":"$2a$10$fFEH/LyhMjymA3xvaa.pfOQbWJ4lRP0BJxEDit/pptXY28jY197d.","JSONWriteFlag":false,"ValueType":5,"isDisplayable":false,"isReadOnly":false,"isWriteReady":false},"Username":{"Value":"user1","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Last Login Time":{"Value":0,"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Last Activity Time":{"Value":0,"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Auto Logout Duration":{"Value":"0","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"First Name":{"Value":"Rob","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Last Name":{"Value":"Kendall","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Photo":{"Value":"p:/photos","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Title":{"Value":"Engineer","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Contact Info":{"Value":[{"Type":"Home Phone","Value":"123456789"},{"Type":"Cell Phone","Value":"987654321"},{"Type":"Email","Value":"rkendall@dorsett-tech.com"},{"Type":"Pager","Value":"467991323"}],"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Description":{"Value":"","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Password Reset":{"Value":true,"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"System Admin":{"Value":false,"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"taglist":["user1","User","Rob","Kendall","p:/photos","Engineer"],"_id":"51fbd63d3a94f04018000002"}]} 
+
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{Properties: ["First Name", "Last Name"]}
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"Users":[{"First Name":"Rob","Last Name":"Kendall"}]}
+
+			#url(data-role='collapsible')
+				h3 /api/security/users/updateuser
+				#summary This call will update a particular user using the given update data.
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c userid
+						.ui-block-b
+							.ui-bar.ui-bar-c Id for the user.
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c String or Int
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Update Data
+						.ui-block-b
+							.ui-bar.ui-bar-c Object containing key:value pairs of what needs to be updated
+						.ui-block-c
+							.ui-bar.ui-bar-c {}
+						.ui-block-d
+							.ui-bar.ui-bar-c Object
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c "success"
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "userid": "520a7ea63e2f75f41b000001", "Update Data": {"System Admin":true, Groups:[{groupid:"51fa7c5f503b1ae425000001", isAdmin:false}]}} 
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}
+
+			#url(data-role='collapsible')
+				h3 /api/security/users/:id
+				#summary This call will return user based on id in the request url.
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c id in request.
+						.ui-block-b
+							.ui-bar.ui-bar-c Upi of the group
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c String or Integer
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c 
+						.ui-block-b
+							.ui-bar.ui-bar-c Object containing all properties for the group
+						.ui-block-c
+							.ui-bar.ui-bar-c {}
+						.ui-block-d
+							.ui-bar.ui-bar-c Object
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example request:
+							.codesnippet
+								/api/security/users/51fbd63d3a94f04018000002
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"Auto Logout Duration":{"Value":"0","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Contact Info":{"Value":[{"Type":"Home Phone","Value":"123456789"},{"Type":"Cell Phone","Value":"987654321"},{"Type":"Email","Value":"rkendall@dorsett-tech.com"},{"Type":"Pager","Value":"467991323"}],"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Description":{"Value":"","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"First Name":{"Value":"Rob","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Last Activity Time":{"Value":0,"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Last Login Time":{"Value":0,"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Last Name":{"Value":"Kendall","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Password":{"Value":"$2a$10$fFEH/LyhMjymA3xvaa.pfOQbWJ4lRP0BJxEDit/pptXY28jY197d.","JSONWriteFlag":false,"ValueType":5,"isDisplayable":false,"isReadOnly":false,"isWriteReady":false},"Password Reset":{"Value":true,"JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Photo":{"Value":"p:/photos","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Point Type":{"Value":"User","JSONWriteFlag":false},"System Admin":{"JSONWriteFlag":false,"Value":"true","ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Title":{"Value":"Engineer","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"Username":{"Value":"user1","JSONWriteFlag":false,"ValueType":5,"isDisplayable":true,"isReadOnly":false,"isWriteReady":false},"_id":"51fbd63d3a94f04018000002","taglist":["user1","User","Rob","Kendall","p:/photos","Engineer"],"username":"user1"} 
+
+			#url(data-role='collapsible')
+				h3 /api/security/points/addgroups
+				#summary This call will add groups to points.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Points
+						.ui-block-b
+							.ui-bar.ui-bar-c List of point upis to have groups added to.
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of integers/strings
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Groups
+						.ui-block-b
+							.ui-bar.ui-bar-c Groups to be added to the points. Must contain "User Group Upi". If no Permissions are given, it defaults to 0. (See example) If "Group Admin" is not supplied, it defaults to false
+						.ui-block-c
+							.ui-bar.ui-bar-c [{}]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of objects
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c Object that was inserted
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "Points": [45018], "Groups": [{ "User Group Upi": "51fbc041af5314f427000001", Permissions: 5, "User Group Name":"Test" }] }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}
+								
+			#url(data-role='collapsible')
+				h3 /api/security/points/removegroups
+				#summary This call will remove groups from given points.
+				
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Points
+						.ui-block-b
+							.ui-bar.ui-bar-c List of point upis to have groups removed from.
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of integers
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Groups
+						.ui-block-b
+							.ui-bar.ui-bar-c Group upis to be added to removed from the points.
+						.ui-block-c
+							.ui-bar.ui-bar-c [""]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of strings or integers
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c Object that was inserted
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "points": ["45018"], "User Group Upis": ["51fa7c5f503b1ae425000001"] }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}
+
+			#url(data-role='collapsible')
+				h3 /api/security/points/addusers
+				#summary This call will add users to given points.
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Points
+						.ui-block-b
+							.ui-bar.ui-bar-c List of point upis to have groups added to.
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of integers
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Users
+						.ui-block-b
+							.ui-bar.ui-bar-c Users to be added to the points. Must contain "Userid". If no Permissions are given, it defaults to 0. (See example) 
+						.ui-block-c
+							.ui-bar.ui-bar-c [{}]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of objects
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c Object that was inserted
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "Points": [45018], "Users": [{"Userid":"51fbd01ecb3588dc13000001", Permissions: 5, username: "robtest", "Point Admin": true}] }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}
+
+			#url(data-role='collapsible')
+				h3 /api/security/points/removeusers
+				#summary This call will remove groups from given points.
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Points
+						.ui-block-b
+							.ui-bar.ui-bar-c List of point upis to have groups added to.
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of integers/strings
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c userids
+						.ui-block-b
+							.ui-bar.ui-bar-c User ids to be removed from the points. (See example)
+						.ui-block-c
+							.ui-bar.ui-bar-c [""]
+						.ui-block-d
+							.ui-bar.ui-bar-c Array of integers/strings
+
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Object
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c message
+						.ui-block-b
+							.ui-bar.ui-bar-c Message stating the outcome of the operation.
+						.ui-block-c
+							.ui-bar.ui-bar-c Object that was inserted
+						.ui-block-d
+							.ui-bar.ui-bar-c String
+					
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example in:
+							.codesnippet
+								{ "Points": [45018], "userids": ["51dc1cba77ea57e81e000111"] }
+						.exampleOut(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Example out:
+							.codesnippet
+								{"message":"success"}

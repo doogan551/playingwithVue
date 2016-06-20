@@ -1,0 +1,64 @@
+include main
+
+body(data-role='page', data-theme='a')
+		#content(data-role='content', data-theme='')
+			#apititle(data-role='header', data-theme='d')
+				|Config.js API Documentation
+				.titlelink
+					a(href='/documentation/configapi') Permalink
+			p
+			#summary These functions will be used to format point objects when properties are changed.
+			p
+			#url(data-role='collapsible')
+				h3 Update.formatPoint(data)
+				#summary This call will take data (point object, old object, reference point and property) and run it against logic before returning it.
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Required Parameters
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c data
+						.ui-block-b
+							.ui-bar.ui-bar-c Object of the 4 parts needed for update changes. The 4 expected keys are newPoint:{}, oldPoint:{}, refPoint:{} and property:"".
+						.ui-block-c
+							.ui-bar.ui-bar-c Required
+						.ui-block-d
+							.ui-bar.ui-bar-c JSON
+					
+				.tableheading(data-role='collapsible', data-content-theme='a')
+					h3 Returned Parameters (callback)
+					#columnheaders.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c Name
+						.ui-block-b
+							.ui-bar.ui-bar-c Summary
+						.ui-block-c
+							.ui-bar.ui-bar-c Default Value
+						.ui-block-d
+							.ui-bar.ui-bar-c Type
+					#rows.ui-grid-c
+						.ui-block-a
+							.ui-bar.ui-bar-c point
+						.ui-block-b
+							.ui-bar.ui-bar-c The updated point object
+						.ui-block-c
+							.ui-bar.ui-bar-c 
+						.ui-block-d
+							.ui-bar.ui-bar-c JSON
+
+				.exampleheading(data-role='collapsible', data-content-theme='a')
+					h3 Examples
+					#examplearea
+						#examplesummary
+						.exampleIn(data-role='collapsible', data-content-theme='b', data-mini='true')
+							h3 Function call:
+							.codesnippet
+							|	newPoint = Config.Update.formatPoint({newPoint:{}, oldPoint:{}, refPoint:{}, property:""});

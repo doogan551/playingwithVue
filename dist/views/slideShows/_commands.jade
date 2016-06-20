@@ -1,0 +1,7 @@
+.btn-group
+    button#save.btn.btn-primary(data-bind='enable:enablize($element),click:ops.save',data-states='{"data":2,"ready":2,"fatalError":2,"dirty":3,"error":2,"invalid":3,"confirm":2}') Save
+    button#cancel.btn.btn-primary(data-states='{"ready":3,"error":3,"fatalError":2,"data":2,"invalid":3,"confirm":2}',data-bind='enable:enablize($element),visible: visibilize($element),click:ops.cancel') Cancel
+    button#delete.btn.btn-primary(data-bind='enable:enablize($element),click:ops.save',data-states='{"data":2,"ready":3,"fatalError":2,"dirty":3,"error":2,"invalid":3,"confirm":2}') Delete
+.btn-group
+    button#clone.btn.btn-default(data-bind='enable:enablize($element),click:ops.save',data-states='{"data":2,"ready":3,"fatalError":2,"dirty":2,"error":2,"invalid":2,"confirm":2}') Clone
+    button#close.btn.btn-default(data-bind='enable:enablize($element),click:ops.save',data-states='{"data":2,"ready":3,"fatalError":2,"dirty":3,"error":3,"invalid":3,"confirm":2}') Close

@@ -1,0 +1,73 @@
+.topBar
+    .title Import / Export
+.mainContent
+    .exportTitle Export Data
+    .exportBody(data-bind="visible: exportAvailable()")
+        .exportContainer
+            .exportStep 1. Choose Month
+            .dropdown.exportDropDown.availablePeriodsContainer
+                button.monthYearSelect.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
+                    span(data-bind="text: selectedMonthYear() && selectedMonthYear().prettyDate")
+                    span.caret.lm10px
+                ul.availablePeriods.dropdown-menu
+                    input.form-control(data-bind="textInput: importExportDateFilter", type="text", placeholder="Search...")
+                    li(role="separator", class="divider")
+                    // ko foreach: filteredImportExportMonthYear
+                    li
+                        a(data-bind="click: function(){ $parent.changeMonth($data) }, text: $data.prettyDate, css: { selected: $parent.selectedMonthYear() && $parent.selectedMonthYear().prettyDate === $data.prettyDate }")
+                    // /ko
+        .exportContainer
+            .exportStep 2. Choose Meter
+            .dropdown.exportDropDown.availableMetersContainer
+                button.meterSelect.btn.btn-default.dropdown-toggle(data-toggle="dropdown")
+                    span(data-bind="text: (selectedMeter() ? selectedMeter().displayedMeterName : 'Meters')")
+                    span.caret.lm10px
+                ul.availableMeters.dropdown-menu
+                    input.form-control(data-bind="textInput: importExportMeterFilter", type="text", placeholder="Search...")
+                    li(role="separator", class="divider")
+                    // ko foreach: filteredImportExportMeters
+                    li
+                        a(data-bind="click: function(){ $parent.meterSelected($data) }, text: $data.displayedMeterName, css: { selected: $parent.selectedMeter() && $parent.selectedMeter().displayedMeterName === $data.displayedMeterName }")
+                    // /ko
+        .exportContainer
+            .exportStep 3. Download the file
+            button.btn.btn-primary.btn-file.btn-sm(type='button', data-bind='click: downloadCsv, enable:(!!selectedMeter()&&!inAjax())') Download
+        .exportContainer.info
+            i.fa.fa-info-circle
+            span If your download does not begin after selecting the download button, make sure your browser's pop-up blocker isn't preventing the download.
+    .exportBody(data-bind="visible: !exportAvailable()")
+        i.fa.fa-info-circle &nbsp;&nbsp;
+        span Export is unavailable until at least one Rate Table and Meter has been configured. Please configure these items then return to this page.
+
+    .exportTitle Import Data
+    //ko if:$root.canWrite($parent.securityBindings.security())
+    .exportBody
+        .exportContainer
+            div.optionsArea
+                .exportStep 1. Choose options:
+                .checkbox
+                    label
+                        input(type='checkbox', value='1', data-bind='checked: uploadMethods')
+                        span Insert missing data
+                .checkbox
+                    label
+                        input(type='checkbox', value='2', data-bind='checked: uploadMethods')
+                        span Overwrite user-supplied data
+                //- Removing the option to overwrite user-supplied data. Reason is becaue Excel automatically chops off significant digits when it opens the CSV file.
+                //- On the upload, Excel's truncation would look like the user modified data to us; if the below option was checked, we'd overwrite unintended data.
+                //- We're unsure of MSFC's needs in this area; if they need this option we can add back and workaround the issue in the future. Note one workaround would
+                //- be to set the download file format as *.txt because Excel doesn't truncate csv data when imported from a *.txt file, but opening it in excel is 
+                //- harder for the uninformed/non-technical user, and a bit cumbersome to boot.
+                //- .checkbox
+                    label
+                        input(type='checkbox', value='4', data-bind='checked: uploadMethods')
+                        span Overwrite meter reported data
+            div
+                form
+                    input.btn.btn-primary.btn-file.uploadBtn(type='file', accept='.csv', data-bind='event:{change:uploadCsv($element.files)}, enable:(uploadMethods().length > 0) && !inAjax()')
+    // /ko
+    //ko if:$root.canWrite($parent.securityBindings.security()) === false
+    .infoMessage
+        i.fa.fa-info-circle
+        span You do not have sufficient permissions to import data.
+    // /ko

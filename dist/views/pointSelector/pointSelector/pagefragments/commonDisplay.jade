@@ -1,0 +1,48 @@
+.row
+.container.well.well-sm
+    .row
+        .form-group
+            label.col-xs-6.control-label
+                | Label
+            .col-xs-6
+                input.form-control.input-sm(type='text', data-bind='event: { keyup: staticVal.bind($element,$data, \'lbl\')},value:lbl()')
+
+    .row
+        .form-group
+            label.col-xs-12.checkbox(style="padding-left:40px")
+                input(type='checkbox', data-bind='checked:showLabel(), event: { click: staticCheck.bind($element, $data, \'showLabel\') }')
+                | Show Label
+    .row
+        .form-group
+            label.col-xs-12.checkbox(style="padding-left:40px")
+                input(type='checkbox', data-bind='checked:showValue(), event: { click: staticCheck.bind($element, $data, \'showValue\') }')
+                | Show Value
+    .row
+        .form-group
+            label.checkbox.col-xs-12(style="padding-left:40px")
+                input(type='checkbox', data-bind='event: { click: changeChecked.bind($element, $data, \'COV Enable\',false) }, checked:$parent.getSelectedDProp(\'COV Enable\')')
+                | COV Enable
+    .row
+        .form-group
+            .col-xs-12
+                label.label.label-success
+                    | Numeric Format
+    .row
+        .form-group
+            label.col-xs-6.control-label
+                | Number of Characters
+            .col-xs-6
+                input.form-control.input-sm(type='text', data-bind='event: { keyup: staticVal.bind($element,$data, \'numOfCharacters\')},value:numOfCharacters()')
+    .row
+        .form-group
+            label.col-xs-6.control-label
+                | Number of Decimals
+            .col-xs-6
+                input.form-control.input-sm(type='text', data-bind='event: { keyup: staticVal.bind($element,$data, \'numOfDecimals\')},value:numOfDecimals()')
+    .row
+        .form-group
+            label.col-xs-6
+                | Maximum Output
+            .col-xs-6
+                input.form-control.input-sm(type='text', data-bind='event: { keyup: staticVal.bind($element,$data, \'maxOutputChange\')},value:maxOutputChange()')
+

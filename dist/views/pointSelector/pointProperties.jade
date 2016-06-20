@@ -1,0 +1,72 @@
+include layoutProperties
+.container
+        header
+            h6.badge.badge-success #{title}
+            //h5 #{point_Type}
+            div.errorMsg.alert.alert-danger
+            div.successMsg.alert.alert-success
+        .tabbable
+            ul.nav.nav-tabs
+                li.active
+                    a(href='#pane1', data-toggle='tab') Value
+                li
+                    a(href='#pane2', data-toggle='tab') Display
+                li
+                    a(href='#pane3', data-toggle='tab') Shutdown
+                li
+                    a(href='#pane4', data-toggle='tab') Control
+        .tab-content
+            #pane1.tab-pane.active
+                include ./pagefragments/commonValue
+            #pane2.tab-pane
+                include ./pagefragments/commonDisplay
+            #pane3.tab-pane
+                include ./pagefragments/shutdown
+            #pane4.tab-pane
+                if (point_Type === 'Select Value' || point_Type === 'Math')
+                    include ./pagefragments/largestSmallest
+                if (point_Type === 'Logic')
+                    include ./pagefragments/logical
+                if (point_Type === 'Proportional')
+                    include ./pagefragments/proportional
+                if (point_Type === 'Enthalpy')
+                    include ./pagefragments/enthalpy
+                if (point_Type === 'Setpoint Adjust')
+                    include ./pagefragments/setpointadjust
+                if (point_Type === 'Average')
+                    include ./pagefragments/Average
+                if (point_Type === 'Alarm Status')
+                    include ./pagefragments/alarmStatus
+                if (point_Type === 'Comparator')
+                    include ./pagefragments/comparator
+                if (point_Type === 'Digital Logic')
+                    include ./pagefragments/comparator
+                if (point_Type === 'Delay')
+                    include ./pagefragments/delay
+                if (point_Type === 'Multiplexer')
+                    include ./pagefragments/multiplexerEconomizer
+                if (point_Type === 'Economizer')
+                    include ./pagefragments/multiplexerEconomizer
+                //h5 #{point_Type}
+                if (point_Type === 'Binary Selector')
+                    include ./pagefragments/binarySelector
+                if (point_Type === 'Analog Selector')
+                    include ./pagefragments/analogSelector
+                if (point_Type === 'Ramp')
+                    include ./pagefragments/ramp
+                if (point_Type === 'Totalizer')
+                    include ./pagefragments/totalizer
+        footer
+            .container
+                .row
+                    .col-md-4
+                    .col-md-4
+                        ul.nav.nav-pills.pull-right
+                            li
+                                a#save.btn.btn-success.btn-sm(href='javascript:dorsett.pointProperties.applyChanges();') Save
+                            li
+                                a#cancel.btn.btn-danger.btn-sm(href='javascript:dorsett.pointProperties.cancelChanges();') Cancel
+                    .col-md-4
+
+
+

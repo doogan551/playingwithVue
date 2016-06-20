@@ -1,0 +1,18 @@
+// ko if:loaded
+.page.dashboard(data-bind="with: dashboardBindings")
+    include electricity_dashboard.jade
+.page.billing(data-bind="with: billingBindings")
+    include electricity_billing.jade
+.page.reports(data-bind="with: reportsBindings")
+    include electricity_reports.jade
+.page.ratetable(data-bind="with: ratetableBindings")
+    include electricity_ratetable.jade
+.page.datastore(data-bind="with: datastoreBindings")
+    include electricity_datastore.jade
+.page.meters(data-bind="with: metersBindings")
+    include electricity_meters.jade
+.page.export(data-bind="with: exportBindings")
+    include electricity_export.jade
+.page.security(data-bind="with: securityBindings")
+    include electricity_security.jade
+// /ko

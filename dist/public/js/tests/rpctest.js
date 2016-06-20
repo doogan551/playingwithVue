@@ -1,0 +1,1 @@
+$(document).ready(function(){testRPC=function(a){$.ajax({url:"/api/config/devices/rpctest",type:"post",dataType:"json",success:function(b){return b.err?a(!1):b?(console.log(JSON.stringify(b)),a(!0)):a(!1)}})}});

@@ -1,0 +1,15 @@
+#displayObjects
+    img#displayBg(
+        ng-src='{{bgSrcURL}}',
+        ng-dblclick="drop()",
+        ng-click="blur()",
+        ng-right-click="menuClick()",
+        ng-drag-over="dragOver()")
+    .object(
+        id="screen_object_{{$index}}",
+        ng-repeat="object in objs",
+        ng-mousedown="action(object,$event)",
+        ng-right-click="rightClick(object)",
+        ng-bind-html-unsafe="object|renderObject",
+        ng-class="{activeHighlight: object.sel}",
+        ng-style='getStyle(object)')

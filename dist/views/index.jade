@@ -1,0 +1,44 @@
+!!! 5
+html
+    head
+        title
+        link(rel='stylesheet', href='/css/lib/bootstrap3.min.css?ver=0.4.0')
+        link(rel='stylesheet', href='/css/alarms/alarms.css?ver=0.4.0')
+    body
+        #main
+            .configColumn.col-lg-2
+                .configs Default Views
+                div(data-bind="foreach: defaultConfigs")
+                    a.title(href="#", data-bind="text: $data.title, click: $root.applyConfig, css: { subFilterType: $data.subType == true }")
+                .configs Custom Views
+                div(data-bind="foreach: customConfigs")
+                    a.title(href="#", data-bind="text: $data.title, click: $root.applyConfig")
+            .contentColumn.col-lg-10
+                .tabs
+                    a#contentTab.active(data-target="content", href="#", data-bind="click: handleTabClick") Alarms
+                    a#configTab(data-target="config", href="#", data-bind="click: handleTabClick") Config
+                .tabContents
+                    #content.tabContent.active
+                        table.table.table-hover.table-condensed.alarmList(data-bind="visible: currentList().length > 0")
+                            thead
+                                tr
+                                    th(data-bind="click: sortAlarmsByTime") Time
+                                    th.nosort Text
+                                    th(data-bind="click: sortAlarmsByType") Type
+                                    th(data-bind="click: sortAlarmsByCategory") Category
+                                    th(data-bind="click: sortAlarmsByClass") Class
+                            tbody(data-bind="foreach: filteredList")
+                                tr(data-bind="css: $parent.getAlarmClass($data)")
+                                    td(data-bind="prettyDate: $data.msgTime")
+                                    td(data-bind="text: $data.msgText")
+                                    td(data-bind="text: $data.msgType")
+                                    td(data-bind="text: $data.msgCat")
+                                    td(data-bind="text: $data.almClass")
+                    #config.tabContent Config
+            .clear
+
+        script(type='text/javascript', src='/js/lib/knockout-2.3.0.js?ver=0.4.0')
+        script(type='text/javascript', src='/js/lib/jquery.min.js?ver=0.4.0')
+        script(src="/js/displays/socket.io.js")
+        script(type='text/javascript', src='/js/alarms/alarms.js?ver=0.4.0')
+

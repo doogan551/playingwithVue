@@ -1,0 +1,22 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/css/lib/bootstrap.darkly.css?ver=0.4.0')
+    link(rel="stylesheet", href="/css/trendPlots/trendPlots.css?ver=0.4.0")
+
+  body
+    #chartContainer
+        #container
+
+    include chartConfig.jade
+
+
+    script(src="/js/lib/jquery.min.js?ver=0.4.0")
+    script(src="/js/lib/highcharts.src.js?ver=0.4.0")
+    script(src="/js/lib/highcharts-more.js?ver=0.4.0")
+    script(src="/js/lib/modules/exporting.src.js?ver=0.4.0")
+    script(src="/js/lib/themes/dark-unica.js?ver=0.4.0")
+    script(src='/js/lib/bootstrap3.min.js?ver=0.4.0')
+    script(src='/js/lib/knockout-3.2.0.js?ver=0.4.0')
+    script(src="/js/trendPlots/trendPlotNew.js")
