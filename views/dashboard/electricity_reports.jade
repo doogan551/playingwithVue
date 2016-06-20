@@ -168,12 +168,12 @@
                                 tr
                                     td.bold(colspan="4") Off Peak
                                 tr
-                                    td(data-bind="text: moment(duOffPeakMW().timeStamp).format('HH:00 MM/DD/YY')")
+                                    td(data-bind="text: moment(duOffPeakMW().timeStamp).format('HH:mm MM/DD/YY')")
                                     td(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
                                     td(data-bind="text: tou.numberWithCommas(duOffPeakMVAR().value)")
                                     td
                                 tr
-                                    td(data-bind="text: moment(duOffPeakMWH().timeStamp).format('HH:00 MM/DD/YY')")
+                                    td(data-bind="text: moment(duOffPeakMWH().timeStamp).endOf('month').format('00:00 MM/DD/YY')")
                                     td
                                     td
                                     td(data-bind="text: tou.numberWithCommas(sumOfOffPeakConsumption())")
@@ -182,12 +182,12 @@
                                 tr
                                     td.bold(colspan="4", data-bind="text: (selectedMonthYear().period === 'Year' ? 'On ' : selectedMonthYear().season) + ' Peak'")
                                 tr
-                                    td(data-bind="text: moment(duOnPeakMW().timeStamp).format('HH:00 MM/DD/YY')")
+                                    td(data-bind="text: moment(duOnPeakMW().timeStamp).format('HH:mm MM/DD/YY')")
                                     td(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
                                     td(data-bind="text: tou.numberWithCommas(duOnPeakMVAR().value)")
                                     td
                                 tr
-                                    td(data-bind="text: moment(duOnPeakMWH().timeStamp).format('HH:00 MM/DD/YY')")
+                                    td(data-bind="text: moment(duOnPeakMWH().timeStamp).endOf('month').format('00:00 MM/DD/YY')")
                                     td
                                     td
                                     td(data-bind="text: tou.numberWithCommas(sumOfOnPeakConsumption())")
