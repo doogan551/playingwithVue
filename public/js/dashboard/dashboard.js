@@ -6400,6 +6400,7 @@ tou.utilityPages.Electricity = function() {
                     self.bindings.meterIndexArray = self.bindings.indexMeters();
 
                     postInit();
+                    self.bindings.getData();
                 }
             });
             tou.on('ratetablesaved', function (utilityName) {
@@ -6407,6 +6408,7 @@ tou.utilityPages.Electricity = function() {
                     self.listOfMonthYears(tou.availablePeriods[self.utilityName]);
                     self.bindings.reportDateFilter.valueHasMutated();
                     postInit();
+                    self.bindings.getData();
                 }
             });
         },
