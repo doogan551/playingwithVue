@@ -397,7 +397,7 @@ var reportsViewModel = function () {
         $columnsTbody,
         $filtersTbody,
         $filterByPoint,
-        $reporttitleInput,
+        $reportTitleInput,
         $reportColumns,
         $additionalFilters,
         $columnNames,
@@ -1524,7 +1524,25 @@ var reportsViewModel = function () {
                 filter,
                 activeError = false,
                 upis = [],
-                uuid;
+                uuid,
+                cleanUpReportConfig = function (reportConfig) {  // shrinking size of request object
+                    var results = $.extend(true, {}, reportConfig),
+                        i;
+
+                    for (i = 0; i < results.columns.length; i++) {
+                        delete results.columns[i]["canBeCharted"];
+                        delete results.columns[i]["canCalculate"];
+                        delete results.columns[i]["colDisplayName"];
+                        delete results.columns[i]["dataColumnName"];
+                        delete results.columns[i]["includeInChart"];
+                        delete results.columns[i]["multiplier"];
+                        delete results.columns[i]["pointType"];
+                        delete results.columns[i]["precision"];
+                        delete results.columns[i]["yaxisGroup"];
+                    }
+
+                    return results;
+                };
 
             columns = validateColumns(); //self.listOfColumns();
             filters = validateFilters(); //self.listOfFilters();
@@ -1629,7 +1647,7 @@ var reportsViewModel = function () {
                             start: self.startDate,
                             end: self.endDate
                         },
-                        reportConfig: point["Report Config"],
+                        reportConfig: cleanUpReportConfig(point["Report Config"]),
                         reportType: point["Report Type"].Value,
                         sort: ""
                     }
@@ -1698,7 +1716,7 @@ var reportsViewModel = function () {
             $filterByPoint = $direports.find("#filterByPoint");
             $saveReportButton = $direports.find(".saveReportButton");
             $pointSelectorIframe = $filterByPoint.find(".pointLookupFrame");
-            $reporttitleInput = $direports.find(".reporttitle").find("input");
+            $reportTitleInput = $direports.find(".reporttitle").find("input");
             $filtersTbody = $direports.find('.filtersGrid tbody');
             $columnsTbody = $direports.find('.columnsGrid .sortablecolums');
             $reportColumns = $direports.find("#reportColumns");
@@ -3509,7 +3527,7 @@ var reportsViewModel = function () {
 
             updateListOfFilters(self.listOfFilters());
             setTimeout(function () {
-                $reporttitleInput.focus();
+                $reportTitleInput.focus();
             }, 1500);
             setReportEvents();
             adjustConfigTabActivePaneHeight();
