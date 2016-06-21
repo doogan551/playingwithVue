@@ -6325,17 +6325,18 @@ tou.utilityPages.Electricity = function() {
 
                     self.bindings.configRequired(configRequired);
                     self.refreshMonthYear();
-                    listOfDates = self.bindings.$page.listOfMonthYears();
                     if (!configRequired) {
+                        listOfDates = self.bindings.$page.listOfMonthYears();
                         setDefaultMonth();
                         monthYear = ko.utils.arrayFilter(listOfDates, function (monthYearObj) {
                             return monthYearObj.searchDate === self.bindings.selectedMonthYear().searchDate;
                         });
                         self.bindings.selectedMonthYear(monthYear[0]);
                         self.bindings.rateTablePeriod(self.bindings.findPeriod(self.bindings.selectedMonthYear().rateTable["Demand Charges"].periods));
+                        self.bindings.getData();
                     }
                 };
-            self.initReportSocket(self.bindings.getData);
+            self.initReportSocket();
 
             $.extend(self.bindings, {
                 $mainContent: $('.' + self.utilityNameShort + ' .mainContent'),
@@ -6388,7 +6389,8 @@ tou.utilityPages.Electricity = function() {
             // Set the config required flag - if true, reports is disabled
             self.bindings.configRequired((self.bindings.listOfMeters().length === 0) || (self.listOfMonthYears().length === 0));
             if (self.bindings.selectedMonthYear() === "") {
-                postInit();
+                self.refreshMonthYear();
+                setDefaultMonth();
             }
             self.bindings.reportDateFilter.valueHasMutated();
 
@@ -6400,7 +6402,6 @@ tou.utilityPages.Electricity = function() {
                     self.bindings.meterIndexArray = self.bindings.indexMeters();
 
                     postInit();
-                    self.bindings.getData();
                 }
             });
             tou.on('ratetablesaved', function (utilityName) {
@@ -6408,7 +6409,6 @@ tou.utilityPages.Electricity = function() {
                     self.listOfMonthYears(tou.availablePeriods[self.utilityName]);
                     self.bindings.reportDateFilter.valueHasMutated();
                     postInit();
-                    self.bindings.getData();
                 }
             });
         },
@@ -7240,10 +7240,12 @@ tou.utilityPages.Electricity = function() {
                             data: [{
                                 data: arrayOfData.trendPlotData.maxes,
                                 name: 'Max',
+                                color: '#ff2222',
                                 yAxis: 0
                             }, {
                                 data: arrayOfData.trendPlotData.mins,
                                 name: 'Min',
+                                color: '#7cb5ec',
                                 yAxis: 0
                             }],
                             type: 'line',
