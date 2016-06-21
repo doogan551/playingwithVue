@@ -1796,13 +1796,10 @@ var alarmMessageViewModel = function() {
                 alarmTemplate.msgTextColor.rawValue = getRawHexColor(self.alarmTemplateTextColor());
                 alarmTemplate.msgBackColor.rawValue = getRawHexColor(self.alarmTemplateBackgroundColor());
                 alarmTemplate.msgName.rawValue = $alarmTemplateContainer.find(".msgName").val();
-                if (alarmTemplate.isSystemMessage.rawValue) {
-                    alarmTemplate.msgFormat.rawValue = $alarmTemplateContainer.find(".msgFormat").text();
-                } else {
+                if (!alarmTemplate.isSystemMessage.rawValue) {
                     alarmTemplate.msgFormat.rawValue = $alarmTemplateContainer.find(".msgFormat").val();
+                    alarmTemplate.msgFormat.rawValue = alarmTemplate.msgFormat.rawValue.replace(/\r?\n|\r/g, "");
                 }
-
-                alarmTemplate.msgFormat.rawValue = alarmTemplate.msgFormat.rawValue.replace(/\r?\n|\r/g, "");
 
                 for (key in alarmTemplate) {
                     if (alarmTemplate.hasOwnProperty(key)) {
