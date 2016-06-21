@@ -416,9 +416,7 @@ define([
                     point: ko.viewmodel.toModel(pointInspector.point.data),
                     property: e.property,
                     refPoint: e.refPoint,
-                    oldPoint: pointInspector.point.originalData,
-                    systemNetwork: window.opener.workspaceManager.systemEnumObjects.telemetry['IP Network Segment'],
-                    systemIPPort: window.opener.workspaceManager.systemEnumObjects.telemetry['IP Port']
+                    oldPoint: pointInspector.point.originalData
                 };
                 updatedPoint = config.Update.formatPoint(point);
                 console.log('SEND', point);

@@ -181,11 +181,10 @@ module.exports = {
 
     Utility.update(criteria, cb);
   },
+
   updateTelemetry: function(data, cb) {
     var ipSegment = parseInt(data["IP Network Segment"], 10);
     var ipPort = parseInt(data["IP Port"], 10);
-    var ipPortChanged = (typeof data.ipPortChanged === 'string') ? ((data.ipPortChanged === 'true') ? true : false) : data.ipPortChanged;
-    var origVals = data.originalValues;
 
     var searchCriteria = {
       "Name": "Preferences"
@@ -214,53 +213,7 @@ module.exports = {
         return cb(err.message);
       }
 
-      if (ipPortChanged === true) {
-        criteria = {
-          query: {
-            $or: [{
-              "Point Type.Value": "Device"
-            }, {
-              "Point Type.Value": "Remote Unit",
-              'Model Type.Value': 'BACnet',
-              'Network Type.eValue': 4
-            }],
-            'Network Segment.Value': origVals['IP Network Segment']
-          },
-          updateObj: {
-            $set: {
-              "Ethernet IP Port.Value": ipPort,
-              "Ethernet IP Port.isReadOnly": true
-            }
-          },
-          options: {
-            multi: true
-          },
-          collection: 'points'
-        };
-        Utility.update(criteria, function(err, result) {
-          criteria = {
-            query: {
-              "Point Type.Value": "Remote Unit",
-              "Model Type.eValue": {
-                $nin: [5, 9, 10, 11, 12, 13, 14, 16]
-              }
-            },
-            updateObj: {
-              $set: {
-                "Ethernet IP Port.Value": ipPort,
-                _cfgRequired: true
-              }
-            },
-            options: {
-              multi: true
-            },
-            collection: 'points'
-          };
-          Utility.update(criteria, cb);
-        });
-      } else {
-        return cb();
-      }
+      return cb();
 
     });
   },
