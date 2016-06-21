@@ -68,6 +68,7 @@
         .reportsChartsContent
             img.busySpinner(src='/css/lib/jqwidgets/images/loader.gif')
             .title(data-bind="text: selectedMonthYear().period + 'ly Electrical Metering Report - ' + selectedMonthYear().fullDate")
+            //.reportsDays(data-bind="text: 'Days in ' + selectedMonthYear().period + ': ' + moment().daysInMonth()")
 
             // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
             .section.highestOnPeakDemand
@@ -173,7 +174,12 @@
                                     td(data-bind="text: tou.numberWithCommas(duOffPeakMVAR().value)")
                                     td
                                 tr
+                                    // ko if: (moment().isAfter(moment(duOffPeakMWH().timeStamp).endOf('month')))
                                     td(data-bind="text: moment(duOffPeakMWH().timeStamp).endOf('month').format('00:00 MM/DD/YY')")
+                                    // /ko
+                                    // ko if: (moment().isBefore(moment(duOffPeakMWH().timeStamp).endOf('month')))
+                                    td(data-bind="text: moment().format('00:00 MM/DD/YY')")
+                                    // /ko
                                     td
                                     td
                                     td(data-bind="text: tou.numberWithCommas(sumOfOffPeakConsumption())")
@@ -187,7 +193,12 @@
                                     td(data-bind="text: tou.numberWithCommas(duOnPeakMVAR().value)")
                                     td
                                 tr
+                                    // ko if: (moment().isAfter(moment(duOnPeakMWH().timeStamp).endOf('month')))
                                     td(data-bind="text: moment(duOnPeakMWH().timeStamp).endOf('month').format('00:00 MM/DD/YY')")
+                                    // /ko
+                                    // ko if: (moment().isBefore(moment(duOnPeakMWH().timeStamp).endOf('month')))
+                                    td(data-bind="text: moment().format('00:00 MM/DD/YY')")
+                                    // /ko
                                     td
                                     td
                                     td(data-bind="text: tou.numberWithCommas(sumOfOnPeakConsumption())")

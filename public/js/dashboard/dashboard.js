@@ -6417,6 +6417,7 @@ tou.utilityPages.Electricity = function() {
             configRequired: ko.observable(false),
             activeDataRequest: ko.observable(false),
             committedReports: {},
+            currentDayOfPeriod: ko.observable(1),
             dataRequestTimer: null,
             decimalPlaces: 0,
             displayPercentageOfValidData: ko.observable(0),
@@ -6472,7 +6473,7 @@ tou.utilityPages.Electricity = function() {
             meterIndexArray: [],
             MeterReportCollection: ko.observableArray([]),
             missingDataCollection: ko.observableArray([]),
-            numberOfDaysInCurrentPeriod: 0,
+            numberOfDaysInCurrentPeriod: ko.observable(0),
             numberOfInactiveMeters: ko.observable(0),
             numberOfTimeSlotsPerDay: (24 * 2),
             percentageOfMissingData: ko.observable(0),
@@ -6512,7 +6513,7 @@ tou.utilityPages.Electricity = function() {
                     monthYear = myBindings.selectedMonthYear();
 
                 if (monthYear.period.toLowerCase() === "month") {
-                    answer = myBindings.numberOfDaysInCurrentPeriod;
+                    answer = myBindings.numberOfDaysInCurrentPeriod();
                 } else if (monthYear.period.toLowerCase() === "year") {
                     answer = 12;
                 }
@@ -6787,7 +6788,7 @@ tou.utilityPages.Electricity = function() {
 
                     if (monthYearPeriod === "month") {
                         startIndex = 1;
-                        periodMax = (myBindings.numberOfDaysInCurrentPeriod + 1);
+                        periodMax = (myBindings.numberOfDaysInCurrentPeriod() + 1);
                     } else if (monthYearPeriod === "year") {
                         startIndex = 0;
                         periodMax = 12;
@@ -8065,7 +8066,7 @@ tou.utilityPages.Electricity = function() {
             },
             getData: function () {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
-                if (myBindings.selectedMonthYear() !== "" && myBindings.listOfMeters().length > 0) {
+                if (myBindings.selectedMonthYear() !== "" && myBindings.listOfMeters().length > 0 && !myBindings.selectedMonthYear().isReportCommitted()) {
                     myBindings.startTime = moment();
                     myBindings.errorWithRequest(false);
                     this.$page.blockUI(true);
@@ -8194,8 +8195,9 @@ tou.utilityPages.Electricity = function() {
                     startDay = moment(selectedDate.start),
                     endDay = moment(selectedDate.end);
 
-                myBindings.numberOfDaysInCurrentPeriod = tou.toFixed(moment.duration(endDay.diff(startDay)).asDays(), 0);
+                myBindings.numberOfDaysInCurrentPeriod(tou.toFixed(moment.duration(endDay.diff(startDay)).asDays(), 0));
                 myBindings.selectedMonthYear(selectedDate);
+                // myBindings.currentDayOfPeriod((myBindings.selectedMonthYear().period === "Month" ? moment().format("D") : moment().dayOfYear()));
                 myBindings.rateTablePeriod(myBindings.findPeriod(myBindings.selectedMonthYear().rateTable["Demand Charges"].periods));
                 if (myBindings.selectedReportsMode() !== "") {
                     myBindings.koGridReportCollection([]);
