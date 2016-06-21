@@ -3162,17 +3162,6 @@ var Config = (function(obj) {
         },
 
         applyEthernetNetworkNumber: function(data) {
-            if (!data.hasOwnProperty('systemNetwork') || !data.hasOwnProperty('systemIPPort')) {
-                data.ok = false;
-                data.result = "systemNetwork and systemIPPort must be supplied.";
-            }
-            if (data.point['Ethernet Network'].Value !== data.systemNetwork) {
-                data.point['Ethernet IP Port'].isReadOnly = false;
-            } else {
-                data.point['Ethernet IP Port'].isReadOnly = true;
-                data.point['Ethernet IP Port'].Value = data.systemIPPort;
-            }
-
             if (data.oldPoint['Ethernet Network'].Value !== data.point['Ethernet Network'].Value) {
                 data.point._cfgRequired = true;
             }

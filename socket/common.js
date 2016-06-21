@@ -146,7 +146,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
     updateReferences = false,
     downloadPoint = false,
     updateDownlinkNetwk = false,
-    updateEthernetNetwk = false,
     configRequired,
     updateObject = {},
     //activityLogObject = {},
@@ -572,7 +571,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Device Address":
               case "Device Port":
               case "Downlink IP Port":
-              case "Ethernet IP Port":
               case "Feedback Channel":
               case "Feedback Type":
               case "Input Type":
@@ -648,10 +646,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                   configRequired = true;
                 break;
 
-              case 'Ethernet Network':
-              case 'Downlink Network':
-
-
               case "Point Refs":
                 var pointRefProps = Config.Utility.getPointRefProperties(newPoint);
                 for (var r = 0; r < pointRefProps.length; r++) {
@@ -721,9 +715,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                 break;
               case "Downlink Network":
                 downloadPoint = true;
-                if (newPoint["Point Type"].Value === "Device") {
-                  updateEthernetNetwk = true;
-                }
                 break;
               default:
                 break;
@@ -939,11 +930,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               return callback({
                 err: err
               }, result);
-            updEthernetNetwk(updateEthernetNetwk, newPoint, function(err) {
-              if (err)
-                return callback({
-                  err: err
-                }, result);
               updPoint(downloadPoint, newPoint, function(err, msg) {
                 if (err)
                   error = err;
@@ -973,7 +959,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                     });
 
                   });
-                });
               });
             });
           });
@@ -1155,27 +1140,6 @@ function updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
       updateObj: {
         $set: {
           _updPoint: true
-        }
-      }
-    }, function(err, result) {
-      callback(err);
-    });
-  } else {
-    callback(null);
-  }
-}
-
-function updEthernetNetwk(updateEthernetNetwk, newPoint, callback) {
-  if (updateEthernetNetwk) {
-    Utility.update({
-      collection: constants('pointsCollection'),
-      query: {
-        'Point Type.Value': 'Device',
-        'Network Segment.Value': newPoint['Downlink Network'].Value
-      },
-      updateObj: {
-        $set: {
-          'Ethernet IP Port.Value': newPoint['Downlink IP Port'].Value
         }
       }
     }, function(err, result) {

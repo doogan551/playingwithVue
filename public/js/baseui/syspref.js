@@ -202,7 +202,7 @@ ko.validation.registerExtenders();
 var calendarViewModel = function() {
     var viewModel = {
 
-        $calendarData : "",
+        $calendarData: "",
 
         displayName: 'Calendar',
 
@@ -445,7 +445,8 @@ var calendarViewModel = function() {
             }
 
             // Loop through each holiday in the modified collection until we find a difference
-            for (i = 0;  (i < mlen) && (diff === false); i++) {
+            for (i = 0;
+                (i < mlen) && (diff === false); i++) {
                 found = false; // Initialize difference found flag
 
                 // Try to find a match in the original holiday collection
@@ -1135,6 +1136,17 @@ var telemetryViewModel = function() {
             }
         }],
         makeDirty = function() {
+            if (!self.dirty() && !!self.initialized()) {
+                $.toast({
+                    heading: 'Warning',
+                    text: 'A system restart will be required after saving any changes to these settings.',
+                    position: 'mid-center',
+                    stack: false,
+                    hideAfter: false,
+                    bgColor: 'yellow',
+                    textColor: 'black'
+                });
+            }
             self.dirty(true);
         },
         checkForErrors = function() {
@@ -1183,7 +1195,7 @@ var telemetryViewModel = function() {
                 item,
                 name,
                 value;
-
+            self.initialized(false);
             for (c = 0; c < len; c++) {
                 item = fieldList[c];
                 name = item.name;
@@ -1198,6 +1210,7 @@ var telemetryViewModel = function() {
 
                 self.dirty(false);
             }
+            self.initialized(true);
             // console.log("setdata originalValues", originalValues);
         },
         updateData = function() {
@@ -1229,6 +1242,7 @@ var telemetryViewModel = function() {
     self.displayName = 'Telemetry';
 
     self.dirty = ko.observable(false);
+    self.initialized = ko.observable(false);
     self.hasError = ko.observable(false);
     self.selectedTimeZone = ko.observable('');
     self.selectedTimeZoneText = ko.observable('');
@@ -1384,7 +1398,7 @@ var alarmMessageViewModel = function() {
         deleteUrl = '/api/system/deleteAlarmTemplate',
         alarmTemplateData,
         columnsArray,
-        blockUI = function ($control, state) {
+        blockUI = function($control, state) {
             if (state === true) {
                 $control.hide();
             } else {
@@ -1392,17 +1406,17 @@ var alarmMessageViewModel = function() {
             }
             $control.attr('disabled', state);
         },
-        getRawHexColor = function (theColor) {
-            return theColor.replace(/#/g , "");
+        getRawHexColor = function(theColor) {
+            return theColor.replace(/#/g, "");
         },
-        getColumnByRenderIndex = function (index) {
+        getColumnByRenderIndex = function(index) {
             var result;
-            result = columnsArray.filter(function (col) {
+            result = columnsArray.filter(function(col) {
                 return (col.renderedIndex === index);
             });
             return result[0];
         },
-        getKeyBasedOnEnumValue = function (obj, value) {
+        getKeyBasedOnEnumValue = function(obj, value) {
             for (var key in obj) {
                 if (obj.hasOwnProperty(key)) {
                     if (obj[key].enum === parseInt(value, 10)) {
@@ -1412,7 +1426,7 @@ var alarmMessageViewModel = function() {
             }
             return "System Message";
         },
-        getColumns = function () {
+        getColumns = function() {
             var cols = [];
             cols.push({
                 columnKey: "_id",
@@ -1477,13 +1491,13 @@ var alarmMessageViewModel = function() {
             });
             return cols;
         },
-        configureDataTable = function (destroy, clearData, columns) {
+        configureDataTable = function(destroy, clearData, columns) {
             var $cloneButton = "<div class='btn-group' title='Clone'><button type='button' data-bind='click:function() { $parent.clone($parent.$index);}' class='btn btn-xs cloneTemplate'><span class='fa fa-clipboard'></span></button></div>",
                 $deleteButton = "<div class='btn-group' title='Delete'><button type='button' data-bind='click:function() { $parent.delete($parent.$index);}' class='btn btn-xs deleteTemplate'><span class='fa fa-trash'></span></button></div>",
                 aoColumns = [],
                 i,
                 renderedIndex = 0,
-                setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
+                setTdAttribs = function(tdField, columnConfig, data, columnIndex) {
                     switch (columnConfig.columnKey) {
                         case "msgFormat":
                             $(tdField).css('background-color', data.msgBackColor.Value);
@@ -1514,7 +1528,7 @@ var alarmMessageViewModel = function() {
                             break;
                     }
                 },
-                setColumnClasses = function (columnKey) {
+                setColumnClasses = function(columnKey) {
                     var result = "";
                     switch (columnKey) {
                         case "msgCat":
@@ -1538,7 +1552,7 @@ var alarmMessageViewModel = function() {
                     }
                     return result;
                 },
-                buildColumnObject = function (columnConfig, columnIndex) {
+                buildColumnObject = function(columnConfig, columnIndex) {
                     var result,
                         columnTitle = columnConfig.columnName,
                         sortAbleColumn = columnConfig.sortable;
@@ -1551,7 +1565,7 @@ var alarmMessageViewModel = function() {
                         render: {
                             _: "Value"
                         },
-                        fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
+                        fnCreatedCell: function(nTd, sData, oData, iRow, iCol) {
                             setTdAttribs(nTd, getColumnByRenderIndex(iCol), oData, iCol);
                         },
                         bSortable: sortAbleColumn
@@ -1572,24 +1586,29 @@ var alarmMessageViewModel = function() {
                 $alarmTemplateDataTable.DataTable({
                     data: alarmTemplateData,
                     columns: aoColumns,
-                    headerCallback: function (thead, data, start, end, display) {
+                    headerCallback: function(thead, data, start, end, display) {
                         for (i = 0; i < aoColumns.length; i++) {
                             $(thead).find('th').eq(i).css("background-color", "rgb(234, 234, 234)");
                             $(thead).find('th').eq(i).addClass("strong");
                         }
                     },
-                    order: [[1, "asc"]], // always default sort by 2nd column
+                    order: [
+                        [1, "asc"]
+                    ], // always default sort by 2nd column
                     scrollY: true,
                     scrollX: true,
                     scrollCollapse: true,
                     lengthChange: true,
-                    lengthMenu: [[10, 18, 30, 50, 75, 100, -1], [10, 18, 30, 50, 75, 100, "All"]],
+                    lengthMenu: [
+                        [10, 18, 30, 50, 75, 100, -1],
+                        [10, 18, 30, 50, 75, 100, "All"]
+                    ],
                     //bFiler: false,  // search box
                     pageLength: 100
                 });
             }
         },
-        renderAlarmTemplates = function () {
+        renderAlarmTemplates = function() {
             self.activeDataRequest(false);
             if (alarmTemplateData) {
                 blockUI($alarmMessagesData, false);
@@ -1599,16 +1618,16 @@ var alarmMessageViewModel = function() {
                 $alarmTemplateDataTable.DataTable().draw();
             }
         },
-        buildAlarmTemplate = function (row, cloneRow) {
+        buildAlarmTemplate = function(row, cloneRow) {
             var editLevel = 0,
                 result;
 
             if (getKeyBasedOnEnumValue(alarmTemplateCategories, row.msgCat) === "Event") {
-                editLevel = 0;  // Events can't be cloned or deleted
+                editLevel = 0; // Events can't be cloned or deleted
             } else if (row.isSystemMessage) {
-                editLevel = 1;  // non Events that are System messages can be cloned
+                editLevel = 1; // non Events that are System messages can be cloned
             } else {
-                editLevel = 2;  // this is user generated content.  cloneable and deletable
+                editLevel = 2; // this is user generated content.  cloneable and deletable
             }
 
             if (typeof row._id !== 'object') { // if it's not an object then reading raw data from DB
@@ -1690,7 +1709,7 @@ var alarmMessageViewModel = function() {
             var message = text.charAt(0).toUpperCase() + text.substring(1);
             console.log("save message = " + message);
         },
-        promptDelete = function (row) {
+        promptDelete = function(row) {
             self.alarmTemplate(buildAlarmTemplate(row, false));
             $alarmTemplateDeleteConfirm.modal("show");
         };
@@ -1732,10 +1751,10 @@ var alarmMessageViewModel = function() {
     self.showEntryForm = ko.observable(false);
     self.init = function() {
         columnsArray = getColumns();
-        self.alarmTemplateBackgroundColor.subscribe(function (newValue) {
+        self.alarmTemplateBackgroundColor.subscribe(function(newValue) {
             $msgFormat.css('background-color', "#" + newValue);
         });
-        self.alarmTemplateTextColor.subscribe(function (newValue) {
+        self.alarmTemplateTextColor.subscribe(function(newValue) {
             $msgFormat.css('color', "#" + newValue);
         });
         $alarmTemplateContainer = $("#alarmTemplateContainer");
@@ -1749,24 +1768,24 @@ var alarmMessageViewModel = function() {
         blockUI($alarmMessagesData, true);
         configureDataTable(true, true, columnsArray);
 
-        $alarmTemplateDataTable.find('tbody').on('click', 'tr', function (e) {
+        $alarmTemplateDataTable.find('tbody').on('click', 'tr', function(e) {
             self.alarmTemplate($alarmTemplateDataTable.DataTable().row(this).data());
             self.displayPopupEditor();
         });
 
-        $alarmTemplateDataTable.find('tbody').on('click', '.cloneTemplate', function (e) {
+        $alarmTemplateDataTable.find('tbody').on('click', '.cloneTemplate', function(e) {
             e.preventDefault();
             e.stopPropagation();
             self.clone($alarmTemplateDataTable.DataTable().row($(this).parent().parent().parent()).data());
         });
 
-        $alarmTemplateDataTable.find('tbody').on('click', '.deleteTemplate', function (e) {
+        $alarmTemplateDataTable.find('tbody').on('click', '.deleteTemplate', function(e) {
             e.preventDefault();
             e.stopPropagation();
             promptDelete($alarmTemplateDataTable.DataTable().row($(this).parent().parent().parent()).data());
         });
 
-        $alarmTemplateDataTable.on('draw.dt', function (e, settings) {
+        $alarmTemplateDataTable.on('draw.dt', function(e, settings) {
             var numberOfPages = $alarmTemplateDataTable.DataTable().page.info().pages,
                 $tablePagination,
                 $pagination,
@@ -1881,7 +1900,7 @@ var alarmMessageViewModel = function() {
         });
         $alarmTemplateDeleteConfirm.modal("hide");
     };
-    self.clone = function (row) {
+    self.clone = function(row) {
         self.alarmTemplate(buildAlarmTemplate(row, true));
         self.displayPopupEditor();
     };
