@@ -1541,8 +1541,8 @@ var AlarmManager = function (conf) {
                 pointType = pointTypesUtility.getPointTypeNameFromEnum(data.PointType),
                 endPoint = pointTypesUtility.getUIEndpoint(pointType, data.upi),
                 options = {
-                    width: 850,
-                    height: 600
+                    width: 1250,
+                    height: 750
                 };
             openWindow(endPoint.review.url, data.Name, pointType, endPoint.review.target, data.upi, options);
         },
