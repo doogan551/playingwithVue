@@ -6823,7 +6823,8 @@ tou.utilityPages.Electricity = function() {
                     unitIndex = (parseInt(moment.unix(ts).format(monthYear.childFormatCode), 10) - 1);
                     a[unitIndex] = {
                         value: null,
-                        timeStamp: (ts * 1000)
+                        timeStamp: (ts * 1000),
+                        rawTimeStamp: (ts)
                     };
                     ts = (moment.unix(ts).add(1, monthYear.childPeriod)).unix();
                 }
@@ -7229,23 +7230,27 @@ tou.utilityPages.Electricity = function() {
                     if (arrayOfData.highestTemp.timeStamp !== null) {
                         myBindings.highestTemperatureNow({
                             value: (arrayOfData.highestTemp.value) ? tou.toFixed(arrayOfData.highestTemp.value, 1) : null,
-                            timeStamp: arrayOfData.highestTemp.timeStamp
+                            timeStamp: arrayOfData.highestTemp.timeStamp,
+                            rawTimeStamp: (!!arrayOfData.highestTemp.rawTimeStamp ? arrayOfData.highestTemp.rawTimeStamp : arrayOfData.highestTemp.timeStamp)
                         });
                         myBindings.lowestTemperatureNow({
                             value: (arrayOfData.lowestTemp.value) ? tou.toFixed(arrayOfData.lowestTemp.value, 1) : null,
-                            timeStamp: arrayOfData.lowestTemp.timeStamp
+                            timeStamp: arrayOfData.lowestTemp.timeStamp,
+                            rawTimeStamp: (!!arrayOfData.lowestTemp.rawTimeStamp ? arrayOfData.lowestTemp.rawTimeStamp : arrayOfData.lowestTemp.timeStamp)
                         });
 
-                        highestTempVerbiage = "The high temperature on " + moment.unix(arrayOfData.highestTemp.timeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.highestTemp.value).toFixed(1) + " degrees. ";
-                        lowestTempVerbiage = "The low temperature on " + moment.unix(arrayOfData.lowestTemp.timeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.lowestTemp.value).toFixed(1) + " degrees. ";
+                        highestTempVerbiage = "The high temperature on " + moment(myBindings.highestTemperatureNow().rawTimeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.highestTemp.value).toFixed(1) + " degrees. ";
+                        lowestTempVerbiage = "The low temperature on " + moment(myBindings.lowestTemperatureNow().rawTimeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.lowestTemp.value).toFixed(1) + " degrees. ";
                     } else {
                         myBindings.highestTemperatureNow({
                             value: null,
-                            timeStamp: null
+                            timeStamp: null,
+                            rawTimeStamp: null
                         });
                         myBindings.lowestTemperatureNow({
                             value: null,
-                            timeStamp: null
+                            timeStamp: null,
+                            rawTimeStamp: null
                         });
 
                         highestTempVerbiage = "no data available";
@@ -7274,6 +7279,12 @@ tou.utilityPages.Electricity = function() {
                             target: $highlowTemperaturesPeriodChart,
                             y: 'value',
                             x: 'timeStamp',
+                            rawX: 'rawTimeStamp',
+                            tooltip: {
+                                formatter: function () {
+                                    return '<span style="font-size: 10px">' + moment(this.point.rawX).format("MMM DD, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span>  <b>' + trendPlots.numberWithCommas(this.y) + ' F</b>';
+                                },
+                            },
                             data: [{
                                 data: arrayOfData.trendPlotData.maxes,
                                 name: 'Max',
@@ -7639,11 +7650,13 @@ tou.utilityPages.Electricity = function() {
 
                     highestTemp = {
                         value: null,
-                        timeStamp: null
+                        timeStamp: null,
+                        rawTimeStamp: null
                     };
                     lowestTemp = {
                         value: null,
-                        timeStamp: null
+                        timeStamp: null,
+                        rawTimeStamp: null
                     };
                     trendPlotData = {
                         valid: false,
@@ -7657,8 +7670,10 @@ tou.utilityPages.Electricity = function() {
                         unitIndex = (parseInt(childIndex, 10) - 1);
                         maxes[unitIndex].value = ($.isNumeric(maxMinData.max)) ? tou.toFixed(maxMinData.max, 2) : null;
                         maxes[unitIndex].timeStamp = maxMinData.range.start * 1000;
+                        maxes[unitIndex].rawTimeStamp = maxMinData.maxDate * 1000;
                         mins[unitIndex].value = ($.isNumeric(maxMinData.min)) ? tou.toFixed(maxMinData.min, 2) : null;
                         mins[unitIndex].timeStamp = maxMinData.range.start * 1000;
+                        mins[unitIndex].rawTimeStamp = maxMinData.minDate * 1000;
                         if (maxes[unitIndex].value !== null || mins[unitIndex].value !== null) {
                             trendPlotData.valid = true;
                         }
@@ -7667,14 +7682,16 @@ tou.utilityPages.Electricity = function() {
                     $.each(maxes, function (key, temperature) {
                         if (!!temperature.value && (temperature.value > highestTemp.value || highestTemp.value === null)) {
                             highestTemp.value = tou.toFixed(temperature.value, 1);
-                            highestTemp.timeStamp = temperature.timeStamp / 1000;
+                            highestTemp.timeStamp = temperature.timeStamp;
+                            highestTemp.rawTimeStamp = temperature.rawTimeStamp;
                         }
                     });
 
                     $.each(mins, function (key, temperature) {
                         if (!!temperature.value && (temperature.value < lowestTemp.value || lowestTemp.value === null)) {
                             lowestTemp.value = tou.toFixed(temperature.value, 1);
-                            lowestTemp.timeStamp = temperature.timeStamp / 1000;
+                            lowestTemp.timeStamp = temperature.timeStamp;
+                            lowestTemp.rawTimeStamp = temperature.rawTimeStamp;
                         }
                     });
 
