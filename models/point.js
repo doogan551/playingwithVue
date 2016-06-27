@@ -649,59 +649,72 @@ module.exports = {
           return callback("Name already exists.");
         }
 
-
         criteria = {
-          collection: 'upis',
+          collection: 'SystemInfo',
           query: {
-            _pStatus: 1
-          },
-          sort: [
-            ['_id', 'asc']
-          ],
-          updateObj: {
-            $set: {
-              _pStatus: 0
+            Name: 'Preferences'
+          }
+        }
+        Utility.findOne(criteria, function(err, sysInfo) {
+          if (point['Point Type'].Value === 'Device') {
+            point['Time Zone'].eValue = sysInfo['Time Zone'];
+            point['Time Zone'].Value = Config.revEnums['Time Zones'][sysInfo['Time Zone']];
+          }
+
+          criteria = {
+            collection: 'upis',
+            query: {
+              _pStatus: 1
+            },
+            sort: [
+              ['_id', 'asc']
+            ],
+            updateObj: {
+              $set: {
+                _pStatus: 0
+              }
+            },
+            options: {
+              'new': true
             }
-          },
-          options: {
-            'new': true
-          }
-        };
+          };
 
-        Utility.findAndModify(criteria, function(err, upiObj) {
-          if (err) {
-            return callback(err);
-          }
+          Utility.findAndModify(criteria, function(err, upiObj) {
+            if (err) {
+              return callback(err);
+            }
 
-          if (pointType === "Schedule Entry") {
-            name2 = upiObj._id.toString();
-            buildName(name1, name2, name3, name4);
-          }
+            if (pointType === "Schedule Entry") {
+              name2 = upiObj._id.toString();
+              buildName(name1, name2, name3, name4);
+            }
 
-          if (targetUpi && targetUpi !== 0) {
-            criteria = {
-              collection: 'points',
-              query: {
-                _id: targetUpi
-              }
-            };
+            if (targetUpi && targetUpi !== 0) {
+              criteria = {
+                collection: 'points',
+                query: {
+                  _id: targetUpi
+                }
+              };
 
-            Utility.getOne(criteria, function(err, targetPoint) {
-              if (err) {
-                return cb(err);
-              }
+              Utility.getOne(criteria, function(err, targetPoint) {
+                if (err) {
+                  return cb(err);
+                }
 
-              if (!targetPoint) {
-                return callback("Target point not found.");
-              }
+                if (!targetPoint) {
+                  return callback("Target point not found.");
+                }
 
-              targetPoint._pStatus = 1;
-              fixPoint(upiObj, targetPoint, true, callback);
-            });
-          } else {
-            fixPoint(upiObj, Config.Templates.getTemplate(pointType), false, callback);
-          }
+                targetPoint._pStatus = 1;
+                fixPoint(upiObj, targetPoint, true, callback);
+              });
+            } else {
+              fixPoint(upiObj, Config.Templates.getTemplate(pointType), false, callback);
+            }
+          });
         });
+
       });
 
       function buildName(name1, name2, name3, name4) {
