@@ -581,6 +581,7 @@ var trendPlots = {
         trendSelf.parseConfig = function (cfg) {//get type, apply defaults for that type (and morph data?)
             var yTitle = cfg.yAxisTitle || '',
                 xAxisReversed = cfg.xAxisReversed || false,
+                yAxis = cfg.yAxis || false,
                 legend = cfg.legend || false,
                 type = cfg.type || 'line',
                 width = cfg.width || 600,
@@ -679,12 +680,12 @@ var trendPlots = {
                                     lineColor: series.color,
                                     labels: {
                                         style: {
-                                            color: series.color
+                                            color: (!!yAxis && !!yAxis.labels && yAxis.labels.style.color ? yAxis.labels.style.color : series.color)
                                         }
                                     },
                                     title: {
                                         style: {
-                                            color: series.color
+                                            color: (!!yAxis &&  !!yAxis.title && yAxis.title.style.color ? yAxis.title.style.color : series.color)
                                         }
                                     }
                                 });

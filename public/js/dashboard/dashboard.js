@@ -7042,6 +7042,18 @@ tou.utilityPages.Electricity = function() {
                         xAxis: {
                             allowDecimals: false
                         },
+                        yAxis: {
+                            labels: {
+                                style: {
+                                    color: '#606060'
+                                }
+                            },
+                            title: {
+                                style: {
+                                    color: '#606060'
+                                }
+                            }
+                        },
                         yAxisTitle: myBindings.electricalUnit,
                         xValueFormatter: function(timestamp) {
                             var date = new Date(timestamp);
@@ -7105,6 +7117,18 @@ tou.utilityPages.Electricity = function() {
                         xAxis: {
                             allowDecimals: false
                         },
+                        yAxis: {
+                            labels: {
+                                style: {
+                                    color: '#606060'
+                                }
+                            },
+                            title: {
+                                style: {
+                                    color: '#606060'
+                                }
+                            }
+                        },
                         yAxisTitle: myBindings.electricalUnit,
                         xValueFormatter: function(timestamp) {
                             var date = new Date(timestamp);
@@ -7160,6 +7184,18 @@ tou.utilityPages.Electricity = function() {
                         type: 'column',
                         xAxis: {
                             allowDecimals: false
+                        },
+                        yAxis: {
+                            labels: {
+                                style: {
+                                    color: '#606060'
+                                }
+                            },
+                            title: {
+                                style: {
+                                    color: '#606060'
+                                }
+                            }
                         },
                         yAxisTitle: myBindings.electricalUnit + "h",
                         xValueFormatter: function(timestamp) {
@@ -7252,6 +7288,18 @@ tou.utilityPages.Electricity = function() {
                             type: 'line',
                             xAxis: {
                                 allowDecimals: false
+                            },
+                            yAxis: {
+                                labels: {
+                                    style: {
+                                        color: '#606060'
+                                    }
+                                },
+                                title: {
+                                    style: {
+                                        color: '#606060'
+                                    }
+                                }
                             },
                             yAxisTitle: 'F'
                         });

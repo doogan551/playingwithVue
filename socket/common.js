@@ -836,7 +836,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                 if (newPoint["Point Type"].Value === "Slide Show") {
                   activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                     log: "Slide Show edited",
-                    activity: actLogsEnums["Slide Show Edit"].enum
+                    activity: actLogsEnums["Slideshow Edit"].enum
                   })));
                 } else {
                   compareArrays(newPoint[prop], oldPoint[prop], activityLogObjects);
