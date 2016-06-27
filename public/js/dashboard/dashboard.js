@@ -6463,12 +6463,12 @@ tou.utilityPages.Electricity = function() {
             highestDemandNow: ko.observable(''),
             highestOnPeakDemandLastYear: ko.observable(''),
             highestOnPeakDemandNow: ko.observable(''),
-            highestTemperatureNow: ko.observable(""),
+            highestTemperature: ko.observable(""),
             inactiveMeters: ko.observableArray([]),
             koGridReportCollection: ko.observableArray([]),
             lastResize: null,
             listOfMeters: ko.observableArray(),
-            lowestTemperatureNow: ko.observable(""),
+            lowestTemperature: ko.observable(""),
             maxPeriodUsage: ko.observable(0),
             meterIndexArray: [],
             MeterReportCollection: ko.observableArray([]),
@@ -7228,26 +7228,26 @@ tou.utilityPages.Electricity = function() {
 
                 if (arrayOfData && arrayOfData.trendPlotData.valid) {
                     if (arrayOfData.highestTemp.timeStamp !== null) {
-                        myBindings.highestTemperatureNow({
+                        myBindings.highestTemperature({
                             value: (arrayOfData.highestTemp.value) ? tou.toFixed(arrayOfData.highestTemp.value, 1) : null,
                             timeStamp: arrayOfData.highestTemp.timeStamp,
                             rawTimeStamp: (!!arrayOfData.highestTemp.rawTimeStamp ? arrayOfData.highestTemp.rawTimeStamp : arrayOfData.highestTemp.timeStamp)
                         });
-                        myBindings.lowestTemperatureNow({
+                        myBindings.lowestTemperature({
                             value: (arrayOfData.lowestTemp.value) ? tou.toFixed(arrayOfData.lowestTemp.value, 1) : null,
                             timeStamp: arrayOfData.lowestTemp.timeStamp,
                             rawTimeStamp: (!!arrayOfData.lowestTemp.rawTimeStamp ? arrayOfData.lowestTemp.rawTimeStamp : arrayOfData.lowestTemp.timeStamp)
                         });
 
-                        highestTempVerbiage = "The high temperature on " + moment(myBindings.highestTemperatureNow().rawTimeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.highestTemp.value).toFixed(1) + " degrees. ";
-                        lowestTempVerbiage = "The low temperature on " + moment(myBindings.lowestTemperatureNow().rawTimeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.lowestTemp.value).toFixed(1) + " degrees. ";
+                        highestTempVerbiage = "The high temperature on " + moment(myBindings.highestTemperature().rawTimeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.highestTemp.value).toFixed(1) + " degrees. ";
+                        lowestTempVerbiage = "The low temperature on " + moment(myBindings.lowestTemperature().rawTimeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.lowestTemp.value).toFixed(1) + " degrees. ";
                     } else {
-                        myBindings.highestTemperatureNow({
+                        myBindings.highestTemperature({
                             value: null,
                             timeStamp: null,
                             rawTimeStamp: null
                         });
-                        myBindings.lowestTemperatureNow({
+                        myBindings.lowestTemperature({
                             value: null,
                             timeStamp: null,
                             rawTimeStamp: null
