@@ -216,7 +216,7 @@ var initKnockout = function () {
     };
 
     ko.bindingHandlers.reportTimePicker = {
-        init: function (element, valueAccessor) {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var $element = $(element),
                 timestamp = valueAccessor(),
                 options = {
@@ -230,7 +230,7 @@ var initKnockout = function () {
                 if (ko.isObservable(timestamp)) {
                     timestamp($(element).val());
                 } else {
-                    timestamp = $(element).val();
+                    viewModel.time = $(element).val();
                 }
             });
 
@@ -248,7 +248,7 @@ var initKnockout = function () {
                 if (ko.isObservable(timestamp)) {
                     timestamp($(element).val());
                 } else {
-                    timestamp = $(element).val();
+                    viewModel.time = $(element).val();
                 }
             });
 
@@ -1041,7 +1041,10 @@ var reportsViewModel = function () {
             return result;
         },
         getAdjustedDatetimeUnix = function (date, time) {
-            var result = getAdjustedDatetimeMoment(moment.unix(date), time.toString());
+            var result,
+                validatedDate = (moment.isMoment(date) ? date : moment.unix(date));
+
+            result = getAdjustedDatetimeMoment(validatedDate, time.toString());
             return result.unix();
         },
         initializeNewFilter = function (selectedItem, filter) {
@@ -1061,6 +1064,7 @@ var reportsViewModel = function () {
                 case "Timet":
                 case "DateTime":
                     localFilter.date = moment().unix();
+                    localFilter.value = localFilter.date;
                     localFilter.time = 0;
                     break;
                 case "HourMinSec":
@@ -1255,14 +1259,13 @@ var reportsViewModel = function () {
                             }
                             if (parseInt(filter.time, 10) === 0) {
                                 filter.time = "00:00";
+                            }
+                            if (filter.time.toString().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
+                                filter.value = getFilterAdjustedDatetime(filter);
+                                delete filter.error;
                             } else {
-                                if (filter.time.toString().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
-                                    filter.value = getFilterAdjustedDatetime(filter);
-                                    delete filter.error;
-                                } else {
-                                    valid = false;
-                                    filter.error = "Invalid Time format in Filters";
-                                }
+                                valid = false;
+                                filter.error = "Invalid Time format in Filters";
                             }
                             break;
                         case "HourMinSec":
@@ -1521,10 +1524,49 @@ var reportsViewModel = function () {
                 columns,
                 columnConfig,
                 filters,
-                filter,
                 activeError = false,
                 upis = [],
                 uuid,
+                formatFilters = function (allFilters) {
+                    var filter,
+                        i;
+                    for (i = 0; i < allFilters.length; i++) {
+                        filter = allFilters[i];
+                        console.log("filter  = " + JSON.stringify(filter));
+                        if (!!filter.error) {
+                            displayError(filter.error);
+                            activeError = true;
+                        }
+                        if (filter.valueType === "BitString") {
+                            var total = 0,
+                                key,
+                                bitStringEnums = window.workspaceManager.config.Enums[filter.filterName + ' Bits'];
+
+                            for (key in bitStringEnums) {
+                                if (bitStringEnums.hasOwnProperty(key)) {
+                                    if (key !== "All") {
+                                        total += bitStringEnums[key].enum;
+                                    }
+                                }
+                            }
+
+                            filter.value = 0;
+                            for (j = 0; j < filter.bitStringEnumsArray.length; j++) {
+                                key = filter.bitStringEnumsArray[j].name;
+                                if (bitStringEnums.hasOwnProperty(key)) {
+                                    if (filter.bitStringEnumsArray[j].checked) {
+                                        //console.log("bitStringEnums[" + key + "].enum  = " + bitStringEnums[key].enum);
+                                        filter.value += bitStringEnums[key].enum;
+                                        //console.log("filter.value  = " + filter.value);
+                                    }
+                                    if (filter.value === total) {
+                                        filter.value = bitStringEnums["All"].enum;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 cleanUpReportConfig = function (reportConfig) {  // shrinking size of request object
                     var results = $.extend(true, {}, reportConfig),
                         i;
@@ -1570,41 +1612,7 @@ var reportsViewModel = function () {
                     configureSelectedDuration();
                 } else {
                     if (filters.length > 0) {
-                        for (i = 0; i < filters.length; i++) {
-                            filter = filters[i];
-                            if (!!filter.error) {
-                                displayError(filter.error);
-                                activeError = true;
-                            }
-                            if (filter.valueType === "BitString") {
-                                var total = 0,
-                                    key,
-                                    bitStringEnums = window.workspaceManager.config.Enums[filter.filterName + ' Bits'];
-
-                                for (key in bitStringEnums) {
-                                    if (bitStringEnums.hasOwnProperty(key)) {
-                                        if (key !== "All") {
-                                            total += bitStringEnums[key].enum;
-                                        }
-                                    }
-                                }
-
-                                filter.value = 0;
-                                for (j = 0; j < filter.bitStringEnumsArray.length; j++) {
-                                    key = filter.bitStringEnumsArray[j].name;
-                                    if (bitStringEnums.hasOwnProperty(key)) {
-                                        if (filter.bitStringEnumsArray[j].checked) {
-                                            //console.log("bitStringEnums[" + key + "].enum  = " + bitStringEnums[key].enum);
-                                            filter.value += bitStringEnums[key].enum;
-                                            //console.log("filter.value  = " + filter.value);
-                                        }
-                                        if (filter.value === total) {
-                                            filter.value = bitStringEnums["All"].enum;
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        formatFilters(filters);
                     }
                 }
 
