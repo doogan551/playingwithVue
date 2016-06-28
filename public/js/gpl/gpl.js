@@ -6374,8 +6374,8 @@ gpl.BlockManager = function (manager) {
             pointType,
             doOpenWindow = function (fn) {
                 windowRef = gpl.openWindow(url, pointName, pointType, '', upi, {
-                    width: 820,
-                    height: 540
+                    width: 1250,
+                    height: 750
                 });
 
                 (fn || gpl.emptyFn)();

@@ -1,6 +1,6 @@
 "use strict";
 
-var ActivityLogsManager = function (conf) {
+var ActivityLogsManager = function(conf) {
     var self = this,
         myTitle = 'Activity Logs',
         workspaceManager = window.opener.workspaceManager,
@@ -34,10 +34,10 @@ var ActivityLogsManager = function (conf) {
             name4: '',
             pointTypes: []
         },
-        _log = function () {
+        _log = function() {
             console.log.apply(console, arguments);
         },
-        buildActivityLogRequestObject = function (activityLog, reqObj) {
+        buildActivityLogRequestObject = function(activityLog, reqObj) {
             var localPointTypes,
                 userObj,
                 i,
@@ -94,7 +94,7 @@ var ActivityLogsManager = function (conf) {
             userObj._id = user._id;
             userObj.groups = user.groups;
         },
-        pointNameFilterCallback = function (localFilterObj) {
+        pointNameFilterCallback = function(localFilterObj) {
             //console.log('pointNameFilterCallback() called');
             self.name1(localFilterObj.name1);
             self.name2(localFilterObj.name2);
@@ -107,15 +107,17 @@ var ActivityLogsManager = function (conf) {
                 self.pointTypes(localFilterObj.pointTypes);
             }
         },
-        filterWindowCallback = function () {
+        filterWindowCallback = function() {
             //console.log('filterWindowCallback() called');
             filterWindow.pointLookup.init(pointNameFilterCallback, pointNameFilterObj);
         },
-        initFilterWindow = function () {
+        initFilterWindow = function() {
             //console.log('initFilterWindow() called');
-            filterWindow = openWindow('/pointLookup?mode=filter', 'activityfilter', 'activityfilter', 'activityfilter', 'activityfilter', { callback: filterWindowCallback });
+            filterWindow = openWindow('/pointLookup?mode=filter', 'activityfilter', 'activityfilter', 'activityfilter', 'activityfilter', {
+                callback: filterWindowCallback
+            });
         },
-        getPrettyDate = function (timestamp, forceDateString) {
+        getPrettyDate = function(timestamp, forceDateString) {
             var theDate = new Date(timestamp),
                 theDateClone = theDate.clone().clearTime(),
                 today = Date.today(),
@@ -132,18 +134,18 @@ var ActivityLogsManager = function (conf) {
             }
             return str;
         },
-        getPrettyTime = function (timestamp) {
+        getPrettyTime = function(timestamp) {
             var theDate = new Date(timestamp);
             return theDate.toString('HH:mm:ss');
         },
-        formatActivityLogEntry = function (activityLog) {
+        formatActivityLogEntry = function(activityLog) {
             var selected = false;
 
             activityLog.isSelected = ko.observable(selected);
             activityLog.prettyDate = getPrettyDate(activityLog.timestamp);
             activityLog.prettyTime = getPrettyTime(activityLog.timestamp);
         },
-        updateNumberOfPages = function (count, activityLogTable) {
+        updateNumberOfPages = function(count, activityLogTable) {
             var sortAsc = self.sortAscending(),
                 curPage = self.pageNumber(),
                 curNumberPages = activityLogTable.numberOfPages(),
@@ -162,7 +164,7 @@ var ActivityLogsManager = function (conf) {
                 self.pageNumber(newNumberPages);
             }
         },
-        processActivityLogs = function (theLogData) {
+        processActivityLogs = function(theLogData) {
             var i, page;
 
             if (theLogData.logs !== undefined) {
@@ -183,7 +185,7 @@ var ActivityLogsManager = function (conf) {
             }
             self.activityLogs().gettingData(false);
         },
-        getStoredUsers = function () {
+        getStoredUsers = function() {
             var i,
                 storeData = getStoreData(),
                 arrayOfStoredFilters,
@@ -201,7 +203,7 @@ var ActivityLogsManager = function (conf) {
 
             return usernamesToFilterOn;
         },
-        getStoreData = function () {
+        getStoreData = function() {
             var storeData = store.get(storeKey) || {};
 
             if (storeData.hasOwnProperty('sessionId') && storeData.sessionId !== sessionId) {
@@ -210,7 +212,7 @@ var ActivityLogsManager = function (conf) {
             }
             return storeData;
         },
-        processUsers = function (userData) {
+        processUsers = function(userData) {
             var i,
                 indexOfUser,
                 usernamesToFilterOn = getStoredUsers();
@@ -234,7 +236,7 @@ var ActivityLogsManager = function (conf) {
             // once User list has loaded then load page with Initial logs with any filters already set.
             self.refreshActivityLogsData();
         },
-        ajaxPOST = function (input, url, callback) {
+        ajaxPOST = function(input, url, callback) {
             //console.log(url, "input = " + JSON.stringify(input));
             $.ajax({
                 url: url,
@@ -242,13 +244,13 @@ var ActivityLogsManager = function (conf) {
                 contentType: 'application/json',
                 dataType: 'json',
                 data: JSON.stringify(input),
-                success: function (returnData) {
+                success: function(returnData) {
                     //console.log(url, "returnData = " + JSON.stringify(returnData));
                     return callback(returnData);
                 }
             });
         },
-        requestUsers = function () {
+        requestUsers = function() {
             var date = new Date(),
                 userObj,
                 reqObj = {};
@@ -263,7 +265,7 @@ var ActivityLogsManager = function (conf) {
             //console.log('Requesting Users from server.', reqObj, date);
             ajaxPOST(reqObj, '/api/security/users/getallusers', processUsers);
         },
-        requestActivityLogs = function (activityLogTable) {
+        requestActivityLogs = function(activityLogTable) {
             var name = activityLogTable.name,
                 date = new Date(),
                 uniqueID = date.getTime(),
@@ -279,21 +281,21 @@ var ActivityLogsManager = function (conf) {
             console.log('Requesting ' + name + ' activityLogs from server.', reqObj, date);
             ajaxPOST(reqObj, '/api/activitylogs/get', processActivityLogs);
         },
-        selectActivityLog = function (ActivityLog) {
+        selectActivityLog = function(ActivityLog) {
             ActivityLog.isSelected(true);
             self.selectedRows.push(ActivityLog);
         },
-        deSelectActivityLog = function (ActivityLog) {
+        deSelectActivityLog = function(ActivityLog) {
             if (--nSelectedRowsOnPage < 0) {
                 nSelectedRowsOnPage = 0;
             }
 
             ActivityLog.isSelected(false);
-            self.selectedRows.remove(function (row) {
+            self.selectedRows.remove(function(row) {
                 return row._id === ActivityLog._id;
             });
         },
-        storeFilterData = function () {
+        storeFilterData = function() {
             var filterValues,
                 storeData = store.get(storeKey);
 
@@ -325,7 +327,7 @@ var ActivityLogsManager = function (conf) {
             storeData[filterDataKey] = ko.toJS(filterValues);
             store.set(storeKey, storeData);
         },
-        initFilterValues = function () {
+        initFilterValues = function() {
             var i,
                 data,
                 storeData = getStoreData();
@@ -373,11 +375,11 @@ var ActivityLogsManager = function (conf) {
             stickyScrollBar: false
         };
 
-    self.togglePop = function () {
+    self.togglePop = function() {
         var options = {
-                width: 1024,
-                height: 768
-            };
+            width: 1250,
+            height: 750
+        };
 
         // If we're a pop-out; pop back in
         if (window.top.location.href === window.location.href) {
@@ -387,23 +389,23 @@ var ActivityLogsManager = function (conf) {
             openWindow(window.location.href, 'Activities', 'activitylog', '', windowUpi, options);
         }
     };
-    self.refreshActivityLogsData = function () {
+    self.refreshActivityLogsData = function() {
         //_log('self.refreshActivityLogsData() called........');
         var localActivityLogTable = self.activityLogs();
         requestActivityLogs(localActivityLogTable);
     };
-    self.refreshUsersData = function () {
+    self.refreshUsersData = function() {
         //_log('self.refreshUsersData() called........');
         requestUsers();
     };
-    self.showPointReview = function (element, theData) {
+    self.showPointReview = function(element, theData) {
         var pointTypesUtility = workspaceManager.config.Utility.pointTypes,
             pointType,
             endPoint,
             originalElementText,
             options = {
-                width: 850,
-                height: 600
+                width: 1250,
+                height: 750
             };
         pointType = pointTypesUtility.getPointTypeNameFromEnum(theData.pointType);
         endPoint = pointTypesUtility.getUIEndpoint(pointType, theData.upi);
@@ -411,19 +413,19 @@ var ActivityLogsManager = function (conf) {
             openWindow(endPoint.review.url, theData.Name, pointType, endPoint.review.target, theData.upi, options);
         } else {
             originalElementText = element.text;
-            $(element).stop().fadeOut("4000", function () {
+            $(element).stop().fadeOut("4000", function() {
                 element.text = " * Point not found *";
                 $(element).css("background", "#F26060").fadeIn(500);
             });
-            setTimeout(function () {
-                $(element).stop().fadeOut("500", function () {
+            setTimeout(function() {
+                $(element).stop().fadeOut("500", function() {
                     $(element).css("background", "#FFFFFF").fadeIn(500);
                     element.text = originalElementText;
                 });
             }, 3000);
         }
     };
-    self.selectAll = function () {
+    self.selectAll = function() {
         var localActivityLogs = self.activityLogs().list(),
             n = localActivityLogs.length,
             len = (n > 200) ? 200 : n,
@@ -440,7 +442,7 @@ var ActivityLogsManager = function (conf) {
 
         return true;
     };
-    self.selectAllNames = function () {
+    self.selectAllNames = function() {
         var filterUsers = self.users(),
             len = filterUsers.length,
             localFilterUsers,
@@ -455,7 +457,7 @@ var ActivityLogsManager = function (conf) {
 
         return true;
     };
-    self.deselectAll = function () {
+    self.deselectAll = function() {
         var localActivityLogs = self.activityLogs().list(),
             len = localActivityLogs.length,
             i;
@@ -466,7 +468,7 @@ var ActivityLogsManager = function (conf) {
         self.selectedRows.removeAll();
         nSelectedRowsOnPage = 0;
     };
-    self.deselectAllNames = function () {
+    self.deselectAllNames = function() {
         var filterUsers = self.users(),
             len = filterUsers.length,
             i;
@@ -475,7 +477,7 @@ var ActivityLogsManager = function (conf) {
             filterUsers[i].isSelected(false);
         }
     };
-    self.selectNone = function () {
+    self.selectNone = function() {
         var localActivityLogs = self.activityLogs().list(),
             n = localActivityLogs.length,
             len = (n > PAGE_SIZE) ? PAGE_SIZE : n,
@@ -489,19 +491,19 @@ var ActivityLogsManager = function (conf) {
             }
         }
     };
-    self.resetFilters = function () {
+    self.resetFilters = function() {
         self.clearUsernameFilter();
         self.clearPointNameFilter();
         self.clearDateTimeFilter(true);
     };
-    self.clearUsernameFilter = function (refreshTheData) {
+    self.clearUsernameFilter = function(refreshTheData) {
         self.deselectAllNames();
         if (refreshTheData) {
             storeFilterData();
             self.refreshActivityLogsData();
         }
     };
-    self.clearPointNameFilter = function (refreshTheData) {
+    self.clearPointNameFilter = function(refreshTheData) {
         self.name1("");
         pointNameFilterObj.name1 = "";
         self.name2("");
@@ -520,7 +522,7 @@ var ActivityLogsManager = function (conf) {
         // reinitialize pointname lookup page
         filterWindowCallback();
     };
-    self.clearDateTimeFilter = function (refreshTheData) {
+    self.clearDateTimeFilter = function(refreshTheData) {
         self.dateFrom(null);
         self.dtFilterPlaceholder.dateFrom = '';
         $dateFrom.val('').datepicker('update');
@@ -538,17 +540,17 @@ var ActivityLogsManager = function (conf) {
             self.refreshActivityLogsData();
         }
     };
-    self.applyPointNameFilter = function () {
+    self.applyPointNameFilter = function() {
         gotoPageOne = true;
         storeFilterData();
         self.refreshActivityLogsData();
     };
-    self.applyUserNameFilter = function () {
+    self.applyUserNameFilter = function() {
         gotoPageOne = true;
         storeFilterData();
         self.refreshActivityLogsData();
     };
-    self.cancelUserNameFilter = function () {
+    self.cancelUserNameFilter = function() {
         var i,
             filteredUsers = self.users(),
             indexOfUser,
@@ -564,7 +566,7 @@ var ActivityLogsManager = function (conf) {
         }
 
     };
-    self.cancelPointNameFilter = function () {
+    self.cancelPointNameFilter = function() {
         var i,
             data,
             storeData = getStoreData();
@@ -588,7 +590,7 @@ var ActivityLogsManager = function (conf) {
             filterWindowCallback();
         }
     };
-    self.applyDateTimeFilter = function () {
+    self.applyDateTimeFilter = function() {
         self.dateFrom(self.dtFilterPlaceholder.dateFrom);
         self.timeFrom(self.dtFilterPlaceholder.timeFrom);
         self.dateTo(self.dtFilterPlaceholder.dateTo);
@@ -597,7 +599,7 @@ var ActivityLogsManager = function (conf) {
         storeFilterData();
         self.refreshActivityLogsData();
     };
-    self.cancelDateTimeFilter = function () {
+    self.cancelDateTimeFilter = function() {
         self.dtFilterPlaceholder.dateFrom = self.dateFrom();
         $dateFrom.val(self.dtFilterPlaceholder.dateFrom).datepicker('setDate', self.dtFilterPlaceholder.dateFrom);
         self.dtFilterPlaceholder.timeFrom = self.timeFrom();
@@ -607,13 +609,13 @@ var ActivityLogsManager = function (conf) {
         self.dtFilterPlaceholder.timeTo = self.timeTo();
         $timeTo.val(self.dtFilterPlaceholder.timeTo).timepicker('setTime', self.dtFilterPlaceholder.timeTo);
     };
-    self.toggleDateTimeSort = function () {
+    self.toggleDateTimeSort = function() {
         var currentSort = self.sortAscending();
         self.sortAscending(!currentSort);
         storeFilterData();
         self.refreshActivityLogsData();
     };
-    self.changePage = function (modifier) {
+    self.changePage = function(modifier) {
         var activityLogs = self.activityLogs(),
             newPage;
 
@@ -630,7 +632,7 @@ var ActivityLogsManager = function (conf) {
         activityLogs.refresh(true);
         self.refreshActivityLogsData();
     };
-    self.getFilteredUsers = function () {
+    self.getFilteredUsers = function() {
         var i,
             allUsers = self.users(),
             usernamesToFilterOn = [];
@@ -646,7 +648,9 @@ var ActivityLogsManager = function (conf) {
 
     self.printLogs = function() {
         $('.activityLogs').css('overflow', 'visible');
-        $('.activityLogs').printArea({mode:'iframe'});
+        $('.activityLogs').printArea({
+            mode: 'iframe'
+        });
         $('.activityLogs').css('overflow', 'auto');
     };
 
@@ -669,16 +673,16 @@ var ActivityLogsManager = function (conf) {
     self.pointTypes = ko.observableArray([]);
     self.pageTitle = ko.observable(myTitle);
     self.selectedRows = ko.observableArray([]);
-    self.activityLogs = ko.computed(function () {
+    self.activityLogs = ko.computed(function() {
         return activityLogTables;
     }, self);
-    self.activityLogsForPageSize = ko.computed(function () {
+    self.activityLogsForPageSize = ko.computed(function() {
         return self.activityLogs().list().slice(0, PAGE_SIZE);
     }, self);
-    self.users = ko.computed(function () {
+    self.users = ko.computed(function() {
         return listOfUsers();
     }, self);
-    self.allSelected = ko.computed(function () {
+    self.allSelected = ko.computed(function() {
         var i,
             activityLogs = self.activityLogs().list(),
             n = activityLogs.length,
@@ -696,7 +700,7 @@ var ActivityLogsManager = function (conf) {
 
         return true;
     }, self).extend(computedThrottle);
-    self.allSelectedNames = ko.computed(function () {
+    self.allSelectedNames = ko.computed(function() {
         var i,
             filterUsers = self.users(),
             len = filterUsers.length;
@@ -714,18 +718,18 @@ var ActivityLogsManager = function (conf) {
         return true;
     }, self).extend(computedThrottle);
     self.checkAll = ko.computed({
-        read: function () {
+        read: function() {
             return self.allSelected();
         },
-        write: function (value) {
+        write: function(value) {
             return value ? self.selectAll() : self.deselectAll();
         }
     });
     self.checkAllNames = ko.computed({
-        read: function () {
+        read: function() {
             return self.allSelectedNames();
         },
-        write: function (value) {
+        write: function(value) {
             return value ? self.selectAllNames() : self.deselectAllNames();
         }
     });
@@ -788,7 +792,7 @@ function initPage(manager) {
         $userFilterIcon = $(userFilterId + ' .filterIcon'),
         $bodyMask = $('.bodyMask'),
         $pointFilterModal = $('#pointFilterModal'),
-        toggleDropdown = function (id) {
+        toggleDropdown = function(id) {
             var $dropDown = $(id + ' .dropdown-menu'),
                 $icon = $(id + ' .filterIcon'),
                 visible = $dropDown.is(':visible');
@@ -801,7 +805,7 @@ function initPage(manager) {
             }
             $dropDown.toggle();
         },
-        hideDropDowns = function () {
+        hideDropDowns = function() {
             var $dateFilterDropDown = $(dateId + ' .dropdown-menu'),
                 $userFilterDropDown = $(userFilterId + ' .dropdown-menu'),
                 $userFilterIcon = $(userFilterId + ' .filterIcon');
@@ -816,7 +820,9 @@ function initPage(manager) {
     // Initialize time and datepickers
     $('.time').timepicker({
         'timeFormat': 'H:i:s',
-        'disableTimeRanges': [['24:00:00', '25:00:00']]
+        'disableTimeRanges': [
+            ['24:00:00', '25:00:00']
+        ]
     });
     $('.date').datepicker({
         'format': 'D, m/d/yyyy',
@@ -828,23 +834,23 @@ function initPage(manager) {
 
     // Initialize the table header select column. This way the user can select any
     // part of this header cell to activate the dropdown.
-    $(".header > .colSelect").click(function (e) {
+    $(".header > .colSelect").click(function(e) {
         e.stopPropagation();
         if (e.srcElement.tagName !== 'INPUT') {
             $(".header > .colSelect .dropdown-toggle").dropdown('toggle');
         }
     });
 
-    $dateFilterIcon.click(function (e) {
+    $dateFilterIcon.click(function(e) {
         toggleDropdown(dateId);
     });
 
-    $userFilterIcon.click(function (e) {
+    $userFilterIcon.click(function(e) {
         toggleDropdown(userFilterId);
     });
 
     // This targets the 'x', 'OK', and 'clear filter' buttons in the drop down, which also dismiss the dropdown
-    $('.dropdown-menu .closeIt').click(function () {
+    $('.dropdown-menu .closeIt').click(function() {
         hideDropDowns();
     });
 
@@ -853,17 +859,17 @@ function initPage(manager) {
     // itself to the body. When a date was selected, jQuery detected the body click event, causing the
     // dropdown to be hidden.  This allows the dropdown to persist by blocking the body click, but still
     // allows us to click anywhere outside of the dropdown to dismiss the dropdown.
-    $('.bodyMask').click(function () {
+    $('.bodyMask').click(function() {
         hideDropDowns();
     });
 
     // Add click handlers to 'close' elements within the modal itself
-    $pointFilterModal.find('.closeIt').click(function () {
+    $pointFilterModal.find('.closeIt').click(function() {
         $pointFilterModal.modal('toggle');
     });
 
     // Add handler to notify when the modal is shown
-    $pointFilterModal.on('shown.bs.modal', function (e) {
+    $pointFilterModal.on('shown.bs.modal', function(e) {
         $('#pointLookup')[0].contentWindow.$('#listSearch').find('input:first').focus();
     });
 
@@ -889,7 +895,7 @@ function applyBindings() {
     }
 }
 
-$(function () {
+$(function() {
     applyBindings();
     initPage(window.manager);
 

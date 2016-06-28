@@ -2008,8 +2008,8 @@ var AlarmManager = function (conf) {
     self.togglePop = function () {
         var title = self.alarms().name + ' Alarms',
             options = {
-                width: 1024,
-                heigth: 768
+                width: 1250,
+                    height: 750
             };
 
         // If we're a pop-out; pop back in
@@ -2134,8 +2134,8 @@ var AlarmManager = function (conf) {
         var endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint("Display", data._id),
             name = data.Name || '',
             options = {
-                width: 850,
-                height: 600
+                width: 1250,
+                    height: 750
             };
         openWindow(endPoint.review.url, name, 'Display', '', data._id, options);
 
