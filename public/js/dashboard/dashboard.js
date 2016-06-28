@@ -6767,11 +6767,17 @@ tou.utilityPages.Electricity = function() {
             },
             sumCollection: function (data) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
+                    monthYear = this.selectedMonthYear(),
+                    monthYearPeriod = monthYear.period.toLowerCase(),
                     answer = 0,
                     i,
                     lenData = data.length;
                 for (i = 0; i < lenData; i++) {
-                    answer += data[i].value;
+                    if (monthYearPeriod === "year") {  // only rounding each unit for "Yearly" reporting
+                        answer += tou.toFixed(data[i].value, myBindings.decimalPlaces);
+                    } else {
+                        answer += data[i].value;
+                    }
                 }
                 return tou.toFixed(answer, myBindings.decimalPlaces);
             },
