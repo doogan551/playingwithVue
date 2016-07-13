@@ -1098,18 +1098,16 @@ var telemetryViewModel = function() {
         dataUrl = '/api/system/telemetry',
         saveUrl = '/api/system/updateTelemetry',
         tzEnums = window.opener.workspaceManager.config.Enums["Time Zones"],
-        fieldList = [{
-            name: 'Public IP',
-            validation: {
-                ipAddress: true
-            }
-        }, {
+        ipNetSegTemplate = {
             name: 'IP Network Segment',
             validation: {
                 required: true,
-                number: true
+                number: true,
+                min: 1,
+                max: 65534
             }
-        }, {
+        },
+        ipPortTemplate = {
             name: 'IP Port',
             validation: {
                 required: true,
@@ -1117,30 +1115,38 @@ var telemetryViewModel = function() {
                 min: 47808,
                 max: 47823
             }
-        }, {
-            name: 'APDU Timeout',
-            validation: {
-                required: true,
-                number: true
-            }
-        }, {
-            name: 'APDU Retries',
-            validation: {
-                required: true,
-                number: true
-            }
-        }, {
-            name: 'Time Zone',
-            validation: {
-                required: true
-            }
-        }],
+        },
+        fieldList = [{
+                name: 'Public IP',
+                validation: {
+                    ipAddress: true
+                }
+            }, {
+                name: 'APDU Timeout',
+                validation: {
+                    required: true,
+                    number: true
+                }
+            }, {
+                name: 'APDU Retries',
+                validation: {
+                    required: true,
+                    number: true
+                }
+            }, {
+                name: 'Time Zone',
+                validation: {
+                    required: true
+                }
+            }, ipPortTemplate,
+            ipNetSegTemplate
+        ],
         makeDirty = function() {
             if (!self.dirty() && !!self.initialized()) {
                 $.toast({
                     heading: 'Warning',
                     text: 'A system restart will be required after saving any changes to these settings.',
-                    position: 'mid-center',
+                    position: 'top-center',
                     stack: false,
                     hideAfter: false,
                     bgColor: 'yellow',
@@ -1173,25 +1179,40 @@ var telemetryViewModel = function() {
                     self[name].subscribe(checkForErrors);
                 }
             }
+            self.networks.subscribe(makeDirty);
             errors = ko.validation.group(self);
         },
         getDataToSave = function() {
             var c, len = fieldList.length,
                 field,
-                ret = {};
+                ret = {},
+                networks = ko.viewmodel.toModel(self.networks());;
 
+            for (var n = 0; n < networks.length; n++) {
+                var net = networks[n];
+                if (net['IP Network Segment'] === 0) {
+                    networks.splice(n, 1);
+                    self.networks.splice(n,1);
+                    n--;
+                } else {
+                    if (!!net.isDefault) {
+                        self['IP Network Segment'](net['IP Network Segment']);
+                        self['IP Port'](net['IP Port']);
+                    }
+                }
+            }
             for (c = 0; c < len; c++) {
                 field = fieldList[c].name;
                 ret[field] = self[field]();
             }
-            ret.ipPortChanged = (self['IP Port']() === originalValues['IP Port']) ? false : true;
-            ret.originalValues = originalValues;
+            ret['Network Configuration'] = networks;
             console.log(ret);
 
             return ret;
         },
         setData = function() {
             var c, len = fieldList.length,
+                networks = fullData['Network Configuration'],
                 item,
                 name,
                 value;
@@ -1208,6 +1229,15 @@ var telemetryViewModel = function() {
                 // Original values saved as a string because that's how they're formatted after they are changed in the UI
                 originalValues[name] = self[name]().toString();
 
+                self.dirty(false);
+            }
+            self.networks([]);
+            for (var n = 0; n < networks.length; n++) {
+                // self.networks.push(ko.viewmodel.fromModel(networks[n]));
+                if (!!networks[n].isDefault) {
+                    self.systemDefault(networks[n]['IP Network Segment']);
+                }
+                self.addNetwork(null, null, ko.viewmodel.fromModel(networks[n]));
                 self.dirty(false);
             }
             self.initialized(true);
@@ -1246,6 +1276,22 @@ var telemetryViewModel = function() {
     self.hasError = ko.observable(false);
     self.selectedTimeZone = ko.observable('');
     self.selectedTimeZoneText = ko.observable('');
+    self.networks = ko.observableArray([]);
+    self.systemDefault = ko.observable();
+    self.originalSegment = ko.observable();
+    /*{
+        isDefault: ko.observable(true),
+        'IP Port': ko.observable(47808),
+        ['IP Network Segment']: ko.observable(100)
+    }, {
+        isDefault: ko.observable(false),
+        'IP Port': ko.observable(47808),
+        ['IP Network Segment']: ko.observable(200)
+    }, {
+        isDefault: ko.observable(false),
+        'IP Port': ko.observable(47809),
+        ['IP Network Segment']: ko.observable(300)
+    }*/
 
     initObservables();
 
@@ -1315,6 +1361,70 @@ var telemetryViewModel = function() {
             }
         }
     };
+    self.addNetwork = function(vm, e, network) {
+        var newNetwork = {};
+        if (!!network) {
+            newNetwork = network;
+        } else {
+            newNetwork = ko.viewmodel.fromModel({
+                isDefault: false,
+                'IP Port': 0,
+                'IP Network Segment': 0
+            });
+        }
+        newNetwork['IP Port'].extend(ipPortTemplate.validation);
+        newNetwork['IP Port'].subscribe(checkForErrors);
+        newNetwork['IP Network Segment'].extend(ipNetSegTemplate.validation);
+        newNetwork['IP Network Segment'].subscribe(checkForErrors);
+        if (!!newNetwork.isDefault()) {
+            self.networks.unshift(newNetwork);
+        } else {
+            self.networks.push(newNetwork);
+        }
+    };
+    self.removeNetwork = function() {
+        var networks = self.networks();
+        var toRemove = parseInt(this['IP Network Segment']())
+        var temp = [];
+        for (var i = 0; i < networks.length; i++) {
+            var net = networks[i];
+            if (toRemove !== parseInt(net['IP Network Segment']())) {
+                temp.push(net);
+            }
+        }
+        self.networks(temp);
+    };
+    self.setSegment = function() {
+        self.originalSegment(this['IP Network Segment']());
+    };
+    self.checkUniqueSegment = function(obj, e) {
+        var values = [];
+        var networks = self.networks();
+        $('.networkSegmentUnique').remove();
+        for (var index = 0; index < networks.length; index++) {
+            var prop = networks[index]['IP Network Segment'];
+            var value = parseInt(prop(), 10);
+
+            if (values.indexOf(value) != -1) {
+                $('#uniqueSegmentError').show();
+                $(e.target).after('<span class="validationMessage networkSegmentUnique">Please enter a unique Network Segment. It has been reset to original value.</span>')
+                this['IP Network Segment'](self.originalSegment());
+                return false;
+            } else {
+                values.push(value);
+            }
+        }
+        $('#uniqueSegmentError').hide();
+    };
+    self.changeDefault = function() {
+        var networks = self.networks();
+        networks.forEach(function(net) {
+            net.isDefault(false);
+        });
+        this.isDefault(true);
+        self.dirty(true);
+        return true;
+    }
 };
 
 // Backup Screen --------------------------------------------------------------
