@@ -550,7 +550,9 @@ function renamePoints() {
         socketCommon.newUpdate(oldPoint, point, {
           method: "update",
           from: "ui"
-        }, {username:'SYSTEM'}, function(response, point) {
+        }, {
+          username: 'SYSTEM'
+        }, function(response, point) {
           console.log(response);
           cb();
         });
@@ -560,10 +562,99 @@ function renamePoints() {
     });
   });
 }
-renamePoints();
+// renamePoints();
 
+
+/*"DemandInUpi" : NumberInt(643428),
+"DemandOutUpi" : NumberInt(643430),
+"UsageInUpi" : NumberInt(643432),
+"UsageOutUpi" : NumberInt(729442),
+"KVARInUpi" : NumberInt(643434),
+"KVAROutUpi" : NumberInt(643436)*/
 function test() {
-  var pjson = require('../package.json');
-  console.log(pjson.version);
+  process.setMaxListeners(0);
+  var objs = {
+    DemandInUpi: {
+      name3: 'W3P SUM',
+      newProp: 'DemandSumUpi'
+    },
+    UsageInUpi: {
+      name3: 'WH3P SUM',
+      newProp: 'UsageSumUpi'
+    },
+    KVARInUpi: {
+      name3: 'MVR3 SUM',
+      newProp: 'KVARSumUpi'
+    }
+  };
+
+  var splitName = function(meter) {
+    return meter.Name.split('_');
+  }
+  db.connect(connectionString.join(''), function(err) {
+    Utility.iterateCursor({
+      collection: 'PowerMeters',
+      query: {}
+    }, function(err, meter, cb) {
+      var names = {
+        name1: splitName(meter)[0],
+        name2: splitName(meter)[1],
+        name4: splitName(meter)[3]
+      };
+      async.waterfall([function(callback) {
+        Utility.getOne({
+          collection: 'points',
+          query: {
+            name1: names.name1,
+            name2: names.name2,
+            name4: names.name4,
+            name3: objs.DemandInUpi.name3
+          }
+        }, function(err, point) {
+          var updateObj = {$set:{}};
+          updateObj.$set[objs.DemandInUpi.newProp] = point._id;
+          Utility.update({collection:'PowerMeters', query:{_id:meter._id}, updateObj:updateObj}, function(err, result){
+            callback();
+          });
+        });
+      }, function(callback) {
+        Utility.getOne({
+          collection: 'points',
+          query: {
+            name1: names.name1,
+            name2: names.name2,
+            name4: names.name4,
+            name3: objs.UsageInUpi.name3
+          }
+        }, function(err, point) {
+          var updateObj = {$set:{}};
+          updateObj.$set[objs.UsageInUpi.newProp] = point._id;
+          Utility.update({collection:'PowerMeters', query:{_id:meter._id}, updateObj:updateObj}, function(err, result){
+            callback();
+          });
+        });
+      }, function(callback) {
+        Utility.getOne({
+          collection: 'points',
+          query: {
+            name1: names.name1,
+            name2: names.name2,
+            name4: names.name4,
+            name3: objs.KVARInUpi.name3
+          }
+        }, function(err, point) {
+          var updateObj = {$set:{}};
+          updateObj.$set[objs.KVARInUpi.newProp] = point._id;
+          Utility.update({collection:'PowerMeters', query:{_id:meter._id}, updateObj:updateObj}, function(err, result){
+            callback();
+          });
+        });
+      }], cb)
+
+
+    }, function(err, count) {
+      console.log(err, count);
+    });
+  });
 }
-// test();
+test();

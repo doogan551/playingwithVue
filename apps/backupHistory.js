@@ -189,7 +189,7 @@ function backUp() {
                         logToFile('doBackUp Error: ' + err);
                     }
                     logToFile('Finished with SQLite backup');
-                    setTimeout(function() {
+                    /*setTimeout(function() {
                         Utility.dropCollection({
                             collection: 'historydata'
                         }, function(err, result) {
@@ -218,11 +218,11 @@ function backUp() {
                                                 logToFile('ensureIndex Error: ' + err);
                                             }
                                             logToFile('backupHistory completed. Exiting.');
-                                            process.exit(0);
                                         });
                                 });
                         });
-                    }, 2000);
+                    }, 2000);*/
+                    process.exit(0);
                 });
             });
         });
@@ -275,4 +275,11 @@ function newBackup() {
         });
     });
 }
-newBackup();
+// newBackup();
+
+function test() {
+    db.connect(connectionString.join(''), function(err) {
+        calculateWeather(function(err) {});
+    });
+}
+test();
