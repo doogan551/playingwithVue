@@ -4,12 +4,13 @@ html
         title
             | Infoscan by Dorsett Technologies
         link(rel='stylesheet', href='/css/lib/materialize.css')
-        link(rel='stylesheet', href='/sass/v2/materialize')
+        link(rel='stylesheet', href='/sass/v2/home')
         //- link(rel='stylesheet', href='/css/lib/font-awesome.4.6.1.css')
-        //- link(rel='stylesheet', href='/css/lib/jquery-ui.css')
+        link(rel='stylesheet', href='/css/lib/jstree.themes/default/style.min.css')
+        link(rel='stylesheet', href='/css/lib/jquery-ui.css')
+        link(rel='stylesheet', href='/css/lib/jquery.contextMenu.min.css')
 
-
-    body.grey.lighten-3(oncontextmenu="return false;")
+    body.grey.lighten-3
         ul#dropdown1.dropdown-content
             li
                 a.blue-grey-text.truncate.tooltipped(href='javascript://', data-position='right', data-tooltip='4194 DXAC DISP', data-delay='10') 4194 DXAC DISP
@@ -21,87 +22,326 @@ html
                 nav.blue-grey
                     .nav-wrapper
                         ul.left
-                            li
-                                a#startButton.dropdown-button.noHover(href="javascript://", data-position='bottom', data-tooltip='New Window')
-                                    img.circle.dorsett-logo(src='/img/Dorsett_icon.png')
+                            li.taskbarItem
+                                .startButtonContainer(data-menu="startmenu")
+                                    a#startButton.dropdown-button(href="javascript://", data-position='bottom', data-tooltip='New Window')
+                                        i.material-icons apps
+                                        //- i.material-icons view_comfy
+                                        //- img.circle.dorsett-logo(src='/img/test/nasa.png')
+
                             //- li.active
                             //-     a.dropdown-button(href='javascript://', data-activates='dropdown1', data-beloworigin='true', data-hover='true')
                             //-         | Displays
                             //-         i.material-icons.right arrow_drop_down
-                            li.active
-                                a.waves-effect.truncate.tooltipped(href='javascript://', data-position='bottom', data-tooltip='4194 DXAC DISP', data-delay='10', data-target='displayPanel') 4194 DXAC DISP
-                            li.active
-                                a.waves-effect.truncate.tooltipped(href='javascript://', data-position='bottom', data-tooltip='4200 PARKING LOT LIGHTS', data-delay='10', data-target='gplPanel') 4200 PARKING LOT LIGHTS
-                            li.active.hide.newPanelButton
+                            li.taskbarItem
+                                a#globalSearch.waves-effect(href='javascript://')
+                                    i.material-icons search
+                                //- form
+                                //-     .input-field
+                                //-         input#search(type='search', required='')
+                                //-         label(for='search')
+                                //-             i.material-icons search
+                                //-         i.material-icons close
+                            //- li.taskbarItem
+                            //-     a#openItems.waves-effect.tooltipped(href='javascript://', data-position='bottom', data-tooltip='Show Open Items', data-delay='10')
+                            //-         i.material-icons view_module
+                            li.taskbarItem
+                                a#showOpenItems.taskbarButton.iconOnly.waves-effect.tooltipped(href='javascript://', style='', data-position='bottom', data-tooltip='Manage Open Windows', data-delay='10')
+                                    i.material-icons filter_none
+                            li.taskbarItem.active
+                                //- div
+                                a#displayIcon.taskbarButton.testHover.hoverButton2.waves-effect(href='javascript://', data-menu='displayTooltip', data-position='bottom', data-tooltip='Displays', data-delay='10')
+                                    i.material-icons tv
+                                    span Displays
+
+                            li.taskbarItem.active.hide
+                                a.hoverButton.waves-effect.truncate.tooltipped(href='javascript://', data-position='bottom', data-tooltip='4194 DXAC DISP', data-delay='10', data-target='displayPanel', data-upi='44215') 4194 DXAC DISP
+                            li.taskbarItem.active.hide
+                                a.hoverButton.waves-effect.truncate.tooltipped(href='javascript://', data-position='bottom', data-tooltip='4200 PARKING LOT LIGHTS', data-delay='10', data-upi='68691', data-target='gplPanel') 4200 PARKING LOT LIGHTS
+                            li.taskbarItem.active.hide.newPanelButton
                                 a.waves-effect.truncate.tooltipped(href='javascript://', data-position='bottom', data-tooltip='New Window', data-delay='10', data-target='newPanel') New Window
-                        ul.right.hide-on-med-and-down
-                            li
-                                form
-                                    .input-field
-                                        input#search(type='search', required='')
-                                        label(for='search')
-                                            i.material-icons search
-                                        i.material-icons close
+
+                        ul.center
+
+                        ul.right
+                            li.taskbarItem
+                                a#alarmIcon.waves-effect(href="javascript://", data-menu="alarmDropdown")
+                                    i.material-icons notifications_active
+                                    span.badge.alarmCount 3
+                            li.taskbarItem
+                                a#showDesktop.waves-effect.tooltipped(href='javascript://', data-position='bottom', data-tooltip='Show Desktop')
+                                    i.material-icons home
+
+                                    //- i(style='margin-top: 5px;')
+                                    //-     img(style='height: 36px', src='/img/test/icons/view-grid.png')
+
+                            li.taskbarItem
+                                .userInfo.valign-wrapper
+                                    img.userAvatar(src='/img/test/avatar.png')
+                                    span.userName.valign John Doe
                             //- li
                             //-     span.clock 10:10
-
         main
-            ul#globalSearchResults.dropdown-content.active(style="display: none; position: absolute; right: 5px; top: 48px; opacity: 1; width: 264px;")
+            .tooltips
+
+            #searchBox.white.z-depth-1
+                .input-field
+                    i.material-icons.prefix search
+                    input#searchPopup(type='text', required='')
+                    //- label(for='searchPopup') Search
+                    //- i.material-icons close
+
+            #alarmDropdown.white.z-depth-1
+                .alarmHeader
+                    span Unacknowledged Alarms
+                    .right
+                        a.blue-grey-text.waves-effect.tooltipped(href="javascript://", data-position='bottom', data-tooltip='Mute Alarms', data-delay='10')
+                            i.material-icons volume_up
+                        a.blue-grey-text.waves-effect.tooltipped(href="javascript://", data-position='bottom', data-tooltip='Open Alarm Console', data-delay='10')
+                            i.material-icons notifications_active
+                .alarmBody.container
+                    .row
+                        .col.s1.ack.z-depth-1
+                            a.waves-effect Ack
+                        .col.s2.type Emergency
+                        .col.s3.time Today 8:45:12
+                        .col.s6.message Wet Well High Level
+                    .row
+                        .col.s1.ack.z-depth-1
+                            a.waves-effect Ack
+                        .col.s2.type Critical
+                        .col.s3.time Today 9:55:12
+                        .col.s6.message 4250_UNV02_AH1_SAF VFD Device Failed
+                    .row
+                        .col.s1.ack.z-depth-1
+                            a.waves-effect Ack
+                        .col.s2.type Critical
+                        .col.s3.time Today 11:32:12
+                        .col.s6.message 4250_UNV02 Device Operational
+
+            #displayTooltip.slideDownMenu.white.z-depth-1
+                .actionList
+                    .blue-grey-text Actions
+                    a.blue-grey-text.action(href="javascript://")
+                        i.material-icons add
+                        span New
+                    a.blue-grey-text.action(href="javascript://")
+                        i.material-icons folder_open
+                        span Open
+                    a.blue-grey-text.action(href="javascript://")
+                        i.material-icons close
+                        span Close All
+
+                .items
+                    .itemsHeader.blue-grey-text Open Items
+                    a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-target="displayPanel")
+                        .itemTitle.white-text 4194 DXAC DISP
+                            i.right.material-icons close
+                        .itemBody 
+                            img(src='/img/test/display.png')
+                    a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-target="displayPanel2")
+                        .itemTitle.white-text 4250 AH1 DISP
+                            i.right.material-icons close
+                        .itemBody 
+                            img(src='/img/test/display3.png')                            
+                
+            ul#globalSearchResults.dropdown-content.active(style="display: none; position: absolute; right: 109px; top: 48px; opacity: 1; width: 264px;")
                 li
                     a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='4250 AH5 DISP', data-delay='10') 4250 AH5 DISP
                 li
                     a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='AIR HANDLERS', data-delay='10') AIR HANDLERS
                 li
                     a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='MONTHLY REPORT', data-delay='10') MONTHLY REPORT
-            #startmenu.hide.z-depth-3.grey.lighten-3.white-text
-                div
-                    .row
-                        .col.s9.staticSearch
-                            form
-                                 .input-field
-                                    input#search1(type='search', required='', placeholder='search')
-                                    label(for='search1')
-                                        i.material-icons search
-                                    i.material-icons close
-                        .col.s3(style="text-align: center; margin-top: 15px;")
-                            a.valign.blue-grey-text(href="javascript://")
-                                i.material-icons explore
-                                div Navigator
-                    .row
-                        .col.s6
-                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
-                                i.material-icons.center-align device_hub
-                                span Sequence
-                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
-                                i.material-icons.center-align tv
-                                span Display
-                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
-                                i.material-icons.center-align notifications
-                                span Alarms
-                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
-                                i.material-icons.center-align assignment
-                                span Reports
+            #startmenu.z-depth-3.white.lighten-3.white-text
+                .startmenuBody
+                    .tileList
+                        span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                            i.material-icons.center-align device_hub
+                            span Sequences
+                        span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                            i.material-icons.center-align tv
+                            span Displays
+                        span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                            i.material-icons.center-align notifications
+                            span Alarms
+                        span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                            i.material-icons.center-align assignment
+                            span Reports
+                        span.hoverable.dti-menu-tile.card-panel.card-panel-custom-icon.z-depth-1.blue-grey
+                            i
+                                img(src='/img/test/icons/file-tree-36.png')
+                            span Device Tree
+                        span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                            i.material-icons.center-align assignment
+                            span DB Manager
 
-                        .col.s6.recentItems
-                            .collection.z-depth-2
-                                .recentHeader.collection-item.blue-grey-text
-                                    .center-align Recent Items
-                                a.blue-grey-text.collection-item(href="javascript://")
-                                    span.title 4200 PARKING LOT LIGHTS
-                                        i.left.material-icons device_hub
-                                a.blue-grey-text.collection-item(href="javascript://")
-                                    span.title 4200 CRU1 DISP
-                                        i.left.material-icons tv
-                                a.blue-grey-text.collection-item(href="javascript://")
-                                    span.title DEVICE ADDRESS REPORT
-                                        i.left.material-icons assignment
+                    .recentItems
+                        .col.s12.blue-grey-text Recent Items
+                            //- .recentHeader.collection-item.blue-grey-text
+                            //-     .center-align Recent Items
+                        a.blue-grey-text.collection-item(href="javascript://")
+                            span.title 4200 PARKING LOT LIGHTS
+                                i.left.material-icons device_hub
+                        a.blue-grey-text.collection-item(href="javascript://")
+                            span.title 4200 CRU1 DISP
+                                i.left.material-icons tv
+                        a.blue-grey-text.collection-item(href="javascript://")
+                            span.title DEVICE ADDRESS REPORT
+                                i.left.material-icons assignment
+                    .settings.blue-grey-text
+                        //- a.branding(href='javascript://')
+                        //-     i.material-icons.blue-grey-text settings
+                        div ...and many more apps
+                        //- span &copy; Dorsett Technologies
 
-            #modal1.modal
+            #modal1.modal.bottom-sheet
                 .modal-content
                     h4 Modal Header
                     p A bunch of text
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close
+
+            #grouping.modal.modal-fixed-footer
+                .modal-content
+                    //- .groupingBody
+                        //- ul
+                        //-     li Leaf
+                        //-     li Subtree
+                        //-         ul
+                        //-             li Leaf
+                        //-             li Leaf
+                    .propertiesList
+
+                .modal-footer
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close                         
+
+            #pointID.modal.modal-fixed-footer
+                .modal-content
+                    h4.blue-grey-text Point Identification
+
+                    //- table.striped
+                    //-     tr
+                    //-         th(style="width: 20%") Attribue
+                    //-         th Value
+                    //-     tr
+                    //-         td Address
+                    //-         td.input-field
+                    //-             input(type='text')
+
+                    //- hr
+
+                    //- table.striped
+                    //-     tr
+                    //-         th(style="width: 20%") Class
+                    //-         th Tag
+                    //-     tr
+                    //-         td Building
+                    //-         td.input-field
+                    //-             select
+                    //-                 option(value='4194') 4194
+                    //-     tr
+                    //-         td.userDefined Equipment
+                    //-         td.input-field
+                    //-             input#inputEquipment(type='text', placeholder='Equipment')
+                    //-             label(for='inputEquipment') Equipment
+                    //-     tr
+                    //-         td.userDefined Equipment Type
+                    //-         td.input-field
+                    //-             input(type='text')
+                    //-     tr
+                    //-         td.userDefined Floor
+                    //-         td.input-field
+                    //-             input(type='text')
+                    //-     tr
+                    //-         td.userDefined Zone
+                    //-         td.input-field
+                    //-             input(type='text')
+
+
+                    .row.sectionHeader
+                        .col.s3.blue-grey-text Attribute
+                        .col.s9.blue-grey-text Value
+                    .row
+                        .col.s3 Address
+                        .col.s9.input-field
+                            input#inputAddress(type='text')
+                            label(for='inputAddress') Address
+
+                    .row
+
+                    .row.sectionHeader
+                        .col.s3.blue-grey-text Class
+                        .col.s9.blue-grey-text Tag
+                    .row
+                        .col.s3 Building
+                        .col.s9.input-field
+                            select(value='4194')
+                                option 4194
+                    .row
+                        .col.s3.userDefined 
+                            a(href='javascript://')
+                                i.material-icons highlight_off
+                            span Equipment
+                        .col.s9.input-field
+                            input#inputEquipment(type='text')
+                            label(for='inputEquipment') Equipment
+                    .row
+                        .col.s3.userDefined 
+                            a(href='javascript://')
+                                i.material-icons highlight_off
+                            span Equipment Type
+                        .col.s9.input-field
+                            input#inputEquipmentType(type='text')
+                            label(for='inputEquipmentType') Equipment Type
+                    .row
+                        .col.s3.userDefined 
+                           a(href='javascript://')
+                                 i.material-icons highlight_off
+                            span Floor
+                        .col.s9.input-field
+                            input#inputFloor(type='text')
+                            label(for='inputFloor') Floor
+                    .row
+                        .col.s3.userDefined 
+                            a(href='javascript://')
+                                i.material-icons highlight_off
+                            span Zone
+                        .col.s9.input-field
+                            input#inputZone(type='text')
+                            label(for='inputZone') Zone
+
+                .modal-footer
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
+
+
+
+            #openItemsModal.modal
+                .modal-content
+                    h4 Open Items
+                    #itemlist.openItemList
+                        a.hoverable.item.blue-grey.z-depth-1(href='javascript://')
+                            .itemTitle.white-text 4194 DXAC DISP
+                            .itemBody 
+                                img(src='/img/test/display.png')
+                        a.hoverable.item.blue-grey.z-depth-1(href='javascript://')
+                            .itemTitle.white-text 4200 AH1 DISP
+                            .itemBody 
+                                img(src='/img/test/display4.png')
+                        a.hoverable.item.blue-grey.z-depth-1(href='javascript://')
+                            .itemTitle.white-text 4260 LIGHTING DISP
+                            .itemBody 
+                                img(src='/img/test/display5.png')
+                        a.hoverable.item.blue-grey.z-depth-1(href='javascript://')
+                            .itemTitle.white-text 4250 AH7 TSTAT DISP
+                            .itemBody 
+                                img(src='/img/test/display6.png')                                                                                                    
+                        a.hoverable.item.blue-grey.z-depth-1(href='javascript://')
+                            .itemTitle.white-text 4200 PARKING LOT LIGHTS
+                            .itemBody 
+                                img(src='/img/test/sequence.png')
+
+                .modal-footer
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close                    
 
                     //- .row
                     //-     .col.m6
@@ -114,13 +354,14 @@ html
                 //- .dti-desktop-item
                 //-     .item-content
                 //-     .item-text Test
-                img.z-depth-1(src='/img/test/chart2.png', style="position: absolute; left: 15px; bottom: 15px; height: 250px; width: 800px;")
+                img.z-depth-1(src='/img/test/chart2.png', style="position: absolute; left: 15px; bottom:20px; height: 250px; width: 800px;")
 
                 img.z-depth-1(src='/img/test/alarms.png', style="position: absolute; right: 15px; top: 63px;")
 
-                img.z-depth-1(src='/img/test/sequence2.png', style="position: absolute; right: 15px; bottom: 15px;")
+                img.z-depth-1(src='/img/test/sequence2.png', style="position: absolute; right: 15px; bottom: 20px;")
 
                 .dynamicList
+                    .groupingBody
                     table
                         tr
                             td Outside Air Temp
@@ -185,6 +426,26 @@ html
                             i.material-icons close
                 img(src="/img/test/display.png", style="height: 100%; width: 100%;")
 
+            #displayPanel2.card-panel.dti-card-panel.blue-grey.z-depth-2.lighten-3.hide(style="left: 185px; top: 185px;")
+                .card-toolbar
+                    .card-title.center-align.white-text
+                        div
+                            a.white-text(href="javascript://")
+                                i.material-icons.popInOutIcon call_made
+                            | 4250 AH1 DISP
+                    a.white-text(href="javascript://")
+                        i.material-icons skip_previous
+                    a.white-text(href="javascript://")
+                        i.material-icons skip_next
+                    .right
+                        a.white-text(href="javascript://")
+                            i.minimizePanel.material-icons(style="position: absolute; top: 8px; right: 48px;") remove
+                        a.white-text(href="javascript://")
+                            i.material-icons zoom_out_map
+                        a.white-text(href="javascript://")
+                            i.material-icons close
+                img(src="/img/test/display3.png", style="height: 100%; width: 100%;")                    
+
             #gplPanel.card-panel.dti-card-panel.blue-grey.z-depth-2.activeCard.hide(style="left: 155px; top: 155px;")
                 .card-toolbar
                     .card-title.center-align.white-text
@@ -205,7 +466,7 @@ html
                             i.material-icons close
                 img(src="/img/test/sequence.png", style="height: 100%; width: 100%;")
 
-            #newPanel.card-panel.dti-card-panel.blue-grey.z-depth-2.hide(style="left: 210px; top: 205px; width: 600px;")
+            #newPanel.card-panel.dti-card-panel.blue-grey.hide.z-depth-2(style="left: 210px; top: 205px; width: 740px; height: 500px;")
                 .card-toolbar
                     .card-title.center-align.white-text
                         div
@@ -223,47 +484,60 @@ html
                             i.material-icons zoom_out_map
                         a.white-text(href="javascript://")
                             i.material-icons close
-                .grey.lighten-3.white-text
-                    .row
-                        .col.s9.staticSearch
-                            form
-                                 .input-field
-                                    input#search1(type='search', required='', placeholder='search')
-                                    label(for='search1')
-                                        i.material-icons search
-                                    i.material-icons close
-                        .col.s3(style="text-align: center; margin-top: 15px;")
-                            a.valign.blue-grey-text(href="javascript://")
-                                i.material-icons explore
-                                div Navigator
-                    .row
-                        .col.s6
-                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
-                                i.material-icons.center-align device_hub
-                                span Sequence
-                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
-                                i.material-icons.center-align tv
-                                span Display
-                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
-                                i.material-icons.center-align notifications
-                                span Alarms
-                            span.dti-menu-tile.card-panel.z-depth-2.blue-grey
-                                i.material-icons.center-align assignment
-                                span Reports
+                .card-body.white
+                    .white.lighten-3.white-text
+                        .row
+                            .col.s9.staticSearch2
+                                form
+                                     .input-field
+                                        input#search1(type='search', required='', placeholder='search')
+                                        label(for='search1')
+                                            i.material-icons search
+                                        i.material-icons close
+                            .col.s3(style="text-align: center; margin-top: 15px;")
+                                a.valign.blue-grey-text(href="javascript://")
+                                    i.material-icons explore
+                                    div Navigator
+                        .row
+                            .col.s6.recentItems2
+                                .col.s12.blue-grey-text Recent Items
+                                .collection
+                                    a.blue-grey-text.collection-item(href="javascript://")
+                                        span.title 4200 PARKING LOT LIGHTS
+                                            i.left.material-icons device_hub
+                                    a.blue-grey-text.collection-item(href="javascript://")
+                                        span.title 4200 CRU1 DISP
+                                            i.left.material-icons tv
+                                    a.blue-grey-text.collection-item(href="javascript://")
+                                        span.title DEVICE ADDRESS REPORT
+                                            i.left.material-icons assignment
+                                .mainSettings
+                                    .col.s12.blue-grey-text Favorites
+                                    .collection
+                                        a.blue-grey-text.collection-item(href="javascript://")
+                                            span.title 4200 PARKING LOT LIGHTS
+                                                i.left.material-icons device_hub
+                                        a.blue-grey-text.collection-item(href="javascript://")
+                                            span.title 4200 CRU1 DISP
+                                                i.left.material-icons tv
+                                        a.blue-grey-text.collection-item(href="javascript://")
+                                            span.title DEVICE ADDRESS REPORT
+                                                i.left.material-icons assignment                                        
 
-                        .col.s6.recentItems
-                            .collection.z-depth-2
-                                .recentHeader.collection-item.blue-grey-text
-                                    .center-align Recent Items
-                                a.blue-grey-text.collection-item(href="javascript://")
-                                    span.title 4200 PARKING LOT LIGHTS
-                                        i.left.material-icons device_hub
-                                a.blue-grey-text.collection-item(href="javascript://")
-                                    span.title 4200 CRU1 DISP
-                                        i.left.material-icons tv
-                                a.blue-grey-text.collection-item(href="javascript://")
-                                    span.title DEVICE ADDRESS REPORT
-                                        i.left.material-icons assignment
+                            .col.s6
+                                .col.s12.blue-grey-text Open...
+                                span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                                    i.material-icons.center-align device_hub
+                                    span Sequence
+                                span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                                    i.material-icons.center-align tv
+                                    span Display
+                                span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                                    i.material-icons.center-align notifications
+                                    span Alarms
+                                span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                                    i.material-icons.center-align assignment
+                                    span Reports
 
                 //- .card.blue-grey.z-depth-2
                 //-     .card-content.white-text
@@ -273,14 +547,66 @@ html
                 //-     .card-action.card-action-right
                 //-         a(href='javascript://') Cancel
                 //-         a(href='javascript://') Confirm
-        footer
+            div.center(style='z-index: 100; background-color: #303030;display: block; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);')
+                span(style='margin-left: 10px; color: #ffffff;') NOT PART OF POC---Versions: 
+                a(href='infoscan.html', style='margin-left: 10px;') Version 1
+                a(href='infoscan2.html', style='margin-left: 10px;') Version 2
+                a(href='infoscan3.html', style='margin-left: 10px;') Version 3
+                a(href='infoscan4.html', style='margin-left: 10px;') Version 4
+            //- .footer.grey.darken-4.white-text.z-depth-1
+                //- i.material-icons.green-text check_circle
+                //- i.material-icons.red-text highlight_off
+                span.shadow.z-depth-1.circle.green.darken-1(style="width: 20px; height: 20px;", title="System Status: Online")
+                //- span.shadow.z-depth-1.circle.red.darken-1(style="width: 20px; height: 20px;")
+                #clock
+                img.dorsett-logo(src='/img/Dorsett_icon.png')
+                //- .diBtn
+                //-     .fixed-action-btn
+                //-         a.btn-floating
+                //-             img.dorsett-logo(src='/img/Dorsett_icon.png')
+                //-         ul
+                //-             li
+                //-                 a.btn-floating.red
+                //-                     i.material-icons insert_chart
+
+    script#windowTemplate(type='text/html')
+        .card-panel.dti-card-panel.z-depth-2.lighten-3
+            .card-toolbar.blue-grey
+                .card-title.center-align.white-text
+                    div
+                        a.white-text(href="javascript://")
+                            i.material-icons.popInOutIcon call_made
+                        | #[span(data-bind="text: title")]
+                a.white-text(href="javascript://")
+                    i.material-icons skip_previous
+                a.white-text(href="javascript://")
+                    i.material-icons skip_next
+                .right
+                    a.white-text(href="javascript://")
+                        i.minimizePanel.material-icons(style="position: absolute; top: 8px; right: 24px;") remove
+                    //- a.white-text(href="javascript://")
+                    //-     i.material-icons zoom_out_map
+                    a.white-text(href="javascript://")
+                        i.material-icons close
+            //- img(src="/img/test/display.png", style="height: 100%; width: 100%;")
+            iframe.card-body
+
+    script#taskbarButtonTemplate(type='text/html')
+        li.taskbarItem.active
+            //- div
+            a#displayIcon.taskbarButton.testHover.hoverButton2.waves-effect(href='javascript://', data-menu='displayTooltip', data-position='bottom', data-tooltip='Displays', data-delay='10')
+                i(data-bind="text: iconText, css: iconClass")
+                span(data-bind="text: title")
 
     script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
     script(type='text/javascript', src='/js/lib/jquery-ui.js')
+    script(type='text/javascript', src='/js/lib/jquery.contextMenu.min.js')
     //- script(type='text/javascript', src='/js/lib/config.js')
     script(type='text/javascript', src='/js/lib/moment.js')
+    script(type='text/javascript', src='/js/lib/store.min.js')
+    script(type='text/javascript', src='/js/lib/jstree.js')
     //- script(type='text/javascript', src='/js/lib/typeahead.bundle.js')
-    //- script(type='text/javascript', src='/js/lib/knockout-3.2.0.js')
+    script(type='text/javascript', src='/js/lib/knockout-3.2.0.js')
     //- script(type='text/javascript', src='/js/lib/socket.io.js')
     script(type='text/javascript', src='/js/lib/materialize.js')
     script(type='text/javascript', src='/js/v2/home.js')

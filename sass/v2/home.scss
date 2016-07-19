@@ -59,41 +59,15 @@ nav {
     }
 
     .nav-wrapper {
-        .taskbarItem {
+        ul.center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        ul.right .taskbarItem:last-child {
+            margin-right: 8px;
             margin-left: 4px;
-            margin-right: 4px;
-            height: $navbarHeight;
-
-            a {
-                max-width: 200px;
-                height: $navbarHeight;
-            }
-
-            .input-field {
-                label {
-                    right: 1em;
-                    left: auto;
-
-                    &.active {
-                        i {
-                            display: none;
-                        }
-                    }
-                }
-
-                > i {
-                    display: none;
-
-                    &.active {
-                        display: block;
-                    }
-                }
-
-                input[type=search] {
-                    padding-right: 4rem;
-                    padding-left: 0;
-                }
-            }
         }
 
         .userInfo {
@@ -101,6 +75,73 @@ nav {
                 height: $navbarHeight - 8px;
                 margin-right: 4px;
             }
+        }
+    }
+}
+
+.taskbarItem {
+    height: $navbarHeight;
+    margin-left: 2px;
+    margin-right: 2px;
+
+    .iconOnly i {
+        margin-top: 12px;
+    }
+
+    .taskbarButton {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        i {
+            font-size: 24px;
+            line-height: 24px;
+            height: 24px;
+
+            img {
+                height: 28px;
+            }
+        }
+
+        span {
+            height: 24px;
+            line-height: 24px;
+        }
+    }
+
+    a {
+        // max-width: 200px;
+        height: $navbarHeight;
+    }
+
+    .input-field {
+        label {
+            right: 0;
+            left: auto;
+
+            i {
+                cursor: pointer;
+            }
+
+            &.active {
+                i {
+                    display: none;
+                }
+            }
+        }
+
+        > i {
+            display: none;
+
+            &.active {
+                display: block;
+            }
+        }
+
+        input[type=search] {
+            padding-right: 4rem;
+            padding-left: 0;
         }
     }
 }
@@ -129,6 +170,26 @@ nav {
 
 .staticSearch {
     .input-field {
+        input {
+            border-bottom: 1px solid #9e9e9e !important;
+        }
+
+        label.active {
+            transform: translateY(0%);
+        }
+
+        i {
+            top: 8px !important;
+        }
+    }
+}
+
+.staticSearch2 {
+    .input-field {
+        input {
+            border-bottom: 1px solid #9e9e9e !important;
+        }
+
         label.active {
             transform: translateY(0%);
         }
@@ -189,6 +250,7 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
 
 .dti-card-panel {
     // min-width: 300px;
+    // opacity: 0;
     width: 50%;
     padding: 0;
     display: flex;
@@ -222,6 +284,12 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
         }
     }
 
+    .card-body {
+        height: 100%;
+        width: 100%;
+        border: 0;
+    }
+
     .card-action-right {
         padding-right: 0;
         text-align: right;
@@ -230,7 +298,10 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
 
 .dti-menu-tile {
     width: 100px;
-    margin-right: 14px;
+    margin: 0 5px 5px 0;
+    padding-left: 0;
+    padding-right: 0;
+    // font-size: .9em;
 
     cursor: pointer;
     text-align: center;
@@ -241,43 +312,59 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     }
 }
 
-.recentItems {
-    > .collection {
-        > .recentHeader {
-            font-size: 1.2rem;
-        }
+.card-panel-custom-icon {
+    padding-top: 14px;
 
-        > .collection-item {
-
-            // & :not(.active) {
-            //     background-color: #c3c3c3 !important;
-            // }
-
-            .title {
-                i {
-                    font-size: 20px;
-                }
-            }
-        }
+    img {
+        height: 24px;
     }
+}
 
-    .collection-item.avatar {
-        .circle {
-            // background-color:
+
+.recentItems2 {
+    .collection-item {
+
+        .title {
+
+            i {
+                font-size: 20px;
+            }
         }
     }
 }
 
+.mainSettings {
+    position: absolute;
+    bottom: 0;
+    width: 40%;
+}
+
+.startButtonContainer {
+    height: $navbarHeight;
+}
+
+$startmenuWidth: 550px;
+$startmenuGutter: 15px;
+
 #startmenu {
-    width: 600px;
+    width: $startmenuWidth + $startmenuGutter;
     min-height: 200px;
     z-index: 2;
     position: absolute;
     top: $navbarHeight;
     left: 0;
+    padding: 5px;
+    display: none;
+    opacity: 0;
+}
 
-    > div {
-        height: 100%;
+.startmenuBody {
+    display: flex;
+    flex-wrap: wrap;
+
+    .tileList {
+        width: calc(#{$startmenuWidth} * .6);
+        // margin-right: $startmenuGutter;
     }
 
     .dti-menu-tile {
@@ -285,18 +372,80 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     }
 }
 
+#searchBox {
+    display: none;
+    opacity: 0;
+    width: 400px;
+    position: absolute;
+    left: 0;
+    top: $navbarHeight;
+
+    i {
+        top: 8px;
+    }
+
+    input {
+        width: 340px;
+    }
+}
+
+.recentItems {
+    width: calc(#{$startmenuWidth} *.4);
+
+
+    a {
+        display: block;
+        position: relative;
+        padding-left: 22px;
+        margin-bottom: 5px;
+
+        &:hover {
+            color: lighten($blueGrey, 25%) !important;
+        }
+    }
+
+    .recentHeader {
+        font-size: 1.2rem;
+    }
+
+    .collection-item {
+
+        .title {
+            i {
+                font-size: 20px;
+                position: absolute;
+                left: 0;
+            }
+        }
+    }
+}
+
+.settings {
+    width: 100%;
+    margin-top: 10px;
+    // position: absolute;
+    // bottom: 5px;
+    // right: 5px;
+
+    .branding {
+        float: right;
+    }
+}
+
 .testHover {
     position: relative;
 }
 
+$hoverMenuWidth: 240px;
+
 .hoverMenu {
-    width: 200px;
+    width: $hoverMenuWidth;
     min-height: 10px;
     position: absolute;
     top: 48px;
-    opacity: 0;
     z-index: 5;
     display: none;
+    opacity: 0;
 
     .collection {
         margin: 0;
@@ -310,8 +459,9 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
             a {
                 display: flex;
                 align-items: center;
-                padding: 5px;
-                width: 200px;
+                padding: 0 10px;
+                width: $hoverMenuWidth;
+                height: 36px;
                 // position: absolute;
                 // left: -8px;
 
@@ -323,7 +473,7 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
                     margin-right: 8px;
 
                     color: #fff;
-                } 
+                }
 
                 // > span {
                 //     margin-left: 18px;
@@ -421,6 +571,134 @@ footer {
     }
 }
 
+.slideDownMenu {
+    z-index: 5;
+    position: absolute;
+    top: $navbarHeight;
+    left: 60px;
+    // display: flex;
+    display: none;
+    padding: 10px;
+    opacity: 0;
+
+    .actionList {
+        float: left;
+        margin-right: 15px;
+
+        .action {
+            display: flex;
+            margin-bottom: 2px;
+
+            i {
+                font-size: 1.4em;
+                margin-right: 5px;
+            }
+
+            &:hover {
+                color: lighten($blueGrey, 30%) !important;
+            }
+        }
+    }
+
+    .items {
+        float: right;
+    }
+
+    .itemsHeader {
+        padding-left: 15px;
+    }
+
+    .item {
+        height: 150px;
+        display: inline-block;
+        margin: 0 15px;
+        border: 1px solid $blueGrey;
+
+        .itemTitle {
+            text-align: center;
+            border-bottom: 1px solid $cardTitleBorder;
+        }
+
+        .itemBody {
+            img {
+                max-height: 124px;
+            }
+        }
+
+        &:hover {
+            border-color: lighten($blueGrey, 15%);
+        }
+    }
+}
+
+#alarmIcon {
+    .alarmCount {
+        position: absolute;
+        top: 32px;
+        left: 42px;
+        background-color: #e53935;
+        line-height: 12px;
+        color: #fff;
+        padding: 0 1px 0 0;
+        margin: 0;
+        width: 12px;
+        min-width: 0;
+        right: 0;
+        font-weight: 500;
+        font-size: .8rem;
+        border-radius: 2px;
+    }
+}
+
+#alarmDropdown {
+    position: absolute;
+    left: 40%;
+    top: $navbarHeight;
+    z-index: 5;
+    padding: 10px;
+    width: 650px;
+    opacity: 0;
+    display: none;
+
+    .alarmHeader {
+        font-size: 1.4em;
+
+        i {
+            font-size: 1.5em;
+        }
+    }
+
+    .alarmBody {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+
+        .row {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            width: 100%;
+            margin: 2px 0;
+        }
+
+        .ack {
+            background-color: $blueGrey;
+            border-radius: 2px;
+            padding: 0;
+            text-align: center;
+
+            a {
+                color: #fff;
+                width: 100%;
+            }
+
+            &:hover {
+                background-color: lighten($blueGrey, 10%);
+            }
+        }
+    }
+}
+
 #openItems {
     margin-left: -20px;
     margin-right: 0;
@@ -429,6 +707,7 @@ footer {
 .openItemList {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
 
     .item {
         // max-width: 200px;
@@ -450,26 +729,50 @@ footer {
         }
 
         &:hover {
-            border-color: lighten($blueGrey, 15%);
+            // border-color: lighten($blueGrey, 15%);
         }
     }
 }
 
-#displayIcon {
-    text-align: center;
-    padding: 0 16px;
-    margin: -8px 4px 0 0;
 
-    i {
-        font-size: 24px;
-        line-height: 24px;
-        height: 24px;
-        display: inline-block;
+#pointID {
+    // width: 75%;
+
+    // table {
+    //     width: 75%;
+    // }
+
+    .sectionHeader {
+        font-size: 1.4rem;
+        border-bottom: 1px solid lighten($blueGrey, 20%);
     }
 
-    span {
-        display: block;
-        height: 24px;
-        margin-top: -35px;
+    .userDefined {
+        i {
+            color: $blueGrey;
+            margin-top: 4px;
+        }
+    }
+
+    td {
+        padding: 0;
+    }
+
+    .row {
+        display: flex;
+        align-items: center;
+
+        > .col {
+            display: flex;
+            align-items: center;
+        }
+
+        &:not(.sectionHeader) {
+            margin-bottom: 5px;
+        }
+
+        > .input-field {
+            margin-top: .1rem;
+        }
     }
 }
