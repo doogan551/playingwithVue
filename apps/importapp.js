@@ -196,32 +196,28 @@ function importUpdate() {
 											updateReferences(db, point, function(err) {
 												if (err)
 													logger.info("updateReferences", err);
-												updatePointInstances(point, function(err) {
+												updateTimeZones(point, function(err) {
 													if (err)
-														logger.info("updatePointInstances", err);
-													updateTimeZones(point, function(err) {
+														logger.info("updateTimeZones", err);
+													updateModels(db, point, function(err) {
 														if (err)
-															logger.info("updateTimeZones", err);
-														updateModels(db, point, function(err) {
+															logger.info("updateModels", err);
+														updateDevices(point, function(err) {
 															if (err)
-																logger.info("updateModels", err);
-															updateDevices(point, function(err) {
+																logger.info("updateDevices", err);
+															updateAlarmMessages(point, function(err) {
 																if (err)
-																	logger.info("updateDevices", err);
-																updateAlarmMessages(point, function(err) {
+																	logger.info("updateAlarmMessages", err);
+																addBroadcastPeriod(point, function(err) {
 																	if (err)
-																		logger.info("updateAlarmMessages", err);
-																	addBroadcastPeriod(point, function(err) {
+																		logger.info("addBroadcastPeriod", err);
+																	updateTrend(point, function(err) {
 																		if (err)
-																			logger.info("addBroadcastPeriod", err);
-																		updateTrend(point, function(err) {
+																			logger.info("updateTrend", err);
+																		updatePoint(db, point, function(err) {
 																			if (err)
-																				logger.info("updateTrend", err);
-																			updatePoint(db, point, function(err) {
-																				if (err)
-																					logger.info("updatePoint", err);
-																				cb(null);
-																			});
+																				logger.info("updatePoint", err);
+																			cb(null);
 																		});
 																	});
 																});
@@ -538,7 +534,6 @@ function changeUpis(callback) {
 				lowest++;
 			}
 			doc._newUpi = newUpi;
-			doc['Point Instance'].Value = newUpi;
 			doc._oldUpi = oldId;
 			if (newUpi % 200 === 0) {
 				console.log(newUpi);
@@ -917,7 +912,6 @@ function convertScheduleEntries(db, callback) {
 	// get _id from upi's collection
 	// set _parentUpi to SE's _schedUPI
 	// set name1 "Schedule Entry", name2 = _id
-	// set point instance.value to _id
 	// if _parentUpi is 0, create new scedule point with control point's value for id, name from Point Name
 	// if name is 3 or fewer segments, the next available segment is "Segment", if 4 segments, last segment is "XYZ Segment"
 	var scheduleEntryTemplate = Config.Templates.getTemplate("Schedule Entry");
@@ -960,7 +954,6 @@ function convertScheduleEntries(db, callback) {
 				/*scheduleEntryTemplate._name1 = scheduleEntryTemplate.name1.toLowerCase();
 				scheduleEntryTemplate._name2 = scheduleEntryTemplate.name2.toLowerCase();
 				scheduleEntryTemplate._Name = scheduleEntryTemplate.Name.toLowerCase();*/
-				scheduleEntryTemplate["Point Instance"].Value = scheduleEntryTemplate._id;
 
 				scheduleEntryTemplate["Control Point"] = oldScheduleEntry["Control Point"];
 				scheduleEntryTemplate["Host Schedule"].Value = oldScheduleEntry.hostEntry;
@@ -1428,7 +1421,7 @@ function updateGPLBlocks(point, callback) {
 }
 
 function updateTimeZones(point, cb) {
-	if (point['Point Type'].Value === 'Device') {
+	/*if (point['Point Type'].Value === 'Device') {
 		var timezones = Config.Enums['Time Zones'];
 
 		point['Time Zone'] = Config.Templates.getTemplate("Device")["Time Zone"];
@@ -1439,7 +1432,7 @@ function updateTimeZones(point, cb) {
 				point['Time Zone'].Value = prop;
 			}
 		}
-	}
+	}*/
 	cb(null);
 }
 
@@ -1479,23 +1472,6 @@ function updateCfgRequired(point, callback) {
 	if (["Schedule", "Schedule Entry"].indexOf(point["Point Type"].Value) > -1) {
 		point._cfgRequired = false;
 	}
-	callback(null);
-}
-
-function updatePointInstances(point, callback) {
-	//logger.info("updatePointInstances");
-
-	point["Point Instance"].Value = point._id;
-	/*db.collection(pointsCollection).update({
-		_id: point._id
-	}, {
-		$set: {
-			"Point Instance.Value": point._id
-		}
-	}, function(err, result) {*/
-
-
-	//});
 	callback(null);
 }
 
@@ -1680,86 +1656,6 @@ function updateSensorPoints(db, point, callback) {
 		callback(null);
 	}
 
-}
-
-function updateRefPointInst(db, callback) {
-	//logger.info("updateRefPointInst");
-
-	db.collection(pointsCollection).find({}, {
-		_id: 1
-	}).toArray(function(err, points) {
-		logger.info("Points returned", points.length);
-		async.forEachSeries(points, function(point, cb) {
-			upi = point._id;
-			refQuery = {
-				$or: [{
-					'Alarm Adjust Point.Value': upi
-				}, {
-					'Alarm Display Point.Value': upi
-				}, {
-					'Control Point.Value': upi
-				}, {
-					'Device Point.Value': upi
-				}, {
-					'Dry Bulb Point.Value': upi
-				}, {
-					'Feedback Point.Value': upi
-				}, {
-					'Humidity Point.Value': upi
-				}, {
-					'Input Point 1.Value': upi
-				}, {
-					'Input Point 2.Value': upi
-				}, {
-					'Input Point 3.Value': upi
-				}, {
-					'Input Point 4.Value': upi
-				}, {
-					'Input Point 5.Value': upi
-				}, {
-					'Interlock Point.Value': upi
-				}, {
-					'Mixed Air Point.Value': upi
-				}, {
-					'Monitor Point.Value': upi
-				}, {
-					'Outside Air Point.Value': upi
-				}, {
-					'Remote Unit Point.Value': upi
-				}, {
-					'Return Air Point.Value': upi
-				}, {
-					'Select Input.Value': upi
-				}, {
-					'Setpoint Input.Value': upi
-				}, {
-					'Shutdown Point.Value': upi
-				}, {
-					'Sensor Point.Value': upi
-				}, {
-					'Trigger Point.Value': upi
-				}]
-			};
-			db.collection(pointsCollection).find(refQuery).toArray(function(err, refs) {
-				async.forEach(refs, function(ref, refCB) {
-					db.collection(pointsCollection).update({
-						_id: ref._id
-					}, {
-						$set: {
-							"Point Instance.Value": upi
-						}
-					}, function(err, result) {
-						refCB(err);
-					});
-				}, function(err) {
-					cb(err);
-				});
-
-			});
-		}, function(err) {
-			callback(err);
-		});
-	});
 }
 
 function formatPoints(limit, skip, db, formatCB) {
@@ -2258,7 +2154,6 @@ function updateDevices(point, callback) {
 		point["Serial Number"] = Config.Templates.getTemplate("Device")["Serial Number"];
 		point["Device Address"] = Config.Templates.getTemplate("Device")["Device Address"];
 		point["Network Segment"] = Config.Templates.getTemplate("Device")["Network Segment"];
-		point['Trend Interval'] = Config.Templates.getTemplate("Device")["Trend Interval"];
 
 		var propertyNetwork = point["Uplink Port"].Value + " Network",
 			propertyAddress = point["Uplink Port"].Value + " Address";
@@ -2270,14 +2165,6 @@ function updateDevices(point, callback) {
 			point[prop] = Config.Templates.getTemplate('Device')[prop];
 		}
 
-		point["Ethernet IP Port"].Value = 47808;
-		point["Ethernet IP Port"].isReadOnly = true;
-		point["Ethernet IP Port"].isDisplayable = false;
-		point["Downlink IP Port"].Value = 47808;
-		point["Downlink IP Port"].isReadOnly = true;
-		point["Downlink IP Port"].isDisplayable = false;
-		point["Downlink Broadcast Delay"].Value = 0;
-
 		delete point["Device Address"].Min;
 		delete point["Device Address"].Max;
 
@@ -2287,9 +2174,6 @@ function updateDevices(point, callback) {
 	} else if (point["Point Type"].Value === "Remote Unit") {
 		point["Device Address"].ValueType = 2;
 		point["Device Address"].Value = point["Device Address"].Value.toString();
-
-		delete point["Device Address"].Min;
-		delete point["Device Address"].Max;
 
 		point["Device Status"].Value = "Stop Scan";
 		point["Device Status"].eValue = 66;

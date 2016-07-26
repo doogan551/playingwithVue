@@ -2904,11 +2904,6 @@
                 "valueType": "HourMin",
                 "reportEnable": true
             },
-            "Point Instance": {
-                "enum": 159,
-                "valueType": "Unsigned",
-                "reportEnable": true
-            },
             "Point Refs": {
                 "enum": 277,
                 "valueType": "Array",
@@ -3805,12 +3800,6 @@
             "_name3": "",
             "_name4": "",
             "_Name": "",
-            "Point Instance": {
-                "isDisplayable": true,
-                "isReadOnly": true,
-                "ValueType": 4,
-                "Value": 0
-            },
             "Point Type": {
                 "isDisplayable": true,
                 "isReadOnly": true,
@@ -4098,9 +4087,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 0,
-                    "Max": 65534,
-                    "Min": 0
+                    "Value": 0
                 },
                 "Port 1 Protocol": {
                     "isDisplayable": true,
@@ -4133,9 +4120,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 0,
-                    "Max": 65534,
-                    "Min": 0
+                    "Value": 0
                 },
                 "Port 2 Protocol": {
                     "isDisplayable": true,
@@ -4168,9 +4153,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 0,
-                    "Max": 65534,
-                    "Min": 0
+                    "Value": 0
                 },
                 "Port 3 Protocol": {
                     "isDisplayable": true,
@@ -4203,9 +4186,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 0,
-                    "Max": 65534,
-                    "Min": 0
+                    "Value": 0
                 },
                 "Port 4 Protocol": {
                     "isDisplayable": true,
