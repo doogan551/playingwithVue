@@ -2582,9 +2582,10 @@ var reportsViewModel = function () {
                 }
 
                 if (!self.activeRequestDataDrawn()) {
-                    self.activeRequestDataDrawn(true);  //
                     console.log('. . . . . . . . . . .   requested data has been rendered   . . . . . . . . .');
-                    alert("export to PDF now");
+                    setTimeout(function () {
+                        self.activeRequestDataDrawn(true);
+                    }, 1000);
                 }
             });
 
