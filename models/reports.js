@@ -638,7 +638,7 @@ module.exports = Rpt = {
                 } else {
                     return cb(null, {
                         id: data.id,
-                        isOld: result["Report Config"] !== undefined,
+                        scheduled: data.scheduled,
                         point: JSON.stringify(result),
                         title: result.Name
                     }, result);

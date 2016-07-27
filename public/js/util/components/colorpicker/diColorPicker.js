@@ -190,7 +190,7 @@ var CustomColorsPicker = function ($colorPickerDiv, callback, currentColor, call
                 getdiPickerWidth = function (baseWidth) {
                     var answer = 0;
                     if (useSmallPalette) {
-                        answer = (verticalPalette ? baseWidth + 40 : baseWidth);
+                        answer = (verticalPalette ? baseWidth + 48 : baseWidth);
                     } else {
                         answer = (verticalPalette ? baseWidth + 40 : baseWidth);
                     }
@@ -240,17 +240,18 @@ var CustomColorsPicker = function ($colorPickerDiv, callback, currentColor, call
                 $colorPickerNode.css("width", getdiPickerWidth(pickerWidth));
                 $colorPickerNode.css("height", getdiPickerHeight(pickerHeight));
                 $colorPickerNode.css("display", "flex");
-                $($colorPickerInputs[0]).css("width", "60"); // hex color field
-                $($colorPickerInputs[1]).css("width", "33"); // red color field
-                $($colorPickerInputs[2]).css("width", "33"); // green color field
-                $($colorPickerInputs[3]).css("width", "33"); // blue color field
+                $($colorPickerInputs[0]).css("width", "58"); // hex color field
+                $($colorPickerInputs[1]).css("width", "31"); // red color field
+                $($colorPickerInputs[2]).css("width", "31"); // green color field
+                $($colorPickerInputs[3]).css("width", "31"); // blue color field
             }
         };
-    if (currentColor.match('#')) {
-        currentColor = currentColor.substring(1);
-    }
 
     self.render = function () {
+        if (currentColor.match('#')) {
+            currentColor = currentColor.substring(1);
+        }
+
         if (listOfCustomColorCodes.length > 0) {
             drawColorPickerDiv();
         } else {
