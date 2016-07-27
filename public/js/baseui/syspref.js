@@ -1715,6 +1715,7 @@ var alarmMessageViewModel = function() {
         };
 
     self.displayName = 'Alarm Messages';
+    self.dirty = ko.observable(false);
     self.hasError = ko.observable(false);
     self.activeDataRequest = ko.observable(true);
     self.alarmTemplate = ko.observable("");

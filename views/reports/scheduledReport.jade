@@ -1,0 +1,15 @@
+doctype html
+html.direports
+	head
+		title #{title}
+		meta(charset="utf-8")
+		include scheduledReportsScripts
+	body
+block content
+	#window
+		h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
+		table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
+			tfoot.tableFooter
+				tr(data-bind="foreach: listOfColumns()")
+					td.strong(data-bind="attr: { colindex:  $index() }")
+	include footer
