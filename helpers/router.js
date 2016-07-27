@@ -18,14 +18,15 @@ module.exports = function(controllers) {
 
   router.use('/', controllers.workspace);
   router.use('/inbound', controllers.inbound);
+  router.use('/sass', controllers.sass);
 
   // ALL ROUTES BELOW THIS WILL REQUIRE AUTHENTICATION
   router.use(function(req, res, next) {
-    // if (req.isAuthenticated()) {
+    if (req.isAuthenticated()) {
       return next();
-    // }
+    }
 
-    // res.redirect('/');
+    res.redirect('/');
   });
 
   router.use('/', controllers.loadviews);
@@ -55,7 +56,6 @@ module.exports = function(controllers) {
   router.use('/pointlookup', controllers.pointlookup);
   router.use('/reports1', controllers.reports);
   router.use('/report', controllers.reports);
-  router.use('/sass', controllers.sass);
   router.use('/thumbnail', controllers.thumbnails);
   router.use('/toolbag', controllers.toolbag);
 

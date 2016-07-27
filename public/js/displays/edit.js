@@ -357,6 +357,9 @@ displays = $.extend(displays, {
                 }
 
                 window.displayJson = display;
+                window.pointType = display['Point Type'].Value;
+                window.point = display;
+
                 $.ajax({
                     url: '/displays/getDisplayInfo/',
                     method: 'POST',

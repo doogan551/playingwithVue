@@ -223,6 +223,11 @@ body {
     overflow: hidden;
 }
 
+.hidden {
+    display: none;
+    opacity: 0;
+}
+
 .dorsett-logo {
     height: $navbarHeight * .75;
     width: $navbarHeight * .75;
@@ -234,6 +239,7 @@ main {
     flex-grow: 1;
     padding: .5rem;
     max-height: calc(100vh - #{$navbarHeight});
+    position: relative;
 }
 
 .noHover:hover {
@@ -257,6 +263,10 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     flex-direction: column;
     position: absolute !important;
     margin: 0;
+
+    .progress {
+        margin: 0;
+    }
 
     .card-toolbar {
         cursor: move;
@@ -294,6 +304,14 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
         padding-right: 0;
         text-align: right;
     }
+}
+
+.windowMask {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
 }
 
 .dti-menu-tile {
@@ -351,7 +369,7 @@ $startmenuGutter: 15px;
     min-height: 200px;
     z-index: 2;
     position: absolute;
-    top: $navbarHeight;
+    top: 0;
     left: 0;
     padding: 5px;
     display: none;
@@ -378,10 +396,11 @@ $startmenuGutter: 15px;
     width: 400px;
     position: absolute;
     left: 0;
-    top: $navbarHeight;
+    top: 0;
 
     i {
         top: 8px;
+        color: $blueGrey;
     }
 
     input {
@@ -574,8 +593,8 @@ footer {
 .slideDownMenu {
     z-index: 5;
     position: absolute;
-    top: $navbarHeight;
-    left: 60px;
+    // top: 0;
+    // left: 60px;
     // display: flex;
     display: none;
     padding: 10px;
@@ -614,12 +633,21 @@ footer {
         margin: 0 15px;
         border: 1px solid $blueGrey;
 
+        i.closeIcon {
+            position: absolute;
+            right: 24px;
+            top: 32px;
+        }
+
         .itemTitle {
             text-align: center;
             border-bottom: 1px solid $cardTitleBorder;
+            height: 23px;
         }
 
         .itemBody {
+            height: calc(100% - 24px);
+
             img {
                 max-height: 124px;
             }
@@ -653,7 +681,7 @@ footer {
 #alarmDropdown {
     position: absolute;
     left: 40%;
-    top: $navbarHeight;
+    top: 0;
     z-index: 5;
     padding: 10px;
     width: 650px;
@@ -775,4 +803,22 @@ footer {
             margin-top: .1rem;
         }
     }
+}
+
+
+#login {
+    height: 100%;
+    width: 100%;
+}
+
+
+/* label focus color */
+.input-field input:focus + label {
+    color: $blueGrey !important;
+}
+
+/* label underline focus color */
+input:focus {
+    border-bottom: 1px solid $blueGrey !important;
+    box-shadow: 0 1px 0 0 $blueGrey !important;
 }

@@ -15,7 +15,7 @@ var gpl = {
     editModeOffset: 77,
     scaleValue: 1,
     defaultLoopDelay: 10,
-    resizeDelay: 150,
+    resizeDelay: 250,
     itemIdx: 0,
     editVersionStaleTimeout: 1000 * 60 * 5, //5 minutes
     gridSize: 1, //setOffset needs fixing to properly accomodate grid size > 1
@@ -265,6 +265,8 @@ var gpl = {
         gpl._origPoint = $.extend(true, {}, window.gplData.point);
 
         gpl.point = gpl.convertBooleanStrings(gpl.point);
+        window.point = gpl.point;
+        window.pointType = gpl.point['Point Type'].Value;
         gpl.devicePointRef = gpl.deStringObject(gpl.point['Point Refs'][0]);
 
         addFn(function (cb) {
@@ -9019,13 +9021,13 @@ gpl.Manager = function () {
                 }
             }
         }, {
-            //     event: 'resize',
-            //     type: 'DOM',
-            //     window: true,
-            //     handler: function() {
-            //         managerSelf.resizeCanvas(window.innerWidth, window.innerHeight);
-            //     }
-            // }, {
+            event: 'resize',
+            type: 'DOM',
+            window: true,
+            handler: function() {
+                managerSelf.resizeCanvas(window.innerWidth, window.innerHeight);
+            }
+        }, {
             event: 'keydown',
             handler: function (event) {
                 var objects,

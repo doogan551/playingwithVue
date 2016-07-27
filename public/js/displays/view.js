@@ -147,6 +147,8 @@ $(document).on('pageinit', function() {
                 c;
 
             window.displayJson = response;
+            window.pointType = response['Point Type'].Value;
+            window.point = response;
 
             for(c=0; c<list.length; c++) {
                 upiList.push(list[c].upi);

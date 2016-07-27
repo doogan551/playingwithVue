@@ -61,7 +61,7 @@ router.get('/gifs/:fname/:frame', function(req, res, next) {
 });
 // Checked
 router.get('/view/:upoint', function(req, res, next) {
-	res.render('displays/index.jade', {
+	res.render('displays/view.jade', {
 		upi: req.params.upoint
 	});
 });

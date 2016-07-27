@@ -1,25 +1,46 @@
 var displays = window.displays || {};
 
-var ActionButton = function (config) {
-    var codes = [
-            {text: 'No Action (useless)'},
-            {text: 'History Log Plot – No longer supported'},
-            {text: 'History Log Report'},
-            {text: 'History Log Export'},
-            {text: 'Totalizer Plot'},
-            {text: 'Totalizer Report'},
-            {text: 'Totalizer Export'},
-            {text: 'MultiState Value Command', pointType: 'MultiState Value'},
-            {text: 'Program Start'},
-            {text: 'Analog Output Command', pointType: 'Analog Output'},
-            {text: 'Analog Value Command', pointType: 'Analog Value'},
-            {text: 'Binary Output Command', pointType: 'Binary Output'},
-            {text: 'Binary Value Command', pointType: 'Binary Value'},
-            {text: 'Report Display'},
-            {text: 'Verification Report'},
-            {text: 'Browse Verify Reports'},
-            {text: 'Data Report'}
-        ],
+var ActionButton = function(config) {
+    var codes = [{
+            text: 'No Action (useless)'
+        }, {
+            text: 'History Log Plot – No longer supported'
+        }, {
+            text: 'History Log Report'
+        }, {
+            text: 'History Log Export'
+        }, {
+            text: 'Totalizer Plot'
+        }, {
+            text: 'Totalizer Report'
+        }, {
+            text: 'Totalizer Export'
+        }, {
+            text: 'MultiState Value Command',
+            pointType: 'MultiState Value'
+        }, {
+            text: 'Program Start'
+        }, {
+            text: 'Analog Output Command',
+            pointType: 'Analog Output'
+        }, {
+            text: 'Analog Value Command',
+            pointType: 'Analog Value'
+        }, {
+            text: 'Binary Output Command',
+            pointType: 'Binary Output'
+        }, {
+            text: 'Binary Value Command',
+            pointType: 'Binary Value'
+        }, {
+            text: 'Report Display'
+        }, {
+            text: 'Verification Report'
+        }, {
+            text: 'Browse Verify Reports'
+        }, {
+            text: 'Data Report'
+        }],
         actions = {
             'MultiState Value': {},
             'Analog Output': {},
@@ -27,35 +48,51 @@ var ActionButton = function (config) {
             'Binary Output': {},
             'Binary Value': {}
         },
-        parameters = [
-            {text: 'None'},
-            {text: 'This Hour'},
-            {text: 'Last Hour'},
-            {text: 'Today'},
-            {text: 'Yesterday'},
-            {text: 'This Week'},
-            {text: 'Last Week'},
-            {text: 'This Month'},
-            {text: 'Last Month'},
-            {text: 'This Year'},
-            {text: 'Last Year'},
-            {text: 'Select Time'},
-            {text: 'Last 24 Hours'},
-            {text: 'Last 7 Days'},
-            {text: 'Select Interval'},
-            {text: 'Display'},
-            {text: 'Print'}
-        ],
+        parameters = [{
+            text: 'None'
+        }, {
+            text: 'This Hour'
+        }, {
+            text: 'Last Hour'
+        }, {
+            text: 'Today'
+        }, {
+            text: 'Yesterday'
+        }, {
+            text: 'This Week'
+        }, {
+            text: 'Last Week'
+        }, {
+            text: 'This Month'
+        }, {
+            text: 'Last Month'
+        }, {
+            text: 'This Year'
+        }, {
+            text: 'Last Year'
+        }, {
+            text: 'Select Time'
+        }, {
+            text: 'Last 24 Hours'
+        }, {
+            text: 'Last 7 Days'
+        }, {
+            text: 'Select Interval'
+        }, {
+            text: 'Display'
+        }, {
+            text: 'Print'
+        }],
 
         _commandArguments = {
-            'Command Type'  : 7,
-            upi             : '',
-            Value           : '',
-            Controller      : displays.workspaceManager.user().controllerId,
-            Relinquish      : 0,
-            Priority        : '',
-            Wait            : 0,
-            OvrTime         : 0
+            'Command Type': 7,
+            upi: '',
+            Value: '',
+            Controller: displays.workspaceManager.user().controllerId,
+            Relinquish: 0,
+            Priority: '',
+            Wait: 0,
+            OvrTime: 0
         },
         _id,
         _pointData,
@@ -66,7 +103,7 @@ var ActionButton = function (config) {
         max = 10,
         external,
 
-        _getCommandArguments = function () {
+        _getCommandArguments = function() {
             var ret = $.extend(true, {}, _commandArguments),
                 val = external.ActionParm;
 
@@ -81,8 +118,8 @@ var ActionButton = function (config) {
 
             return ret;
         },
-        _processPointData = function (response) {
-            var transformOptions = function () {
+        _processPointData = function(response) {
+            var transformOptions = function() {
                 var options = response.Value.ValueOptions,
                     ret = [];
 
@@ -151,9 +188,9 @@ var ActionButton = function (config) {
                 }
 
                 if (displays.editMode) {
-                    setTimeout(function () {
+                    setTimeout(function() {
                         displays.EditItemCtrl.$apply();
-                    },1);
+                    }, 1);
                 }
             } else {
                 noPointFound = true;
@@ -162,23 +199,23 @@ var ActionButton = function (config) {
                     Name: 'No Point Found'
                 };
 
-                 _commandArguments.logData = {
+                _commandArguments.logData = {
                     newValue: {
                         Value: ''
                     }
                 };
             }
         },
-        _getPointData = function (upi) {
+        _getPointData = function(upi) {
             if (!isNaN(upi)) {
                 $.ajax({
                     url: '/api/points/' + upi
-                }).done(function (response) {
+                }).done(function(response) {
                     _processPointData(response);
                 });
             }
         },
-        _validateOptions = function (arg) {
+        _validateOptions = function(arg) {
             var pointType = _code.pointType;
 
             if (pointType && pointType !== _pointData['Point Type']) {
@@ -186,17 +223,17 @@ var ActionButton = function (config) {
                 //update UI, if 'upi', else 'command'
             }
         },
-        _sendCommand = function () {
+        _sendCommand = function() {
             console.log('Send Command', _getCommandArguments());
             displays.socket.emit('fieldCommand', JSON.stringify(_getCommandArguments()));
             displays.$scope.currActionButton = null;
         },
 
-        sendValue = function (value) {
+        sendValue = function(value) {
             external.ActionParm = value;
             _sendCommand();
         },
-        getExternalConfig = function (cfg) {
+        getExternalConfig = function(cfg) {
             var ccfg = {
                     intervalNum: 1,
                     intervalType: 'Minute',
@@ -223,7 +260,7 @@ var ActionButton = function (config) {
 
             return externalReportConfig;
         },
-        openReport = function (cfg) {//type, duration, start, end) {
+        openReport = function(cfg) { //type, duration, start, end) {
             var endPoint,
                 params = cfg && getExternalConfig(cfg);
 
@@ -231,9 +268,9 @@ var ActionButton = function (config) {
 
             endPoint = displays.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Report', external.ActionPoint);
             displays.openWindow(endPoint.review.url + '?pause', _pointData['Name'], 'Report', '', external.ActionPoint, {
-                height: 720,
-                width: 1280,
-                callback: function () {
+                width: 1250,
+                height: 750,
+                callback: function() {
                     if (!external.isProperty) {
                         this.applyBindings(params);
                     } else {
@@ -243,11 +280,11 @@ var ActionButton = function (config) {
             });
 
         },
-        updateReportConfig = function (rConfig) {
+        updateReportConfig = function(rConfig) {
             config.reportConfig = $.extend(true, {}, rConfig);
             $('#reportChooseRange').modal('hide');
         },
-        sendCommand = function () {
+        sendCommand = function() {
             if (!noPointFound) {
                 var pointType = _pointData['Point Type'].Value;
 
@@ -279,17 +316,17 @@ var ActionButton = function (config) {
                 }
             }
         },
-        setCommand = function (idx) {
+        setCommand = function(idx) {
             _code = codes[idx];
             _validateOptions('command');
         },
-        setParameter = function (parameter) {
+        setParameter = function(parameter) {
             external.ActionParm = parameter;
         },
-        getPointData = function () {
+        getPointData = function() {
             return _pointData;
         },
-        updateConfig = function (newCfg, fromPointSelect) {
+        updateConfig = function(newCfg, fromPointSelect) {
             _code = newCfg.ActionCode;
             if (newCfg.ActionParm !== undefined) {
                 external.ActionParm = newCfg.ActionParm;
@@ -314,7 +351,7 @@ var ActionButton = function (config) {
                 config.reportConfig.durationInfo.startDate = moment(config.reportConfig.durationInfo.startDate);
             }
         },
-        setUPI = function (upi) {
+        setUPI = function(upi) {
             external.ActionPoint = upi;
             _getPointData(upi);
         };
@@ -381,7 +418,7 @@ displays.DisplayAnimation = function(el, screenObject) {
                 len = stateList.length,
                 ret = {};
 
-            for(c=0; c<len; c++) {
+            for (c = 0; c < len; c++) {
                 ret[c] = stateList[c];
                 ret[stateList[c]] = c;
             }
@@ -403,7 +440,7 @@ displays.DisplayAnimation = function(el, screenObject) {
             0: {
                 type: 'onoff',
                 handler: function(val) {
-                    return (val>0)?'':0;
+                    return (val > 0) ? '' : 0;
                 }
             },
             1: {
@@ -420,7 +457,7 @@ displays.DisplayAnimation = function(el, screenObject) {
                     var animation = displays.animationIDs[animationID] || {},
                         animationFile = animation[val];
 
-                    if(origConfig._v2 === true) {
+                    if (origConfig._v2 === true) {
                         img = origConfig[animFileLookup[val] + 'State'];
                     } else {
                         img = animationFile || file;
@@ -436,16 +473,16 @@ displays.DisplayAnimation = function(el, screenObject) {
         animFiles = (function() {
             var animations = displays.animationIDs[animationID] || {},
                 keys = Object.keys(animations),
-                states = [0,1,2,3,4],
+                states = [0, 1, 2, 3, 4],
                 key,
                 val,
                 len = keys.length,
                 c,
                 ret = {};
 
-            if(origConfig._v2 === true) {
-                if(animType === 'multifile') {
-                    for(c=0; c<stateList.length; c++) {
+            if (origConfig._v2 === true) {
+                if (animType === 'multifile') {
+                    for (c = 0; c < stateList.length; c++) {
                         key = stateList[c] + 'State';
                         ret[key] = origConfig[key];
                     }
@@ -453,8 +490,8 @@ displays.DisplayAnimation = function(el, screenObject) {
                     ret['Animation File'] = origConfig['Animation File'];
                 }
             } else {
-                if(len > 1) {
-                    for(c=0; c<len; c++) {
+                if (len > 1) {
+                    for (c = 0; c < len; c++) {
                         key = keys[c];
                         val = animations[key];
                         ret[animFileLookup[key] + 'State'] = val;
@@ -478,7 +515,7 @@ displays.DisplayAnimation = function(el, screenObject) {
                 val = eVal;
             }
 
-            if(self.updateHandler) {
+            if (self.updateHandler) {
                 frame = self.updateHandler(val);
             } else {
                 frame = 0;
@@ -556,16 +593,16 @@ displays = $.extend(displays, {
         }
     },
     actionCodes: {
-        0:  "No Action (useless)",
-        1:  "History Log Plot – No longer supported",
-        2:  "History Log Report",
-        3:  "History Log Export",
-        4:  "Totalizer Plot",
-        5:  "Totalizer Report",
-        6:  "Totalizer Export",
-        7:  "MultiState Value Command",
-        8:  "Program Start",
-        9:  "Analog Output Command",
+        0: "No Action (useless)",
+        1: "History Log Plot – No longer supported",
+        2: "History Log Report",
+        3: "History Log Export",
+        4: "Totalizer Plot",
+        5: "Totalizer Report",
+        6: "Totalizer Export",
+        7: "MultiState Value Command",
+        8: "Program Start",
+        9: "Analog Output Command",
         10: "Analog Value Command",
         11: "Binary Output Command",
         12: "Binary Value Command",
@@ -575,16 +612,16 @@ displays = $.extend(displays, {
         16: "Data Report"
     },
     actionParameters: {
-        0:  "None",
-        1:  "This Hour",
-        2:  "Last Hour",
-        3:  "Today",
-        4:  "Yesterday",
-        5:  "This Week",
-        6:  "Last Week",
-        7:  "This Month",
-        8:  "Last Month",
-        9:  "This Year",
+        0: "None",
+        1: "This Hour",
+        2: "Last Hour",
+        3: "Today",
+        4: "Yesterday",
+        5: "This Week",
+        6: "Last Week",
+        7: "This Month",
+        8: "Last Month",
+        9: "This Year",
         10: "Last Year",
         11: "Select Time",
         12: "Last 24 Hours",
@@ -593,7 +630,7 @@ displays = $.extend(displays, {
         15: "Display",
         16: "Print"
     },
-    setReportConfig: function (config) {
+    setReportConfig: function(config) {
         var $reportRange = $('#reportRange'),
             picker = $reportRange.data('daterangepicker');
 
@@ -614,7 +651,7 @@ displays = $.extend(displays, {
         $('#reportTimeStart').val(config.starttimestamp);
         $('#reportTimeEnd').val(config.endtimestamp);
     },
-    resolveDisplayObjectPropertyName: function (screenObject) {
+    resolveDisplayObjectPropertyName: function(screenObject) {
         var propertyName;
         switch (screenObject) {
             case 0:
@@ -636,7 +673,7 @@ displays = $.extend(displays, {
 
         return propertyName;
     },
-    upiInPointRefs: function (upi) {
+    upiInPointRefs: function(upi) {
         var answer = false,
             i,
             pointRef,
@@ -652,7 +689,7 @@ displays = $.extend(displays, {
 
         return answer;
     },
-    pointReferenceSoftDeleted: function (upi) {
+    pointReferenceSoftDeleted: function(upi) {
         var answer = false,
             i,
             pointRef,
@@ -670,7 +707,7 @@ displays = $.extend(displays, {
 
         return answer;
     },
-    pointReferenceHardDeleted: function (localUPI) {
+    pointReferenceHardDeleted: function(localUPI) {
         var answer = false;
         if (localUPI !== null && localUPI > 0) {
             if (displays.upiInPointRefs(localUPI)) {
@@ -684,7 +721,7 @@ displays = $.extend(displays, {
         return answer;
     },
     onRender: function(fn) {
-        if(displays.isRendered) {
+        if (displays.isRendered) {
             fn();
         } else {
             displays.onRenderFn = fn;
@@ -694,7 +731,9 @@ displays = $.extend(displays, {
         displays.isRendered = true;
         displays.onRenderFn();
     },
-    onRenderFn: function() {return;},
+    onRenderFn: function() {
+        return;
+    },
     workspaceManager: (window.opener || window.top).workspaceManager,
 
     initDisplay: function() {
@@ -712,7 +751,7 @@ displays = $.extend(displays, {
 
         displays.pointTypeList = displays.workspaceManager.config.Utility.pointTypes.getTypes();
 
-        for(c=0; c<len; c++) {
+        for (c = 0; c < len; c++) {
             row = list[c];
             id = row.id;
             cfg = row.screenObject;
@@ -748,7 +787,7 @@ displays = $.extend(displays, {
 
         if (animationID !== undefined) { //is multi-file
             if (typeof val === 'string') {
-                val = eVal;//stateRef[val.toLowerCase()];
+                val = eVal; //stateRef[val.toLowerCase()];
             }
             animation = displays.animationIDs[animationID];
             animationFile = animation[val];
@@ -820,7 +859,7 @@ displays = $.extend(displays, {
 
                     //is dynamic
                     if (val !== undefined && (tag === 'div' || tag === 'img')) {
-                        if (tag === 'img') {//animation
+                        if (tag === 'img') { //animation
                             displays.animations[el[0].id].update(dynamic.dynamic);
                             // displays.processGif(els[c], val, el.data('precision'), upi, dynamic.dynamic);
                         } else {
@@ -897,13 +936,13 @@ displays = $.extend(displays, {
 
                 animation['Animation File'] = file.replace('.gif', '');
 
-                if(animation._saveHeight !== true) {
+                if (animation._saveHeight !== true) {
                     animation._animType = animation.Height;
                     animation._saveHeight = true;
                 }
 
                 if (animID) {
-                    if(animation.upi) {
+                    if (animation.upi) {
                         lookup = displays.animationUPIs[animation.upi] || [];
 
                         lookup.push(animID);
@@ -992,7 +1031,7 @@ displays = $.extend(displays, {
             ctrlKeyDown = false,
             $reportTimeStart = $('#reportTimeStart'),
             $reportTimeEnd = $('#reportTimeEnd'),
-            timePickerKeyUp = function (event, $el) {
+            timePickerKeyUp = function(event, $el) {
                 if ($el.val().match(/^\s*([01]?\d|2[0-3]):?([0-5]\d)\s*$/)) {
                     $el.parent().removeClass("has-error");
                     $el.parent().attr("title", "");
@@ -1008,7 +1047,7 @@ displays = $.extend(displays, {
 
                 // timestamp = $reportTime.val();
             },
-            timePickerKeyDown = function (event, $el) {
+            timePickerKeyDown = function(event, $el) {
                 var timeValue = $el.val(),
                     element = $el[0],
                     selectionLen = element.selectionEnd - element.selectionStart;
@@ -1029,23 +1068,23 @@ displays = $.extend(displays, {
                     event.preventDefault();
                 }
             },
-            incrementTime = function (incrementUnit, value) {
+            incrementTime = function(incrementUnit, value) {
                 var arr,
                     hrs,
                     mins,
                     timeLen = value.length,
                     wrapped = false;
 
-                if (timeLen > 2) {  // don't allow increment til 3 chars in time field
+                if (timeLen > 2) { // don't allow increment til 3 chars in time field
                     if (value.indexOf(":") > 0) {
                         arr = value.split(':');
                     } else {
                         arr = [];
-                        if (timeLen === 5) {  // step on errant text
+                        if (timeLen === 5) { // step on errant text
                             arr[0] = value.substr(0, 2);
                             arr[1] = value.substr(3, 2);
                         } else {
-                            arr[0] = value.substr(0, (timeLen === 4 ? 2 : 1 ));
+                            arr[0] = value.substr(0, (timeLen === 4 ? 2 : 1));
                             arr[1] = value.substr(timeLen - 2, 2);
                         }
                     }
@@ -1105,11 +1144,11 @@ displays = $.extend(displays, {
             });
         });
 
-        jQuery('#saveReport').click(function () {
+        jQuery('#saveReport').click(function() {
             displays.$editScope.editItem._actionButton.updateReportConfig(displays.$editScope.reportConfig);
         });
 
-        jQuery('#openReportWithConfig').click(function () {
+        jQuery('#openReportWithConfig').click(function() {
             var actionButton = displays.$scope.currActionButton._actionButton;
             actionButton.openReport(displays.$scope.reportConfig);
             // actionButton.openReport($scope.reportType, $scope.reportDuration, $scope.reportStart, $scope.reportEnd);
@@ -1138,19 +1177,19 @@ displays = $.extend(displays, {
         //     // report time = $reportTime.val()
         // });
 
-        $reportTimeStart.keyup(function (event) {
+        $reportTimeStart.keyup(function(event) {
             timePickerKeyUp(event, $reportTimeStart);
         });
 
-        $reportTimeEnd.keyup(function (event) {
+        $reportTimeEnd.keyup(function(event) {
             timePickerKeyUp(event, $reportTimeEnd);
         });
 
-        $reportTimeStart.keydown(function (event) {
+        $reportTimeStart.keydown(function(event) {
             timePickerKeyDown(event, $reportTimeStart);
         });
 
-        $reportTimeEnd.keydown(function (event) {
+        $reportTimeEnd.keydown(function(event) {
             timePickerKeyDown(event, $reportTimeEnd);
         });
 
@@ -1176,7 +1215,7 @@ displays = $.extend(displays, {
             }
         });
 
-        $('#reportRange').on('apply.daterangepicker', function (ev, picker) {
+        $('#reportRange').on('apply.daterangepicker', function(ev, picker) {
             var pickerInfo = {};
             pickerInfo.startDate = picker.startDate;
             pickerInfo.endDate = picker.endDate;
@@ -1195,7 +1234,7 @@ displays = $.extend(displays, {
             displays.$scope.$apply();
         });
 
-        $('#reportRange').on('hide.daterangepicker', function (ev, picker) {
+        $('#reportRange').on('hide.daterangepicker', function(ev, picker) {
             var pickerInfo = {};
             pickerInfo.startDate = picker.startDate;
             pickerInfo.endDate = picker.endDate;
@@ -1207,16 +1246,16 @@ displays = $.extend(displays, {
             $(this).attr("title", pickerInfo.selectedRange);
 
             //delay in order to hold modal open
-            setTimeout(function () {
+            setTimeout(function() {
                 displays.cancelModalClose = false;
             }, 1000);
         });
 
-        $('#reportRange').on('show.daterangepicker', function (ev, picker) {
+        $('#reportRange').on('show.daterangepicker', function(ev, picker) {
             displays.cancelModalClose = true;
         });
 
-        $('#reportChooseRange').on('hide.bs.modal', function (e) {
+        $('#reportChooseRange').on('hide.bs.modal', function(e) {
             if (displays.cancelModalClose) {
                 e.preventDefault();
                 return false;
@@ -1261,9 +1300,9 @@ displays = $.extend(displays, {
                     clearTimeout(displays.panTimer);
                     if (displays.panMode) {
                         displays.panMode = false;
-                    // } else {
-                    //     //displays.$scope.blur();
-                    //     displays.$scope.menuClick();
+                        // } else {
+                        //     //displays.$scope.blur();
+                        //     displays.$scope.menuClick();
                     }
                     // console.log('displays.PANMODE OFF!');
                     $('body').css('cursor', 'auto');
@@ -1298,7 +1337,7 @@ displays = $.extend(displays, {
             }
         });
 
-        $(document).on('mousedown', '.objectBox', function (event) {
+        $(document).on('mousedown', '.objectBox', function(event) {
             var whichEventCode = parseInt(event.which, 10);
 
             switch (whichEventCode) {
@@ -1318,7 +1357,7 @@ displays = $.extend(displays, {
             }
         });
 
-        $(document).on('mousedown', function (event) {
+        $(document).on('mousedown', function(event) {
             var whichEventCode = parseInt(event.which, 10);
             mouseDown = true;
 
@@ -1343,7 +1382,7 @@ displays = $.extend(displays, {
                         displays.cursorY = event.pageY;
                         displays.leftOffOrig = $('#display').offset().left;
                         displays.topOffOrig = $('#display').offset().top;
-                        displays.panTimer = setTimeout(function () {
+                        displays.panTimer = setTimeout(function() {
                             // console.log('displays.PANMODE ON!');
                             displays.startX = displays.pageX;
                             displays.startY = displays.pageY;
@@ -1447,17 +1486,17 @@ displays = $.extend(displays, {
         //     $('#panh-slider').trigger('input');
         // });
 
-        $(document).mousemove(function (event) {
+        $(document).mousemove(function(event) {
             var cval,
-                    cval2,
-                    updateZoom = function () {
-                        var zoom = +$('#zoom-slider').val();
-                        // $scope.zoom = +$('#zoom-slider').val();
-                        $('#display').css({
-                            '-webkit-transform': 'scale(' + zoom / 100 + ')',
-                            'transform': 'scale(' + zoom / 100 + ')'
-                        });
-                    };
+                cval2,
+                updateZoom = function() {
+                    var zoom = +$('#zoom-slider').val();
+                    // $scope.zoom = +$('#zoom-slider').val();
+                    $('#display').css({
+                        '-webkit-transform': 'scale(' + zoom / 100 + ')',
+                        'transform': 'scale(' + zoom / 100 + ')'
+                    });
+                };
 
             if (!displays.popUpWindowActive) {
                 displays.pageX = event.pageX;
@@ -1504,10 +1543,10 @@ displays = $.extend(displays, {
             }
         });
 
-        $('#display').mousemove(function (event) {
+        $('#display').mousemove(function(event) {
             var scope = angular.element(document.getElementById('displayCtrl')).scope(),
-                    x = event.pageX,
-                    y = event.pageY;
+                x = event.pageX,
+                y = event.pageY;
 
             if (!displays.popUpWindowActive) {
                 displays.dpageX = x;
@@ -1547,14 +1586,14 @@ displays = $.extend(displays, {
 
     initAngularFilters: function() {
         var displayApp = displays.displayApp || angular.module('displayApp', []),
-            resolvePrecisionPlaceholder = function (inputPrecision) {
+            resolvePrecisionPlaceholder = function(inputPrecision) {
                 var displayPrecision;
 
                 displayPrecision = parseFloat(inputPrecision).toString().split(".")[1];
                 // displayPrecision = (displayPrecision > 0) ? displayPrecision : parseInt(inputPrecision);   // incase we care about number to left of .
                 displayPrecision = (displayPrecision > 0) ? displayPrecision : 0;
 
-                return ((displayPrecision > 0) ? "###." +  Array(parseInt(displayPrecision, 10)+1).join("#") : "###");
+                return ((displayPrecision > 0) ? "###." + Array(parseInt(displayPrecision, 10) + 1).join("#") : "###");
             };
 
         displays.displayApp = displayApp;
@@ -1654,7 +1693,7 @@ displays = $.extend(displays, {
                         if (wh === 0 || screenObject === 0) {
                             wh = 'auto';
                         } else {
-                            if(screenObject !== 1) {
+                            if (screenObject !== 1) {
                                 wh += 8;
                             }
                             wh = wh + 'px';
@@ -1665,8 +1704,8 @@ displays = $.extend(displays, {
                         var bg = input,
                             out;
 
-                        if (input && input.toLowerCase() !== '.png') {//not just ".png"
-                            if(displays.filesToUpload[input._idx]) {
+                        if (input && input.toLowerCase() !== '.png') { //not just ".png"
+                            if (displays.filesToUpload[input._idx]) {
                                 out = '';
                             } else {
                                 bg = bg.replace('.WMF', '.png');
@@ -1675,7 +1714,7 @@ displays = $.extend(displays, {
                                 bg = bg.replace('.bmp', '.png');
                                 bg = bg.replace(/ /g, '%20');
                                 bg = '/display_assets/assets/' + bg;
-                                out = bg;//'url(' + bg + ')';
+                                out = bg; //'url(' + bg + ')';
                             }
                         } else {
                             out = '/img/blank.gif';
@@ -1700,7 +1739,7 @@ displays = $.extend(displays, {
                             'transform': 'scale(' + $scope.zoom / 100 + ')'
                         });
                     },
-                    zoomToFitWindow = function () {
+                    zoomToFitWindow = function() {
                         var winWidth = window.innerWidth,
                             winHeight = window.innerHeight - $topBar.height(),
                             displayWidth = $scope.display.Width,
@@ -1768,9 +1807,9 @@ displays = $.extend(displays, {
                     $scope: $scope
                 });
 
-                $scope.selectInterval = function (interval) {
+                $scope.selectInterval = function(interval) {
                     $scope.reportConfig.intervalType = interval;
-                    setTimeout(function () {
+                    setTimeout(function() {
                         $scope.$apply();
                     }, 1);
                 };
@@ -1786,7 +1825,7 @@ displays = $.extend(displays, {
                 //     }
                 // };
 
-                $scope.sendCommand = function () {
+                $scope.sendCommand = function() {
                     var val = parseFloat($('#actionButtonValue').val());
                     $scope.currActionButton._actionButton.sendValue(val);
                 };
@@ -1805,19 +1844,19 @@ displays = $.extend(displays, {
 
                     return ret;
                 };
-                $scope.displayDeleted = function () {
-                   return (displayJson._pStatus === 2);
+                $scope.displayDeleted = function() {
+                    return (displayJson._pStatus === 2);
                 };
                 $scope.bgSrcURL = filterwmf(displayJson["Background Picture"]);
                 $scope.getDisplayStyle = function(display) {
                     var ret = {
-                            'margin-left': $scope.dLeft + 'px',
-                            'margin-top': $scope.dTop + 'px',
-                            'box-shadow': 'none',
-                            'background-color': $scope.convertColor(display['Background Color']),
-                            'height': $scope.display.Height + 'px',
-                            'width': $scope.display.Width + 'px'
-                        };
+                        'margin-left': $scope.dLeft + 'px',
+                        'margin-top': $scope.dTop + 'px',
+                        'box-shadow': 'none',
+                        'background-color': $scope.convertColor(display['Background Color']),
+                        'height': $scope.display.Height + 'px',
+                        'width': $scope.display.Width + 'px'
+                    };
 
                     return ret;
                 };
@@ -1831,11 +1870,11 @@ displays = $.extend(displays, {
                         "font-style": filteritalic(object["Font Italic"]),
                         "left": object.Left + 'px',
                         "top": object.Top + 'px'
-                        // "width": filterwh(object.Width),
-                        // "height": filterwh(object.Height)
+                            // "width": filterwh(object.Width),
+                            // "height": filterwh(object.Height)
                     };
 
-                    if(object['Screen Object'] === 1 || object.hasOwnProperty('ActionCode')) {// button or action button
+                    if (object['Screen Object'] === 1 || object.hasOwnProperty('ActionCode')) { // button or action button
                         ret.width = filterwh(object.Width, object['Screen Object']);
                         ret.height = filterwh(object.Height, object['Screen Object']);
                     }
@@ -1860,8 +1899,8 @@ displays = $.extend(displays, {
                             var title = displays.upiNames[item.upi] || item.Text;
                             endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, item.upi);
                             return displays.openWindow(endPoint.review.url, title, pointType, target, item.upi, {
-                                width: 820,
-                                height: 540
+                                width: 1250,
+                                height: 750
                             });
                         };
 
@@ -1873,7 +1912,7 @@ displays = $.extend(displays, {
                         });
                         item._actionButton.sendCommand();
                     } else {
-                        if (localUPI && !(displays.pointReferenceSoftDeleted(localUPI) && isDisplayObject)) {  // don't get softdeleted display references
+                        if (localUPI && !(displays.pointReferenceSoftDeleted(localUPI) && isDisplayObject)) { // don't get softdeleted display references
                             if (typeof localUPI !== 'string') { //upi is string for static text
                                 $.ajax({
                                     url: '/api/points/' + localUPI
@@ -1921,7 +1960,7 @@ displays = $.extend(displays, {
                 $('#panh-slider').on('change', function(event) {
                     var $display = $('#display'),
                         panH = $('#panh-slider').val(),
-                        currentZoom = (+$('#zoom-slider').val())/100,
+                        currentZoom = (+$('#zoom-slider').val()) / 100,
                         scrollingUp = (panH > previousScrollValue),
                         winHeight = window.innerHeight - $topBar.height(),
                         virtualTop = maxScrollPercentage * winHeight,
@@ -1929,14 +1968,14 @@ displays = $.extend(displays, {
                         displayTop = parseInt(($display.offset().top + panH), 10),
                         displayBottom = parseInt(((displayTop + ($scope.display.Height * currentZoom)) + panH), 10);
 
-                    if (((displayBottom >= virtualTop) && (displayTop <= virtualBottom)) ||  // display still in virtual window
-                         (scrollingUp && (displayBottom < virtualTop)) ||  // maxed out scrolling up
-                         (!scrollingUp && (displayTop > virtualBottom))) {  // maxed out scrolling down
+                    if (((displayBottom >= virtualTop) && (displayTop <= virtualBottom)) || // display still in virtual window
+                        (scrollingUp && (displayBottom < virtualTop)) || // maxed out scrolling up
+                        (!scrollingUp && (displayTop > virtualBottom))) { // maxed out scrolling down
                         updatePanh(panH);
-                        previousScrollValue = parseInt(panH,10);
+                        previousScrollValue = parseInt(panH, 10);
                     } else {
                         //event.preventDefault();
-                        $('#panh-slider').val(parseInt(previousScrollValue,10));
+                        $('#panh-slider').val(parseInt(previousScrollValue, 10));
                     }
                 });
                 zoomToFitWindow();
@@ -1992,8 +2031,8 @@ displays = $.extend(displays, {
             };
         });
 
-        displayApp.filter('renderObject', function () {
-            return function (input) {
+        displayApp.filter('renderObject', function() {
+            return function(input) {
                 var out = '???',
                     i,
                     pts,
@@ -2022,107 +2061,107 @@ displays = $.extend(displays, {
 
                     if (typeof screenObject === 'number') {
                         switch (screenObject) {
-                            case 0:  // Dynamic
-                            {
-                                if (isEdit) {
-                                    precision = ' data-precision="' + parseInt(input.uiPrecision, 10) + '"';
-                                    text = ((input.uiPrecision > 0) ? "###." + Array(parseInt(input.uiPrecision, 10) + 1).join("#") : "###");
-                                } else {
-                                    text = (input.Text || resolvePrecisionPlaceholder(input.Precision));
-                                }
-                                out = '<div ' + screenIdx + 'data-orig-color="' + input['Foreground Color'] + '"' + precision + dataUpi + ' class="' + cls + '"' + '>' + text + '</div>';
-                            }
-                                break;
-                            case 1:  // button
-                            {
-                                out = '';
-                                if (+input['Background Color'] !== 0) {
-                                    style += 'background-image:none;border:none;';
-                                }
-                                //style += underline;
-                                style += 'line-height:' + input['Height'] + 'px;' + '"';
-                                text = ((input.Text) ? input.Text.split("\n").join("<br/>") : '&nbsp;');
-
-                                if (input.hasOwnProperty('ActionCode') && input._actionButton === undefined) { // action button
-                                    input._actionButton = new ActionButton(input);
-                                }
-
-                                if (pointSoftDeleted) {
-                                    out = '<p' + screenIdx + style + ' class="displayBtn' + cls + '"' + noAjax + dataUpi + '>' + text + '</p>';
-                                } else {
-                                    out = '<a' + screenIdx + style + ' class="displayBtn' + cls + '"' + noAjax + dataUpi + '>' + text + '</a>';
-                                }
-                            }
-                                break;
-                            case 2:  // text
-                            {
-                                out = (input.Text || '').split("\n").join("<br/>");
-                            }
-                                break;
-                            case 3:  // animation
-                            {
-                                if (displays.editMode === true) { //pause animations
-                                    if (displays.filesToUpload[input._idx]) {
-                                        if (input._animType === 2) {
-                                            imgSrc = displays.filesToUpload[input._idx]['On'];
-                                            imgSrc = (imgSrc || {}).data;
-                                        } else {
-                                            imgSrc = displays.filesToUpload[input._idx].data;
-                                        }
-                                        // imgSrc = displays.filesToUpload[input._idx].data;//input.imgsrc;
+                            case 0: // Dynamic
+                                {
+                                    if (isEdit) {
+                                        precision = ' data-precision="' + parseInt(input.uiPrecision, 10) + '"';
+                                        text = ((input.uiPrecision > 0) ? "###." + Array(parseInt(input.uiPrecision, 10) + 1).join("#") : "###");
                                     } else {
-                                        if (input._animType === 2) {//multifile
+                                        text = (input.Text || resolvePrecisionPlaceholder(input.Precision));
+                                    }
+                                    out = '<div ' + screenIdx + 'data-orig-color="' + input['Foreground Color'] + '"' + precision + dataUpi + ' class="' + cls + '"' + '>' + text + '</div>';
+                                }
+                                break;
+                            case 1: // button
+                                {
+                                    out = '';
+                                    if (+input['Background Color'] !== 0) {
+                                        style += 'background-image:none;border:none;';
+                                    }
+                                    //style += underline;
+                                    style += 'line-height:' + input['Height'] + 'px;' + '"';
+                                    text = ((input.Text) ? input.Text.split("\n").join("<br/>") : '&nbsp;');
+
+                                    if (input.hasOwnProperty('ActionCode') && input._actionButton === undefined) { // action button
+                                        input._actionButton = new ActionButton(input);
+                                    }
+
+                                    if (pointSoftDeleted) {
+                                        out = '<p' + screenIdx + style + ' class="displayBtn' + cls + '"' + noAjax + dataUpi + '>' + text + '</p>';
+                                    } else {
+                                        out = '<a' + screenIdx + style + ' class="displayBtn' + cls + '"' + noAjax + dataUpi + '>' + text + '</a>';
+                                    }
+                                }
+                                break;
+                            case 2: // text
+                                {
+                                    out = (input.Text || '').split("\n").join("<br/>");
+                                }
+                                break;
+                            case 3: // animation
+                                {
+                                    if (displays.editMode === true) { //pause animations
+                                        if (displays.filesToUpload[input._idx]) {
+                                            if (input._animType === 2) {
+                                                imgSrc = displays.filesToUpload[input._idx]['On'];
+                                                imgSrc = (imgSrc || {}).data;
+                                            } else {
+                                                imgSrc = displays.filesToUpload[input._idx].data;
+                                            }
+                                            // imgSrc = displays.filesToUpload[input._idx].data;//input.imgsrc;
+                                        } else {
+                                            if (input._animType === 2) { //multifile
+                                                imgSrc = '/displays/gifs/' + ((input['OnState']) ? input['OnState'] : input['Animation File']);
+                                            } else {
+                                                imgSrc = '/displays/gifs/' + input['Animation File'];
+                                            }
+                                            imgSrc = imgSrc.replace('.gif', '') + '/0';
+                                        }
+                                    } else {
+                                        if (input._animType === 2) { //multifile
                                             imgSrc = '/displays/gifs/' + ((input['OnState']) ? input['OnState'] : input['Animation File']);
                                         } else {
                                             imgSrc = '/displays/gifs/' + input['Animation File'];
                                         }
-                                        imgSrc = imgSrc.replace('.gif', '') + '/0';
-                                    }
-                                } else {
-                                    if (input._animType === 2) {//multifile
-                                        imgSrc = '/displays/gifs/' + ((input['OnState']) ? input['OnState'] : input['Animation File']);
-                                    } else {
-                                        imgSrc = '/displays/gifs/' + input['Animation File'];
-                                    }
 
-                                    imgSrc = imgSrc.replace('.gif', '') + '/';
+                                        imgSrc = imgSrc.replace('.gif', '') + '/';
+                                    }
+                                    displays.animationConfigs.push({
+                                        id: animString,
+                                        screenObject: input
+                                    });
+
+                                    out = '<img ' + animId + screenIdx + dataUpi + precision + ' class="' + cls + '" src="' + imgSrc + '" />';
                                 }
-                                displays.animationConfigs.push({
-                                    id: animString,
-                                    screenObject: input
-                                });
-
-                                out = '<img ' + animId + screenIdx + dataUpi + precision + ' class="' + cls + '" src="' + imgSrc + '" />';
-                            }
                                 break;
-                            case 5:  // history report
-                            {
-                                out = 'history report';
-                            }
+                            case 5: // history report
+                                {
+                                    out = 'history report';
+                                }
                                 break;
-                            case 6:  // history log
-                            {
-                                out = 'history log';
-                            }
+                            case 6: // history log
+                                {
+                                    out = 'history log';
+                                }
                                 break;
-                            case 7:  // Display Trend
-                            {
-                                if (input.points.length < 1) {
-                                    out = '<div><img src="/img/displays/plot.png" /></div>';
-                                } else {
-                                    pts = [];
-                                    for (i = 0; i < input.points.length; i++) {
-                                        pts.push(input.points[i].upi);
-                                    }
-                                    ploturl = '?title=' + input.Title + '&height=' + input.Height + '&width=' + input.Width + '&yaxis=' + input.Yaxis + '&points=' + pts.join();
-                                    out = '<div style="width:100%;height:100%;background-color:white;background-position:center center;background-repeat:no-repeat;background-image:url(/img/displays/spin.gif)">';
-                                    if (isEdit) {
-                                        out += '<img draggable="false" src="/displays/plot' + ploturl + '" /></div>';
+                            case 7: // Display Trend
+                                {
+                                    if (input.points.length < 1) {
+                                        out = '<div><img src="/img/displays/plot.png" /></div>';
                                     } else {
-                                        out += '<iframe frameborder="0" width="100%" height="100%" src="/displays/trend' + ploturl + '"></iframe></div>';
+                                        pts = [];
+                                        for (i = 0; i < input.points.length; i++) {
+                                            pts.push(input.points[i].upi);
+                                        }
+                                        ploturl = '?title=' + input.Title + '&height=' + input.Height + '&width=' + input.Width + '&yaxis=' + input.Yaxis + '&points=' + pts.join();
+                                        out = '<div style="width:100%;height:100%;background-color:white;background-position:center center;background-repeat:no-repeat;background-image:url(/img/displays/spin.gif)">';
+                                        if (isEdit) {
+                                            out += '<img draggable="false" src="/displays/plot' + ploturl + '" /></div>';
+                                        } else {
+                                            out += '<iframe frameborder="0" width="100%" height="100%" src="/displays/trend' + ploturl + '"></iframe></div>';
+                                        }
                                     }
                                 }
-                            }
                                 break;
                             default:
                                 // console.log("who broke what...  screenObject = ", screenObject);
