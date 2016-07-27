@@ -3584,9 +3584,6 @@ var Config = (function(obj) {
 
             //------ Begin import data checks ---------------------------------------------------------------
             delete point.Protocol;
-            delete point["Ethernet Maximum Address"];
-            delete point["Ethernet Address"].Min;
-            delete point["Ethernet Address"].Max;
             delete point["Port 1 Protocol"].Min;
             delete point["Port 1 Protocol"].Max;
             delete point["Port 2 Protocol"].Min;
@@ -3595,14 +3592,6 @@ var Config = (function(obj) {
             delete point["Port 3 Protocol"].Max;
             delete point["Port 4 Protocol"].Min;
             delete point["Port 4 Protocol"].Max;
-            delete point["Port 1 Address"].Min;
-            delete point["Port 1 Address"].Max;
-            delete point["Port 2 Address"].Min;
-            delete point["Port 2 Address"].Max;
-            delete point["Port 3 Address"].Min;
-            delete point["Port 3 Address"].Max;
-            delete point["Port 4 Address"].Min;
-            delete point["Port 4 Address"].Max;
             delete point["Port 1 Maximum Address"].Min;
             delete point["Port 1 Maximum Address"].Max;
             delete point["Port 2 Maximum Address"].Min;
