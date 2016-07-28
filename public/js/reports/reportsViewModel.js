@@ -909,8 +909,11 @@ var reportsViewModel = function () {
                     if (self.reportType === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
                         tempObject.operator = tempObject.valueList[0].text;
-                        tempObject.dataColumnName += " - " + tempObject.operator.toLowerCase();
+                        tempObject.dataColumnName = "point-" + tempObject.upi + " - " + tempObject.operator.toLowerCase();
                     } else {
+                        if (self.reportType === "History") {
+                            tempObject.dataColumnName = "point-" + tempObject.upi;
+                        }
                         if (!!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
