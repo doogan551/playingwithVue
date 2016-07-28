@@ -871,7 +871,7 @@ var reportsViewModel = function () {
                 self.activeRequestDataDrawn(true);
                 //self.errorWithRequest(true);
             }).always(function () {
-                console.log( " . .     ajax Request complete..");
+                // console.log( " . .     ajax Request complete..");
             });
         },
         displayError = function (errorMessage) {
@@ -994,42 +994,44 @@ var reportsViewModel = function () {
             });
         },
         filterOpenPointSelector = function () {
-            var url = '/pointLookup',
-                tempObject = {
-                    upi: 0,
-                    valueType: "",
-                    colName: "",
-                    colDisplayName: ""
-                },
-                pointSelectedCallback = function (pid, name, type, filter) {
-                    if (!!pid) {
-                        tempObject.upi = pid;
-                        tempObject.valueType = "String";
-                        tempObject.colName = name;
-                        tempObject.colDisplayName = name.replace(/_/g, " ");
-                    }
-                },
-                windowOpenedCallback = function () {
-                    pointSelectorRef.pointLookup.MODE = 'select';
-                    pointSelectorRef.pointLookup.init(pointSelectedCallback, pointFilter);
-                    if (pointFilter.selectedPointTypes.length > 0) {
-                        pointSelectorRef.window.pointLookup.checkPointTypes(pointFilter.selectedPointTypes);
-                    }
-                    if (!self.canEdit()) {
-                        var $allInputFields = $pointSelectorIframe.contents().find("input,button,textarea,select"),
-                            $pointTypesListBox = $pointSelectorIframe.contents().find("#pointTypes");
-                        $allInputFields.prop("disabled", true);
-                        // TODO still need to disable the listbox so selections can't change
-                        //$pointTypesListBox.addClass("jqx-disableselect");
-                        //var items = $pointTypesListBox.jqxListBox('getItems');
-                        //$pointTypesListBox.jqxListBox('disableAt', 0 );
-                    }
-                };
+            if (!scheduled) {
+                var url = '/pointLookup',
+                    tempObject = {
+                        upi: 0,
+                        valueType: "",
+                        colName: "",
+                        colDisplayName: ""
+                    },
+                    pointSelectedCallback = function (pid, name, type, filter) {
+                        if (!!pid) {
+                            tempObject.upi = pid;
+                            tempObject.valueType = "String";
+                            tempObject.colName = name;
+                            tempObject.colDisplayName = name.replace(/_/g, " ");
+                        }
+                    },
+                    windowOpenedCallback = function () {
+                        pointSelectorRef.pointLookup.MODE = 'select';
+                        pointSelectorRef.pointLookup.init(pointSelectedCallback, pointFilter);
+                        if (pointFilter.selectedPointTypes.length > 0) {
+                            pointSelectorRef.window.pointLookup.checkPointTypes(pointFilter.selectedPointTypes);
+                        }
+                        if (!self.canEdit()) {
+                            var $allInputFields = $pointSelectorIframe.contents().find("input,button,textarea,select"),
+                                $pointTypesListBox = $pointSelectorIframe.contents().find("#pointTypes");
+                            $allInputFields.prop("disabled", true);
+                            // TODO still need to disable the listbox so selections can't change
+                            //$pointTypesListBox.addClass("jqx-disableselect");
+                            //var items = $pointTypesListBox.jqxListBox('getItems');
+                            //$pointTypesListBox.jqxListBox('disableAt', 0 );
+                        }
+                    };
 
-            pointSelectorRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'filter', {
-                callback: windowOpenedCallback,
-                width: 1000
-            });
+                pointSelectorRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'filter', {
+                    callback: windowOpenedCallback,
+                    width: 1000
+                });
+            }
         },
         getFilterAdjustedDatetime = function (filter) {
             return getAdjustedDatetimeUnix(moment.unix(filter.date), filter.time.toString());
@@ -1645,7 +1647,7 @@ var reportsViewModel = function () {
                             };
                             break;
                         case "Property":
-                            pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
+                            pointFilter = (scheduled ? point["Report Config"].pointFilter : getPointLookupFilterValues($pointSelectorIframe.contents()));
                             break;
                         default:
                             console.log(" - - - DEFAULT  buildReportDataRequest()");
@@ -2582,10 +2584,14 @@ var reportsViewModel = function () {
                 }
 
                 if (!self.activeRequestDataDrawn()) {
-                    console.log('. . . . . . . . . . .   requested data has been rendered   . . . . . . . . .');
-                    setTimeout(function () {
-                        self.activeRequestDataDrawn(true);
-                    }, 1000);
+                    // console.log('. . . . . . . . . . .   requested data has been rendered   . . . . . . . . .');
+                    if (scheduled && self.chartable()) {
+                        self.requestChart();
+                    } else {
+                        setTimeout(function () {
+                            self.activeRequestDataDrawn(true);
+                        }, 1000);
+                    }
                 }
             });
 
@@ -3208,7 +3214,33 @@ var reportsViewModel = function () {
                 yAxisTitle,
                 spinnerText,
                 chartWidth,
-                chartHeight;
+                chartHeight,
+                getChartWidth = function () {
+                    var answer;
+
+                    if (!!formatForPrint) {
+                        answer = 950;
+                    } else if (!!scheduled) {
+                        answer = 1250;
+                    } else {
+                        answer = $reportChartDiv.parent().width();
+                    }
+
+                    return answer;
+                },
+                getChartHeight = function () {
+                    var answer;
+
+                    if (!!formatForPrint) {
+                        answer = 650;
+                    } else if (!!scheduled) {
+                        answer = 850;
+                    } else {
+                        answer = $reportChartDiv.parent().height();
+                    }
+
+                    return answer;
+                };
 
             self.activeRequestForChart(true);
             if (!!formatForPrint) {
@@ -3221,8 +3253,8 @@ var reportsViewModel = function () {
             adjustViewReportTabHeightWidth();
 
             chartType = getValueBasedOnText(self.listOfChartTypes, self.selectedChartType());
-            chartWidth = (!!formatForPrint ? 950 : $reportChartDiv.parent().width());
-            chartHeight = (!!formatForPrint ? 650 : $reportChartDiv.parent().height());
+            chartWidth = getChartWidth();
+            chartHeight = getChartHeight();
             reportChartData = getOnlyChartData(reportData);
 
             if (!!reportChartData && !!reportChartData[0]) {
@@ -3338,6 +3370,7 @@ var reportsViewModel = function () {
                             }
                         }
                         self.activeRequestForChart(false);
+                        self.activeRequestDataDrawn(true);
                     }, 110);
                 } else {
                     $reportChartDiv.html("Too many data rows for " + self.selectedChartType() + " Chart. Max = " + maxDataRowsForChart);
@@ -3792,11 +3825,10 @@ var reportsViewModel = function () {
         }, 700);
     };
 
-    self.requestChart = function () {
+    self.requestChart = function (printFormat) {
         self.selectViewReportTabSubTab("chartData");
         $reportChartDiv.html("");
-        reportChartData = getOnlyChartData(reportData);
-        renderChart();
+        renderChart(printFormat);
     };
 
     self.focusGridView = function () {
