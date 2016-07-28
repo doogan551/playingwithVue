@@ -27,6 +27,9 @@ html
                                 a#globalSearch.waves-effect(href='javascript://')
                                     i.material-icons search
                             li.taskbarItem
+                                a.tooltipped.taskbarButton.iconOnly.waves-effect(href='javascript://', data-bind="click: function () { dti.utility.showNavigator(); }", data-position='bottom', data-tooltip='Navigator', data-delay='10')
+                                    i.mdi.mdi-compass
+                            li.taskbarItem
                                 a#showOpenItems.taskbarButton.iconOnly.waves-effect.tooltipped(href='javascript://', style='', data-position='bottom', data-tooltip='Manage Open Windows', data-delay='10')
                                     i.material-icons filter_none
 
@@ -34,42 +37,21 @@ html
                             span(data-bind="template: { name: 'taskbarButtonTemplate', data: $data }")
                             // /ko
 
-
-                            //- li.taskbarItem.active
-                                //- div
-                                //- a#displayIcon.taskbarButton.testHover.hoverButton2.waves-effect(href='javascript://', data-menu='displayTooltip', data-position='bottom', data-tooltip='Displays', data-delay='10')
-                                //-     i.material-icons tv
-                                //-     span Displays
-
-                            li.taskbarItem.active.hide
-                                a.hoverButton.waves-effect.truncate.tooltipped(href='javascript://', data-position='bottom', data-tooltip='4194 DXAC DISP', data-delay='10', data-target='displayPanel', data-upi='44215') 4194 DXAC DISP
-                            li.taskbarItem.active.hide
-                                a.hoverButton.waves-effect.truncate.tooltipped(href='javascript://', data-position='bottom', data-tooltip='4200 PARKING LOT LIGHTS', data-delay='10', data-upi='68691', data-target='gplPanel') 4200 PARKING LOT LIGHTS
-                            li.taskbarItem.active.hide.newPanelButton
-                                a.waves-effect.truncate.tooltipped(href='javascript://', data-position='bottom', data-tooltip='New Window', data-delay='10', data-target='newPanel') New Window
-
-                        ul.center
-
                         ul.right
                             li.taskbarItem
                                 a#alarmIcon.waves-effect(href="javascript://", data-menu="alarmDropdown")
                                     i.material-icons notifications_active
                                     span.badge.alarmCount 3
                             li.taskbarItem
-                                a#showDesktop.waves-effect.tooltipped(href='javascript://', data-position='bottom', data-tooltip='Show Desktop')
+                                a#showDesktop.waves-effect.tooltipped(data-bind="click: showDesktop", href='javascript://', data-position='bottom', data-tooltip='Show Desktop')
                                     i.material-icons home
-
-                                    //- i(style='margin-top: 5px;')
-                                    //-     img(style='height: 36px', src='/img/test/icons/view-grid.png')
 
                             li.taskbarItem
                                 .userInfo.valign-wrapper
                                     img.userAvatar(src='/img/test/avatar.png')
                                     span.userName.valign John Doe
-                            //- li
-                            //-     span.clock 10:10
+
         main.hidden
-            .tooltips
 
             #searchBox.white.z-depth-1
                 .input-field
@@ -106,32 +88,6 @@ html
                         .col.s3.time Today 11:32:12
                         .col.s6.message 4250_UNV02 Device Operational
 
-            //- #displayTooltip.slideDownMenu.white.z-depth-1
-                .actionList
-                    .blue-grey-text Actions
-                    a.blue-grey-text.action(href="javascript://")
-                        i.material-icons add
-                        span New
-                    a.blue-grey-text.action(href="javascript://")
-                        i.material-icons folder_open
-                        span Open
-                    a.blue-grey-text.action(href="javascript://")
-                        i.material-icons close
-                        span Close All
-
-                .items
-                    .itemsHeader.blue-grey-text Open Items
-                    a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-target="displayPanel")
-                        .itemTitle.white-text 4194 DXAC DISP
-                            i.right.material-icons close
-                        .itemBody 
-                            img(src='/img/test/display.png')
-                    a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-target="displayPanel2")
-                        .itemTitle.white-text 4250 AH1 DISP
-                            i.right.material-icons close
-                        .itemBody 
-                            img(src='/img/test/display3.png')                            
-                
             ul#globalSearchResults.dropdown-content.active(style="display: none; position: absolute; right: 109px; top: 48px; opacity: 1; width: 264px;")
                 li
                     a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='4250 AH5 DISP', data-delay='10') 4250 AH5 DISP
@@ -139,13 +95,14 @@ html
                     a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='AIR HANDLERS', data-delay='10') AIR HANDLERS
                 li
                     a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='MONTHLY REPORT', data-delay='10') MONTHLY REPORT
+
             #startmenu.z-depth-3.white.lighten-3.white-text
                 .startmenuBody
                     .tileList
-                        span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                        a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="showNavigator: 'Sequence'")
                             i.material-icons.center-align device_hub
                             span Sequences
-                        span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                        a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="showNavigator: 'Display'")
                             i.material-icons.center-align tv
                             span Displays
                         span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
@@ -377,13 +334,14 @@ html
                 span(data-bind="text: title")
 
     script#taskbarMenuTemplate(type='text/html')                    
+        // ko stopBindings: true
         .slideDownMenu.white.z-depth-1
             .actionList
                 .blue-grey-text Actions
                 a.blue-grey-text.action(href="javascript://")
                     i.material-icons add
                     span New
-                a.blue-grey-text.action(href="javascript://")
+                a.blue-grey-text.action(href="javascript://", data-bind="showNavigator: group")
                     i.material-icons folder_open
                     span Open
                 a.blue-grey-text.action(href="javascript://")
@@ -403,11 +361,7 @@ html
                             img(data-bind="thumbnail: upi")
 
                 // /ko
-                //- a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-target="displayPanel2")
-                //-     .itemTitle.white-text 4250 AH1 DISP
-                //-         i.right.material-icons close
-                //-     .itemBody 
-                //-         img(src='/img/test/display3.png')              
+        // /ko
 
     script.
         var isAuthenticated = !{isAuthenticated};
