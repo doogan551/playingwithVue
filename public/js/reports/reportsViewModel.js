@@ -146,11 +146,11 @@ var initKnockout = function () {
                 ranges: reportDateRanges()
             });
 
-            $element.on('apply.daterangepicker', function (picker) {
+            $element.on('apply.daterangepicker', function (ev, picker) {
                 getPickerData($(this), picker);
             });
 
-            $element.on('hide.daterangepicker', function (picker) {
+            $element.on('hide.daterangepicker', function (ev, picker) {
                 getPickerData($(this), picker);
             });
         }
