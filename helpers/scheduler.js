@@ -24,7 +24,7 @@ module.exports = function(cb) {
     var date = moment().format('YYYYMMDD');
 
     // figure out date/time
-    new CronJob('* * 16 * * *', function() {
+    new CronJob('15 * 15 * * *', function() {
       var path = [__dirname, '/../tmp/', date, reportName, '.pdf'].join('');
       pageRender.renderPage('http://localhost/scheduleloader/report/scheduled/' + reportUpi, path, function(err) {
         fs.readFile(path, function(err, data) {

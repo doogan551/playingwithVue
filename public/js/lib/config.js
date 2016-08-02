@@ -923,7 +923,8 @@ var Config = (function(obj) {
         },
 
         validatePortNNetwork: function(data) {
-            data = this.validateUsingMaxMinKeys(data);
+            // data = this.validateUsingMaxMinKeys(data);
+            data = this.validateUsingTheseLimits(data, 0, 65535);
             if (data.ok === true) {
                 data = this.validateNetworkNumber(data); // Check if donwlink network number matches one of the serial port network numbers
             }
@@ -1684,12 +1685,6 @@ var Config = (function(obj) {
 
         "Out of Service": function(data) {
             data.point = obj.EditChanges.applyOutOfService(data);
-            return data;
-        },
-
-        "Point Instance": function(data) {
-            data.ok = false; // Add 'ok' key and preset for validation fail
-            data.result = data.property + " cannot be changed.";
             return data;
         },
 
