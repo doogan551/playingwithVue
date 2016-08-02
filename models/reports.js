@@ -377,7 +377,6 @@ module.exports = Rpt = {
                     },
                     timestamps: timestamps
                 }, function(err, results) {
-                    console.log(results, histPoints);
                     for (var h = 0; h < histPoints.length; h++) {
                         var hadTS = false;
                         for (var r = 0; r < results.length; r++) {
@@ -392,7 +391,6 @@ module.exports = Rpt = {
                         }
                     }
                     histPoints = results;
-                    console.log(histPoints);
                     async.eachSeries(timestamps.reverse(), function(ts, callback1) {
                             //convert id to ts and upi
                             returnObj = {
