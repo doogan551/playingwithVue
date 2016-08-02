@@ -898,6 +898,7 @@ var Config = (function(obj) {
         validateNetworkNumber: function(data) {
             var point = data.point, // Shortcut
                 val = data.propertyObject.Value, // Property value
+                networkConfig = data.networkConfig,
                 props = ["Port 1 Network", "Port 2 Network", "Port 3 Network", "Port 4 Network", "Downlink Network", "Ethernet Network"],
                 prop, // Work var
                 len = props.length, // Number of networks
@@ -919,6 +920,26 @@ var Config = (function(obj) {
                     }
                 }
             }
+
+            if (['Ethernet Network', 'Downlink Network', 'Network Segment'].indexOf(data.property) >= 0) {
+                var validNetwork = false;
+                if (['Downlink Network', 'Network Segment'].indexOf(data.property) >= 0 && val === 0) {
+                    validNetwork = true;
+                } else if (data.point['Uplink Port'].Value !== 'Ethernet' && val === 0) {
+                    validNetwork = true;
+                }
+                for (var i = 0; i < networkConfig.length; i++) {
+                    if (parseInt(networkConfig[i]['IP Network Segment'], 10) === val) {
+                        validNetwork = true;
+                        break;
+                    }
+                }
+                if (!validNetwork) {
+                    data.ok = false;
+                    data.result = "Please enter a network number listed in System Network Configuration.";
+                }
+            }
+
             return data;
         },
 
@@ -2069,27 +2090,28 @@ var Config = (function(obj) {
 
             data.ok = false; // Add 'ok' key and preset for validation fail
 
+            data = this.validateUsingTheseLimits(data, 0, 65534);
             // This property only supported by Devices
             if (type !== "Device") {
                 data.result = "Internal validation error. Point type '" + type + "' does not support this property.";
-            } else if (val < 0) {
-                data.result = data.property + " must be 0 or greater.";
-            } else if (val > 65534) {
-                data.result = data.property + " must be 65534 or less.";
             } else {
                 data.ok = true; // Preset for validation success
                 data = this.validateNetworkNumber(data); // Check if donwlink network number matches one of the serial port network numbers
+            }
+            if (data.ok === true) {
+                data.point = obj.EditChanges.applyNetworkNumber(data);
             }
             return data;
         },
 
         "Ethernet Network": function(data) {
-            data = this.validateUsingMaxMinKeys(data);
+            data = this.validateUsingTheseLimits(data, 0, 65534);
 
             if (data.ok === true) {
                 data = this.validateNetworkNumber(data);
             }
             if (data.ok === true) {
+                data.point = obj.EditChanges.applyNetworkNumber(data);
                 data.point = obj.EditChanges.applyEthernetNetworkNumber(data);
             }
             return data;
@@ -2204,7 +2226,10 @@ var Config = (function(obj) {
         },
 
         "Network Segment": function(data) {
-            data = this.validateUsingTheseLimits(data, 1, 65534);
+            data = this.validateUsingTheseLimits(data, 0, 65534);
+            if (data.ok === true) {
+                data.point = obj.EditChanges.applyNetworkNumber(data);
+            }
             return data;
         },
 
@@ -3152,6 +3177,21 @@ var Config = (function(obj) {
             } else {
                 data.point["High Warning Limit"].isReadOnly = true;
                 data.point["Low Warning Limit"].isReadOnly = true;
+            }
+            return data.point;
+        },
+
+        applyNetworkNumber: function(data) {
+            switch (data.property) {
+                case 'Ethernet Network':
+                    data.point['Ethernet IP Port'].isReadOnly = (data.propertyObject.Value === 0) ? false : true;
+                    break;
+                case 'Downlink Network':
+                    data.point['Downlink IP Port'].isReadOnly = (data.propertyObject.Value === 0) ? false : true;
+                    break;
+                case 'Network Segment':
+                    data.point['Ethernet IP Port'].isReadOnly = (data.propertyObject.Value === 0) ? false : true;
+                    break;
             }
             return data.point;
         },
