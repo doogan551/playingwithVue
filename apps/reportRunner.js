@@ -7,8 +7,10 @@ page.paperSize = {
 };
 page.open(system.args[1], function(status) {
 
-  if (status === "success") {
+  setTimeout(function() {
+    if (status === "success") {
       page.render(system.args[2]);
-  }
-  phantom.exit();
+      phantom.exit();
+    }
+  }, 25000);
 });
