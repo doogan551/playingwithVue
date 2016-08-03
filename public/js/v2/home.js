@@ -334,7 +334,7 @@ var dti = {
                 self.bindings = $.extend(self.bindings, obj);                        
             },
             getGroupName = function (config) {
-                var groupName = dti.taskbar.getWindowGroupName(config.group);
+                var groupName = dti.taskbar.getWindowGroupName(config.type);
 
                 if (config.exempt) {
                     return '';
@@ -344,7 +344,7 @@ var dti = {
             },
             close = function (event) {
                 self.bindings.minimize();
-                dti.bindings.openWindows.remove(self.bindings);
+                dti.bindings.openWindows[self.bindings.group()].remove(self.bindings);
                 self.$iframe.attr('src', 'about:blank');
 
                 dti.fire('closeWindow', self);
@@ -405,14 +405,9 @@ var dti = {
                     }
 
                     if (this.contentWindow.point) {
-                        // dti.log('Setting window upi', this.contentWindow.point._id);
                         if (self.bindings.upi() === undefined) {
                             self.bindings.upi(this.contentWindow.point._id);
-                        // } else {
-                        //     dti.log('Skipping window upi, already set', self.bindings.upi());
                         }
-                    // } else {
-                    //     dti.log('Skipping set window upi');
                     }
 
                     $(this.contentDocument).on('click', function handleIframeClick(event) {
@@ -425,7 +420,7 @@ var dti = {
                         }
                     };
 
-                    // config.afterLoad.call(self, this.contentWindow);
+                    this.contentWindow.windowId = self.bindings.windowId();
                 },
                 getGroup: function () {
                     //if point type app, get point type.  if not, check route?
@@ -581,21 +576,15 @@ var dti = {
             dti.bindings.startMenuItems(ko.viewmodel.fromModel(dti.config.itemGroups));
             //load user preferences
             dti.forEachArray(dti.taskbar.pinnedItems, function  processPinnedItem (item) {
+                dti.bindings.openWindows[item] = ko.observableArray([]);
                 dti.bindings.windowGroups.push(dti.taskbar.getWindowGroup(item, true));
             });
 
             dti.on('closeWindow', function handleCloseWindow (win) {
                 var group = win.bindings.group(),
-                    found = false;
+                    openWindows = dti.bindings.openWindows[group]();
 
-                dti.forEachArray(dti.bindings.openWindows(), function (openWin) {
-                    if (openWin.bindings.group() === group) {
-                        found = true;
-                        return false;
-                    }
-                });
-
-                if (!found) {
+                if (openWindows.length === 0) {
                     dti.bindings.windowGroups.remove(function removeWindowGroup (item) {
                         return item.group() === group && item.pinned() === false;
                     });
@@ -609,10 +598,11 @@ var dti = {
 
              if (group && dti.taskbar.isValidGroup(group)) {
                 if (!dti.taskbar.isGroupOpen(group)) {
+                    dti.bindings.openWindows[win.bindings.group()] = ko.observableArray([]);
                     dti.bindings.windowGroups.push(dti.taskbar.getWindowGroup(group));
                 }
 
-                dti.bindings.openWindows.push(win.bindings);
+                dti.bindings.openWindows[win.bindings.group()].push(win.bindings);
                 // if (myWindow.point) {
                 //     this.bindings.upi(myWindow.point._id);            
                 // }
@@ -1038,7 +1028,7 @@ var dti = {
     },
     bindings: {
         user: ko.observable(window.userData || {}),
-        openWindows: ko.observableArray([]),
+        openWindows: {},
         windowGroups: ko.observableArray([]), // Pinned items prepopulate this array
         startMenuItems: ko.observableArray([]),
         closeWindows: function (group) {
@@ -1360,23 +1350,8 @@ absolute/relative/fixed position--bindings?  base css classes via binding, posit
 
 */
 
-dti.Taskbar = function () {
-    var self = {
-            addWindow: function (title, id) {
-
-            }
-        };
-
-    return {
-        addWindow: self.addWindow,
-        closeWindow: self.closeWindow
-    };
-};
-
 dti.workspaceManager = window.workspaceManager = {
-    user: function() {
-        return JSON.parse(JSON.stringify(dti.bindings.user()));
-    },
+    openWindowPositioned: dti.windows.openWindow,
     config: window.Config,
     systemEnums: dti.utility.systemEnums,
     systemEnumObjects: dti.utility.systemEnumObjects,
@@ -1386,13 +1361,26 @@ dti.workspaceManager = window.workspaceManager = {
     sessionId: function () {
         return store.get('sessionId');
     },
-    openWindowPositioned: dti.windows.openWindow
+    user: function() {
+        return JSON.parse(JSON.stringify(dti.bindings.user()));
+    }
 };
 
+//include messaging.js, sets up storage listener, parses messages, etc.  grabs window id, then sets up 'onMessage' event?
 dti.window = {
     updateUrl: null,
     back: null,
     forward: null,
     saveState: null,
-    retrieveState: null
+    retrieveState: null,
+    initialize: function () {
+        this.id = windowPrefix + makeId();
+
+    }
 };
+
+
+
+
+
+

@@ -234,7 +234,8 @@ html
             #openItemsModal.modal.modal-large
                 .modal-content
                     h4 Open Items
-                    #itemlist.openItemList(data-bind="foreach: $root.openWindows")
+                    #itemlist.openItemList(data-bind="foreach: $root.windowGroups")
+                        // ko foreach: $root.openWindows[group()]
                         // ko if: !exempt()
                         a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: function () {activate(false);}")
                             .itemTitle.white-text
@@ -242,6 +243,7 @@ html
                                 div(data-bind="text: title")
                             .itemBody 
                                 img(data-bind="thumbnail: upi")
+                        // /ko
                         // /ko
 
                 .modal-footer
@@ -366,15 +368,15 @@ html
 
             .items
                 .itemsHeader.blue-grey-text Open Items
-                // ko foreach: $root.openWindows
+                // ko foreach: $root.openWindows[group()]
 
-                span(data-bind="if: group() === $parent.group()")
-                    a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: function () {activate();}")
-                        .itemTitle.white-text
-                            i.right.material-icons.closeIcon close
-                            div(data-bind="text: title")
-                        .itemBody 
-                            img(data-bind="thumbnail: upi")
+                //- span(data-bind="if: group() === $parent.group()")
+                a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: function () {activate();}")
+                    .itemTitle.white-text
+                        i.right.material-icons.closeIcon close
+                        div(data-bind="text: title")
+                    .itemBody 
+                        img(data-bind="thumbnail: upi")
 
                 // /ko
         // /ko
