@@ -714,6 +714,13 @@ window.pointLookup = (function(module, ko, $) {
         refreshPointTypes();
     };
 
+    module.hidePointTypes = function () {
+        $splitter.jqxSplitter('collapse');
+    };
+
+    module.showPointTypes = function () {
+        $splitter.jqxSplitter('expand');
+    };
 
     module.getCheckedPointTypes = function () {
         return getSelectedPointTypes();

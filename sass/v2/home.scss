@@ -246,6 +246,10 @@ main {
     background: none !important;
 }
 
+.modal-content-no-padding {
+    padding: 0 !important;
+}
+
 /* global */
 
 .activeCard {
@@ -331,6 +335,12 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     > i {
         display: block;
     }
+
+    > .mdi {
+        font-size: 24px;
+        line-height: 24px;
+        height: 24px;
+    }
 }
 
 .card-panel-custom-icon {
@@ -400,6 +410,7 @@ $startmenuGutter: 15px;
     position: absolute;
     left: 0;
     top: 0;
+    z-index: 110;
 
     i {
         top: 8px;
@@ -683,7 +694,7 @@ footer {
 
 #alarmDropdown {
     position: absolute;
-    left: 40%;
+    right: 100px;
     top: 0;
     z-index: 105;
     padding: 10px;
@@ -754,6 +765,8 @@ footer {
         }
 
         .itemBody {
+            height: calc(100% - 24px);
+
             img {
                 max-height: 124px;
             }
@@ -813,6 +826,20 @@ footer {
     height: 100%;
     width: 100%;
 }
+
+#navigatorModal {
+    width: 75%;
+    height: 80%;
+    max-height: 95%;
+}
+
+.iframeFull {
+    height: 99%;
+    width: 100%;
+    border: 0;
+}
+
+
 
 
 /* label focus color */

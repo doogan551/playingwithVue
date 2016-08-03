@@ -6,7 +6,58 @@ var dti = {
         webEndpoint: window.location.origin,
         socketEndPoint: window.location.origin,
         apiEndpoint: window.location.origin + '/api/',
-        idxPrefix: 'dti_'
+        idxPrefix: 'dti_',
+        sessionId: btoa(new Date().getTime().toString().split('').reverse().join(''))
+    },
+    config: {
+        itemGroups: {
+            'Display': {
+                title: 'Displays',
+                iconText: 'tv',
+                iconClass: 'material-icons',
+                group: 'Display'
+            },
+            'Sequence': {
+                title: 'Sequences',
+                iconText: 'device_hub',
+                iconClass: 'material-icons',
+                group: 'Sequence'
+            },
+            'Report': {
+                title: 'Reports',
+                iconText: 'assignment',
+                iconClass: 'material-icons',
+                group: 'Report'
+            },
+            'Dashboard': {
+                title: 'Dashboards',
+                iconText: '',
+                iconClass: 'mdi mdi-gauge',
+                group: 'Dashboard',
+                standalone: true
+            },
+            'Alarm': {
+                title: 'Alarms',
+                iconText: 'notifications',
+                iconClass: 'material-icons',
+                group: 'Alarm',
+                standalone: true,
+                url: '/alarms'
+            },
+            'Activity Log': {
+                title: 'Activity Logs',
+                iconText: '',
+                iconClass: 'mdi mdi-comment-multiple-outline',
+                group: 'Activity Log',
+                standalone: true
+            },
+            'Point': {
+                title: 'Points',
+                iconText: 'memory',
+                iconClass: 'material-icons',
+                group: 'Point'
+            }
+        }
     },
     makeId: function () {
         dti.itemIdx++;
@@ -192,10 +243,12 @@ var dti = {
                 $menu = $('#' + menuID),
                 hideTimer,
                 hoverDelay = 500,
-                closeMenu = function () {
-                    if (menuShown) {
-                        menuShown = false;
-                        dti.animations.fadeOut($menu);
+                closeMenu = function (id) {
+                    if (id || id !== menuID) {
+                        if (menuShown) {
+                            menuShown = false;
+                            dti.animations.fadeOut($menu);
+                        }
                     }
                 },
                 setTimer = function () {
@@ -204,6 +257,7 @@ var dti = {
                 };
 
             $button.hover(function showHoverMenu (event) {
+                dti.fire('openMenu', menuID);
                 if (!menuShown) {
                     menuShown = true;
                     dti.animations.fadeIn($menu);
@@ -238,6 +292,8 @@ var dti = {
             });
 
             dti.on('hideMenus', closeMenu);
+
+            dti.on('openMenu', closeMenu);
         }
     },
     Window: function (config) {
@@ -277,19 +333,30 @@ var dti = {
 
                 self.bindings = $.extend(self.bindings, obj);                        
             },
+            getGroupName = function (config) {
+                var groupName = dti.taskbar.getWindowGroupName(config.group);
+
+                if (config.exempt) {
+                    return '';
+                }
+
+                return groupName;
+            },
             close = function (event) {
                 self.bindings.minimize();
                 dti.bindings.openWindows.remove(self.bindings);
                 self.$iframe.attr('src', 'about:blank');
 
-                setTimeout(function () {
+                dti.fire('closeWindow', self);
+
+                setTimeout(function closeWindow () {
                     self.$windowEl.remove();
                 }, 100);
             },
-            minimize = function (event) {
-                if (active) {
-                    active = false;
-                    self.bindings.minimized(true);
+            minimize = function (event, skipActivate) {
+                active = false;
+                self.bindings.minimized(true);
+                if (active && !skipActivate) {
                     dti.windows.activate(null);
                 }
             },
@@ -313,9 +380,9 @@ var dti = {
                 bindings: {
                     title: ko.observable(config.title),
                     windowId: ko.observable(windowId),
-                    group: ko.observable(config.type),
+                    group: ko.observable(getGroupName(config)),
                     url: config.url,
-                    upi: ko.observable(),
+                    upi: ko.observable(config.upi),
                     activate: activate,
                     minimize: minimize,
                     minimized: ko.observable(false),
@@ -338,15 +405,25 @@ var dti = {
                     }
 
                     if (this.contentWindow.point) {
-                        dti.log('Setting window upi', this.contentWindow.point._id);
+                        // dti.log('Setting window upi', this.contentWindow.point._id);
                         if (self.bindings.upi() === undefined) {
                             self.bindings.upi(this.contentWindow.point._id);
-                        } else {
-                            dti.log('Skipping window upi, already set', self.bindings.upi());
+                        // } else {
+                        //     dti.log('Skipping window upi, already set', self.bindings.upi());
                         }
-                    } else {
-                        dti.log('Skipping set window upi');
+                    // } else {
+                    //     dti.log('Skipping set window upi');
                     }
+
+                    $(this.contentDocument).on('click', function handleIframeClick(event) {
+                        self.bindings.activate();
+                    });
+
+                    this.contentWindow.dti = {
+                        showNavigator: function () {
+                            dti.utility.showNavigatorModal();
+                        }
+                    };
 
                     // config.afterLoad.call(self, this.contentWindow);
                 },
@@ -369,18 +446,18 @@ var dti = {
         }
 
         //detect clicks inside iframe
-        setInterval(function () {
-            var elem = document.activeElement;
-            if (elem && elem.id === iframeId) {
-                self.bindings.activate();
-            }
-        }, 100);
+        // setInterval(function detectIframeClick () {
+        //     var elem = document.activeElement;
+        //     if (elem && elem.id === iframeId) {
+        //         self.bindings.activate();
+        //     }
+        // }, 100);
 
         ko.applyBindings(self.bindings, self.$windowEl[0]);
 
         return {
-            minimize: self.minimize,
-            close: self.close,
+            minimize: minimize,
+            close: close,
             deactivate: deactivate,
             activate: activate,
             $el: self.$windowEl,
@@ -389,6 +466,11 @@ var dti = {
         };
     },
     windows: {
+        _offsetX: 30,
+        _offsetY: 30,
+        _offset: 30,
+        _offsetCount: 0,
+        _offsetMax: 5,
         _draggableConfig: {
             containment: 'main',
             scroll: false
@@ -405,21 +487,30 @@ var dti = {
             dti.windows.$elements.draggable(dti.windows._draggableConfig);
 
             dti.windows.$elements.resizable(dti.windows._resizableConfig);
+        },
+        offset: function () {
+            dti.windows._offsetCount++;
 
-            // $('main').on('mousedown', dti.windows.elementSelector, function handleCardClick (event) {
-            //     if (!$(event.target).hasClass('minimizePanel')) {
-            //         dti.windows.activate($(event.currentTarget));
-            //     }
-            // });
-
-            // $('.dti-card-panel .card-toolbar .right a:first-child').click(function minimizePanel (event) {
-            //     $(event.target).parents('.dti-card-panel').addClass('hide');
-            // });
-
-            // $('.material-tooltip .backdrop').addClass('blue-grey');
+            if (dti.windows._offsetCount >= dti.windows._offsetMax) {
+                dti.windows._offsetCount = 0;
+                dti.windows._offsetX = 30;
+                dti.windows._offsetY = 30;
+            } else {
+                dti.windows._offsetX += dti.windows._offset;
+                dti.windows._offsetY += dti.windows._offset;
+            }
         },
         create: function (config) {
-            var newWindow = new dti.Window(config);
+            var newWindow;
+
+            if (!config.exempt) {
+                dti.windows.offset();
+
+                config.left = dti.windows._offsetX;
+                config.top = dti.windows._offsetY;
+            }
+
+            newWindow = new dti.Window(config);
 
             dti.taskbar.addWindow(newWindow);
 
@@ -442,7 +533,14 @@ var dti = {
                 url: url,
                 title: title,
                 type: type,
-                uniqueId: uniqueId
+                upi: uniqueId
+            });
+        },
+        closeAll: function (group) {
+            dti.forEachArray(dti.windows._windowList, function (win) {
+                if (!group || group === win.bindings.group()) {
+                    win.close();
+                }
             });
         },
         activate: function (target) {
@@ -470,29 +568,38 @@ var dti = {
             dti.fire('hideMenus');
 
             // $target.removeClass('hide').addClass('activeCard').children('.card-toolbar').removeClass('lighten-3 hide');
+        },
+        showDesktop: function () {
+            dti.forEachArray(dti.windows._windowList, function deactivateOnShowDesktop (win) {
+                win.minimize(null, true);
+            });
         }
     },
     taskbar: {
-        _groups: {
-            'Display': {
-                title: 'Displays',
-                iconText: 'tv',
-                iconClass: 'material-icons',
-                group: 'Display'
-            },
-            'Sequence': {
-                title: 'Sequences',
-                iconText: 'device_hub',
-                iconClass: 'material-icons',
-                group: 'Sequence'
-            }
-        },
-        pinnedItems: ['Display', 'Sequence'],
+        pinnedItems: ['Display'],
         init: function () {
-            var pinnedItems = [];
+            dti.bindings.startMenuItems(ko.viewmodel.fromModel(dti.config.itemGroups));
             //load user preferences
             dti.forEachArray(dti.taskbar.pinnedItems, function  processPinnedItem (item) {
-                dti.bindings.windowGroups.push(dti.taskbar.getWindowGroup(item));
+                dti.bindings.windowGroups.push(dti.taskbar.getWindowGroup(item, true));
+            });
+
+            dti.on('closeWindow', function handleCloseWindow (win) {
+                var group = win.bindings.group(),
+                    found = false;
+
+                dti.forEachArray(dti.bindings.openWindows(), function (openWin) {
+                    if (openWin.bindings.group() === group) {
+                        found = true;
+                        return false;
+                    }
+                });
+
+                if (!found) {
+                    dti.bindings.windowGroups.remove(function removeWindowGroup (item) {
+                        return item.group() === group && item.pinned() === false;
+                    });
+                }
             });
 
             // dti.bindings.windowGroups(pinnedItems);
@@ -511,11 +618,23 @@ var dti = {
                 // }
             }
         },
-        getWindowGroup: function (group) {
-            return ko.viewmodel.fromModel(dti.taskbar._groups[group] || {});
+        _getWindowGroup: function (grp) {
+            return dti.config.itemGroups[grp] || dti.config.itemGroups.Point;
+        },
+        getWindowGroupName: function (grp) {
+            var group = dti.taskbar._getWindowGroup(grp);
+
+            return group.group;
+        },
+        getWindowGroup: function (grp, pinned) {
+            var group = dti.taskbar._getWindowGroup(grp);
+
+            group.pinned = !!pinned;
+
+            return ko.viewmodel.fromModel(group);
         },
         isValidGroup: function (group) {
-            return dti.taskbar._groups[group] !== undefined;
+            return dti.config.itemGroups[group] !== undefined;
         },
         isGroupOpen: function (group) {
             var openWindowGroups = dti.bindings.windowGroups(),
@@ -545,7 +664,7 @@ var dti = {
                 $('#modal2').openModal();
             });
 
-            dti.events.clickMenu('.startButtonContainer', '#startmenu');
+            dti.events.hoverMenu('.startButtonContainer', 'startmenu');
 
             dti.events.clickMenu('#globalSearch', '#searchBox', {
                 before: function () {
@@ -587,13 +706,25 @@ var dti = {
                 }
             });
 
-            $('#showOpenItems').click(function (event) {
+            $('#showOpenItems').click(function showOpenItems (event) {
                 $('#openItemsModal').openModal();
             });
 
             // $('#showDesktop').click(function (event) {
             //     $('.dti-card-panel').addClass('hide');
             // });
+        },
+        handleClick: function (koIconObj) {
+            var obj = ko.toJS(koIconObj),
+                id = dti.makeId();
+
+            if (!obj.standalone) {
+                dti.bindings.showNavigator(obj.group);
+            } else {
+                dti.windows.openWindow(obj.url + '?' + id, obj.title, obj.group);
+
+                // openWindow: function (url, title, type, target, uniqueId, options) {
+            }
         }
     },
     globalSearch: {
@@ -641,6 +772,8 @@ var dti = {
         }
     },
     utility: {
+        $navigatorModalIframe: $('#navigatorModal iframe'),
+        $navigatorModal: $('#navigatorModal'),
         systemEnums: {},
         systemEnumObjects: {},
         addEvent: function(element, event, fn) {
@@ -837,7 +970,25 @@ var dti = {
             }
         },
         hideNavigator: function () {
-            dti._navigatorWindow.bindings.minimized(true);
+            if (dti._navigatorWindow) {
+                dti._navigatorWindow.bindings.minimized(true);
+            }
+        },
+        showNavigatorModal: function (pointType) {
+            var initModalLookup = function () {
+                this.contentWindow.pointLookup.init();
+            };
+
+            dti.utility.$navigatorModal.openModal({
+                ready: function () {
+                    if (!dti._navigatorModal) {
+                        dti._navigatorModal = true;
+
+                        dti.utility.addEvent(dti.utility.$navigatorModalIframe[0], 'load', initModalLookup);
+                        dti.utility.$navigatorModalIframe.attr('src', 'pointLookup?mode=filter');
+                    }
+                }
+            });
         },
         init: function () {
             dti.utility.pointTypeLookup = {};
@@ -862,21 +1013,45 @@ var dti = {
                     'New Value': e.newValue
                 });
             });
+
+            store.set('sessionId', dti.settings.sessionId);
+
+            $('#testLink').on('click', function clickTestLink (event) {
+                store.set('startupCommands', true);
+            });
+
+            dti.on('loaded', function checkStartupCommands () {
+                var commands = store.get('startupCommands');
+
+                if (commands) {
+                    dti.windows.create({
+                        url: '/displays/view/44215',
+                        title: 'Test Open',
+                        type: 'Display',
+                        upi: 44215
+                    });
+
+                    store.set('startupCommands', null);
+                }
+            });
         }
     },
     bindings: {
         user: ko.observable(window.userData || {}),
         openWindows: ko.observableArray([]),
         windowGroups: ko.observableArray([]), // Pinned items prepopulate this array
-        showNavigator: function () {
-            dti.utility.showNavigator();
+        startMenuItems: ko.observableArray([]),
+        closeWindows: function (group) {
+            dti.windows.closeAll(group);
+        },
+        showNavigator: function (group) {
+            dti.utility.showNavigator(group);
+        },
+        startMenuClick: function (obj) {
+            dti.startMenu.handleClick(obj);
         },
         showDesktop: function () {
-            dti.forEachArray(dti.bindings.openWindows(), function minimizeOnShowDesktop (win) {
-                win.minimize();
-            });
-
-            dti.utility.hideNavigator();
+            dti.windows.showDesktop();
         }
     },
     knockout: {
@@ -891,6 +1066,31 @@ var dti = {
 
             ko.virtualElements.allowedBindings.stopBindings = true;
 
+            ko.bindingHandlers.foreachprop = {
+                transformObject: function (obj) {
+                    var properties = [];
+                    ko.utils.objectForEach(obj, function (key, value) {
+                        properties.push({
+                            key: key,
+                            value: value
+                        });
+                    });
+                    return properties;
+                },
+                init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                    var properties = ko.pureComputed(function () {
+                        var obj = ko.utils.unwrapObservable(valueAccessor());
+                        return ko.bindingHandlers.foreachprop.transformObject(obj);
+                    });
+                    ko.applyBindingsToNode(element, {
+                        foreach: properties
+                    }, bindingContext);
+                    return {
+                        controlsDescendantBindings: true
+                    };
+                }
+            };
+
             ko.bindingHandlers.thumbnail = {
                 update: function (element, valueAccessor) {
                     var upi = valueAccessor()(),
@@ -902,7 +1102,7 @@ var dti = {
 
                     if (upi !== undefined) {
                         if (currThumb === undefined) {
-                            dti.log('No thumb for upi', upi);
+                            // dti.log('No thumb for upi', upi);
                             $.ajax({
                                     url: '/img/thumbs/' + upi + '.txt',
                                     dataType: 'text',
@@ -914,7 +1114,7 @@ var dti = {
                                             bgColor = data[0],
                                             image = data[1];
 
-                                        dti.log('Saving thumb for upi', upi);
+                                        // dti.log('Saving thumb for upi', upi);
 
                                         dti.thumbs[upi] = {
                                             bgColor: bgColor,
@@ -928,11 +1128,11 @@ var dti = {
                                 .fail(
                                     function () {
                                         $element.hide();
-                                        $icon.show();
+                                        // $icon.show();
                                     }
                                 );
                         } else {
-                            dti.log('Using existing thumb for', upi);
+                            // dti.log('Using existing thumb for', upi);
                             bg = currThumb.bgColor;
                             img = currThumb.image;
 
@@ -993,7 +1193,9 @@ var dti = {
                 }
             };
 
-            ko.applyBindings(dti.bindings);
+            dti.on('loaded', function applyKnockoutBindings () {
+                ko.applyBindings(dti.bindings);
+            });
         }
     },
     authentication: {
@@ -1046,9 +1248,11 @@ var dti = {
                     if (typeof val === 'object' && val.init) {
                         val.init();
                     }
-
-                    $('select').material_select();
                 });
+
+                $('select').material_select();
+
+                dti.fire('loaded');
             },
             complete = function () {
                 num--;
@@ -1064,7 +1268,7 @@ var dti = {
 
 $(function initWorkspaceV2 () {
     dti.socket = io.connect(dti.settings.socketEndPoint);
-    dti.$loginBtn.click(function (event) {
+    dti.$loginBtn.click(function validateLogin (event) {
         var user = $('#username').val(),
             pw = $('#password').val();
 
@@ -1179,6 +1383,16 @@ dti.workspaceManager = window.workspaceManager = {
     socket: function () {
         return dti.socket;
     },
+    sessionId: function () {
+        return store.get('sessionId');
+    },
     openWindowPositioned: dti.windows.openWindow
 };
 
+dti.window = {
+    updateUrl: null,
+    back: null,
+    forward: null,
+    saveState: null,
+    retrieveState: null
+};

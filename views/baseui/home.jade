@@ -98,26 +98,31 @@ html
 
             #startmenu.z-depth-3.white.lighten-3.white-text
                 .startmenuBody
-                    .tileList
-                        a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="showNavigator: 'Sequence'")
-                            i.material-icons.center-align device_hub
-                            span Sequences
-                        a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="showNavigator: 'Display'")
-                            i.material-icons.center-align tv
-                            span Displays
-                        span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
-                            i.material-icons.center-align notifications
-                            span Alarms
-                        span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
-                            i.material-icons.center-align assignment
-                            span Reports
-                        span.hoverable.dti-menu-tile.card-panel.card-panel-custom-icon.z-depth-1.blue-grey
-                            i
-                                img(src='/img/test/icons/file-tree-36.png')
-                            span Device Tree
-                        span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
-                            i.material-icons.center-align assignment
+                    .tileList(data-bind="foreachprop: startMenuItems")
+                        // ko with: value
+                        a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="click: $root.startMenuClick")
+                            i.center-align(data-bind="css: iconClass, text: iconText")
+                            span(data-bind="text: title")             
+                        // /ko       
+                    //- .tileList
+                    //-     a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="showNavigator: 'Display'")
+                    //-         i.material-icons.center-align tv
+                    //-         span Displays
+                    //-     span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                    //-         i.material-icons.center-align notifications
+                    //-         span Alarms
+                    //-     span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                    //-         i.material-icons.center-align assignment
+                    //-         span Reports
+                    //-     span.hoverable.dti-menu-tile.card-panel.card-panel-custom-icon.z-depth-1.blue-grey
+                    //-         i
+                    //-             img(src='/img/test/icons/file-tree-36.png')
+                    //-         span Device Tree
+                    //-     span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
+                    //-         i.material-icons.center-align assignment
                             span DB Manager
+
+
 
                     .recentItems
                         .col.s12.blue-grey-text Recent Items
@@ -140,28 +145,28 @@ html
                                 i.mdi.mdi-compass
                         //- span &copy; Dorsett Technologies
 
-            #modal1.modal.bottom-sheet
-                .modal-content
-                    h4 Modal Header
-                    p A bunch of text
-                .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close
+            //- #modal1.modal.bottom-sheet
+            //-     .modal-content
+            //-         h4 Modal Header
+            //-         p A bunch of text
+            //-     .modal-footer
+            //-         a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close
 
-            #grouping.modal.modal-fixed-footer
-                .modal-content
-                    //- .groupingBody
-                        //- ul
-                        //-     li Leaf
-                        //-     li Subtree
-                        //-         ul
-                        //-             li Leaf
-                        //-             li Leaf
-                    .propertiesList
+            //- #grouping.modal.modal-fixed-footer
+            //-     .modal-content
+            //-         //- .groupingBody
+            //-             //- ul
+            //-             //-     li Leaf
+            //-             //-     li Subtree
+            //-             //-         ul
+            //-             //-             li Leaf
+            //-             //-             li Leaf
+            //-         .propertiesList
 
-                .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close                         
+            //-     .modal-footer
+            //-         a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close                         
 
-            #pointID.modal.modal-fixed-footer
+            //- #pointID.modal.modal-fixed-footer
                 .modal-content
                     h4.blue-grey-text Point Identification
 
@@ -220,7 +225,13 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
 
-            #openItemsModal.modal
+            #navigatorModal.modal
+                //- .modal-content.modal-content-no-padding
+                iframe.iframeFull
+                //- .modal-footer
+                //-     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close
+
+            #openItemsModal.modal.modal-large
                 .modal-content
                     h4 Open Items
                     #itemlist.openItemList(data-bind="foreach: $root.openWindows")
@@ -268,6 +279,11 @@ html
                         tr
                             td Dew Point
                             td 47.02
+                        tr
+                            td Test Link
+                            td
+                                a#testLink(href='/', target='_blank') Infoscan
+
 
                 .buttonBar
                     a.blue-grey.waves-effect.btn(href="javascript://") Master Menu Disp
@@ -287,7 +303,7 @@ html
                                 label(for='email') Username
                         .row
                             .input-field.col.s12
-                                input#password(type='password', name='password')
+                                input#password(type='password', name='password', autocomplete='off')
                                 label(for='password') Password
                         br
                         center
@@ -338,13 +354,13 @@ html
         .slideDownMenu.white.z-depth-1
             .actionList
                 .blue-grey-text Actions
-                a.blue-grey-text.action(href="javascript://")
-                    i.material-icons add
-                    span New
                 a.blue-grey-text.action(href="javascript://", data-bind="showNavigator: group")
                     i.material-icons folder_open
-                    span Open
-                a.blue-grey-text.action(href="javascript://")
+                    span Open                
+                //- a.blue-grey-text.action(href="javascript://")
+                //-     i.material-icons add
+                //-     span New
+                a.blue-grey-text.action(href="javascript://", data-bind="click: function () { $root.closeWindows(group()); }")
                     i.material-icons close
                     span Close All
 
