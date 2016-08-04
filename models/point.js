@@ -655,11 +655,7 @@ module.exports = {
             Name: 'Preferences'
           }
         }
-        Utility.findOne(criteria, function(err, sysInfo) {
-          if (point['Point Type'].Value === 'Device') {
-            point['Time Zone'].eValue = sysInfo['Time Zone'];
-            point['Time Zone'].Value = Config.revEnums['Time Zones'][sysInfo['Time Zone']];
-          }
+        Utility.getOne(criteria, function(err, sysInfo) {
 
           criteria = {
             collection: 'upis',
@@ -838,6 +834,12 @@ module.exports = {
           } else if (template["Point Type"].Value === "Report") {
             template["Report Type"].Value = (subType) ? subType.Value : "Property";
             template["Report Type"].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
+          }
+		  
+		  
+          if (template['Point Type'].Value === 'Device') {
+            template['Time Zone'].eValue = sysInfo['Time Zone'];
+            template['Time Zone'].Value = Config.revEnums['Time Zones'][sysInfo['Time Zone']];
           }
 
           template._parentUpi = parentUpi;
