@@ -2440,7 +2440,10 @@ var Config = (function(obj) {
 
             if (type === "Binary Input") {
                 data.point = obj.EditChanges.applyBinaryInputTypeInputType(data);
+            } else if (type === "Analg Input") {
+                data.point = obj.EditChanges.applyAnalogInputTypeInputType(data);
             }
+
             return data;
         },
 
@@ -3725,9 +3728,9 @@ var Config = (function(obj) {
             // Init Firmware 2 to not displayable - we'll set it displayable when it is needed
             point["Firmware 2 Version"].isDisplayable = false;
 
-            if (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "Unknown" || point["Model Type"].Value == "MicroScan 5 xTalk" || point["Model Type"].Value == "SCADA Vio") {
-                // Firmware 2 (baseboard fw) is displayable on MS5-UNV and SCADA Vio products
-                point["Firmware 2 Version"].isDisplayable = (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "SCADA Vio");
+            if (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "Unknown" || point["Model Type"].Value == "MicroScan 5 xTalk" || point["Model Type"].Value == "SCADA Vio" || point["Model Type"].Value == "SCADA IO") {
+                // Firmware 2 (baseboard fw) is displayable on MS5-UNV, SCADA Vio products, and SCADA IO products
+                point["Firmware 2 Version"].isDisplayable = (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "SCADA Vio" || point["Model Type"].Value == "MicroScan 5 UNV");
 
                 if (point["Model Type"].Value !== "Unknown") {
                     point["Time Zone"].isReadOnly = false;
@@ -4704,6 +4707,30 @@ var Config = (function(obj) {
             return point;
         },
 
+        applyAnalogInputTypeInputType: function(data) {
+            var point = data.point;
+
+            if (_devModel === SCADA IO) {
+                if (point["Input Type"].Value === "Internal Input") {
+                    if (point["Channel"].ValueType !== enum) {
+                        // set channel prop to enum type
+                        setupChannel({
+                            ValueType: enumValueType,
+                            ValueOptions: {
+                                "9 - Battery Voltage": 9,
+                                "10 - Temperature (F)": 10,
+                                "11 - Power Input Voltage": 11,
+                                "12 - Power Input Current": 12,
+                                "13 - Power Consumption": 13
+                            }
+                        });
+                    }
+                } else if (point["Channel"].ValueType === enum) {
+
+                }
+            }
+        },
+
         applyAnalogInputTypeSensorPoint: function(data) {
             var point = data.point,
                 refPoint = data.refPoint,
@@ -4733,7 +4760,54 @@ var Config = (function(obj) {
         },
 
         applyAnalogInputTypeDevModel: function(data) {
-            var point = data.point;
+            var point = data.point,
+                unsignedValueType = enumsTemplatesJson.Enums["Value Types"].Unsigned.enum,
+                enumValueType = enumsTemplatesJson.Enums["Value Types"].Enum.enum,
+                setupChannel = function (opts) {
+                    // opts is expected to be an object of the form:
+                    // {
+                    //     ValueType: <val>,
+                    //     Min: <val>,
+                    //     Max: <val>,
+                    //     ValueOptions: <val>
+                    // }
+                    var ch = point.Channel,
+                        valueTypeEnums = enumsTemplatesJson.Enums["Value Types"],
+                        ValueType = opts.ValueType,
+                        Min = opts.Min,
+                        Max = opts.Max,
+                        key;
+
+                    ch.isDisplayable = true;
+
+                    if (ch.ValueType !== ValueType) {
+                        ch.ValueType = ValueType;
+                        if (ValueType === unsignedValueType) {
+                            delete ch.ValueOptions;
+                            delete ch.eValue;
+                            ch.Min = Min;
+                            ch.Max = Max;
+                            ch.Value = Min;
+                        } else if (ValueType === enumValueType) {
+                            delete ch.Min;
+                            delete ch.Max;
+                            ch.ValueOptions = opts.ValueOptions;
+                            // Get the 1st value option's key
+                            key = Object.keys(ch.ValueOptions)[0];
+                            // Set the eValue and Value
+                            ch.eValue = ch.ValueOptions[key];
+                            ch.Value = key;
+                        }
+                    } else if (ValueType === unsignedValueType) {
+                        ch.Min = Min;
+                        ch.Max = Max;
+                        if (ch.Value < Min) {
+                            ch.Value = Min;
+                        } else if (ch.Value > Max) {
+                            ch.Value = Max;
+                        }
+                    }
+                };
 
             // If unknown or central device model type 
             if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"])) {
@@ -4781,9 +4855,11 @@ var Config = (function(obj) {
                     // Else if SCADA Vio
                     else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) {
 
-                        point.Channel.isDisplayable = true;
-                        point.Channel.Max = 2;
-                        point.Channel.Min = 1;
+                        setupChannel({
+                            ValueType: unsignedValueType,
+                            Max: 2,
+                            Min: 1
+                        });
 
                         point["Input Type"].isDisplayable = true;
                         point["Input Type"].ValueOptions = {
@@ -4798,12 +4874,39 @@ var Config = (function(obj) {
                         data.point = point;
                         return data.point;
                     }
+                    // Else if SCADA IO
+                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"]) {
+                        setupChannel({
+                            Min: 1,
+                            Max: 8,
+                            ValueType: unsignedValueType
+                        });
+                        point["Input Type"].isDisplayable = true;
+                        point["Input Type"].ValueOptions = {
+                            "10 Volts": 2,
+                            "20 mA": 3,
+                            "Rate Input": 5,
+                            "Internal Input": 6
+                        };
+                        point["Input Type"].eValue = 2;
+                        point["Input Type"].Value = "10 Volts";
+
+                        obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
+                        point["Conversion Type"].isDisplayable = true;
+
+                        // Applying Sensor Logic
+                        data.point = point;
+                        return data.point;
+
+                    }
                     // Must be MS5-UNV or central (no device assigned)
                     else {
 
-                        point.Channel.isDisplayable = true;
-                        point.Channel.Max = 16;
-                        point.Channel.Min = 1;
+                        setupChannel({
+                            ValueType: unsignedValueType,
+                            Max: 16,
+                            Min: 1
+                        });
 
                         point["Input Type"].isDisplayable = true;
                         point["Input Type"].ValueOptions = {
@@ -4901,9 +5004,11 @@ var Config = (function(obj) {
                     // Else if MicroScan 4 Digital
                     else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"]) {
 
-                        point.Channel.isDisplayable = true;
-                        point.Channel.Max = 32;
-                        point.Channel.Min = 1;
+                        setupChannel({
+                            ValueType: unsignedValueType,
+                            Min: 1,
+                            Max: 32
+                        });
 
                         point["Input Type"].isDisplayable = true;
                         point["Input Type"].ValueOptions = {
@@ -4920,9 +5025,11 @@ var Config = (function(obj) {
                     // Must be MS4-UNV
                     else {
 
-                        point.Channel.isDisplayable = true;
-                        point.Channel.Max = 16;
-                        point.Channel.Min = 1;
+                        setupChannel({
+                            ValueType: unsignedValueType,
+                            Min: 1,
+                            Max: 16
+                        });
 
                         point["Input Type"].isDisplayable = true;
                         point["Input Type"].ValueOptions = {
@@ -4959,9 +5066,11 @@ var Config = (function(obj) {
                 // If MS3 RT, MS3 EEPROM, MS3 Flash
                 else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
 
-                    point["Channel"].isDisplayable = true;
-                    point["Channel"].Max = 7;
-                    point["Channel"].Min = 0;
+                    setupChannel({
+                        ValueType: unsignedValueType,
+                        Min: 0,
+                        Max: 7
+                    });
 
                     point["Input Type"].isDisplayable = true;
                     point["Input Type"].ValueOptions = {
@@ -5055,9 +5164,11 @@ var Config = (function(obj) {
                 // If MS3 RT, MS3 EEPROM, MS3 Flash
                 else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
 
-                    point["Channel"].isDisplayable = true;
-                    point["Channel"].Max = 7;
-                    point["Channel"].Min = 0;
+                    setupChannel({
+                        ValueType: unsignedValueType,
+                        Min: 0,
+                        Max: 7
+                    });
 
                     point["Input Type"].isDisplayable = true;
                     point["Input Type"].ValueOptions = {
@@ -5109,9 +5220,11 @@ var Config = (function(obj) {
                 // If IFC Remote Unit type
                 else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["IFC Remote Unit"]["enum"]) {
 
-                    point.Channel.isDisplayable = true;
-                    point.Channel.Max = 15;
-                    point.Channel.Min = 0;
+                    setupChannel({
+                        ValueType: unsignedValueType,
+                        Min: 0,
+                        Max: 15
+                    });
 
                     point["Input Type"].isDisplayable = true;
                     point["Input Type"].ValueOptions = {
@@ -5145,9 +5258,11 @@ var Config = (function(obj) {
                 // If ASE RMU
                 else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["ASE Remote Unit"]["enum"]) {
 
-                    point.Channel.isDisplayable = true;
-                    point.Channel.Max = 255;
-                    point.Channel.Min = 0;
+                    setupChannel({
+                        ValueType: unsignedValueType,
+                        Min: 0,
+                        Max: 255
+                    });
 
                     obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
                     point["Conversion Type"].isDisplayable = true;
@@ -5172,9 +5287,11 @@ var Config = (function(obj) {
                 // If Smart II Remote Unit
                 else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Smart II Remote Unit"]["enum"]) {
 
-                    point.Channel.isDisplayable = true;
-                    point.Channel.Max = 7;
-                    point.Channel.Min = 0;
+                    setupChannel({
+                        ValueType: unsignedValueType,
+                        Min: 0,
+                        Max: 7
+                    });
 
                     obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
                     point["Conversion Type"].isDisplayable = true;
