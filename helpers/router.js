@@ -23,6 +23,8 @@ module.exports = function(controllers) {
   // Our inbound route is a random id so it's not guessable
   router.use('/' + inboundId, controllers.inbound);
 
+  router.use('/scheduleloader/report', controllers.reports);
+
   // ALL ROUTES BELOW THIS WILL REQUIRE AUTHENTICATION
   router.use(function(req, res, next) {
     if (req.isAuthenticated()) {
@@ -55,7 +57,6 @@ module.exports = function(controllers) {
   router.use('/displays', controllers.display);
   router.use('/gpl', controllers.gpl);
   router.use('/pointlookup', controllers.pointlookup);
-  router.use('/reports1', controllers.reports);
   router.use('/report', controllers.reports);
   router.use('/thumbnail', controllers.thumbnails);
   router.use('/toolbag', controllers.toolbag);

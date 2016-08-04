@@ -1,6 +1,6 @@
 "use strict";
 
-var ActivityLogsManager = function(conf) {
+var ActivityLogsManager = function (conf) {
     var self = this,
         myTitle = 'Activity Logs',
         workspaceManager = window.opener.workspaceManager,
@@ -26,6 +26,7 @@ var ActivityLogsManager = function(conf) {
         filterWindow,
         numberPointTypes = workspaceManager.config.Utility.pointTypes.getAllowedPointTypes().length,
         listOfUsers = ko.observableArray([]),
+        listOfFilteredUsers = ko.observableArray([]),
         gotoPageOne = true,
         pointNameFilterObj = {
             name1: '',
@@ -34,10 +35,10 @@ var ActivityLogsManager = function(conf) {
             name4: '',
             pointTypes: []
         },
-        _log = function() {
+        _log = function () {
             console.log.apply(console, arguments);
         },
-        buildActivityLogRequestObject = function(activityLog, reqObj) {
+        buildActivityLogRequestObject = function (activityLog, reqObj) {
             var localPointTypes,
                 userObj,
                 i,
@@ -94,7 +95,7 @@ var ActivityLogsManager = function(conf) {
             userObj._id = user._id;
             userObj.groups = user.groups;
         },
-        pointNameFilterCallback = function(localFilterObj) {
+        pointNameFilterCallback = function (localFilterObj) {
             //console.log('pointNameFilterCallback() called');
             self.name1(localFilterObj.name1);
             self.name2(localFilterObj.name2);
@@ -107,17 +108,17 @@ var ActivityLogsManager = function(conf) {
                 self.pointTypes(localFilterObj.pointTypes);
             }
         },
-        filterWindowCallback = function() {
+        filterWindowCallback = function () {
             //console.log('filterWindowCallback() called');
             filterWindow.pointLookup.init(pointNameFilterCallback, pointNameFilterObj);
         },
-        initFilterWindow = function() {
+        initFilterWindow = function () {
             //console.log('initFilterWindow() called');
             filterWindow = openWindow('/pointLookup?mode=filter', 'activityfilter', 'activityfilter', 'activityfilter', 'activityfilter', {
                 callback: filterWindowCallback
             });
         },
-        getPrettyDate = function(timestamp, forceDateString) {
+        getPrettyDate = function (timestamp, forceDateString) {
             var theDate = new Date(timestamp),
                 theDateClone = theDate.clone().clearTime(),
                 today = Date.today(),
@@ -134,18 +135,18 @@ var ActivityLogsManager = function(conf) {
             }
             return str;
         },
-        getPrettyTime = function(timestamp) {
+        getPrettyTime = function (timestamp) {
             var theDate = new Date(timestamp);
             return theDate.toString('HH:mm:ss');
         },
-        formatActivityLogEntry = function(activityLog) {
+        formatActivityLogEntry = function (activityLog) {
             var selected = false;
 
             activityLog.isSelected = ko.observable(selected);
             activityLog.prettyDate = getPrettyDate(activityLog.timestamp);
             activityLog.prettyTime = getPrettyTime(activityLog.timestamp);
         },
-        updateNumberOfPages = function(count, activityLogTable) {
+        updateNumberOfPages = function (count, activityLogTable) {
             var sortAsc = self.sortAscending(),
                 curPage = self.pageNumber(),
                 curNumberPages = activityLogTable.numberOfPages(),
@@ -164,7 +165,7 @@ var ActivityLogsManager = function(conf) {
                 self.pageNumber(newNumberPages);
             }
         },
-        processActivityLogs = function(theLogData) {
+        processActivityLogs = function (theLogData) {
             var i, page;
 
             if (theLogData.logs !== undefined) {
@@ -185,7 +186,27 @@ var ActivityLogsManager = function(conf) {
             }
             self.activityLogs().gettingData(false);
         },
-        getStoredUsers = function() {
+        getStoreData = function () {
+            var storeData = store.get(storeKey) || {};
+
+            if (storeData.hasOwnProperty('sessionId') && storeData.sessionId !== sessionId) {
+                store.remove(storeKey);
+                storeData = {};
+            }
+            return storeData;
+        },
+        getJsUsers = function () {
+            var i,
+                filteredUsers = self.filteredUsers(),
+                cleanedUsers = [];
+
+            for (i = 0; i < filteredUsers.length; i++) {
+                cleanedUsers.push(ko.toJS(filteredUsers[i]));
+            }
+
+            return cleanedUsers;
+        },
+        getStoredUsers = function () {
             var i,
                 storeData = getStoreData(),
                 arrayOfStoredFilters,
@@ -203,40 +224,42 @@ var ActivityLogsManager = function(conf) {
 
             return usernamesToFilterOn;
         },
-        getStoreData = function() {
-            var storeData = store.get(storeKey) || {};
-
-            if (storeData.hasOwnProperty('sessionId') && storeData.sessionId !== sessionId) {
-                store.remove(storeKey);
-                storeData = {};
-            }
-            return storeData;
-        },
-        processUsers = function(userData) {
+        parseListOfUsers = function (users) {
             var i,
                 indexOfUser,
-                usernamesToFilterOn = getStoredUsers();
+                usernamesToFilterOn = getStoredUsers(),
+                clonedUsers = $.extend(true, [], users);
 
-            if (userData.Users !== undefined) {
-                //console.log(' - - - activityLogs processUsers() ==> User names from server.  Users.length ', userData.Users.length);
-                for (i = 0; i < userData.Users.length; i += 1) {
-                    if (usernamesToFilterOn.length > 0) {
-                        indexOfUser = usernamesToFilterOn.indexOf(userData.Users[i].username);
-                        userData.Users[i].isSelected = ko.observable(indexOfUser !== -1 ? true : false);
-                    } else {
-                        userData.Users[i].isSelected = ko.observable(false);
-                    }
+            //console.log(' - - - activityLogs processUsers() ==> User names from server.  Users.length ', userData.Users.length);
+            for (i = 0; i < clonedUsers.length; i += 1) {
+                if (usernamesToFilterOn.length > 0) {
+                    indexOfUser = usernamesToFilterOn.indexOf(clonedUsers[i].username);
+                    clonedUsers[i].isSelected = ko.observable(indexOfUser !== -1 ? true : false);
+                } else {
+                    clonedUsers[i].isSelected = ko.observable(false);
                 }
-                listOfUsers(userData.Users);
+            }
+
+            return clonedUsers;
+        },
+        processUsers = function (userData) {
+            if (userData.Users !== undefined) {
+                userData.Users.sort(function (a, b) {
+                    return (a.username.toLowerCase() > b.username.toLowerCase()) ? 1 : -1;
+                });
+
+                listOfFilteredUsers(parseListOfUsers(userData.Users));
+                listOfUsers(getJsUsers());
             } else {
                 listOfUsers([]);
+                listOfFilteredUsers([]);
                 console.log(' - - - activityLogs processUsers() ==> Unable to get list of Users from server.  Users.length ', new Date());
             }
 
             // once User list has loaded then load page with Initial logs with any filters already set.
             self.refreshActivityLogsData();
         },
-        ajaxPOST = function(input, url, callback) {
+        ajaxPOST = function (input, url, callback) {
             //console.log(url, "input = " + JSON.stringify(input));
             $.ajax({
                 url: url,
@@ -244,13 +267,13 @@ var ActivityLogsManager = function(conf) {
                 contentType: 'application/json',
                 dataType: 'json',
                 data: JSON.stringify(input),
-                success: function(returnData) {
+                success: function (returnData) {
                     //console.log(url, "returnData = " + JSON.stringify(returnData));
                     return callback(returnData);
                 }
             });
         },
-        requestUsers = function() {
+        requestUsers = function () {
             var date = new Date(),
                 userObj,
                 reqObj = {};
@@ -265,7 +288,7 @@ var ActivityLogsManager = function(conf) {
             //console.log('Requesting Users from server.', reqObj, date);
             ajaxPOST(reqObj, '/api/security/users/getallusers', processUsers);
         },
-        requestActivityLogs = function(activityLogTable) {
+        requestActivityLogs = function (activityLogTable) {
             var name = activityLogTable.name,
                 date = new Date(),
                 uniqueID = date.getTime(),
@@ -281,21 +304,21 @@ var ActivityLogsManager = function(conf) {
             console.log('Requesting ' + name + ' activityLogs from server.', reqObj, date);
             ajaxPOST(reqObj, '/api/activitylogs/get', processActivityLogs);
         },
-        selectActivityLog = function(ActivityLog) {
+        selectActivityLog = function (ActivityLog) {
             ActivityLog.isSelected(true);
             self.selectedRows.push(ActivityLog);
         },
-        deSelectActivityLog = function(ActivityLog) {
+        deSelectActivityLog = function (ActivityLog) {
             if (--nSelectedRowsOnPage < 0) {
                 nSelectedRowsOnPage = 0;
             }
 
             ActivityLog.isSelected(false);
-            self.selectedRows.remove(function(row) {
+            self.selectedRows.remove(function (row) {
                 return row._id === ActivityLog._id;
             });
         },
-        storeFilterData = function() {
+        storeFilterData = function () {
             var filterValues,
                 storeData = store.get(storeKey);
 
@@ -307,6 +330,8 @@ var ActivityLogsManager = function(conf) {
             if (storeData[filterDataKey] === undefined) {
                 storeData[filterDataKey] = {};
             }
+
+            listOfUsers(getJsUsers());  // get current selected users
 
             filterValues = {
                 sortAscending: self.sortAscending(),
@@ -327,7 +352,7 @@ var ActivityLogsManager = function(conf) {
             storeData[filterDataKey] = ko.toJS(filterValues);
             store.set(storeKey, storeData);
         },
-        initFilterValues = function() {
+        initFilterValues = function () {
             var i,
                 data,
                 storeData = getStoreData();
@@ -375,7 +400,7 @@ var ActivityLogsManager = function(conf) {
             stickyScrollBar: false
         };
 
-    self.togglePop = function() {
+    self.togglePop = function () {
         var options = {
             width: 1250,
             height: 750
@@ -389,16 +414,16 @@ var ActivityLogsManager = function(conf) {
             openWindow(window.location.href, 'Activities', 'activitylog', '', windowUpi, options);
         }
     };
-    self.refreshActivityLogsData = function() {
-        //_log('self.refreshActivityLogsData() called........');
+    self.refreshActivityLogsData = function () {
+        _log('self.refreshActivityLogsData() called........');
         var localActivityLogTable = self.activityLogs();
         requestActivityLogs(localActivityLogTable);
     };
-    self.refreshUsersData = function() {
+    self.refreshUsersData = function () {
         //_log('self.refreshUsersData() called........');
         requestUsers();
     };
-    self.showPointReview = function(element, theData) {
+    self.showPointReview = function (element, theData) {
         var pointTypesUtility = workspaceManager.config.Utility.pointTypes,
             pointType,
             endPoint,
@@ -413,19 +438,19 @@ var ActivityLogsManager = function(conf) {
             openWindow(endPoint.review.url, theData.Name, pointType, endPoint.review.target, theData.upi, options);
         } else {
             originalElementText = element.text;
-            $(element).stop().fadeOut("4000", function() {
+            $(element).stop().fadeOut("4000", function () {
                 element.text = " * Point not found *";
                 $(element).css("background", "#F26060").fadeIn(500);
             });
-            setTimeout(function() {
-                $(element).stop().fadeOut("500", function() {
+            setTimeout(function () {
+                $(element).stop().fadeOut("500", function () {
                     $(element).css("background", "#FFFFFF").fadeIn(500);
                     element.text = originalElementText;
                 });
             }, 3000);
         }
     };
-    self.selectAll = function() {
+    self.selectAll = function () {
         var localActivityLogs = self.activityLogs().list(),
             n = localActivityLogs.length,
             len = (n > 200) ? 200 : n,
@@ -442,42 +467,43 @@ var ActivityLogsManager = function(conf) {
 
         return true;
     };
-    self.selectAllNames = function() {
-        var filterUsers = self.users(),
+    self.selectAllNames = function () {
+        var filterUsers = self.filteredUsers(),
             len = filterUsers.length,
             localFilterUsers,
             i;
 
-        for (i = 0; i < len; i += 1) {
+        for (i = 0; i < len; i++) {
             localFilterUsers = filterUsers[i];
             if (!localFilterUsers.isSelected()) {
                 localFilterUsers.isSelected(true);
             }
         }
-
+        self.dirtyUsernameFilter(true);
         return true;
     };
-    self.deselectAll = function() {
+    self.deselectAll = function () {
         var localActivityLogs = self.activityLogs().list(),
             len = localActivityLogs.length,
             i;
 
-        for (i = 0; i < len; i += 1) {
+        for (i = 0; i < len; i++) {
             localActivityLogs[i].isSelected(false);
         }
         self.selectedRows.removeAll();
         nSelectedRowsOnPage = 0;
     };
-    self.deselectAllNames = function() {
-        var filterUsers = self.users(),
+    self.deselectAllNames = function () {
+        var filterUsers = self.filteredUsers(),
             len = filterUsers.length,
             i;
 
-        for (i = 0; i < len; i += 1) {
+        for (i = 0; i < len; i++) {
             filterUsers[i].isSelected(false);
         }
+        self.dirtyUsernameFilter(true);
     };
-    self.selectNone = function() {
+    self.selectNone = function () {
         var localActivityLogs = self.activityLogs().list(),
             n = localActivityLogs.length,
             len = (n > PAGE_SIZE) ? PAGE_SIZE : n,
@@ -491,19 +517,20 @@ var ActivityLogsManager = function(conf) {
             }
         }
     };
-    self.resetFilters = function() {
+    self.resetFilters = function () {
         self.clearUsernameFilter();
         self.clearPointNameFilter();
         self.clearDateTimeFilter(true);
     };
-    self.clearUsernameFilter = function(refreshTheData) {
+    self.clearUsernameFilter = function (refreshTheData) {
         self.deselectAllNames();
         if (refreshTheData) {
+            listOfUsers(getJsUsers());
             storeFilterData();
             self.refreshActivityLogsData();
         }
     };
-    self.clearPointNameFilter = function(refreshTheData) {
+    self.clearPointNameFilter = function (refreshTheData) {
         self.name1("");
         pointNameFilterObj.name1 = "";
         self.name2("");
@@ -522,7 +549,7 @@ var ActivityLogsManager = function(conf) {
         // reinitialize pointname lookup page
         filterWindowCallback();
     };
-    self.clearDateTimeFilter = function(refreshTheData) {
+    self.clearDateTimeFilter = function (refreshTheData) {
         self.dateFrom(null);
         self.dtFilterPlaceholder.dateFrom = '';
         $dateFrom.val('').datepicker('update');
@@ -540,19 +567,20 @@ var ActivityLogsManager = function(conf) {
             self.refreshActivityLogsData();
         }
     };
-    self.applyPointNameFilter = function() {
+    self.applyPointNameFilter = function () {
         gotoPageOne = true;
         storeFilterData();
         self.refreshActivityLogsData();
     };
-    self.applyUserNameFilter = function() {
+    self.applyUserNameFilter = function () {
         gotoPageOne = true;
+        listOfUsers(getJsUsers());
         storeFilterData();
         self.refreshActivityLogsData();
     };
-    self.cancelUserNameFilter = function() {
+    self.cancelUserNameFilter = function () {
         var i,
-            filteredUsers = self.users(),
+            filteredUsers = self.filteredUsers(),
             indexOfUser,
             usernamesToFilterOn = getStoredUsers();
 
@@ -566,7 +594,7 @@ var ActivityLogsManager = function(conf) {
         }
 
     };
-    self.cancelPointNameFilter = function() {
+    self.cancelPointNameFilter = function () {
         var i,
             data,
             storeData = getStoreData();
@@ -590,7 +618,7 @@ var ActivityLogsManager = function(conf) {
             filterWindowCallback();
         }
     };
-    self.applyDateTimeFilter = function() {
+    self.applyDateTimeFilter = function () {
         self.dateFrom(self.dtFilterPlaceholder.dateFrom);
         self.timeFrom(self.dtFilterPlaceholder.timeFrom);
         self.dateTo(self.dtFilterPlaceholder.dateTo);
@@ -599,7 +627,7 @@ var ActivityLogsManager = function(conf) {
         storeFilterData();
         self.refreshActivityLogsData();
     };
-    self.cancelDateTimeFilter = function() {
+    self.cancelDateTimeFilter = function () {
         self.dtFilterPlaceholder.dateFrom = self.dateFrom();
         $dateFrom.val(self.dtFilterPlaceholder.dateFrom).datepicker('setDate', self.dtFilterPlaceholder.dateFrom);
         self.dtFilterPlaceholder.timeFrom = self.timeFrom();
@@ -609,13 +637,13 @@ var ActivityLogsManager = function(conf) {
         self.dtFilterPlaceholder.timeTo = self.timeTo();
         $timeTo.val(self.dtFilterPlaceholder.timeTo).timepicker('setTime', self.dtFilterPlaceholder.timeTo);
     };
-    self.toggleDateTimeSort = function() {
+    self.toggleDateTimeSort = function () {
         var currentSort = self.sortAscending();
         self.sortAscending(!currentSort);
         storeFilterData();
         self.refreshActivityLogsData();
     };
-    self.changePage = function(modifier) {
+    self.changePage = function (modifier) {
         var activityLogs = self.activityLogs(),
             newPage;
 
@@ -632,21 +660,25 @@ var ActivityLogsManager = function(conf) {
         activityLogs.refresh(true);
         self.refreshActivityLogsData();
     };
-    self.getFilteredUsers = function() {
+    self.getFilteredUsers = function () {
         var i,
-            allUsers = self.users(),
+            users = self.users(),
             usernamesToFilterOn = [];
 
-        for (i = 0; i < allUsers.length; i += 1) {
-            if (allUsers[i].isSelected()) {
-                usernamesToFilterOn.push(allUsers[i].username);
+        for (i = 0; i < users.length; i++) {
+            if (users[i].isSelected) {
+                usernamesToFilterOn.push(users[i].username);
             }
         }
 
         return usernamesToFilterOn;
     };
-
-    self.printLogs = function() {
+    self.userFilterClick = function (element, indexOfUsers) {
+        listOfFilteredUsers()[indexOfUsers].isSelected(element.checked);
+        self.dirtyUsernameFilter(true);
+        return true;
+    };
+    self.printLogs = function () {
         $('.activityLogs').css('overflow', 'visible');
         $('.activityLogs').printArea({
             mode: 'iframe'
@@ -670,19 +702,23 @@ var ActivityLogsManager = function(conf) {
     self.name2 = ko.observable();
     self.name3 = ko.observable();
     self.name4 = ko.observable();
+    self.dirtyUsernameFilter = ko.observable(false);
     self.pointTypes = ko.observableArray([]);
     self.pageTitle = ko.observable(myTitle);
     self.selectedRows = ko.observableArray([]);
-    self.activityLogs = ko.computed(function() {
+    self.activityLogs = ko.computed(function () {
         return activityLogTables;
     }, self);
-    self.activityLogsForPageSize = ko.computed(function() {
+    self.activityLogsForPageSize = ko.computed(function () {
         return self.activityLogs().list().slice(0, PAGE_SIZE);
     }, self);
-    self.users = ko.computed(function() {
+    self.users = ko.computed(function () {
         return listOfUsers();
     }, self);
-    self.allSelected = ko.computed(function() {
+    self.filteredUsers = ko.computed(function () {
+        return listOfFilteredUsers();
+    }, self);
+    self.allSelected = ko.computed(function () {
         var i,
             activityLogs = self.activityLogs().list(),
             n = activityLogs.length,
@@ -700,9 +736,9 @@ var ActivityLogsManager = function(conf) {
 
         return true;
     }, self).extend(computedThrottle);
-    self.allSelectedNames = ko.computed(function() {
+    self.allSelectedNames = ko.computed(function () {
         var i,
-            filterUsers = self.users(),
+            filterUsers = self.filteredUsers(),
             len = filterUsers.length;
 
         if (len === 0) {
@@ -718,22 +754,22 @@ var ActivityLogsManager = function(conf) {
         return true;
     }, self).extend(computedThrottle);
     self.checkAll = ko.computed({
-        read: function() {
+        read: function () {
             return self.allSelected();
         },
-        write: function(value) {
+        write: function (value) {
             return value ? self.selectAll() : self.deselectAll();
         }
     });
     self.checkAllNames = ko.computed({
-        read: function() {
+        read: function () {
             return self.allSelectedNames();
         },
-        write: function(value) {
+        write: function (value) {
             return value ? self.selectAllNames() : self.deselectAllNames();
         }
     });
-    self.pointTypeNameFilterIsSet = ko.computed(function() {
+    self.pointTypeNameFilterIsSet = ko.computed(function () {
         var localPointTypes = self.pointTypes();
 
         if (self.name1() !== "" || self.name2() !== "" || self.name3() !== "" || self.name4() !== "") {
@@ -746,22 +782,22 @@ var ActivityLogsManager = function(conf) {
 
         return false;
     });
-    self.datetimeFilterIsSet = ko.computed(function() {
+    self.datetimeFilterIsSet = ko.computed(function () {
         return (self.dateFrom() || self.timeFrom() || self.dateTo() || self.timeTo());
     });
-    self.usersFilterIsSet = ko.computed(function() {
+    self.usersFilterIsSet = ko.computed(function () {
         var i,
             filterUsers = self.users();
 
         for (i = 0; i < filterUsers.length; i++) {
-            if (filterUsers[i].isSelected()) {
+            if (filterUsers[i].isSelected) {
                 return true;
             }
         }
 
         return false;
     });
-    self.filterIsSet = ko.computed(function() {
+    self.filterIsSet = ko.computed(function () {
         var aFilterIsSet = false;
 
         if (!aFilterIsSet) {
@@ -792,7 +828,7 @@ function initPage(manager) {
         $userFilterIcon = $(userFilterId + ' .filterIcon'),
         $bodyMask = $('.bodyMask'),
         $pointFilterModal = $('#pointFilterModal'),
-        toggleDropdown = function(id) {
+        toggleDropdown = function (id) {
             var $dropDown = $(id + ' .dropdown-menu'),
                 $icon = $(id + ' .filterIcon'),
                 visible = $dropDown.is(':visible');
@@ -805,7 +841,7 @@ function initPage(manager) {
             }
             $dropDown.toggle();
         },
-        hideDropDowns = function() {
+        hideDropDowns = function () {
             var $dateFilterDropDown = $(dateId + ' .dropdown-menu'),
                 $userFilterDropDown = $(userFilterId + ' .dropdown-menu'),
                 $userFilterIcon = $(userFilterId + ' .filterIcon');
@@ -834,23 +870,23 @@ function initPage(manager) {
 
     // Initialize the table header select column. This way the user can select any
     // part of this header cell to activate the dropdown.
-    $(".header > .colSelect").click(function(e) {
+    $(".header > .colSelect").click(function (e) {
         e.stopPropagation();
         if (e.srcElement.tagName !== 'INPUT') {
             $(".header > .colSelect .dropdown-toggle").dropdown('toggle');
         }
     });
 
-    $dateFilterIcon.click(function(e) {
+    $dateFilterIcon.click(function (e) {
         toggleDropdown(dateId);
     });
 
-    $userFilterIcon.click(function(e) {
+    $userFilterIcon.click(function (e) {
         toggleDropdown(userFilterId);
     });
 
     // This targets the 'x', 'OK', and 'clear filter' buttons in the drop down, which also dismiss the dropdown
-    $('.dropdown-menu .closeIt').click(function() {
+    $('.dropdown-menu .closeIt').click(function () {
         hideDropDowns();
     });
 
@@ -859,19 +895,23 @@ function initPage(manager) {
     // itself to the body. When a date was selected, jQuery detected the body click event, causing the
     // dropdown to be hidden.  This allows the dropdown to persist by blocking the body click, but still
     // allows us to click anywhere outside of the dropdown to dismiss the dropdown.
-    $('.bodyMask').click(function() {
+    $('.bodyMask').click(function () {
         hideDropDowns();
     });
 
     // Add click handlers to 'close' elements within the modal itself
-    $pointFilterModal.find('.closeIt').click(function() {
+    $pointFilterModal.find('.closeIt').click(function () {
         $pointFilterModal.modal('toggle');
     });
 
     // Add handler to notify when the modal is shown
-    $pointFilterModal.on('shown.bs.modal', function(e) {
+    $pointFilterModal.on('shown.bs.modal', function (e) {
         $('#pointLookup')[0].contentWindow.$('#listSearch').find('input:first').focus();
     });
+
+    // $('.filterContainer.userFilterDropdown').on('hidden.bs.dropdown', function (event) {
+    //     manager.cancelUserNameFilter();
+    // });
 
     // If this is a pop-out window
     if (window.top.location.href === window.location.href) {
@@ -880,7 +920,7 @@ function initPage(manager) {
     }
 
     // attach event handler to Point Name click event.
-    $("#activityLogRows").on("click", "a", function() {
+    $("#activityLogRows").on("click", "a", function () {
         var context = ko.contextFor(this);
         context.$parent.showPointReview(this, context.$data);
     });
@@ -895,7 +935,7 @@ function applyBindings() {
     }
 }
 
-$(function() {
+$(function () {
     applyBindings();
     initPage(window.manager);
 

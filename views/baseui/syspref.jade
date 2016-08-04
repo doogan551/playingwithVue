@@ -288,7 +288,7 @@ html
                                     span(data-bind="text: $data['Public IP']")
                                     input#telemetryPublicIP.hide.form-control.input-sm(type="text", data-bind="value: $data['Public IP']")
             // ------ Alarm Messages ---------------------------------------------------------------------
-            #alarmTemplateContainer(data-bind="visible: section() == 'Alarm Messages'")
+            div#alarmTemplateContainer(data-bind="visible: section() == 'Alarm Messages'")
                 div(data-bind='with: alarmMessagesViewModel')
                     .title(data-bind="text: displayName")
                     br

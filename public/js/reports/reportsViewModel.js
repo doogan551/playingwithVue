@@ -65,7 +65,7 @@ var initKnockout = function () {
                         arr[0] = value.substr(0, 2);
                         arr[1] = value.substr(3, 2);
                     } else {
-                        arr[0] = value.substr(0, (timeLen === 4 ? 2 : 1 ));
+                        arr[0] = value.substr(0, (timeLen === 4 ? 2 : 1));
                         arr[1] = value.substr(timeLen - 2, 2);
                     }
                 }
@@ -468,14 +468,14 @@ var reportsViewModel = function () {
             if (!!refPoint) {
                 var pointType = refPoint["Point Type"].Value;
                 tempRef = {};
-                tempRef.PropertyEnum = window.workspaceManager.config.Enums.Properties["Column Point"].enum;
+                tempRef.PropertyEnum = Config.Enums.Properties["Column Point"].enum;
                 tempRef.PropertyName = property;
                 tempRef.Value = refPoint._id;
                 tempRef.AppIndex = ++appIndex;
                 tempRef.isDisplayable = true;
                 tempRef.isReadOnly = false;
                 tempRef.PointName = refPoint.Name;
-                tempRef.PointType = window.workspaceManager.config.Enums["Point Types"][pointType].enum;
+                tempRef.PointType = Config.Enums["Point Types"][pointType].enum;
                 point["Point Refs"].push(tempRef);
             } else {
                 if (!!refPointUPI) {
@@ -486,17 +486,24 @@ var reportsViewModel = function () {
         },
         userCanEdit = function (data, requestedAccessLevel) {
             var cumulativePermissions = 0,
-                user = window.workspaceManager.user(),
+                user,
+                groups,
+                isSystemAdmin;
+
+            if (!!window.workspaceManager) {
+                user = window.workspaceManager.user();
                 groups = user.groups.filter(function (item) {
                     return !!~data.Security.indexOf(item._id);
-                }),
+                });
                 isSystemAdmin = user['System Admin'].Value;
 
-            if (isSystemAdmin) return true;
+                if (isSystemAdmin) { return true; }
 
-            for (var i = 0, last = groups.length; i < last; i++) {
-                cumulativePermissions |= groups[i]._pAccess;
+                for (var i = 0, last = groups.length; i < last; i++) {
+                    cumulativePermissions |= groups[i]._pAccess;
+                }
             }
+
             return !!(cumulativePermissions & requestedAccessLevel);
         },
         cleanPointRefArray = function () {
@@ -711,7 +718,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = window.workspaceManager.config.Templates.getTemplate(column.pointType).Value.ValueOptions;
+                        valueOptions = Config.Templates.getTemplate(column.pointType).Value.ValueOptions;
                         result = (valueOptions === undefined);
                         break;
                 }
@@ -738,7 +745,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = window.workspaceManager.config.Templates.getTemplate(column.pointType).Value.ValueOptions;
+                        valueOptions = Config.Templates.getTemplate(column.pointType).Value.ValueOptions;
                         result = (valueOptions !== undefined);
                         break;
                 }
@@ -848,6 +855,7 @@ var reportsViewModel = function () {
             return filters;
         },
         ajaxPost = function (input, url, callback) {
+            self.activeRequestDataDrawn(false);
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -859,8 +867,11 @@ var reportsViewModel = function () {
                     callback.call(self, returnData);
                 }
             }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.log( "Request failed: " + textStatus );
+                self.activeRequestDataDrawn(true);
                 //self.errorWithRequest(true);
             }).always(function () {
+                // console.log( " . .     ajax Request complete..");
             });
         },
         displayError = function (errorMessage) {
@@ -879,6 +890,9 @@ var reportsViewModel = function () {
                 tempObject = updatedList[selectObjectIndex],
                 setColumnPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
+                    if (!!tempObject.AppIndex) {
+                        delete tempObject.AppIndex;
+                    }
                     tempObject.upi = selectedPoint._id;
                     tempObject.dataColumnName = tempObject.upi;
                     tempObject.valueType = "None";
@@ -898,19 +912,22 @@ var reportsViewModel = function () {
                     if (self.reportType === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
                         tempObject.operator = tempObject.valueList[0].text;
-                        tempObject.dataColumnName += " - " + tempObject.operator.toLowerCase();
+                        tempObject.dataColumnName = "point-" + tempObject.upi + " - " + tempObject.operator.toLowerCase();
                     } else {
+                        if (self.reportType === "History") {
+                            tempObject.dataColumnName = "point-" + tempObject.upi;
+                        }
                         if (!!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
-                            tempObject.valueOptions = window.workspaceManager.config.Templates.getTemplate(tempObject.pointType).Value.ValueOptions;
+                            tempObject.valueOptions = Config.Templates.getTemplate(tempObject.pointType).Value.ValueOptions;
                         }
                     }
                     tempObject.canBeCharted = columnCanBeCharted(tempObject);
                     tempObject.yaxisGroup = "A";
                     updateColumnFromPointRefs(tempObject);  // sets AppIndex;
                     if (tempObject.AppIndex) {
-                        tempPoint = window.workspaceManager.config.Update.formatPoint({
+                        tempPoint = Config.Update.formatPoint({
                             point: point,
                             oldPoint: point,
                             refPoint: selectedPoint,
@@ -954,7 +971,7 @@ var reportsViewModel = function () {
                     tempObject.value = selectedPoint.Name;
                     tempObject.pointType = selectedPoint["Point Type"].Value;
                     updateFilterFromPointRefs(tempObject);  // sets AppIndex;
-                    tempPoint = window.workspaceManager.config.Update.formatPoint({
+                    tempPoint = Config.Update.formatPoint({
                         point: point,
                         oldPoint: point,
                         refPoint: selectedPoint,
@@ -983,42 +1000,44 @@ var reportsViewModel = function () {
             });
         },
         filterOpenPointSelector = function () {
-            var url = '/pointLookup',
-                tempObject = {
-                    upi: 0,
-                    valueType: "",
-                    colName: "",
-                    colDisplayName: ""
-                },
-                pointSelectedCallback = function (pid, name, type, filter) {
-                    if (!!pid) {
-                        tempObject.upi = pid;
-                        tempObject.valueType = "String";
-                        tempObject.colName = name;
-                        tempObject.colDisplayName = name.replace(/_/g, " ");
-                    }
-                },
-                windowOpenedCallback = function () {
-                    pointSelectorRef.pointLookup.MODE = 'select';
-                    pointSelectorRef.pointLookup.init(pointSelectedCallback, pointFilter);
-                    if (pointFilter.selectedPointTypes.length > 0) {
-                        pointSelectorRef.window.pointLookup.checkPointTypes(pointFilter.selectedPointTypes);
-                    }
-                    if (!self.canEdit()) {
-                        var $allInputFields = $pointSelectorIframe.contents().find("input,button,textarea,select"),
-                            $pointTypesListBox = $pointSelectorIframe.contents().find("#pointTypes");
-                        $allInputFields.prop("disabled", true);
-                        // TODO still need to disable the listbox so selections can't change
-                        //$pointTypesListBox.addClass("jqx-disableselect");
-                        //var items = $pointTypesListBox.jqxListBox('getItems');
-                        //$pointTypesListBox.jqxListBox('disableAt', 0 );
-                    }
-                };
+            if (!scheduled) {
+                var url = '/pointLookup',
+                    tempObject = {
+                        upi: 0,
+                        valueType: "",
+                        colName: "",
+                        colDisplayName: ""
+                    },
+                    pointSelectedCallback = function (pid, name, type, filter) {
+                        if (!!pid) {
+                            tempObject.upi = pid;
+                            tempObject.valueType = "String";
+                            tempObject.colName = name;
+                            tempObject.colDisplayName = name.replace(/_/g, " ");
+                        }
+                    },
+                    windowOpenedCallback = function () {
+                        pointSelectorRef.pointLookup.MODE = 'select';
+                        pointSelectorRef.pointLookup.init(pointSelectedCallback, pointFilter);
+                        if (pointFilter.selectedPointTypes.length > 0) {
+                            pointSelectorRef.window.pointLookup.checkPointTypes(pointFilter.selectedPointTypes);
+                        }
+                        if (!self.canEdit()) {
+                            var $allInputFields = $pointSelectorIframe.contents().find("input,button,textarea,select"),
+                                $pointTypesListBox = $pointSelectorIframe.contents().find("#pointTypes");
+                            $allInputFields.prop("disabled", true);
+                            // TODO still need to disable the listbox so selections can't change
+                            //$pointTypesListBox.addClass("jqx-disableselect");
+                            //var items = $pointTypesListBox.jqxListBox('getItems');
+                            //$pointTypesListBox.jqxListBox('disableAt', 0 );
+                        }
+                    };
 
-            pointSelectorRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'filter', {
-                callback: windowOpenedCallback,
-                width: 1000
-            });
+                pointSelectorRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'filter', {
+                    callback: windowOpenedCallback,
+                    width: 1000
+                });
+            }
         },
         getFilterAdjustedDatetime = function (filter) {
             return getAdjustedDatetimeUnix(moment.unix(filter.date), filter.time.toString());
@@ -1078,7 +1097,7 @@ var reportsViewModel = function () {
                     localFilter.evalue = -1;
                     break;
                 case "BitString":
-                    localFilter.bitStringEnumsArray = getBitStringEnumsArray(window.workspaceManager.config.Enums[localFilter.filterName + ' Bits']);
+                    localFilter.bitStringEnumsArray = getBitStringEnumsArray(Config.Enums[localFilter.filterName + ' Bits']);
                     break;
             }
 
@@ -1188,13 +1207,13 @@ var reportsViewModel = function () {
                 results.push(localArray[i]);
 
                 if (cleanup && col.valid && results.length > 0) {
-                    delete results[results.length - 1]["valueList"];  // valuelist is only used in UI
-                    delete results[results.length - 1]["dataColumnName"]; // dataColumnName is only used in UI
-                    delete results[results.length - 1]["rawValue"]; // rawValue is only used in UI
-                    delete results[results.length - 1]["error"]; // error is only used in UI
-                    delete results[results.length - 1]["softDeleted"]; // error is only used in UI
-                    delete results[results.length - 1]["bitstringEnums"]; // error is only used in UI
-                    delete results[results.length - 1]["upi"]; // error is only used in UI
+                    delete results[results.length - 1].valueList;  // valuelist is only used in UI
+                    delete results[results.length - 1].dataColumnName; // dataColumnName is only used in UI
+                    delete results[results.length - 1].rawValue; // rawValue is only used in UI
+                    delete results[results.length - 1].error; // error is only used in UI
+                    delete results[results.length - 1].softDeleted; // error is only used in UI
+                    delete results[results.length - 1].bitstringEnums; // error is only used in UI
+                    delete results[results.length - 1].upi; // error is only used in UI
                 }
             }
 
@@ -1295,10 +1314,10 @@ var reportsViewModel = function () {
                     }
 
                     if (cleanup && valid && results.length > 0) {  // clean fields only used during UI
-                        delete results[results.length - 1]["valueList"];
-                        delete results[results.length - 1]["error"];
-                        delete results[results.length - 1]["softDeleted"];
-                        delete results[results.length - 1]["upi"]; // error is only used in UI
+                        delete results[results.length - 1].valueList;
+                        delete results[results.length - 1].error;
+                        delete results[results.length - 1].softDeleted;
+                        delete results[results.length - 1].upi; // error is only used in UI
                     }
                 }
             }
@@ -1370,7 +1389,7 @@ var reportsViewModel = function () {
                         case "Property":
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
                             if (currentColumn.valueType === "BitString") {
-                                currentColumn.bitstringEnums = window.workspaceManager.config.Enums[currentColumn.colName + ' Bits'];
+                                currentColumn.bitstringEnums = Config.Enums[currentColumn.colName + ' Bits'];
                             }
                             currentColumn.dataColumnName = currentColumn.colName;
                             break;
@@ -1397,7 +1416,7 @@ var reportsViewModel = function () {
         getValueList = function (property, pointType) {
             var result = [],
                 i,
-                options = window.workspaceManager.config.Utility.pointTypes.getEnums(property, pointType),
+                options = Config.Utility.pointTypes.getEnums(property, pointType),
                 len = (options && options.length ? options.length : 0);
 
             for (i = 0; i < len; i++) {
@@ -1429,14 +1448,14 @@ var reportsViewModel = function () {
             return result;
         },
         getProperty = function (key) {
-            return window.workspaceManager.config.Enums.Properties[key];
+            return Config.Enums.Properties[key];
         },
         collectEnumProperties = function () {
             getPointPropertiesForFilters();
             getPointPropertiesForColumns();
         },
         getPointPropertiesForFilters = function () {
-            var props = window.workspaceManager.config.Enums.Properties,
+            var props = Config.Enums.Properties,
                 listOfKeysToSkip = [],
                 prop,
                 key;
@@ -1540,7 +1559,7 @@ var reportsViewModel = function () {
                         if (filter.valueType === "BitString") {
                             var total = 0,
                                 key,
-                                bitStringEnums = window.workspaceManager.config.Enums[filter.filterName + ' Bits'];
+                                bitStringEnums = Config.Enums[filter.filterName + ' Bits'];
 
                             for (key in bitStringEnums) {
                                 if (bitStringEnums.hasOwnProperty(key)) {
@@ -1560,7 +1579,7 @@ var reportsViewModel = function () {
                                         //console.log("filter.value  = " + filter.value);
                                     }
                                     if (filter.value === total) {
-                                        filter.value = bitStringEnums["All"].enum;
+                                        filter.value = bitStringEnums.All.enum;
                                     }
                                 }
                             }
@@ -1572,15 +1591,15 @@ var reportsViewModel = function () {
                         i;
 
                     for (i = 0; i < results.columns.length; i++) {
-                        delete results.columns[i]["canBeCharted"];
-                        delete results.columns[i]["canCalculate"];
-                        delete results.columns[i]["colDisplayName"];
-                        delete results.columns[i]["dataColumnName"];
-                        delete results.columns[i]["includeInChart"];
-                        delete results.columns[i]["multiplier"];
-                        delete results.columns[i]["pointType"];
-                        delete results.columns[i]["precision"];
-                        delete results.columns[i]["yaxisGroup"];
+                        delete results.columns[i].canBeCharted;
+                        delete results.columns[i].canCalculate;
+                        delete results.columns[i].colDisplayName;
+                        delete results.columns[i].dataColumnName;
+                        delete results.columns[i].includeInChart;
+                        delete results.columns[i].multiplier;
+                        delete results.columns[i].pointType;
+                        delete results.columns[i].precision;
+                        delete results.columns[i].yaxisGroup;
                     }
 
                     return results;
@@ -1603,7 +1622,7 @@ var reportsViewModel = function () {
                             upis.push({
                                 upi: parseInt(columns[i].upi, 10),
                                 op: (columns[i].operator).toLowerCase()
-                            })
+                            });
                         }
                     }
                 }
@@ -1634,7 +1653,7 @@ var reportsViewModel = function () {
                             };
                             break;
                         case "Property":
-                            pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
+                            pointFilter = (scheduled ? point["Report Config"].pointFilter : getPointLookupFilterValues($pointSelectorIframe.contents()));
                             break;
                         default:
                             console.log(" - - - DEFAULT  buildReportDataRequest()");
@@ -1658,7 +1677,7 @@ var reportsViewModel = function () {
                         reportConfig: cleanUpReportConfig(point["Report Config"]),
                         reportType: point["Report Type"].Value,
                         sort: ""
-                    }
+                    };
                 }
             } else {
                 displayError("Column list is blank. Nothing to report on.");
@@ -1894,7 +1913,7 @@ var reportsViewModel = function () {
                                 result.rawValue = "";
                             }
                         } else {
-                            //console.log("dataField.PointInst is UNDEFINED");
+                            console.log("dataField.PointInst is UNDEFINED");
                         }
                         break;
                     default:
@@ -1927,9 +1946,9 @@ var reportsViewModel = function () {
             for (i = 0; i < lenHistoryData; i++) {
                 historyResults = historyData[i].HistoryResults;
                 tempPivot = {};
-                tempPivot["Date"] = {};
-                tempPivot["Date"].Value = moment.unix(historyData[i].timestamp).format("MM/DD/YY HH:mm");
-                tempPivot["Date"].rawValue = historyData[i].timestamp;
+                tempPivot.Date = {};
+                tempPivot.Date.Value = moment.unix(historyData[i].timestamp).format("MM/DD/YY HH:mm");
+                tempPivot.Date.rawValue = historyData[i].timestamp;
                 for (j = 0; j < historyResults.length; j++) {
                     columnUPI = historyResults[j].upi;
                     columnKey = "point-" + columnUPI;
@@ -1966,9 +1985,9 @@ var reportsViewModel = function () {
             if (numberOfColumnsFound > 0 && totalizerData[0].totals) {
                 for (j = 0; j < totalizerData[0].totals.length; j++) {
                     tempPivot = {};
-                    tempPivot["Date"] = {};
-                    tempPivot["Date"].Value = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YY HH:mm");
-                    tempPivot["Date"].rawValue = totalizerData[0].totals[j].range.start;
+                    tempPivot.Date = {};
+                    tempPivot.Date.Value = moment.unix(totalizerData[0].totals[j].range.start).format("MM/DD/YY HH:mm");
+                    tempPivot.Date.rawValue = totalizerData[0].totals[j].range.start;
                     for (i = 0; i < numberOfColumnsFound; i++) {
                         operator = totalizerData[i].op.toLowerCase();
                         columnConfig = getColumnConfigByOperatorAndUPI(operator, totalizerData[i].upi);
@@ -2262,152 +2281,302 @@ var reportsViewModel = function () {
                 handleResize();
             });
 
-            $direports.find(".addColumnButton").on('click', function (e) {
-                var defaultColName = ((self.reportType === "Totalizer") || (self.reportType === "History") ? "Choose Point" : "Choose Property"),
-                    rowTemplate = {
-                        colName: defaultColName,
-                        colDisplayName: "",
-                        valueType: "String",
-                        operator: "",
-                        calculation: "",
-                        canCalculate: false,
-                        canBeCharted: false,
-                        includeInChart: false,
-                        multiplier: 1,
-                        precision: 3,
-                        valueList: [],
-                        upi: 0
-                    },
-                    $newRow;
-                e.preventDefault();
-                e.stopPropagation();
-                if (self.listOfColumns.indexOf(rowTemplate) === -1) {
-                    self.listOfColumns.push(rowTemplate);
-                    updateListOfColumns(self.listOfColumns());
-                    $newRow = $columnsTbody.find('tr:last');
-                    $newRow.addClass("ui-sortable-handle");
-                    $newRow.addClass("danger");
-                    if (self.reportType !== "Property") {
-                        self.selectPointForColumn(rowTemplate, (self.listOfColumns().length - 1));
+            if (!scheduled) {
+                $direports.find(".addColumnButton").on('click', function (e) {
+                    var defaultColName = ((self.reportType === "Totalizer") || (self.reportType === "History") ? "Choose Point" : "Choose Property"),
+                        rowTemplate = {
+                            colName: defaultColName,
+                            colDisplayName: "",
+                            valueType: "String",
+                            operator: "",
+                            calculation: "",
+                            canCalculate: false,
+                            canBeCharted: false,
+                            includeInChart: false,
+                            multiplier: 1,
+                            precision: 3,
+                            valueList: [],
+                            upi: 0
+                        },
+                        $newRow;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (self.listOfColumns.indexOf(rowTemplate) === -1) {
+                        self.listOfColumns.push(rowTemplate);
+                        updateListOfColumns(self.listOfColumns());
+                        $newRow = $columnsTbody.find('tr:last');
+                        $newRow.addClass("ui-sortable-handle");
+                        $newRow.addClass("danger");
+                        if (self.reportType !== "Property") {
+                            self.selectPointForColumn(rowTemplate, (self.listOfColumns().length - 1));
+                        }
                     }
+                    handleResize();
+                    $reportColumns.stop().animate({
+                        scrollTop: $reportColumns.get(0).scrollHeight
+                    }, 700);
+                });
+
+                $direports.find(".addFilterbutton").on('click', function (e) {
+                    var rowTemplate = {
+                        filterName: "",
+                        condition: "$and",
+                        childLogic: false,
+                        beginGroup: false,
+                        endGroup: false,
+                        operator: "EqualTo",
+                        valueType: "String",
+                        value: "",
+                        valueList: ""
+                    };
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (self.listOfFilters.indexOf(rowTemplate) === -1) {
+                        self.listOfFilters.push(rowTemplate);
+                        updateListOfFilters(self.listOfFilters());
+                    }
+                    handleResize();
+                    $additionalFilters.stop().animate({
+                        scrollTop: $additionalFilters.get(0).scrollHeight
+                    }, 700);
+                });
+
+                $saveReportButton.on('click', function () {
+                    var $screenMessages = $tabConfiguration.find(".screenMessages");
+                    blockUI($tabConfiguration, true, " Saving Report...");
+                    $screenMessages.find(".errorMessage").text(""); // clear messages
+                    $screenMessages.find(".successMessage").text(""); // clear messages
+                    saveReportConfig();
+                    $(this).blur();
+                });
+
+                $direports.find(".runReportButton").on('click', function (e) {
+                    $(this).focus();
+                    e.preventDefault();
+                    e.stopPropagation();
+                    self.requestReportData();
+                });
+
+                $dataTablePlaceHolder.on('click', '.pointInstance', function () {
+                    var data = {
+                        upi: $(this).attr('upi'),
+                        pointType: $(this).attr('pointType'),
+                        pointName: $(this).text()
+                    };
+
+                    self.showPointReview(data);
+                });
+
+                $tabConfiguration.find(".toggleTab").on('shown.bs.tab', function () {
+                    adjustConfigTabActivePaneHeight();
+                });
+
+                if (!!reportSocket) {
+                    reportSocket.on('pointUpdated', function (data) {
+                        var $currentmessageholder;
+                        console.log(" -  -  - reportSocket() 'pointUpdated' returned");
+                        if (data.err === null || data.err === undefined) {
+                            self.unSavedDesignChange(false);
+                            $currentmessageholder = $tabConfiguration.find(".screenMessages").find(".successMessage");
+                            $currentmessageholder.text("Report Saved");
+                            setTimeout(function () {
+                                $currentmessageholder.text("");
+                            }, 3000);  // display success message
+                        } else {
+                            self.unSavedDesignChange(true);
+                            originalPoint = _.clone(newPoint, true);
+                            self.reportDisplayTitle(originalPoint.Name.replace("_", " "));
+                            $tabConfiguration.find(".screenMessages").find(".errorMessage").text(data.err);
+                        }
+                        blockUI($tabConfiguration, false);
+                    });
                 }
-                handleResize();
-                $reportColumns.stop().animate({
-                    scrollTop: $reportColumns.get(0).scrollHeight
-                }, 700);
-            });
 
-            $direports.find(".addFilterbutton").on('click', function (e) {
-                var rowTemplate = {
-                    filterName: "",
-                    condition: "$and",
-                    childLogic: false,
-                    beginGroup: false,
-                    endGroup: false,
-                    operator: "EqualTo",
-                    valueType: "String",
-                    value: "",
-                    valueList: ""
-                };
-                e.preventDefault();
-                e.stopPropagation();
-                if (self.listOfFilters.indexOf(rowTemplate) === -1) {
-                    self.listOfFilters.push(rowTemplate);
-                    updateListOfFilters(self.listOfFilters());
-                }
-                handleResize();
-                $additionalFilters.stop().animate({
-                    scrollTop: $additionalFilters.get(0).scrollHeight
-                }, 700);
-            });
+                $dataTablePlaceHolder.on('column-reorder.dt', function (event, settings, details) {
+                    var columnsArray = $.extend(true, [], self.listOfColumns()),
+                        swapColumnFrom = $.extend(true, {}, columnsArray[details.iFrom]);  // clone from field
+                    columnsArray.splice(details.iFrom, 1);
+                    columnsArray.splice(details.iTo, 0, swapColumnFrom);
+                    updateListOfColumns(columnsArray);
+                    $dataTablePlaceHolder.DataTable().draw("current");
+                    console.log("moved column '" + details.from + "' to column '" + details.to + "'");
+                });
 
-            $saveReportButton.on('click', function () {
-                var $screenMessages = $tabConfiguration.find(".screenMessages");
-                blockUI($tabConfiguration, true, " Saving Report...");
-                $screenMessages.find(".errorMessage").text(""); // clear messages
-                $screenMessages.find(".successMessage").text(""); // clear messages
-                saveReportConfig();
-                $(this).blur();
-            });
+                $dataTablePlaceHolder.on('column-resize.dt', function (event, settings, details) {
+                    var columnsArray = $.extend(true, [], self.listOfColumns());
+                    columnsArray[details.resizedColumn].width = details.width;
+                    updateListOfColumns(columnsArray);
+                    $dataTablePlaceHolder.DataTable().draw("current");
+                    // console.log("column '" + details.resizedColumn + "' width set to '" + details.width + "'");
+                });
 
-            $direports.find(".runReportButton").on('click', function (e) {
-                $(this).focus();
-                e.preventDefault();
-                e.stopPropagation();
-                self.requestReportData();
-            });
-
-            $dataTablePlaceHolder.on('click', '.pointInstance', function () {
-                var data = {
-                    upi: $(this).attr('upi'),
-                    pointType: $(this).attr('pointType'),
-                    pointName: $(this).text()
-                };
-
-                self.showPointReview(data);
-            });
-
-            $tabConfiguration.find(".toggleTab").on('shown.bs.tab', function () {
-                adjustConfigTabActivePaneHeight();
-            });
-
-            reportSocket.on('pointUpdated', function (data) {
-                var $currentmessageholder;
-                console.log(" -  -  - reportSocket() 'pointUpdated' returned");
-                if (data.err === null || data.err === undefined) {
-                    self.unSavedDesignChange(false);
-                    $currentmessageholder = $tabConfiguration.find(".screenMessages").find(".successMessage");
-                    $currentmessageholder.text("Report Saved");
+                $dataTablePlaceHolder.on('length.dt', function (e, settings, len) {
+                    self.selectedPageLength(len);
                     setTimeout(function () {
-                        $currentmessageholder.text("");
-                    }, 3000);  // display success message
-                } else {
-                    self.unSavedDesignChange(true);
-                    originalPoint = _.clone(newPoint, true);
-                    self.reportDisplayTitle(originalPoint.Name.replace("_", " "));
-                    $tabConfiguration.find(".screenMessages").find(".errorMessage").text(data.err);
+                        adjustViewReportTabHeightWidth();
+                    }, 10);
+                });
+
+                $dataTablePlaceHolder.on('page.dt', function (e, settings) {
+                    setTimeout(function () {
+                        adjustViewReportTabHeightWidth();
+                    }, 10);
+                });
+
+                $dataTablePlaceHolder.on('search.dt', function (e, settings) {
+                    setTimeout(function () {
+                        adjustViewReportTabHeightWidth();
+                    }, 10);
+                });
+
+                // $dataTablePlaceHolder.on( 'buttons-action', function ( e, buttonApi, dataTable, node, config ) {
+                //     console.log( 'Button '+buttonApi.text()+' was activated' );
+                // });
+
+                $columnsGrid.find(".precisionColumn").on('mousedown', function (e) {
+                    if (self.canEdit()) {
+                        longClickStart = moment();
+                    }
+                });
+
+                $columnsGrid.find(".precisionColumn").on('click', function (e) {
+                    if (self.canEdit()) {
+                        if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
+                            if (!precisionEventsSet) {
+                                precisionOriginalField = $(this).html();
+                            }
+
+                            if ($(this).html() === "Precision") {
+                                $globalPrecision.removeClass("hidden");
+                                $(this).html("");
+                                $globalPrecision.appendTo($(this));
+                                $(this).find("input").focus();
+                            }
+
+                            if (!precisionEventsSet) {
+                                precisionEventsSet = true;
+                                $(this).focusout(function (e) {
+                                    $globalPrecision.appendTo($hiddenPlaceholder);
+                                    $(this).html(precisionOriginalField);
+                                });
+
+                                $(this).keyup(function (event) {
+                                    if (event.keyCode === 13) {
+                                        var precision;
+                                        if (isNaN($(this).find("input").val()) || $(this).find("input").val() === "") {
+                                            $(this).find("input").val(0);
+                                        }
+                                        precision = $(this).find("input").val();
+                                        self.globalPrecisionValue(parseInt(precision, 10));
+                                        globalSetAllColumnValues("precision", self.globalPrecisionValue());
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+
+                $columnsGrid.find("th .includeInChartColumn").on('mousedown', function (e) {
+                    if (self.canEdit()) {
+                        longClickStart = moment();
+                    }
+                });
+
+                $columnsGrid.find("th .includeInChartColumn").on('click', function (e) {
+                    if (self.canEdit()) {
+                        if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
+                            if (!includeInChartEventsSet) {
+                                includeInChartOriginalField = $(this).html();
+                            }
+
+                            if ($(this).html() === "Chart") {
+                                $globalIncludeInChart.removeClass("hidden");
+                                $(this).html("");
+                                $globalIncludeInChart.appendTo($(this));
+                                $(this).find("input").focus();
+                            }
+
+                            if (!includeInChartEventsSet) {
+                                includeInChartEventsSet = true;
+                                $(this).focusout(function (e) {
+                                    $globalIncludeInChart.appendTo($hiddenPlaceholder);
+                                    $(this).html(includeInChartOriginalField);
+                                });
+
+                                $(this).click(function (event) {
+                                    if (event.target.checked !== undefined) {
+                                        globalSetAllColumnValues("includeInChart", event.target.checked);
+                                        return true;
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    return true;
+                });
+
+                $filtersGrid.sortable({
+                    appendTo: $filtersTbody,
+                    disabled: false,
+                    items: "tr",
+                    forceHelperSize: true,
+                    helper: 'original',
+                    stop: function (event, ui) {
+                        var tempArray,
+                            item = ko.dataFor(ui.item[0]),
+                            newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                        if (newIndex >= self.listOfFilters().length) {
+                            newIndex = self.listOfFilters().length - 1;
+                        }
+                        if (newIndex < 0) {
+                            newIndex = 0;
+                        }
+
+                        ui.item.remove();
+                        self.listOfFilters.remove(item);
+                        self.listOfFilters.splice(newIndex, 0, item);
+                        tempArray = self.listOfFilters();
+                        updateListOfFilters(tempArray);
+                    },
+                    scroll: true,
+                    handle: '.handle'
+                });
+
+                $columnsGrid.sortable({
+                    appendTo: $columnsTbody,
+                    disabled: false,
+                    items: "tr",
+                    forceHelperSize: true,
+                    helper: 'original',
+                    stop: function (event, ui) {
+                        var tempArray,
+                            item = ko.dataFor(ui.item[0]),
+                            newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                        if (newIndex >= self.listOfColumns().length) {
+                            newIndex = self.listOfColumns().length - 1;
+                        }
+                        if (newIndex < 0) {
+                            newIndex = 0;
+                        }
+
+                        ui.item.remove();
+                        self.listOfColumns.remove(item);
+                        self.listOfColumns.splice(newIndex, 0, item);
+                        tempArray = self.listOfColumns();
+                        updateListOfColumns(tempArray);
+                    },
+                    scroll: true,
+                    handle: '.handle'
+                });
+
+                if (window.top.location.href === window.location.href) {
+                    $('.popOut').addClass('hidden');
+                    $('.popIn').removeClass('hidden');
                 }
-                blockUI($tabConfiguration, false);
-            });
-
-            $dataTablePlaceHolder.on('column-reorder.dt', function (event, settings, details) {
-                var columnsArray = $.extend(true, [], self.listOfColumns()),
-                    swapColumnFrom = $.extend(true, {}, columnsArray[details.iFrom]);  // clone from field
-                columnsArray.splice(details.iFrom, 1);
-                columnsArray.splice(details.iTo, 0, swapColumnFrom);
-                updateListOfColumns(columnsArray);
-                $dataTablePlaceHolder.DataTable().draw("current");
-                console.log("moved column '" + details.from + "' to column '" + details.to + "'");
-            });
-
-            $dataTablePlaceHolder.on('column-resize.dt', function (event, settings, details) {
-                var columnsArray = $.extend(true, [], self.listOfColumns());
-                columnsArray[details.resizedColumn].width = details.width;
-                updateListOfColumns(columnsArray);
-                $dataTablePlaceHolder.DataTable().draw("current");
-                // console.log("column '" + details.resizedColumn + "' width set to '" + details.width + "'");
-            });
-
-            $dataTablePlaceHolder.on('length.dt', function (e, settings, len) {
-                self.selectedPageLength(len);
-                setTimeout(function () {
-                    adjustViewReportTabHeightWidth();
-                }, 10);
-            });
-
-            $dataTablePlaceHolder.on('page.dt', function (e, settings) {
-                setTimeout(function () {
-                    adjustViewReportTabHeightWidth();
-                }, 10);
-            });
-
-            $dataTablePlaceHolder.on('search.dt', function (e, settings) {
-                setTimeout(function () {
-                    adjustViewReportTabHeightWidth();
-                }, 10);
-            });
+            }
 
             $dataTablePlaceHolder.on('draw.dt', function (e, settings) {
+                // console.log('. . . . . . . . .    draw.dt   . . . . . . . . .');
                 var numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
                     $tablePagination,
                     $pagination,
@@ -2419,152 +2588,18 @@ var reportsViewModel = function () {
                     $paginate_buttons = $paginate_buttons.not("li.active");
                     $paginate_buttons.hide();
                 }
-            });
 
-            // $dataTablePlaceHolder.on( 'buttons-action', function ( e, buttonApi, dataTable, node, config ) {
-            //     console.log( 'Button '+buttonApi.text()+' was activated' );
-            // });
-
-            $columnsGrid.find(".precisionColumn").on('mousedown', function (e) {
-                if (self.canEdit()) {
-                    longClickStart = moment();
-                }
-            });
-
-            $columnsGrid.find(".precisionColumn").on('click', function (e) {
-                if (self.canEdit()) {
-                    if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
-                        if (!precisionEventsSet) {
-                            precisionOriginalField = $(this).html();
-                        }
-
-                        if ($(this).html() === "Precision") {
-                            $globalPrecision.removeClass("hidden");
-                            $(this).html("");
-                            $globalPrecision.appendTo($(this));
-                            $(this).find("input").focus();
-                        }
-
-                        if (!precisionEventsSet) {
-                            precisionEventsSet = true;
-                            $(this).focusout(function (e) {
-                                $globalPrecision.appendTo($hiddenPlaceholder);
-                                $(this).html(precisionOriginalField);
-                            });
-
-                            $(this).keyup(function (event) {
-                                if (event.keyCode === 13) {
-                                    var precision;
-                                    if (isNaN($(this).find("input").val()) || $(this).find("input").val() === "") {
-                                        $(this).find("input").val(0);
-                                    }
-                                    precision = $(this).find("input").val();
-                                    self.globalPrecisionValue(parseInt(precision, 10));
-                                    globalSetAllColumnValues("precision", self.globalPrecisionValue());
-                                }
-                            });
-                        }
+                if (!self.activeRequestDataDrawn()) {
+                    // console.log('. . . . . . . . . . .   requested data has been rendered   . . . . . . . . .');
+                    if (scheduled && self.chartable()) {
+                        self.requestChart();
+                    } else {
+                        setTimeout(function () {
+                            self.activeRequestDataDrawn(true);
+                        }, 1000);
                     }
                 }
             });
-
-            $columnsGrid.find("th .includeInChartColumn").on('mousedown', function (e) {
-                if (self.canEdit()) {
-                    longClickStart = moment();
-                }
-            });
-
-            $columnsGrid.find("th .includeInChartColumn").on('click', function (e) {
-                if (self.canEdit()) {
-                    if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
-                        if (!includeInChartEventsSet) {
-                            includeInChartOriginalField = $(this).html();
-                        }
-
-                        if ($(this).html() === "Chart") {
-                            $globalIncludeInChart.removeClass("hidden");
-                            $(this).html("");
-                            $globalIncludeInChart.appendTo($(this));
-                            $(this).find("input").focus();
-                        }
-
-                        if (!includeInChartEventsSet) {
-                            includeInChartEventsSet = true;
-                            $(this).focusout(function (e) {
-                                $globalIncludeInChart.appendTo($hiddenPlaceholder);
-                                $(this).html(includeInChartOriginalField);
-                            });
-
-                            $(this).click(function (event) {
-                                if (event.target.checked !== undefined) {
-                                    globalSetAllColumnValues("includeInChart", event.target.checked);
-                                    return true;
-                                }
-                            });
-                        }
-                    }
-                }
-                return true;
-            });
-
-            $filtersGrid.sortable({
-                appendTo: $filtersTbody,
-                disabled: false,
-                items: "tr",
-                forceHelperSize: true,
-                helper: 'original',
-                stop: function (event, ui) {
-                    var tempArray,
-                        item = ko.dataFor(ui.item[0]),
-                        newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
-                    if (newIndex >= self.listOfFilters().length) {
-                        newIndex = self.listOfFilters().length - 1;
-                    }
-                    if (newIndex < 0) {
-                        newIndex = 0;
-                    }
-
-                    ui.item.remove();
-                    self.listOfFilters.remove(item);
-                    self.listOfFilters.splice(newIndex, 0, item);
-                    tempArray = self.listOfFilters();
-                    updateListOfFilters(tempArray);
-                },
-                scroll: true,
-                handle: '.handle'
-            });
-
-            $columnsGrid.sortable({
-                appendTo: $columnsTbody,
-                disabled: false,
-                items: "tr",
-                forceHelperSize: true,
-                helper: 'original',
-                stop: function (event, ui) {
-                    var tempArray,
-                        item = ko.dataFor(ui.item[0]),
-                        newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
-                    if (newIndex >= self.listOfColumns().length) {
-                        newIndex = self.listOfColumns().length - 1;
-                    }
-                    if (newIndex < 0) {
-                        newIndex = 0;
-                    }
-
-                    ui.item.remove();
-                    self.listOfColumns.remove(item);
-                    self.listOfColumns.splice(newIndex, 0, item);
-                    tempArray = self.listOfColumns();
-                    updateListOfColumns(tempArray);
-                },
-                scroll: true,
-                handle: '.handle'
-            });
-
-            if (window.top.location.href === window.location.href) {
-                $('.popOut').addClass('hidden');
-                $('.popIn').removeClass('hidden');
-            }
 
             intervals = [
                 {
@@ -2707,7 +2742,6 @@ var reportsViewModel = function () {
                         case "Totalizer":
                             if (columnIndex === 0 && columnConfig.dataColumnName === "Date") {
                                 $(tdField).attr('title', moment.unix(data[columnConfig.dataColumnName].rawValue).format("dddd"));
-                            } else {
                             }
                             break;
                         case "Property":
@@ -2729,7 +2763,7 @@ var reportsViewModel = function () {
 
                     if (data[columnConfig.colName] && data[columnConfig.colName].PointInst) {
                         var pointType;
-                        pointType = window.workspaceManager.config.Utility.pointTypes.getPointTypeNameFromEnum(data[columnConfig.colName].PointType);
+                        pointType = Config.Utility.pointTypes.getPointTypeNameFromEnum(data[columnConfig.colName].PointType);
                         $(tdField).addClass("pointInstance");
                         $(tdField).attr('upi', data[columnConfig.colName].PointInst);
                         $(tdField).attr('pointType', pointType);
@@ -2908,8 +2942,8 @@ var reportsViewModel = function () {
             if (aoColumns.length > 0) {
                 $dataTablePlaceHolder.DataTable({
                     api: true,
-                    dom: 'Blfrtip',
-                    buttons: [
+                    dom: (!scheduled ? 'Blfrtip' : 'lfrtip'),
+                    buttons: (!scheduled ? [
                         {
                             extend: 'collection',
                             text: 'Export',
@@ -2977,7 +3011,7 @@ var reportsViewModel = function () {
                                 }
                             }
                         }
-                    ],
+                    ] : undefined),
                     drawCallback: function (settings) {
                         setInfoBarDateTime();
                     },
@@ -3090,14 +3124,16 @@ var reportsViewModel = function () {
                         fixedColumnsLeft: 1,
                         realtime: false
                     },
-                    order: [[0, "asc"]], // always default sort by first column
+                    order: (!scheduled ? [[0, "asc"]] : false), // always default sort by first column
                     scrollY: true,
                     scrollX: true,
                     scrollCollapse: true,
-                    lengthChange: true,
+                    lengthChange: !scheduled,
+                    paging: !scheduled,
+                    ordering: !scheduled,
                     lengthMenu: [[10, 15, 24, 48, 75, 100, -1], [10, 15, 24, 48, 75, 100, "All"]],
-                    //bFiler: false,  // search box
-                    pageLength: parseInt(self.selectedPageLength(), 10)
+                    searching: !scheduled,  // search box
+                    pageLength: (!scheduled ? parseInt(self.selectedPageLength(), 10) : -1)
                 });
             }
 
@@ -3183,7 +3219,33 @@ var reportsViewModel = function () {
                 yAxisTitle,
                 spinnerText,
                 chartWidth,
-                chartHeight;
+                chartHeight,
+                getChartWidth = function () {
+                    var answer;
+
+                    if (!!formatForPrint) {
+                        answer = 950;
+                    } else if (!!scheduled) {
+                        answer = 1250;
+                    } else {
+                        answer = $reportChartDiv.parent().width();
+                    }
+
+                    return answer;
+                },
+                getChartHeight = function () {
+                    var answer;
+
+                    if (!!formatForPrint) {
+                        answer = 650;
+                    } else if (!!scheduled) {
+                        answer = 850;
+                    } else {
+                        answer = $reportChartDiv.parent().height();
+                    }
+
+                    return answer;
+                };
 
             self.activeRequestForChart(true);
             if (!!formatForPrint) {
@@ -3196,8 +3258,8 @@ var reportsViewModel = function () {
             adjustViewReportTabHeightWidth();
 
             chartType = getValueBasedOnText(self.listOfChartTypes, self.selectedChartType());
-            chartWidth = (!!formatForPrint ? 950 : $reportChartDiv.parent().width());
-            chartHeight = (!!formatForPrint ? 650 : $reportChartDiv.parent().height());
+            chartWidth = getChartWidth();
+            chartHeight = getChartHeight();
             reportChartData = getOnlyChartData(reportData);
 
             if (!!reportChartData && !!reportChartData[0]) {
@@ -3267,7 +3329,7 @@ var reportsViewModel = function () {
                                         formatter: function () {
                                             return '<span style="font-size: 10px">' + moment(this.x).format("dddd, MMM Do, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span> ' + this.point.series.name + ': <b>' + trendPlots.numberWithCommas(this.y) + (!!this.point.enumText ? '-' + this.point.enumText : '') + '</b><br/>';
                                         }
-                                    }
+                                    };
                                 }
 
                                 trendPlot = new TrendPlot({
@@ -3313,6 +3375,7 @@ var reportsViewModel = function () {
                             }
                         }
                         self.activeRequestForChart(false);
+                        self.activeRequestDataDrawn(true);
                     }, 110);
                 } else {
                     $reportChartDiv.html("Too many data rows for " + self.selectedChartType() + " Chart. Max = " + maxDataRowsForChart);
@@ -3351,6 +3414,8 @@ var reportsViewModel = function () {
     self.allChartCheckboxChecked = ko.observable(false);
 
     self.durationError = ko.observable(false);
+
+    self.activeRequestDataDrawn = ko.observable(true);
 
     self.selectedDuration = ko.observable({
         startDate: moment(),
@@ -3450,7 +3515,9 @@ var reportsViewModel = function () {
             $pointName3.val(point.name3);
             $pointName4.val(point.name4);
 
-            initSocket();
+            if (!scheduled) {
+                initSocket();
+            }
 
             if (columns) {
                 self.reportDisplayTitle((!!point["Report Config"].reportTitle ? point["Report Config"].reportTitle : point.Name.replace(/_/g, " ")));
@@ -3542,7 +3609,9 @@ var reportsViewModel = function () {
             self.filterPropertiesSearchFilter(""); // computed props jolt
             self.columnPropertiesSearchFilter(""); // computed props jolt
 
-            if (!!externalConfig) {
+            if (scheduled) {
+                self.requestReportData();
+            } else if (!!externalConfig) {
                 if (self.reportType === "History" || self.reportType === "Totalizer") {
                     configureSelectedDuration(externalConfig);
                 }
@@ -3616,65 +3685,71 @@ var reportsViewModel = function () {
     };
 
     self.displayCondition = function (op) {
+        var answer;
         switch (op) {
             case "$and":
-                return "AND";
+                answer = "AND";
                 break;
             case "$or":
-                return "OR";
+                answer = "OR";
                 break;
             default:
-                return op;
+                answer = op;
                 break;
         }
+        return answer;
     };
 
     self.displayOperator = function (con) {
+        var answer;
         switch (con) {
             case "EqualTo":
-                return "=";
+                answer = "=";
                 break;
             case "NotEqualTo":
-                return "!=";
+                answer = "!=";
                 break;
             case "Containing":
-                return "{*}";
+                answer = "{*}";
                 break;
             case "NotContaining":
-                return "{!*}";
+                answer = "{!*}";
                 break;
             case "GreaterThan":
-                return ">";
+                answer = ">";
                 break;
             case "GreaterThanOrEqualTo":
-                return ">=";
+                answer = ">=";
                 break;
             case "LessThan":
-                return "<";
+                answer = "<";
                 break;
             case "LessThanOrEqualTo":
-                return "<=";
+                answer = "<=";
                 break;
             default:
-                return con;
+                answer = con;
                 break;
         }
+        return answer;
     };
 
     self.displayBool = function (val) {
+        var answer;
         switch (val) {
             case true:
             case "True":
-                return "On";
+                answer = "On";
                 break;
             case false:
             case "False":
-                return "Off";
+                answer = "Off";
                 break;
             default:
-                return val;
+                answer = val;
                 break;
         }
+        return answer;
     };
 
     self.selectPointForColumn = function (data, index) {
@@ -3731,15 +3806,15 @@ var reportsViewModel = function () {
                         reportData = undefined;
                         switch (self.reportType) {
                             case "History":
-                                ajaxPost(requestObj, "/report/historyDataSearch", renderHistoryReport);
+                                ajaxPost(requestObj, dataUrl + "/report/historyDataSearch", renderHistoryReport);
                                 //reportSocket.emit("historyDataSearch", {options: requestObj});
                                 break;
                             case "Totalizer":
-                                ajaxPost(requestObj, "/report/totalizerReport", renderTotalizerReport);
+                                ajaxPost(requestObj, dataUrl + "/report/totalizerReport", renderTotalizerReport);
                                 //reportSocket.emit("totalizerReport", {options: requestObj});
                                 break;
                             case "Property":
-                                ajaxPost(requestObj, "/report/reportSearch", renderPropertyReport);
+                                ajaxPost(requestObj, dataUrl + "/report/reportSearch", renderPropertyReport);
                                 //reportSocket.emit("reportSearch", {options: requestObj});
                                 break;
                             default:
@@ -3749,8 +3824,6 @@ var reportsViewModel = function () {
                     } else {
                         renderReport();
                     }
-                } else {
-                    // bad request object do nothing.
                 }
             }
         } else {
@@ -3761,11 +3834,10 @@ var reportsViewModel = function () {
         }, 700);
     };
 
-    self.requestChart = function () {
+    self.requestChart = function (printFormat) {
         self.selectViewReportTabSubTab("chartData");
         $reportChartDiv.html("");
-        reportChartData = getOnlyChartData(reportData);
-        renderChart();
+        renderChart(printFormat);
     };
 
     self.focusGridView = function () {
