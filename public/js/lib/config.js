@@ -2440,7 +2440,7 @@ var Config = (function(obj) {
 
             if (type === "Binary Input") {
                 data.point = obj.EditChanges.applyBinaryInputTypeInputType(data);
-            } else if (type === "Analg Input") {
+            } else if (type === "Analog Input") {
                 data.point = obj.EditChanges.applyAnalogInputTypeInputType(data);
             }
 
@@ -4712,9 +4712,9 @@ var Config = (function(obj) {
                 ch = point["Channel"],
                 enums = enumsTemplatesJson.Enums,
                 valueTypes = enums["Value Types"];
-
-            // If SCADA IO device type
-            if (point._devModel === enums["Device Model Types"]["SCADA IO"]["enum"]) {
+            
+            // If this is a SCADA IO device (if an RMU is defined it's not a SCADA IO)
+            if ((point._devModel === enums["Device Model Types"]["SCADA IO"]["enum"]) && (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0)) {
                 // If internal input is selected
                 if (point["Input Type"].Value === "Internal Input") {
                     // Our channel property should be an enum; if it's not, then
@@ -4851,8 +4851,8 @@ var Config = (function(obj) {
             point["Conversion Coefficient 3"].isDisplayable = false;
             point["Conversion Coefficient 4"].isDisplayable = false;
 
-            // If Device type uknown, Central device, MicroScan 5 xTalk, MicroScan 5 UNV, or SCADA Vio
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"])) {
+            // If Device type uknown, Central device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, or SCADA IO
+            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
 
                 // If no RMU defined for this point
                 if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {

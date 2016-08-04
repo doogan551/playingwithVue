@@ -1,7 +1,10 @@
 define(['knockout', 'text!./view.html'], function(ko, view) {
 
     function ViewModel(params) {
-        this.isInEditMode = params.rootContext.isInEditMode;
+        this.propertyName   = 'Channel';
+        this.rootContext    = params.rootContext;
+        this.data           = params.data;
+        this.columnClasses  = params.columnClasses;
     }
 
     // Use prototype to declare any public methods
