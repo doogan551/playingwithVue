@@ -225,11 +225,19 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
 
-            #navigatorModal.modal
-                //- .modal-content.modal-content-no-padding
-                iframe.iframeFull
-                //- .modal-footer
-                //-     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close
+            #navigatorFilterModal.navigatorModal.modal.modal-fixed-footer
+                .modal-header Filter Points
+                .modal-content.modal-content-no-padding
+                    iframe.iframeFull(src='/pointlookup?mode=filter')
+                .modal-footer
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel
+
+            #navigatorModal.navigatorModal.modal.modal-fixed-footer
+                .modal-header Select Point
+                .modal-content.modal-content-no-padding
+                    iframe.iframeFull(src='/pointlookup')
+                .modal-footer
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel                    
 
             #openItemsModal.modal.modal-large
                 .modal-content
@@ -366,7 +374,7 @@ html
                     i.material-icons close
                     span Close All
 
-            .items
+            .items(data-bind="visible: $root.openWindows[group()]().length > 0")
                 .itemsHeader.blue-grey-text Open Items
                 // ko foreach: $root.openWindows[group()]
 
@@ -398,3 +406,4 @@ html
     script(type='text/javascript', src='/js/lib/socket.io.js')
     script(type='text/javascript', src='/js/lib/materialize.js')
     script(type='text/javascript', src='/js/v2/home.js')
+    script(type='text/javascript', src='/js/v2/dti.js')        

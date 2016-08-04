@@ -414,12 +414,6 @@ var dti = {
                         self.bindings.activate();
                     });
 
-                    this.contentWindow.dti = {
-                        showNavigator: function () {
-                            dti.utility.showNavigatorModal();
-                        }
-                    };
-
                     this.contentWindow.windowId = self.bindings.windowId();
                 },
                 getGroup: function () {
@@ -501,8 +495,12 @@ var dti = {
             if (!config.exempt) {
                 dti.windows.offset();
 
-                config.left = dti.windows._offsetX;
-                config.top = dti.windows._offsetY;
+                if (config.left === undefined) {
+                    config.left = dti.windows._offsetX;
+                }
+                if (config.top === undefined) {
+                    config.top = dti.windows._offsetY;
+                }
             }
 
             newWindow = new dti.Window(config);
@@ -763,7 +761,9 @@ var dti = {
     },
     utility: {
         $navigatorModalIframe: $('#navigatorModal iframe'),
+        $navigatorFilterModalIframe: $('#navigatorFilterModal iframe'),
         $navigatorModal: $('#navigatorModal'),
+        $navigatorFilterModal: $('#navigatorFilterModal'),
         systemEnums: {},
         systemEnumObjects: {},
         addEvent: function(element, event, fn) {
@@ -907,7 +907,7 @@ var dti = {
                 dti.bindings.user(user);
             }
         },
-        applyNavigatorFilter: function (pointType) {
+        applyNavigatorFilter: function (pointType, pointLookup) {
             var types,
                 processedTypes = [];
 
@@ -926,59 +926,109 @@ var dti = {
                 types = ['all'];
             }
 
-            dti._navigatorWindowIFrame[0].contentWindow.pointLookup.checkPointTypes(types);
+            pointLookup.checkPointTypes(types);
         },
         showNavigator: function (pointType) {
-
             dti.fire('hideMenus');
-            if (!dti.navigatorLoaded) {
-                dti.navigatorLoaded = true;
-                dti._navigatorWindow = dti.windows.create({
-                    width: '100%',
-                    // height: '100%',
-                    left: 0,
-                    bottom: 0,
-                    top: -28,
-                    right: 0,
-                    title: 'Navigator',
-                    id: 'Navigator',
-                    url: '/pointLookup',
-                    exempt: true,
-                    onLoad: function () {
-                        dti._navigatorWindow.$el.css('zIndex', 100);
-                        dti._navigatorWindowIFrame[0].contentWindow.pointLookup.init();
-                        dti.utility.applyNavigatorFilter(pointType);
-                    }
-                });
-                dti._navigatorWindowIFrame = dti._navigatorWindow.$el.children('iframe');
-            } else {
-                dti._navigatorWindow.bindings.minimized(false);
-                dti.windows.activate('Navigator');
-                dti.utility.applyNavigatorFilter(pointType);
-                // dti.windows.activate('Navigator');
-                // $('#Navigator').removeClass('hide');
-            }
+            dti.utility.showNavigatorModal(pointType);
+            // if (!dti.navigatorLoaded) {
+            //     dti.navigatorLoaded = true;
+            //     dti._navigatorWindow = dti.windows.create({
+            //         width: '100%',
+            //         // height: '100%',
+            //         left: 0,
+            //         bottom: 0,
+            //         top: -28,
+            //         right: 0,
+            //         title: 'Navigator',
+            //         id: 'Navigator',
+            //         url: '/pointLookup',
+            //         exempt: true,
+            //         onLoad: function () {
+            //             // dti._navigatorWindow.$el.css('zIndex', 100);
+            //             // dti._navigatorWindowIFrame[0].contentWindow.pointLookup.init();
+                        
+            //         }
+            //     });
+            //     dti._navigatorWindowIFrame = dti._navigatorWindow.$el.children('iframe');
+            // } else {
+            //     dti._navigatorWindow.bindings.minimized(false);
+            //     dti.windows.activate('Navigator');
+            //     dti.utility.applyNavigatorFilter(pointType);
+            //     // dti.windows.activate('Navigator');
+            //     // $('#Navigator').removeClass('hide');
+            // }
         },
         hideNavigator: function () {
             if (dti._navigatorWindow) {
                 dti._navigatorWindow.bindings.minimized(true);
             }
         },
-        showNavigatorModal: function (pointType) {
+        showNavigatorFilterModal: function (pointType) {
             var initModalLookup = function () {
-                this.contentWindow.pointLookup.init();
+                this.contentWindow.pointLookup.init(dti.utility.navigatorModalCallback, {
+                    name1: '',
+                    name2: '',
+                    name3: '',
+                    name4: '',
+                    pointTypes: []
+                });
             };
+
+            dti.fire('hideMenus');
+
+            dti.utility.$navigatorFilterModal.openModal({
+                ready: function () {
+                    if (!dti._navigatorFilterModal) {
+                        dti._navigatorFilterModal = true;
+
+                        initModalLookup.call(dti.utility.$navigatorFilterModalIframe[0]);
+                    }
+                }
+            });
+        },
+        showNavigatorModal: function (pointType) {
+            var loaded = false,
+                $el = dti.utility.$navigatorModalIframe[0],
+                applyFilter = function () {
+                    dti.utility.applyNavigatorFilter(pointType, $el.contentWindow.pointLookup);
+                },
+                initModalLookup = function () {
+                    this.contentWindow.pointLookup.init(dti.utility.navigatorModalCallback);
+                    applyFilter();
+                };
+
+            dti.fire('hideMenus');
 
             dti.utility.$navigatorModal.openModal({
                 ready: function () {
                     if (!dti._navigatorModal) {
                         dti._navigatorModal = true;
 
-                        dti.utility.addEvent(dti.utility.$navigatorModalIframe[0], 'load', initModalLookup);
-                        dti.utility.$navigatorModalIframe.attr('src', 'pointLookup?mode=filter');
+                        initModalLookup.call($el);
+                    } else {
+                        applyFilter();
                     }
                 }
             });
+        },
+        navigatorModalCallback: function () {
+            dti.log(arguments);
+        },
+        processMessage: function (e) {
+            var callbacks = {
+                navigatormodal: function () {
+                    // key: navigatormodal, oldValue: windowId of recipient to send info to
+                    if (e.newValue.action === 'open') {
+                        dti.utility.showNavigatorModal();
+                    }
+                }
+            };
+
+            if (callbacks[e.key]) { // store previous call
+                dti.utility._prevMessage = e;
+                callbacks[e.key](e);
+            }
         },
         init: function () {
             dti.utility.pointTypeLookup = {};
@@ -992,16 +1042,16 @@ var dti = {
             dti.utility.getSystemEnum('qualityCodes');
             dti.utility.getSystemEnum('telemetry');
             dti.utility.getSystemEnum('controllers', dti.utility.refreshUserCtlr);
+
+            dti.storage.onMessage(dti.utility.processMessage);
         }
     },
     storage: {
+        _messageCallbacks: [],
         init: function () {
-            window.addEventListener('storage', function handleStorageChange (e) {
-                console.log({
-                    'Storage Key': e.key,
-                    'Old Value': e.oldValue,
-                    'New Value': e.newValue
-                });
+            window.addEventListener('storage', function (e) {
+                console.log(e);
+                dti.storage.processMessage(e);
             });
 
             store.set('sessionId', dti.settings.sessionId);
@@ -1018,12 +1068,36 @@ var dti = {
                         url: '/displays/view/44215',
                         title: 'Test Open',
                         type: 'Display',
-                        upi: 44215
+                        upi: 44215,
+                        left: 0,
+                        // right: 0,
+                        top: 0,
+                        // bottom: 0,
+                        width: '100%',
+                        height: '100%'
                     });
 
                     store.set('startupCommands', null);
                 }
             });
+        },
+        processMessage: function (e) {
+            var message = {
+                key: e.key
+            };
+
+            if (typeof e.newValue === 'string') {
+                message.newValue = JSON.parse(e.newValue);
+            } else {
+                message.newValue = e.newValue;
+            }
+
+            dti.forEachArray(dti.storage._messageCallbacks, function (cb) {
+                cb(message);
+            });
+        },
+        onMessage: function (cb) {
+            dti.storage._messageCallbacks.push(cb);
         }
     },
     bindings: {

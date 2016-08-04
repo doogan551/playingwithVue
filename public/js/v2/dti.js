@@ -1,9 +1,13 @@
-var dtiMessaging = {
+var dtiMessaging =  {
     initEventListener: function () {
         window.addEventListener('storage', dtiMessaging.processMessage);
     },
 
     init: function () {
+        if (window.store === undefined) {
+            $.getScript('/js/lib/store.min.js');
+        }
+
         dtiMessaging.initEventListener();
     },
 
@@ -23,11 +27,23 @@ var dtiMessaging = {
 
 
     // API -----------------------------------------
+    openWindow: function (url, title, type, target, uniqueId, options) {
+        //if target = new, call window.top.workspaceManager.openWindow..., else change this window's url
+    },
+
+    showNavigator: function () {
+        // send message to navigator to open
+        // dtiMessaging.utility.showNavigatorModal();
+        dtiMessaging.sendMessage('navigatormodal', {
+            action: 'open'
+        });
+    },
+
     sendMessage: function (target, data) {
         //add timestamp to guarantee changes
         data._timestamp = new Date().getTime();
         
-        window.top.store.set(target, data);
+        store.set(target, data);
     },
 
     onMessage: function (config) {
@@ -35,4 +51,4 @@ var dtiMessaging = {
     }
 };
 
-dtiMessaging.init();
+$(dtiMessaging.init);
