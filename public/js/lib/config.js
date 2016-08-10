@@ -3650,6 +3650,8 @@ var Config = (function(obj) {
                 point["Downlink IP Port"] = obj.Templates.getTemplate("Device")["Downlink IP Port"];
             if (!point.hasOwnProperty("Downlink Broadcast Delay"))
                 point["Downlink Broadcast Delay"] = obj.Templates.getTemplate("Device")["Downlink Broadcast Delay"];
+            if (!point.hasOwnProperty("Firmware 2 Version"))
+                point["Firmware 2 Version"] = obj.Templates.getTemplate("Device")["Firmware 2 Version"];
 
             if (point["Uplink Port"].Value !== undefined) {
 

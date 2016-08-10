@@ -8,8 +8,6 @@ module.exports = {
 	// conn: 'mongodb://localhost/infoscan',
 	xmlPath: "C:/import/msfc/GPLConvert",
 	// xmlPath: "//192.168.1.88/d$/InfoAdmin/MSFC GPL/XML",
-	xmlPath: "C:/import/msfc/GPLConvert",
-	// xmlPath: "C:/Users/rob/Documents/MSFC_GPL/MSFC_GPL",
 	ctrlrs: {
 		"Name": "Controllers",
 		"Entries": [{
