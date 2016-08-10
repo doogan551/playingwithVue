@@ -5954,7 +5954,7 @@ gpl.BlockManager = function (manager) {
                     return {
                         Name: ref.Name,
                         pointType: ref['Point Type'].Value,
-                        valueType: (ref['Value'].ValueType === 5) ? 'enum' : 'float',
+                        valueType: (ref['Value'] && ref['Value'].ValueType === 5) ? 'enum' : 'float',
                         _idx: idx
                     };
                     // return ref;
