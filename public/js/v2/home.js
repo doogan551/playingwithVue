@@ -455,9 +455,9 @@ var dti = {
         };
     },
     windows: {
-        _offsetX: 30,
-        _offsetY: 30,
-        _offset: 30,
+        _offsetX: 0,
+        _offsetY: 0,
+        _offset: 25,
         _offsetCount: 0,
         _offsetMax: 5,
         _draggableConfig: {
@@ -530,25 +530,20 @@ var dti = {
             });
         },
         closeAll: function (group) {
-            dti.forEachArray(dti.windows._windowList, function (win) {
-                if (!group || group === win.bindings.group()) {
-                    win.close();
-                }
+            var openWindows = dti.bindings.openWindows[group];
+
+            if (openWindows) {
+                openWindows = openWindows();
+            }
+
+            dti.forEachArray(openWindows, function (win) {
+                win.close();
             });
         },
         activate: function (target) {
-            // var $target;
-
-            // $('.activeCard').removeClass('activeCard').children('.card-toolbar').addClass('lighten-3');
-
-            // if ($target.hasClass('hide')) {
-            //     dti.animations.fadeIn($target);
-            // }
+            dti.fire('hideMenus');
 
             dti.forEachArray(dti.windows._windowList, function processWindowActivate (win) {
-                // if (win.windowId !== target) {
-                //     win.deactivate();
-                // }
                 if (win.windowId === target) {
                     win.activate(true);
                 } else {
@@ -557,10 +552,6 @@ var dti = {
                     }
                 }
             });
-
-            dti.fire('hideMenus');
-
-            // $target.removeClass('hide').addClass('activeCard').children('.card-toolbar').removeClass('lighten-3 hide');
         },
         showDesktop: function () {
             dti.forEachArray(dti.windows._windowList, function deactivateOnShowDesktop (win) {
@@ -572,8 +563,8 @@ var dti = {
         pinnedItems: ['Display'],
         init: function () {
             dti.bindings.startMenuItems(ko.viewmodel.fromModel(dti.config.itemGroups));
-            //load user preferences
-            dti.forEachArray(dti.taskbar.pinnedItems, function  processPinnedItem (item) {
+            //load user preferences 
+            dti.forEachArray(dti.taskbar.pinnedItems, function processPinnedItem (item) {
                 dti.bindings.openWindows[item] = ko.observableArray([]);
                 dti.bindings.windowGroups.push(dti.taskbar.getWindowGroup(item, true));
             });
@@ -707,7 +698,8 @@ var dti = {
                 id = dti.makeId();
 
             if (!obj.standalone) {
-                dti.bindings.showNavigator(obj.group);
+                dti.settings._workspaceNav = true;
+                dti.bindings.showNavigator(obj.group, true);
             } else {
                 dti.windows.openWindow(obj.url + '?' + id, obj.title, obj.group);
 
@@ -766,21 +758,21 @@ var dti = {
         $navigatorFilterModal: $('#navigatorFilterModal'),
         systemEnums: {},
         systemEnumObjects: {},
-        addEvent: function(element, event, fn) {
+        addEvent: function (element, event, fn) {
             if (element.addEventListener) {
                 element.addEventListener(event, fn, false);
             } else if (element.attachEvent) {
                 element.attachEvent('on' + event, fn);
             }
         },
-        getSystemEnum: function(enumType, callback) {
+        getSystemEnum: function (enumType, callback) {
             return $.ajax({
                 url: dti.settings.apiEndpoint + 'system/' + enumType,
                 contentType: 'application/json',
                 dataType: 'json',
                 type: 'get'
             }).done(
-                function(data) {
+                function handleGetSystemEnum (data) {
                     var c = 0,
                         len = data.length,
                         row,
@@ -789,7 +781,7 @@ var dti = {
                             name: 'None',
                             value: 0
                         }],
-                        _setQCData = function(qc, object) {
+                        _setQCData = function (qc, object) {
                             var QC = 'Quality Code',
                                 QCL = 'Quality Code Label',
                                 QCC = 'Quality Code Font HTML Color';
@@ -807,7 +799,7 @@ var dti = {
                                 };
                             }
                         },
-                        _setCTData = function(ct, object) {
+                        _setCTData = function (ct, object) {
                             var ID = 'Controller ID',
                                 NAME = 'Controller Name',
                                 DESC = 'Description',
@@ -826,7 +818,7 @@ var dti = {
                                 };
                             }
                         },
-                        _setPLData = function(pl, object) {
+                        _setPLData = function (pl, object) {
                             var LEVEL = 'Priority Level',
                                 TEXT = 'Priority Text';
 
@@ -885,7 +877,7 @@ var dti = {
                     if (callback) callback(_array);
                 }
             ).fail(
-                function(jqXHR, textStatus) {
+                function getSystemEnumFail (jqXHR, textStatus) {
                     dti.log('Get system enum (' + enumType + ') failed', jqXHR, textStatus);
                     // Set an empty array/object for code looking @ systemEnums[enumType]
                     // TODO Try again or alert the user and stop
@@ -894,11 +886,11 @@ var dti = {
                 }
             );
         },
-        refreshUserCtlr: function(data) {
+        refreshUserCtlr: function (data) {
             // This routine adds the user's controller ID to the user object
             // Parms: data is the received array of controllers
             var user = dti.bindings.user(),
-                controller = ko.utils.arrayFilter(data, function(ctrl) {
+                controller = ko.utils.arrayFilter(data, function filterControllerUser (ctrl) {
                     return ctrl.name === user.username;
                 });
 
@@ -907,7 +899,7 @@ var dti = {
                 dti.bindings.user(user);
             }
         },
-        applyNavigatorFilter: function (pointType, pointLookup) {
+        applyNavigatorFilter: function (pointType, pointLookup, isStartMenu) {
             var types,
                 processedTypes = [];
 
@@ -917,47 +909,23 @@ var dti = {
                 } else {
                     types = pointType;
                 }
-
-                // dti.forEachArray(types, function findPointType(type) {
-                //     processedTypes.push(dti.utility.pointTypeLookup[type]);
-                // });
-
             } else {
                 types = ['all'];
             }
 
+            if (pointLookup.MODE !== 'filter') {
+                if (!isStartMenu) {
+                    pointLookup.MODE = 'select';
+                } else {
+                    pointLookup.MODE = null;
+                }
+            }
+
             pointLookup.checkPointTypes(types);
         },
-        showNavigator: function (pointType) {
+        showNavigator: function (pointType, isStartMenu) {
             dti.fire('hideMenus');
-            dti.utility.showNavigatorModal(pointType);
-            // if (!dti.navigatorLoaded) {
-            //     dti.navigatorLoaded = true;
-            //     dti._navigatorWindow = dti.windows.create({
-            //         width: '100%',
-            //         // height: '100%',
-            //         left: 0,
-            //         bottom: 0,
-            //         top: -28,
-            //         right: 0,
-            //         title: 'Navigator',
-            //         id: 'Navigator',
-            //         url: '/pointLookup',
-            //         exempt: true,
-            //         onLoad: function () {
-            //             // dti._navigatorWindow.$el.css('zIndex', 100);
-            //             // dti._navigatorWindowIFrame[0].contentWindow.pointLookup.init();
-                        
-            //         }
-            //     });
-            //     dti._navigatorWindowIFrame = dti._navigatorWindow.$el.children('iframe');
-            // } else {
-            //     dti._navigatorWindow.bindings.minimized(false);
-            //     dti.windows.activate('Navigator');
-            //     dti.utility.applyNavigatorFilter(pointType);
-            //     // dti.windows.activate('Navigator');
-            //     // $('#Navigator').removeClass('hide');
-            // }
+            dti.utility.showNavigatorModal(pointType, isStartMenu);
         },
         hideNavigator: function () {
             if (dti._navigatorWindow) {
@@ -987,11 +955,11 @@ var dti = {
                 }
             });
         },
-        showNavigatorModal: function (pointType) {
+        showNavigatorModal: function (pointType, isStartMenu) {
             var loaded = false,
                 $el = dti.utility.$navigatorModalIframe[0],
                 applyFilter = function () {
-                    dti.utility.applyNavigatorFilter(pointType, $el.contentWindow.pointLookup);
+                    dti.utility.applyNavigatorFilter(pointType, $el.contentWindow.pointLookup, isStartMenu);
                 },
                 initModalLookup = function () {
                     this.contentWindow.pointLookup.init(dti.utility.navigatorModalCallback);
@@ -1009,10 +977,14 @@ var dti = {
                     } else {
                         applyFilter();
                     }
+                },
+                complete: function () {
+                    dti.settings._workspaceNav = false;
                 }
             });
         },
         navigatorModalCallback: function () {
+
             dti.log(arguments);
         },
         processMessage: function (e) {
@@ -1022,6 +994,12 @@ var dti = {
                     if (e.newValue.action === 'open') {
                         dti.utility.showNavigatorModal();
                     }
+                },
+                pointSelected: function () {
+
+                },
+                pointFilterSelected: function () {
+
                 }
             };
 
@@ -1031,6 +1009,8 @@ var dti = {
             }
         },
         init: function () {
+            dti.utility.$navigatorModalIframe.attr('src', '/pointlookup');
+            dti.utility.$navigatorFilterModalIframe.attr('src', '/pointlookup?mode=filter');
             dti.utility.pointTypeLookup = {};
             dti.utility.pointTypes = dti.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes();
 
@@ -1050,7 +1030,7 @@ var dti = {
         _messageCallbacks: [],
         init: function () {
             window.addEventListener('storage', function (e) {
-                console.log(e);
+                // console.log(e);
                 dti.storage.processMessage(e);
             });
 
@@ -1108,8 +1088,8 @@ var dti = {
         closeWindows: function (group) {
             dti.windows.closeAll(group);
         },
-        showNavigator: function (group) {
-            dti.utility.showNavigator(group);
+        showNavigator: function (group, isStartMenu) {
+            dti.utility.showNavigator(group, isStartMenu);
         },
         startMenuClick: function (obj) {
             dti.startMenu.handleClick(obj);
@@ -1252,7 +1232,7 @@ var dti = {
                     }
 
                     $element.click(function showNavigatorFiltered () {
-                        dti.utility.showNavigator(filter);
+                        dti.utility.showNavigator(filter,  true);
                     });
                 }
             };
@@ -1275,7 +1255,7 @@ var dti = {
                     'remember-me': true
                 }))
             }).done(
-                function(data) {
+                function handleAuthenticateData (data) {
                     dti.$loginBtn.removeAttr('disabled');
 
                     // if (!!data.resetPass) {
@@ -1435,7 +1415,7 @@ dti.workspaceManager = window.workspaceManager = {
     sessionId: function () {
         return store.get('sessionId');
     },
-    user: function() {
+    user: function () {
         return JSON.parse(JSON.stringify(dti.bindings.user()));
     }
 };

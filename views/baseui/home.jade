@@ -228,14 +228,14 @@ html
             #navigatorFilterModal.navigatorModal.modal.modal-fixed-footer
                 .modal-header Filter Points
                 .modal-content.modal-content-no-padding
-                    iframe.iframeFull(src='/pointlookup?mode=filter')
+                    iframe.iframeFull
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel
 
             #navigatorModal.navigatorModal.modal.modal-fixed-footer
                 .modal-header Select Point
                 .modal-content.modal-content-no-padding
-                    iframe.iframeFull(src='/pointlookup')
+                    iframe.iframeFull
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel                    
 
@@ -257,7 +257,7 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close                    
 
-            #desktop
+            //- #desktop
                 .desktopTitle(style="font-size: 1.6em;") MSFC Utility Control System
                 img.desktop-background(src="/img/test/nasa.png", style="height: 200px; position: absolute; top: 130px; left: 50px;")
                 //- .dti-desktop-item

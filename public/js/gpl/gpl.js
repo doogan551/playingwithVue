@@ -480,7 +480,7 @@ var gpl = {
     },
     isEdit: document.location.href.match('/edit/') !== null,
     noSocket: document.location.href.match('nosocket') !== null,
-    noLog: document.location.href.match('nolog') !== null,
+    noLog: document.location.href.match('log') === null,
     nobg: document.location.href.match('nobg') !== null,
     skipInit: document.location.href.match('skipinit') !== null,
     formatDate: function (date, addSuffix) {
