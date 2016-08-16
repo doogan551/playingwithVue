@@ -4720,8 +4720,6 @@ var Config = (function(obj) {
                     // Our channel property should be an enum; if it's not, then
                     if (ch.ValueType !== valueTypes["Enum"]["enum"]) {
                         ch.ValueType = valueTypes["Enum"]["enum"];
-                        delete ch.Min;
-                        delete ch.Max;
                         ch.ValueOptions = {
                             "9 - Battery Voltage": 9,
                             "10 - Temperature (F)": 10,
@@ -4731,16 +4729,20 @@ var Config = (function(obj) {
                         };
                         ch.eValue = 9;
                         ch.Value = "9 - Battery Voltage";
+
+                        delete ch.Min;
+                        delete ch.Max;
                     }
                 }
                 // Internal input is NOT selected; our channel property should be an unsigned; if it's not, then
                 else if (ch.ValueType !== valueTypes["Unsigned"]["enum"]) {
                     ch.ValueType = valueTypes["Unsigned"]["enum"];
-                    delete ch.ValueOptions;
-                    delete ch.eValue;
                     ch.Min = 1;
                     ch.Max = 8;
                     ch.Value = 1;
+
+                    delete ch.ValueOptions;
+                    delete ch.eValue;
                 }
             }
             return point;
@@ -4807,7 +4809,7 @@ var Config = (function(obj) {
                     else if (ch.Value > ch.Max)
                         ch.Value = ch.Max;
 
-                    ch.ValueType = opts.ValueType;
+                    ch.ValueType = unsignedValueType;
                 },
                 setupInputType = function (ValueOptions) {
                     var inputType = point["Input Type"],
