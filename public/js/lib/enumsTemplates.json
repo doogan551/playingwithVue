@@ -496,6 +496,9 @@
             },
             "SCADA Vio": {
                 "enum": 20
+            },
+            "SCADA IO": {
+                "enum": 21
             }
         },
         "Device Ports": {
