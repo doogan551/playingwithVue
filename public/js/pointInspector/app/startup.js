@@ -808,6 +808,12 @@ define([
                 }
             });
         };
+        // This function is used to hydrate point properties (add key-value pairs to the property if they are not on it) after
+        // data is received from the server (model data), and before it is made into view-model data
+        // At the time of this comment, it is only used for the Channel property. It was necessary for the SCADA IO device
+        // because its channel property can be a numeric input or a drop-down selection based on the 'Input Type' property value,
+        // but ko's viewmodel plugin doesn't support dynamic adding or removal of the view-model key-value pairs. So the hydrate
+        // makes sure all possible key-value pairs are present on the model before creating the view-model.
         self.hydrate = function (data) {
             var hydrateProps = ['Channel'],
                 doHydrate = {
@@ -838,6 +844,8 @@ define([
 
             return data;
         };
+        // This function is the complement to the hydrate - it removes any extra key-value pairs that are not needed on a property,
+        // and is called before data is sent to the server for committing to the database.
         self.sanitize = function (data) {
             var sanitizeProps = ['Channel'],
                 doSanitize = {
@@ -1186,11 +1194,9 @@ define([
 
                         // SCADA IO device type added support for AI channel numbers that are numeric entry OR drop down selection,
                         // determined by another property selection (up to the point of this comment, the 'Channel' property was
-                        // always a numeric input). Dynamically changing this property to a drop down caused this numeric binding
-                        // to throw errors because the value wasn't always a number due to this binding firing before the value
-                        // updated (valueType caused it to fire). Accessing the valueType using .peek() fixed the issue of the 
-                        // value not being a number when this binding fired, but I don't think we can guarantee the valueType will
-                        // always be updated when this binding fires, so the below is a more robust solution
+                        // always a numeric input). Dynamically changing this property to a drop-down was causing this numeric binding
+                        // to throw errors because the drop-down values are not numbers. So we'll check the value type and value
+                        // before calling formatNumber...
 
                         if (valueType === valueTypeEnums.Enum.enum) {
                             return val;
