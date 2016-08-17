@@ -3185,15 +3185,35 @@ var Config = (function(obj) {
         },
 
         applyNetworkNumber: function(data) {
+            var networks = data.networkConfig;
+            var networkValue = data.point[data.property].Value;
+            var findNetwork = function(segment) {
+                var port = 0;
+                for (var n = 0; n < networks.length; n++) {
+                    if (networks[n]['IP Network Segment'] === segment) {
+                        port = networks[n]['IP Port'];
+                    }
+                }
+                return port;
+            }
             switch (data.property) {
                 case 'Ethernet Network':
                     data.point['Ethernet IP Port'].isReadOnly = (data.propertyObject.Value === 0) ? false : true;
+                    if (networkValue !== 0) {
+                        data.point['Ethernet IP Port'].Value = findNetwork(networkValue);
+                    }
                     break;
                 case 'Downlink Network':
                     data.point['Downlink IP Port'].isReadOnly = (data.propertyObject.Value === 0) ? false : true;
+                    if (networkValue !== 0) {
+                        data.point['Downlink IP Port'].Value = findNetwork(networkValue);
+                    }
                     break;
                 case 'Network Segment':
                     data.point['Ethernet IP Port'].isReadOnly = (data.propertyObject.Value === 0) ? false : true;
+                    if (networkValue !== 0) {
+                        data.point['Ethernet IP Port'].Value = findNetwork(networkValue);
+                    }
                     break;
             }
             return data.point;
@@ -4739,7 +4759,7 @@ var Config = (function(obj) {
                 ch = point["Channel"],
                 enums = enumsTemplatesJson.Enums,
                 valueTypes = enums["Value Types"];
-            
+
             // If this is a SCADA IO device (if an RMU is defined it's not a SCADA IO)
             if ((point._devModel === enums["Device Model Types"]["SCADA IO"]["enum"]) && (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0)) {
                 // If internal input is selected
@@ -4807,7 +4827,7 @@ var Config = (function(obj) {
             var point = data.point,
                 unsignedValueType = enumsTemplatesJson.Enums["Value Types"].Unsigned.enum,
                 enumValueType = enumsTemplatesJson.Enums["Value Types"].Enum.enum,
-                setupChannel = function (opts) {
+                setupChannel = function(opts) {
                     // opts is expected to be an object of the form:
                     // {
                     //     Min: <val>,
@@ -4838,7 +4858,7 @@ var Config = (function(obj) {
 
                     ch.ValueType = unsignedValueType;
                 },
-                setupInputType = function (ValueOptions) {
+                setupInputType = function(ValueOptions) {
                     var inputType = point["Input Type"],
                         key = Object.keys(ValueOptions)[0];
 
