@@ -1157,7 +1157,7 @@ var telemetryViewModel = function() {
         },
         checkForErrors = function() {
             makeDirty();
-            self.hasError(errors().length > 0);
+            // self.hasError(errors().length > 0);
         },
         initObservables = function() {
             var c, len = fieldList.length,
@@ -1180,31 +1180,44 @@ var telemetryViewModel = function() {
                 }
             }
             self.networks.subscribe(makeDirty);
-            errors = ko.validation.group(self);
+            errors = ko.validatedObservable(self);
         },
         getDataToSave = function() {
             var c, len = fieldList.length,
                 field,
                 ret = {},
-                networks = ko.viewmodel.toModel(self.networks());;
+                networks = self.networks();
+
+            var fixLeadingZeros = function(value) {
+                // var matched = value.match(/^0*/);
+                // if (!!matched) {
+                //     return value.substr(matched[0].length);
+                // }
+
+                return parseInt(value, 10);
+            };
 
             for (var n = 0; n < networks.length; n++) {
                 var net = networks[n];
-                if (net['IP Network Segment'] === 0) {
+                if (net['IP Network Segment']() === 0 || net['IP Port']() < 47808 || net["IP Port"]() > 47823) {
                     networks.splice(n, 1);
-                    self.networks.splice(n,1);
+                    self.networks.splice(n, 1);
                     n--;
                 } else {
+                    net['IP Network Segment'](fixLeadingZeros(net['IP Network Segment']()));
+                    net['IP Port'](fixLeadingZeros(net['IP Port']()));
                     if (!!net.isDefault) {
-                        self['IP Network Segment'](net['IP Network Segment']);
-                        self['IP Port'](net['IP Port']);
+                        self['IP Network Segment'](net['IP Network Segment']());
+                        self['IP Port'](net['IP Port']());
                     }
                 }
             }
+            self.updateDefault();
             for (c = 0; c < len; c++) {
                 field = fieldList[c].name;
                 ret[field] = self[field]();
             }
+            networks = ko.viewmodel.toModel(self.networks());
             ret['Network Configuration'] = networks;
             console.log(ret);
 
@@ -1330,23 +1343,23 @@ var telemetryViewModel = function() {
             len = valErrors.length,
             saveObj;
 
-        if (len === 0) {
-            //no errors, save
-            saveObj = getDataToSave();
-            self.hasError(false);
+        // if (len === 0) {
+        //no errors, save
+        saveObj = getDataToSave();
+        self.hasError(false);
 
-            $.ajax({
-                url: saveUrl,
-                data: saveObj,
-                dataType: 'json',
-                type: 'post'
-            }).done(function(response) {
-                updateData();
-            });
-        } else {
-            self.dirty(true);
-            self.hasError(true);
-        }
+        $.ajax({
+            url: saveUrl,
+            data: saveObj,
+            dataType: 'json',
+            type: 'post'
+        }).done(function(response) {
+            updateData();
+        });
+        // } else {
+        // self.dirty(true);
+        // self.hasError(true);
+        // }
     };
 
     self.cancel = function() {
@@ -1384,15 +1397,19 @@ var telemetryViewModel = function() {
     };
     self.removeNetwork = function() {
         var networks = self.networks();
-        var toRemove = parseInt(this['IP Network Segment']())
+        var toRemove = parseInt(this['IP Network Segment']());
+        var portCheck = parseInt(this['IP Port']());
         var temp = [];
         for (var i = 0; i < networks.length; i++) {
             var net = networks[i];
-            if (toRemove !== parseInt(net['IP Network Segment']())) {
-                temp.push(net);
+            if (toRemove === parseInt(net['IP Network Segment']()) && portCheck === parseInt(net['IP Port']())) {
+                networks.splice(i, 1);
+                break;
             }
         }
-        self.networks(temp);
+        // self.networks(temp);
+        self.networks.valueHasMutated();
+        self.updateDefault();
     };
     self.setSegment = function() {
         self.originalSegment(this['IP Network Segment']());
@@ -1417,6 +1434,7 @@ var telemetryViewModel = function() {
         $('#uniqueSegmentError').hide();
     };
     self.changeDefault = function() {
+        console.log(this['IP Network Segment'](), this.isDefault());
         var networks = self.networks();
         networks.forEach(function(net) {
             net.isDefault(false);
@@ -1424,6 +1442,26 @@ var telemetryViewModel = function() {
         this.isDefault(true);
         self.dirty(true);
         return true;
+    };
+    self.allowDefault = function() {
+        console.log(this);
+        return true;
+    };
+    self.updateDefault = function() {
+        var hasDefault = false;
+        var networks = self.networks();
+        networks.forEach(function(net) {
+            if (!!net.isDefault()) {
+                hasDefault = true;
+            }
+        });
+        if (!hasDefault) {
+            self.changeDefault.apply(networks[0]);
+
+            self.systemDefault(networks[0]['IP Network Segment']())
+            self['IP Network Segment'](networks[0]['IP Network Segment']());
+            self['IP Port'](networks[0]['IP Port']());
+        }
     }
 };
 

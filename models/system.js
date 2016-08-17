@@ -187,7 +187,9 @@ module.exports = {
     var ipPort = parseInt(data["IP Port"], 10);
     var netConfig = data['Network Configuration'];
 
-    for(var n = 0; n <netConfig.length; n++){
+    for (var n = 0; n < netConfig.length; n++) {
+      netConfig[n]['IP Network Segment'] = parseInt(netConfig[n]['IP Network Segment'], 10);
+      netConfig[n]['IP Port'] = parseInt(netConfig[n]['IP Port'], 10);
       netConfig[n].isDefault = (netConfig[n].isDefault === 'true');
     }
 

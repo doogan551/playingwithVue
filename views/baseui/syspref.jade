@@ -289,7 +289,7 @@ html
                         tbody(data-bind='foreach:networks')
                             tr
                                 td
-                                    input(type='radio', name='defaultNetwork', data-bind='checked:$parent.systemDefault, checkedValue:$data["IP Network Segment"], event:{click:$parent.changeDefault}')
+                                    input(type='radio', name='defaultNetwork', data-bind='checked:$parent.systemDefault, checkedValue:$data["IP Network Segment"], enable: ($data["IP Network Segment"]() !== 0 && $data["IP Port"]() >= 47808 && $data["IP Port"]() <= 47823 ), event:{click:$parent.changeDefault}')
                                 td.networkDelete
                                     span(class="showOnHover valign pull-left" data-bind="visible: !$data.isDefault()")
                                         a(href="#", title="Delete", data-bind="click: $parent.removeNetwork")
