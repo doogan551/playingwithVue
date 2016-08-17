@@ -3728,9 +3728,10 @@ var Config = (function(obj) {
             // Init Firmware 2 to not displayable - we'll set it displayable when it is needed
             point["Firmware 2 Version"].isDisplayable = false;
 
+            // If unknown (central), MS5-UNV, MS5-xTalk, SCADA Vio, SCADA IO
             if (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "Unknown" || point["Model Type"].Value == "MicroScan 5 xTalk" || point["Model Type"].Value == "SCADA Vio" || point["Model Type"].Value == "SCADA IO") {
                 // Firmware 2 (baseboard fw) is displayable on MS5-UNV, SCADA Vio products, and SCADA IO products
-                point["Firmware 2 Version"].isDisplayable = (point["Model Type"].Value == "MicroScan 5 UNV" || point["Model Type"].Value == "SCADA Vio" || point["Model Type"].Value == "MicroScan 5 UNV");
+                point["Firmware 2 Version"].isDisplayable = !!~["MicroScan 5 UNV", "SCADA Vio", "SCADA IO"].indexOf(point["Model Type"].Value);
 
                 if (point["Model Type"].Value !== "Unknown") {
                     point["Time Zone"].isReadOnly = false;
@@ -5385,8 +5386,8 @@ var Config = (function(obj) {
                 "2 - Reheat": 2
             };
 
-            // If Device type uknown, Central device, MicroScan 5 xTalk, MicroScan 5 UNV, or SCADA Vio
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"])) {
+            // If Device type uknown, Central device, MicroScan 5 xTalk, MicroScan 5 UNV, or SCADA Vio or SCADA IO
+            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
 
                 // If this point is not on an RMU
                 if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
@@ -5406,6 +5407,31 @@ var Config = (function(obj) {
 
                         point["Output Type"].isDisplayable = true;
                         point["Output Type"].ValueOptions = {
+                            "Pulse Width": 1,
+                            "Pulsed": 2
+                        };
+
+                        point["Open Channel"].Max = 5;
+                        point["Open Channel"].Min = 1;
+
+                        point["Close Channel"].Max = 5;
+                        point["Close Channel"].Min = 1;
+
+                        data.point = point;
+                        data.point = this.applyAnalogOutputTypeOutputType(data);
+                        return data.point;
+                    }
+                    // Else if SCADA IO
+                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"]) {
+                        obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
+
+                        point["Conversion Coefficient 1"].isDisplayable = true;
+                        point["Conversion Coefficient 2"].isDisplayable = true;
+
+                        point["Output Type"].isDisplayable = true;
+                        point["Output Type"].ValueOptions = {
+                            "0 to 10 Volt": 3,
+                            "0 to 20 mA": 4,
                             "Pulse Width": 1,
                             "Pulsed": 2
                         };
@@ -5861,8 +5887,8 @@ var Config = (function(obj) {
             point["Demand Enable"].isDisplayable = true;
             point["Fail Action"].isDisplayable = true;
 
-            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"])) {
+            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, SCADA IO
+            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
 
                 // If BACnet or N2 RMU
                 if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
@@ -6005,8 +6031,8 @@ var Config = (function(obj) {
             point["Demand Enable"].isDisplayable = true;
             point["Fail Action"].isDisplayable = true;
 
-            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"])) {
+            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, SCADA IO
+            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
 
                 // If BACnet or N2 RMU
                 if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
@@ -6192,8 +6218,8 @@ var Config = (function(obj) {
              point["Latch Value"].isDisplayable = false;*/
             point["Supervised Input"].isDisplayable = false;
 
-            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"])) {
+            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, SCADA IO
+            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
 
                 // If no RMU
                 if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
@@ -6208,6 +6234,23 @@ var Config = (function(obj) {
 
                         point.Channel.isDisplayable = true;
                         point.Channel.Max = 9;
+                        point.Channel.Min = 1;
+
+                        point["Input Type"].isDisplayable = true;
+                        point["Input Type"].ValueOptions = {
+                            "Latch": 0,
+                            "Momentary": 1,
+                            "Pulse": 2
+                        };
+
+                        data.point = point;
+                        point = this.applyBinaryInputTypeInputType(data); // Apply input type logic
+                    }
+                    // If SCADA IO
+                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"]) {
+
+                        point.Channel.isDisplayable = true;
+                        point.Channel.Max = 8;
                         point.Channel.Min = 1;
 
                         point["Input Type"].isDisplayable = true;
@@ -6636,8 +6679,8 @@ var Config = (function(obj) {
             point["Off Control Register"].isDisplayable = false;
             point["Off Control Value"].isDisplayable = false;
 
-            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"])) {
+            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, SCADA IO
+            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
 
                 // If no RMU
                 if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
@@ -6679,6 +6722,40 @@ var Config = (function(obj) {
 
                         data.point = point;
                         point = this.applyBinaryOutputTypeOutputType(data); // Apply output type logic
+                    }
+                    // If SCADA IO
+                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"]) {
+
+                        point["Same State Test"].isDisplayable = true;
+                        point.Polarity.isDisplayable = true;
+
+                        point["Output Type"].isDisplayable = true;
+                        point["Output Type"].ValueOptions = {
+                            "Latch": 0,
+                            "Momentary": 1
+                        };
+
+                        point.Channel.Max = 8;
+                        point.Channel.Min = 1;
+
+                        point["On Channel"].Max = 8;
+                        point["On Channel"].Min = 1;
+
+                        point["Off Channel"].Max = 8;
+                        point["Off Channel"].Min = 1;
+
+                        point["Feedback Channel"].Max = 8;
+                        point["Feedback Channel"].Min = 1;
+
+                        point["Open Channel"].Max = 8;
+                        point["Open Channel"].Min = 1;
+
+                        point["Close Channel"].Max = 8;
+                        point["Close Channel"].Min = 1;
+
+                        data.point = point;
+                        point = this.applyBinaryOutputTypeOutputType(data); // Apply output type logic
+
                     }
                     // Must be MicroScan 5 UNV, unkown, or central
                     else {
@@ -7215,8 +7292,8 @@ var Config = (function(obj) {
             point["Poll Register"].isDisplayable = false;
             point["Poll Data Type"].isDisplayable = false;
 
-            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"])) {
+            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, SCADA IO
+            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
 
                 // If BACnet
                 if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) {
@@ -7306,8 +7383,8 @@ var Config = (function(obj) {
             point["Rate Period"].isDisplayable = false;
             point["Pulse Weight"].isDisplayable = false;
 
-            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"])) {
+            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, SCADA IO
+            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
 
                 // If no RMU defined
                 if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
@@ -7323,6 +7400,15 @@ var Config = (function(obj) {
                         point["Channel"].isDisplayable = true;
                         point["Channel"].Max = 9;
                         point["Channel"].Min = 6;
+                        point["Fast Pulse"].isDisplayable = true;
+                        point["Rate Period"].isDisplayable = true;
+                        point["Pulse Weight"].isDisplayable = true;
+                    }
+                    // If SCADA IO
+                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"]) {
+                        point["Channel"].isDisplayable = true;
+                        point["Channel"].Max = 8;
+                        point["Channel"].Min = 1;
                         point["Fast Pulse"].isDisplayable = true;
                         point["Rate Period"].isDisplayable = true;
                         point["Pulse Weight"].isDisplayable = true;
