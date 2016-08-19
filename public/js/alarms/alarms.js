@@ -304,9 +304,10 @@ var AlarmManager = function (conf) {
             }
         },
         //------ Point selector routines
-        filterCallback = function(_filterObj) {
+        filterCallback = function(newValue) {
             // filterCallback() is called anytime a change is made in the point selector
-            var i,
+            var _filterObj = newValue.filter,
+                i,
                 key;
 
             for (i = 1; i < 5; i++) {
@@ -322,11 +323,11 @@ var AlarmManager = function (conf) {
             view = view || self.currentView();
 
             // filterWindowCallback() is called after the iframe is loaded
-            filterWindow.pointLookup.init(filterCallback, view.filters.nameSegment.options);
+            // filterWindow.pointLookup.init(filterCallback, view.filters.nameSegment.options);
         },
         initFilterWindow = function () {
             // initFilterWindow() is called once to initialize our iframe with the point selector
-            filterWindow = openWindow('/pointLookup?mode=filter', 'filter', 'filter', 'filter', 'filter', { callback: filterWindowCallback });
+            // filterWindow = openWindow('/pointLookup?mode=filter', 'filter', 'filter', 'filter', 'filter', { callback: filterWindowCallback });
         },
         getPrettyDate = function (timestamp, forceDateString) {
             var alm = new Date(timestamp * 1000),
@@ -1431,9 +1432,9 @@ var AlarmManager = function (conf) {
             // Init the name segment window. This routine is called @ startup before filterWindow is initialized,
             // so we need to make sure it exists before we call it here
             // IE Fix: Also check for init (in IE11, filterWindow.pointLookup existed, but not filterWindow.pointLookup.init)
-            if (filterWindow.pointLookup && filterWindow.pointLookup.init) {
+            // if (filterWindow.pointLookup && filterWindow.pointLookup.init) {
                 filterWindowCallback(targetView);
-            }
+            // }
 
             // Save our scroll position before we change views
             curView.scrollPosition = $elAlarms.scrollTop();
@@ -2416,6 +2417,15 @@ var AlarmManager = function (conf) {
         sort(!sort());
         applyFilter(withoutDelay);
     };
+
+    self.showPointFilter = function () {
+        dtiMessaging.showNavigatorFilter();
+    };
+
+    dtiMessaging.onPointFilterSelect(function (cfg) {
+        filterCallback(cfg);
+        self.applyNameFilter();
+    });
 
     self.changePage = function (modifier) {
         var alarms = self.alarms(),

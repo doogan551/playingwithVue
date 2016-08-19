@@ -47,7 +47,7 @@ html
                                     i.material-icons home
 
                             li.taskbarItem
-                                .userInfo.valign-wrapper
+                                .userInfo.valign-wrapper.dropdown-button(data-activates='userDropdownMenu', data-beloworigin='true', data-hover='true', data-alignment='right')
                                     img.userAvatar(src='/img/test/avatar.png')
                                     span.userName.valign John Doe
 
@@ -145,6 +145,11 @@ html
                                 i.mdi.mdi-compass
                         //- span &copy; Dorsett Technologies
 
+            ul#userDropdownMenu.dropdown-content
+                li
+                    a.blue-grey-text(href='javascript://') Preferences
+                li
+                    a.blue-grey-text(href='javascript://', data-bind="click: logout") Logout
             //- #modal1.modal.bottom-sheet
             //-     .modal-content
             //-         h4 Modal Header
@@ -225,12 +230,13 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
 
-            #navigatorFilterModal.navigatorModal.modal.modal-fixed-footer
+            #navigatorFilterModal.navigatorModal.modal.modal-fixed-footer.modal-fixed-header
                 .modal-header Filter Points
                 .modal-content.modal-content-no-padding
                     iframe.iframeFull
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel
+                    a.modal-action.modal-close.waves-effect.btn.blue-grey(href='javascript://', data-bind="click: acceptNavigatorFilter") Accept
 
             #navigatorModal.navigatorModal.modal.modal-fixed-footer
                 .modal-header Select Point
@@ -320,6 +326,40 @@ html
                             .row
                                 button#loginBtn.col.s12.btn.btn-large.waves-effect.blue-grey(type='submit', name='btn_login') Login
 
+        #loading.hidden
+            .loadingMask
+                .preloader-wrapper.active
+                    .spinner-layer.spinner-blue
+                        .circle-clipper.left
+                            .circle
+                        .gap-patch
+                            .circle
+                        .circle-clipper.right
+                            .circle
+                    .spinner-layer.spinner-red
+                        .circle-clipper.left
+                            .circle
+                        .gap-patch
+                            .circle
+                        .circle-clipper.right
+                            .circle
+                    .spinner-layer.spinner-yellow
+                        .circle-clipper.left
+                            .circle
+                        .gap-patch
+                            .circle
+                        .circle-clipper.right
+                            .circle
+                    .spinner-layer.spinner-green
+                        .circle-clipper.left
+                            .circle
+                        .gap-patch
+                            .circle
+                        .circle-clipper.right
+                            .circle
+
+
+
     script#miniWindowTemplate(type='text/html')
         a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-target="displayPanel")
             .itemTitle.white-text(data-bind="text: title")
@@ -362,7 +402,7 @@ html
     script#taskbarMenuTemplate(type='text/html')                    
         // ko stopBindings: true
         .slideDownMenu.white.z-depth-1
-            .actionList
+            .actionList(data-bind="if: singleton() === false")
                 .blue-grey-text Actions
                 a.blue-grey-text.action(href="javascript://", data-bind="showNavigator: group")
                     i.material-icons folder_open
@@ -383,8 +423,14 @@ html
                     .itemTitle.white-text
                         i.right.material-icons.closeIcon close
                         div(data-bind="text: title")
-                    .itemBody 
+                    .itemBody
+                        //ko if: thumbnail() === true 
                         img(data-bind="thumbnail: upi")
+                        // /ko
+
+                        // ko if: thumbnail() === false
+                        i.center-align.white-text(data-bind="css: iconClass, text: iconText")
+                        // /ko
 
                 // /ko
         // /ko

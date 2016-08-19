@@ -2285,7 +2285,7 @@ var tou = {
         });
 
         tou.poppedIn = window.top.location.href !== window.location.href;
-        tou.workspaceManager = window.opener && window.opener.workspaceManager;
+        tou.workspaceManager = window.top.workspaceManager;
         tou._openWindow = tou.workspaceManager && tou.workspaceManager.openWindowPositioned;
 
         tou.processWeatherPoints(tou._weatherPoints);

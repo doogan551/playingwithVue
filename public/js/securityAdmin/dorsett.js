@@ -175,7 +175,7 @@ var dorsett = (function() {
                 type: 'post'
             }).done(
                 function(data) {
-                    console.log(data.Users);
+                    // console.log(data.Users);
                     var users = data.Users,
                         i = 0,
                         recordCount = users.length;

@@ -57,7 +57,7 @@ html
 
                 // NAME SEGMENT FILTERS
                 .filterContainer(id="nameFilters")
-                    .filterIcon.fa.fa-font.fa.dropdown-toggle(title="Filter by point name and/or point type", data-toggle="modal", data-target="#pointFilterModal")
+                    .filterIcon.fa.fa-font.fa.dropdown-toggle(title="Filter by point name and/or point type", data-bind="click: showPointFilter")
 
                 // TIME DATE FILTERS
                 .filterContainer(id="timeDateFilters", data-bind="visible: filters.dateTime.visible")
@@ -267,13 +267,13 @@ html
         .bodyMask
 
         // Point Filter Modal
-        .modal#pointFilterModal(role="dialog", style="overflow: hidden;")
-            .modalContainer
-                .subTitle POINT NAME/TYPE FILTER
-                .pull-right.fa.fa-2x.fa-times.closeIt
-                iframe#pointLookup(name="pid_filter")
-                .text-center
-                    button.btn.btn-success.closeIt OK
+        //- .modal#pointFilterModal(role="dialog", style="overflow: hidden;")
+        //-     .modalContainer
+        //-         .subTitle POINT NAME/TYPE FILTER
+        //-         .pull-right.fa.fa-2x.fa-times.closeIt
+        //-         iframe#pointLookup(name="pid_filter")
+        //-         .text-center
+        //-             button.btn.btn-success.closeIt OK
 
         script(type='text/javascript', src='/js/lib/jquery.min.js')
         script(type='text/javascript', src='/js/lib/knockout-3.1.0.js')
@@ -285,4 +285,5 @@ html
         script(type='text/javascript', src='/js/lib/bootstrap-datepicker.js')
         script(type='text/javascript', src='/js/lib/jstween-1.1.min.js')
         script(type='text/javascript', src='/js/lib/jquery.printarea.js')
+        script(type='text/javascript', src='/js/v2/dti.js')
         script(type='text/javascript', src='/js/alarms/alarms.js')

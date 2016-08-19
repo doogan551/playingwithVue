@@ -3,7 +3,7 @@
 var ActivityLogsManager = function (conf) {
     var self = this,
         myTitle = 'Activity Logs',
-        workspaceManager = window.opener.workspaceManager,
+        workspaceManager = window.top.workspaceManager,
         sessionId = workspaceManager.sessionId(),
         user = workspaceManager.user(),
         storeKey = 'activityLogs_' + user._id,

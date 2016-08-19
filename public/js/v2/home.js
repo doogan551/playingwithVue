@@ -15,26 +15,33 @@ var dti = {
                 title: 'Displays',
                 iconText: 'tv',
                 iconClass: 'material-icons',
-                group: 'Display'
+                group: 'Display',
+                thumbnail: true,
+                singleton: false
             },
             'Sequence': {
                 title: 'Sequences',
                 iconText: 'device_hub',
                 iconClass: 'material-icons',
-                group: 'Sequence'
+                group: 'Sequence',
+                thumbnail: true,
+                singleton: false
             },
             'Report': {
                 title: 'Reports',
                 iconText: 'assignment',
                 iconClass: 'material-icons',
-                group: 'Report'
+                group: 'Report',
+                singleton: false
             },
             'Dashboard': {
                 title: 'Dashboards',
                 iconText: '',
                 iconClass: 'mdi mdi-gauge',
                 group: 'Dashboard',
-                standalone: true
+                standalone: true,
+                url: '/dashboard',
+                singleton: true
             },
             'Alarm': {
                 title: 'Alarms',
@@ -42,20 +49,50 @@ var dti = {
                 iconClass: 'material-icons',
                 group: 'Alarm',
                 standalone: true,
-                url: '/alarms'
+                url: '/alarms',
+                singleton: false
             },
             'Activity Log': {
                 title: 'Activity Logs',
                 iconText: '',
                 iconClass: 'mdi mdi-comment-multiple-outline',
                 group: 'Activity Log',
-                standalone: true
+                standalone: true,
+                url: '/activityLogs',
+                singleton: false
             },
             'Point': {
                 title: 'Points',
                 iconText: 'memory',
                 iconClass: 'material-icons',
-                group: 'Point'
+                group: 'Point',
+                singleton: false
+            },
+            'Settings': {
+                title: 'System Prefs',
+                iconText: 'settings',
+                iconClass: 'material-icons',
+                group: 'Settings',
+                standalone: true,
+                url: '/syspref',
+                singleton: true,
+                options: {
+                    // left: 200,
+                    // top: 200
+                }
+            },
+            'Security': {
+                title: 'Security',
+                iconText: 'security',
+                iconClass: 'material-icons',
+                group: 'Security',
+                standalone: true,
+                url: '/securityadmin',
+                singleton: true,
+                options: {
+                    width: '85%',
+                    height: '85%'
+                }
             }
         }
     },
@@ -85,6 +122,21 @@ var dti = {
             errorFree = true;
 
         for (c = 0; c < len && errorFree; c++) {
+            errorFree = fn(list[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
+    forEachArrayRev: function (arr, fn) {
+        var c,
+            list = arr || [],
+            len = list.length,
+            errorFree = true;
+
+        for (c = len - 1; c >= 0 && errorFree; c--) {
             errorFree = fn(list[c], c);
             if (errorFree === undefined) {
                 errorFree = true;
@@ -186,12 +238,14 @@ var dti = {
             });
         },
         fadeIn: function ($el, cb) {
+            $el[0].style.willChange = 'opacity, display';
             $el.css('display', 'block');
             dti.animations._fade($el, 1, cb);
         },
         fadeOut: function ($el, cb) {
             dti.animations._fade($el, 0, function finishFadeOut () {
                 $el.css('display', 'none');
+                $el[0].style.willChange = '';
                 if (cb) {
                     cb();
                 }
@@ -251,6 +305,9 @@ var dti = {
                         }
                     }
                 },
+                setOpen = function () {
+                    menuShown = true;
+                },
                 setTimer = function () {
                     // clearTimeout(hideTimer);
                     hideTimer = setTimeout(closeMenu, hoverDelay);
@@ -300,6 +357,7 @@ var dti = {
         var windowId = config.id || dti.makeId(),
             iframeId = dti.makeId(),
             active = false,
+            group,
             prepMeasurement = function (x) {
                 if (typeof x === 'string') {
                     return x;
@@ -387,6 +445,9 @@ var dti = {
                     minimize: minimize,
                     minimized: ko.observable(false),
                     close: close,
+                    iconClass: ko.observable(),
+                    iconText: ko.observable(),
+                    thumbnail: ko.observable(false),
                     active: ko.observable(false),
                     exempt: ko.observable(config.exempt || false),
                     height: ko.observable(prepMeasurement(config.height)),
@@ -395,6 +456,17 @@ var dti = {
                     top: ko.observable(prepMeasurement(config.top)),
                     right: ko.observable(prepMeasurement(config.right)),
                     bottom: ko.observable(prepMeasurement(config.bottom))
+                },
+                handleMessage: function (message) {
+                    var callbacks = {
+                        updateTitle: function () {
+                            self.bindings.title(message.title);
+                        }
+                    };
+
+                    if (callbacks[message.action]) {
+                        callbacks[message.action]();
+                    }
                 },
                 onLoad: function (event) {
                     // var group = this.contentWindow.pointType;
@@ -434,6 +506,11 @@ var dti = {
             self.bindings.upi(config.upi);
         }
 
+        group = dti.taskbar.getWindowGroup(config.type);
+        self.bindings.iconClass(group.iconClass);
+        self.bindings.iconText(group.iconText);
+        self.bindings.thumbnail(group.thumbnail || false);
+
         //detect clicks inside iframe
         // setInterval(function detectIframeClick () {
         //     var elem = document.activeElement;
@@ -451,7 +528,8 @@ var dti = {
             activate: activate,
             $el: self.$windowEl,
             windowId: windowId,
-            bindings: self.bindings
+            bindings: self.bindings,
+            handleMessage: self.handleMessage
         };
     },
     windows: {
@@ -489,8 +567,23 @@ var dti = {
                 dti.windows._offsetY += dti.windows._offset;
             }
         },
+        sendMessage: function (e) {
+            var targetWindow,
+                winId = e.winId || e._windowId;
+
+            dti.forEachArray(dti.windows._windowList, function checkForTargetWindow (win) {
+                if (win.windowId === winId) {
+                    targetWindow = win;
+                    return false;
+                }
+            });
+
+            targetWindow.handleMessage(e);
+        },
         create: function (config) {
             var newWindow;
+
+            $.extend(config, config.options);
 
             if (!config.exempt) {
                 dti.windows.offset();
@@ -526,8 +619,14 @@ var dti = {
                 url: url,
                 title: title,
                 type: type,
-                upi: uniqueId
+                upi: uniqueId,
+                options: options
             });
+        },
+        getWindowsByType: function (type) {
+            var openWindows = dti.bindings.openWindows[type];
+
+            return (openWindows && openWindows()) || [];
         },
         closeAll: function (group) {
             var openWindows = dti.bindings.openWindows[group];
@@ -536,7 +635,7 @@ var dti = {
                 openWindows = openWindows();
             }
 
-            dti.forEachArray(openWindows, function (win) {
+            dti.forEachArrayRev(openWindows, function (win) {
                 win.close();
             });
         },
@@ -566,7 +665,7 @@ var dti = {
             //load user preferences 
             dti.forEachArray(dti.taskbar.pinnedItems, function processPinnedItem (item) {
                 dti.bindings.openWindows[item] = ko.observableArray([]);
-                dti.bindings.windowGroups.push(dti.taskbar.getWindowGroup(item, true));
+                dti.bindings.windowGroups.push(dti.taskbar.getKOWindowGroup(item, true));
             });
 
             dti.on('closeWindow', function handleCloseWindow (win) {
@@ -588,25 +687,22 @@ var dti = {
              if (group && dti.taskbar.isValidGroup(group)) {
                 if (!dti.taskbar.isGroupOpen(group)) {
                     dti.bindings.openWindows[win.bindings.group()] = ko.observableArray([]);
-                    dti.bindings.windowGroups.push(dti.taskbar.getWindowGroup(group));
+                    dti.bindings.windowGroups.push(dti.taskbar.getKOWindowGroup(group));
                 }
 
                 dti.bindings.openWindows[win.bindings.group()].push(win.bindings);
-                // if (myWindow.point) {
-                //     this.bindings.upi(myWindow.point._id);            
-                // }
             }
         },
-        _getWindowGroup: function (grp) {
+        getWindowGroup: function (grp) {
             return dti.config.itemGroups[grp] || dti.config.itemGroups.Point;
         },
         getWindowGroupName: function (grp) {
-            var group = dti.taskbar._getWindowGroup(grp);
+            var group = dti.taskbar.getWindowGroup(grp);
 
             return group.group;
         },
-        getWindowGroup: function (grp, pinned) {
-            var group = dti.taskbar._getWindowGroup(grp);
+        getKOWindowGroup: function (grp, pinned) {
+            var group = dti.taskbar.getWindowGroup(grp);
 
             group.pinned = !!pinned;
 
@@ -695,15 +791,26 @@ var dti = {
         },
         handleClick: function (koIconObj) {
             var obj = ko.toJS(koIconObj),
-                id = dti.makeId();
+                id = dti.makeId(),
+                openWindows,
+                doOpenWindow = function () {
+                    dti.windows.openWindow(obj.url + '?' + id, obj.title, obj.group, null, null, obj.options);
+                };
 
             if (!obj.standalone) {
                 dti.settings._workspaceNav = true;
                 dti.bindings.showNavigator(obj.group, true);
             } else {
-                dti.windows.openWindow(obj.url + '?' + id, obj.title, obj.group);
-
-                // openWindow: function (url, title, type, target, uniqueId, options) {
+                if (obj.singleton) {
+                    openWindows = dti.windows.getWindowsByType(obj.group);
+                    if (openWindows.length > 0) {
+                        openWindows[0].activate();
+                    } else {
+                        doOpenWindow();
+                    }
+                } else {
+                    doOpenWindow();
+                }
             }
         }
     },
@@ -903,7 +1010,7 @@ var dti = {
             var types,
                 processedTypes = [];
 
-            if (pointType) {
+            if (pointType && pointType !== 'Point') {
                 if (!Array.isArray(pointType)) {
                     types = [pointType];
                 } else {
@@ -922,6 +1029,19 @@ var dti = {
             }
 
             pointLookup.checkPointTypes(types);
+            pointLookup.refreshUI();
+        },
+        acceptNavigatorFilter: function () {
+            var filter = dti.utility._currNavigatorFilter,
+                message = dti.utility._navigatorMessage;
+
+            dti.storage.sendMessage({
+                key: message._windowId,
+                value: {
+                    action: 'pointFilterSelected',
+                    filter: filter
+                }
+            });
         },
         showNavigator: function (pointType, isStartMenu) {
             dti.fire('hideMenus');
@@ -932,80 +1052,120 @@ var dti = {
                 dti._navigatorWindow.bindings.minimized(true);
             }
         },
-        showNavigatorFilterModal: function (pointType) {
-            var initModalLookup = function () {
-                this.contentWindow.pointLookup.init(dti.utility.navigatorModalCallback, {
-                    name1: '',
-                    name2: '',
-                    name3: '',
-                    name4: '',
-                    pointTypes: []
-                });
-            };
+        showNavigatorFilterModal: function (pointType, initial) {
+            var $el = dti.utility.$navigatorFilterModalIframe[0],
+                initModalLookup = function () {
+                    var navigatorFilterInterval;
 
-            dti.fire('hideMenus');
+                    navigatorFilterInterval = setInterval(function initNavigatorFilter () {
+                        if ($el.contentWindow.pointLookup && $el.contentWindow.pointLookup.init) {
+                            clearInterval(navigatorFilterInterval);
+                            dti._navigatorFilterModal = true;
+                            $el.contentWindow.pointLookup.init(dti.utility.navigatorModalCallback, {
+                                name1: '',
+                                name2: '',
+                                name3: '',
+                                name4: '',
+                                pointTypes: []
+                            });
 
-            dti.utility.$navigatorFilterModal.openModal({
-                ready: function () {
-                    if (!dti._navigatorFilterModal) {
-                        dti._navigatorFilterModal = true;
+                            dti.fire('modalLoaded');
+                        }
+                    }, 500);
+                };
 
-                        initModalLookup.call(dti.utility.$navigatorFilterModalIframe[0]);
-                    }
-                }
-            });
+            if (initial) {
+                dti.utility.addEvent($el, 'load', initModalLookup);
+            } else {
+                dti.fire('hideMenus');
+                dti.utility.$navigatorFilterModal.openModal();
+            }
         },
-        showNavigatorModal: function (pointType, isStartMenu) {
+        showNavigatorModal: function (pointType, isStartMenu, initial) {
             var loaded = false,
                 $el = dti.utility.$navigatorModalIframe[0],
                 applyFilter = function () {
                     dti.utility.applyNavigatorFilter(pointType, $el.contentWindow.pointLookup, isStartMenu);
                 },
                 initModalLookup = function () {
-                    this.contentWindow.pointLookup.init(dti.utility.navigatorModalCallback);
-                    applyFilter();
+                    var navigatorInterval;
+
+                    navigatorInterval = setInterval(function initNavigator () {
+                        if ($el.contentWindow.pointLookup && $el.contentWindow.pointLookup.init) {
+                            clearInterval(navigatorInterval);
+                            dti._navigatorModal = true;
+                            $el.contentWindow.pointLookup.init(dti.utility.navigatorModalCallback);
+                            applyFilter();
+                            dti.fire('modalLoaded');
+                        }
+                    }, 400);
                 };
 
-            dti.fire('hideMenus');
+            if (initial) {
+                dti.utility.addEvent($el, 'load', initModalLookup);
+            } else {
+                dti.fire('hideMenus');
 
-            dti.utility.$navigatorModal.openModal({
-                ready: function () {
-                    if (!dti._navigatorModal) {
-                        dti._navigatorModal = true;
+                dti.utility.$navigatorModal.openModal({
+                    ready: function () {
+                        if (!dti._navigatorModal) {
+                            dti._navigatorModal = true;
 
-                        initModalLookup.call($el);
-                    } else {
-                        applyFilter();
+                            initModalLookup.call($el);
+                        } else {
+                            applyFilter();
+                        }
+                    },
+                    complete: function () {
+                        dti.settings._workspaceNav = false;
                     }
-                },
-                complete: function () {
-                    dti.settings._workspaceNav = false;
-                }
-            });
+                });
+            }
         },
-        navigatorModalCallback: function () {
-
-            dti.log(arguments);
+        navigatorModalCallback: function (filter) {
+            dti.utility._currNavigatorFilter = filter;
         },
         processMessage: function (e) {
-            var callbacks = {
-                navigatormodal: function () {
-                    // key: navigatormodal, oldValue: windowId of recipient to send info to
-                    if (e.newValue.action === 'open') {
-                        dti.utility.showNavigatorModal();
+            var config,
+                ignoredProps = {
+                    '__storejs__': true
+                },
+                callbacks = {
+                    navigatormodal: function () {
+                        // key: navigatormodal, oldValue: windowId of recipient to send info to
+                        if (config.action === 'open') {
+                            dti.utility._navigatorMessage = config;
+                            dti.utility.showNavigatorModal();
+                        }
+                    },
+                    navigatorfiltermodal: function () {
+                        if (config.action === 'open') {
+                            dti.utility._navigatorMessage = config;
+                            dti.utility.showNavigatorFilterModal();
+                        }
+                    },
+                    windowMessage: function () {
+                        dti.windows.sendMessage(config);
+                    },
+                    pointSelected: function () {
+
+                    },
+                    pointFilterSelected: function () {
+
                     }
-                },
-                pointSelected: function () {
+                };
 
-                },
-                pointFilterSelected: function () {
-
+            if (!ignoredProps[e.key]) {
+                config = e.newValue;
+                if (typeof config === 'string') {
+                    config = JSON.parse(config);
                 }
-            };
 
-            if (callbacks[e.key]) { // store previous call
-                dti.utility._prevMessage = e;
-                callbacks[e.key](e);
+                if (callbacks[e.key]) { 
+                    // store previous call
+                    dti.utility._prevMessage = config;
+                    callbacks[e.key]();
+                }
             }
         },
         init: function () {
@@ -1013,6 +1173,9 @@ var dti = {
             dti.utility.$navigatorFilterModalIframe.attr('src', '/pointlookup?mode=filter');
             dti.utility.pointTypeLookup = {};
             dti.utility.pointTypes = dti.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes();
+
+            dti.utility.showNavigatorModal(null, null, true);
+            dti.utility.showNavigatorFilterModal(null, true);
 
             dti.forEachArray(dti.utility.pointTypes, function processPointType (type) {
                 dti.utility.pointTypeLookup[type.key] = type;
@@ -1061,6 +1224,11 @@ var dti = {
                 }
             });
         },
+        sendMessage: function (config) {
+            config.value._timestamp = new Date().getTime();
+            config.value._windowId = window.windowId;
+            store.set(config.key, config.value);
+        },
         processMessage: function (e) {
             var message = {
                 key: e.key
@@ -1091,11 +1259,17 @@ var dti = {
         showNavigator: function (group, isStartMenu) {
             dti.utility.showNavigator(group, isStartMenu);
         },
+        acceptNavigatorFilter: function () {
+            dti.utility.acceptNavigatorFilter();
+        },
         startMenuClick: function (obj) {
             dti.startMenu.handleClick(obj);
         },
         showDesktop: function () {
             dti.windows.showDesktop();
+        },
+        logout: function () {
+            window.location.href = '/logout';
         }
     },
     knockout: {
@@ -1144,7 +1318,7 @@ var dti = {
                         bg,
                         img;
 
-                    if (upi !== undefined) {
+                    if (upi !== undefined && upi !== null) {
                         if (currThumb === undefined) {
                             // dti.log('No thumb for upi', upi);
                             $.ajax({
@@ -1288,30 +1462,42 @@ var dti = {
     init: function () {
         var num = 2,
             runInits = function () {
-                dti.forEach(dti, function dtiInit (val, key) {
-                    if (typeof val === 'object' && val.init) {
-                        val.init();
-                    }
+                dti.animations.fadeIn($('main, header'), function startInitFlow () {
+                    dti.on('modalLoaded', function checkDone () {
+                        num--;
+                        if (num === 0) {
+                            complete();
+                        }
+                    });
+                    dti.forEach(dti, function dtiInit (val, key) {
+                        if (typeof val === 'object' && val.init) {
+                            val.init();
+                        }
+                    });
+
+                    $('select').material_select();
+
+                    dti.fire('loaded');
                 });
-
-                $('select').material_select();
-
-                dti.fire('loaded');
             },
             complete = function () {
-                num--;
-                if (num === 0) {
-                    runInits();
-                }
+                dti.animations.fadeOut($('#loading'));
+            },
+            showLoading = function () {
+                dti.animations.fadeIn($('#loading'), runInits);
             };
 
-        dti.animations.fadeOut($('#login'), complete);
-        dti.animations.fadeIn($('main, header'), complete);
+        dti.animations.fadeOut($('#login'), showLoading);
     }
 };
 
 $(function initWorkspaceV2 () {
     dti.socket = io.connect(dti.settings.socketEndPoint);
+    dti.socket.on('disconnect', function (err) {
+        dti.log('server offline, disconnecting');
+        dti.socket.disconnect();
+    });
+
     dti.$loginBtn.click(function validateLogin (event) {
         var user = $('#username').val(),
             pw = $('#password').val();

@@ -71,6 +71,8 @@ nav {
         }
 
         .userInfo {
+            padding: 0 5px;
+
             .userAvatar {
                 height: $navbarHeight - 8px;
                 margin-right: 4px;
@@ -242,8 +244,16 @@ main {
     position: relative;
 }
 
+header {
+    z-index: 2;
+}
+
 .noHover:hover {
     background: none !important;
+}
+
+.modal-fixed-header .modal-content {
+    height: calc(100% - 88px) !important;
 }
 
 .modal-header {
@@ -648,6 +658,7 @@ footer {
     }
 
     .item {
+        min-width: 125px;
         height: 150px;
         display: inline-block;
         margin: 0 15px;
@@ -667,6 +678,14 @@ footer {
 
         .itemBody {
             height: calc(100% - 24px);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            i {
+                margin: 0 auto 10px;
+                font-size: 3em;
+            }
 
             img {
                 max-height: 124px;
@@ -831,6 +850,34 @@ footer {
 #login {
     height: 100%;
     width: 100%;
+}
+
+
+$loaderSize: 128px;
+
+#loading {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: #fff;
+    z-index: 999;
+
+    .loadingMask {
+        position: relative;
+        height: 100%;
+    }
+
+    .preloader-wrapper {
+        z-index: 1000;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        height: $loaderSize;
+        width: $loaderSize;
+        margin: calc(-1 * #{$loaderSize} / 2) 0 0 calc(-1 * #{$loaderSize} / 2);
+    }
 }
 
 .navigatorModal {
