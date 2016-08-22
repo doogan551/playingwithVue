@@ -315,8 +315,8 @@ html
                                 img(src='/img/Dorsett_logo.png')
                         .row
                             .input-field.col.s12
-                                input#username(type='email', name='email', autocomplete='off')
-                                label(for='email') Username
+                                input#username(type='text', name='username', autocomplete='off')
+                                label(for='username') Username
                         .row
                             .input-field.col.s12
                                 input#password(type='password', name='password', autocomplete='off')
@@ -358,8 +358,6 @@ html
                         .circle-clipper.right
                             .circle
 
-
-
     script#miniWindowTemplate(type='text/html')
         a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-target="displayPanel")
             .itemTitle.white-text(data-bind="text: title")
@@ -368,7 +366,7 @@ html
                 img(data-bind="thumbnail: upi")
 
     script#windowTemplate(type='text/html')
-        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='click: activate, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized(), activeCard: active() }')
+        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized(), activeCard: active() }')
             .card-toolbar.blue-grey(data-bind="css: { 'lighten-3': !active() }")
                 .card-title.center-align.white-text
                     div

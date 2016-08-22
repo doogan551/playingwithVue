@@ -1,11 +1,19 @@
 var dtiMessaging =  {
+    store: window.store,
     initEventListener: function () {
         window.addEventListener('storage', dtiMessaging.handleMessage);
     },
 
     init: function () {
-        if (window.store === undefined) {
-            $.getScript('/js/lib/store.min.js');
+        if (dtiMessaging.store === undefined) {
+            $.getScript('/js/lib/store.min.js', function handleGetStore () {
+                var storeInterval = setInterval(function testStore () {
+                    if (window.store) {
+                        dtiMessaging.store = window.store;
+                        clearInterval(storeInterval);
+                    }
+                }, 100);
+            });
         }
 
         dtiMessaging.initEventListener();
@@ -86,7 +94,8 @@ var dtiMessaging =  {
         dtiMessaging._pointFilterSelectCb = cb;
     },
 
-    sendMessage: function (target, data) {
+    sendMessage: function (target, cfg) {
+        var data = cfg || {};
         //add timestamp to guarantee changes
         data._timestamp = new Date().getTime();
         data._windowId = window.windowId;
@@ -96,7 +105,14 @@ var dtiMessaging =  {
 
     onMessage: function (cb) {
         dtiMessaging.defaultHandler = cb;
+    },
+
+    closeWindow: function () {
+        dtiMessaging.sendMessage('closeWindow');
     }
 };
 
-$(dtiMessaging.init);
+// $(dtiMessaging.init);
+document.addEventListener("DOMContentLoaded", function loadDtiMessaging (event) {
+    setTimeout(dtiMessaging.init, 1000); 
+});

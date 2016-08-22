@@ -368,26 +368,52 @@ var dti = {
                 }
             },
             prepMeasurements = function () {
-                var obj = {
-                    left: ko.observable(prepMeasurement(config.left)),
-                    top: ko.observable(prepMeasurement(config.top))
-                };
+                var container = $(dti.windows._draggableConfig.containment),
+                    containerWidth = container.width(),
+                    containerHeight = container.height(),
+                    containerPadding = parseFloat(container.css('padding'), 10),
+                    obj = {
+                        left: config.left,
+                        top: config.top
+                    };
 
-                // if (config.right !== undefined) {
-                    obj.right = ko.observable(prepMeasurement(config.right));
-                    // obj.width = ko.observable(null);
-                // } else {
-                    obj.width = ko.observable(prepMeasurement(config.width || 800));
-                    // obj.right = ko.observable(null);
-                // }
-
-                if (config.bottom !== undefined) {
-                    obj.bottom = ko.observable(prepMeasurement(config.bottom));
-                    obj.height = ko.observable(null);
+                if (config.fullScreen) {
+                    obj.left = containerPadding;
+                    obj.top = containerPadding;
+                    obj.width = containerWidth;
+                    obj.height = containerHeight;
                 } else {
-                    obj.height = ko.observable(prepMeasurement(config.height || 600));
-                    obj.bottom = ko.observable(null);
+
+                    obj.right = config.right;
+                    obj.width = config.width || 800;
+
+                    if (config.bottom !== undefined) {
+                        obj.bottom = config.bottom;
+                        obj.height = null;
+                    } else {
+                        obj.height = config.height || 600;
+                        obj.bottom = null;
+                    }
+
+                    if (obj.right) {
+                        if (obj.right - obj.left >  containerWidth) {
+                            obj.left = containerPadding;
+                            obj.right = containerPadding;
+                            obj.width = containerWidth - (2 * containerPadding);
+                        }
+                    } else {
+                        if (obj.left + obj.width > containerWidth) {
+                            obj.width = containerWidth;
+                            obj.left = containerPadding;
+                        }
+                    }
                 }
+
+                dti.forEach(obj, function prepWindowMeasurement (val, key) {
+                    obj[key] = prepMeasurement(val);
+                });
+
+                obj = ko.viewmodel.fromModel(obj);
 
                 self.bindings = $.extend(self.bindings, obj);                        
             },
@@ -482,11 +508,14 @@ var dti = {
                         }
                     }
 
-                    $(this.contentDocument).on('click', function handleIframeClick(event) {
+                    $(this.contentDocument).on('mousedown', function handleIframeClick (event) {
                         self.bindings.activate();
                     });
 
                     this.contentWindow.windowId = self.bindings.windowId();
+                    this.contentWindow.close = function () {
+                        self.bindings.close();
+                    };
                 },
                 getGroup: function () {
                     //if point type app, get point type.  if not, check route?
@@ -547,6 +576,18 @@ var dti = {
             containment: 'main'
         },
         _windowList: [],
+        getWindowById: function (id) {
+            var targetWindow;
+
+            dti.forEachArray(dti.windows._windowList, function checkForTargetWindow (win) {
+                if (win.windowId === id) {
+                    targetWindow = win;
+                    return false;
+                }
+            });
+
+            return targetWindow;
+        },
         init: function () {
             dti.windows.elementSelector = '.dti-card-panel';//'.card, .card-panel';
             dti.windows.$elements = $(dti.windows.elementSelector);
@@ -554,6 +595,17 @@ var dti = {
             dti.windows.$elements.draggable(dti.windows._draggableConfig);
 
             dti.windows.$elements.resizable(dti.windows._resizableConfig);
+
+            dti.on('closeWindow', function handleCloseWindow (win) {
+                var windowId = win.bindings.windowId();
+
+                dti.forEachArray(dti.windows._windowList, function checkOpenWindow (openWin, idx) {
+                    if (openWin.windowId === windowId) {
+                        dti.windows._windowList.splice(idx, 1);
+                        return false;
+                    }
+                });
+            });
         },
         offset: function () {
             dti.windows._offsetCount++;
@@ -571,12 +623,7 @@ var dti = {
             var targetWindow,
                 winId = e.winId || e._windowId;
 
-            dti.forEachArray(dti.windows._windowList, function checkForTargetWindow (win) {
-                if (win.windowId === winId) {
-                    targetWindow = win;
-                    return false;
-                }
-            });
+            targetWindow = dti.windows.getWindowById(winId);
 
             targetWindow.handleMessage(e);
         },
@@ -627,6 +674,11 @@ var dti = {
             var openWindows = dti.bindings.openWindows[type];
 
             return (openWindows && openWindows()) || [];
+        },
+        closeWindow: function (id) {
+            var targetWindow = dti.windows.getWindowById(id);
+
+            targetWindow.close();
         },
         closeAll: function (group) {
             var openWindows = dti.bindings.openWindows[group];
@@ -729,8 +781,8 @@ var dti = {
         init: function () {
             dti.startButton.$el = $('#startButton');
 
-            $('body').mousedown(function handleBodyMouseDown(event) {
-                dti.forEachArray(dti.events._bodyClickHandlers, function bodyMouseDownHandler(handler) {
+            $('body').mousedown(function handleBodyMouseDown (event) {
+                dti.forEachArray(dti.events._bodyClickHandlers, function bodyMouseDownHandler (handler) {
                     handler(event);
                 });
             });
@@ -1128,7 +1180,9 @@ var dti = {
         processMessage: function (e) {
             var config,
                 ignoredProps = {
-                    '__storejs__': true
+                    '__storejs__': true,
+                    'sessionId': true,
+                    'debug': true
                 },
                 callbacks = {
                     navigatormodal: function () {
@@ -1147,6 +1201,11 @@ var dti = {
                     windowMessage: function () {
                         dti.windows.sendMessage(config);
                     },
+                    closeWindow: function () {
+                        var windowId = config._windowId;
+
+                        dti.windows.closeWindow(windowId);
+                    },
                     pointSelected: function () {
 
                     },
@@ -1156,12 +1215,11 @@ var dti = {
                 };
 
             if (!ignoredProps[e.key]) {
-                config = e.newValue;
-                if (typeof config === 'string') {
-                    config = JSON.parse(config);
-                }
-
                 if (callbacks[e.key]) { 
+                    config = e.newValue;
+                    if (typeof config === 'string') {
+                        config = JSON.parse(config);
+                    }
                     // store previous call
                     dti.utility._prevMessage = config;
                     callbacks[e.key]();
@@ -1235,7 +1293,12 @@ var dti = {
             };
 
             if (typeof e.newValue === 'string') {
-                message.newValue = JSON.parse(e.newValue);
+                try {
+                    message.newValue = JSON.parse(e.newValue);    
+                }
+                catch (ex) {
+                    message.newValue = e.newValue;
+                }
             } else {
                 message.newValue = e.newValue;
             }
