@@ -315,11 +315,10 @@ var dti = {
 
             $button.hover(function showHoverMenu (event) {
                 dti.fire('openMenu', menuID);
+                clearTimeout(hideTimer);
                 if (!menuShown) {
                     menuShown = true;
                     dti.animations.fadeIn($menu);
-                } else {
-                    clearTimeout(hideTimer);
                 }
             }, function hideHoverMenu (event) {
                 var $relatedTarget = $(event.relatedTarget);
@@ -330,20 +329,22 @@ var dti = {
             });
 
             $('#' + menuID).hover(function maintainHoverMenu () {
-                if (menuShown) {
-                    clearTimeout(hideTimer);
-                }
+                clearTimeout(hideTimer);
                 menuShown = true;
             }, function hideHoverMenu (event) {
                 var $target = $(event.relatedTarget);
 
-                if ($target.parents(button).length === 0) {
+                if (($target.parents(button).length === 0) && ($target.attr('id')) !== 'context-menu-layer') {
                     setTimer();
                 }
             });
 
             dti.events.bodyClick(function closeHoverMenus (event) {
-                if (menuShown) {
+                var $target = $(event.target),
+                    notMenuClick = !$target.closest('#' + menuID).length,
+                    notButtonClick = !$target.closest(button).length;
+
+                if (menuShown && notMenuClick && notButtonClick) {
                     closeMenu();
                 }
             });
@@ -816,10 +817,10 @@ var dti = {
                                 $el,
                                 template = '<li class="taskbarItem active"><a href="javascript://" data-position="bottom" data-tooltip="' + text + '" data-delay="10" class="taskbarButton testHover hoverButton2 waves-effect"><i class="material-icons">' + icon + '</i><span>' + text + '</span></a></li>';
 
-                            if (!dti.startMenu.pinnedItems[text]) {
+                            if (!dti.taskbar.pinnedItems[text]) {
                                 $el = $('.taskbar .left').append(template);
 
-                                dti.startMenu.pinnedItems[text] = {
+                                dti.taskbar.pinnedItems[text] = {
                                     text: text,
                                     icon: icon,
                                     template: template,
@@ -864,6 +865,12 @@ var dti = {
                     doOpenWindow();
                 }
             }
+        }
+    },
+    alarms: {
+        init: function () {
+            // dti.on('loaded', function () {
+            // });
         }
     },
     globalSearch: {
