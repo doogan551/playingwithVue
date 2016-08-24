@@ -156,7 +156,7 @@
                 .yearBillTable
                     table(data-bind="css: $data.name.id")
                         tr(data-bind="foreach: columns")
-                            th(data-bind="css: $data.season")
+                            th(data-bind="css: $data.season, attr: {title: $data.fullDate || ''} ")
                                 span(data-bind="text: name.title")
                         // ko foreach: rows
                         tr

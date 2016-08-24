@@ -1,3 +1,4 @@
+process.setMaxListeners(0);
 var mongo = require('mongodb');
 var async = require('async');
 var Config = require('../public/js/lib/config.js');
@@ -5,6 +6,7 @@ var modelUtil = require('../public/js/modelUtil.js');
 var ObjectID = mongo.ObjectID;
 var util = require('util');
 var lodash = require('lodash');
+var moment = require('moment');
 var config = require('config');
 var logger = require('../helpers/logger')(module);
 var importconfig = require('./importconfig.js');
@@ -16,7 +18,7 @@ var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.por
 
 var conn = connectionString.join('');
 var xmlPath = importconfig.xmlPath;
-
+console.log(conn, xmlPath);
 var pointsCollection = "points";
 var systemInfoCollection = "SystemInfo";
 
@@ -39,6 +41,8 @@ process.argv.forEach(function(val, index, array) {
 			processFlag = "innerloop";
 		} else if (val === "updategpl") {
 			processFlag = "updategpl";
+		} else if (val === "updateHistory") {
+			processFlag = "updateHistory";
 		} else {
 			logger.info("No args passed. Proceeding with default import process.");
 		}
@@ -64,17 +68,17 @@ if (processFlag === "gpl") {
 			logger.info("done", err, new Date());
 		});
 	});
+} else if (processFlag === 'updateHistory') {
+	dbModel.connect(connectionString.join(''), function(err) {
+		updateHistory(function(err) {
+			console.log('done');
+		})
+	});
 } else {
 	mongo.connect(conn, function(err, db) {
-	importProcess.start();
-		/*fixUpisCollection(db, function(err) {
-			console.log('done', err);
-		});*/
+		importProcess.start();
 	});
-	// testHistory();
 }
-//fixUpisCollection();
-//testSchedules();
 
 function importUpdate() {
 	this.start = function() {
@@ -87,15 +91,17 @@ function importUpdate() {
 				logger.info("starting", new Date());
 				doGplImport(db, xmlPath, function(err) {
 					initImport(db, function(err) {
-						updateIndexes(db, function(err) {
-							fixUpisCollection(db, function(err) {
+						updateIndexes(function(err) {
+							fixUpisCollection(db, pointsCollection, function(err) {
 								convertHistoryReports(db, function(err) {
-									convertScheduleEntries(db, function(err) {
-										updateAllProgramPoints(db, function(err) {
-											updateAllSensorPoints(db, function(err) {
+									convertTotalizerReports(function(err) {
+										convertScheduleEntries(db, function(err) {
+											updateAllProgramPoints(db, function(err) {
+												updateAllSensorPoints(db, function(err) {
 
-												self.innerLoop(db, limit, skip);
-												// logger.info('done');
+													self.innerLoop(db, limit, skip);
+													// logger.info('done');
+												});
 											});
 										});
 									});
@@ -133,14 +139,22 @@ function importUpdate() {
 		}, function(err) {
 			logger.info('innerLoop cursor done', err);
 			updateGPLReferences(db, function(err) {
-				cleanupDB(db, function(err) {
-					if (err) {
-						logger.info("updateGPLReferences err:", err);
-					}
-					logger.info("!!Check Port 1-4 Timeouts on devices!!");
-					logger.info("done", err, new Date());
-					process.exit(0);
+				fixPowerMeters(function(err, count) {
+					logger.info('number of powermeters changed:', count);
+					logger.info("before changeUpis", err, new Date());
+					changeUpis(function(err) {
+						fixUpisCollection(db, 'new_points',function(err) {
+							// cleanupDB(db, function(err) {
+							if (err) {
+								logger.info("updateGPLReferences err:", err);
+							}
+							logger.info("!!Check Port 1-4 Timeouts on devices!!");
+							logger.info("done", err, new Date());
+							process.exit(0);
 
+							// });
+						});
+					});
 				});
 			});
 		});
@@ -186,27 +200,27 @@ function importUpdate() {
 											updateReferences(db, point, function(err) {
 												if (err)
 													logger.info("updateReferences", err);
-												updatePointInstances(point, function(err) {
+												updateTimeZones(point, function(err) {
 													if (err)
-														logger.info("updatePointInstances", err);
-													updateTimeZones(point, function(err) {
+														logger.info("updateTimeZones", err);
+													updateModels(db, point, function(err) {
 														if (err)
-															logger.info("updateTimeZones", err);
-														updateModels(db, point, function(err) {
+															logger.info("updateModels", err);
+														updateDevices(point, function(err) {
 															if (err)
-																logger.info("updateModels", err);
-															updateDevices(point, function(err) {
+																logger.info("updateDevices", err);
+															updateAlarmMessages(point, function(err) {
 																if (err)
-																	logger.info("updateDevices", err);
-																updateAlarmMessages(point, function(err) {
+																	logger.info("updateAlarmMessages", err);
+																addBroadcastPeriod(point, function(err) {
 																	if (err)
-																		logger.info("updateAlarmMessages", err);
-																	addBroadcastPeriod(point, function(err) {
+																		logger.info("addBroadcastPeriod", err);
+																	updateTrend(point, function(err) {
 																		if (err)
-																			logger.info("addBroadcastPeriod", err);
-																		updateTrend(point, function(err) {
+																			logger.info("updateTrend", err);
+																		rearrangeProperties(point, function(err) {
 																			if (err)
-																				logger.info("updateTrend", err);
+																				logger.info("rearrangeProperties", err);
 																			updatePoint(db, point, function(err) {
 																				if (err)
 																					logger.info("updatePoint", err);
@@ -281,15 +295,15 @@ function updatePoint(db, point, cb) {
 }
 
 function addDefaultUser(db, cb) {
-	return cb();
-	var user = importconfig.defaultUser,
-		ctrlrs = importconfig.ctrlrs;
-	db.collection('Users').insert(user, function(err, result) {
-		db.collection(systemInfoCollection).insert(ctrlrs, function(err, result) {
+	var ctrlrs = importconfig.ctrlrs;
 
-			updateControllers(db, "add", user.username, function(err) {
-				cb(err);
-			});
+	db.collection(systemInfoCollection).insert(ctrlrs, function(err, result) {
+		db.collection('Users').find({}).toArray(function(err, users) {
+			async.eachSeries(users, function(user, callback) {
+				updateControllers(db, "add", user.username, function(err) {
+					callback(err);
+				});
+			}, cb);
 		});
 	});
 
@@ -461,7 +475,235 @@ function setupPointRefsArray(db, callback) {
 	});
 }
 
-function fixUpisCollection(db, callback) {
+function fixPowerMeters(callback) {
+	var objs = {
+		DemandInUpi: {
+			name3: 'W3P SUM',
+			newProp: 'DemandSumUpi'
+		},
+		UsageInUpi: {
+			name3: 'WH3P SUM',
+			newProp: 'UsageSumUpi'
+		},
+		KVARInUpi: {
+			name3: 'MVR3 SUM',
+			newProp: 'KVARSumUpi'
+		}
+	};
+
+	var splitName = function(meter) {
+		return meter.Name.split('_');
+	}
+
+	Utility.iterateCursor({
+		collection: 'PowerMeters',
+		query: {}
+	}, function(err, meter, cb) {
+		var names = {
+			name1: splitName(meter)[0],
+			name2: splitName(meter)[1],
+			name4: splitName(meter)[3]
+		};
+		async.waterfall([function(wfCb) {
+			Utility.getOne({
+				collection: 'points',
+				query: {
+					name1: names.name1,
+					name2: names.name2,
+					name4: names.name4,
+					name3: objs.DemandInUpi.name3
+				}
+			}, function(err, point) {
+				if (!!point) {
+					var updateObj = {
+						$set: {}
+					};
+					updateObj.$set[objs.DemandInUpi.newProp] = point._id;
+					Utility.update({
+						collection: 'PowerMeters',
+						query: {
+							_id: meter._id
+						},
+						updateObj: updateObj
+					}, function(err, result) {
+						wfCb();
+					});
+				} else {
+					wfCb();
+				}
+			});
+		}, function(wfCb) {
+			Utility.getOne({
+				collection: 'points',
+				query: {
+					name1: names.name1,
+					name2: names.name2,
+					name4: names.name4,
+					name3: objs.UsageInUpi.name3
+				}
+			}, function(err, point) {
+				if (!!point) {
+					var updateObj = {
+						$set: {}
+					};
+					updateObj.$set[objs.UsageInUpi.newProp] = point._id;
+					Utility.update({
+						collection: 'PowerMeters',
+						query: {
+							_id: meter._id
+						},
+						updateObj: updateObj
+					}, function(err, result) {
+						wfCb();
+					});
+				} else {
+					wfCb();
+				}
+			});
+		}, function(wfCb) {
+			Utility.getOne({
+				collection: 'points',
+				query: {
+					name1: names.name1,
+					name2: names.name2,
+					name4: names.name4,
+					name3: objs.KVARInUpi.name3
+				}
+			}, function(err, point) {
+				if (!!point) {
+					var updateObj = {
+						$set: {}
+					};
+					updateObj.$set[objs.KVARInUpi.newProp] = point._id;
+					Utility.update({
+						collection: 'PowerMeters',
+						query: {
+							_id: meter._id
+						},
+						updateObj: updateObj
+					}, function(err, result) {
+						wfCb();
+					});
+				} else {
+					wfCb();
+				}
+			});
+		}], cb)
+	}, function(err, count) {
+		callback(err, count);
+	});
+}
+
+function changeUpis(callback) {
+	// rename schedule entries
+	// drop pointinst and devinst indexes
+	var newPoints = 'new_points';
+	var points = 'points';
+	var newUpi = 0;
+	var lowest = 1;
+	var highestDevice = 4194302;
+
+	var updateDependencies = function(oldId, newId, collection, cb) {
+		Utility.iterateCursor({
+				collection: collection,
+				query: {
+					$or: [{
+						'Point Refs.Value': oldId
+					}, {
+						'Point Refs.PointInst': oldId
+					}, {
+						'Point Refs.DevInst': oldId
+					}]
+				}
+			},
+			function(err, dep, cb2) {
+				var refs = dep['Point Refs'];
+				for (var i = 0; i < refs.length; i++) {
+					if (refs[i].Value === oldId) {
+						// console.log('changing Value', oldId, collection);
+						refs[i].Value = newId;
+					}
+					if (refs[i].PointInst === oldId) {
+						// console.log('changing PointInst', oldId, collection);
+						refs[i].PointInst = newId;
+					}
+					if (refs[i].DevInst === oldId) {
+						// console.log('changing DevInst', oldId, collection);
+						refs[i].DevInst = newId;
+					}
+				}
+				// console.log(dep['Point Refs']);
+				Utility.update({
+					collection: collection,
+					updateObj: dep,
+					query: {
+						_id: dep._id
+					}
+				}, cb2);
+			}, cb);
+	};
+
+	var doHistory = function() {};
+
+	Utility.iterateCursor({
+			collection: points,
+			query: {},
+			sort: {
+				_id: 1
+			}
+		}, function(err, doc, cb) {
+			var oldId = doc._id;
+			if (doc['Point Type'].Value === 'Device') {
+				newUpi = highestDevice;
+				highestDevice--;
+			} else {
+				newUpi = lowest;
+				lowest++;
+			}
+			doc._newUpi = newUpi;
+			doc._oldUpi = oldId;
+
+			Utility.update({
+				query: {
+					_id: oldId
+				},
+				updateObj: doc,
+				collection: points
+			}, function(err, result) {
+				cb();
+			});
+		},
+		function(err, count) {
+			Utility.iterateCursor({
+				collection: points,
+				query: {}
+			}, function(err, doc, cb) {
+				doc._id = doc._newUpi;
+
+				Utility.insert({
+					collection: newPoints,
+					insertObj: doc
+				}, function(err) {
+					cb(err);
+				});
+			}, function(err, count) {
+
+				console.log('count', count);
+				Utility.iterateCursor({
+					collection: newPoints,
+					query: {}
+				}, function(err, doc, cb) {
+					updateDependencies(doc._oldUpi, doc._newUpi, newPoints, function(err, count) {
+						cb(err);
+					});
+				}, function(err, count) {
+					callback(err);
+				});
+			});
+		});
+}
+
+function fixUpisCollection(db, baseCollection, callback) {
 	logger.info("starting fixUpisCollection");
 
 	var _count = 0,
@@ -525,7 +767,7 @@ function fixUpisCollection(db, callback) {
 			multi: true
 		}, function(err, result) {
 			if (err) callback(err);
-			db.collection(pointsCollection).find({}, {
+			db.collection(baseCollection).find({}, {
 				_id: 1
 			}).toArray(function(err, points) {
 				if (err) callback(err);
@@ -557,7 +799,7 @@ function fixUpisCollection(db, callback) {
 						callback(err);
 					});
 				}, function(err) {
-					if (err) logger.info("err", err);
+					if (err) logger.info("fixUpisCollection err", err);
 					logger.info("finished fixUpisCollection");
 					return callback(err);
 				});
@@ -570,17 +812,14 @@ function testHistory() {
 	logger.info('testing history');
 	mongo.connect(conn, function(err, db) {
 		convertHistoryReports(db, function(err) {
-			logger.info("err", err);
+			logger.info("testHistory err", err);
 		});
 	});
 }
 
 function convertHistoryReports(db, callback) {
-	db.collection('OldHistLogs').find({
-		_id: {
-			$in: [887992, 50774, 50775, 605715, 90838]
-		}
-	}, function(err, cursor) {
+	console.log('converting history reports');
+	db.collection('OldHistLogs').find({}, function(err, cursor) {
 		function processPoint(err, point) {
 			if (point === null) {
 				callback(err);
@@ -608,6 +847,10 @@ function convertHistoryReports(db, callback) {
 				}
 				report["Report Config"].reportTitle = report.Name;
 
+				report['Report Config'].interval.text = 'Minute';
+				report['Report Config'].interval.value = Math.floor(point.Interval / 60);
+				report['Report Config'].duration.selectedRange = 'Today';
+
 				async.forEachSeries(point.upis, function(upi, cb) {
 					db.collection(pointsCollection).findOne({
 						_id: upi
@@ -615,32 +858,48 @@ function convertHistoryReports(db, callback) {
 						Name: 1,
 						Value: 1,
 						"Point Type": 1,
-						"Point Refs": 1
+						"Point Refs": 1,
+						'Engineering Units': 1
 					}, function(err, ref) {
-						report["Report Config"].dataSources.History.columns.push({
-							"colName": ref.Name,
-							"valueType": "String",
-							"upi": ref._id
-						});
-						report["Point Refs"].push({
-							"PropertyName": "Qualifier Point",
-							"PropertyEnum": 130,
-							"AppIndex": index + 1,
-							"isDisplayable": true,
-							"isReadOnly": false,
-							"Value": ref._id,
-							"PointName": "",
-							"PointType": 0,
-							"PointInst": 0,
-							"DevInst": 0
-						});
-						report = Config.EditChanges.applyUniquePIDLogic({
-							point: report,
-							refPoint: ref
-						}, index);
-						report._actvAlmId = ObjectID("000000000000000000000000");
-						report._curAlmId = ObjectID("000000000000000000000000");
-						index++;
+						if (!!ref) {
+							report["Report Config"].columns.push({
+								"colName": ref.Name,
+								"colDisplayName": ref.Name,
+								"valueType": "None",
+								"operator": "",
+								"calculation": "Mean",
+								"canCalculate": true,
+								"includeInReport": true,
+								"includeInChart": true,
+								"multiplier": 1,
+								"precision": 5,
+								"upi": ref._id,
+								"pointType": ref['Point Type'].Value,
+								"units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
+								"canBeCharted": true,
+								"yaxisGroup": "A",
+								"AppIndex": index + 1
+							});
+							report["Point Refs"].push({
+								"PropertyName": "Column Point",
+								"PropertyEnum": 131,
+								"AppIndex": index + 1,
+								"isDisplayable": true,
+								"isReadOnly": false,
+								"Value": ref._id,
+								"PointName": "",
+								"PointType": 0,
+								"PointInst": 0,
+								"DevInst": 0
+							});
+							report = Config.EditChanges.applyUniquePIDLogic({
+								point: report,
+								refPoint: ref
+							}, index);
+							report._actvAlmId = ObjectID("000000000000000000000000");
+							report._curAlmId = ObjectID("000000000000000000000000");
+							index++;
+						}
 						cb(null);
 
 					});
@@ -657,10 +916,134 @@ function convertHistoryReports(db, callback) {
 	});
 }
 
+function convertTotalizerReports(callback) {
+	console.log('converting totalizer reports');
+	var criteria = {
+		collection: 'Totalizers',
+		query: {}
+	};
+	var intervals = Config.Enums['Report Intervals'];
+	Utility.iterateCursor(criteria, function(err, doc, cb) {
+		var guide = importconfig.reportGuide;
+		var template = Config.Templates.getTemplate("Report");
+		var report = lodash.merge(template, guide);
+		var refIds = [];
+
+		report["Report Type"].Value = "Totalizer";
+		report["Report Type"].eValue = Config.Enums["Report Types"]["Totalizer"].enum;
+		report["Point Refs"] = [];
+		report._pStatus = 0;
+		report._id = doc._id;
+		report.Name = doc.Name;
+		//report._Name = point.Name.toLowerCase();
+		delete report._Name;
+
+		var names = report.Name.split('_');
+		var index = 0;
+
+		for (var i = 1; i <= names.length; i++) {
+			report["name" + i] = names[i - 1];
+			report["_name" + i] = names[i - 1].toLowerCase();
+		}
+		report["Report Config"].reportTitle = report.Name;
+
+		switch (doc['Reset Interval']) {
+			case 'Year':
+				report['Report Config'].interval.text = 'Month';
+				report['Report Config'].interval.value = 1;
+				report['Report Config'].duration.selectedRange = 'This Year';
+				break;
+			case 'Month':
+				report['Report Config'].interval.text = 'Day';
+				report['Report Config'].interval.value = 1;
+				report['Report Config'].duration.selectedRange = 'This Month';
+				break;
+			case 'Day':
+			case 'Hour':
+			case 'None':
+				report['Report Config'].interval.text = 'Hour';
+				report['Report Config'].interval.value = 1;
+				report['Report Config'].duration.selectedRange = 'Last 7 Days';
+				break;
+		}
+
+		async.forEachSeries(doc.Monitors, function(monitor, cb2) {
+			var monitorCriteria = {
+				collection: 'points',
+				query: {
+					_id: monitor['Monitor upi']
+				},
+				fields: {
+					Name: 1,
+					Value: 1,
+					"Point Type": 1,
+					"Point Refs": 1,
+					'Engineering Units': 1
+				}
+			};
+
+			Utility.getOne(monitorCriteria, function(err, ref) {
+				if (!!ref) {
+					if (refIds.indexOf(ref._id) < 0) {
+						refIds.push(ref._id);
+
+						report["Point Refs"].push({
+							"PropertyName": "Column Point",
+							"PropertyEnum": 131,
+							"AppIndex": report["Point Refs"].length + 1,
+							"isDisplayable": true,
+							"isReadOnly": false,
+							"Value": monitor['Monitor upi'],
+							"PointName": "",
+							"PointType": 0,
+							"PointInst": 0,
+							"DevInst": 0
+						});
+					}
+					report["Report Config"].columns.push({
+						"colName": ref.Name,
+						"colDisplayName": ref.Name,
+						"valueType": "None",
+						"operator": monitor['Monitor Property'],
+						"calculation": "",
+						"canCalculate": true,
+						"includeInReport": true,
+						"includeInChart": true,
+						"multiplier": 1,
+						"precision": 3,
+						"upi": ref._id,
+						"pointType": ref['Point Type'].Value,
+						"units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
+						"canBeCharted": true,
+						"yaxisGroup": "A",
+						"AppIndex": refIds.indexOf(ref._id)
+					});
+					report = Config.EditChanges.applyUniquePIDLogic({
+						point: report,
+						refPoint: ref
+					}, refIds.indexOf(ref._id));
+					report._actvAlmId = ObjectID("000000000000000000000000");
+					report._curAlmId = ObjectID("000000000000000000000000");
+				}
+				cb2(null);
+
+			});
+		}, function(err) {
+			Utility.insert({
+				collection: pointsCollection,
+				insertObj: report
+			}, cb);
+		});
+	}, function(err, count) {
+		console.log('convertTotalizerReports', err, count);
+		callback(err);
+	});
+}
+
 function testSchedules() {
 	mongo.connect(conn, function(err, db) {
 		convertScheduleEntries(db, function(err) {
-			logger.info("err", err);
+			logger.info("convertScheduleEntries err", err);
 		});
 	});
 }
@@ -672,7 +1055,6 @@ function convertScheduleEntries(db, callback) {
 	// get _id from upi's collection
 	// set _parentUpi to SE's _schedUPI
 	// set name1 "Schedule Entry", name2 = _id
-	// set point instance.value to _id
 	// if _parentUpi is 0, create new scedule point with control point's value for id, name from Point Name
 	// if name is 3 or fewer segments, the next available segment is "Segment", if 4 segments, last segment is "XYZ Segment"
 	var scheduleEntryTemplate = Config.Templates.getTemplate("Schedule Entry");
@@ -715,7 +1097,6 @@ function convertScheduleEntries(db, callback) {
 				/*scheduleEntryTemplate._name1 = scheduleEntryTemplate.name1.toLowerCase();
 				scheduleEntryTemplate._name2 = scheduleEntryTemplate.name2.toLowerCase();
 				scheduleEntryTemplate._Name = scheduleEntryTemplate.Name.toLowerCase();*/
-				scheduleEntryTemplate["Point Instance"].Value = scheduleEntryTemplate._id;
 
 				scheduleEntryTemplate["Control Point"] = oldScheduleEntry["Control Point"];
 				scheduleEntryTemplate["Host Schedule"].Value = oldScheduleEntry.hostEntry;
@@ -734,7 +1115,7 @@ function convertScheduleEntries(db, callback) {
 				});
 			});
 		}, function(err) {
-			logger.info('err', err);
+			logger.info('convertScheduleEntries err', err);
 			return callback(err);
 		});
 	});
@@ -753,7 +1134,9 @@ function cleanupDB(db, callback) {
 		if (err) {
 			return callback(err);
 		}
-		db.dropCollection('OldHistLogs', callback);
+		db.dropCollection('OldHistLogs', function() {
+			db.dropCollection('Totalizers', callback);
+		});
 	});
 }
 
@@ -776,7 +1159,7 @@ function updateGPLReferences(db, callback) {
 				_id: gplBlock._id
 			}, gplBlock, function(err, result) {
 				if (err)
-					logger.info('err', err);
+					logger.info('updateGPLReferences1 err', err);
 
 				db.collection(pointsCollection).find({
 					"Point Refs.Value": gplBlock._id
@@ -797,7 +1180,7 @@ function updateGPLReferences(db, callback) {
 							}
 						}, function(err, result) {
 							if (err)
-								logger.info('err', err);
+								logger.info('updateGPLReferences2 err', err);
 							cb2(null);
 						});
 					}, function(err) {
@@ -854,7 +1237,7 @@ function initImport(db, callback) {
 
 }
 
-function updateIndexes(db, callback) {
+function updateIndexes(callback) {
 	var indexes = [{
 		index: {
 			name1: 1,
@@ -886,6 +1269,36 @@ function updateIndexes(db, callback) {
 		},
 		options: {},
 		collection: pointsCollection
+	}, {
+		index: {
+			"Point Refs.DevInst": 1
+		},
+		options: {},
+		collection: pointsCollection
+	}, {
+		index: {
+			"Point Refs.PointInst": 1
+		},
+		options: {},
+		collection: pointsCollection
+	}, {
+		index: {
+			"Point Refs.Value": 1
+		},
+		options: {},
+		collection: 'new_points'
+	}, {
+		index: {
+			"Point Refs.DevInst": 1
+		},
+		options: {},
+		collection: 'new_points'
+	}, {
+		index: {
+			"Point Refs.PointInst": 1
+		},
+		options: {},
+		collection: 'new_points'
 	}, {
 		index: {
 			"Point Refs.PropertyName": 1
@@ -1011,7 +1424,11 @@ function updateIndexes(db, callback) {
 	}];
 
 	async.forEachSeries(indexes, function(index, indexCB) {
-		db.createIndex(index.collection, index.index, index.options, function(err, IndexName) {
+		Utility.ensureIndex({
+			collection: index.collection,
+			index: index.index,
+			options: index.options
+		}, function(err, IndexName) {
 			logger.info(IndexName, "err:", err);
 			indexCB(null);
 		});
@@ -1147,7 +1564,7 @@ function updateGPLBlocks(point, callback) {
 }
 
 function updateTimeZones(point, cb) {
-	if (point['Point Type'].Value === 'Device') {
+	/*if (point['Point Type'].Value === 'Device') {
 		var timezones = Config.Enums['Time Zones'];
 
 		point['Time Zone'] = Config.Templates.getTemplate("Device")["Time Zone"];
@@ -1158,7 +1575,7 @@ function updateTimeZones(point, cb) {
 				point['Time Zone'].Value = prop;
 			}
 		}
-	}
+	}*/
 	cb(null);
 }
 
@@ -1198,23 +1615,6 @@ function updateCfgRequired(point, callback) {
 	if (["Schedule", "Schedule Entry"].indexOf(point["Point Type"].Value) > -1) {
 		point._cfgRequired = false;
 	}
-	callback(null);
-}
-
-function updatePointInstances(point, callback) {
-	//logger.info("updatePointInstances");
-
-	point["Point Instance"].Value = point._id;
-	/*db.collection(pointsCollection).update({
-		_id: point._id
-	}, {
-		$set: {
-			"Point Instance.Value": point._id
-		}
-	}, function(err, result) {*/
-
-
-	//});
 	callback(null);
 }
 
@@ -1399,86 +1799,6 @@ function updateSensorPoints(db, point, callback) {
 		callback(null);
 	}
 
-}
-
-function updateRefPointInst(db, callback) {
-	//logger.info("updateRefPointInst");
-
-	db.collection(pointsCollection).find({}, {
-		_id: 1
-	}).toArray(function(err, points) {
-		logger.info("Points returned", points.length);
-		async.forEachSeries(points, function(point, cb) {
-			upi = point._id;
-			refQuery = {
-				$or: [{
-					'Alarm Adjust Point.Value': upi
-				}, {
-					'Alarm Display Point.Value': upi
-				}, {
-					'Control Point.Value': upi
-				}, {
-					'Device Point.Value': upi
-				}, {
-					'Dry Bulb Point.Value': upi
-				}, {
-					'Feedback Point.Value': upi
-				}, {
-					'Humidity Point.Value': upi
-				}, {
-					'Input Point 1.Value': upi
-				}, {
-					'Input Point 2.Value': upi
-				}, {
-					'Input Point 3.Value': upi
-				}, {
-					'Input Point 4.Value': upi
-				}, {
-					'Input Point 5.Value': upi
-				}, {
-					'Interlock Point.Value': upi
-				}, {
-					'Mixed Air Point.Value': upi
-				}, {
-					'Monitor Point.Value': upi
-				}, {
-					'Outside Air Point.Value': upi
-				}, {
-					'Remote Unit Point.Value': upi
-				}, {
-					'Return Air Point.Value': upi
-				}, {
-					'Select Input.Value': upi
-				}, {
-					'Setpoint Input.Value': upi
-				}, {
-					'Shutdown Point.Value': upi
-				}, {
-					'Sensor Point.Value': upi
-				}, {
-					'Trigger Point.Value': upi
-				}]
-			};
-			db.collection(pointsCollection).find(refQuery).toArray(function(err, refs) {
-				async.forEach(refs, function(ref, refCB) {
-					db.collection(pointsCollection).update({
-						_id: ref._id
-					}, {
-						$set: {
-							"Point Instance.Value": upi
-						}
-					}, function(err, result) {
-						refCB(err);
-					});
-				}, function(err) {
-					cb(err);
-				});
-
-			});
-		}, function(err) {
-			callback(err);
-		});
-	});
 }
 
 function formatPoints(limit, skip, db, formatCB) {
@@ -1913,8 +2233,8 @@ function updateReferences(db, point, mainCallback) {
 		} else {
 
 			async.forEachSeries(properties, function(prop, callback) {
-				if (prop === "Sequence Device")
-					prop = "Device Point";
+				/*if (prop === "Sequence Device")
+					prop = "Device Point";*/
 
 				if (point[prop] !== null && (point[prop].ValueType === 8)) {
 					var propName = prop;
@@ -1924,10 +2244,10 @@ function updateReferences(db, point, mainCallback) {
 					if ((prop === "Device Point" || prop === "Remote Unit Point") && point._parentUpi === 0)
 						point[prop].isReadOnly = false;
 
-					if (point["Point Type"].Value === "Sequence" && prop === "Device Point") {
+					/*if (point["Point Type"].Value === "Sequence" && prop === "Device Point") {
 						propName = "Sequence Device";
 						propEnum = Config.Enums.Properties[propName].enum;
-					}
+					}*/
 
 					var pointRef = {
 						PropertyName: propName,
@@ -1977,7 +2297,13 @@ function updateDevices(point, callback) {
 		point["Serial Number"] = Config.Templates.getTemplate("Device")["Serial Number"];
 		point["Device Address"] = Config.Templates.getTemplate("Device")["Device Address"];
 		point["Network Segment"] = Config.Templates.getTemplate("Device")["Network Segment"];
-		point['Trend Interval'] = Config.Templates.getTemplate("Device")["Trend Interval"];
+		point['Firmware 2 Version'] = Config.Templates.getTemplate("Device")["Firmware 2 Version"];
+
+		if ([Config.Enums['Device Model Types']['MicroScan 5 UNV'].enum, Config.Enums['Device Model Types']['SCADA Vio'].enum].indexOf(point['Model Type'].eValue) >= 0) {
+			point['Firmware 2 Version'].isDisplayable = true;
+		} else {
+			point['Firmware 2 Version'].isDisplayable = false;
+		}
 
 		var propertyNetwork = point["Uplink Port"].Value + " Network",
 			propertyAddress = point["Uplink Port"].Value + " Address";
@@ -1989,14 +2315,6 @@ function updateDevices(point, callback) {
 			point[prop] = Config.Templates.getTemplate('Device')[prop];
 		}
 
-		point["Ethernet IP Port"].Value = 47808;
-		point["Ethernet IP Port"].isReadOnly = true;
-		point["Ethernet IP Port"].isDisplayable = false;
-		point["Downlink IP Port"].Value = 47808;
-		point["Downlink IP Port"].isReadOnly = true;
-		point["Downlink IP Port"].isDisplayable = false;
-		point["Downlink Broadcast Delay"].Value = 0;
-
 		delete point["Device Address"].Min;
 		delete point["Device Address"].Max;
 
@@ -2006,9 +2324,6 @@ function updateDevices(point, callback) {
 	} else if (point["Point Type"].Value === "Remote Unit") {
 		point["Device Address"].ValueType = 2;
 		point["Device Address"].Value = point["Device Address"].Value.toString();
-
-		delete point["Device Address"].Min;
-		delete point["Device Address"].Max;
 
 		point["Device Status"].Value = "Stop Scan";
 		point["Device Status"].eValue = 66;
@@ -2061,6 +2376,47 @@ function updateTrend(point, callback) {
 		point["Trend Last Status"] = Config.Templates.getTemplate(point["Point Type"].Value)["Trend Last Status"];
 		point["Trend Last Value"] = Config.Templates.getTemplate(point["Point Type"].Value)["Trend Last Value"];
 	}
+	callback(null);
+}
+
+function rearrangeProperties(point, callback) {
+	var compare = function(a, b) {
+		var _a = a.toLowerCase();
+		var _b = b.toLowerCase();
+		if (_a === '_id') {
+			return -1;
+		} else if (_b === '_id') {
+			return 1;
+		}
+		if (_a.match(/^name|^_/) && _b.match(/^name|^_/)) {
+			if (_a > _b) {
+				return -1;
+			} else if (a < _b) {
+				return 1;
+			}
+		} else if (!_a.match(/^name|^_/) && !_b.match(/^name|^_/)) {
+			if (_a > _b) {
+				return 1;
+			} else if (a < _b) {
+				return -1;
+			}
+		} else if (_a.match(/^name|^_/)) {
+			return -1;
+		} else if (_b.match(/^name|^_/)) {
+			return 1;
+		}
+		return 0;
+	}
+	var arr = [];
+	var o = {};
+	for (var prop in point) {
+		arr.push(prop);
+	}
+	arr.sort(compare);
+	for (var i = 0; i < arr.length; i++) {
+		o[arr[i]] = point[arr[i]];
+	}
+	point = o;
 	callback(null);
 }
 
@@ -2642,5 +2998,49 @@ function doGplImport(db, xmlPath, cb) {
 			});
 			parser.parseString(filedata, handler(filename));
 		}*/
+	});
+}
+
+function updateHistory(cb) {
+	var Archive = require('../models/archiveutility');
+	var now = moment().endOf('month');
+	var start = moment('2000/01', 'YYYY/MM');
+	var count = 0;
+	Utility.get({
+		collection: 'new_points',
+		query: {},
+		fields: {
+			_oldUpi: 1
+		},
+		sort: {
+			_id: 1
+		}
+	}, function(err, results) {
+		async.whilst(function() {
+			return now.isAfter(start);
+		}, function(callback) {
+			async.eachSeries(results, function(doc, eachCB) {
+				var criteria = {
+					year: now.year(),
+					statement: ['UPDATE History_', now.year(), now.format('MM'), ' SET UPI=? WHERE UPI=?'].join('')
+				};
+				Archive.prepare(criteria, function(stmt) {
+					criteria = {
+						year: now.year(),
+						statement: stmt,
+						parameters: [doc._id, doc._oldUpi]
+					};
+					Archive.runStatement(criteria, function() {
+						count += this.changes;
+						Archive.finalizeStatement(criteria, function() {
+							eachCB();
+						});
+					});
+				});
+			}, function(err) {
+				now = now.subtract(1, 'month');
+				callback(err);
+			});
+		}, cb);
 	});
 }

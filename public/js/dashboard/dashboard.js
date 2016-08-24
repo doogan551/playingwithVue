@@ -996,6 +996,7 @@ var tou = {
                     } else {//statistic
                         row = results.results[props].slice(-1)[0];
                         getVal(row);
+                        isEmpty = false;
                         row = results.results[props][0];
                         when = moment.unix(row.timestamp || row.range.start);
                         when = when.format('MM/DD/YY HH:mm:SS');
@@ -4420,7 +4421,7 @@ tou.utilityPages.Electricity = function() {
                             // for the total consumption and maximum demand.
                             // Set the masterRateType so we know that the data received actually belongs to this rate element
                             masterRateType = _rateType;
-                            createConsumptionAndDemandRequest((data.rate.qualifierDemand === 'Peak Demand') ? 'on' : 'both');
+                            createConsumptionAndDemandRequest((data.rate.qualifierDemand === 'On Peak Demand') ? 'on' : 'both');
                             // Clear the masterRateType
                             masterRateType = null;
                         }
@@ -4534,9 +4535,19 @@ tou.utilityPages.Electricity = function() {
                                 collection.tempData.onPeakDemandRow = row;
                             }
                         } else if (rateType === 'reactive') {
-                            peak = 'both'; // For reactive rate elements, peak is not selectable and defaults to 'on' which is incorrect
+                            // Peak is not selectable for reactive rate elments; it defaults to 'on' which is not always what we want
+                            if (period.rangeType === 'transition') {
+                                // If peak times enabled we need the period's highest on-peak
+                                if (period.enablePeakSelection) {
+                                    peak = 'on';
+                                } else {
+                                    peak = 'both';  // We could set this to 'off' & get the same effect
+                                }
+                            } else {
+                                peak = 'on';        // It should already be set to on but just CYB
+                            }
                             // Also update the rate element stored on our row
-                            row.rateElement.peak = 'both';
+                            row.rateElement.peak = peak;
                         }
                         // Get this rate element's units
                         unit = units[rateType];
@@ -4691,15 +4702,18 @@ tou.utilityPages.Electricity = function() {
                     yearBillData.source.sort(function (a, b) {
                         return a.start > b.start ? 1:-1;
                     });
-                    self.postProcessYearData();
-                    callback();
+                    self.postProcessYearData_step1(callback);
                 },
                 addToSource = function (_bill, billData) {
                     yearBillData.source.push({
                         month: _bill.month,
                         start: _bill.start,
+                        end: _bill.end,
                         season: _bill.season,
-                        data: billData
+                        data: billData,
+                        fullDate: _bill.fullDate,
+                        fiscalyear: _bill.fiscalYear,
+                        rateTable: _bill.rateTable
                     });
                 },
                 getMonthlyBill = function (_bill) {
@@ -4896,11 +4910,72 @@ tou.utilityPages.Electricity = function() {
                 done();
             }
         },
-        postProcessYearData: function () {
+        // When you have no idea what to name a function, make it as long as possible
+        postProcessYearDataReceiveDataHandler: function (data) {
+            // This routine is called after data requested by self.postProcessYearData_step1() is received 
+
+            // Throw it away if we don't have a request matching this touid
+            if (this.dataRequests.hasOwnProperty(data.touid) === false)
+                return;
+
             var self = this,
-                yearData = self.yearBillData,
-                source = yearData.source,
-                collections = yearData.collections,
+                result = data.results,
+                request = this.dataRequests[data.touid],
+                usage = request.usage,
+                rateType = request.rateType,
+                arrLookup = {
+                    consumption: 'sums',
+                    demand: 'maxes'
+                },
+                keyLookup = {
+                    consumption: 'sum',
+                    demand: 'max'
+                },
+                value = 0;
+
+
+            // Check for error first (it's a string); data.result is not present if the 'error' key is present
+            // The only time I know this happens is if we have meters defined but all UPI's are unassigned
+            if (data.error) {
+                // Inform the user we had an error; usage.value is already 0
+                usage.displayValue = 'Error';
+            } else {
+                if (rateType === 'reactive') {
+                    if (typeof result === 'object') {
+                        // The reactiveMax is actually the corresponding reactive value that occurred at the demand max (which really is the period's max)
+                        // Get reactive and demand max value pair; the '|| 0' is because the server doesn't always send the the 'max' keys; *1000 converts MVAR to kVAR
+                        value = (result[0].reactive.max || 0);
+                    }
+                } else {
+                    // Must be a consumption or demand charge
+                    // The server's response is formated differently depending on the data requested
+                    // The '|| 0' is because the server doesn't always send the 'max' or 'sum' key
+                    value = result[arrLookup[rateType]][0][keyLookup[rateType]] || 0;
+                }
+
+                // Convert M to k (i.e. MW to kW, MWh to kWh, MVAR to kVAR), round to nearest whole number, and store on usage object
+                usage.value = tou.toFixed(value * 1000, 0);
+                // Get a "commetized" display value
+                usage.displayValue = self.prettyValue({value: usage.value, digits: 0});
+            }
+
+            // Remove the notFound flag from our usage object
+            delete usage.notFound;
+
+            // Clean up our dataRequst object
+            delete self.dataRequests[data.touid];
+
+            // If all requests have been received we need to perform some final processing
+            // We check against 1 because our callback occupies 1 key
+            if (Object.keys(self.dataRequests).length === 1) {
+                // We have to pass our 'this' into the _step2 function because this function was bound to 'this'
+                // 'this' would have been the window if not for the binding. So when we call the _step2 function,
+                // 'this' returns to the window object
+                self.postProcessYearData_step2(self);
+            }
+        },
+        postProcessYearData_step1: function (callback) {
+            var self = this,
                 addedLineItems = {},
                 chargesLineItems = [],
                 monthShortLookup = {
@@ -4917,12 +4992,17 @@ tou.utilityPages.Electricity = function() {
                     November: 'Nov',
                     December: 'Dec'
                 },
+                activeMeters = self.activeMeters || self.buildActiveMeters(),
+                dataRequest = {
+                    options: [],
+                    handler: self.postProcessYearDataReceiveDataHandler.bind(self)
+                },
                 buildChargesCollection = function () {
-                    var chargesCollection = getCollection(collections, 'charges'),
+                    var chargesCollection = getCollection(self.yearBillData.collections, 'charges'),
                         chargesRows = chargesCollection.rows,
                         chargeTotals = [];
 
-                    yearData.source.forEach(function (source, index) {
+                    self.yearBillData.source.forEach(function (source, index) {
                         var sourceCollection = getCollection(source.data.collections, 'Total Charges'),
                             sourceRows = (sourceCollection && sourceCollection.rows) || [],
                             total = 0;
@@ -4978,10 +5058,306 @@ tou.utilityPages.Electricity = function() {
                         isTotalRow: true
                     });
                 },
-                buildNetCosts = function () {
-                    var netCostData = getRow(getCollection(collections, 'netCost').rows, 'kwh').data, // empty array
-                        chargeTotals = getRow(getCollection(collections, 'charges').rows, 'Total', 'displayValue').data, // array
-                        totalKwhData = getRow(getCollection(collections, 'consumption').rows, 'total').data; // array
+                getRowOrCollection = function (data, name, key) {
+                    var _name;
+
+                    for (var i = 0, len = data.length; i < len; i++) {
+                        _name = data[i].name;
+
+                        if (typeof _name === 'object') {
+                            _name = _name[key || 'id'];
+                        }
+
+                        if (_name === name) {
+                            return data[i];
+                        }
+                    }
+                },
+                getCollection = function (collections, name, key) {
+                    return getRowOrCollection(collections, name, key);
+                },
+                getRow = function (rows, name, key) {
+                    return getRowOrCollection(rows, name, key);
+                },
+                getUsage = function (data, type, peak) {
+                    var collections = data.collections,
+                        unitsLookup = {
+                            demand: 'kW',
+                            consumption: 'kWh',
+                            reactive: 'kVAR'
+                        },
+                        collection,
+                        row,
+                        usage,
+                        returnData;
+                    for (var i = 0, len = collections.length; i < len; i++) {
+                        collection = collections[i];
+                        for (var j = 0, jlen = collection.rows.length; j < jlen; j++) {
+                            row = collection.rows[j];
+                            // Type and peak must match for consumption and demand. For reactives, only the type must match. This is because
+                            // the monthly bill's reactive may be 'on' or 'off' peak depending if the period has peak times. The user can't configure
+                            // this, therefore all reactives in the bill will be the same, so we just need to get the first reactive element we find
+                            if (row.rateElement && (row.rateElement.type === type) && ((type === 'reactive') || (row.rateElement.peak === peak))) {
+                                usage = row.usage;
+
+                                if (type === 'reactive') {
+                                    usage = usage.contributors.reactiveMax;
+                                } else if (type === 'demand') {
+                                    usage = usage.contributors.demand;
+                                } else { // consumption
+                                    usage = usage.contributors.consumption;
+                                }
+
+                                usage = tou.toFixed(usage, 0);
+                                returnData = {
+                                    value: usage,
+                                    displayValue: self.prettyValue({value: usage, digits: 0})
+                                };
+
+                                returnData.units = {
+                                    displayValue: row.usage.units.displayValue,
+                                    visible: false
+                                };
+                                returnData.rateElement = row.rateElement;
+
+                                return returnData;
+                            }
+                        }
+                    }
+                    return {
+                        value: 0,
+                        displayValue: '0',
+                        units: {
+                            displayValue: unitsLookup[type],
+                            visible: false
+                        },
+                        notFound: true
+                    };
+                },
+                getLoadFactor = function (data) {
+                    var loadFactor = data.loadFactor;
+                    return {
+                        value: loadFactor.value,
+                        displayValue: loadFactor.displayValue
+                    };
+                },
+                buildRequestOptions = function (params) {
+                    // params is object with keys: source, peak, fx, and upis
+                    var source = params.source,
+                        obj = {
+                            utilityName: self.utilityName,
+                            // rateCollectionName: rateCollectionKey,
+                            fiscalYear: source.fiscalyear,
+                            touid: tou.makeId(),
+                            scale: 'month',
+                            peak: params.peak,
+                            fx: params.fx,
+                            upis: params.upis,
+                            range: {
+                                start: parseInt(source.start / 1000, 10),
+                                end: parseInt(source.end / 1000, 10)
+                            }
+                        };
+
+                    if (params.secondUpis) {
+                        obj.secondUpis = params.secondUpis;
+                    }
+                    return obj;
+                },
+                process = {
+                    'demand': function (collection, source, index) {
+                        var sourceData = source.data,
+                            row,
+                            usage,
+                            requestOptions;
+
+                        usage = getUsage(sourceData, 'demand', 'on');
+                        row = getRow(collection.rows, 'onPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            // Add the data request
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'on',
+                                fx: 'max',
+                                upis: activeMeters.demand
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'demand'
+                            };
+                        }
+
+                        usage = getUsage(sourceData, 'demand', 'off');
+                        row = getRow(collection.rows, 'offPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            // Add the data request
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'off',
+                                fx: 'max',
+                                upis: activeMeters.demand
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'demand'
+                            };
+                        }
+
+                        // The monthly bill's reactive may be 'on' or 'off' peak depending if the period has peak times
+                        // The user can't configure this, therefore all reactives in the bill will be the same, so we
+                        // just need to get the first reactive element we find
+                        usage = getUsage(sourceData, 'reactive');
+                        row = getRow(collection.rows, 'reactiveAtPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'both',
+                                fx: 'reactiveCharge',
+                                upis: activeMeters.demand,
+                                secondUpis: activeMeters.reactive
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'reactive'
+                            };
+                        }
+                    },
+                    'consumption': function (collection, source, index) {
+                        var sourceData = source.data,
+                            row,
+                            usage,
+                            requestOptions;
+
+                        usage = getUsage(sourceData, 'consumption', 'both');
+                        usage.isTotal = true;   // Total consumption needs the 'isTotal' key also
+                        row = getRow(collection.rows, 'total');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'both',
+                                fx: 'sum',
+                                upis: activeMeters.consumption
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'consumption'
+                            };
+                        }
+
+                        usage = getUsage(sourceData, 'consumption', 'on');
+                        row = getRow(collection.rows, 'onPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'on',
+                                fx: 'sum',
+                                upis: activeMeters.consumption
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'consumption'
+                            };
+                        }
+
+                        usage = getUsage(sourceData, 'consumption', 'off');
+                        row = getRow(collection.rows, 'offPeak');
+                        row.data.push(usage);
+
+                        if (usage.notFound) {
+                            requestOptions = buildRequestOptions({
+                                source: source,
+                                peak: 'off',
+                                fx: 'sum',
+                                upis: activeMeters.consumption
+                            });
+                            dataRequest.options.push(requestOptions);
+                            self.dataRequests[requestOptions.touid] = {
+                                requestOptions: requestOptions,
+                                usage: usage,
+                                rateType: 'consumption'
+                            };
+                        }
+                    },
+                    'loadFactor': function (collection, source, index) {
+                        getRow(collection.rows, 'loadFactor').data.push(getLoadFactor(source.data));
+                    },
+                    'charges': function (collection, source, index) {
+                        var billTotalChargesCollection = getCollection(source.data.collections, 'Total Charges'),
+                            rows = (billTotalChargesCollection && billTotalChargesCollection.rows) || [];
+                        rows.forEach(function (row) {
+                            var lineItem = row.name.displayValue;
+                            if ((lineItem !== 'Total') && !addedLineItems[lineItem]) {
+                                addedLineItems[lineItem] = true;
+                                chargesLineItems.push(lineItem);
+                            }
+                        });
+                    },
+                    'netCost': function (collection, source, index) {
+                        // nothing to do with this collection yet
+                    }
+                };
+
+            // Clear all of our server request references
+            self.dataRequests = {
+                callback: callback
+            };
+
+            self.yearBillData.source.forEach(function (source, index) {
+                self.yearBillData.collections.forEach(function (collection) {
+                    collection.columns.push({
+                        name: {
+                            title: monthShortLookup[source.month],
+                            visible: true,
+                        },
+                        season: source.season,
+                        start: source.start,
+                        end: source.end,
+                        fullDate: source.fullDate
+                    });
+                    process[collection.name.id](collection, source, index);
+                });
+            });
+
+            // Build the charges collection
+            buildChargesCollection();
+
+            // If we finished the post processing and didn't need any additional data
+            if (dataRequest.options.length === 0) {
+                // See the comment just before the call to postProcessYearData_step2 in postProcessYearDataReceiveDataHandler()
+                // for why we pass 'self' to our _step2 function...
+                self.postProcessYearData_step2(self);
+            } else {
+                // Launch the miss-aisles
+                self.bindings.gettingData(true);
+                tou.addDataRequest(dataRequest);
+                tou.makeDataRequest();
+            }
+        },
+        postProcessYearData_step2: function (self) {
+            var buildNetCosts = function () {
+                    var netCostData = getRow(getCollection(self.yearBillData.collections, 'netCost').rows, 'kwh').data, // empty array
+                        chargeTotals = getRow(getCollection(self.yearBillData.collections, 'charges').rows, 'Total', 'displayValue').data, // array
+                        totalKwhData = getRow(getCollection(self.yearBillData.collections, 'consumption').rows, 'total').data; // array
 
                     chargeTotals.forEach(function (total, index) {
                         var value = total.value / totalKwhData[index].value,
@@ -5002,7 +5378,7 @@ tou.utilityPages.Electricity = function() {
                         netCostData.push(data);
                     });
                 },
-                getMaxAvgAndTotals = function () {
+                getMaxAvgTotalsAndDisplayUnits = function () {
                     var lookupTable = {
                             'demand': {
                                 calc: 'Average',
@@ -5036,9 +5412,13 @@ tou.utilityPages.Electricity = function() {
                                 prepend: '$',
                                 append: ''
                             }
-                        };
+                        },
+                        consumptionCollection,
+                        totalConsumptionRow,
+                        chargesCollection,
+                        totalChargeRow;
 
-                    yearData.collections.forEach(function (collection) {
+                    self.yearBillData.collections.forEach(function (collection) {
                         var lookup = lookupTable[collection.name.id];
 
                         // Add column for calculation output
@@ -5087,7 +5467,17 @@ tou.utilityPages.Electricity = function() {
                                 data.value = sum;
                                 data.isTotal = true;
                             } else { // Average
-                                data.value = sum / cnt;
+                                // The average NET Cost is not an average of each month's net cost. It is:
+                                // total year's cost / total year's consumption
+                                if (collection.name.id === 'netCost') {
+                                    consumptionCollection = getCollection(self.yearBillData.collections, 'consumption');
+                                    totalConsumptionRow = getRow(consumptionCollection.rows, 'total');
+                                    chargesCollection = getCollection(self.yearBillData.collections, 'charges');
+                                    totalChargeRow = getRow(chargesCollection.rows, 'Total', 'displayValue');
+                                    data.value = totalChargeRow.data[totalChargeRow.data.length - 1].value / totalConsumptionRow.data[totalConsumptionRow.data.length - 1].value;
+                                } else {
+                                    data.value = sum / cnt;
+                                }
                             }
                             data.displayValue = self.prettyValue({
                                 value: data.value,
@@ -5139,119 +5529,16 @@ tou.utilityPages.Electricity = function() {
                 },
                 getRow = function (rows, name, key) {
                     return getRowOrCollection(rows, name, key);
-                },
-                getUsage = function (data, type, peak) {
-                    var collections = data.collections,
-                        collection,
-                        row,
-                        usage,
-                        returnData;
-                    for (var i = 0, len = collections.length; i < len; i++) {
-                        collection = collections[i];
-                        for (var j = 0, jlen = collection.rows.length; j < jlen; j++) {
-                            row = collection.rows[j];
-                            if (row.rateElement && (row.rateElement.type === type) && (row.rateElement.peak === peak)) {
-                                usage = row.usage;
-
-                                if (type === 'reactive') {
-                                    usage = usage.contributors.reactiveMax;
-                                } else if (type === 'demand') {
-                                    usage = usage.contributors.demand;
-                                } else { // consumption
-                                    usage = usage.contributors.consumption;
-                                }
-
-                                usage = tou.toFixed(usage, 0);
-                                returnData = {
-                                    value: usage,
-                                    displayValue: self.prettyValue({value: usage, digits: 0})
-                                };
-
-                                returnData.units = {
-                                    displayValue: row.usage.units.displayValue,
-                                    visible: false
-                                };
-                                returnData.rateElement = row.rateElement;
-
-                                return returnData;
-                            }
-                        }
-                    }
-                    return {
-                        value: 0,
-                        displayValue: '0',
-                        units: {
-                            displayValue: '',
-                            visible: false
-                        }
-                    };
-                },
-                getLoadFactor = function (data) {
-                    var loadFactor = data.loadFactor;
-                    return {
-                        value: loadFactor.value,
-                        displayValue: loadFactor.displayValue
-                    };
-                },
-                process = {
-                    'demand': function (collection, sourceData, index) {
-                        getRow(collection.rows, 'onPeak').data.push(getUsage(sourceData, 'demand', 'on'));
-                        getRow(collection.rows, 'offPeak').data.push(getUsage(sourceData, 'demand', 'off'));
-                        getRow(collection.rows, 'reactiveAtPeak').data.push(getUsage(sourceData, 'reactive', 'both'));
-                    },
-                    'consumption': function (collection, sourceData, index) {
-                        var data;
-
-                        // We handle our total consumption a bit differently because we need to add the 'isTotal' key to our data set
-                        data = getUsage(sourceData, 'consumption', 'both');
-                        data.isTotal = true;
-                        getRow(collection.rows, 'total').data.push(data);
-
-                        getRow(collection.rows, 'onPeak').data.push(getUsage(sourceData, 'consumption', 'on'));
-                        getRow(collection.rows, 'offPeak').data.push(getUsage(sourceData, 'consumption', 'off'));
-                    },
-                    'loadFactor': function (collection, sourceData, index) {
-                        getRow(collection.rows, 'loadFactor').data.push(getLoadFactor(sourceData));
-                    },
-                    'charges': function (collection, sourceData, index) {
-                        var billTotalChargesCollection = getCollection(sourceData.collections, 'Total Charges'),
-                            rows = (billTotalChargesCollection && billTotalChargesCollection.rows) || [];
-                        rows.forEach(function (row) {
-                            var lineItem = row.name.displayValue;
-                            if ((lineItem !== 'Total') && !addedLineItems[lineItem]) {
-                                addedLineItems[lineItem] = true;
-                                chargesLineItems.push(lineItem);
-                            }
-                        });
-                    },
-                    'netCost': function (collection, sourceData, index) {
-                        // nothing to do with this collection yet
-                    }
                 };
 
-            yearData.source.forEach(function (source, index) {
-                yearData.collections.forEach(function (collection) {
-                    collection.columns.push({
-                        name: {
-                            title: monthShortLookup[source.month],
-                            visible: true,
-                        },
-                        season: source.season,
-                        start: source.start
-                    });
-                    process[collection.name.id](collection, source.data, index);
-                });
-            });
-
-            // Build the charges collection
-            buildChargesCollection();
             // Build the net cost pwer kwh collection
             buildNetCosts();
-            // Identify the maximums in each row & add total/average column
-            getMaxAvgAndTotals();
-            //
-
-            delete yearData.source;
+            // Identify the maximums in each row, add total/average column, and display units as needed
+            getMaxAvgTotalsAndDisplayUnits();
+            // Delete source data - was going to keep it but it's too big for the ajax post and we don't have to have it...
+            delete self.yearBillData.source;
+            // Now we're finally ready to call the callback and display the yearly bill to the user
+            self.dataRequests.callback();
         },
         prettyValue: function (data) {
             // data is expected to take the following form
@@ -5381,13 +5668,19 @@ tou.utilityPages.Electricity = function() {
                     } else if (tier.multiplier !== null) {
                         // Our formula is: (off-peak consumption / total consumption) * demand * multiplier, where demand is the peak demand (highest
                         // demand during on peak periods) or max demand (highest demand regardless of on peak or off peak)
+                        
+                        // row.usage.value has already been rounded; all contributors are non-rounded numbers
+                        // TOU Phase 1 Calculations used the non-rounded contributor numbers
+                        // TOU Phase 2 uses rounded contributor numbers for the following reason:
+                        // While raw numbers provide a more accurate tiered number, it creates a number that is not reproducible by plugging the
+                        // numbers shown on the bill into the tier formula.
 
                         // We use || 0 to recover from undefined; for example, we saw this in testing: if maxDemand was 0 and peakDemand
                         // was undefined, this would resolve to undefined if we didn't include the trailing '|| 0'
-                        demand = (contributors.maxDemand || contributors.peakDemand) || 0;
+                        demand = tou.toFixed((contributors.maxDemand || contributors.peakDemand) || 0, 0);
 
                         // The '|| 0' part here is to recover from divide by 0 which generates NaN
-                        usage = tou.toFixed(((row.usage.value / contributors.totalConsumption) || 0) * demand * tier.multiplier, 0);
+                        usage = tou.toFixed(((row.usage.value / tou.toFixed(contributors.totalConsumption, 0)) || 0) * demand * tier.multiplier, 0);
                         usage = Math.min(usage, offPeakLessTiers);
 
                         offPeakLessTiers -= usage;
@@ -6032,17 +6325,18 @@ tou.utilityPages.Electricity = function() {
 
                     self.bindings.configRequired(configRequired);
                     self.refreshMonthYear();
-                    listOfDates = self.bindings.$page.listOfMonthYears();
                     if (!configRequired) {
+                        listOfDates = self.bindings.$page.listOfMonthYears();
                         setDefaultMonth();
                         monthYear = ko.utils.arrayFilter(listOfDates, function (monthYearObj) {
                             return monthYearObj.searchDate === self.bindings.selectedMonthYear().searchDate;
                         });
                         self.bindings.selectedMonthYear(monthYear[0]);
                         self.bindings.rateTablePeriod(self.bindings.findPeriod(self.bindings.selectedMonthYear().rateTable["Demand Charges"].periods));
+                        self.bindings.getData();
                     }
                 };
-            self.initReportSocket(self.bindings.getData);
+            self.initReportSocket();
 
             $.extend(self.bindings, {
                 $mainContent: $('.' + self.utilityNameShort + ' .mainContent'),
@@ -6095,7 +6389,8 @@ tou.utilityPages.Electricity = function() {
             // Set the config required flag - if true, reports is disabled
             self.bindings.configRequired((self.bindings.listOfMeters().length === 0) || (self.listOfMonthYears().length === 0));
             if (self.bindings.selectedMonthYear() === "") {
-                postInit();
+                self.refreshMonthYear();
+                setDefaultMonth();
             }
             self.bindings.reportDateFilter.valueHasMutated();
 
@@ -6122,6 +6417,7 @@ tou.utilityPages.Electricity = function() {
             configRequired: ko.observable(false),
             activeDataRequest: ko.observable(false),
             committedReports: {},
+            currentDayOfPeriod: ko.observable(1),
             dataRequestTimer: null,
             decimalPlaces: 0,
             displayPercentageOfValidData: ko.observable(0),
@@ -6138,6 +6434,14 @@ tou.utilityPages.Electricity = function() {
                 value: null
             }),
             duOnPeakMVAR: ko.observable({
+                timestamp: null,
+                value: null
+            }),
+            duOffPeakMaxMVAR: ko.observable({
+                timestamp: null,
+                value: null
+            }),
+            duOnPeakMaxMVAR: ko.observable({
                 timestamp: null,
                 value: null
             }),
@@ -6159,17 +6463,17 @@ tou.utilityPages.Electricity = function() {
             highestDemandNow: ko.observable(''),
             highestOnPeakDemandLastYear: ko.observable(''),
             highestOnPeakDemandNow: ko.observable(''),
-            highestTemperatureNow: ko.observable(""),
+            highestTemperature: ko.observable(""),
             inactiveMeters: ko.observableArray([]),
             koGridReportCollection: ko.observableArray([]),
             lastResize: null,
             listOfMeters: ko.observableArray(),
-            lowestTemperatureNow: ko.observable(""),
+            lowestTemperature: ko.observable(""),
             maxPeriodUsage: ko.observable(0),
             meterIndexArray: [],
             MeterReportCollection: ko.observableArray([]),
             missingDataCollection: ko.observableArray([]),
-            numberOfDaysInCurrentPeriod: 0,
+            numberOfDaysInCurrentPeriod: ko.observable(0),
             numberOfInactiveMeters: ko.observable(0),
             numberOfTimeSlotsPerDay: (24 * 2),
             percentageOfMissingData: ko.observable(0),
@@ -6209,7 +6513,7 @@ tou.utilityPages.Electricity = function() {
                     monthYear = myBindings.selectedMonthYear();
 
                 if (monthYear.period.toLowerCase() === "month") {
-                    answer = myBindings.numberOfDaysInCurrentPeriod;
+                    answer = myBindings.numberOfDaysInCurrentPeriod();
                 } else if (monthYear.period.toLowerCase() === "year") {
                     answer = 12;
                 }
@@ -6224,9 +6528,7 @@ tou.utilityPages.Electricity = function() {
                     $maxTD,
                     gridColumns = [
                         "gridonpeakdemand",
-                        "gridonpeakreactive",
                         "gridoffpeakdemand",
-                        "gridoffpeakreactive",
                         "gridonpeakconsumption",
                         "gridoffpeakconsumption",
                         "gridconsumptiontotal"],
@@ -6249,6 +6551,14 @@ tou.utilityPages.Electricity = function() {
                     });
                     if ($maxTD) {
                         $maxTD.addClass("danger");
+
+                        if (gridColumns[i] === "gridonpeakdemand") {
+                            $maxTD.parent().find(".occurrent.onpeakdemand").addClass("danger");
+                            $maxTD.parent().find(".gridonpeakreactive").addClass("danger");
+                        } else if (gridColumns[i] === "gridoffpeakdemand") {
+                            $maxTD.parent().find(".occurrent.offpeakdemand").addClass("danger");
+                            $maxTD.parent().find(".gridoffpeakreactive").addClass("danger");
+                        }
                     }
                 }
 
@@ -6457,11 +6767,17 @@ tou.utilityPages.Electricity = function() {
             },
             sumCollection: function (data) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings,
+                    monthYear = this.selectedMonthYear(),
+                    monthYearPeriod = monthYear.period.toLowerCase(),
                     answer = 0,
                     i,
                     lenData = data.length;
                 for (i = 0; i < lenData; i++) {
-                    answer += data[i].value;
+                    if (monthYearPeriod === "year") {  // only rounding each unit for "Yearly" reporting
+                        answer += tou.toFixed(data[i].value, myBindings.decimalPlaces);
+                    } else {
+                        answer += data[i].value;
+                    }
                 }
                 return tou.toFixed(answer, myBindings.decimalPlaces);
             },
@@ -6478,7 +6794,7 @@ tou.utilityPages.Electricity = function() {
 
                     if (monthYearPeriod === "month") {
                         startIndex = 1;
-                        periodMax = (myBindings.numberOfDaysInCurrentPeriod + 1);
+                        periodMax = (myBindings.numberOfDaysInCurrentPeriod() + 1);
                     } else if (monthYearPeriod === "year") {
                         startIndex = 0;
                         periodMax = 12;
@@ -6513,7 +6829,8 @@ tou.utilityPages.Electricity = function() {
                     unitIndex = (parseInt(moment.unix(ts).format(monthYear.childFormatCode), 10) - 1);
                     a[unitIndex] = {
                         value: null,
-                        timeStamp: (ts * 1000)
+                        timeStamp: (ts * 1000),
+                        rawTimeStamp: (ts)
                     };
                     ts = (moment.unix(ts).add(1, monthYear.childPeriod)).unix();
                 }
@@ -6672,10 +6989,10 @@ tou.utilityPages.Electricity = function() {
                     myBindings.setGridData("OffPeakReactive");
                     myBindings.duOnPeakMW(myBindings.findMax(myBindings.reportData["OnPeakDemand"]));
                     myBindings.duOffPeakMW(myBindings.findMax(myBindings.reportData["OffPeakDemand"]));
-                    myBindings.duOnPeakMVAR(myBindings.findMax(myBindings.reportData["OnPeakReactive"]));
-                    myBindings.duOffPeakMVAR(myBindings.findMax(myBindings.reportData["OffPeakReactive"]));
-                    //myBindings.duOnPeakMVAR(myBindings.findByTimestamp(myBindings.reportData["OnPeakReactive"], myBindings.duOnPeakMW().timeStamp));
-                    //myBindings.duOffPeakMVAR(myBindings.findByTimestamp(myBindings.reportData["OffPeakReactive"], myBindings.duOffPeakMW().timeStamp));
+                    myBindings.duOnPeakMaxMVAR(myBindings.findMax(myBindings.reportData["OnPeakReactive"]));
+                    myBindings.duOffPeakMaxMVAR(myBindings.findMax(myBindings.reportData["OffPeakReactive"]));
+                    myBindings.duOnPeakMVAR(myBindings.findByTimestamp(myBindings.reportData["OnPeakReactive"], myBindings.duOnPeakMW().timeStamp));
+                    myBindings.duOffPeakMVAR(myBindings.findByTimestamp(myBindings.reportData["OffPeakReactive"], myBindings.duOffPeakMW().timeStamp));
 
                     myBindings.renderOnPeakDemand(myBindings.reportData["OnPeakDemand"]);
                     myBindings.renderDemand(myBindings.reportData["MaxForOnOffPeakDemandArray"]);
@@ -6731,6 +7048,18 @@ tou.utilityPages.Electricity = function() {
                         type: 'column',
                         xAxis: {
                             allowDecimals: false
+                        },
+                        yAxis: {
+                            labels: {
+                                style: {
+                                    color: '#606060'
+                                }
+                            },
+                            title: {
+                                style: {
+                                    color: '#606060'
+                                }
+                            }
                         },
                         yAxisTitle: myBindings.electricalUnit,
                         xValueFormatter: function(timestamp) {
@@ -6795,6 +7124,18 @@ tou.utilityPages.Electricity = function() {
                         xAxis: {
                             allowDecimals: false
                         },
+                        yAxis: {
+                            labels: {
+                                style: {
+                                    color: '#606060'
+                                }
+                            },
+                            title: {
+                                style: {
+                                    color: '#606060'
+                                }
+                            }
+                        },
                         yAxisTitle: myBindings.electricalUnit,
                         xValueFormatter: function(timestamp) {
                             var date = new Date(timestamp);
@@ -6851,6 +7192,18 @@ tou.utilityPages.Electricity = function() {
                         xAxis: {
                             allowDecimals: false
                         },
+                        yAxis: {
+                            labels: {
+                                style: {
+                                    color: '#606060'
+                                }
+                            },
+                            title: {
+                                style: {
+                                    color: '#606060'
+                                }
+                            }
+                        },
                         yAxisTitle: myBindings.electricalUnit + "h",
                         xValueFormatter: function(timestamp) {
                             var date = new Date(timestamp);
@@ -6874,32 +7227,36 @@ tou.utilityPages.Electricity = function() {
                     highestTempVerbiage,
                     lowestTempVerbiage,
                     chartWidth = myBindings.getChartWidth(printFormat),
-                    $highlowTemperaturesPeriodChart = $(myBindings.$reportsContent).find(' .highlowTemperaturesPeriodChart');
+                    $highlowTemperaturesPeriodChart = $(myBindings.$reportsContent).find('.highlowTemperaturesPeriodChart');
 
                 titleVerbiage = "High/Low " + periodVerbiage + " Temperatures - " + myBindings.selectedMonthYear().prettyDate;
                 myBindings.temperatureTitle(titleVerbiage);
 
                 if (arrayOfData && arrayOfData.trendPlotData.valid) {
                     if (arrayOfData.highestTemp.timeStamp !== null) {
-                        myBindings.highestTemperatureNow({
+                        myBindings.highestTemperature({
                             value: (arrayOfData.highestTemp.value) ? tou.toFixed(arrayOfData.highestTemp.value, 1) : null,
-                            timeStamp: arrayOfData.highestTemp.timeStamp
+                            timeStamp: arrayOfData.highestTemp.timeStamp,
+                            rawTimeStamp: (!!arrayOfData.highestTemp.rawTimeStamp ? arrayOfData.highestTemp.rawTimeStamp : arrayOfData.highestTemp.timeStamp)
                         });
-                        myBindings.lowestTemperatureNow({
+                        myBindings.lowestTemperature({
                             value: (arrayOfData.lowestTemp.value) ? tou.toFixed(arrayOfData.lowestTemp.value, 1) : null,
-                            timeStamp: arrayOfData.lowestTemp.timeStamp
+                            timeStamp: arrayOfData.lowestTemp.timeStamp,
+                            rawTimeStamp: (!!arrayOfData.lowestTemp.rawTimeStamp ? arrayOfData.lowestTemp.rawTimeStamp : arrayOfData.lowestTemp.timeStamp)
                         });
 
-                        highestTempVerbiage = "The high temperature on " + moment.unix(arrayOfData.highestTemp.timeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.highestTemp.value).toFixed(1) + " degrees. ";
-                        lowestTempVerbiage = "The low temperature on " + moment.unix(arrayOfData.lowestTemp.timeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.lowestTemp.value).toFixed(1) + " degrees. ";
+                        highestTempVerbiage = "The high temperature on " + moment(myBindings.highestTemperature().rawTimeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.highestTemp.value).toFixed(1) + " degrees. ";
+                        lowestTempVerbiage = "The low temperature on " + moment(myBindings.lowestTemperature().rawTimeStamp).format("dddd, MMMM Do YYYY") + " was " + (arrayOfData.lowestTemp.value).toFixed(1) + " degrees. ";
                     } else {
-                        myBindings.highestTemperatureNow({
+                        myBindings.highestTemperature({
                             value: null,
-                            timeStamp: null
+                            timeStamp: null,
+                            rawTimeStamp: null
                         });
-                        myBindings.lowestTemperatureNow({
+                        myBindings.lowestTemperature({
                             value: null,
-                            timeStamp: null
+                            timeStamp: null,
+                            rawTimeStamp: null
                         });
 
                         highestTempVerbiage = "no data available";
@@ -6928,22 +7285,43 @@ tou.utilityPages.Electricity = function() {
                             target: $highlowTemperaturesPeriodChart,
                             y: 'value',
                             x: 'timeStamp',
+                            rawX: 'rawTimeStamp',
+                            tooltip: {
+                                formatter: function () {
+                                    return '<span style="font-size: 10px">' + moment(this.point.rawX).format("MMM DD, YYYY HH:mm") + '</span><br>' + '<span style="color:' + this.point.color + '">●</span>  <b>' + trendPlots.numberWithCommas(this.y) + ' F</b>';
+                                },
+                            },
                             data: [{
                                 data: arrayOfData.trendPlotData.maxes,
                                 name: 'Max',
+                                color: '#ff2222',
                                 yAxis: 0
                             }, {
                                 data: arrayOfData.trendPlotData.mins,
                                 name: 'Min',
+                                color: '#7cb5ec',
                                 yAxis: 0
                             }],
                             type: 'line',
                             xAxis: {
                                 allowDecimals: false
                             },
+                            yAxis: {
+                                labels: {
+                                    style: {
+                                        color: '#606060'
+                                    }
+                                },
+                                title: {
+                                    style: {
+                                        color: '#606060'
+                                    }
+                                }
+                            },
                             yAxisTitle: 'F'
                         });
                     }
+                    myBindings.$highlowTemperatures.show();
                 } else {
                     myBindings.$highlowTemperatures.hide();
                     myBindings.temperatureTitle("");
@@ -7278,11 +7656,13 @@ tou.utilityPages.Electricity = function() {
 
                     highestTemp = {
                         value: null,
-                        timeStamp: null
+                        timeStamp: null,
+                        rawTimeStamp: null
                     };
                     lowestTemp = {
                         value: null,
-                        timeStamp: null
+                        timeStamp: null,
+                        rawTimeStamp: null
                     };
                     trendPlotData = {
                         valid: false,
@@ -7296,24 +7676,28 @@ tou.utilityPages.Electricity = function() {
                         unitIndex = (parseInt(childIndex, 10) - 1);
                         maxes[unitIndex].value = ($.isNumeric(maxMinData.max)) ? tou.toFixed(maxMinData.max, 2) : null;
                         maxes[unitIndex].timeStamp = maxMinData.range.start * 1000;
+                        maxes[unitIndex].rawTimeStamp = maxMinData.maxDate * 1000;
                         mins[unitIndex].value = ($.isNumeric(maxMinData.min)) ? tou.toFixed(maxMinData.min, 2) : null;
                         mins[unitIndex].timeStamp = maxMinData.range.start * 1000;
+                        mins[unitIndex].rawTimeStamp = maxMinData.minDate * 1000;
                         if (maxes[unitIndex].value !== null || mins[unitIndex].value !== null) {
                             trendPlotData.valid = true;
                         }
                     }
 
                     $.each(maxes, function (key, temperature) {
-                        if (temperature.value > highestTemp.value || highestTemp.value === null) {
+                        if (!!temperature.value && (temperature.value > highestTemp.value || highestTemp.value === null)) {
                             highestTemp.value = tou.toFixed(temperature.value, 1);
-                            highestTemp.timeStamp = temperature.timeStamp / 1000;
+                            highestTemp.timeStamp = temperature.timeStamp;
+                            highestTemp.rawTimeStamp = temperature.rawTimeStamp;
                         }
                     });
 
                     $.each(mins, function (key, temperature) {
-                        if (temperature.value < lowestTemp.value || lowestTemp.value === null) {
+                        if (!!temperature.value && (temperature.value < lowestTemp.value || lowestTemp.value === null)) {
                             lowestTemp.value = tou.toFixed(temperature.value, 1);
-                            lowestTemp.timeStamp = temperature.timeStamp / 1000;
+                            lowestTemp.timeStamp = temperature.timeStamp;
+                            lowestTemp.rawTimeStamp = temperature.rawTimeStamp;
                         }
                     });
 
@@ -7753,7 +8137,7 @@ tou.utilityPages.Electricity = function() {
             },
             getData: function () {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].reportsBindings;
-                if (myBindings.selectedMonthYear() !== "" && myBindings.listOfMeters().length > 0) {
+                if (myBindings.selectedMonthYear() !== "" && myBindings.listOfMeters().length > 0 && !myBindings.selectedMonthYear().isReportCommitted()) {
                     myBindings.startTime = moment();
                     myBindings.errorWithRequest(false);
                     this.$page.blockUI(true);
@@ -7863,11 +8247,7 @@ tou.utilityPages.Electricity = function() {
                             myBindings.activeDataRequest(true);
                             tou.socket.emit("getUsage", {options: options});
 
-                            if (monthYearPeriod === 'month') {
-                                timerDuration = 10000;  // 10 seconds
-                            } else {
-                                timerDuration = 200000; // 200 seconds
-                            }
+                            timerDuration = 180000;  // 3 mins
 
                             myBindings.dataRequestTimer = setTimeout(function () {
                                 myBindings.$reportsContent.hide();
@@ -7886,8 +8266,9 @@ tou.utilityPages.Electricity = function() {
                     startDay = moment(selectedDate.start),
                     endDay = moment(selectedDate.end);
 
-                myBindings.numberOfDaysInCurrentPeriod = tou.toFixed(moment.duration(endDay.diff(startDay)).asDays(), 0);
+                myBindings.numberOfDaysInCurrentPeriod(tou.toFixed(moment.duration(endDay.diff(startDay)).asDays(), 0));
                 myBindings.selectedMonthYear(selectedDate);
+                // myBindings.currentDayOfPeriod((myBindings.selectedMonthYear().period === "Month" ? moment().format("D") : moment().dayOfYear()));
                 myBindings.rateTablePeriod(myBindings.findPeriod(myBindings.selectedMonthYear().rateTable["Demand Charges"].periods));
                 if (myBindings.selectedReportsMode() !== "") {
                     myBindings.koGridReportCollection([]);

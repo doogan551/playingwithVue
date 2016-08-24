@@ -4,23 +4,23 @@ html
         meta(name='viewport',content='width=device-width,initial-scale=1')
         title= title
         link(rel='stylesheet', href='/css/lib/jqwidgets/jqx.base.css')
-        link(rel='stylesheet', href='/css/lib/font-awesome-4.1.0/css/font-awesome.min.css')
+        link(rel='stylesheet', href='/css/lib/font-awesome-4.3.0/css/font-awesome.min.css')
         link(rel='stylesheet', href='/css/lib/bootstrap.3.0.2.min.css')
         link(rel='stylesheet', href='/css/lib/fullcalendar.css')
         link(rel='stylesheet', href='/css/lib/scheduler.css')
         link(rel='stylesheet', href='/css/lib/jquery-clockpicker.css')
         link(rel='stylesheet', href='/css/lib/jquery.toast.min.css')
         link(rel='stylesheet', href='/css/diColorPicker/diColorPicker.css')
-        link(rel='stylesheet', href='/css/lib/DataTables-1.10.10/dataTables.bootstrap.min.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.bootstrap.min.css')
         // syspref.css must follow after bootstrap.min.css so we can override bootstrap themes
         link(rel='stylesheet', href='/css/baseui/syspref.css')
-        link(rel='stylesheet', href='/css/alarmMessageDefinitions/alarmMessageDefinitions.css')
+        link(rel='stylesheet', href='/css/baseui/alarmTemplate.css')
         script(type='text/javascript', src='/js/lib/json2.js')
         script(type='text/javascript', src='/js/lib/jquery.min.js')
         script(type='text/javascript', src='/js/lib/jquery-clockpicker.min.js')
         script(type='text/javascript', src='/js/lib/jquery-ui.js')
         script(type='text/javascript', src='/js/lib/jquery.toast.min.js')
-        script(type='text/javascript', src='/js/lib/knockout-2.3.0.js')
+        script(type='text/javascript', src='/js/lib/knockout-3.2.0.js')
         script(type='text/javascript', src='/js/lib/knockout.viewModel.js')
         script(type='text/javascript', src='/js/lib/knockout.mapping-2.3.5.js')
         script(type='text/javascript', src='/js/lib/knockout-sortable.js')
@@ -46,22 +46,12 @@ html
         script(type='text/javascript', src='/js/lib/date.js')
         script(type='text/javascript', src='/js/lib/moment.js')
         script(type='text/javascript', src='/js/lib/underscore.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/underscore.string.min.js')
-        script(type='text/javascript', src='/js/lib/backbone.min.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.hoverIntent.min.js')
-        script(type='text/javascript', src='/js/lib/knockback.min.js')
         script(type='text/javascript', src='/js/lib/fullcalendar.js')
         script(type='text/javascript', src='/js/lib/scheduler.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/ko.editables.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/jquery.caret.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/knockout-inline-confirm.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/koGrid-2.1.1.js')
-        script(type='text/javascript', src='/js/alarmMessageDefinition/ko.bindingHandler.definitionColorPicker.js')
         script(type='text/javascript', src='/js/util/components/colorpicker/diColorPicker.js')
-        script(type="text/javascript" src='/js/lib/DataTables-1.10.10/jquery.dataTables.js')
-        script(type="text/javascript" src='/js/lib/DataTables-1.10.10/dataTables.bootstrap.min.js')
+        script(type="text/javascript", src='/js/lib/DataTables-1.10.12/media/js/jquery.dataTables.min.js')
+        script(type="text/javascript", src='/js/lib/DataTables-1.10.12/media/js/dataTables.bootstrap.min.js')
         script(type='text/javascript', src='/js/baseui/syspref.js')
-        include ../AlarmMessageDefinition/templates.jade
 
     body.whitebg
         div#navbar
@@ -79,7 +69,7 @@ html
             div#calendar(data-bind="visible: section() == 'Calendar'")
                 .title Season Control
 
-                div(data-bind="with: calendarViewModel")
+                div.calendarData(data-bind="with: calendarViewModel", style="display: none")
                     #season
                         input(type='radio', data-bind='checked: season,click:changeSeason,attr:{disabled:gettingData()}' name='season', id='heatingSeason', value='Heating')
                         label(for='heatingSeason') Heating
@@ -267,16 +257,6 @@ html
                     table#telemetryList.linedTable
                         tbody
                             tr
-                                td.col-sm-4 IP Network Segment
-                                td.col-sm-9.clickToEdit(data-bind="clickEdit: $data['IP Network Segment']")
-                                    span(data-bind="text: $data['IP Network Segment']")
-                                    input#telemetryIPNetworkSegment.hide.form-control(type="text", data-bind="value: $data['IP Network Segment']")
-                            tr
-                                td IP Port
-                                td.clickToEdit(data-bind="clickEdit: $data['IP Port']")
-                                    span(data-bind="text: $data['IP Port']")
-                                    input#telemetryIPNetworkSegment.hide.form-control(type="text", data-bind="value: $data['IP Port']")
-                            tr
                                 td APDU Timeout (seconds)
                                 td.clickToEdit(data-bind="clickEdit: $data['APDU Timeout']")
                                     span(data-bind="text: $data['APDU Timeout']")
@@ -297,16 +277,46 @@ html
                                 td.clickToEdit(data-bind="clickEdit: $data['Public IP']")
                                     span(data-bind="text: $data['Public IP']")
                                     input#telemetryPublicIP.hide.form-control.input-sm(type="text", data-bind="value: $data['Public IP']")
+                    br
+                    .title Network Configuration
+                    table#networkConfigTable.linedTable
+                        thead
+                            tr
+                                th Make Default
+                                th 
+                                th Network Segment (Unique)
+                                th Ip Port
+                        tbody(data-bind='foreach:networks')
+                            tr
+                                td
+                                    input(type='radio', name='defaultNetwork', data-bind='checked:$parent.systemDefault, checkedValue:$data["IP Network Segment"], enable: ($data["IP Network Segment"]() !== 0 && $data["IP Port"]() >= 47808 && $data["IP Port"]() <= 47823 ), event:{click:$parent.changeDefault}')
+                                td.networkDelete
+                                    span(class="showOnHover valign pull-left" data-bind="visible: !$data.isDefault()")
+                                        a(href="#", title="Delete", data-bind="click: $parent.removeNetwork")
+                                            img(src="/img/icon_delete.png")
+                                td.clickToEdit(data-bind="clickEdit: $data['IP Network Segment'], event:{click:$parent.setSegment}")
+                                    span(data-bind="text: $data['IP Network Segment']")
+                                    input#telemetryIPNetworkSegment.hide.form-control(type="text", data-bind="value: $data['IP Network Segment'], event:{blur:$parent.checkUniqueSegment}")
+                                td.clickToEdit(data-bind="clickEdit: $data['IP Port']")
+                                    span(data-bind="text: $data['IP Port']")
+                                    input#telemetryIPNetworkSegment.hide.form-control(type="text", data-bind="value: $data['IP Port']")
+                    #telemetryActionBar
+                        button(id='networkAdd', type='button', class='btn btn-primary btn-sm', data-bind='click: addNetwork') Add New
 
-            // ------ Alarm Message Definitions ---------------------------------------------------------------------
-            #alarmMessageDefinitionContainer(data-bind="visible: section() == 'Alarm Messages'")
-                .title Alarm Messages
-                br
-                div(data-bind='with:alarmMessagesViewModel.viewModel()')
-                    include ../AlarmMessageDefinition/AlarmMessageDefinitionModule.jade
-
+            // ------ Alarm Messages ---------------------------------------------------------------------
+            div#alarmTemplateContainer(data-bind="visible: section() == 'Alarm Messages'")
+                div(data-bind='with: alarmMessagesViewModel')
+                    .title(data-bind="text: displayName")
+                    br
+                    .gettingDataSpinner(data-bind="css: { displayDiv: activeDataRequest(), hideDiv: !activeDataRequest()} ", title="Requesting Data")
+                        i.fa.fa-spinner.fa-spin.fa-3x
+                        span.spinnertext Getting Data
+                    div.alarmMessagesData
+                        table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
+                        include ../alarmTemplate/templates.jade
+                        include ../alarmTemplate/_confirm.jade
             // ------ Backup ----------------------------------------------------------------------------------------
-            div#telemetry(data-bind="visible: section() == 'Backup'")
+            div#backupContainer(data-bind="visible: section() == 'Backup'")
                 .title Backup
                 br
                 div#backupForm(data-bind="with: backupViewModel")

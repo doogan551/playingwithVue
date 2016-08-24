@@ -3,7 +3,6 @@ public/display_assets/
 logs/
 tmp/
 scripts/
-dist/
 nbproject/
 iisnode/
 *.scc

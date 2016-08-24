@@ -58,13 +58,10 @@
 
 /*   small format  */
 .sm-vertical-customColors {
-    width: 45px;
+    width: 47px;
     height: 165px;
     list-style-type: none;
     padding-left: 0px;
-    position: relative;
-    top: -178px;
-    left: 195px;
     box-shadow: 0px 0px 10px 1px rgba(119, 119, 119, 0.5);
     -moz-box-shadow: 0px 0px 10px 1px rgba(119, 119, 119, 0.5);
     -webkit-box-shadow: 0px 0px 10px 1px rgba(119, 119, 119, 0.5);
@@ -101,16 +98,16 @@
 }
 .sm-colorSwatch {
     border: none;
-    width:  16px;
+    width: 16px;
     height: 16px;
-    padding: 0px 0px 0px 0px;
-    margin:  0px 0px 0px 0px;
+    padding: 0px 1px 0px 1px;
+    margin: 0px 0px 0px 0px;
 }
 .sm-colorSwatch.selected {
     box-sizing: inherit;
-    border: 1px solid #3D4048;
-    width:  14px;
-    height: 14px;
+    border: 2px solid #e2a18d;
+    width:  16px;
+    height: 16px;
     padding: 0px 0px 0px 0px;
     margin:  0px 0px 0px 0px;
 }

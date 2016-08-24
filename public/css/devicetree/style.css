@@ -161,3 +161,7 @@ html body{
     right:15%;
     z-index: 1000;
 }
+
+.inlineDevAddr{
+    color: brown;
+}

@@ -133,7 +133,7 @@ module.exports = {
 
 (function loop() {
   setTimeout(function() {
-    logger.info('@@@@@@@ Server still active');
+    // logger.info('@@@@@@@ Server still active');
     autoAcknowledgeAlarms(function(result) {
       loop();
     });
@@ -161,7 +161,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
     };
   readOnlyProps = ["_id", "_cfgDevice", "_updTOD", "_pollTime",
     "_forceAllCOV", "_actvAlmId", "Alarm State", "Control Pending", "Device Status",
-    "Last Report Time", "Point Instance", "Point Type", "Reliability"
+    "Last Report Time", "Point Type", "Reliability"
   ];
   // JDR - Removed "Authorized Value" from readOnlyProps because it changes when ValueOptions change. Keep this note.
 
@@ -415,7 +415,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Demand Interval":
               case "Disable Limit Fault":
               case "Downlink Broadcast":
-              case "Downlink Network":
               case "Enable Warning Alarms":
               case "Fail Action":
               case "Fan Off CFM Setpoint":
@@ -572,7 +571,6 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               case "Device Address":
               case "Device Port":
               case "Downlink IP Port":
-              case "Ethernet IP Port":
               case "Feedback Channel":
               case "Feedback Type":
               case "Input Type":
@@ -711,8 +709,12 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                 break;
 
               case "Ethernet Network":
-                if (newPoint["Point Type"].Value === "Device")
+                if (newPoint["Point Type"].Value === "Device") {
                   updateDownlinkNetwk = true;
+                }
+                break;
+              case "Downlink Network":
+                downloadPoint = true;
                 break;
               default:
                 break;
@@ -834,7 +836,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                 if (newPoint["Point Type"].Value === "Slide Show") {
                   activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                     log: "Slide Show edited",
-                    activity: actLogsEnums["Slide Show Edit"].enum
+                    activity: actLogsEnums["Slideshow Edit"].enum
                   })));
                 } else {
                   compareArrays(newPoint[prop], oldPoint[prop], activityLogObjects);
@@ -893,6 +895,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
         } else if (newPoint._pStatus !== Config.Enums["Point Statuses"].Active.enum ||
           newPoint._devModel === Config.Enums["Device Model Types"].Unknown.enum ||
           newPoint._devModel === Config.Enums["Device Model Types"]["Central Device"].enum ||
+          newPoint["Point Type"].Value === "Sequence" ||
           (newPoint["Point Type"].Value !== "Device" &&
             (Config.Utility.getPropertyObject("Device Point", newPoint) === null ||
               Config.Utility.getPropertyObject("Device Point", newPoint).PointInst === 0))) {
@@ -922,40 +925,40 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
             err: err
           }, null);
           var error = null;
-          updDownlinkNetwk(updateDownlinkNetwk, newPoint, function(err) {
+          updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, function(err) {
             if (err)
               return callback({
                 err: err
               }, result);
-            updPoint(downloadPoint, newPoint, function(err, msg) {
-              if (err)
-                error = err;
-              signalExecTOD(executeTOD, function(err) {
+              updPoint(downloadPoint, newPoint, function(err, msg) {
                 if (err)
-                  error = error;
-                doActivityLogs(generateActivityLog, activityLogObjects, function(err) {
+                  error = err;
+                signalExecTOD(executeTOD, function(err) {
                   if (err)
-                    return callback({
-                      err: err
-                    }, result);
-                  updateRefs(updateReferences, newPoint, flags, user, function(err) {
+                    error = error;
+                  doActivityLogs(generateActivityLog, activityLogObjects, function(err) {
                     if (err)
                       return callback({
                         err: err
                       }, result);
-                    else if (error)
-                      return callback({
-                        err: error
-                      }, result);
-                    else {
-                      msg = (msg !== undefined && msg !== null) ? msg : "success";
-                      return callback({
-                        message: msg
-                      }, result);
-                    }
-                  });
+                    updateRefs(updateReferences, newPoint, flags, user, function(err) {
+                      if (err)
+                        return callback({
+                          err: err
+                        }, result);
+                      else if (error)
+                        return callback({
+                          err: error
+                        }, result);
+                      else {
+                        msg = (msg !== undefined && msg !== null) ? msg : "success";
+                        return callback({
+                          message: msg
+                        }, result);
+                      }
+                    });
 
-                });
+                  });
               });
             });
           });
@@ -1117,14 +1120,22 @@ function doActivityLogs(generateActivityLog, logs, callback) {
   }
 }
 // newupdate
-function updDownlinkNetwk(updateDownlinkNetwk, newPoint, callback) {
+function updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
   if (updateDownlinkNetwk) {
     Utility.update({
       collection: constants('pointsCollection'),
       query: {
         "Point Type.Value": "Device",
         "Uplink Port.Value": "Ethernet",
-        "Downlink Network.Value": newPoint["Ethernet Network"].Value
+        $and: [{
+          "Downlink Network.Value": {
+            $ne: 0
+          }
+        }, {$or: [{
+          'Downlink Network.Value': newPoint["Ethernet Network"].Value
+        }, {
+          'Downlink Network.Value': oldPoint["Ethernet Network"].Value
+        }]}]
       },
       updateObj: {
         $set: {
@@ -1138,6 +1149,7 @@ function updDownlinkNetwk(updateDownlinkNetwk, newPoint, callback) {
     callback(null);
   }
 }
+
 // newupdate
 function updPoint(downloadPoint, newPoint, callback) {
   var errVar;
@@ -1231,7 +1243,6 @@ function updateDependencies(refPoint, flags, user, callback) {
     }
     return temp;
   };
-
 
   Utility.get({
     collection: constants('pointsCollection'),
@@ -2259,7 +2270,6 @@ function addPoint(point, user, options, callback) {
       callback(err);
 
     point._pStatus = 0;
-    point["Point Instance"].Value = point._id;
 
     var searchQuery = {};
     var updateObj = {};

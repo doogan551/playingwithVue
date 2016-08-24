@@ -1062,8 +1062,8 @@ window.pointLookup = (function(module, ko, $) {
             } else {
                 if (!deletedDisplay) {
                     workspaceManager.openWindowPositioned(endPoint.review.url, fullName, pointType, endPoint.review.target, rowData._id, {
-                        width: 820,
-                        height: 542
+                        width: 1250,
+                        height: 750
                     });
                 }
             }
@@ -1173,20 +1173,20 @@ window.pointLookup = (function(module, ko, $) {
             switch (command) {
                 case 'open':
                     workspaceManager.openWindowPositioned(endPoint.review.url, fullName, pointType, endPoint.review.target, id, {
-                        width: 820,
-                        height: 542
+                        width: 1250,
+                        height: 750
                     });
                     break;
                 case 'clone':
                     workspaceManager.openWindowPositioned('/api/points/newPoint/' + id, 'New Point', '', '', 'newPoint', {
                         width: 960,
-                        height: 280
+                        height: 560
                     });
                     break;
                 case 'edit':
                     workspaceManager.openWindowPositioned(endPoint.edit.url, fullName, pointType, endPoint.edit.target, id, {
-                        width: 820,
-                        height: 542
+                        width: 1250,
+                        height: 750
                     });
                     break;
                 case 'delete':
@@ -1195,7 +1195,7 @@ window.pointLookup = (function(module, ko, $) {
                     // Disallowed if the point is on a GPL sequence (it must be deleted from within the sequence)
                     if (itemData._parentUpi !== 0) {
                         var _endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint('Sequence', itemData._parentUpi),
-                            link = '<a href="javascript: void(0)" onclick="workspaceManager.openWindowPositioned(\'' + _endPoint.review.url + '\', \'\', \'Sequence\', \'' + _endPoint.review.target + '\', ' + itemData._parentUpi + ', {width: 820,height: 542});">Sequence</a>',
+                            link = '<a href="javascript: void(0)" onclick="workspaceManager.openWindowPositioned(\'' + _endPoint.review.url + '\', \'\', \'Sequence\', \'' + _endPoint.review.target + '\', ' + itemData._parentUpi + ', {width: 1250,height: 750});">Sequence</a>',
                             message = '<h4>This point cannot be deleted here. It must be deleted from the ' + link + '</h4>';
                         workspaceManager.showConfirmation({
                             message: message
@@ -1327,7 +1327,7 @@ window.pointLookup = (function(module, ko, $) {
 
             win = workspaceManager.openWindowPositioned('/api/points/newPoint/?selectedPointType=' + selectedPointType, 'New Point', '', '', 'newPoint', {
                 width: 960,
-                height: 280
+                height: 560
             });
         });
 
@@ -1456,8 +1456,8 @@ window.pointLookup = (function(module, ko, $) {
                                 return;
                             default:
                                 workspaceManager.openWindowPositioned(endPoint.review.url, fullName, pointType, endPoint.review.target, rowData._id, {
-                                    width: 820,
-                                    height: 542
+                                    width: 1250,
+                                    height: 750
                                 });
                         }
                     } else {

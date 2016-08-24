@@ -39,9 +39,11 @@ module.exports = {
                     'Device Status.Value': 1,
                     'Uplink Port.eValue': 1,
                     'Network Segment.Value': 1,
+                    'Device Address': 1,
                     'Downlink Network.Value': 1,
                     'Ethernet Network.Value': 1,
                     'Ethernet Protocol.eValue': 1,
+                    'Ethernet IP Port.Value': 1,
                     'Port 1 Protocol.eValue': 1,
                     'Port 1 Network.Value': 1,
                     'Port 2 Protocol.eValue': 1,
@@ -51,8 +53,6 @@ module.exports = {
                     'Port 4 Protocol.eValue': 1,
                     'Port 4 Network.Value': 1
                 }
-                /*,
-                                limit: 3*/
             }, buildTree, callback);
         };
 
@@ -64,6 +64,9 @@ module.exports = {
                 status: device['Device Status'].Value,
                 protocol: device['Uplink Port'].eValue,
                 networkSegment: device['Network Segment'].Value,
+                deviceAddress: device['Device Address'].Value,
+                uplinkPort: device['Uplink Port'].eValue,
+                ethIPPort: device['Ethernet IP Port'].Value,
                 networks: [],
                 branches: []
             };
@@ -87,10 +90,11 @@ module.exports = {
                 if ([18, 19, 20].indexOf(device['Model Type'].eValue) > -1) {
                     portNs = portNs.concat([3, 4]);
                 }
+
                 for (var n = 1; n <= portNs.length; n++) {
                     if (n !== currentUplinkPort) {
                         var portN = 'Port ' + n + ' ';
-                        if (device['Ethernet Network'].Value !== 0 && validEthProtocols.indexOf(device['Ethernet Protocol'].eValue) > -1) {
+                        if (device[portN + 'Network'].Value !== 0 && validPortProtocols.indexOf(device[portN + 'Protocol'].eValue) > -1) {
                             addToNetworks(deviceNetwork, device[portN + 'Network'].Value);
                         }
                     }

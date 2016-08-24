@@ -54,12 +54,13 @@
             </div>
             <hr>
             <div class="row">
-                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Model Type', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Device Model Types', rootContext: $root } } -->
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Model Type', data: data, columnClasses: 'col col-sm-3 col-xs-12', enumSetName: 'Device Model Types', rootContext: $root } } -->
                 <!-- /ko -->
-                <div class="col col-sm-4 col-xs-12">
-                    <div data-bind="component: { name: 'ctl-firmwareVersion', params: { firmwareVersion: data['Firmware Version'].Value, rootContext: $root } }"></div>
-                </div>
-                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Time Zone', data: data, columnClasses: 'col col-sm-4 col-xs-12', enumSetName: 'Time Zones', rootContext: $root } } -->
+                <!--  ko component: { name: 'ctl-text', params: { propertyName: 'Firmware Version', data: data, columnClasses: 'col col-sm-3 col-xs-12', rootContext: $root } } -->
+                <!-- /ko -->
+                <!--  ko component: { name: 'ctl-text', params: { propertyName: 'Firmware 2 Version', data: data, columnClasses: 'col col-sm-3 col-xs-12', rootContext: $root } } -->
+                <!-- /ko -->
+                <!--  ko component: { name: 'ctl-dropdown', params: { propertyName: 'Time Zone', data: data, columnClasses: 'col col-sm-3 col-xs-12', enumSetName: 'Time Zones', rootContext: $root } } -->
                 <!-- /ko -->
             </div>
             <div class="row">
@@ -153,16 +154,7 @@
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-ip', params: { propertyName: 'Ethernet Address', data: data, columnClasses: 'col col-sm-3 col-xs-6', rootContext: $root } } -->
             <!-- /ko -->
-            
-            <!-- ko with: data['Ethernet IP Port'] -->
-            <!-- ko if: isDisplayable -->
-            <div class="col col-sm-3 col-xs-6">
-                <div class="dataField">
-                    <label>Ethernet IP Port</label>
-                    <span class="lh30" data-bind="text: Value"></span>
-                </div>
-            </div>
-            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Ethernet IP Port', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 1, max: 65535, rootContext: $root } } -->
             <!-- /ko -->
         </div>
         <div class="row">
@@ -170,16 +162,7 @@
             <!-- /ko -->
             <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Downlink Broadcast Delay', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 0, max: 1000, rootContext: $root } } -->
             <!-- /ko -->
-            
-            <!-- ko with: data['Downlink IP Port'] -->
-            <!-- ko if: isDisplayable -->
-            <div class="col col-sm-3 col-xs-6">
-                <div class="dataField">
-                    <label>Downlink IP Port</label>
-                    <span class="lh30" data-bind="text: Value"></span>
-                </div>
-            </div>
-            <!-- /ko -->
+            <!--  ko component: { name: 'ctl-number', params: { propertyName: 'Downlink IP Port', data: data, columnClasses: 'col col-sm-3 col-xs-6', min: 1, max: 65535, rootContext: $root } } -->
             <!-- /ko -->
         </div>
         <!-- ko foreach: [1,2,3,4] -->
