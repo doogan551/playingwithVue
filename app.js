@@ -57,9 +57,8 @@ app.use(bodyParser.urlencoded({
   extended: true,
   parameterLimit: 4500
 }));
-app.use(multer({
-  inMemory: true
-}));
+var storage = multer.memoryStorage();
+var upload = multer({ storage: storage });
 
 app.engine('jade', require('jade').__express);
 app.set('view engine', 'jade');
