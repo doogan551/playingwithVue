@@ -1,5 +1,5 @@
 var fs = require('fs');
-var jade = require('jade');
+var pug = require('pug');
 
 var Utility = require('./utility');
 var System = require('./system');
@@ -133,12 +133,12 @@ module.exports = {
     },
 
     getUtilityMarkup: function(type, cb) {
-        var filename = __dirname + '/../views/dashboard/utility_' + type + '.jade';
+        var filename = __dirname + '/../views/dashboard/utility_' + type + '.pug';
         fs.readFile(filename, 'utf8', function(err, data) {
             var fn,
                 html;
 
-            fn = jade.compile(data, {
+            fn = pug.compile(data, {
                 filename: filename
             });
 

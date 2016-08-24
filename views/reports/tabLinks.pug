@@ -1,0 +1,9 @@
+// - - -   tablinks.pug
+ul.text-left.tabs.list-unstyled.sidebar-nav
+   li.active
+      tab(data-bind="click: reportConfiguration.bind()") Configuration
+   li
+      tab(data-bind="click: function(){ $root.requestReportData() }") Run Report
+      i.fa.fa-spinner.fa-spin.fa-1x.runReportTabSpinner(data-bind="css: {displayDiv: displayTabSpinner(), hideDiv: !displayTabSpinner()} ", title="Requesting Report Data")
+      i.fa.fa-check.fa-1x.runReportCheckMark(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
+
