@@ -1,7 +1,8 @@
 'use strict';
 
 var https = require('https');
-var server = https.createServer(require('./index.js'));
+var httpsOptions = require('./');
+var server = https.createServer(httpsOptions).create();
 var port = process.argv[2] || 8443;
 
 server.on('request', function (req, res) {
