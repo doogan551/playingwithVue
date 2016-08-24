@@ -927,7 +927,7 @@ function initPage(manager) {
 }
 
 function applyBindings() {
-    if (window.opener === undefined) {
+    if (window.top === undefined) {
         window.setTimeout(applyBindings, 2);
     } else {
         window.manager = new ActivityLogsManager({});

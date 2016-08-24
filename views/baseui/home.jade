@@ -388,7 +388,8 @@ html
             //- .progress
             //-     .indeterminate
             iframe.card-body(data-bind="attr: {src: url}")
-            //- .windowMask(data-bind="click: activate")
+            //- .draggableMask
+            .windowMask
 
     script#taskbarButtonTemplate(type='text/html')
         li.taskbarItem.active(data-bind="taskbarMenu: $data")

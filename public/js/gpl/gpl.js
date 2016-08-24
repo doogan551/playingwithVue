@@ -6737,10 +6737,10 @@ gpl.Manager = function () {
                 doNextInit();
             };
 
-            //fix for IE not showing window.opener when first loaded
-            gpl.getPointTypes = (window.opener || window.top) && (window.opener || window.top).workspaceManager && (window.opener || window.top).workspaceManager.config.Utility.pointTypes.getAllowedPointTypes;
-            gpl.workspaceManager = (window.opener || window.top) && (window.opener || window.top).workspaceManager;
-            gpl._openWindow = (window.opener || window.top) && (window.opener || window.top).workspaceManager && (window.opener || window.top).workspaceManager.openWindowPositioned;
+            //fix for IE not showing window.top when first loaded
+            gpl.getPointTypes = window.top && window.top.workspaceManager && window.top.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes;
+            gpl.workspaceManager = window.top && window.top.workspaceManager;
+            gpl._openWindow = window.top && window.top.workspaceManager && window.top.workspaceManager.openWindowPositioned;
             gpl.controllers = gpl.workspaceManager.systemEnums.controllers;
             gpl.pointTypes = gpl.workspaceManager.config.Enums['Point Types'];
             gpl.formatPoint = gpl.workspaceManager.config.Update.formatPoint;

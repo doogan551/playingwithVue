@@ -1,5 +1,5 @@
 "use strict";
-window.workspaceManager = (window.opener || window.top).workspaceManager;
+window.workspaceManager = window.top.workspaceManager;
 var reportsVM,
     reportDateRanges = function (selectedRange) {
         var answer,
@@ -4110,7 +4110,7 @@ var reportsViewModel = function () {
 };
 
 function applyBindings(extConfig) {
-    if (window.opener === undefined) {
+    if (window.top === undefined) {
         window.setTimeout(applyBindings, 2);
     } else {
         reportsVM = new reportsViewModel();

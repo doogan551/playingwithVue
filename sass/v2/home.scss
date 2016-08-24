@@ -278,6 +278,8 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
 .dti-card-panel {
     // min-width: 300px;
     // opacity: 0;
+    // resize: both;
+    // overflow: hidden;
     width: 50%;
     padding: 0;
     display: flex;
@@ -334,6 +336,12 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     right: 0;
     top: 0;
     bottom: 0;
+    display: none;
+}
+
+.ui-resizable-resizing .windowMask,
+.ui-draggable-dragging .windowMask {
+    display: block;
 }
 
 .dti-menu-tile {

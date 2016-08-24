@@ -574,7 +574,8 @@ var dti = {
         },
         _resizableConfig: {
             // helper: 'ui-resizable-helper',
-            containment: 'main'
+            containment: 'main',
+            handles: 'all'
         },
         _windowList: [],
         getWindowById: function (id) {
@@ -590,12 +591,12 @@ var dti = {
             return targetWindow;
         },
         init: function () {
-            dti.windows.elementSelector = '.dti-card-panel';//'.card, .card-panel';
-            dti.windows.$elements = $(dti.windows.elementSelector);
+            // dti.windows.elementSelector = '.dti-card-panel';//'.card, .card-panel';
+            // dti.windows.$elements = $(dti.windows.elementSelector);
 
-            dti.windows.$elements.draggable(dti.windows._draggableConfig);
+            // dti.windows.$elements.draggable(dti.windows._draggableConfig);
 
-            dti.windows.$elements.resizable(dti.windows._resizableConfig);
+            // dti.windows.$elements.resizable(dti.windows._resizableConfig);
 
             dti.on('closeWindow', function handleCloseWindow (win) {
                 var windowId = win.bindings.windowId();
@@ -1559,7 +1560,9 @@ var dti = {
                 });
             },
             complete = function () {
-                dti.animations.fadeOut($('#loading'));
+                setTimeout(function doLoginFadeout () {
+                    dti.animations.fadeOut($('#loading'));
+                }, 1500);
             },
             showLoading = function () {
                 dti.animations.fadeIn($('#loading'), runInits);

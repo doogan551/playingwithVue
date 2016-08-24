@@ -1,4 +1,4 @@
-window.workspaceManager = (window.opener || window.top).workspaceManager;
+window.workspaceManager = window.top.workspaceManager;
 
 var slideShowPlayer;
 

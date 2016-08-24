@@ -120,7 +120,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         initDOM();
     };
     ViewModel.prototype.openPointReview = function(data, e) {
-        var workspace = (window.opener || window.top).workspaceManager,
+        var workspace = window.top.workspaceManager,
             endPoint, win, width, height, pointType,
             $e = $(e.currentTarget),
             col = $e.data('col');

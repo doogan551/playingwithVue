@@ -1,4 +1,4 @@
 $(function() {
-    window.opener.thumbnailGenerator.nextCapture();
-    window.opener.focus();
+    window.top.thumbnailGenerator.nextCapture();
+    window.top.focus();
 });

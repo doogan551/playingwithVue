@@ -1,5 +1,5 @@
 window.splash = (function(module, ko, $) {
-    var workspace = window.opener && window.opener.workspaceManager,
+    var workspace = window.top && window.top.workspaceManager,
         socket = workspace.socket;
 
     function ViewModel() {

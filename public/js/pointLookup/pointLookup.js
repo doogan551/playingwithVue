@@ -1,6 +1,6 @@
 "use strict";
 window.pointLookup = (function(module, ko, $) {
-    var workspaceManager = (window.opener || window.top).workspaceManager,
+    var workspaceManager = window.top.workspaceManager,
         socket = workspaceManager.socket(),
         socketHistory = {},
         dataAdapters,

@@ -1,4 +1,4 @@
-var workspace = window.opener && window.opener.workspaceManager
+var workspace = window.top && window.top.workspaceManager
 var qualityCodes = workspace.systemEnums.qualityCodes;
 var socket = workspace.socket();
 

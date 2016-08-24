@@ -92,7 +92,7 @@ define([
     'bootstrap-switch'
 ], function($, ko, io, moment, Big, bannerJS) {
     var pointInspector = {},
-        workspace = (window.opener || window.top).workspaceManager,
+        workspace = window.top.workspaceManager,
         uniqueIdRegister = [],
         formatPointErrorTimestamp = 0;
 

@@ -3145,7 +3145,7 @@ function initPage (manager) {
 function applyBindings () {
     // If we're an iFrame, the workspace attaches an 'opener' handler (IE fix). AlarmManager requires this opener method to be established
     // before it is instantiated. The workspace can't attach it until the iFrame is fully rendered, so we must wait if it doesn't exist yet
-    if (window.opener === undefined) {
+    if (window.top === undefined) {
         window.setTimeout(applyBindings, 2);
     } else {
         window.manager = new AlarmManager({});

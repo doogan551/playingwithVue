@@ -1097,7 +1097,7 @@ var telemetryViewModel = function() {
         originalValues = {},
         dataUrl = '/api/system/telemetry',
         saveUrl = '/api/system/updateTelemetry',
-        tzEnums = window.opener.workspaceManager.config.Enums["Time Zones"],
+        tzEnums = window.top.workspaceManager.config.Enums["Time Zones"],
         ipNetSegTemplate = {
             name: 'IP Network Segment',
             validation: {
@@ -1468,7 +1468,7 @@ var telemetryViewModel = function() {
 // Backup Screen --------------------------------------------------------------
 var backupViewModel = function() {
     var self = this,
-        socket = window.opener && window.opener.workspaceManager.socket(),
+        socket = window.top && window.top.workspaceManager.socket(),
         initObservables = function() {
 
         };
@@ -1531,8 +1531,8 @@ var versionsViewModel = function() {
 // Alarm Messages Screen ---------------------------------------------------------
 var alarmMessageViewModel = function() {
     var self = this,
-        alarmTemplateCategories = window.opener.workspaceManager.config.Enums["Alarm Categories"],
-        alarmTemplateTypes = window.opener.workspaceManager.config.Enums["Alarm Types"],
+        alarmTemplateCategories = window.top.workspaceManager.config.Enums["Alarm Categories"],
+        alarmTemplateTypes = window.top.workspaceManager.config.Enums["Alarm Types"],
         $alarmTemplateModal,
         $alarmTokens,
         $alarmToken,
@@ -2060,8 +2060,8 @@ var weatherViewModel = function() {
     var self = this,
         dataUrl = '/api/system/weather',
         saveUrl = '/api/system/updateWeather',
-        workspaceManager = window.opener && window.opener.workspaceManager,
-        openWindow = workspaceManager && window.opener.workspaceManager.openWindowPositioned,
+        workspaceManager = window.top && window.top.workspaceManager,
+        openWindow = workspaceManager && window.top.workspaceManager.openWindowPositioned,
         activePointStatus = workspaceManager && workspaceManager.config.Enums["Point Statuses"].Active.enum,
         originalData,
         openPointSelector = function(callback) {
@@ -3525,7 +3525,7 @@ $(function() {
 
         // If we're an iFrame, the workspace attaches an 'opener' handler (IE fix). We require this opener method to be established
         // before it is instantiated. The workspace can't attach it until the iFrame is fully rendered, so we must wait if it doesn't exist yet
-        if (window.opener === undefined) {
+        if (window.top === undefined) {
             window.setTimeout(postInit, 10);
         } else {
             sysPrefsViewModel.registerSection(alarmMessageViewModel, 'init');

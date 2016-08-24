@@ -778,7 +778,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
             });
         }
         item.openPointReview = function() {
-            var workspace = (window.opener || window.top).workspaceManager,
+            var workspace = window.top.workspaceManager,
                 win = workspace.openWindowPositioned(item.url(), item.scheduleName(), self.pointType, '', indiv._parentUpi(), {
                     width: 1250,
                     height: 750
@@ -1101,7 +1101,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
 
     ViewModel.prototype.openPointReview = function(data) {
 
-        var workspace = (window.opener || window.top).workspaceManager,
+        var workspace = window.top.workspaceManager,
             endPoint = workspace.config.Utility.pointTypes.getUIEndpoint(data.ref.PointType, data.ref.Value),
             win = workspace.openWindowPositioned(endPoint.review.url, data.ref.PointName, data.ref.PointType, '', data.ref.Value, {
                 width: 820,
