@@ -400,7 +400,8 @@ html
     script#taskbarMenuTemplate(type='text/html')                    
         // ko stopBindings: true
         .slideDownMenu.white.z-depth-1
-            .actionList(data-bind="if: singleton() === false")
+            // ko if: singleton() === false
+            .actionList
                 .blue-grey-text Actions
                 a.blue-grey-text.action(href="javascript://", data-bind="showNavigator: group")
                     i.material-icons folder_open
@@ -411,13 +412,14 @@ html
                 a.blue-grey-text.action(href="javascript://", data-bind="click: function () { $root.closeWindows(group()); }")
                     i.material-icons close
                     span Close All
+            // /ko
 
             .items(data-bind="visible: $root.openWindows[group()]().length > 0")
                 .itemsHeader.blue-grey-text Open Items
                 // ko foreach: $root.openWindows[group()]
 
                 //- span(data-bind="if: group() === $parent.group()")
-                a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: function () {activate();}")
+                a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")
                     .itemTitle.white-text
                         i.right.material-icons.closeIcon close
                         div(data-bind="text: title")

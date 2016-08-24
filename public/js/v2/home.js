@@ -1335,6 +1335,14 @@ var dti = {
         startMenuClick: function (obj) {
             dti.startMenu.handleClick(obj);
         },
+        handleCardClick: function (obj, e) {
+            dti.fire('hideMenus');
+            if ($(e.target).hasClass('closeIcon')) {
+                obj.close();
+            } else {
+                obj.activate();
+            }
+        },
         showDesktop: function () {
             dti.windows.showDesktop();
         },
