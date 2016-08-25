@@ -18,6 +18,8 @@ block content
 								a.strong.toggleTab(href="#reportAttribs", data-toggle="tab") Attributes
 							li.columns(role="presentation")
 								a.strong.toggleTab(href="#reportColumns", data-toggle="tab") Columns
+							li.columns2(role="presentation")
+								a.strong.toggleTab(href="#gridConfig", data-toggle="tab") Grid
 							// ko if: (reportType === 'Property')
 							li.filterByPoint(role="presentation")
 								a.strong.toggleTab(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
@@ -85,12 +87,13 @@ block content
 									h4.strong.panel-title
 										table.columnsGrid.small.grid.table
 											thead
-												tr.strong
+												tr.strong(style="height:44px")
 													th.medium.strong Column Key
 													// ko if: (reportType !== 'Property')
 													th.medium.strong Display Name
 													th.medium.strong.multiplierColumn
-													th.medium.strong.calculateColumn
+													th.medium.strong
+														.calculateColumn
 													th.medium.strong.typeColumn
 													th.medium.strong
 														.precisionColumn
@@ -141,15 +144,17 @@ block content
 														// /ko
 														.dropdown.availableCalculations(data-bind="css: {disabled: !$root.canEdit()}")
 															button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-																span(data-bind="text: calculation")
-																// ko if: ($parent.listOfCalculations().length > 1)
+																//span(data-bind="text: calculation")
+																span Calcs
+																// ko if: ($parent.listOfCalculations.length > 1)
 																span.caret.lm10px
 																// /ko
-															// ko if: ($parent.listOfCalculations().length > 1)
+															// ko if: ($parent.listOfCalculations.length > 1)
 															ul.calculations.dropdown-menu
-																// ko foreach: $parent.listOfCalculations()
+																// ko foreach: $parent.listOfCalculations
 																li
-																	a(data-bind="click: function(){ $root.selectCalculation($element, $parentContext.$index(), $data.text) }, text: $data.text")
+																	input(data-bind="checked: $parent.calculation[$data.text]", type="checkbox")
+																	.calcLabel(data-bind="text: ' ' + $data.text")
 																// /ko
 															// /ko
 														// /ko
@@ -196,13 +201,81 @@ block content
 													// /ko
 													// ko if: ($root.canEdit())
 													td.removecolumn
-														a.span.removerow(data-bind="click: $parent.deleteColumnRow, attr: { title: valueType}") Remove
+														a.span.removerow(data-bind="click: $parent.deleteReportColumn") Remove
 													// /ko
 											tbody
 												tr
 													// ko if: ($root.canEdit())
 													td(colspan="4")
 														a.addColumnButton(href="#") Add Column
+													// /ko
+								div#gridConfig.tab-pane
+									h4.strong.panel-title
+										table.gridConfig.small.grid.table
+											thead
+												tr.sortablecolums(data-bind="foreach: listOfColumns()")
+													th.displayName
+														.columnItem(data-bind="css: { globalConfigCell: ($index() === 0)}")
+															// ko if: $index() > 0
+															.handle
+															// /ko
+															//.placeholderVerbiage(style="font-weight: normal; color: #a7a7a7;", data-bind="text: ($index() === 0 ? 'Reserved column' : '')")
+															// ko if: $index() === 0
+															button.btn.btn-default.globalConfigColumnItem(data-bind="click: function () { $root.globalEditColumnFields() }") Global config
+															.blankspot
+																| &nbsp;
+															a.addColumnGridButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn(2) }")
+															// /ko
+															// ko if: $index() > 0
+															button.btn.btn-default.gridConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName), click: function () { $root.editColumn($data, $index()) }, event: { mouseover: function () { $root.showColumnSettings($element, $data) }, mouseout: function() { $root.hideColumnSettings($element) } }")
+															// /ko
+														// ko if: $index() > 0
+														button.btn.btn-danger.btn-xs.fa.fa-times.removeColumn(data-bind="click: function(){ $root.deleteReportColumn($data) }")
+														// /ko
+														.addColumnContainer
+														// ko if: $index() === ($root.listOfColumns().length - 1)
+														a.addColumnGridButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn() }")
+														// /ko
+														// ko if: $index() > 0 && $index() !== ($root.listOfColumns().length - 1)
+														.blankspot
+															| &nbsp;
+														// /ko
+											tbody
+												tr(data-bind="foreach: listOfColumns()")
+													td
+														div ...
+												tr(data-bind="foreach: listOfColumns()")
+													td
+														div ...
+												tr(data-bind="foreach: listOfColumns()")
+													td
+														div ...
+											tfoot
+												tr.calculationFooter(data-bind="foreach: listOfColumns()")
+													// ko if: $index() === 0
+													td
+														.globalCalculationsCell
+															ul.globalCalculations
+																// ko foreach: $root.listOfCalculations
+																li
+																	label.fancy-checkbox(data-bind="attr: { title: ($root.globalcalculateColumnSelectedvalue[$data.text] ? 'Selected' : 'Not Selected')}")
+																		input.medium(data-bind="checked: $root.globalcalculateColumnSelectedvalue[$data.text], click: function () { return $root.globalCalculationClick($element, $data.text) }", type="checkbox")
+																		span.calcLabel(data-bind="text: ' ' + $data.text")
+																// /ko
+															//div Global
+													// /ko
+													// ko if: $index() > 0
+													// ko if: ($parent.listOfCalculations.length > 0)
+													td
+														.calculationsCell
+															ul.calculations
+																// ko foreach: $parent.listOfCalculations
+																li
+																	label.fancy-checkbox
+																		input.medium(data-bind="checked: $parent.calculation[$data.text]", type="checkbox")
+																		span.calcLabel(data-bind="text: ' ' + $data.text")
+																// /ko
+													// /ko
 													// /ko
 								div#filterByPoint.tab-pane
 									h4.strong.panel-title
@@ -348,5 +421,22 @@ block content
 	.hiddenPlaceholder.hidden
 		input.form-control.globalPrecision.hidden(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
 		input.form-control.globalChartCheckbox.hidden(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit()", type="checkbox")
+		.globalcalculateColumnDropdown.hidden.dropdown.availableCalculations(data-bind="css: {disabled: !$root.canEdit()}")
+			button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+				span(data-bind="text: $root.globalcalculateColumnSelectedvalue()")
+				// ko if: ($root.listOfCalculations.length > 1)
+				span.caret.lm10px
+				// /ko
+			// ko if: ($root.listOfCalculations.length > 1)
+			ul.calculations.dropdown-menu
+				// ko foreach: $root.listOfCalculations
+				li
+					input(type="checkbox")
+					a(data-bind="text: ' ' + $data.text")
+				// /ko
+			// /ko
 	include footer
+	include popoverColumnSettings
 	include modals/dialogScreens
+	include modals/dialogEditColumn
+	include modals/dialogGlobalFieldsEditColumn

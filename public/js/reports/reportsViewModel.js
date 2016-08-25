@@ -69,8 +69,8 @@ var initKnockout = function () {
                         arr[1] = value.substr(timeLen - 2, 2);
                     }
                 }
-                hrs = Number.isNaN(parseInt(arr[0], 10)) ? 0 : parseInt(arr[0], 10);
-                mins = Number.isNaN(parseInt(arr[1], 10)) ? 0 : parseInt(arr[1], 10);
+                hrs = isNaN(parseInt(arr[0], 10)) ? 0 : parseInt(arr[0], 10);
+                mins = isNaN(parseInt(arr[1], 10)) ? 0 : parseInt(arr[1], 10);
 
                 if (hrs > 23) {
                     hrs = 23;
@@ -413,11 +413,13 @@ var reportsViewModel = function () {
         longClickStart,
         longClickTimer = 100,
         reportData,
+        reportExportData,
         reportChartData,
         activeDataRequests,
         reportSocket,
         exportEventSet,
         totalizerDurationInHours = true,
+        exportLandscape = true,
         Name = "dorsett.reportUI",
         getPointURL = "/api/points/getpoint",
         originalPoint = {},
@@ -446,6 +448,7 @@ var reportsViewModel = function () {
         newlyReferencedPoints = [],
         windowUpi,
         resizeTimer = 400,
+        baseConfigColumnWidth = 140,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
         setNewPointReference = function (refPointUPI, property) {
@@ -2042,7 +2045,7 @@ var reportsViewModel = function () {
         },
         parseNumberValue = function (theValue, rawValue, eValue) {
             var result;
-            result = Number.parseFloat(theValue.toString().replace(",",""));
+            result = parseFloat(theValue.toString().replace(",",""));
             if (isNaN(result)) {
                 result = (eValue !== undefined ? parseFloat(eValue) : parseFloat(rawValue));
                 if (isNaN(result)) {
@@ -2158,6 +2161,15 @@ var reportsViewModel = function () {
             }
             return setYaxisValues(result);
         },
+        buildPrintableTable = function () {
+            var $dataTablesScrollHead,
+                $dataTablesScrollBody,
+                $dataTablesScrollFoot;
+
+            $dataTablesScrollHead = $dataTablePlaceHolder.find('thead');
+            $dataTablesScrollBody = $dataTablePlaceHolder.find('tbody');
+            $dataTablesScrollFoot = $dataTablePlaceHolder.find('tfoot');
+        },
         adjustViewReportTabHeightWidth = function () {
             var infoscanHeader = 95,
                 adjustHeight,
@@ -2181,13 +2193,14 @@ var reportsViewModel = function () {
                 $dataTablesScrollBody = $tabViewReport.find('.dataTables_scrollBody');
                 $dataTablesScrollFoot = $tabViewReport.find('.dataTables_scrollFoot');
                 $dataTablesWrapper = $tabViewReport.find('.dataTables_wrapper');
-                $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
+
                 setInfoBarDateTime();
                 adjustHeight = $dataTablesScrollBody.height() - (($dataTablesWrapper.height() + infoscanHeader) - window.innerHeight);
                 $dataTablesScrollHead.css('width', $dataTablesWrapper.width() - 17); // allow for scrolly in body
                 $dataTablesScrollBody.css('height', adjustHeight);
                 $dataTablesScrollBody.css('width', $dataTablesWrapper.width());
                 $dataTablesScrollFoot.css('width', $dataTablesWrapper.width() - 17); // allow for scrolly in body
+                $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
             }
         },
         adjustConfigTabActivePaneHeight = function () {
@@ -2592,7 +2605,7 @@ var reportsViewModel = function () {
                 if (!self.activeRequestDataDrawn()) {
                     // console.log('. . . . . . . . . . .   requested data has been rendered   . . . . . . . . .');
                     if (scheduled && self.chartable()) {
-                        self.requestChart();
+                        //self.requestChart();
                     } else {
                         setTimeout(function () {
                             self.activeRequestDataDrawn(true);
@@ -3125,12 +3138,14 @@ var reportsViewModel = function () {
                         realtime: false
                     },
                     order: (!scheduled ? [[0, "asc"]] : false), // always default sort by first column
-                    scrollY: true,
-                    scrollX: true,
-                    scrollCollapse: true,
+                    scrollY: !scheduled,
+                    scrollX: !scheduled,
+                    scrollCollapse: !scheduled,
                     lengthChange: !scheduled,
                     paging: !scheduled,
                     ordering: !scheduled,
+                    info: !scheduled,
+                    responsive: true,
                     lengthMenu: [[10, 15, 24, 48, 75, 100, -1], [10, 15, 24, 48, 75, 100, "All"]],
                     searching: !scheduled,  // search box
                     pageLength: (!scheduled ? parseInt(self.selectedPageLength(), 10) : -1)
@@ -3177,6 +3192,10 @@ var reportsViewModel = function () {
                 }
 
                 adjustViewReportTabHeightWidth();
+                if (scheduled) {
+                    buildPrintableTable();
+                    $(document.body).find("script").html(null);
+                }
             }
         },
         renderHistoryReport = function (data) {
@@ -3849,10 +3868,10 @@ var reportsViewModel = function () {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn];
         column.colName = "Choose Point";
+        column.colDisplayName = "";
         column.valueType = "String";
         column.operator = "";
         column.upi = 0;
-        column.colDisplayName = "";
         column.pointType = "";
         column.units = "";
         column.valueList = "";
