@@ -185,11 +185,18 @@ module.exports = {
   updateTelemetry: function(data, cb) {
     var ipSegment = parseInt(data["IP Network Segment"], 10);
     var ipPort = parseInt(data["IP Port"], 10);
+    var netConfig = data['Network Configuration'];
+
+    for (var n = 0; n < netConfig.length; n++) {
+      netConfig[n]['IP Network Segment'] = parseInt(netConfig[n]['IP Network Segment'], 10);
+      netConfig[n]['IP Port'] = parseInt(netConfig[n]['IP Port'], 10);
+      netConfig[n].isDefault = (netConfig[n].isDefault === 'true');
+    }
 
     var searchCriteria = {
       "Name": "Preferences"
     };
-
+    console.log(data);
     var updateCriteria = {
       $set: {
         "IP Network Segment": ipSegment,
@@ -198,6 +205,7 @@ module.exports = {
         "Public IP": data["Public IP"],
         "IP Port": ipPort,
         "Time Zone": parseInt(data["Time Zone"], 10),
+        "Network Configuration": netConfig
       }
     };
 

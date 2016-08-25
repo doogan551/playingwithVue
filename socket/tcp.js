@@ -19,7 +19,7 @@ module.exports = function(_common) {
         socket.setEncoding('utf8');
 
         socket.on('data', function(buf) {
-            // logger.info(buf);
+            logger.info(buf);
             var jbuf = JSON.parse(buf);
 
             if (jbuf.msg == 'newtod') {

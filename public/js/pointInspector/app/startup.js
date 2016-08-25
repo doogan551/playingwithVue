@@ -416,7 +416,8 @@ define([
                     point: ko.viewmodel.toModel(pointInspector.point.data),
                     property: e.property,
                     refPoint: e.refPoint,
-                    oldPoint: pointInspector.point.originalData
+                    oldPoint: pointInspector.point.originalData,
+                    networkConfig: pointInspector.utility.workspace.systemEnumObjects.telemetry['Network Configuration']
                 };
                 updatedPoint = config.Update.formatPoint(point);
                 console.log('SEND', point);
@@ -808,8 +809,70 @@ define([
                 }
             });
         };
+        // This function is used to hydrate point properties (add key-value pairs to the property if they are not on it) after
+        // data is received from the server (model data), and before it is made into view-model data
+        // At the time of this comment, it is only used for the Channel property. It was necessary for the SCADA IO device
+        // because its channel property can be a numeric input or a drop-down selection based on the 'Input Type' property value,
+        // but ko's viewmodel plugin doesn't support dynamic adding or removal of the view-model key-value pairs. So the hydrate
+        // makes sure all possible key-value pairs are present on the model before creating the view-model.
+        self.hydrate = function (data) {
+            var hydrateProps = ['Channel'],
+                doHydrate = {
+                    'Channel': function (dataProp) {
+                        var obj = {
+                                'Min': 1,
+                                'Max': 8,
+                                'eValue': 1,
+                                'ValueOptions': {
+                                    1: 1
+                                }
+                            },
+                            key;
+
+                        for (key in obj) {
+                            if (!dataProp.hasOwnProperty[key]) {
+                                dataProp[key] = obj[key];
+                            }
+                        }
+                    }
+                };
+
+            hydrateProps.forEach(function (prop) {
+                if (data.hasOwnProperty(prop)) {
+                    doHydrate[prop](data[prop]);
+                }
+            });
+
+            return data;
+        };
+        // This function is the complement to the hydrate - it removes any extra key-value pairs that are not needed on a property,
+        // and is called before data is sent to the server for committing to the database.
+        self.sanitize = function (data) {
+            var sanitizeProps = ['Channel'],
+                doSanitize = {
+                    'Channel': function (dataProp) {
+                        valueTypeEnums = pointInspector.utility.config.Enums["Value Types"];
+
+                        if (dataProp.ValueType === valueTypeEnums.Enum.enum) {
+                            delete dataProp.Min;
+                            delete dataProp.Max;
+                        } else if (dataProp.ValueType === valueTypeEnums.Unsigned.enum) {
+                            delete dataProp.ValueOptions;
+                            delete dataProp.eValue;
+                        }
+                    }
+                };
+
+            sanitizeProps.forEach(function (prop) {
+                if (data.hasOwnProperty(prop)) {
+                    doSanitize[prop](data[prop]);
+                }
+            });
+
+            return data;
+        };
         self.originalData = data;
-        self.data = ko.viewmodel.fromModel(data, options);
+        self.data = ko.viewmodel.fromModel(self.hydrate(data), options);
         //throttle point refs for model switch when toggling edit mode
         self.data['Point Refs'].extend({ rateLimit: { timeout: 500, method: "notifyWhenChangesStop" } });
         self.status = ko.observable('saved'); // Options: saved, saving, error
@@ -822,7 +885,7 @@ define([
             //    value.
             if (self.status() === 'saving' || ((new Date().getTime() - formatPointErrorTimestamp) < 1000))
                 return;
-            var newPointData = ko.viewmodel.toModel(self.data),
+            var newPointData = self.sanitize(ko.viewmodel.toModel(self.data)),
                 emitData    = { newPoint: newPointData, oldPoint: self.originalData },
                 emitString  = 'updatePoint',
                 spinClass   = 'fa-spinner fa-spin',
@@ -1113,6 +1176,7 @@ define([
     ko.bindingHandlers.numeric = {
         init: function (element, valueAccessor, allBindingsAccessor) {
             var utility                 = pointInspector.utility,
+                valueTypeEnums          = utility.config.Enums["Value Types"],
                 $element                = $(element),
                 underlyingObservable    = valueAccessor(),
                 valueType               = ko.unwrap(allBindingsAccessor().valueType),
@@ -1125,7 +1189,21 @@ define([
                 method,
                 interceptor             = ko.computed({
                     read: function() {
-                        if ($element.is(':focus') && $element.is('input')) {
+                        var val = ko.unwrap(valueAccessor()),
+                            valIsPureNumber = /^([0-9]*)$/.test(val),
+                            valueType = allBindingsAccessor().valueType.peek();
+
+                        // SCADA IO device type added support for AI channel numbers that are numeric entry OR drop down selection,
+                        // determined by another property selection (up to the point of this comment, the 'Channel' property was
+                        // always a numeric input). Dynamically changing this property to a drop-down was causing this numeric binding
+                        // to throw errors because the drop-down values are not numbers. So we'll check the value type and value
+                        // before calling formatNumber...
+
+                        if (valueType === valueTypeEnums.Enum.enum) {
+                            return val;
+                        } else if ((valueType === valueTypeEnums.Unsigned.enum) && !valIsPureNumber) {
+                            return min;
+                        } else if ($element.is(':focus') && $element.is('input')) {
                             return ko.unwrap(underlyingObservable);
                         }
                         return utility.formatNumber(ko.unwrap(underlyingObservable), valueType, noTruncate, noComma);

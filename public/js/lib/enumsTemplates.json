@@ -496,6 +496,9 @@
             },
             "SCADA Vio": {
                 "enum": 20
+            },
+            "SCADA IO": {
+                "enum": 21
             }
         },
         "Device Ports": {
@@ -4098,9 +4101,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 0,
-                    "Max": 65534,
-                    "Min": 0
+                    "Value": 0
                 },
                 "Port 1 Protocol": {
                     "isDisplayable": true,
@@ -4133,9 +4134,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 0,
-                    "Max": 65534,
-                    "Min": 0
+                    "Value": 0
                 },
                 "Port 2 Protocol": {
                     "isDisplayable": true,
@@ -4168,9 +4167,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 0,
-                    "Max": 65534,
-                    "Min": 0
+                    "Value": 0
                 },
                 "Port 3 Protocol": {
                     "isDisplayable": true,
@@ -4203,9 +4200,7 @@
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 0,
-                    "Max": 65534,
-                    "Min": 0
+                    "Value": 0
                 },
                 "Port 4 Protocol": {
                     "isDisplayable": true,
