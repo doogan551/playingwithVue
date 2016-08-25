@@ -303,8 +303,8 @@ module.exports = {
       var alarmTemplateNew = {
         "_id": new ObjectId(),
         "isSystemMessage": false,
-        "msgType": data.newObject.msgType,
-        "msgCat": data.newObject.msgCat,
+        "msgType": parseInt(data.newObject.msgType, 10),
+        "msgCat": parseInt(data.newObject.msgCat, 10),
         "msgTextColor": data.newObject.msgTextColor,
         "msgBackColor": data.newObject.msgBackColor,
         "msgName": data.newObject.msgName,
@@ -327,8 +327,8 @@ module.exports = {
       var alarmTemplateUpdate = {
         $set: {
           "isSystemMessage": (data.updatedObject.isSystemMessage == "true"),
-          "msgType": data.updatedObject.msgType,
-          "msgCat": data.updatedObject.msgCat,
+          "msgType": parseInt(data.updatedObject.msgType, 10),
+          "msgCat": parseInt(data.updatedObject.msgCat, 10),
           "msgTextColor": data.updatedObject.msgTextColor,
           "msgBackColor": data.updatedObject.msgBackColor,
           "msgName": data.updatedObject.msgName,

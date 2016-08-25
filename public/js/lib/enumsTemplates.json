@@ -1408,7 +1408,7 @@
                 "enum": 166,
                 "lists": ["default"],
                 "endpoint": "gpl",
-                "ptRefProps": ["Device Point", "GPLBlock"],
+                "ptRefProps": ["Device Point", "GPLBlock", "GPLDynamic"],
                 "schedProps": []
             },
             "Setpoint Adjust": {
@@ -2202,6 +2202,11 @@
             },
             "GPLBlock": {
                 "enum": 439,
+                "valueType": "UniquePID",
+                "reportEnable": false
+            },
+            "GPLDynamic": {
+                "enum": 440,
                 "valueType": "UniquePID",
                 "reportEnable": false
             },
