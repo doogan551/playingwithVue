@@ -1,4 +1,5 @@
 // To run from command prompt, run from root infoscan folder as such: 'node apps/migrationScripts.js'
+process.setMaxListeners(0);
 var async = require('async');
 var utility = require('../models/utility');
 var db = require('../helpers/db');
@@ -184,9 +185,7 @@ var scripts = {
                 "Point Type.Value": "Sequence"
             }
         }, function processSequence(err, sequence, cb) {
-            var sequenceNeedsSaving = false,
-                updatingBlocks = false,
-                updatingDynamics = false;
+            var sequenceNeedsSaving = false;
 
             // logger.info('processSequence() sequence = ', sequence);
             if (!!sequence && !!sequence.SequenceData && !!sequence.SequenceData.sequence && !!sequence.SequenceData.sequence.block) {
@@ -197,7 +196,7 @@ var scripts = {
                     pRefs = sequence["Point Refs"],
                     deviceId = !!pRefs[0] ? pRefs[0].PointInst : null,
                     saveSequence = function () {
-                        if (sequenceNeedsSaving && !updatingBlocks && !updatingDynamics) {
+                        if (sequenceNeedsSaving) {
                             // logger.info("   ___ sequenceNeedsSaving ___");
                             sequenceNeedsSaving = false;
 
@@ -214,13 +213,18 @@ var scripts = {
 
                                 cb(null);
                             });
+                        } else {
+                            cb(null);
                         }
                     },
-                    adjustBlocks = function () {
+                    adjustSequence = function () {
+                        adjustBlocksAndDynamics();
+                    },
+                    adjustBlocksAndDynamics = function () {
+                        // logger.info("- blocks.length:", blocks.length);
                         async.eachSeries(blocks, function processBlocks(block, seriesCallback) {
                             if (block.upi > 0 || block.pointRefIndex !== undefined) {
                                 sequenceNeedsSaving = true;
-                                updatingBlocks = true;
 
                                 // logger.info("block.upi:" + block.upi + "   block.pointRefIndex:" + block.pointRefIndex);
                                 pointRef = getPointReference(block, "GPLBlock");
@@ -237,16 +241,14 @@ var scripts = {
                                 return seriesCallback();
                             }
                         }, function allDone(err) {
-                            // logger.info("allDone() called.............................................................");
-                            updatingBlocks = false;
-                            saveSequence();
+                            // logger.info("- dynamics.length:", dynamics.length);
+                            adjustDynamics();
                         });
                     },
                     adjustDynamics = function () {
                         async.eachSeries(dynamics, function processDynamics(dynamic, seriesCallback) {
                             if (dynamic.upi > 0 || dynamic.pointRefIndex !== undefined) {
                                 sequenceNeedsSaving = true;
-                                updatingDynamics = true;
 
                                 // logger.info("dynamic.upi:" + dynamic.upi + "   dynamic.pointRefIndex:" + dynamic.pointRefIndex);
                                 pointRef = getPointReference(dynamic, "GPLDynamic");
@@ -263,8 +265,6 @@ var scripts = {
                                 return seriesCallback();
                             }
                         }, function allDone(err) {
-                            // logger.info("allDone() called.............................................................");
-                            updatingDynamics = false;
                             saveSequence();
                         });
                     },
@@ -397,23 +397,12 @@ var scripts = {
                     pRefs[0].PropertyName = "Device Point";
                 }
 
-                // logger.info("- blocks.length:", blocks.length);
-                if (blocks.length > 0) {
-                    adjustBlocks();
-                }
+                adjustSequence();
 
-                // logger.info("- dynamics.length:", dynamics.length);
-                if (dynamics.length > 0) {
-                    adjustDynamics();
-                }
-
-                if (!sequenceNeedsSaving) {
-                    cb();  // nothing was changed
-                }
             } else {
                 cb();
             }
-        }, function finishUpdatingSequences(err) {
+        }, function (err) {
             logger.info("Finished with updateGenerateGPLPointRefs");
             callback(null, {
                 fn: "updateGenerateGPLPointRefs",
