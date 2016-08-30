@@ -17,6 +17,26 @@ var dtiMessaging =  {
         }
 
         dtiMessaging.initEventListener();
+
+        //adjust default calendar config to show time
+        moment.locale('en', {
+            longDateFormat : {
+                LT   : "HH:mm",
+                LTS  : "HH:mm:ss",
+                L    : "MM/DD/YYYY",
+                LL   : "MMMM Do YYYY",
+                LLL  : "MMMM Do YYYY LT",
+                LLLL : "dddd, MMMM Do YYYY LT"
+            },
+            calendar : {
+                lastDay  : '[Yesterday] LTS',
+                sameDay  : '[Today] LTS',
+                nextDay  : '[Tomorrow] LTS',
+                lastWeek : 'L LTS',
+                nextWeek : 'L LTS',
+                sameElse : 'L LTS'
+            }
+        });
     },
 
     defaultHandler: function (e) {

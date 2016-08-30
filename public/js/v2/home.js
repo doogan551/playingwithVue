@@ -250,6 +250,26 @@ var dti = {
                     cb();
                 }
             });
+        },
+        slideUp: function ($el, cb) {
+            $el[0].style.willChange = 'height, padding';
+
+            $el.css('overflow', 'hidden');
+            $el.velocity({
+                height: 0,
+                padding: 0
+            }, {
+                queue: false,
+                duration: 300,
+                easing: 'easeOutSine',
+                complete: function finishSlideUp () {
+                    $el.css('display', 'none');
+                    $el[0].style.willChange = '';
+                    if (cb) {
+                        cb();
+                    }
+                }
+            });
         }
     },
     events: {
@@ -868,9 +888,274 @@ var dti = {
         }
     },
     alarms: {
+        debug: {
+            loadAlarms: function (count) {
+                var actions = dti.alarms.init,
+                    list = [];
+
+                count = count || 150;
+
+                for (i = 0; i < count; i++) {
+                    list.push({
+                        _id: i,
+                        msgText: 'Unacknowledged alarm # ' + i,
+                        msgTime: 1472136463 + (i*1000),
+                        ackStatus: 1,
+                        ackTime: 0,
+                        ackUser: '',
+                        almClass: 0
+                    });
+                }
+
+                actions.receiveUnacknowledgedAlarms({
+                    alarms: list,
+                    count: count
+                });
+            },
+            addAlarms: function (count) {
+                var actions = dti.alarms.init,
+                    _id;
+
+                while (count && count--) {
+                    _id = parseInt(Math.random()*1000, 10);
+                    actions.newUnackAlarm({
+                        newAlarm: {
+                            _id: _id,
+                            msgText: 'Unacknowledged alarm # '+ _id,
+                            msgTime: 1472136463,
+                            ackStatus: 1,
+                            ackTime: 0,
+                            ackUser: '',
+                            almClass: 0
+                        }
+                    });
+                }
+            },
+            removeAlarms: function (count) {
+                var actions = dti.alarms.init,
+                    unacknowledgedAlarms = dti.bindings.alarms.unacknowledged;
+
+                while (count && count-- && unacknowledgedAlarms.list().length) {
+                    actions.removingUnackAlarm({
+                        _id: unacknowledgedAlarms.list()[0]._id,
+                        ackStatus: 2,
+                        ackUser: '',
+                        ackTime: 0
+                    });
+                }
+            },
+            start: function (interval) {
+                var debug = dti.alarms.debug;
+                
+                if (dti.bindings.alarms.unacknowledged.list().length === 0) {
+                    debug.loadAlarms(150);
+                }
+
+                debug.id = window.setInterval(function () {
+                    debug.removeAlarms(1);
+                }, 7);
+            },
+            stop: function () {
+                window.clearInterval(dti.alarms.debug.id);
+            },
+            id: 0
+        },
         init: function () {
+            var alarms = dti.bindings.alarms,
+                unacknowledgedAlarms = alarms.unacknowledged,
+                constants = dti.alarms.constants,
+                prepAlarms = function (data) {
+                    var dataIsArray = Array.isArray(data),
+                        list = dataIsArray ? data:[data],
+                        len = list.length,
+                        i,
+                        alarm;
+
+                    for (i = 0; i < len; i++) {
+                        alarm = list[i];
+                        alarm.ackStatus = ko.observable(alarm.ackStatus).extend({ rateLimit: 100 });
+                        alarm.ackUser = ko.observable();
+                        alarm.ackTime = ko.observable();
+                        
+                        date = new Date(alarm.msgTime);
+                        alarm.dateTime = ko.observable(moment(+(alarm.msgTime + '000')).calendar());
+                    }
+                    return dataIsArray ? list:data;
+                },
+                getUnacknowledgedAlarms = function () {
+                    // dti.socket.emit('getUnacknowledged', JSON.stringify({
+                    //     user: dti.bindings.user(),
+                    //     numberItems: constants.BUFFER_SIZE
+                    // }));
+                    // debug
+                    dti.alarms.debug.loadAlarms(constants.BUFFER_MAX);
+                },
+                receiveUnacknowledgedAlarms = function (data) {
+                    // data = {
+                    //     alarms: [{
+                    //         BackColor: "ffffff"
+                    //         Name1: "Rob"
+                    //         Name2: "BI2"
+                    //         Name3: ""
+                    //         Name4: ""
+                    //         PointType: 3
+                    //         Security: ["567b05edc41bb35c3a82c44a", "..."]
+                    //         TextColor: "ff0000"
+                    //         _id: "57bf050fb60281b058105f98"
+                    //         ackStatus: 1
+                    //         ackTime: 0
+                    //         ackUser: 0
+                    //         almClass: 0
+                    //         almNotify: true
+                    //         msgCat: 1
+                    //         msgText: "Rob_BI2 in unauthorized state of On"
+                    //         msgTime: 1472136463
+                    //         msgType: 5
+                    //         upi: 2990
+                    //     },
+                    //     {...}],
+                    //     count: 1
+                    // }
+                    unacknowledgedAlarms.list(prepAlarms(data.alarms));
+                    unacknowledgedAlarms.count(data.count);
+                    unacknowledgedAlarms.showList(!!data.count);
+                },
+                newUnackAlarm = function (data) {
+                    // data: {
+                    //     newAlarm: {},
+                    // }
+                    // * The newAlarm object format is commented in the 'unacknowledged' socket handler
+                    var list = unacknowledgedAlarms.list(),
+                        count = unacknowledgedAlarms.count,
+                        sortFn = function (a,b) {
+                            return (a.msgTime - b.msgTime);
+                        };
+
+                    // ** Work with raw array so we don't refresh the UI unnecessarily
+                    // Push new alarm to top of array
+                    list.unshift(prepAlarms(data.newAlarm));
+
+                    // The new unack'd alarm could have an older timestamp than the newest entry in our list
+                    if ((list.length > 1) && (list[0].msgTime < list[1].msgTime)) {
+                        list.sort(sortFn);
+                    }
+                    
+                    // If length greater than max, throw away the tail
+                    if (list.length > constants.BUFFER_MAX) {
+                        list.splice(constants.BUFFER_MAX);
+                    }
+                    
+                    // Notify depdendencies
+                    unacknowledgedAlarms.list.valueHasMutated();
+                    // Update alarm count
+                    count(count()+1);
+
+                    unacknowledgedAlarms.showList(true);
+                },
+                removingUnackAlarm = function (data) {
+                    // data: {
+                    //      _id: string
+                    //      ackStatus: int 
+                    //      ackUser: string
+                    //      ackTime: int (Unix Epoch)
+                    // }
+                    var count;
+
+                    dti.forEachArray(unacknowledgedAlarms.list(), function iterator (alarm, index) {
+                        if (alarm._id === data._id) {
+                            // Update ack information
+                            alarm.ackStatus(data.ackStatus);
+                            alarm.ackUser(data.ackUser);
+                            alarm.ackTime(data.ackTime);
+                            // Remove the alarm from our list
+                            unacknowledgedAlarms.list.splice(index, 1);
+                            // Stop iterating over the array
+                            return false;
+                        }
+                    });
+
+                    // Update our alarm count
+                    count = unacknowledgedAlarms.count() - 1;
+                    unacknowledgedAlarms.count(count);
+                    
+                    // If we've depleted our buffer below the minimum and we have more unacknowledged alarms on the server
+                    // if ((unacknowledgedAlarms.list().length < constants.BUFFER_MIN) && (count > constants.BUFFER_MIN)) {
+                    //     // Get unacknowledged alarms from server
+                    //     getUnacknowledgedAlarms();
+                    // }
+                    // debug
+                    if (unacknowledgedAlarms.list().length < constants.BUFFER_MIN) {
+                        // Get unacknowledged alarms from server
+                        getUnacknowledgedAlarms();
+                    }
+                },
+                acknowledgeResponse = function (data) {
+                    // data: {
+                    //     reqID: int or string (id used for acknowledge request),
+                    //     result: int (acknowledged count)
+                    // }
+                    var acknowledgeRequests = dti.alarms.acknowledgeRequests,
+                        request = acknowledgeRequests[data.reqID];
+                    
+                    if (request) {
+                        window.clearTimeout(request.timeoutID);
+                        delete acknowledgeRequests[data.reqID];
+                    }
+                    // We will receive a follow-up socket request, 'removingUnackAlarm', which updates
+                    // the alarm list and count.
+                };
+
+            // debug
+            // dti.socket.on('unacknowledged', receiveUnacknowledgedAlarms);
+            // dti.socket.on('newUnackAlarm', newUnackAlarm);
+            // dti.socket.on('removingUnackAlarm', removingUnackAlarm);
+            // dti.socket.on('acknowledgeResponse', acknowledgeResponse);
+            // getUnacknowledgedAlarms();
+
             // dti.on('loaded', function () {
             // });
+
+            // Debug - un-expose these in production
+            dti.alarms.init.receiveUnacknowledgedAlarms = receiveUnacknowledgedAlarms;
+            dti.alarms.init.newUnackAlarm = newUnackAlarm;
+            dti.alarms.init.removingUnackAlarm = removingUnackAlarm;
+        },
+        sendAcknowledge: function (alarmList) {
+            var request = {
+                    reqID: dti.makeId(),
+                    username: dti.bindings.user().username,
+                    ids: [],
+                    timeoutID: null
+                },
+                constants = dti.alarms.constants,
+                acknowledgeTimeout = function () {
+                    dti.forEachArray(alarmList, function (alarm, index) {
+                        alarm.ackStatus(constants.ACK_ERROR);
+                    });
+                };
+
+            dti.forEachArray(alarmList, function (alarm, index) {
+                request.ids.push(alarm._id);
+                alarm.ackStatus(constants.ACK_IN_PROGRESS);
+            });
+
+            request.timeoutID = window.setTimeout(acknowledgeTimeout, constants.TIMEOUT);
+
+            dti.alarms.acknowledgeRequests[request.reqID] = request;
+
+            dti.log('Sending alarm acknowledge:', request.ids);
+
+            // debug
+            // dti.socket.emit('sendAcknowledge', JSON.stringify(request));
+        },
+        acknowledgeRequests: {},
+        constants: {
+            ACK_IN_PROGRESS: 1.5,
+            ACK_ERROR: -1,
+            TIMEOUT: 5000,
+            BUFFER_SIZE: 100,
+            BUFFER_MIN: 50,
+            BUFFER_MAX: 150
         }
     },
     globalSearch: {
@@ -1323,6 +1608,81 @@ var dti = {
         openWindows: {},
         windowGroups: ko.observableArray([]), // Pinned items prepopulate this array
         startMenuItems: ko.observableArray([]),
+        alarms: {
+            unacknowledged: {
+                count: ko.observable(0),
+                list: ko.observableArray([]),
+                showList: ko.observable(false)
+            },
+            recentlyAcknowledged: {
+                count: ko.observable(0),
+                list: ko.observableArray([])
+            },
+            isMuted: ko.observable(false), // TODO Default should be a user/system setting
+            muteTooltip: ko.observable('Mute'),
+            toggleMute: function (bindings, element) {
+                var alarmBindings = dti.bindings.alarms,
+                    isMuted = !alarmBindings.isMuted(),
+                    $el = $(element.currentTarget),
+                    $tooltip = $('#' + $el.attr('data-tooltip-id')),
+                    $tooltipTextContainer =  $tooltip.find('span:first'),
+                    offset = $tooltip.offset(),
+                    originalWidth = $tooltip.width(),
+                    newWidth;
+
+                alarmBindings.isMuted(isMuted);
+
+                // We have to manually update the tooltip text because it isn't updated until after the user
+                // mouses out and then back over the mute control icon. We also update our observable text
+                // so the tooltip will be correct if/when the user does mouseout and back over the icon.
+
+                if (isMuted) {
+                    $tooltipTextContainer.text('Un-mute');
+                    alarmBindings.muteTooltip('Un-mute');
+                } else {
+                    $tooltipTextContainer.text('Mute');
+                    alarmBindings.muteTooltip('Mute');
+                }
+                newWidth = $tooltip.width();
+
+                // Recenter the tooltip
+                offset.left = offset.left + parseInt((originalWidth - newWidth)/2, 10);
+                $tooltip.offset(offset);
+            },
+            slideUp: function (element, index, alarm) {
+                var unacknowledgedAlarms = dti.bindings.alarms.unacknowledged;
+
+                dti.animations.slideUp($(element), function updateAlarmList () {
+
+                    // Remove the alarm from the DOM (it has already been removed from the observable 
+                    // array - see socket handler "removingUnackAlarm" defined in dti.alarms.init)
+                    $(element).remove();
+
+                    if (unacknowledgedAlarms.count() === 0) {
+                        // Short delay before hiding the list (just for UI - otherwise it felt choppy)
+                        window.setTimeout(function () {
+                            // Use the count variable instead of a 0 value in case the count changed while we were away
+                            unacknowledgedAlarms.showList(!!unacknowledgedAlarms.count());
+                        }, 300);
+                    }
+                    
+                    // FUTURE use
+                    // var recentlyAcknowledgedList = dti.bindings.alarms.recentlyAcknowledged.list();
+                    // // Add the removed alarm to our recently acknowledged list
+                    // recentlyAcknowledgedList.unshift(alarm);
+                    // // If our recent list has outgrown itself
+                    // if (recentlyAcknowledgedList.length > dti.alarms.constants.BUFFER_MIN) {
+                    //     // Remove the last entry
+                    //     recentlyAcknowledgedList.pop();
+                    // }
+                    // // Notify depdendencies
+                    // dti.bindings.alarms.recentlyAcknowledged.list.valueHasMutated();
+                });
+            },
+            acknowledgeOne: function (alarm) {
+                dti.alarms.sendAcknowledge([alarm]);
+            }
+        },
         closeWindows: function (group) {
             dti.windows.closeAll(group);
         },
