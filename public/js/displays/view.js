@@ -2,7 +2,7 @@ var displays = window.displays || {};
 
 
 displays = $.extend(displays, {
-    workspaceManager: (window.opener || window.top).workspaceManager,
+    workspaceManager: window.top.workspaceManager,
     resize: false,
     pageX: 0,
     pageY: 0,

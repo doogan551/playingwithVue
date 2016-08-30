@@ -6,7 +6,7 @@ window.newPoint = (function(module, ko, $) {
         $pointTypesListBox,
         $createPointBtn,
         $cancelBtn,
-        workspace = window.opener.workspaceManager,
+        workspace = window.top.workspaceManager,
         config = workspace.config,
         urlParams = $.getAllQueryStrings(),
         sensorTypes = config.Utility.pointTypes.getEnums('Sensor Types', 'Sensor').filter(function(item) {
@@ -135,7 +135,7 @@ window.newPoint = (function(module, ko, $) {
                 params = {},
                 hasValue = 0,
                 msg = '',
-                workspaceManager = window.opener.workspaceManager;
+                workspaceManager = window.top.workspaceManager;
 
             $createPointBtn.attr('disabled', 'disabled');
 
@@ -227,8 +227,8 @@ window.newPoint = (function(module, ko, $) {
                     endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint(params.pointType, data._id);
                     handoffMode = endPoint.edit || endPoint.review;
                     workspaceManager.openWindowPositioned(handoffMode.url, data.Name, params.pointType, handoffMode.target, data._id, {
-                        width: 750,
-                        height: screen.availHeight - 100,
+                        width: 1250,
+                        height: 750,
                         callback: function() {
                             if (window) {
                                 window.close();
@@ -252,7 +252,7 @@ window.newPoint = (function(module, ko, $) {
 
         $splitter = $('#splitter');
 
-        if (!window.opener) {
+        if (!window.top) {
             $splitter.hide();
             alert('The Infoscan Point Navigator cannot be opened directly. You will now be redirected to the workspace.');
             window.location.replace('/');
@@ -302,7 +302,7 @@ window.newPoint = (function(module, ko, $) {
                 messageTop = offset.top + height + 3,
                 messageLeft = offset.left,
                 messageWidth = $element.outerWidth(),
-                config = window.opener.workspaceManager.config,
+                config = window.top.workspaceManager.config,
                 timer;
             $element
                 .on("keypress", function (event) {

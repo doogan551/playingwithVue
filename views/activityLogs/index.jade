@@ -20,8 +20,8 @@ html
             // FILTERS
             #filters
                 // User FILTERS
-                .filterContainer(id="userFilters", data-bind="visible: true", title="Filter by user name")
-                    .filterIcon.fa.fa-user.fa.dropdown-toggle(data-bind="css: { 'dropdown-toggle-filter-set' : usersFilterIsSet(), 'dropdown-toggle' : !usersFilterIsSet() }")
+                .filterContainer.userFilterDropdown(id="userFilters", data-bind="visible: true", title="Filter by user name")
+                    .filterIcon.fa.fa-user.fa.dropdown-toggle(data-bind="css: { 'dropdown-toggle-filter-set' : usersFilterIsSet(), 'dropdown-toggle' : !usersFilterIsSet() }", data-toggle="dropdown")
                         i.fa.fa-sort-down
                     .dropdown-menu
                         .title
@@ -29,28 +29,28 @@ html
                                 i.fa.fa-2x.fa-times.closeIt(data-bind="click: cancelUserNameFilter")
                             div
                             br(clear="all")
-                        .usernamesFilter.thinScroll(style="height:600px;overflow-y:auto;")
-                            .header
-                                .colSelect
-                                    input(type="checkbox" data-bind="checkedValue: $data, checked: checkAllNames")
-                                .colPhoto
-                                    | Photo
-                                .colUserName
-                                    | User
+                        .header(style="display: inline-block;")
+                            .colSelect
+                                input(type="checkbox" data-bind="checkedValue: $data, checked: checkAllNames")
+                            .colPhoto
+                                | Photo
+                            .colUserName
+                                | User
+                        .usernamesFilter.thinScroll(style="height:450px;overflow-y:auto;")
                             table
-                                tbody(data-bind="foreach: users()")
+                                tbody(data-bind="foreach: filteredUsers()")
                                     tr(data-bind="click: $root.selectRow, css: { selectedRow: $data.isSelected  }")
                                         td.colSelect
-                                            input(type="checkbox", data-bind="checked: $data.isSelected")
+                                            input(type="checkbox", data-bind="click: function () { return $root.userFilterClick($element, $index()) }, checked: $data.isSelected")
                                         td.colPhoto
                                             //span.selectable(data-bind="text: Photo.Value")
                                             img(data-bind='attr: { src: "/img/users/" + (Photo.Value.length > 0 ? Photo.Value : "userLarge.png")}', style='width: 24px;margin-right: 8px;float: left;position: relative;top: -6px;')
                                         td.colUserName
                                             span.selectable(data-bind="text: username")
                             br(clear="all")
-                            .okCancel.text-center
-                                button.btn.btn-success.closeIt(data-bind="click: applyUserNameFilter") OK
-                                a.cancel.cursorPointer.closeIt(data-bind="click: clearUsernameFilter") Clear Filter
+                        .okCancel.text-center.userNameFilterFooter
+                            button.btn.btn-success.closeIt(data-bind="click: applyUserNameFilter, css: { disabled : !dirtyUsernameFilter() }") OK
+                            a.cancel.cursorPointer.closeIt(data-bind="click: clearUsernameFilter") Clear Filter
                  // NAME SEGMENT FILTERS
                 .filterContainer(id="nameFilters", title="Filter by point name and/or point type" )
                     .filterIcon.fa.fa-font.fa.dropdown-toggle(data-bind="css: { 'dropdown-toggle-filter-set' : pointTypeNameFilterIsSet(), 'dropdown-toggle' : !pointTypeNameFilterIsSet() }", data-toggle="modal", data-target="#pointFilterModal")
@@ -153,7 +153,7 @@ html
                 .text-center
                     button.btn.btn-success.closeIt(data-bind="click: applyPointNameFilter") OK
         script(type='text/javascript', src='/js/lib/jquery.min.js')
-        script(type='text/javascript', src='/js/lib/knockout-3.1.0.js')
+        script(type='text/javascript', src='/js/lib/knockout-3.4.0.js')
         script(type='text/javascript', src='/js/lib/bootstrap3.min.js')
         script(type='text/javascript', src="/js/lib/socket.io.js")
         script(type='text/javascript', src='/js/lib/store.min.js')

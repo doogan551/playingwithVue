@@ -770,7 +770,7 @@ var dorsett = (function() {
         viewPointAccess: function(type) {
             var groupid = dorsett.editData._id,
                 groupname = dorsett.editData['User Group Name'](),
-                workspaceManager = (window.opener || window.top).workspaceManager,
+                workspaceManager = window.top.workspaceManager,
                 pointWindow;
 
             pointWindow = workspaceManager.openWindowPositioned([_pointSelector, '/security/', groupid].join(''), 'Group Permissions', 'groupPermissions', 'groupPermissions', 'groupPermissions', {

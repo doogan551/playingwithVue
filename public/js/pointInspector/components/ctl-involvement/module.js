@@ -120,7 +120,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         initDOM();
     };
     ViewModel.prototype.openPointReview = function(data, e) {
-        var workspace = (window.opener || window.top).workspaceManager,
+        var workspace = window.top.workspaceManager,
             endPoint, win, width, height, pointType,
             $e = $(e.currentTarget),
             col = $e.data('col');
@@ -128,12 +128,12 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         if(!!col){
             pointType = col;
             data = data.Device;
-            width = 820;
-            height = 542;
+            width = 1250;
+            height = 750;
         } else if(data['Point Type'] !== 'Schedule Entry' && data['Point Type'] !== 'Schedule'){
             pointType = data['Point Type'];
-            width = 820;
-            height = 542;
+            width = 1250;
+            height = 750;
         }else{
             pointType = 'Schedule';
             width = 1250;

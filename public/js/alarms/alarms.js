@@ -1542,8 +1542,8 @@ var AlarmManager = function (conf) {
                 pointType = pointTypesUtility.getPointTypeNameFromEnum(data.PointType),
                 endPoint = pointTypesUtility.getUIEndpoint(pointType, data.upi),
                 options = {
-                    width: 850,
-                    height: 600
+                    width: 1250,
+                    height: 750
                 };
             openWindow(endPoint.review.url, data.Name, pointType, endPoint.review.target, data.upi, options);
         },
@@ -2009,8 +2009,8 @@ var AlarmManager = function (conf) {
     self.togglePop = function () {
         var title = self.alarms().name + ' Alarms',
             options = {
-                width: 1024,
-                heigth: 768
+                width: 1250,
+                    height: 750
             };
 
         // If we're a pop-out; pop back in
@@ -2135,8 +2135,8 @@ var AlarmManager = function (conf) {
         var endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint("Display", data._id),
             name = data.Name || '',
             options = {
-                width: 850,
-                height: 600
+                width: 1250,
+                    height: 750
             };
         openWindow(endPoint.review.url, name, 'Display', '', data._id, options);
 
@@ -3145,7 +3145,7 @@ function initPage (manager) {
 function applyBindings () {
     // If we're an iFrame, the workspace attaches an 'opener' handler (IE fix). AlarmManager requires this opener method to be established
     // before it is instantiated. The workspace can't attach it until the iFrame is fully rendered, so we must wait if it doesn't exist yet
-    if (window.opener === undefined) {
+    if (window.top === undefined) {
         window.setTimeout(applyBindings, 2);
     } else {
         window.manager = new AlarmManager({});

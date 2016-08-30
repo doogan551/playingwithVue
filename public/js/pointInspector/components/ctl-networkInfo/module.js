@@ -92,7 +92,7 @@ define(['knockout', 'bootstrap-3.3.4', 'text!./view.html'], function(ko, bootstr
         self.openPointRef = function(property) {
             var address = this[property].pointRef.Address();
             if (address !== '') {
-                var workspace = (window.opener || window.top).workspaceManager;
+                var workspace = window.top.workspaceManager;
                 var win = workspace.openWindowPositioned(address, this[property].pointRef.Value(), this[property].pointRef.PointType(), '', this[property].pointRef.upi(), {
                     width: 1250,
                     height: 750

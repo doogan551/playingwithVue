@@ -1015,9 +1015,14 @@ Opera */
 
 .reportsContent .title {
     font-weight: bold;
-    margin-bottom: 15px;
     font-size: 1.4em;
+    margin-bottom: 15px;
     color: #333333;
+}
+
+.reportsContent .reportsDays {
+    font-weight: bold;
+    margin-bottom: 20px;
 }
 
 .reportsContent .sectionTitle {
@@ -1288,6 +1293,9 @@ Opera */
     }
     .billingBar {
         display: none;
+    }
+    .yearBillTable .max {
+        color: red !important;
     }
 }
 /* End Electricity Billing ----------------------- */

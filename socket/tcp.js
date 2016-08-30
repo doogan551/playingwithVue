@@ -19,7 +19,7 @@ module.exports = function(_common) {
         socket.setEncoding('utf8');
 
         socket.on('data', function(buf) {
-            // logger.info(buf);
+            logger.info(buf);
             var jbuf = JSON.parse(buf);
 
             if (jbuf.msg == 'newtod') {
@@ -37,7 +37,6 @@ module.exports = function(_common) {
                 });
             } else if (jbuf.msg === 'serverup' || jbuf.msg === 'serverdown') {
                 io.sockets.emit('statusUpdate', jbuf.msg);
-                _common.systemStatus = jbuf.msg;
             }
         });
         socket.on('close', function(data) {

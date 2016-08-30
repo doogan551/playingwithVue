@@ -377,7 +377,6 @@ module.exports = Rpt = {
                     },
                     timestamps: timestamps
                 }, function(err, results) {
-                    console.log(results, histPoints);
                     for (var h = 0; h < histPoints.length; h++) {
                         var hadTS = false;
                         for (var r = 0; r < results.length; r++) {
@@ -392,7 +391,6 @@ module.exports = Rpt = {
                         }
                     }
                     histPoints = results;
-                    console.log(histPoints);
                     async.eachSeries(timestamps.reverse(), function(ts, callback1) {
                             //convert id to ts and upi
                             returnObj = {
@@ -638,7 +636,7 @@ module.exports = Rpt = {
                 } else {
                     return cb(null, {
                         id: data.id,
-                        isOld: result["Report Config"] !== undefined,
+                        scheduled: data.scheduled,
                         point: JSON.stringify(result),
                         title: result.Name
                     }, result);
@@ -693,7 +691,6 @@ module.exports = Rpt = {
                 }
             }
             fields["Point Type.Value"] = 1;
-            fields["Point Instance.Value"] = 1;
         }
 
         if (selectedPointTypes && selectedPointTypes.length > 0) {

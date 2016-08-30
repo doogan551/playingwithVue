@@ -734,7 +734,7 @@ displays = $.extend(displays, {
     onRenderFn: function() {
         return;
     },
-    workspaceManager: (window.opener || window.top).workspaceManager,
+    workspaceManager: window.top.workspaceManager,
 
     initDisplay: function() {
         displayJson.Width = displayJson.Width || 800;

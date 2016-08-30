@@ -9,7 +9,7 @@ var thumbnailGenerator = (function ($) {
         _fetcher;
 
     //set dummy workspaceManager obj
-    window.workspaceManager = (window.opener && window.opener.workspaceManager) || {
+    window.workspaceManager = (window.top && window.top.workspaceManager) || {
         openWindow: function() {},
         openWindowPositioned: function() {}
     };

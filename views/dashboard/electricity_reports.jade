@@ -68,6 +68,7 @@
         .reportsChartsContent
             img.busySpinner(src='/css/lib/jqwidgets/images/loader.gif')
             .title(data-bind="text: selectedMonthYear().period + 'ly Electrical Metering Report - ' + selectedMonthYear().fullDate")
+            //.reportsDays(data-bind="text: 'Days in ' + selectedMonthYear().period + ': ' + moment().daysInMonth()")
 
             // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
             .section.highestOnPeakDemand
@@ -104,7 +105,7 @@
                 .sectionTitle Statistics
                 .sectionBody
                     .entry.bm15px #[span(data-bind="text: displayPercentageOfValidData")]% of possible data was collected to create this report.
-                    // ko if: percentageOfMissingData() > 0.0
+                    // ko if: percentageOfMissingData() > 0.0 && percentageOfMissingData() < 100
                     .entry.bm15px Meters with data missing and % missing:
                     table.table.table-striped
                         thead
@@ -168,12 +169,17 @@
                                 tr
                                     td.bold(colspan="4") Off Peak
                                 tr
-                                    td(data-bind="text: moment(duOffPeakMW().timeStamp).format('HH:00 MM/DD/YY')")
+                                    td(data-bind="text: moment(duOffPeakMW().timeStamp).format('HH:mm MM/DD/YY')")
                                     td(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
                                     td(data-bind="text: tou.numberWithCommas(duOffPeakMVAR().value)")
                                     td
                                 tr
-                                    td(data-bind="text: moment(duOffPeakMWH().timeStamp).format('HH:00 MM/DD/YY')")
+                                    // ko if: (moment().isAfter(moment(duOffPeakMWH().timeStamp).endOf('month')))
+                                    td(data-bind="text: moment(duOffPeakMWH().timeStamp).endOf('month').format('00:00 MM/DD/YY')")
+                                    // /ko
+                                    // ko if: (moment().isBefore(moment(duOffPeakMWH().timeStamp).endOf('month')))
+                                    td(data-bind="text: moment().format('00:00 MM/DD/YY')")
+                                    // /ko
                                     td
                                     td
                                     td(data-bind="text: tou.numberWithCommas(sumOfOffPeakConsumption())")
@@ -182,12 +188,17 @@
                                 tr
                                     td.bold(colspan="4", data-bind="text: (selectedMonthYear().period === 'Year' ? 'On ' : selectedMonthYear().season) + ' Peak'")
                                 tr
-                                    td(data-bind="text: moment(duOnPeakMW().timeStamp).format('HH:00 MM/DD/YY')")
+                                    td(data-bind="text: moment(duOnPeakMW().timeStamp).format('HH:mm MM/DD/YY')")
                                     td(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
                                     td(data-bind="text: tou.numberWithCommas(duOnPeakMVAR().value)")
                                     td
                                 tr
-                                    td(data-bind="text: moment(duOnPeakMWH().timeStamp).format('HH:00 MM/DD/YY')")
+                                    // ko if: (moment().isAfter(moment(duOnPeakMWH().timeStamp).endOf('month')))
+                                    td(data-bind="text: moment(duOnPeakMWH().timeStamp).endOf('month').format('00:00 MM/DD/YY')")
+                                    // /ko
+                                    // ko if: (moment().isBefore(moment(duOnPeakMWH().timeStamp).endOf('month')))
+                                    td(data-bind="text: moment().format('00:00 MM/DD/YY')")
+                                    // /ko
                                     td
                                     td
                                     td(data-bind="text: tou.numberWithCommas(sumOfOnPeakConsumption())")
@@ -234,12 +245,13 @@
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     th(data-bind="text: (selectedMonthYear().season ? selectedMonthYear().season : '') + ' Peak Demand (kW)'")
-                                    th Occurrent
+                                    th Occurrent Time
+
                                     th(data-bind="text: 'Coinciding ' + (selectedMonthYear().season ? selectedMonthYear().season : '') + ' Reactive (kVAR)'")
                                     // /ko
-
                                     th Off Peak Demand (kW)
-                                    th Occurrent
+                                    th Occurrent Time
+
                                     th Coinciding Off Peak Reactive (kVAR)
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
@@ -249,7 +261,12 @@
                                     th Off Peak Usage (kWh)
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
+                                    // ko if: (selectedMonthYear().childPeriod === "Day")
                                     th Total Daily Usage (kWh)
+                                    // /ko
+                                    // ko if: (selectedMonthYear().childPeriod !== "Day")
+                                    th Total Monthy Usage (kWh)
+                                    // /ko
                                     // /ko
                             tbody(data-bind="foreach: koGridReportCollection()")
                                 tr
@@ -263,7 +280,7 @@
                                     // ko if: ($parent.selectedMonthYear().season !== 'Transition' || !!$parent.rateTablePeriod().enablePeakSelection)
                                     td.gridonpeakdemand
                                         .itemValue(data-bind="text: tou.numberWithCommas(OnPeakDemand.value)")
-                                    td.occurent
+                                    td.occurrent.onpeakdemand
                                         // ko if: OnPeakDemand.value !== 0 && OnPeakDemand.timeStamp > 0
                                         span.itemTimeStamp(data-bind="text: moment(OnPeakDemand.timeStamp).format('HH:mm')")
                                         // /ko
@@ -273,7 +290,7 @@
 
                                     td.gridoffpeakdemand
                                         .itemValue(data-bind="text: tou.numberWithCommas(OffPeakDemand.value)")
-                                    td.occurent
+                                    td.occurrent.offpeakdemand
                                         // ko if: OffPeakDemand.value !== 0 && OffPeakDemand.timeStamp > 0
                                         span.itemTimeStamp(data-bind="text: moment(OffPeakDemand.timeStamp).format('HH:mm')")
                                         // /ko
@@ -298,17 +315,17 @@
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     td
-                                        .itemValue(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMW().value)")
                                     td
                                     td
-                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMVAR().value)")
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOnPeakMaxMVAR().value)")
                                     // /ko
 
                                     td
-                                        .itemValue(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMW().value)")
                                     td
                                     td
-                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMVAR().value)")
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(duOffPeakMaxMVAR().value)")
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     td
@@ -320,7 +337,7 @@
 
                                     // ko if: (selectedMonthYear().season !== 'Transition' || !!rateTablePeriod().enablePeakSelection)
                                     td
-                                        .itemValue(data-bind="text: tou.numberWithCommas(maxPeriodUsage().value)")
+                                        .itemValue.max(data-bind="text: tou.numberWithCommas(maxPeriodUsage().value)")
                                     // /ko
                                 tr
                                     td.bold Totals

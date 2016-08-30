@@ -22,17 +22,17 @@ function newHistory() {
   var end = moment.unix(start).add(1, 'month').unix();
 
   var options = [{
-    "touid": "tou_14",
+    "touid": "tou_64",
     "utilityName": "Electricity",
     "range": {
-      "start": start,
-      "end": end
+      "start": 1443675600,
+      "end": 1446354000
     },
-    "fiscalYear": 2015,
-    "type": "demand",
     "scale": "month",
-    "fx": "max",
-    "upis": upis.demand
+    "fx": "tempRange",
+    "upis": [
+      65696
+    ]
   }];
 
   // options  = [{"range":{"start":1417410000,"end":1420088400},"scale":"half-hour","fx":"missingData","upis":[919009,918929,918978]}];
@@ -48,7 +48,8 @@ function newHistory() {
         console.log('doXne with csv', err);
       });*/
       result = history.unbuildOps(result);
-      console.log(JSON.stringify(result));
+      // console.log(JSON.stringify(result));
+      console.log(result[0].results.tempRanges);
       /*var peakSum = 0;
       var totalSum = 0;
       for (var r = 0; r < result.length; r++) {
@@ -527,8 +528,204 @@ function createMathBlocks() {
 }
 // createMathBlocks();
 
-function test() {
-  var pjson = require('../package.json');
-  console.log(pjson.version);
+function renamePoints() {
+  var socketCommon = require('../socket/common').common;
+  db.connect(connectionString.join(''), function(err) {
+    var name1 = 'YDK Booster Sta';
+    var newName1 = 'YNC Booster Sta';
+    Utility.get({
+      collection: 'points',
+      query: {
+        name1: name1
+      }
+    }, function(err, points) {
+      async.eachSeries(points, function(point, cb) {
+        var oldPoint = _.cloneDeep(point);
+        point.name1 = newName1;
+        point = Config.Update.formatPoint({
+          point: point,
+          oldPoint: oldPoint,
+          property: 'name1'
+        });
+        socketCommon.newUpdate(oldPoint, point, {
+          method: "update",
+          from: "ui"
+        }, {
+          username: 'SYSTEM'
+        }, function(response, point) {
+          console.log(response);
+          cb();
+        });
+      }, function(err) {
+        console.log(err, 'done');
+      });
+    });
+  });
 }
-test();
+// renamePoints();
+
+
+/*"DemandInUpi" : NumberInt(643428),
+"DemandOutUpi" : NumberInt(643430),
+"UsageInUpi" : NumberInt(643432),
+"UsageOutUpi" : NumberInt(729442),
+"KVARInUpi" : NumberInt(643434),
+"KVAROutUpi" : NumberInt(643436)*/
+function test() {
+  process.setMaxListeners(0);
+  var objs = {
+    DemandInUpi: {
+      name3: 'W3P SUM',
+      newProp: 'DemandSumUpi'
+    },
+    UsageInUpi: {
+      name3: 'WH3P SUM',
+      newProp: 'UsageSumUpi'
+    },
+    KVARInUpi: {
+      name3: 'MVR3 SUM',
+      newProp: 'KVARSumUpi'
+    }
+  };
+
+  var splitName = function(meter) {
+    return meter.Name.split('_');
+  }
+  db.connect(connectionString.join(''), function(err) {
+    Utility.iterateCursor({
+      collection: 'PowerMeters',
+      query: {}
+    }, function(err, meter, cb) {
+      var names = {
+        name1: splitName(meter)[0],
+        name2: splitName(meter)[1],
+        name4: splitName(meter)[3]
+      };
+      async.waterfall([function(callback) {
+        Utility.getOne({
+          collection: 'points',
+          query: {
+            name1: names.name1,
+            name2: names.name2,
+            name4: names.name4,
+            name3: objs.DemandInUpi.name3
+          }
+        }, function(err, point) {
+          var updateObj = {
+            $set: {}
+          };
+          updateObj.$set[objs.DemandInUpi.newProp] = point._id;
+          Utility.update({
+            collection: 'PowerMeters',
+            query: {
+              _id: meter._id
+            },
+            updateObj: updateObj
+          }, function(err, result) {
+            callback();
+          });
+        });
+      }, function(callback) {
+        Utility.getOne({
+          collection: 'points',
+          query: {
+            name1: names.name1,
+            name2: names.name2,
+            name4: names.name4,
+            name3: objs.UsageInUpi.name3
+          }
+        }, function(err, point) {
+          var updateObj = {
+            $set: {}
+          };
+          updateObj.$set[objs.UsageInUpi.newProp] = point._id;
+          Utility.update({
+            collection: 'PowerMeters',
+            query: {
+              _id: meter._id
+            },
+            updateObj: updateObj
+          }, function(err, result) {
+            callback();
+          });
+        });
+      }, function(callback) {
+        Utility.getOne({
+          collection: 'points',
+          query: {
+            name1: names.name1,
+            name2: names.name2,
+            name4: names.name4,
+            name3: objs.KVARInUpi.name3
+          }
+        }, function(err, point) {
+          var updateObj = {
+            $set: {}
+          };
+          updateObj.$set[objs.KVARInUpi.newProp] = point._id;
+          Utility.update({
+            collection: 'PowerMeters',
+            query: {
+              _id: meter._id
+            },
+            updateObj: updateObj
+          }, function(err, result) {
+            callback();
+          });
+        });
+      }], cb)
+
+
+    }, function(err, count) {
+      console.log(err, count);
+    });
+  });
+}
+// test();
+
+function rearrangeProperties() {
+  var test = { "_id" : 20874, "Name" : "4201_FID01", "name1" : "4201", "name2" : "FID01", "name3" : "", "name4" : "", "Security" : [  ], "_pStatus" : 0, "_cfgRequired" : true, "_cfgDevice" : false, "_forceAllCOV" : false, "_relDevice" : 0, "_relRMU" : 0, "_relPoint" : 0, "_updPoint" : false, "_updTOD" : false, "_pollTime" : 0, "_devModel" : 2, "_rmuModel" : 0, "_parentUpi" : 0, "_actvAlmId" : { "$oid" : "000000000000000000000000" }, "Alarm Messages" : [ { "msgType" : 17, "msgId" : { "$oid" : "574463492f1ead8b514070e1" }, "ack" : false, "notify" : false }, { "msgType" : 7, "msgId" : { "$oid" : "574463492f1ead8b514070d6" }, "ack" : false, "notify" : false }, { "msgType" : 8, "msgId" : { "$oid" : "574463492f1ead8b514070d7" }, "ack" : false, "notify" : false }, { "msgType" : 6, "msgId" : { "$oid" : "574463492f1ead8b514070d5" }, "ack" : false, "notify" : false }, { "msgType" : 9, "msgId" : { "$oid" : "574463492f1ead8b514070d8" }, "ack" : false, "notify" : false }, { "msgType" : 10, "msgId" : { "$oid" : "574463492f1ead8b514070d9" }, "ack" : false, "notify" : false }, { "msgType" : 11, "msgId" : { "$oid" : "574463492f1ead8b514070da" }, "ack" : false, "notify" : false }, { "msgType" : 12, "msgId" : { "$oid" : "574463492f1ead8b514070db" }, "ack" : false, "notify" : false }, { "msgType" : 45, "msgId" : { "$oid" : "574463492f1ead8b514070f4" }, "ack" : false, "notify" : false } ], "APDU Retries" : { "ValueType" : 4, "Value" : 2, "isDisplayable" : true, "isReadOnly" : false }, "APDU Timeout" : { "ValueType" : 4, "Value" : 25, "isDisplayable" : true, "isReadOnly" : false }, "Configure Device" : { "ValueType" : 7, "Value" : false, "isDisplayable" : true, "isReadOnly" : false }, "COV Period" : { "ValueType" : 13, "Value" : 10, "isDisplayable" : true, "isReadOnly" : false }, "Device Status" : { "ValueType" : 5, "Value" : "Stop Scan", "eValue" : 66, "isDisplayable" : true, "isReadOnly" : true }, "Alarm Value" : { "ValueType" : 5, "Value" : "Failed", "eValue" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Downlink Network" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Firmware Version" : { "ValueType" : 2, "Value" : "V3.20", "isDisplayable" : true, "isReadOnly" : true }, "Last Report Time" : { "ValueType" : 11, "Value" : 1463589898, "isDisplayable" : true, "isReadOnly" : true }, "Model Type" : { "ValueType" : 5, "Value" : "Field Interface Device", "eValue" : 2, "isDisplayable" : true, "isReadOnly" : false }, "Startup Delay" : { "ValueType" : 13, "Value" : 120, "isDisplayable" : true, "isReadOnly" : false }, "Time Zone" : { "ValueType" : 5, "Value" : "Central Time Zone", "eValue" : 6, "isDisplayable" : true, "isReadOnly" : false }, "Stop Scan" : { "ValueType" : 7, "Value" : true, "isDisplayable" : true, "isReadOnly" : false }, "Active Text" : { "ValueType" : 2, "Value" : "Normal", "isDisplayable" : true, "isReadOnly" : false }, "Alarm Class" : { "ValueType" : 5, "Value" : "Critical", "eValue" : 1, "isDisplayable" : true, "isReadOnly" : false }, "Alarm Delay Time" : { "ValueType" : 13, "Value" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Alarm Display Point" : { "ValueType" : 8, "Value" : 0, "isDisplayable" : true, "isReadOnly" : false, "PointName" : "", "PointType" : 0, "DevInst" : 0, "PointInst" : 0 }, "Alarm Repeat Enable" : { "ValueType" : 7, "Value" : false, "isDisplayable" : true, "isReadOnly" : false }, "Alarm Repeat Time" : { "ValueType" : 17, "Value" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Alarms Off" : { "ValueType" : 7, "Value" : false, "isDisplayable" : true, "isReadOnly" : false }, "Alarm State" : { "ValueType" : 5, "Value" : "Normal", "eValue" : 0, "isDisplayable" : true, "isReadOnly" : true }, "Inactive Text" : { "ValueType" : 2, "Value" : "Failed", "isDisplayable" : true, "isReadOnly" : false }, "Value" : { "ValueType" : 5, "Value" : "Failed", "eValue" : 0, "ValueOptions" : { "Failed" : 0, "Normal" : 1 }, "isDisplayable" : true, "isReadOnly" : true }, "Quality Code Enable" : { "ValueType" : 18, "Value" : 255, "isDisplayable" : true, "isReadOnly" : false }, "Reliability" : { "ValueType" : 5, "Value" : "No Fault", "eValue" : 0, "isDisplayable" : true, "isReadOnly" : true }, "Trend Interval" : { "ValueType" : 13, "Value" : 60, "isDisplayable" : true, "isReadOnly" : false }, "Remarks" : { "ValueType" : 2, "Value" : "", "isDisplayable" : true, "isReadOnly" : false }, "Description" : { "ValueType" : 2, "Value" : "", "isDisplayable" : true, "isReadOnly" : false }, "Point Type" : { "ValueType" : 5, "Value" : "Device", "eValue" : 8, "isDisplayable" : true, "isReadOnly" : true }, "taglist" : [ "4201", "FID01", "Device" ], "Ethernet Address" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Ethernet IP Port" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Ethernet Network" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Downlink IP Port" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Downlink Broadcast Delay" : { "ValueType" : 4, "Value" : 64, "isDisplayable" : true, "isReadOnly" : false }, "Ethernet Protocol" : { "ValueType" : 5, "Value" : "None", "eValue" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Uplink Port" : { "ValueType" : 5, "Value" : "Port 1", "eValue" : 1, "ValueOptions" : { "Port 1" : 1, "Port 2" : 2 }, "isDisplayable" : true, "isReadOnly" : false }, "Port 1 Address" : { "ValueType" : 4, "Value" : 12, "isDisplayable" : true, "isReadOnly" : false }, "Port 1 Maximum Address" : { "ValueType" : 4, "Value" : 15, "Max" : 127, "Min" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Port 1 Network" : { "ValueType" : 4, "Value" : 15, "isDisplayable" : true, "isReadOnly" : false }, "Port 1 Protocol" : { "ValueType" : 5, "Value" : "MS/TP", "eValue" : 1, "isDisplayable" : true, "isReadOnly" : false }, "Port 2 Address" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 2 Maximum Address" : { "ValueType" : 4, "Value" : 0, "Max" : 127, "Min" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 2 Network" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 2 Protocol" : { "ValueType" : 5, "Value" : "MS/TP", "eValue" : 1, "isDisplayable" : false, "isReadOnly" : false }, "Port 3 Address" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 3 Maximum Address" : { "ValueType" : 4, "Value" : 0, "Max" : 127, "Min" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 3 Network" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 3 Protocol" : { "ValueType" : 5, "Value" : "MS/TP", "eValue" : 1, "isDisplayable" : false, "isReadOnly" : false }, "Port 4 Address" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 4 Maximum Address" : { "ValueType" : 4, "Value" : 0, "Max" : 127, "Min" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 4 Network" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 4 Protocol" : { "ValueType" : 5, "Value" : "MS/TP", "eValue" : 1, "isDisplayable" : false, "isReadOnly" : false } };
+  var compare = function(a, b) {
+    var _a = a.toLowerCase();
+    var _b = b.toLowerCase();
+    if(['name','name1'].indexOf(_a) >= 0){
+      console.log(typeof test[a], a);
+    }
+    if (_a === '_id') {
+      return -1;
+    } else if (_b === '_id') {
+      return 1;
+    }
+    if(_a.match(/^name|^_/) && _b.match(/^name|^_/)){
+      if (_a > _b) {
+        return -1;
+      } else if (a < _b) {
+        return 1;
+      }
+    } else if(!_a.match(/^name|^_/) && !_b.match(/^name|^_/)) {
+      if (_a > _b) {
+        return 1;
+      } else if (a < _b) {
+        return -1;
+      }
+    } else if(_a.match(/^name|^_/)){
+      return -1;
+    }else if(_b.match(/^name|^_/)){
+      return 1;
+    }
+    return 0;
+  }
+  var arr = [];
+  var o = {};
+  for (var prop in test) {
+    arr.push(prop);
+  }
+  arr.sort(compare);
+  // console.log(arr);
+  for (var i = 0; i < arr.length; i++) {
+    o[arr[i]] = test[arr[i]];
+  }
+  test = o;
+  console.log(test);
+}
+rearrangeProperties();

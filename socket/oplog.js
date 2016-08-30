@@ -4,6 +4,7 @@ var ObjectID = require('mongodb').ObjectID;
 var _ = require('lodash');
 var moment = require('moment');
 var notifications = require('../models/notifications');
+var config = require('config');
 
 // OTHERS
 var NotifierUtility = require('../models/notifierutility');
@@ -11,6 +12,7 @@ var notifierUtility = new NotifierUtility();
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
+var dbName = config.get('Infoscan.dbConfig').dbName;
 var openAlarms = [];
 var openDisplays = [];
 var io;
@@ -26,7 +28,7 @@ module.exports = function(_common) {
     oplog.on('insert', function(doc) {
 
         var startDate, endDate;
-        if (doc.ns === 'infoscan.Alarms' || doc.ns === 'infoscan.ActiveAlarms') {
+        if (doc.ns === dbName+'.Alarms' || doc.ns === dbName+'.ActiveAlarms') {
             var userHasAccess = false;
 
             // recent and unack
@@ -63,7 +65,7 @@ module.exports = function(_common) {
                     }
 
                     // unack
-                    if (doc.o.ackStatus === 1 && openAlarms[k].alarmView === "Unacknowledged" && doc.ns === 'infoscan.Alarms' && doc.o.msgCat !== Config.Enums['Alarm Categories'].Return.enum) {
+                    if (doc.o.ackStatus === 1 && openAlarms[k].alarmView === "Unacknowledged" && doc.ns === dbName+'.Alarms' && doc.o.msgCat !== Config.Enums['Alarm Categories'].Return.enum) {
                         io.sockets.connected[openAlarms[k].sockId].emit('newUnackAlarm', {
                             newAlarm: doc.o,
                             reqID: openAlarms[k].data.reqID
@@ -73,7 +75,7 @@ module.exports = function(_common) {
                     //recent
                     startDate = (typeof parseInt(openAlarms[k].data.startDate, 10) === "number") ? openAlarms[k].data.startDate : 0;
                     endDate = (parseInt(openAlarms[k].data.endDate, 10) === 0) ? Math.ceil(new Date().getTime() / 1000) + 10000 : openAlarms[k].data.endDate;
-                    if (openAlarms[k].alarmView === "Recent" && doc.ns === 'infoscan.Alarms' && doc.o.msgTime >= startDate && doc.o.msgTime <= endDate) {
+                    if (openAlarms[k].alarmView === "Recent" && doc.ns === dbName+'.Alarms' && doc.o.msgTime >= startDate && doc.o.msgTime <= endDate) {
                         io.sockets.connected[openAlarms[k].sockId].emit('newRecentAlarm', {
                             newAlarm: doc.o,
                             reqID: openAlarms[k].data.reqID
@@ -81,7 +83,7 @@ module.exports = function(_common) {
                     }
 
                     // active
-                    if (openAlarms[k].alarmView === "Active" && doc.ns === 'infoscan.ActiveAlarms') {
+                    if (openAlarms[k].alarmView === "Active" && doc.ns === dbName+'.ActiveAlarms') {
 
                         io.sockets.connected[openAlarms[k].sockId].emit('addingActiveAlarm', {
                             newAlarm: doc.o,
@@ -91,15 +93,15 @@ module.exports = function(_common) {
                 }
             }
 
-            if (doc.ns === 'infoscan.Alarms') {
+            if (doc.ns === dbName+'.Alarms') {
                 common.acknowledgePointAlarms(doc.o);
                 notifications.processIncomingAlarm(doc.o);
             }
 
-        } else if (doc.ns === 'infoscan.historydata') {
+        } else if (doc.ns === dbName+'.historydata') {
             // module.exports.updateDashboard(doc.o);
         }
-        /* else if (doc.ns === 'infoscan.ActiveAlarms') {
+        /* else if (doc.ns === dbName+'.ActiveAlarms') {
                     var alarm = doc.o;
                     for (var m = 0; m < openAlarms.length; m++) {
                         if (openAlarms[m].alarmView === "Active" && ((openAlarms[m].pointTypes !== undefined) ? openAlarms[m].pointTypes.indexOf(alarm.PointType) > -1 : true) && checkUserAccess(openAlarms[m].data.user, alarm.Security)) {
@@ -260,7 +262,7 @@ module.exports = function(_common) {
                     });
                 }
             }
-        } else if (doc.ns === 'infoscan.historydata') {
+        } else if (doc.ns === dbName+'.historydata') {
             Utility.getOne({
                 collection: 'historydata',
                 query: {
@@ -306,7 +308,7 @@ module.exports = function(_common) {
     });
 
     oplog.on('delete', function(doc) {
-        if (doc.ns === 'infoscan.ActiveAlarms') {
+        if (doc.ns === dbName+'.ActiveAlarms') {
             for (var n = 0; n < openAlarms.length; n++) {
                 if (openAlarms[n].alarmView === "Active") {
                     io.sockets.connected[openAlarms[n].sockId].emit('removingActiveAlarm', {

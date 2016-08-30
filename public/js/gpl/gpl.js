@@ -427,6 +427,9 @@ var gpl = {
             gpl.socketWaitFn = null;
         }
     },
+    hideMessage: function () {
+        gpl.$messageModal.modal('hide');
+    },
     on: function (event, handler) {
         gpl.eventHandlers[event] = gpl.eventHandlers[event] || [];
         gpl.eventHandlers[event].push(handler);
@@ -2574,19 +2577,23 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
             c,
             len;
 
-        this.value = val;
-        this.valueText.setText(gpl.formatValue(this, val));
+        if (this.value !== val) {
+            this.value = val;
+            this.valueText.setText(gpl.formatValue(this, val));
 
-        lines = this.outputAnchor.getLines();
-        len = lines.length;
+            lines = this.outputAnchor.getLines();
+            len = lines.length;
 
-        for (c = 0; c < len; c++) {
-            anchor = lines[c].getOtherAnchor(this.outputAnchor);
-            block = gpl.blockManager.getBlock(anchor.gplId);
-            block.syncAnchorValue(anchor, val);
+            for (c = 0; c < len; c++) {
+                anchor = lines[c].getOtherAnchor(this.outputAnchor);
+                block = gpl.blockManager.getBlock(anchor.gplId);
+                block.syncAnchorValue(anchor, val);
+            }
+
+            this.renderAll();
+
+            gpl.manager.bindings.hasEdits(true);
         }
-
-        this.renderAll();
     }
 });
 
@@ -5949,7 +5956,7 @@ gpl.BlockManager = function (manager) {
                     return {
                         Name: ref.Name,
                         pointType: ref['Point Type'].Value,
-                        valueType: (ref['Value'].ValueType === 5) ? 'enum' : 'float',
+                        valueType: (ref['Value'] && ref['Value'].ValueType === 5) ? 'enum' : 'float',
                         _idx: idx
                     };
                     // return ref;
@@ -6151,7 +6158,7 @@ gpl.BlockManager = function (manager) {
         }
 
         delete bmSelf.blocks[oldBlock.gplId];
-        oldBlock.delete(true);
+        oldBlock.delete();
 
         delete bmSelf.editedBlocks[oldBlock.upi];
 
@@ -6369,8 +6376,8 @@ gpl.BlockManager = function (manager) {
             pointType,
             doOpenWindow = function (fn) {
                 windowRef = gpl.openWindow(url, pointName, pointType, '', upi, {
-                    width: 820,
-                    height: 540
+                    width: 1250,
+                    height: 750
                 });
 
                 (fn || gpl.emptyFn)();
@@ -6730,10 +6737,10 @@ gpl.Manager = function () {
                 doNextInit();
             };
 
-            //fix for IE not showing window.opener when first loaded
-            gpl.getPointTypes = (window.opener || window.top) && (window.opener || window.top).workspaceManager && (window.opener || window.top).workspaceManager.config.Utility.pointTypes.getAllowedPointTypes;
-            gpl.workspaceManager = (window.opener || window.top) && (window.opener || window.top).workspaceManager;
-            gpl._openWindow = (window.opener || window.top) && (window.opener || window.top).workspaceManager && (window.opener || window.top).workspaceManager.openWindowPositioned;
+            //fix for IE not showing window.top when first loaded
+            gpl.getPointTypes = window.top && window.top.workspaceManager && window.top.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes;
+            gpl.workspaceManager = window.top && window.top.workspaceManager;
+            gpl._openWindow = window.top && window.top.workspaceManager && window.top.workspaceManager.openWindowPositioned;
             gpl.controllers = gpl.workspaceManager.systemEnums.controllers;
             gpl.pointTypes = gpl.workspaceManager.config.Enums['Point Types'];
             gpl.formatPoint = gpl.workspaceManager.config.Update.formatPoint;
@@ -7267,10 +7274,9 @@ gpl.Manager = function () {
             name3 = names[2],
             name4 = names[3] || '',
             handler = function (obj) {
-                var oldPoint = $.extend(true, {}, obj),
-                    newPoint;
+                var oldPoint = $.extend(true, {}, obj);
 
-                gpl.unblockUI();
+                // gpl.unblockUI();
 
                 if (obj && obj.target) { //is event
                     if (!called) {
@@ -7282,7 +7288,7 @@ gpl.Manager = function () {
                 }
 
                 block.upi = obj._id;
-                obj['Point Instance'].Value = obj._id;
+                // obj['Point Instance'].Value = obj._id;
 
                 // if (obj['Reverse Action'])
 
@@ -7300,18 +7306,18 @@ gpl.Manager = function () {
 
                 block.setPointData(obj, true);
 
-                log(block.gplId, 'save callback', newPoint);
+                log(block.gplId, 'save callback', obj);
                 gpl.fire('newblock', block);
                 called = true;
 
                 managerSelf.socket.emit('updatePoint', JSON.stringify({
-                    'newPoint': newPoint,
+                    'newPoint': obj,
                     'oldPoint': oldPoint
                 }));
             };
 
         if (block.isNonPoint !== true && !(block instanceof gpl.blocks.TextBlock)) {
-            gpl.blockUI();
+            // gpl.blockUI();
 
             windowRef = gpl.openWindow('/api/points/newPoint/restrictTo/' + pointType, 'New Point', '', '', 'newPoint', {
                 width: 980,
@@ -7410,6 +7416,7 @@ gpl.Manager = function () {
 
     managerSelf.doSaveForLater = function () {
         var continueEditingCb = function () {
+            gpl.hideMessage();
             gpl.unblockUI();
             gpl.$saveForLaterConfirmModal.modal('show');
         };
@@ -8696,10 +8703,10 @@ gpl.Manager = function () {
                 });
             }
 
-            if (!line.isNew || gpl.isEdit) {
+            // if (!line.isNew || gpl.isEdit) { all 'new' lines should be in editVersion now
                 newLine = new gpl.ConnectionLine(coords, managerSelf.canvas, line.isNew || false);
                 managerSelf.shapes.push(newLine);
-            }
+            // }
         }
 
         managerSelf.renderAll();
@@ -9002,20 +9009,26 @@ gpl.Manager = function () {
                 var pointer = managerSelf.canvas.getPointer(event.e),
                     x = pointer.x,
                     y = pointer.y,
-                    obj;
+                    obj,
+                    canvasObj;
 
                 gpl._rightClickTargets = gpl._rightClickTargets || [];
 
                 if (event.e.which === 3) {
-                    obj = gpl.manager.getObject({
+                    canvasObj = gpl.manager.getObject({
                         left: x,
                         top: y
                     });
 
-                    if (obj) {
-                        obj = gpl.blockManager.getBlock(obj.gplId);
+                    if (canvasObj) {
+                        obj = gpl.blockManager.getBlock(canvasObj.gplId);
                         if (obj) {
                             log(obj);
+                        } else {
+                            obj = gpl.lineManager.getLine(canvasObj.gplId);
+                            if (obj) {
+                                log(obj);
+                            }
                         }
                     }
                 }

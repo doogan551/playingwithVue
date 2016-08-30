@@ -2,7 +2,7 @@ var dorsett = {
   'Infoscan': {
     'dbConfig': {
       'host': 'localhost',
-      'dbName': 'dorsett'
+      'dbName': 'infoscan'
     },
     'zmqConfig': {
       'server': '127.0.0.1'

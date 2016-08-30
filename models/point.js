@@ -649,59 +649,87 @@ module.exports = {
           return callback("Name already exists.");
         }
 
-
         criteria = {
-          collection: 'upis',
+          collection: 'SystemInfo',
           query: {
-            _pStatus: 1
-          },
-          sort: [
-            ['_id', 'asc']
-          ],
-          updateObj: {
-            $set: {
-              _pStatus: 0
-            }
-          },
-          options: {
-            'new': true
+            Name: 'Preferences'
           }
-        };
-
-        Utility.findAndModify(criteria, function(err, upiObj) {
-          if (err) {
-            return callback(err);
-          }
-
-          if (pointType === "Schedule Entry") {
-            name2 = upiObj._id.toString();
-            buildName(name1, name2, name3, name4);
-          }
-
-          if (targetUpi && targetUpi !== 0) {
+        }
+        Utility.getOne(criteria, function(err, sysInfo) {
+          if (pointType === 'Device') {
             criteria = {
-              collection: 'points',
+              collection: 'upis',
               query: {
-                _id: targetUpi
+                _pStatus: 1
+              },
+              sort: [
+                ['_id', 'desc']
+              ],
+              updateObj: {
+                $set: {
+                  _pStatus: 0
+                }
+              },
+              options: {
+                'new': true
               }
             };
-
-            Utility.getOne(criteria, function(err, targetPoint) {
-              if (err) {
-                return cb(err);
-              }
-
-              if (!targetPoint) {
-                return callback("Target point not found.");
-              }
-
-              targetPoint._pStatus = 1;
-              fixPoint(upiObj, targetPoint, true, callback);
-            });
           } else {
-            fixPoint(upiObj, Config.Templates.getTemplate(pointType), false, callback);
+            criteria = {
+              collection: 'upis',
+              query: {
+                _pStatus: 1
+              },
+              sort: [
+                ['_id', 'asc']
+              ],
+              updateObj: {
+                $set: {
+                  _pStatus: 0
+                }
+              },
+              options: {
+                'new': true
+              }
+            };
           }
+
+          Utility.findAndModify(criteria, function(err, upiObj) {
+            if (err) {
+              return callback(err);
+            }
+
+            if (pointType === "Schedule Entry") {
+              name2 = upiObj._id.toString();
+              buildName(name1, name2, name3, name4);
+            }
+
+            if (targetUpi && targetUpi !== 0) {
+              criteria = {
+                collection: 'points',
+                query: {
+                  _id: targetUpi
+                }
+              };
+
+              Utility.getOne(criteria, function(err, targetPoint) {
+                if (err) {
+                  return cb(err);
+                }
+
+                if (!targetPoint) {
+                  return callback("Target point not found.");
+                }
+
+                targetPoint._pStatus = 1;
+                fixPoint(upiObj, targetPoint, true, callback);
+              });
+            } else {
+              fixPoint(upiObj, Config.Templates.getTemplate(pointType), false, callback);
+            }
+          });
         });
+
       });
 
       function buildName(name1, name2, name3, name4) {
@@ -825,6 +853,12 @@ module.exports = {
           } else if (template["Point Type"].Value === "Report") {
             template["Report Type"].Value = (subType) ? subType.Value : "Property";
             template["Report Type"].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
+          }
+		  
+		  
+          if (template['Point Type'].Value === 'Device') {
+            template['Time Zone'].eValue = sysInfo['Time Zone'];
+            template['Time Zone'].Value = Config.revEnums['Time Zones'][sysInfo['Time Zone']];
           }
 
           template._parentUpi = parentUpi;
