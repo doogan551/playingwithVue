@@ -141,6 +141,8 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
             },
             pointSelectorEndPoint = [getPath(), '?mode=select'].join(''),
             callback = function(id, name, pointType) {
+                // Schedule entry point ref changes don't go through normal validation in configjs
+                // this is the first point that the returned id can be checked for a recursive loop.
                 if (self.point['Point Type'].Value() === 'Schedule Entry' && id === self.point._parentUpi()) {
                     bannerJS.showBanner({
                         msg: 'Unable to control Schedule from same schedule.',
