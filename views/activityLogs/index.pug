@@ -1,0 +1,167 @@
+doctype html
+html
+    head
+        title
+        link(rel='stylesheet', href='/css/lib/bootstrap3.min.css')
+        link(rel='stylesheet', href='/css/lib/font-awesome-4.0.3/css/font-awesome.min.css')
+        link(rel='stylesheet', href='/css/lib/jquery.timepicker.css')
+        link(rel='stylesheet', href='/css/lib/bootstrap-datepicker.css')
+        link(rel='stylesheet', href='/css/activityLogs/activityLogs.css')
+    body.noSelect
+        .titleBar
+            .title
+                span(data-bind="text: pageTitle") &nbsp;&nbsp;
+            .filterIcon.resetFilter(data-bind="click: resetFilters, visible: filterIsSet", title="Reset All Filters")
+                .fa.fa-filter.fa-2x
+                .fa.fa-times-circle.x(data-bind="visible: filterIsSet")
+            .filterIcon.fa.fa-refresh(data-bind="click: refreshActivityLogsData, visible: !activityLogs().gettingData()", title="Refresh")
+            .filterIcon.fa.fa-refresh.fa-spin(data-bind="visible: activityLogs().gettingData()", title="Getting activities from server...")
+        .content
+            // FILTERS
+            #filters
+                // User FILTERS
+                .filterContainer.userFilterDropdown(id="userFilters", data-bind="visible: true", title="Filter by user name")
+                    .filterIcon.fa.fa-user.fa.dropdown-toggle(data-bind="css: { 'dropdown-toggle-filter-set' : usersFilterIsSet(), 'dropdown-toggle' : !usersFilterIsSet() }", data-toggle="dropdown")
+                        i.fa.fa-sort-down
+                    .dropdown-menu
+                        .title
+                            span Filter by User
+                                i.fa.fa-2x.fa-times.closeIt(data-bind="click: cancelUserNameFilter")
+                            div
+                            br(clear="all")
+                        .header(style="display: inline-block;")
+                            .colSelect
+                                input(type="checkbox" data-bind="checkedValue: $data, checked: checkAllNames")
+                            .colPhoto
+                                | Photo
+                            .colUserName
+                                | User
+                        .usernamesFilter.thinScroll(style="height:450px;overflow-y:auto;")
+                            table
+                                tbody(data-bind="foreach: filteredUsers()")
+                                    tr(data-bind="click: $root.selectRow, css: { selectedRow: $data.isSelected  }")
+                                        td.colSelect
+                                            input(type="checkbox", data-bind="click: function () { return $root.userFilterClick($element, $index()) }, checked: $data.isSelected")
+                                        td.colPhoto
+                                            //span.selectable(data-bind="text: Photo.Value")
+                                            img(data-bind='attr: { src: "/img/users/" + (Photo.Value.length > 0 ? Photo.Value : "userLarge.png")}', style='width: 24px;margin-right: 8px;float: left;position: relative;top: -6px;')
+                                        td.colUserName
+                                            span.selectable(data-bind="text: username")
+                            br(clear="all")
+                        .okCancel.text-center.userNameFilterFooter
+                            button.btn.btn-success.closeIt(data-bind="click: applyUserNameFilter, css: { disabled : !dirtyUsernameFilter() }") OK
+                            a.cancel.cursorPointer.closeIt(data-bind="click: clearUsernameFilter") Clear Filter
+                // NAME SEGMENT FILTERS
+                .filterContainer(id="nameFilters", title="Filter by point name and/or point type" )
+                    .filterIcon.fa.fa-font.fa.dropdown-toggle(data-bind="css: { 'dropdown-toggle-filter-set' : pointTypeNameFilterIsSet(), 'dropdown-toggle' : !pointTypeNameFilterIsSet() }", data-toggle="modal", data-target="#pointFilterModal")
+                // TIME DATE FILTERS
+                .filterContainer(id="timeDateFilters", title="Filter by date and/or time", data-bind="visible: true")
+                    .filterIcon.fa.fa-clock-o.fa.dropdown-toggle(data-bind="css: { 'dropdown-toggle-filter-set' : datetimeFilterIsSet(), 'dropdown-toggle' : !datetimeFilterIsSet() }")
+                        i.fa.fa-sort-down
+                    .dropdown-menu
+                        .title
+                            span Date Time Filter
+                            i.fa.fa-2x.fa-times.closeIt(data-bind="click: cancelDateTimeFilter")
+                        div
+                            .fromTo From
+                            .dateTime
+                                input.date.start.input-sm.form-control(type="text", id="dateFrom", placeholder="Date", data-bind="value: dtFilterPlaceholder.dateFrom")
+                                input.time.start.input-sm.form-control(type="text", id="timeFrom", placeholder="Time", data-bind="value: dtFilterPlaceholder.timeFrom")
+                            br(clear="all")
+                            .fromTo To
+                            .dateTime
+                                input.date.end.input-sm.form-control(type="text", id="dateTo", placeholder="Date", data-bind="value: dtFilterPlaceholder.dateTo")
+                                input.time.end.input-sm.form-control(type="text", id="timeTo", placeholder="Time", data-bind="value: dtFilterPlaceholder.timeTo")
+                        br(clear="all")
+                        .okCancel.text-center
+                            button.btn.btn-success.closeIt(data-bind="click: applyDateTimeFilter") OK
+                            a.cancel.cursorPointer.closeIt(data-bind="click: clearDateTimeFilter") Clear Filter
+
+                // PRINT BUTTON
+                button.btn.btn-default.btn-sm.btnPrint.pull-right(type="button" data-bind="click:printLogs") Print
+
+            #activitylogContainer
+                .header
+                    //.colSelect
+                    //    input(type="checkbox" data-bind="checkedValue: $data, checked: checkAll")
+                    .colTime(data-bind="click: toggleDateTimeSort")
+                        | Timestamp
+                        i.pull-right.fa(data-bind="css: { 'fa-arrow-up' : sortAscending(), 'fa-arrow-down' : !sortAscending() }")
+                    .colUserName
+                        | User
+                    .colPointName
+                        | Point
+                    .colLog
+                        | &nbsp; Log
+                .activityLogs.thinScroll
+                        table
+                            tbody(id="activityLogRows", data-bind="foreach: activityLogsForPageSize()")
+                                tr
+                                    //td.colSelect
+                                    //    input(type="checkbox", data-bind="checked: $data.isSelected")
+                                    td.colTime
+                                        span.selectable
+                                            span(data-bind="text: prettyDate")
+                                            |  &nbsp;
+                                            span(data-bind="text: prettyTime")
+                                    td.colUserName
+                                        span.selectable(data-bind="text: username")
+                                    td.colPointName
+                                        a.span.selectable.colPointName(id="pointNameField", data-bind="text: Name, attr: { title: Name }")
+                                    td.colLog
+                                        span.selectable(data-bind="text: log")
+
+                .pages
+                    .pull-left
+                        .pop.cursorPointer(data-bind='click: togglePop')
+                            .popOut
+                                .fa.fa-arrow-circle-up
+                                | Pop Out
+                            .popIn.hidden
+                                .fa.fa-arrow-circle-down
+                                | Pop In
+                        // ko if: pageNumber() > 1
+                        // ko if: activityLogs().numberOfPages() > 2
+                        a(href='javascript:void(0)', data-bind="click: changePage.bind($data, 'begin')") <<<
+                        | &nbsp;&nbsp;
+                        // /ko
+                        a(href='javascript:void(0)', data-bind="click: changePage.bind($data, -1)") Previous Page
+                        | &nbsp;&nbsp;
+                        // /ko
+                        | Page&nbsp;
+                        span(data-bind="text: pageNumber")
+                        |  of&nbsp;
+                        span(data-bind="text: activityLogs().numberOfPages")
+                        | &nbsp; &nbsp;
+                        // ko if: pageNumber() !== activityLogs().numberOfPages()
+                        a(href='javascript:void(0)', data-bind="click: changePage.bind($data, +1)") Next Page
+                        // ko if: activityLogs().numberOfPages() > 2
+                        | &nbsp;&nbsp;
+                        a(href='javascript:void(0)', data-bind="click: changePage.bind($data, 'end')") >>>
+                        // /ko
+                        // /ko
+                    .pull-right
+                        span(data-bind="text: activityLogs().count()")
+                        |  ActivityLogs
+        .bodyMask
+        // Point Filter Modal
+        .modal#pointFilterModal(role="dialog", style="overflow: hidden;")
+            .modalContainer
+                .subTitle POINT NAME/TYPE FILTER
+                .pull-right.fa.fa-2x.fa-times.closeIt(data-bind="click: cancelPointNameFilter")
+                iframe#pointLookup(name="pid_activityfilter")
+                .text-center
+                    button.btn.btn-success.closeIt(data-bind="click: applyPointNameFilter") OK
+        script(type='text/javascript', src='/js/lib/jquery.min.js')
+        script(type='text/javascript', src='/js/lib/knockout-3.4.0.js')
+        script(type='text/javascript', src='/js/lib/bootstrap3.min.js')
+        script(type='text/javascript', src="/js/lib/socket.io.js")
+        script(type='text/javascript', src='/js/lib/store.min.js')
+        script(type='text/javascript', src='/js/lib/date.js')
+        script(type='text/javascript', src='/js/lib/jquery.timepicker.min.js')
+        script(type='text/javascript', src='/js/lib/jquery.printarea.js')
+        script(type='text/javascript', src='/js/lib/bootstrap-datepicker.js')
+        script(type='text/javascript', src='/js/lib/jstween-1.1.min.js')
+        script(type='text/javascript', src='/js/lib/moment.js')
+        script(type='text/javascript', src='/js/activityLogs/activityLogs.js')
+

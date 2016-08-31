@@ -12,7 +12,7 @@ router.get('/view/:upoint', function(req, res, next) {
 			cbCount++;
 			console.log('completing', cbCount);
 			if (cbCount === cbTotal) {
-				res.render('gpl/index.jade');
+				res.render('gpl/index.pug');
 			}
 		},
 		processGpl = function(data) {
@@ -37,7 +37,7 @@ router.get('/edit/:upoint', function(req, res, next) {
 			cbCount++;
 			console.log('completing', cbCount);
 			if (cbCount === cbTotal) {
-				res.render('gpl/index.jade');
+				res.render('gpl/index.pug');
 			}
 		},
 		processGpl = function(data) {

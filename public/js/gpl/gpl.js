@@ -6705,6 +6705,10 @@ gpl.Manager = function () {
                                 window.loaded = true;
                             }
 
+                            window.destroy = function () {
+                                gpl.manager.destroy();
+                            };
+
                             managerSelf.postInit();
                         }, 100);
                     }
@@ -7853,6 +7857,8 @@ gpl.Manager = function () {
                 delete managerSelf.toolbar;
             }
 
+            ko.cleanNode(window.document.body);
+
             gpl.forEach(gpl.eventHandlers, function (handlers) {
                 handlers = [];
             });
@@ -8798,6 +8804,7 @@ gpl.Manager = function () {
             type: 'DOM',
             window: true,
             handler: function () {
+                gpl.log('destroying');
                 managerSelf.destroy();
             }
         }, {
@@ -9136,3 +9143,5 @@ $(function () {
         gpl.initGpl();
     }
 });
+
+window.gpl = gpl;

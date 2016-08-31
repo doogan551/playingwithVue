@@ -60,8 +60,8 @@ app.use(bodyParser.urlencoded({
 var storage = multer.memoryStorage();
 var upload = multer({ storage: storage });
 
-app.engine('jade', require('jade').__express);
-app.set('view engine', 'jade');
+app.engine('pug', require('pug').__express);
+app.set('view engine', 'pug');
 
 //if production, use dist folders
 if (config.minifyFiles !== false) {
