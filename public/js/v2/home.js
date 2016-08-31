@@ -370,6 +370,12 @@ var dti = {
             dti.on('hideMenus', closeMenu);
 
             dti.on('openMenu', closeMenu);
+
+            return {
+                isOpen: function () {
+                    return menuShown;
+                }
+            };
         }
     },
     Window: function (config) {
