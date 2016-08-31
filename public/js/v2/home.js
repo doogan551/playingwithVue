@@ -10,6 +10,9 @@ var dti = {
         sessionId: btoa(new Date().getTime().toString().split('').reverse().join(''))
     },
     config: {
+        init: function () {
+            dti.utility.configureMoment(moment);
+        },
         itemGroups: {
             'Display': {
                 title: 'Displays',
@@ -252,12 +255,13 @@ var dti = {
             });
         },
         slideUp: function ($el, cb) {
-            $el[0].style.willChange = 'height, padding';
-
+            $el[0].style.willChange = 'height, padding-top, padding-bottom';
             $el.css('overflow', 'hidden');
+            $el.velocity('stop');
             $el.velocity({
                 height: 0,
-                padding: 0
+                'padding-top': 0,
+                'padding-bottom': 0
             }, {
                 queue: false,
                 duration: 300,
@@ -890,36 +894,41 @@ var dti = {
     },
     alarms: {
         debug: {
+            enable: true,
             loadAlarms: function (count) {
-                var actions = dti.alarms.init,
-                    list = [];
+                var _id,
+                    list = dti.bindings.alarms.unacknowledged.list(),
+                    num;
 
                 count = count || 150;
 
                 for (i = 0; i < count; i++) {
+                    num = Math.random();
+                    _id = parseInt(num*10000, 10);
                     list.push({
-                        _id: i,
-                        msgText: 'Unacknowledged alarm # ' + i,
-                        msgTime: 1472136463 + (i*1000),
+                        _id: _id,
+                        msgText: 'Unacknowledged alarm # ' + _id,
+                        msgTime: 1472136463 - (i*1000),
                         ackStatus: 1,
                         ackTime: 0,
                         ackUser: '',
-                        almClass: 0
+                        almClass: Math.floor(num*4)
                     });
                 }
 
-                actions.receiveUnacknowledgedAlarms({
+                // We overload our count so that dti.alarms.init function 'removingUnackAlarm' will load more
+                // alarms after our buffer is below minimum
+                dti.alarms.receiveUnacknowledgedAlarms({
                     alarms: list,
-                    count: count
+                    count: count + dti.alarms.constants.BUFFER_MIN
                 });
             },
             addAlarms: function (count) {
-                var actions = dti.alarms.init,
-                    _id;
+                var _id;
 
                 while (count && count--) {
-                    _id = parseInt(Math.random()*1000, 10);
-                    actions.newUnackAlarm({
+                    _id = parseInt(Math.random()*10000, 10);
+                    dti.alarms.newUnackAlarm({
                         newAlarm: {
                             _id: _id,
                             msgText: 'Unacknowledged alarm # '+ _id,
@@ -933,11 +942,10 @@ var dti = {
                 }
             },
             removeAlarms: function (count) {
-                var actions = dti.alarms.init,
-                    unacknowledgedAlarms = dti.bindings.alarms.unacknowledged;
+                var unacknowledgedAlarms = dti.bindings.alarms.unacknowledged;
 
                 while (count && count-- && unacknowledgedAlarms.list().length) {
-                    actions.removingUnackAlarm({
+                    dti.alarms.removingUnackAlarm({
                         _id: unacknowledgedAlarms.list()[0]._id,
                         ackStatus: 2,
                         ackUser: '',
@@ -954,10 +962,20 @@ var dti = {
 
                 debug.id = window.setInterval(function () {
                     debug.removeAlarms(1);
-                }, 7);
+                }, interval || 300);
             },
             stop: function () {
                 window.clearInterval(dti.alarms.debug.id);
+            },
+            sendAcknowledge: function (alarmList) {
+                dti.forEachArray(alarmList, function (alarm, index) {
+                    dti.alarms.removingUnackAlarm({
+                        _id: alarm._id,
+                        ackStatus: 2,
+                        ackUser: 'JDR',
+                        ackTime: Math.floor(Date.now() / 1000)
+                    });
+                });
             },
             id: 0
         },
@@ -965,6 +983,7 @@ var dti = {
             var alarms = dti.bindings.alarms,
                 unacknowledgedAlarms = alarms.unacknowledged,
                 constants = dti.alarms.constants,
+                debug = dti.alarms.debug,
                 prepAlarms = function (data) {
                     var dataIsArray = Array.isArray(data),
                         list = dataIsArray ? data:[data],
@@ -977,19 +996,26 @@ var dti = {
                         alarm.ackStatus = ko.observable(alarm.ackStatus).extend({ rateLimit: 100 });
                         alarm.ackUser = ko.observable();
                         alarm.ackTime = ko.observable();
-                        
+                        // TODO change this to use dti.workspaceManager.getConfig('revEnums.Alarm Classes.' + alarm.almClass)
+                        // after it is available
+                        alarm.almClassText = dti.workspaceManager.config.revEnums['Alarm Classes'][alarm.almClass];
+                        alarm.cssClass = 'type-' + alarm.almClassText;
+
                         date = new Date(alarm.msgTime);
                         alarm.dateTime = ko.observable(moment(+(alarm.msgTime + '000')).calendar());
                     }
                     return dataIsArray ? list:data;
                 },
                 getUnacknowledgedAlarms = function () {
-                    // dti.socket.emit('getUnacknowledged', JSON.stringify({
-                    //     user: dti.bindings.user(),
-                    //     numberItems: constants.BUFFER_SIZE
-                    // }));
-                    // debug
-                    dti.alarms.debug.loadAlarms(constants.BUFFER_MAX);
+                    if (debug.enable) {
+                        debug.loadAlarms(constants.BUFFER_MAX);
+                        return;
+                    }
+
+                    dti.socket.emit('getUnacknowledged', JSON.stringify({
+                        user: dti.bindings.user(),
+                        numberItems: constants.BUFFER_SIZE
+                    }));
                 },
                 receiveUnacknowledgedAlarms = function (data) {
                     // data = {
@@ -1079,13 +1105,7 @@ var dti = {
                     count = unacknowledgedAlarms.count() - 1;
                     unacknowledgedAlarms.count(count);
                     
-                    // If we've depleted our buffer below the minimum and we have more unacknowledged alarms on the server
-                    // if ((unacknowledgedAlarms.list().length < constants.BUFFER_MIN) && (count > constants.BUFFER_MIN)) {
-                    //     // Get unacknowledged alarms from server
-                    //     getUnacknowledgedAlarms();
-                    // }
-                    // debug
-                    if (unacknowledgedAlarms.list().length < constants.BUFFER_MIN) {
+                    if ((unacknowledgedAlarms.list().length < constants.BUFFER_MIN) && (count >= constants.BUFFER_MIN)) {
                         // Get unacknowledged alarms from server
                         getUnacknowledgedAlarms();
                     }
@@ -1106,20 +1126,22 @@ var dti = {
                     // the alarm list and count.
                 };
 
-            // debug
-            // dti.socket.on('unacknowledged', receiveUnacknowledgedAlarms);
-            // dti.socket.on('newUnackAlarm', newUnackAlarm);
-            // dti.socket.on('removingUnackAlarm', removingUnackAlarm);
-            // dti.socket.on('acknowledgeResponse', acknowledgeResponse);
-            // getUnacknowledgedAlarms();
+            if (debug.enable) {
+                // Expose these normally private methods for access from within our debug routines
+                dti.alarms.receiveUnacknowledgedAlarms = receiveUnacknowledgedAlarms;
+                dti.alarms.newUnackAlarm = newUnackAlarm;
+                dti.alarms.removingUnackAlarm = removingUnackAlarm;
+                return;
+            }
+
+            dti.socket.on('unacknowledged', receiveUnacknowledgedAlarms);
+            dti.socket.on('newUnackAlarm', newUnackAlarm);
+            dti.socket.on('removingUnackAlarm', removingUnackAlarm);
+            dti.socket.on('acknowledgeResponse', acknowledgeResponse);
+            getUnacknowledgedAlarms();
 
             // dti.on('loaded', function () {
             // });
-
-            // Debug - un-expose these in production
-            dti.alarms.init.receiveUnacknowledgedAlarms = receiveUnacknowledgedAlarms;
-            dti.alarms.init.newUnackAlarm = newUnackAlarm;
-            dti.alarms.init.removingUnackAlarm = removingUnackAlarm;
         },
         sendAcknowledge: function (alarmList) {
             var request = {
@@ -1135,6 +1157,11 @@ var dti = {
                     });
                 };
 
+            if (dti.alarms.debug.enable) {
+                dti.alarms.debug.sendAcknowledge(alarmList);
+                return;
+            }
+
             dti.forEachArray(alarmList, function (alarm, index) {
                 request.ids.push(alarm._id);
                 alarm.ackStatus(constants.ACK_IN_PROGRESS);
@@ -1146,8 +1173,7 @@ var dti = {
 
             dti.log('Sending alarm acknowledge:', request.ids);
 
-            // debug
-            // dti.socket.emit('sendAcknowledge', JSON.stringify(request));
+            dti.socket.emit('sendAcknowledge', JSON.stringify(request));
         },
         acknowledgeRequests: {},
         constants: {
@@ -1518,6 +1544,27 @@ var dti = {
                     callbacks[e.key]();
                 }
             }
+        },
+        configureMoment: function (momentInstance) {
+            // Adjust default calendar config
+            momentInstance.locale('en', {
+                longDateFormat : {
+                    LT   : "HH:mm",
+                    LTS  : "HH:mm:ss",
+                    L    : "MM/DD/YYYY",
+                    LL   : "MMMM Do YYYY",
+                    LLL  : "MMMM Do YYYY LT",
+                    LLLL : "dddd, MMMM Do YYYY LT"
+                },
+                calendar : {
+                    lastDay  : '[Yesterday] LTS',
+                    sameDay  : '[Today] LTS',
+                    nextDay  : '[Tomorrow] LTS',
+                    lastWeek : 'L LTS',
+                    nextWeek : 'L LTS',
+                    sameElse : 'L LTS'
+                }
+            });
         },
         init: function () {
             dti.utility.$navigatorModalIframe.attr('src', '/pointlookup');
@@ -1896,6 +1943,14 @@ var dti = {
                     }
                 }
             );
+        }
+    },
+    audio: {
+        sounds: {
+
+        },
+        playSound: function (sound) {
+
         }
     },
     init: function () {

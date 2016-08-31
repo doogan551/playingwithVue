@@ -748,7 +748,7 @@ footer {
         }
     }
     
-    .noAlarmsMsg {
+    .status {
         padding: 20px;
     }
 
@@ -757,7 +757,6 @@ footer {
         flex-direction: column;
         width: 100%;
         padding: 0 10px;
-        border-bottom: 1px solid #e0e0e0;
         max-height: 400px;
         overflow-x: hidden;
         overflow-y: auto;
@@ -770,23 +769,22 @@ footer {
             width: 100%;
             margin: 0;
             padding: 5px;
+            border-bottom: 1px solid #e0e0e0;
         }
 
-        .row > div:not(:first-child) {
-            margin-left: 5px;
+        .row:first-child {
+            border: none;
+            font-weight: bold;
+
+            .ack {
+                background: none;
+            }
         }
 
-        .row:nth-child(even) {
-            background-color: #F0F0F0;
-            border-radius: 3px;
-        }
-
-        .type {
-            flex: 0 0 50px;
-        }
         .date {
             flex: 0 0 160px;
         }
+
         .message {
             flex-grow: 1;
         }
@@ -811,6 +809,23 @@ footer {
             &.error {
                 background-color: red;
             }
+        }
+
+        .type {
+            flex: 0 0 90px;
+            padding-right: 10px;
+        }
+        .type-Emergency {
+            color: red;
+        }
+        .type-Critical {
+            color: #F90;
+        }
+        .type-Urgent {
+            color: #90F;
+        }
+        .type-Normal {
+            color: #666;
         }
     }
 }

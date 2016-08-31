@@ -70,15 +70,23 @@ html
                             i.material-icons(data-bind='visible: alarms.isMuted') volume_off
                         //- a.blue-grey-text.waves-effect.tooltipped(href="javascript://", data-position='bottom', data-tooltip='Open Alarm Console', data-delay='10')
                             i.material-icons notifications_active
+                    .alarmBody
                 .alarmBody(data-bind='visible: alarms.unacknowledged.showList')
-                    .alarmList(data-bind='foreach: { data: alarms.unacknowledged.list, beforeRemove: alarms.slideUp }')
+                    .alarmList
                         .row
-                            .type(data-bind='text: almClass')
+                            .date Date
+                            .message Alarm
+                            .type Class
+                            .ack
+                        // ko foreach: { data: alarms.unacknowledged.list, beforeRemove: alarms.slideUp }
+                        .row
                             .date(data-bind="text: dateTime")
                             .message(data-bind='text: msgText')
+                            .type(data-bind='text: almClassText, css: cssClass')
                             .ack.z-depth-1
                                 a.waves-effect(href='javascript://', data-bind='click: $parent.alarms.acknowledgeOne') Ack
-                .noAlarmsMsg(data-bind='visible: alarms.unacknowledged.showList() === false') Relax...none right now.
+                        // /ko
+                .status(data-bind='visible: alarms.unacknowledged.showList() === false') Relax...none right now.
 
             ul#globalSearchResults.dropdown-content.active(style="display: none; position: absolute; right: 109px; top: 48px; opacity: 1; width: 264px;")
                 li
