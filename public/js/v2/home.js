@@ -100,6 +100,13 @@ var dti = {
         dti.itemIdx++;
         return dti.settings.idxPrefix + dti.itemIdx;
     },
+    destroyObject: function (o) {
+        var keys = Object.keys(o),
+            c;
+        for (c = 0; c < keys.length; c++) {
+            delete o[keys[c]];
+        }
+    },
     forEach: function (obj, fn) {
         var keys = Object.keys(obj),
             c,
@@ -290,7 +297,7 @@ var dti = {
                 dti.animations.fadeOut($menuEl);
             });
         },
-        hoverMenu: function (button, menuEl) {
+        hoverMenu: function (button, menuEl, eventHandlers) {
             var $button = $(button),
                 menuShown = false,
                 menuID = menuEl || $button.data('menu'),
@@ -301,7 +308,11 @@ var dti = {
                     if (id || id !== menuID) {
                         if (menuShown) {
                             menuShown = false;
-                            dti.animations.fadeOut($menu);
+                            dti.animations.fadeOut($menu, function checkMenuClose () {
+                                if (eventHandlers && eventHandlers.onHide) {
+                                    eventHandlers.onHide();
+                                }
+                            });
                         }
                     }
                 },
@@ -318,7 +329,14 @@ var dti = {
                 clearTimeout(hideTimer);
                 if (!menuShown) {
                     menuShown = true;
-                    dti.animations.fadeIn($menu);
+                    if (eventHandlers && eventHandlers.onBeforeShow) {
+                        eventHandlers.onBeforeShow();
+                    }
+                    dti.animations.fadeIn($menu, function checkMenuOpen () {
+                        if (eventHandlers && eventHandlers.onShow) {
+                            eventHandlers.onShow();
+                        }
+                    });
                 }
             }, function hideHoverMenu (event) {
                 var $relatedTarget = $(event.relatedTarget);
@@ -369,7 +387,7 @@ var dti = {
                 }
             },
             prepMeasurements = function () {
-                var container = $(dti.windows._draggableConfig.containment),
+                var container = $(dti.windows.draggableConfig.containment),
                     containerWidth = container.width(),
                     containerHeight = container.height(),
                     containerPadding = parseFloat(container.css('padding'), 10),
@@ -432,11 +450,21 @@ var dti = {
                 dti.bindings.openWindows[self.bindings.group()].remove(self.bindings);
                 self.$iframe.attr('src', 'about:blank');
 
+                self.$windowEl.draggable('destroy');
+                self.$windowEl.resizable('destroy');
+
                 dti.fire('closeWindow', self);
+
+                if (self.$iframe[0].contentWindow.destroy) {
+                    self.$iframe[0].contentWindow.destroy();
+                }
 
                 setTimeout(function closeWindow () {
                     self.$windowEl.remove();
-                }, 100);
+                    ko.cleanNode(self.$windowEl[0]);
+                    $(self.$iframe[0].contentDocument).off('mousedown');
+                    dti.destroyObject(self);
+                }, 2000);
             },
             minimize = function (event, skipActivate) {
                 active = false;
@@ -541,6 +569,9 @@ var dti = {
         self.bindings.iconText(group.iconText);
         self.bindings.thumbnail(group.thumbnail || false);
 
+        self.$windowEl.draggable(dti.windows.draggableConfig);
+        self.$windowEl.resizable(dti.windows.resizableConfig);
+
         //detect clicks inside iframe
         // setInterval(function detectIframeClick () {
         //     var elem = document.activeElement;
@@ -568,16 +599,35 @@ var dti = {
         _offset: 25,
         _offsetCount: 0,
         _offsetMax: 5,
-        _draggableConfig: {
+        draggableConfig: {
             containment: 'main',
-            scroll: false
+            scroll: false,
+            start: function () {
+                dti.windows.dragStart();
+            },
+            stop: function () {
+                dti.windows.dragStop();
+            }
         },
-        _resizableConfig: {
+        resizableConfig: {
             // helper: 'ui-resizable-helper',
             containment: 'main',
-            handles: 'all'
+            handles: 'all',
+            start: function () {
+                dti.windows.resizeStart();
+            },
+            stop: function () {
+                dti.windows.resizeStop();
+            }
         },
         _windowList: [],
+        _setInteractingFlag: function (isInteracting) {
+            if (isInteracting) {
+                $('body').addClass('interacting');
+            } else {
+                $('body').removeClass('interacting');
+            }
+        },
         getWindowById: function (id) {
             var targetWindow;
 
@@ -590,13 +640,25 @@ var dti = {
 
             return targetWindow;
         },
+        resizeStart: function () {
+            dti.windows._setInteractingFlag(true);
+        },
+        resizeStop: function () {
+            dti.windows._setInteractingFlag(false);
+        },
+        dragStart: function () {
+            dti.windows._setInteractingFlag(true);
+        },
+        dragStop: function () {
+            dti.windows._setInteractingFlag(false);
+        },
         init: function () {
             // dti.windows.elementSelector = '.dti-card-panel';//'.card, .card-panel';
             // dti.windows.$elements = $(dti.windows.elementSelector);
 
-            // dti.windows.$elements.draggable(dti.windows._draggableConfig);
+            // dti.windows.$elements.draggable(dti.windows.draggableConfig);
 
-            // dti.windows.$elements.resizable(dti.windows._resizableConfig);
+            // dti.windows.$elements.resizable(dti.windows.resizableConfig);
 
             dti.on('closeWindow', function handleCloseWindow (win) {
                 var windowId = win.bindings.windowId();
@@ -650,9 +712,6 @@ var dti = {
             dti.taskbar.addWindow(newWindow);
 
             // config.afterLoad = dti.windows.afterLoad;
-
-            newWindow.$el.draggable(dti.windows._draggableConfig);
-            newWindow.$el.resizable(dti.windows._resizableConfig);
 
             dti.windows._windowList.push(newWindow);
 

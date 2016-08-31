@@ -340,7 +340,8 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
 }
 
 .ui-resizable-resizing .windowMask,
-.ui-draggable-dragging .windowMask {
+.ui-draggable-dragging .windowMask,
+.interacting .windowMask {
     display: block;
 }
 

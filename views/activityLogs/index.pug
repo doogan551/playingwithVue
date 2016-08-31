@@ -51,7 +51,7 @@ html
                         .okCancel.text-center.userNameFilterFooter
                             button.btn.btn-success.closeIt(data-bind="click: applyUserNameFilter, css: { disabled : !dirtyUsernameFilter() }") OK
                             a.cancel.cursorPointer.closeIt(data-bind="click: clearUsernameFilter") Clear Filter
-                 // NAME SEGMENT FILTERS
+                // NAME SEGMENT FILTERS
                 .filterContainer(id="nameFilters", title="Filter by point name and/or point type" )
                     .filterIcon.fa.fa-font.fa.dropdown-toggle(data-bind="css: { 'dropdown-toggle-filter-set' : pointTypeNameFilterIsSet(), 'dropdown-toggle' : !pointTypeNameFilterIsSet() }", data-toggle="modal", data-target="#pointFilterModal")
                 // TIME DATE FILTERS
