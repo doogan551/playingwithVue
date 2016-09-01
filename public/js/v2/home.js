@@ -472,7 +472,6 @@ var dti = {
             close = function (event) {
                 self.bindings.minimize();
                 dti.bindings.openWindows[self.bindings.group()].remove(self.bindings);
-                self.$iframe.attr('src', 'about:blank');
 
                 self.$windowEl.draggable('destroy');
                 self.$windowEl.resizable('destroy');
@@ -484,12 +483,13 @@ var dti = {
                 }
 
                 setTimeout(function closeWindow () {
+                    self.$iframe.attr('src', 'about:blank');
                     ko.cleanNode(self.$windowEl[0]);
                     $(self.$iframe[0].contentDocument).off('mousedown');
                     self.$windowEl.remove();
                     dti.destroyObject(self.bindings);
                     dti.destroyObject(self);
-                }, 2000);
+                }, 1000);
             },
             minimize = function (event, skipActivate) {
                 active = false;
