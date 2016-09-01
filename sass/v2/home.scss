@@ -777,7 +777,7 @@ footer {
             border: none;
             font-weight: bold;
 
-            .ack {
+            .ackContainer {
                 background: none;
             }
         }
@@ -786,47 +786,66 @@ footer {
             flex: 0 0 160px;
         }
 
-        .message {
+        .messageContainer {
+            display: inline-block;
             flex-grow: 1;
         }
-
-        .ack {
-            background-color: $blueGrey;
-            border-radius: 2px;
-            padding: 2px 10px;
-            text-align: center;
-            color: #FFF;
-            flex: 0 0 50px;
-
-            a {
-                color: #fff;
-                width: 100%;
-            }
-
-            &:hover {
-                background-color: lighten($blueGrey, 10%);
-            }
-
-            &.error {
-                background-color: red;
-            }
+        .message {
+            display: inline-block;
+            padding: 0 5px;
+            border-radius: 3px;
         }
 
         .type {
             flex: 0 0 90px;
             padding-right: 10px;
+            margin-left: 10px;
         }
+
         .type-Emergency {
             color: red;
         }
+
         .type-Critical {
             color: #F90;
         }
+
         .type-Urgent {
             color: #90F;
         }
+
         .type-Normal {
             color: #666;
+        }
+
+        .ackContainer {
+            flex: 0 0 50px;
+
+            .ack {
+                width: 100%;
+                text-align: center;
+                color: #FFF;
+                background-color: $blueGrey;
+                padding: 2px;
+                border-radius: 2px;
+                
+                &:hover {
+                    background-color: lighten($blueGrey, 10%);
+                }
+
+                &.error {
+                    background-color: red;
+                }
+
+                &.error:hover {
+                    background-color: lighten(red, 20%);
+                }
+            }
+
+            .busy {
+                background-color: #FFF;
+                padding: 0 2px;
+            }
         }
     }
 }

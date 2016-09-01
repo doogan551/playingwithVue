@@ -75,16 +75,23 @@ html
                     .alarmList
                         .row
                             .date Date
-                            .message Alarm
+                            .messageContainer Alarm
                             .type Class
-                            .ack
+                            .ackContainer
                         // ko foreach: { data: alarms.unacknowledged.list, beforeRemove: alarms.slideUp }
                         .row
                             .date(data-bind="text: dateTime")
-                            .message(data-bind='text: msgText')
+                            .messageContainer
+                                .message(data-bind='text: msgText, style: { backgroundColor: BackColor, color: TextColor }')
                             .type(data-bind='text: almClassText, css: cssClass')
-                            .ack.z-depth-1
-                                a.waves-effect(href='javascript://', data-bind='click: $parent.alarms.acknowledgeOne') Ack
+                            .ackContainer
+                                a.ack.waves-effect(href='javascript://', data-bind='visible: ackStatus() != $parent.alarms.constants.ACK_IN_PROGRESS, css: { error: ackStatus() == $parent.alarms.constants.ACK_ERROR }, click: $parent.alarms.acknowledgeOne') Ack
+                                .busy(data-bind='visible: ackStatus() == $parent.alarms.constants.ACK_IN_PROGRESS')
+                                    .progress
+                                        .indeterminate
+                        // /ko
+                        // ko if: alarms.unacknowledged.list().length !== alarms.unacknowledged.count()
+                        .row *Displaying&nbsp;#[span(data-bind='text: alarms.unacknowledged.list().length')]&nbsp;of&nbsp;#[span(data-bind='text: alarms.unacknowledged.count()')].
                         // /ko
                 .status(data-bind='visible: alarms.unacknowledged.showList() === false') Relax...none right now.
 
