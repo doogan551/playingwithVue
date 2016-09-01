@@ -39,9 +39,10 @@ html
 
                         ul.right
                             li.taskbarItem
-                                a#alarmIcon.waves-effect(href="javascript://", data-menu="alarmDropdown")
-                                    i.material-icons notifications_active
-                                    span.badge.alarmCount 3
+                                a#alarmIcon.waves-effect(href='javascript://', data-menu='alarmDropdown')
+                                    i.material-icons(data-bind='visible: !alarms.isMuted()') notifications_active
+                                    i.material-icons(data-bind='visible: alarms.isMuted') notifications
+                                    span.badge.alarmCount(data-bind='visible: alarms.unacknowledged.count() !== 0, text: alarms.unacknowledged.count()')
                             li.taskbarItem
                                 a#showDesktop.waves-effect.tooltipped(data-bind="click: showDesktop", href='javascript://', data-position='bottom', data-tooltip='Show Desktop')
                                     i.material-icons home
@@ -64,29 +65,35 @@ html
                 .alarmHeader
                     span Unacknowledged Alarms
                     .right
-                        a.blue-grey-text.waves-effect.tooltipped(href="javascript://", data-position='bottom', data-tooltip='Mute Alarms', data-delay='10')
-                            i.material-icons volume_up
-                        a.blue-grey-text.waves-effect.tooltipped(href="javascript://", data-position='bottom', data-tooltip='Open Alarm Console', data-delay='10')
+                        a.muteIcon.blue-grey-text.waves-effect.tooltipped(href='javascript://', data-bind='click: alarms.toggleMute, attr: { "data-tooltip": alarms.muteTooltip }' data-position='bottom', data-alignment='right' data-delay='750')
+                            i.material-icons(data-bind='visible: !alarms.isMuted()') volume_up
+                            i.material-icons(data-bind='visible: alarms.isMuted') volume_off
+                        //- a.blue-grey-text.waves-effect.tooltipped(href="javascript://", data-position='bottom', data-tooltip='Open Alarm Console', data-delay='10')
                             i.material-icons notifications_active
-                .alarmBody.container
-                    .row
-                        .col.s1.ack.z-depth-1
-                            a.waves-effect Ack
-                        .col.s2.type Emergency
-                        .col.s3.time Today 8:45:12
-                        .col.s6.message Wet Well High Level
-                    .row
-                        .col.s1.ack.z-depth-1
-                            a.waves-effect Ack
-                        .col.s2.type Critical
-                        .col.s3.time Today 9:55:12
-                        .col.s6.message 4250_UNV02_AH1_SAF VFD Device Failed
-                    .row
-                        .col.s1.ack.z-depth-1
-                            a.waves-effect Ack
-                        .col.s2.type Critical
-                        .col.s3.time Today 11:32:12
-                        .col.s6.message 4250_UNV02 Device Operational
+                    .alarmBody
+                .alarmBody(data-bind='visible: alarms.unacknowledged.showList')
+                    .alarmList
+                        .row
+                            .date Date
+                            .messageContainer Alarm
+                            .type Class
+                            .ackContainer
+                        // ko foreach: { data: alarms.unacknowledged.list, beforeRemove: alarms.slideUp }
+                        .row
+                            .date(data-bind="text: dateTime")
+                            .messageContainer
+                                .message(data-bind='text: msgText, style: { backgroundColor: BackColor, color: TextColor }')
+                            .type(data-bind='text: almClassText, css: cssClass')
+                            .ackContainer
+                                a.ack.waves-effect(href='javascript://', data-bind='visible: ackStatus() != $parent.alarms.constants.ACK_IN_PROGRESS, css: { error: ackStatus() == $parent.alarms.constants.ACK_ERROR }, click: $parent.alarms.acknowledgeOne') Ack
+                                .busy(data-bind='visible: ackStatus() == $parent.alarms.constants.ACK_IN_PROGRESS')
+                                    .progress
+                                        .indeterminate
+                        // /ko
+                        // ko if: alarms.unacknowledged.list().length !== alarms.unacknowledged.count()
+                        .row *Displaying&nbsp;#[span(data-bind='text: alarms.unacknowledged.list().length')]&nbsp;of&nbsp;#[span(data-bind='text: alarms.unacknowledged.count()')].
+                        // /ko
+                .status(data-bind='visible: alarms.unacknowledged.showList() === false') Relax...none right now.
 
             ul#globalSearchResults.dropdown-content.active(style="display: none; position: absolute; right: 109px; top: 48px; opacity: 1; width: 264px;")
                 li

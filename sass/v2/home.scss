@@ -711,16 +711,14 @@ footer {
 #alarmIcon {
     .alarmCount {
         position: absolute;
-        top: 32px;
-        left: 42px;
+        bottom: 5px;
+        right: 5px;
         background-color: #e53935;
         line-height: 12px;
         color: #fff;
-        padding: 0 1px 0 0;
+        padding: 2px;
         margin: 0;
-        width: 12px;
         min-width: 0;
-        right: 0;
         font-weight: 500;
         font-size: .8rem;
         border-radius: 2px;
@@ -729,48 +727,124 @@ footer {
 
 #alarmDropdown {
     position: absolute;
-    right: 100px;
+    right: 175px;
     top: 0;
     z-index: 105;
-    padding: 10px;
-    width: 650px;
+    min-width: 700px;
+    max-width: 800px;
     opacity: 0;
     display: none;
 
     .alarmHeader {
         font-size: 1.4em;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 10px;
+
+        .muteIcon {
+            margin-left: 20px;
+        }
 
         i {
             font-size: 1.5em;
         }
+    }
+    
+    .status {
+        padding: 20px;
     }
 
     .alarmBody {
         display: flex;
         flex-direction: column;
         width: 100%;
+        padding: 0 10px;
+        max-height: 400px;
+        overflow-x: hidden;
+        overflow-y: auto;
 
         .row {
             display: flex;
             flex-direction: row;
+            flex-shrink: 0;
             align-items: center;
             width: 100%;
-            margin: 2px 0;
+            margin: 0;
+            padding: 5px;
+            border-bottom: 1px solid #e0e0e0;
         }
 
-        .ack {
-            background-color: $blueGrey;
-            border-radius: 2px;
-            padding: 0;
-            text-align: center;
+        .row:first-child {
+            border: none;
+            font-weight: bold;
 
-            a {
-                color: #fff;
+            .ackContainer {
+                background: none;
+            }
+        }
+
+        .date {
+            flex: 0 0 160px;
+        }
+
+        .messageContainer {
+            display: inline-block;
+            flex-grow: 1;
+        }
+        .message {
+            display: inline-block;
+            padding: 0 5px;
+            border-radius: 3px;
+        }
+
+        .type {
+            flex: 0 0 90px;
+            padding-right: 10px;
+            margin-left: 10px;
+        }
+
+        .type-Emergency {
+            color: red;
+        }
+
+        .type-Critical {
+            color: #F90;
+        }
+
+        .type-Urgent {
+            color: #90F;
+        }
+
+        .type-Normal {
+            color: #666;
+        }
+
+        .ackContainer {
+            flex: 0 0 50px;
+
+            .ack {
                 width: 100%;
+                text-align: center;
+                color: #FFF;
+                background-color: $blueGrey;
+                padding: 2px;
+                border-radius: 2px;
+                
+                &:hover {
+                    background-color: lighten($blueGrey, 10%);
+                }
+
+                &.error {
+                    background-color: red;
+                }
+
+                &.error:hover {
+                    background-color: lighten(red, 20%);
+                }
             }
 
-            &:hover {
-                background-color: lighten($blueGrey, 10%);
+            .busy {
+                background-color: #FFF;
+                padding: 0 2px;
             }
         }
     }
