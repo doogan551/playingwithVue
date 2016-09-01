@@ -1651,13 +1651,13 @@ var dti = {
                     });
 
                     $('select').material_select();
-
-                    dti.fire('loaded');
                 });
             },
             complete = function () {
                 setTimeout(function doLoginFadeout () {
-                    dti.animations.fadeOut($('#loading'));
+                    dti.animations.fadeOut($('#loading'), function afterLoadFadeOut () {
+                        dti.fire('loaded');
+                    });
                 }, 1500);
             },
             showLoading = function () {
