@@ -329,7 +329,7 @@ var scripts = {
                                     thePointRef = makePointRef(objRef, deviceId, refType, refEnum);
                                     if (!!thePointRef) {
                                         gplobject.pointRefIndex = thePointRef.AppIndex;
-                                        delete gplobject.upi;
+                                        // delete gplobject.upi;  // TODO to clear out duplicate data (point ref contains the UPI)
                                     }
                                 }
                                 // logger.info(" createNewPointRef() thePointRef = " + thePointRef);
@@ -398,6 +398,252 @@ var scripts = {
                 }
 
                 adjustSequence();
+
+            } else {
+                cb();
+            }
+        }, function (err) {
+            logger.info("Finished with updateGenerateGPLPointRefs");
+            callback(null, {
+                fn: "updateGenerateGPLPointRefs",
+                errors: err
+            });
+        });
+    },
+
+    updateGenerateDisplayPointRefs: function (callback) {
+        utility.iterateCursor({
+            collection: "points",
+            query: {
+                // "_id" : 54349,
+                "Point Type.Value": "Display"
+            }
+        }, function processDisplay(err, display, cb) {
+            var displayNeedsSaving = false,
+                prop;
+
+            // logger.info('processDisplay() display = ', display);
+            if (!!display && !!display["Screen Objects"]) {
+                logger.info("- - updating display:", display._id);
+                var screenObjects = display["Screen Objects"],
+                    pointRef,
+                    pRefs = display["Point Refs"],
+                    deviceId = 0,
+                    reIndexAppIndex = function () {
+                        var i,
+                            appIndex = 0;
+                        for (i = 0; i < pRefs.length; i++) {
+                            pRefs[i].AppIndex = appIndex++;
+                        }
+                    },
+                    getScreenObjectType = function (screenObjectType) {
+                        var propEnum = 0,
+                            propName = "";
+
+                        switch (screenObjectType) {
+                            case 0:
+                                propEnum = Config.Enums.Properties["Display Dynamic"].enum;
+                                propName = "Display Dynamic";
+                                break;
+                            case 1:
+                                propEnum = Config.Enums.Properties["Display Button"].enum;
+                                propName = "Display Button";
+                                break;
+                            case 3:
+                                propEnum = Config.Enums.Properties["Display Animation"].enum;
+                                propName = "Display Animation";
+                                break;
+                            case 7:
+                                propEnum = Config.Enums.Properties["Display Trend"].enum;
+                                propName = "Display Trend";
+                                break;
+                            default:
+                                propEnum = 0;
+                                propName = "";
+                                break;
+                        }
+
+                        return {
+                            name: propName,
+                            enum: propEnum
+                        };
+                    },
+                    saveDisplay = function () {
+                        if (displayNeedsSaving) {
+                            // logger.info("   ___ displayNeedsSaving ___");
+                            displayNeedsSaving = false;
+
+                            utility.update({
+                                collection: "points",
+                                query: {
+                                    _id: display._id
+                                },
+                                updateObj: display
+                            }, function updatedDisplayHandler(err) {
+                                if (err) {
+                                    logger.debug("Update err:", err);
+                                }
+
+                                cb(null);
+                            });
+                        } else {
+                            cb(null);
+                        }
+                    },
+                    adjustScreenObjects = function () {
+                        reIndexAppIndex();  // existing point refs have invalid AppIndex values.
+
+                            // logger.info("- screenObjects.length:", screenObjects.length);
+                        async.eachSeries(screenObjects, function processDisplays(screenObject, seriesCallback) {
+                            if (screenObject.upi > 0 || screenObject.pointRefIndex !== undefined) {
+                                displayNeedsSaving = true;
+                                prop = getScreenObjectType(screenObject["Screen Object"]);
+
+                                //logger.info("screenObject.upi:" + screenObject.upi + "   screenObject.pointRefIndex:" + screenObject.pointRefIndex);
+                                pointRef = getPointReference(screenObject, prop.name);
+
+                                //logger.info("pointRef.AppIndex = " + (!!pointRef ? pointRef.AppIndex : null));
+                                if (pointRef !== undefined && pointRef !== null) {
+                                    screenObject.pointRefIndex = pointRef.AppIndex;
+                                    // delete screenObject.upi; // TODO remove UPI and reference pointRefIndex instead
+                                    return seriesCallback();
+                                } else {
+                                    createPointRef(screenObject, prop.name, prop.enum, seriesCallback);
+                                }
+                            } else {
+                                return seriesCallback();
+                            }
+                        }, function allDone(err) {
+                            // logger.info("- dynamics.length:", dynamics.length);
+                            saveDisplay();
+                        });
+                    },
+                    getDisplayReferencedObject = function (upi, cb2) {
+                        var criteria = {
+                            collection: 'points',
+                            query: {
+                                _id: upi
+                            },
+                            fields: {
+                                _id: 1,
+                                Name: 1,
+                                Value: 1,
+                                "Point Type": 1
+                            }
+                        };
+
+                        // logger.info("criteria = " + criteria);
+                        utility.getOne(criteria, function (err, referencedObj) {
+                            if (err) {
+                                logger.info("utility.getOne err = " + err);
+                                return cb2(err);
+                            } else {
+                                // logger.info("getDisplayReferencedObject()  referencedObj = " + referencedObj);
+                                if (referencedObj === null) {
+                                    logger.info("        - - UPI Not Found: " + upi);
+                                    cb2(null, referencedObj);
+                                } else {
+                                    // logger.info("utility.getOne found it = " + referencedObj);
+                                    cb2(null, referencedObj);
+                                }
+                            }
+                        });
+                    },
+                    getPointReference = function (screenObject, refType) {
+                        var answer = null;
+
+                        // logger.info('screenObject.upi:'+ screenObject.upi + '   screenObject.pointRefIndex:' + screenObject.pointRefIndex);
+                        if (screenObject.pointRefIndex !== undefined && screenObject.pointRefIndex !== null) {
+                            answer = getPointRefByAppindex(screenObject.pointRefIndex, refType);
+                        } else if (screenObject.upi !== undefined && screenObject.upi !== null) {
+                            answer = getPointRefByUpi(screenObject.upi, refType);
+                        }
+
+                        // logger.info('getPointReference()  answer =  ' + answer);
+                        return answer;
+                    },
+                    createPointRef = function (screenObject, refType, refEnum, createCallBack) {
+                        var createNewPointRef = function (err, referencedPoint) {
+                            var objRef,
+                                thePointRef = null;
+                            if (err) {
+                                logger.info("err = " + err);
+                                return createCallBack(err);
+                            } else {
+                                if (referencedPoint !== null) {
+                                    objRef = {
+                                        upi: referencedPoint._id,
+                                        name: referencedPoint.Name,
+                                        pointType: referencedPoint["Point Type"].Value
+                                    };
+                                    thePointRef = makePointRef(objRef, deviceId, refType, refEnum);
+                                    if (!!thePointRef) {
+                                        screenObject.pointRefIndex = thePointRef.AppIndex;
+                                        //delete screenObject.upi;  // TODO remove UPI and reference pointRefIndex instead
+                                    }
+                                }
+                                // logger.info(" createNewPointRef() thePointRef = " + thePointRef);
+                                return createCallBack(null, thePointRef);
+                            }
+                        };
+
+                        // logger.info(" createNewPointRef() screenObject.upi = " + screenObject.upi);
+                        if (screenObject.upi !== undefined && screenObject.upi !== null) {
+                            getDisplayReferencedObject(screenObject.upi, createNewPointRef);
+                        } else {
+                            return createCallBack(null);
+                        }
+                    },
+                    getPointRefByAppindex = function (pointRefIndex, referenceType) {
+                        var answer;
+                        if (!!pointRefIndex) {
+                            answer = pRefs.filter(function (pointRef) {
+                                return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
+                            });
+
+                            answer = (!!answer && answer.length > 0 ? answer[0] : null);
+                        }
+                        return answer;
+                    },
+                    getPointRefByUpi = function (upi, referenceType) {
+                        var answer;
+                        if (!!upi && !isNaN(upi)) {
+                            answer = pRefs.filter(function (pointRef) {
+                                return pointRef.PointInst === upi && pointRef.PropertyName === referenceType;
+                            });
+                            answer = (!!answer && answer.length > 0 ? answer[0] : null);
+                        }
+                        return answer;
+                    },
+                    getNextAppIndex = function () {
+                        var answer = 0,
+                            i;
+                        for (i = 0; i < pRefs.length; i++) {
+                            if (answer < pRefs[i].AppIndex) {
+                                answer = pRefs[i].AppIndex;
+                            }
+                        }
+                        return answer + 1;
+                    },
+                    makePointRef = function (theObject, devInst, referenceType, referenceEnum) {
+                        var pointRef = {
+                            "PropertyName": referenceType,
+                            "PropertyEnum": referenceEnum,
+                            "Value": theObject.upi,
+                            "AppIndex": getNextAppIndex(),
+                            "isDisplayable": true,
+                            "isReadOnly": true,
+                            "PointName": theObject.name,
+                            "PointInst": theObject.upi,
+                            "DevInst": devInst,   // TODO   what about external references?
+                            "PointType": Config.Enums['Point Types'][theObject.pointType].enum
+                        };
+
+                        pRefs.push(pointRef);
+                        return pointRef;
+                    };
+
+                adjustScreenObjects();
 
             } else {
                 cb();
@@ -624,7 +870,8 @@ db.connect(connectionString, function (err) {
         return logger.debug(err);
     }
     // Array of tasks that should be run
-    var tasks = [scripts.updateCommittedBills, scripts.updateGPLBlockPointRefEnum, scripts.updateGenerateGPLPointRefs, scripts.updateExistingReports, scripts.updateDevices, scripts.removePointInstance];
+    var tasks = [scripts.updateCommittedBills, scripts.updateGPLBlockPointRefEnum, scripts.updateGenerateGPLPointRefs, scripts.updateGenerateDisplayPointRefs, scripts.updateExistingReports, scripts.updateDevices, scripts.removePointInstance];
+    // var tasks = [scripts.updateGenerateDisplayPointRefs];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result

@@ -25,7 +25,7 @@ var systemInfoCollection = "SystemInfo";
 var processFlag = "default";
 var importProcess = new importUpdate();
 
-process.argv.forEach(function(val, index, array) {
+process.argv.forEach(function (val, index, array) {
 	if (index == 2) {
 		if (val == "gpl") {
 			// expection a command line argument to match
@@ -129,6 +129,7 @@ function importUpdate() {
 
 		Utility.iterateCursor(criteria, function(err, doc, cb) {
 			// logger.info("retrieved", err);
+			// logger.info("doc.id = " + doc._id);
 			importPoint(db, doc, function(err) {
 				count++;
 				if (count % 10000 === 0) {
@@ -1147,6 +1148,7 @@ function updateGPLReferences(db, callback) {
 			$exists: 1
 		}
 	}).toArray(function(err, gplBlocks) {
+		logger.info("gplBlocks.length = " + gplBlocks.length);
 		async.forEachSeries(gplBlocks, function(gplBlock, cb) {
 			gplBlock.name4 = gplBlock.gplLabel;
 			gplBlock.Name = gplBlock.name1 + "_" + gplBlock.name2 + "_" + gplBlock.name3 + "_" + gplBlock.name4;
@@ -1204,7 +1206,7 @@ function updateGPLRefs(db, callback) {
 		}
 	}).toArray(function(err, sequences) {
 		async.forEachSeries(sequences, function(sequence, cb) {
-			addBlocksToSequencePointRefs(db, sequence, function() {
+			addReferencesToSequencePointRefs(db, sequence, function() {
 				db.collection(pointsCollection).update({
 					_id: sequence._id
 				}, sequence, cb);
@@ -1244,6 +1246,17 @@ function updateIndexes(callback) {
 			name2: 1,
 			name3: 1,
 			name4: 1
+		},
+		options: {
+			name: "name1-4"
+		},
+		collection: pointsCollection
+	},{
+		index: {
+			_name1: 1,
+			_name2: 1,
+			_name3: 1,
+			_name4: 1
 		},
 		options: {
 			name: "name1-4"
@@ -1564,7 +1577,7 @@ function updateGPLBlocks(point, callback) {
 }
 
 function updateTimeZones(point, cb) {
-	/*if (point['Point Type'].Value === 'Device') {
+	if (!point.hasOwnProperty("Time Zone") && point['Point Type'].Value === 'Device') {
 		var timezones = Config.Enums['Time Zones'];
 
 		point['Time Zone'] = Config.Templates.getTemplate("Device")["Time Zone"];
@@ -1575,7 +1588,7 @@ function updateTimeZones(point, cb) {
 				point['Time Zone'].Value = prop;
 			}
 		}
-	}*/
+	}
 	cb(null);
 }
 
@@ -1910,59 +1923,366 @@ function updateProgramPoints(point, db, callback) {
 	}
 }
 
-function addBlocksToSequencePointRefs(db, point, cb) {
-	var blocks = point.SequenceData && point.SequenceData.sequence && point.SequenceData.sequence.block,
-		block,
+function addReferencesToSlideShowPointRefs(db, point, cb) {
+	var referencedSlides = point.Slides,
 		upiList = [],
-		skipTypes = ['Output', 'Input', 'Constant'],
 		c,
-		makePointRef = function(upi, name) {
+		pRefAppIndex = 0,
+		matchUpisToPointRefs = function () {
+			var setPointRefIndex = function (slides) {
+				var slide,
+					pRef;
+
+				if (!!slides) {
+					for (c = 0; c < slides.length; c++) {
+						slide = slides[c];
+						if (!!slide.display) {
+							pRef = point["Point Refs"].filter(function (pointRef) {
+								return pointRef.Value === slide.display && pointRef.PropertyName === "Slide Display";
+							});
+
+							pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
+
+							if (!!pRef) {
+								slide.pointRefIndex = pRef.AppIndex;
+								// delete slide.display; // TODO to clear out duplicate data (point ref contains the UPI)
+							}
+						}
+					}
+				}
+			};
+
+			setPointRefIndex(referencedSlides);
+			cb();
+		},
+		makePointRef = function (refPoint) {
+			var pointType = refPoint["Point Type"].Value,
+				baseRef = {
+					"PropertyName": "Slide Display",
+					"PropertyEnum": Config.Enums.Properties["Slide Display"].enum,
+					"Value": refPoint._id,
+					"AppIndex": pRefAppIndex++,
+					"isDisplayable": true,
+					"isReadOnly": false,
+					"PointName": refPoint.Name,
+					"PointInst": (refPoint._pStatus !== 2) ? refPoint._id : 0,
+					"DevInst": (Config.Utility.getPropertyObject("Device Point", refPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", refPoint).Value : 0,
+					"PointType": Config.Enums['Point Types'][pointType].enum || 0
+				};
+
+			return baseRef;
+		},
+		setPointData = function () {
+			var pushPointObjectsUPIs = function (slides) {
+				var slide;
+
+				if (!!slides) {
+					for (c = 0; c < slides.length; c++) {
+						slide = slides[c];
+
+						if (!!slide.display && slide.display > 0) {
+							if (upiList.indexOf(slide.display) === -1) {
+								upiList.push(slide.display);
+							}
+						}
+					}
+				}
+			};
+
+			pushPointObjectsUPIs(referencedSlides);
+
+			if (!!upiList && upiList.length > 0) {
+				db.collection(pointsCollection).find({
+					_id: {
+						$in: upiList
+					}
+				}).toArray(function (err, points) {
+					var referencedPoint;
+					if (!!points) {
+						for (c = 0; c < points.length; c++) {
+							referencedPoint = points[c];
+							point["Point Refs"].push(makePointRef(referencedPoint));
+						}
+					}
+					matchUpisToPointRefs();
+				});
+			} else {
+				cb();
+			}
+		};
+
+	setPointData();
+}
+
+function addReferencesToDisplayPointRefs(db, point, cb) {
+	var screenObjectsCollection = point["Screen Objects"],
+		upiList = [],
+		upiCrossRef = [],
+		c,
+		pRefAppIndex = 0,
+		getScreenObjectType = function (screenObjectType) {
+			var propEnum = 0,
+				propName = "";
+
+			switch (screenObjectType) {
+				case 0:
+					propEnum = Config.Enums.Properties["Display Dynamic"].enum;
+					propName = "Display Dynamic";
+					break;
+				case 1:
+					propEnum = Config.Enums.Properties["Display Button"].enum;
+					propName = "Display Button";
+					break;
+				case 3:
+					propEnum = Config.Enums.Properties["Display Animation"].enum;
+					propName = "Display Animation";
+					break;
+				case 7:
+					propEnum = Config.Enums.Properties["Display Trend"].enum;
+					propName = "Display Trend";
+					break;
+				default:
+					propEnum = 0;
+					propName = "";
+					break;
+			}
+
+			return {
+				name: propName,
+				enum: propEnum
+			};
+		},
+		getCrossRefByUPIandName = function (upi, propertyName) {
+			return upiCrossRef.filter(function (ref) {
+				return ref.upi === upi && ref.PropertyName === propertyName;
+			});
+		},
+		getCrossRefByUPI = function (upi) {
+			return upiCrossRef.filter(function (ref) {
+				return ref.upi === upi;
+			});
+		},
+		matchUpisToPointRefs = function () {
+			var setPointRefIndex = function (screenObjects) {
+				var screenObject,
+					prop,
+					pRef;
+
+				if (!!screenObjects) {
+					for (c = 0; c < screenObjects.length; c++) {
+						screenObject = screenObjects[c];
+						if (!!screenObject.upi) {
+							prop = getScreenObjectType(screenObject["Screen Object"]);
+							pRef = point["Point Refs"].filter(function (pointRef) {
+								return pointRef.Value === screenObject.upi && pointRef.PropertyName === prop.name;
+							});
+
+							pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
+
+							if (!!pRef) {
+								screenObject.pointRefIndex = pRef.AppIndex;
+								// delete screenObject.upi; // TODO to clear out duplicate data (point ref contains the UPI)
+							}
+						}
+					}
+				}
+			};
+
+			setPointRefIndex(screenObjectsCollection);
+			cb();
+		},
+		makePointRef = function (refPoint, propName, propType) {
+			var pointType = refPoint["Point Type"].Value,
+				//pointRef.DevInst =
+				baseRef = {
+					"PropertyName": propName,
+					"PropertyEnum": propType,
+					"Value": refPoint._id,
+					"AppIndex": pRefAppIndex++,
+					"isDisplayable": true,
+					"isReadOnly": false,
+					"PointName": refPoint.Name,
+					"PointInst": (refPoint._pStatus !== 2) ? refPoint._id : 0,
+					"DevInst": (Config.Utility.getPropertyObject("Device Point", refPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", refPoint).Value : 0,
+					"PointType": Config.Enums['Point Types'][pointType].enum || 0
+				};
+
+			return baseRef;
+		},
+		setDisplayPointData = function () {
+			var pushScreenObjectsUPIs = function (screenObjects) {
+				var screenObject,
+					prop;
+
+				if (!!screenObjects) {
+					for (c = 0; c < screenObjects.length; c++) {
+						screenObject = screenObjects[c];
+						prop = getScreenObjectType(screenObject["Screen Object"]);
+
+						if (!!screenObject.upi && screenObject.upi > 0) {
+							if (upiList.indexOf(screenObject.upi) === -1) {
+								upiList.push(screenObject.upi);
+							}
+
+							if (getCrossRefByUPIandName(screenObject.upi, prop.name).length === 0) {
+								upiCrossRef.push({
+									upi: screenObject.upi,
+									name: prop.name,
+									type: prop.enum
+								});
+							}
+						}
+					}
+				}
+			};
+
+			pushScreenObjectsUPIs(screenObjectsCollection);
+
+			if (!!upiList && upiList.length > 0) {
+				db.collection(pointsCollection).find({
+					_id: {
+						$in: upiList
+					}
+				}).toArray(function (err, points) {
+					var referencedPoint,
+						neededRefs,
+						i;
+					if (!!points) {
+						for (c = 0; c < points.length; c++) {
+							referencedPoint = points[c];
+							neededRefs = getCrossRefByUPI(referencedPoint._id);  // all types of screen objects
+							for (i = 0; i < neededRefs.length; i++) {
+								point["Point Refs"].push(makePointRef(referencedPoint, neededRefs[i].name, neededRefs[i].enum));
+							}
+						}
+					}
+					matchUpisToPointRefs();
+				});
+			} else {
+				cb();
+			}
+		};
+
+	setDisplayPointData();
+}
+
+function addReferencesToSequencePointRefs(db, point, cb) {
+	var blocks = point.SequenceData && point.SequenceData.sequence && point.SequenceData.sequence.block,
+		dynamics = point.SequenceData && point.SequenceData.sequence && point.SequenceData.sequence.dynamic,
+		upiList = [],
+		upiCrossRef = [],
+		skipTypes = ['Constant'],
+		c,
+		pRefAppIndex = 1,
+		getCrossRefByUPIandName = function (upi, propertyName) {
+			return upiCrossRef.filter(function (ref) {
+				return ref.upi === upi && ref.PropertyName === propertyName;
+			});
+		},
+		getCrossRefByUPI = function (upi) {
+			return upiCrossRef.filter(function (ref) {
+				return ref.upi === upi;
+			});
+		},
+		matchUpisToPointRefs = function () {
+			var setPointRefIndex = function (gplObjects, propertyName) {
+				var gplObject,
+					pRef;
+
+				if (!!gplObjects) {
+					for (c = 0; c < gplObjects.length; c++) {
+						gplObject = gplObjects[c];
+						if (gplObject.upi && skipTypes.indexOf(gplObject.blockType) === -1) {
+							if (!!gplObject.upi) {
+								pRef = point["Point Refs"].filter(function (pointRef) {
+									return pointRef.Value === gplObject.upi && pointRef.PropertyName === propertyName;
+								});
+
+								pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
+
+								if (!!pRef) {
+									gplObject.pointRefIndex = pRef.AppIndex;
+									// delete gplObject.upi; // TODO to clear out duplicate data (point ref contains the UPI)
+								}
+							}
+						}
+					}
+				}
+			};
+
+			setPointRefIndex(blocks, "GPLBlock");
+			setPointRefIndex(dynamics, "GPLDynamic");
+			cb();
+		},
+		makePointRef = function (refPoint, propName, propType) {
+			var pointType = refPoint["Point Type"].Value;
 			var baseRef = {
-				"PropertyName": "GPLBlock",
-				"PropertyEnum": 439,
-				"Value": upi,
-				"AppIndex": c + 1,
+				"PropertyName": propName,
+				"PropertyEnum": propType,
+				"Value": refPoint._id,
+				"AppIndex": pRefAppIndex++,
 				"isDisplayable": true,
 				"isReadOnly": true,
-				"PointName": name,
-				"PointInst": upi,
-				"DevInst": 0,
-				"PointType": 0
+				"PointName": refPoint.Name,
+				"PointInst": (refPoint._pStatus !== 2) ? refPoint._id : 0,
+				"DevInst": (Config.Utility.getPropertyObject("Device Point", refPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", refPoint).Value : 0,
+				"PointType": Config.Enums['Point Types'][pointType].enum || 0
 			};
 
 			return baseRef;
 		},
-		getBlockPointData = function() {
-			db.collection(pointsCollection).find({
-				_id: {
-					$in: upiList
-				}
-			}).toArray(function(err, blockPoints) {
-				var blockUPI,
-					block,
-					blockName;
+		setGPLPointData = function () {
+			var pushGPLObjectUPIs = function (gplObjects, propName, propType) {
+				var gplObject;
+				if (!!gplObjects) {
+					for (c = 0; c < gplObjects.length; c++) {
+						gplObject = gplObjects[c];
+						if (gplObject.upi && skipTypes.indexOf(gplObject.blockType) === -1) {
+							if (upiList.indexOf(gplObject.upi) === -1) {
+								upiList.push(gplObject.upi);
+							}
 
-				for (c = 0; c < blockPoints.length; c++) {
-					block = blockPoints[c];
-					blockUPI = block._id;
-					blockName = block.Name;
-					point["Point Refs"].push(makePointRef(blockUPI, blockName));
+							if (getCrossRefByUPIandName(gplObject.upi, propName).length === 0) {
+								upiCrossRef.push({
+									upi: gplObject.upi,
+									name: propName,
+									type: propType
+								});
+							}
+						}
+					}
 				}
+			};
+
+			pushGPLObjectUPIs(blocks, "GPLBlock", 439);
+			pushGPLObjectUPIs(dynamics, "GPLDynamic", 440);
+
+			if (!!upiList && upiList.length > 0) {
+				db.collection(pointsCollection).find({
+					_id: {
+						$in: upiList
+					}
+				}).toArray(function (err, points) {
+					var referencedPoint,
+						neededRefs,
+						i;
+					if (!!points) {
+						for (c = 0; c < points.length; c++) {
+							referencedPoint = points[c];
+							neededRefs = getCrossRefByUPI(referencedPoint._id);  // gets both Blocks and Dynamics refs
+							for (i = 0; i < neededRefs.length; i++) {
+								point["Point Refs"].push(makePointRef(referencedPoint, neededRefs[i].name, neededRefs[i].type));
+							}
+						}
+					}
+					matchUpisToPointRefs();
+				});
+			} else {
 				cb();
-			});
+			}
 		};
 
-	if (blocks) {
-		for (c = 0; c < blocks.length; c++) {
-			block = blocks[c];
-			if (block.upi && skipTypes.indexOf(block.blockType) === -1 && upiList.indexOf(block.upi) === -1) {
-				upiList.push(block.upi);
-			}
-		}
-		getBlockPointData();
-	} else {
-		cb();
-	}
+	setGPLPointData();
 }
 
 function updateReferences(db, point, mainCallback) {
@@ -2011,35 +2331,8 @@ function updateReferences(db, point, mainCallback) {
 		}
 
 		if (point["Point Type"].Value === "Slide Show") {
-			async.forEachSeries(point.Slides, function(slide, propCb) {
-				db.collection(pointsCollection).findOne({
-					_id: slide.display
-				}, function(err, displaypoint) {
-					if (err)
-						propCb(err);
-					var pointRef = {};
-					if (displaypoint !== null) {
-						pointRef.PropertyEnum = Config.Enums.Properties["Slide Display"].enum;
-						pointRef.PropertyName = "Slide Display";
-						pointRef.Value = displaypoint._id;
-						pointRef.AppIndex = slide.order + 1;
-						pointRef.isDisplayable = true;
-						pointRef.isReadOnly = false;
-						pointRef.PointName = displaypoint.Name;
-						pointRef.PointType = displaypoint["Point Type"].eValue;
-						pointRef.PointInst = (displaypoint._pStatus !== 2) ? displaypoint._id : 0;
-						pointRef.DevInst = (Config.Utility.getPropertyObject("Device Point", displaypoint) !== null) ? Config.Utility.getPropertyObject("Device Point", displaypoint).Value : 0;
-
-						point["Point Refs"].push(pointRef);
-					}
-					propCb(null);
-				});
-			}, function(err) {
-				/*db.collection(pointsCollection).update({
-						_id: point._id
-					}, point, function(err, result) {*/
+			addReferencesToSlideShowPointRefs(db, point, function() {
 				uniquePID(point["Point Refs"]);
-				//});
 			});
 		}
 		/*else if (point["Point Type"].Value === "Sensor") {
@@ -2064,59 +2357,9 @@ function updateReferences(db, point, mainCallback) {
 		}*/
 		else if (point["Point Type"].Value === "Display") {
 			if (point["Screen Objects"] !== undefined) {
-				async.forEachSeries(point["Screen Objects"], function(screenObject, propCb) {
-						if (screenObject["Screen Object"] === 0 || screenObject["Screen Object"] === 1 || screenObject["Screen Object"] === 3 || screenObject["Screen Object"] === 7) {
-							var propertyEnum = 0;
-							var propertyName = "";
-							if (screenObject["Screen Object"] === 0) {
-								propertyEnum = Config.Enums.Properties["Display Dynamic"].enum;
-								propertyName = "Display Dynamic";
-							}
-							if (screenObject["Screen Object"] === 1) {
-								propertyEnum = Config.Enums.Properties["Display Button"].enum;
-								propertyName = "Display Button";
-							}
-							if (screenObject["Screen Object"] === 3) {
-								propertyEnum = Config.Enums.Properties["Display Animation"].enum;
-								propertyName = "Display Animation";
-							}
-							if (screenObject["Screen Object"] === 7) {
-								propertyEnum = Config.Enums.Properties["Display Trend"].enum;
-								propertyName = "Display Trend";
-							}
-
-							db.collection(pointsCollection).findOne({
-								_id: screenObject.upi
-							}, function(err, displaypoint) {
-								if (err)
-									propCb(err);
-								var pointRef = {};
-								if (displaypoint !== null) {
-									pointRef.PropertyEnum = propertyEnum;
-									pointRef.PropertyName = propertyName;
-									pointRef.Value = displaypoint._id;
-									pointRef.AppIndex = 1;
-									pointRef.isDisplayable = true;
-									pointRef.isReadOnly = false;
-									pointRef.PointName = displaypoint.Name;
-									pointRef.PointType = displaypoint["Point Type"].eValue;
-									pointRef.PointInst = (displaypoint._pStatus !== 2) ? displaypoint._id : 0;
-									pointRef.DevInst = (Config.Utility.getPropertyObject("Device Point", displaypoint) !== null) ? Config.Utility.getPropertyObject("Device Point", displaypoint).Value : 0;
-
-									point["Point Refs"].push(pointRef);
-								}
-								propCb(null);
-							});
-						} else
-							propCb(null);
-					},
-					function(err) {
-						/*db.collection(pointsCollection).update({
-								_id: point._id
-							}, point, function(err, result) {*/
-						uniquePID(point["Point Refs"]);
-						//});
-					});
+				addReferencesToDisplayPointRefs(db, point, function() {
+					uniquePID(point["Point Refs"]);
+				});
 			} else {
 				point["Screen Objects"] = [];
 				/*db.collection(pointsCollection).update({
@@ -2277,7 +2520,7 @@ function updateReferences(db, point, mainCallback) {
 					}, point, function(err, result) {*/
 
 				if (point['Point Type'].Value === 'Sequence') {
-					addBlocksToSequencePointRefs(db, point, function() {
+					addReferencesToSequencePointRefs(db, point, function() {
 						uniquePID(point["Point Refs"]);
 					});
 				} else {
