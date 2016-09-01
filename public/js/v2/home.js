@@ -103,11 +103,20 @@ var dti = {
         dti.itemIdx++;
         return dti.settings.idxPrefix + dti.itemIdx;
     },
-    destroyObject: function (o) {
+    destroyObject: function (o, recursive) {
         var keys = Object.keys(o),
+            val,
             c;
+
         for (c = 0; c < keys.length; c++) {
-            delete o[keys[c]];
+            val = o[keys[c]];
+
+            if (val && typeof val === 'object' && recursive) {
+                dti.destroyObject(val, true);
+                delete o[keys[c]];
+            } else {
+                delete o[keys[c]];
+            }
         }
     },
     forEach: function (obj, fn) {
@@ -213,6 +222,16 @@ var dti = {
     on: function (event, handler) {
         dti.events[event] = dti.events[event] || [];
         dti.events[event].push(handler);
+    },
+    off: function (event, handler) {
+        var handlers = dti.events[event] || [];
+
+        dti.forEachArray(handlers, function processOffHandler (fn, idx) {
+            if (fn === handler) {
+                dti.events[event].splice(idx, 1);
+                return false;
+            }
+        });
     },
     fire: function (event, obj1, obj2) {
         var c,
@@ -346,6 +365,13 @@ var dti = {
                 setTimer = function () {
                     // clearTimeout(hideTimer);
                     hideTimer = setTimeout(closeMenu, hoverDelay);
+                },
+                destroy = function () {
+                    $button.off('mouseenter mouseleave');
+                    $('#' + menuID).off('mouseenter mouseleave');
+                    clearTimeout(hideTimer);
+                    dti.off('hideMenus', closeMenu);
+                    dti.off('openMenu', closeMenu);
                 };
 
             $button.hover(function showHoverMenu (event) {
@@ -401,7 +427,8 @@ var dti = {
             return {
                 isOpen: function () {
                     return menuShown;
-                }
+                },
+                destroy: destroy
             };
         }
     },
@@ -481,7 +508,6 @@ var dti = {
             close = function (event) {
                 self.bindings.minimize();
                 dti.bindings.openWindows[self.bindings.group()].remove(self.bindings);
-                self.$iframe.attr('src', 'about:blank');
 
                 self.$windowEl.draggable('destroy');
                 self.$windowEl.resizable('destroy');
@@ -493,11 +519,13 @@ var dti = {
                 }
 
                 setTimeout(function closeWindow () {
-                    self.$windowEl.remove();
+                    self.$iframe.attr('src', 'about:blank');
                     ko.cleanNode(self.$windowEl[0]);
                     $(self.$iframe[0].contentDocument).off('mousedown');
-                    dti.destroyObject(self);
-                }, 2000);
+                    self.$windowEl.remove();
+                    // dti.destroyObject(self.bindings);
+                    dti.destroyObject(self, true);
+                }, 1000);
             },
             minimize = function (event, skipActivate) {
                 active = false;
@@ -2008,7 +2036,8 @@ var dti = {
                         menu = $('#taskbarMenuTemplate').html(),
                         $menu,
                         menuId = dti.makeId(),
-                        buttonId = $element.attr('id');
+                        buttonId = $element.attr('id'),
+                        hoverMenu;
 
                     if (!buttonId) {
                         buttonId = dti.makeId();
@@ -2029,8 +2058,12 @@ var dti = {
                                 at: 'center bottom'
                             });
 
-                        dti.events.hoverMenu('#' + buttonId, menuId);
+                        hoverMenu = dti.events.hoverMenu('#' + buttonId, menuId);
                     }, 100);
+
+                    ko.utils.domNodeDisposal.addDisposeCallback(element, function disposeTaskbarMenu () {
+                        hoverMenu.destroy();
+                    });
                 }
             };
 
@@ -2049,9 +2082,7 @@ var dti = {
                 }
             };
 
-            dti.on('loaded', function applyKnockoutBindings () {
-                ko.applyBindings(dti.bindings);
-            });
+            ko.applyBindings(dti.bindings);
         }
     },
     authentication: {

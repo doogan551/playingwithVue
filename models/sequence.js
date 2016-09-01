@@ -66,7 +66,7 @@ exports.doUpdateSequence = function (data, cb) {
     query:{'Name': name},
     updateObj:{
       $set:{
-        'SequenceDate': sequenceData
+        'SequenceData': sequenceData
       }
     }
   };

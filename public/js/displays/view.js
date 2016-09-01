@@ -144,14 +144,26 @@ $(document).on('pageinit', function() {
             url: '/api/points/' + window.upi
         }).done(function(response) {
             var list = response['Screen Objects'] || [],
+                screenObject,
+                pointRef,
                 c;
 
             window.displayJson = response;
             window.pointType = response['Point Type'].Value;
             window.point = response;
 
-            for(c=0; c<list.length; c++) {
-                upiList.push(list[c].upi);
+            for (c = 0; c < list.length; c++) {
+                screenObject = list[c];
+                if (screenObject.upi > 0 || screenObject.pointRefIndex !== undefined) {
+                    pointRef = displays.getScreenObjectPointRef(screenObject);
+
+                    if (!!pointRef) {
+                        screenObject.upi = pointRef.Value;
+                        screenObject.pointRefIndex = pointRef.AppIndex;
+                    }
+
+                    upiList.push(screenObject.upi);
+                }
             }
 
             $.ajax({
