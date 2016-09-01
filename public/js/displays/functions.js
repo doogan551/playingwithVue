@@ -731,10 +731,120 @@ displays = $.extend(displays, {
         displays.isRendered = true;
         displays.onRenderFn();
     },
-    onRenderFn: function() {
+    onRenderFn: function () {
         return;
     },
-    workspaceManager: window.top.workspaceManager,
+    getPointRefByAppindex: function (pointRefIndex, referenceType) {
+        var answer;
+        if (!!pointRefIndex) {
+            answer = displayJson["Point Refs"].filter(function (pointRef) {
+                return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
+            });
+
+            answer = (!!answer && answer.length > 0 ? answer[0] : null);
+        }
+        return answer;
+    },
+    getPointRefByUpi: function (upi, referenceType) {
+        var answer;
+        if (!!upi && !isNaN(upi)) {
+            answer = displayJson["Point Refs"].filter(function (pointRef) {
+                return pointRef.PointInst === upi && pointRef.PropertyName === referenceType;
+            });
+            answer = (!!answer && answer.length > 0 ? answer[0] : null);
+        }
+        return answer;
+    },
+    getScreenObjectType: function (screenObjectType) {
+        var propEnum = 0,
+            propName = "";
+
+        switch (screenObjectType) {
+            case 0:
+                propEnum = displays.workspaceManager.config.Enums.Properties["Display Dynamic"].enum;
+                propName = "Display Dynamic";
+                break;
+            case 1:
+                propEnum = displays.workspaceManager.config.Enums.Properties["Display Button"].enum;
+                propName = "Display Button";
+                break;
+            case 3:
+                propEnum = displays.workspaceManager.config.Enums.Properties["Display Animation"].enum;
+                propName = "Display Animation";
+                break;
+            case 7:
+                propEnum = displays.workspaceManager.config.Enums.Properties["Display Trend"].enum;
+                propName = "Display Trend";
+                break;
+            default:
+                propEnum = 0;
+                propName = "";
+                break;
+        }
+
+        return {
+            name: propName,
+            enum: propEnum
+        };
+    },
+    getScreenObjectPointRef: function (screenObject) {
+        var prop = displays.getScreenObjectType(screenObject["Screen Object"]);
+        return displays.getPointRef(screenObject, prop.name, prop.enum);
+    },
+    getPointRef: function (screenObject, referenceType, referenceEnum) {
+        var objRef,
+            getPointReference = function (screenobject, refType) {
+                var answer = null;
+
+                if (!!screenobject.pointRefIndex) {
+                    answer = displays.getPointRefByAppindex(screenobject.pointRefIndex, refType);
+                } else if (!!screenobject.upi) {
+                    answer = displays.getPointRefByUpi(screenobject.upi, refType);
+                }
+
+                return answer;
+            },
+            pointRef = getPointReference(screenObject, referenceType);
+
+        // objRef = {
+        //     upi: screenObject.upi,
+        //     name: !!displays.upiNames ? displays.upiNames[screenObject.upi] : 0,
+        //     pointType: !!displays.pointTypes ? displays.pointTypes[screenObject.upi] : 0
+        // };
+
+        // return (!!pointRef ? pointRef : displays.makePointRef(objRef, 0, referenceType, referenceEnum));
+        return (!!pointRef ? pointRef : null);
+    },
+    getNextAppIndex: function () {
+        var answer = 0,
+            i;
+        for (i = 0; i < displayJson['Point Refs'].length; i++) {
+            if (answer < displayJson['Point Refs'][i].AppIndex) {
+                answer = displayJson['Point Refs'][i].AppIndex;
+            }
+        }
+        return answer + 1;
+    },
+    makePointRef: function (referencedPoint, devInst, referenceType, referenceEnum) {
+        var pointRef = {
+            "PropertyName": referenceType,
+            "PropertyEnum": referenceEnum,
+            "Value": referencedPoint.upi,
+            "AppIndex": displays.getNextAppIndex(),
+            "isDisplayable": true,
+            "isReadOnly": true,
+            "PointName": referencedPoint.name,
+            "PointInst": referencedPoint.upi,
+            "DevInst": devInst,   // TODO   what about external references?
+            "PointType": displays.pointTypes[referencedPoint.pointType].enum
+        };
+
+        displayJson['Point Refs'].push(pointRef);
+
+        return pointRef;
+    },
+
+    workspaceManager: (window.opener || window.top).workspaceManager,
 
     initDisplay: function() {
         displayJson.Width = displayJson.Width || 800;

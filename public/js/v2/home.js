@@ -100,11 +100,20 @@ var dti = {
         dti.itemIdx++;
         return dti.settings.idxPrefix + dti.itemIdx;
     },
-    destroyObject: function (o) {
+    destroyObject: function (o, recursive) {
         var keys = Object.keys(o),
+            val,
             c;
+
         for (c = 0; c < keys.length; c++) {
-            delete o[keys[c]];
+            val = o[keys[c]];
+
+            if (val && typeof val === 'object' && recursive) {
+                dti.destroyObject(val, true);
+                delete o[keys[c]];
+            } else {
+                delete o[keys[c]];
+            }
         }
     },
     forEach: function (obj, fn) {
@@ -487,8 +496,8 @@ var dti = {
                     ko.cleanNode(self.$windowEl[0]);
                     $(self.$iframe[0].contentDocument).off('mousedown');
                     self.$windowEl.remove();
-                    dti.destroyObject(self.bindings);
-                    dti.destroyObject(self);
+                    // dti.destroyObject(self.bindings);
+                    dti.destroyObject(self, true);
                 }, 1000);
             },
             minimize = function (event, skipActivate) {

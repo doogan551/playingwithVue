@@ -473,7 +473,7 @@ var gpl = {
         var answer;
         if (!!upi && !isNaN(upi)) {
             answer = gpl.point["Point Refs"].filter(function (pointRef) {
-                return pointRef.PointInst === upi && pointRef.PropertyName === referenceType;
+                return pointRef.Value === upi && pointRef.PropertyName === referenceType;
             });
             answer = (!!answer && answer.length > 0 ? answer[0] : null);
         }
@@ -488,13 +488,13 @@ var gpl = {
 
             pRef.DevInst = gpl.deviceId;
 
-            if (!!dynamic.upi && !isNaN(dynamic.upi)) {
-                delete dynamic.upi;
-            }
+            // if (!!dynamic.upi && !isNaN(dynamic.upi)) {  // TODO to clear out duplicate data (point ref contains the UPI)
+            //     delete dynamic.upi;
+            // }
         }
     },
-    getDynamicPointRef: function (block) {
-        return gpl.getPointRef(block, "GPLDynamic", 440);
+    getDynamicPointRef: function (dynamic) {
+        return gpl.getPointRef(dynamic, "GPLDynamic", 440);
     },
     setBlockPointRef: function (block) {
         var pRef = gpl.getBlockPointRef(block);
@@ -505,9 +505,9 @@ var gpl = {
             if (block.type !== 'MonitorBlock') {
                 pRef.DevInst = gpl.deviceId;  // just in case the "Device Point" changed
             }
-            if (!!block.upi && !isNaN(block.upi)) {
-                delete block.upi;
-            }
+            // if (!!block.upi && !isNaN(block.upi)) {  // TODO to clear out duplicate data (point ref contains the UPI)
+            //     delete block.upi;
+            // }
         }
     },
     getBlockPointRef: function (block) {
@@ -565,18 +565,18 @@ var gpl = {
         }
         return answer + 1;
     },
-    makePointRef: function (gplObject, devInst, referenceType, referenceEnum) {
+    makePointRef: function (referencedPoint, devInst, referenceType, referenceEnum) {
         var pointRef = {
             "PropertyName": referenceType,
             "PropertyEnum": referenceEnum,
-            "Value": gplObject.upi,
+            "Value": referencedPoint.upi,
             "AppIndex": gpl.getNextAppIndex(),
             "isDisplayable": true,
             "isReadOnly": true,
-            "PointName": gplObject.name,
-            "PointInst": gplObject.upi,
+            "PointName": referencedPoint.name,
+            "PointInst": referencedPoint.upi,
             "DevInst": devInst,   // TODO   what about external references?
-            "PointType": gpl.pointTypes[gplObject.pointType].enum
+            "PointType": gpl.pointTypes[referencedPoint.pointType].enum
         };
 
         gpl.point['Point Refs'].push(pointRef);
@@ -4132,7 +4132,7 @@ gpl.ActionButton = function (config) {
 
 
         setUPI = function (upi) {
-            _local.upi = upi;
+            _local.upi = config.upi;
             _getPointData(upi);
         };
 
@@ -6113,7 +6113,7 @@ gpl.BlockManager = function (manager) {
 
             if (answer) {
                 if (!!pointRef) {
-                    block.upi = pointRef.PointInst;
+                    block.upi = pointRef.Value;
                     block.pointRefIndex = pointRef.AppIndex;
                 }
             } else {
@@ -6818,7 +6818,7 @@ gpl.Manager = function () {
                         block = gpl.json.block[i];
                         pointRef = gpl.getBlockPointRef(block);
                         if (!!pointRef) {
-                            block.upi = pointRef.PointInst;
+                            block.upi = pointRef.Value;
                             block.pointRefIndex = pointRef.AppIndex;
                         }
                     }
@@ -6829,7 +6829,7 @@ gpl.Manager = function () {
                         dynamic = gpl.json.dynamic[i];
                         pointRef = gpl.getDynamicPointRef(dynamic);
                         if (!!pointRef) {
-                            dynamic.upi = pointRef.PointInst;
+                            dynamic.upi = pointRef.Value;
                             dynamic.pointRefIndex = pointRef.AppIndex;
                         }
                     }
@@ -8778,7 +8778,8 @@ gpl.Manager = function () {
             pointRef = gpl.getDynamicPointRef(dynamic);
 
             if (!!pointRef) {
-                dynamic.upi = pointRef.PointInst;
+                dynamic.upi = pointRef.Value;
+                dynamic.actionPoint = pointRef.Value;
                 dynamic.pointRefIndex = pointRef.AppIndex;
             }
             managerSelf.doAddNewButton(dynamic);
