@@ -1,4 +1,4 @@
-define(['knockout', 'text!./view.html'], function(ko, view) {
+define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view) {
     var apiEndpoint;
 
     // this ko binding hander swiped from http://blog.craigsworks.com/knockout-bootstrap-3-buttons-and-the-enable-binding/
@@ -60,9 +60,9 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             var point;
             if (params.hasOwnProperty('point')) {
                 point = self.utility.getPointRefProperty(self.refType, this.point);
-            } else if(self.appIndex === 0){
+            } else if (self.appIndex === 0) {
                 point = self.utility.getPointRefProperty(self.refType);
-            }else{
+            } else {
                 point = self.utility.getPointRefPropertyByAppIndex(self.refType, self.appIndex);
             }
             self.arrayIndex = point.arrayIndex;
@@ -141,7 +141,16 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             },
             pointSelectorEndPoint = [getPath(), '?mode=select'].join(''),
             callback = function(id, name, pointType) {
-                if (!!id) {
+                // Schedule entry point ref changes don't go through normal validation in configjs
+                // this is the first point that the returned id can be checked for a recursive loop.
+                if (self.point['Point Type'].Value() === 'Schedule Entry' && id === self.point._parentUpi()) {
+                    bannerJS.showBanner({
+                        msg: 'Unable to control Schedule from same schedule.',
+                        dismissText: 'Dismiss',
+                        color: '#D50000',
+                    });
+                    return false;
+                } else if (!!id) {
                     getRefData(id).done(
                         function(data) {
                             endPoint = self.utility.config.Utility.pointTypes.getUIEndpoint(pointType, id);
@@ -162,6 +171,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                                     refPoint: self.refPoint
                                 });
                             }
+
                         }
                     );
                 }

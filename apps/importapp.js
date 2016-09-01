@@ -143,7 +143,7 @@ function importUpdate() {
 					logger.info('number of powermeters changed:', count);
 					logger.info("before changeUpis", err, new Date());
 					changeUpis(function(err) {
-						fixUpisCollection(db, 'new_points',function(err) {
+						fixUpisCollection(db, 'new_points', function(err) {
 							// cleanupDB(db, function(err) {
 							if (err) {
 								logger.info("updateGPLReferences err:", err);
@@ -1110,9 +1110,14 @@ function convertScheduleEntries(db, callback) {
 				scheduleEntryTemplate["Point Refs"] = [];
 
 				delete scheduleEntryTemplate._Name;
-				insertScheduleEntry(db, scheduleEntryTemplate, function(err) {
-					forEachCallback(err);
-				});
+				if (scheduleEntryTemplate["Control Point"].Value !== scheduleEntryTemplate._parentUpi) {
+					insertScheduleEntry(db, scheduleEntryTemplate, function(err) {
+						forEachCallback(err);
+					});
+				} else {
+					console.log('not inserting SE', scheduleEntryTemplate._id);
+					forEachCallback();
+				}
 			});
 		}, function(err) {
 			logger.info('convertScheduleEntries err', err);

@@ -1790,11 +1790,11 @@ var alarmMessageViewModel = function() {
                     },
                     msgCat: {
                         Value: getKeyBasedOnEnumValue(alarmTemplateCategories, row.msgCat),
-                        rawValue: row.msgCat
+                        rawValue: parseInt(row.msgCat, 10)
                     },
                     msgType: {
                         Value: getKeyBasedOnEnumValue(alarmTemplateTypes, row.msgType),
-                        rawValue: row.msgType
+                        rawValue: parseInt(row.msgType, 10)
                     },
                     msgName: {
                         Value: row.msgName,

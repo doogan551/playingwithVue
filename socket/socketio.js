@@ -657,7 +657,8 @@ function doRefreshSequence(data, socket) {
 
 function doUpdateSequence(data, cb) {
   var name = data.sequenceName,
-    sequenceData = data.sequenceData;
+      sequenceData = data.sequenceData,
+      pointRefs = data.pointRefs;
 
   // mydb.collection('points').findOne({
   //     "Name": name
@@ -677,7 +678,8 @@ function doUpdateSequence(data, cb) {
     },
     updateObj: {
       $set: {
-        'SequenceData': sequenceData
+        'SequenceData': sequenceData,
+        'Point Refs': pointRefs
       }
     }
   }, function(updateErr, updateRecords) {
