@@ -7888,7 +7888,7 @@ gpl.Manager = function () {
     };
 
     managerSelf.handleNavigateAway = function (event) {
-        if (managerSelf.bindings.hasEdits()) {
+        if (gpl.isEdit && managerSelf.bindings.hasEdits()) {
             return 'You have unsaved changes. Are you sure you want to leave this page?';
         }
     };
