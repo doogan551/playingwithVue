@@ -676,11 +676,11 @@ footer {
 
         i.closeIcon {
             position: absolute;
-            right: 24px;
-            top: 32px;
+            right: 0;
         }
 
         .itemTitle {
+            position: relative;
             text-align: center;
             border-bottom: 1px solid $cardTitleBorder;
             height: 23px;
