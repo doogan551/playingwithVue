@@ -95,8 +95,10 @@ var ActivityLogsManager = function (conf) {
             userObj._id = user._id;
             userObj.groups = user.groups;
         },
-        pointNameFilterCallback = function (localFilterObj) {
+        pointNameFilterCallback = function (newValue) {
             //console.log('pointNameFilterCallback() called');
+            var localFilterObj = newValue.filter;
+            
             self.name1(localFilterObj.name1);
             self.name2(localFilterObj.name2);
             self.name3(localFilterObj.name3);
@@ -110,13 +112,13 @@ var ActivityLogsManager = function (conf) {
         },
         filterWindowCallback = function () {
             //console.log('filterWindowCallback() called');
-            filterWindow.pointLookup.init(pointNameFilterCallback, pointNameFilterObj);
+            // filterWindow.pointLookup.init(pointNameFilterCallback, pointNameFilterObj);
         },
         initFilterWindow = function () {
             //console.log('initFilterWindow() called');
-            filterWindow = openWindow('/pointLookup?mode=filter', 'activityfilter', 'activityfilter', 'activityfilter', 'activityfilter', {
-                callback: filterWindowCallback
-            });
+            // filterWindow = openWindow('/pointLookup?mode=filter', 'activityfilter', 'activityfilter', 'activityfilter', 'activityfilter', {
+            //     callback: filterWindowCallback
+            // });
         },
         getPrettyDate = function (timestamp, forceDateString) {
             var theDate = new Date(timestamp),
@@ -618,6 +620,15 @@ var ActivityLogsManager = function (conf) {
             filterWindowCallback();
         }
     };
+    self.showPointFilter = function () {
+        dtiMessaging.showNavigatorFilter();
+    };
+
+    dtiMessaging.onPointFilterSelect(function (cfg) {
+        pointNameFilterCallback(cfg);
+        self.applyPointNameFilter();
+    });
+
     self.applyDateTimeFilter = function () {
         self.dateFrom(self.dtFilterPlaceholder.dateFrom);
         self.timeFrom(self.dtFilterPlaceholder.timeFrom);
