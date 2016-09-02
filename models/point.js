@@ -722,10 +722,10 @@ module.exports = {
                 }
 
                 targetPoint._pStatus = 1;
-                fixPoint(upiObj, targetPoint, true, callback);
+                fixPoint(upiObj, targetPoint, true, sysInfo, callback);
               });
             } else {
-              fixPoint(upiObj, Config.Templates.getTemplate(pointType), false, callback);
+              fixPoint(upiObj, Config.Templates.getTemplate(pointType), false, sysInfo, callback);
             }
           });
         });
@@ -819,7 +819,7 @@ module.exports = {
       });
     }
 
-    function fixPoint(upiObj, template, isClone, callback) {
+    function fixPoint(upiObj, template, isClone, sysInfo, callback) {
       template.Name = Name;
       template.name1 = (name1) ? name1 : "";
       template.name2 = (name2) ? name2 : "";
