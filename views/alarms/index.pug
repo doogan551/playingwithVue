@@ -187,7 +187,9 @@ html
 
                 .pages
                     .pull-left
-                        .pop.cursorPointer(data-bind='click: togglePop')
+                        //-  TODO
+                        //-  Disable until this is supported in v2
+                        //- .pop.cursorPointer(data-bind='click: togglePop')
                             .popOut
                                 .fa.fa-arrow-circle-up
                                 | Pop Out
@@ -255,8 +257,8 @@ html
 
                 .displays.scrollable.thinScroll(data-bind="visible: !alarmDetail.gettingData() && !alarmDetail.error()")
                     // ko foreach: alarmDetail.displays
-                    .thumb
-                        img.cursorPointer(data-bind="dataSrc: $data._id, click: $root.openDisplay", title="Open this display in a new window.")
+                    .thumb.cursorPointer(data-bind="click: $root.openDisplay", title="Open this display in a new window.")
+                        img(data-bind="dataSrc: $data._id")
                         div.truncate(data-bind="text: $data.Name, attr: {title: $data.Name}", style="background-color: #ECECEC; padding: 10px;")
                     // /ko
 

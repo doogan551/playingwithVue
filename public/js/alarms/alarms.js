@@ -2386,7 +2386,9 @@ var AlarmManager = function (conf) {
         if (view.id === currentView.id)
             return;
 
-        updateWorkspaceWindowTitle(view);
+        // TODO
+        // Disable until this is supported in v2
+        // updateWorkspaceWindowTitle(view);
 
         // Update local storage with the name of the new view we're looking at
         storeViewFilters(view);
