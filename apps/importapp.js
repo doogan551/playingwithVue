@@ -1256,7 +1256,7 @@ function updateIndexes(callback) {
 			name: "name1-4"
 		},
 		collection: pointsCollection
-	},{
+	}, {
 		index: {
 			_name1: 1,
 			_name2: 1,
@@ -1301,24 +1301,6 @@ function updateIndexes(callback) {
 		collection: pointsCollection
 	}, {
 		index: {
-			"Point Refs.Value": 1
-		},
-		options: {},
-		collection: 'new_points'
-	}, {
-		index: {
-			"Point Refs.DevInst": 1
-		},
-		options: {},
-		collection: 'new_points'
-	}, {
-		index: {
-			"Point Refs.PointInst": 1
-		},
-		options: {},
-		collection: 'new_points'
-	}, {
-		index: {
 			"Point Refs.PropertyName": 1
 		},
 		options: {},
@@ -1355,6 +1337,110 @@ function updateIndexes(callback) {
 		},
 		options: {},
 		collection: pointsCollection
+	}, {
+		index: {
+			name1: 1,
+			name2: 1,
+			name3: 1,
+			name4: 1
+		},
+		options: {
+			name: "name1-4"
+		},
+		collection: "new_points"
+	}, {
+		index: {
+			_name1: 1,
+			_name2: 1,
+			_name3: 1,
+			_name4: 1
+		},
+		options: {
+			name: "name1-4"
+		},
+		collection: "new_points"
+	}, {
+		index: {
+			Name: 1
+		},
+		options: {
+			unique: true
+		},
+		collection: "new_points"
+	}, {
+		index: {
+			_pStatus: 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Refs.Value": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Refs.DevInst": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Refs.PointInst": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Refs.PropertyName": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Refs.PropertyEnum": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Refs.PointInst": 1,
+			"Point Refs.PropertyEnum": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Type.Value": 1,
+			"name1": 1,
+			"name2": 1,
+			"name3": 1,
+			"name4": 1
+		},
+		options: {
+			name: "Pt, name1-4"
+		},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Type.Value": 1,
+			"Network Segment.Value": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Type.Value": 1,
+			_name1: 1,
+			_name2: 1,
+			_name3: 1,
+			_name4: 1
+		},
+		options: {
+			name: "PT, _name1-4"
+		},
+		collection: "new_points"
 	}, {
 		index: {
 			"msgTime": 1
@@ -1932,7 +2018,7 @@ function addReferencesToSlideShowPointRefs(db, point, cb) {
 	var referencedSlides = point.Slides,
 		upiList = [],
 		c,
-		pRefAppIndex = 0,
+		pRefAppIndex = 1,  // skipping 0 for "Device Point"
 		matchUpisToPointRefs = function () {
 			var setPointRefIndex = function (slides) {
 				var slide,

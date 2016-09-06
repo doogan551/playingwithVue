@@ -458,7 +458,7 @@ var gpl = {
     },
     getPointRefByAppindex: function (pointRefIndex, referenceType) {
         var answer;
-        if (!!pointRefIndex) {
+        if (pointRefIndex > -1) {
             answer = gpl.point["Point Refs"].filter(function (pointRef) {
                 return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
             });

@@ -346,7 +346,7 @@ var scripts = {
                     },
                     getPointRefByAppindex = function (pointRefIndex, referenceType) {
                         var answer;
-                        if (!!pointRefIndex) {
+                        if (pointRefIndex > -1) {
                             answer = pRefs.filter(function (pointRef) {
                                 return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
                             });
@@ -596,7 +596,7 @@ var scripts = {
                     },
                     getPointRefByAppindex = function (pointRefIndex, referenceType) {
                         var answer;
-                        if (!!pointRefIndex) {
+                        if (pointRefIndex > -1) {
                             answer = pRefs.filter(function (pointRef) {
                                 return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
                             });
