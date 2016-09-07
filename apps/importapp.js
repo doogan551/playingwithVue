@@ -144,16 +144,16 @@ function importUpdate() {
 					logger.info('number of powermeters changed:', count);
 					logger.info("before changeUpis", err, new Date());
 					changeUpis(function(err) {
-						fixUpisCollection(db, 'new_points', function(err) {
-							// cleanupDB(db, function(err) {
-							if (err) {
-								logger.info("updateGPLReferences err:", err);
-							}
-							logger.info("!!Check Port 1-4 Timeouts on devices!!");
-							logger.info("done", err, new Date());
-							process.exit(0);
+						fixUpisCollection(db, 'new_points', function (err) {
+							cleanupDB(db, function (err) {
+								if (err) {
+									logger.info("updateGPLReferences err:", err);
+								}
+								logger.info("!!Check Port 1-4 Timeouts on devices!!");
+								logger.info("done", err, new Date());
+								process.exit(0);
 
-							// });
+							});
 						});
 					});
 				});
