@@ -229,6 +229,15 @@ span.intervalLabel {
     margin-left: 15px;
     margin-top: -2px;
 }
+.calculations {
+    list-style-type: none;
+    width: 100px;
+    -webkit-appearance: none;
+    padding: 2px 5px 2px 5px;
+}
+.globalCalculations {
+    list-style-type: none;
+}
 .calculations.dropdown-menu {
     width: 65px;
     min-width: 50px;

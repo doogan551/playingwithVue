@@ -388,6 +388,8 @@ var reportsViewModel = function () {
         $dataTablePlaceHolder,
         $rightPanel,
         $spinnertext,
+        $editColumnModal,
+        $viewColumnModal,
         $pointName1,
         $pointName2,
         $pointName3,
@@ -884,13 +886,11 @@ var reportsViewModel = function () {
                 $errorMessageholder.text("");
             }, 6000);  // display error message
         },
-        openPointSelectorForColumn = function (selectObjectIndex, upi, newUrl) {
+        openPointSelectorForModalColumn = function (selectObjectIndex, upi, newUrl) {
             var url = newUrl || '/pointlookup/' + encodeURI("Report") + '/' + encodeURI("Column Point") + "?mode=select",
-                windowRef, //
+                windowRef,
                 tempPoint,
-                objIndex = selectObjectIndex,
-                updatedList = $.extend(true, [], self.listOfColumns()),
-                tempObject = updatedList[selectObjectIndex],
+                tempObject = {},
                 setColumnPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
                     if (!!tempObject.AppIndex) {
@@ -910,7 +910,8 @@ var reportsViewModel = function () {
                         tempObject.precision = 3;
                         tempObject.includeInChart = false;
                     }
-                    tempObject.calculation = "";
+                    tempObject.calculation = [];
+                    tempObject.multiplier = 1;
                     delete tempObject.valueOptions;
                     if (self.reportType === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
@@ -936,7 +937,85 @@ var reportsViewModel = function () {
                             refPoint: selectedPoint,
                             property: getPointRefByAppIndex(tempObject.AppIndex)
                         });
-                        updatedList[objIndex] = tempObject;
+                        self.currentColumnEdit(tempObject);
+                    } else {
+                        console.log("openPointSelectorForModalColumn() couldn't find AppIndex.........");
+                        self.currentColumnEdit(columnEditReset());
+                    }
+                },
+                pointSelectedCallback = function (pid, name, type, filter) {
+                    if (!!pid) {
+                        ajaxPost({pointid: pid}, getPointURL, setColumnPoint);
+                    }
+                    pointFilterSearch.name1 = filter.filter1;
+                    pointFilterSearch.name2 = filter.filter2;
+                    pointFilterSearch.name3 = filter.filter3;
+                    pointFilterSearch.name4 = filter.filter4;
+                    pointFilterSearch.selectedPointTypes = filter.selectedPointTypes;
+                },
+                windowOpenedCallback = function () {
+                    windowRef.pointLookup.MODE = 'select';
+                    windowRef.pointLookup.init(pointSelectedCallback, pointFilterSearch);
+                };
+
+            windowRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'Select Point Column', {
+                callback: windowOpenedCallback,
+                width: 1000
+            });
+        },
+        openPointSelectorForColumn = function (selectObjectIndex, upi, newUrl) {
+            var url = newUrl || '/pointlookup/' + encodeURI("Report") + '/' + encodeURI("Column Point") + "?mode=select",
+                windowRef, //
+                tempPoint,
+                updatedList = $.extend(true, [], self.listOfColumns()),
+                tempObject = updatedList[selectObjectIndex],
+                setColumnPoint = function (selectedPoint) {
+                    newlyReferencedPoints.push(selectedPoint);
+                    if (!!tempObject.AppIndex) {
+                        delete tempObject.AppIndex;
+                    }
+                    tempObject.upi = selectedPoint._id;
+                    tempObject.dataColumnName = tempObject.upi;
+                    tempObject.valueType = "None";
+                    tempObject.colName = selectedPoint.Name;
+                    tempObject.colDisplayName = selectedPoint.Name.replace(/_/g, " ");
+                    tempObject.pointType = selectedPoint["Point Type"].Value;
+                    tempObject.canCalculate = columnCanBeCalculated(tempObject);
+                    if (selectedPoint["Engineering Units"]) {
+                        tempObject.units = selectedPoint["Engineering Units"].Value;
+                    }
+                    if (tempObject.canCalculate) {
+                        tempObject.precision = 3;
+                        tempObject.includeInChart = false;
+                    }
+                    tempObject.calculation = [];
+                    tempObject.multiplier = 1;
+                    delete tempObject.valueOptions;
+                    if (self.reportType === "Totalizer") {
+                        tempObject.valueList = getTotalizerValueList(tempObject.pointType);
+                        tempObject.operator = tempObject.valueList[0].text;
+                        tempObject.dataColumnName = "point-" + tempObject.upi + " - " + tempObject.operator.toLowerCase();
+                    } else {
+                        if (self.reportType === "History") {
+                            tempObject.dataColumnName = "point-" + tempObject.upi;
+                        }
+                        if (!!selectedPoint.Value.ValueOptions) {
+                            tempObject.valueOptions = selectedPoint.Value.ValueOptions;
+                        } else {
+                            tempObject.valueOptions = Config.Templates.getTemplate(tempObject.pointType).Value.ValueOptions;
+                        }
+                    }
+                    tempObject.canBeCharted = columnCanBeCharted(tempObject);
+                    tempObject.yaxisGroup = "A";
+                    updateColumnFromPointRefs(tempObject);  // sets AppIndex;
+                    if (tempObject.AppIndex) {
+                        tempPoint = Config.Update.formatPoint({
+                            point: point,
+                            oldPoint: point,
+                            refPoint: selectedPoint,
+                            property: getPointRefByAppIndex(tempObject.AppIndex)
+                        });
+                        updatedList[selectObjectIndex] = tempObject;
                         updateListOfColumns(updatedList);
                     }
                 },
@@ -1730,6 +1809,8 @@ var reportsViewModel = function () {
         },
         getScreenFields = function () {
             $direports = $(".direports");
+            $editColumnModal = $direports.find("#editColumnModal");
+            $viewColumnModal = $direports.find("#viewColumnModal");
             $tabs = $direports.find(".tabs");
             $tabConfiguration = $direports.find(".tabConfiguration");
             $tabViewReport = $direports.find(".tabViewReport");
@@ -3165,6 +3246,24 @@ var reportsViewModel = function () {
                 $currentDateTimeDiv.prependTo($tablePagination);
             }
         },
+        columnEditReset = function () {
+            return {
+                colname: "Choose Point",
+                colDisplayName: "",
+                valueType: "String",
+                upi: 0,
+                multiplier: 1,
+                calculation: [],
+                operator: "",
+                pointType: "",
+                units: "",
+                precision: 3,
+                includeInChart: false,
+                yaxisGroup: "",
+                valueList: "",
+                dataColumnName: ""
+            };
+        },
         renderReport = function () {
             if (reportData !== undefined && self.currentTab() === 2) {
                 $popAction.show();
@@ -3489,6 +3588,27 @@ var reportsViewModel = function () {
 
     self.listOfFilters = ko.observableArray([]);
 
+    self.globalcalculateColumnSelectedvalue = ko.observableArray([]);
+
+    self.globalColumnMultiplier = ko.observable("Mean");
+
+    self.globalColumnPrecision = ko.observable(1);
+
+    self.globalColumnIncludeInChart = ko.observable(false);
+
+    self.globalColumnYaxisGroup = ko.observable("");
+
+    self.currentColumnEditIndex = ko.observable(1);
+
+    self.globalFieldsColumnEditBefore = ko.observable({
+        multiplier: 1,
+        precision: 3,
+        includeInChart: false,
+        yaxisGroup: ""
+    });
+
+    self.currentColumnEdit = ko.observable(columnEditReset());
+
     self.printDiv = function () {
         renderChart(true);
         setTimeout(function () {
@@ -3779,6 +3899,14 @@ var reportsViewModel = function () {
         openPointSelectorForColumn(columnIndex, upi);
     };
 
+    self.selectPointForModalColumn = function (data, index) {
+        var upi = parseInt(data.upi, 10),
+            currentIndex = (typeof index === "function" ? index() : index),
+            columnIndex = parseInt(currentIndex, 10);
+
+        openPointSelectorForModalColumn(columnIndex, upi);
+    };
+
     self.selectPointForFilter = function (data, index) {
         var upi = parseInt(data.upi, 10),
             columnIndex = parseInt(index(), 10);
@@ -3867,22 +3995,25 @@ var reportsViewModel = function () {
     self.clearColumnPoint = function (indexOfColumn) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn];
-        column.colName = "Choose Point";
-        column.colDisplayName = "";
-        column.valueType = "String";
-        column.operator = "";
-        column.upi = 0;
-        column.pointType = "";
-        column.units = "";
-        column.valueList = "";
-        column.dataColumnName = "";
-        if (!!column.AppIndex) {
-            delete column.AppIndex;
-        }
-        if (!!column.softDeleted) {
-            delete column.softDeleted;
-        }
+        column = columnEditReset();
         updateListOfColumns(tempArray);
+    };
+
+    self.clearModalColumnPoint = function (indexOfColumn) {
+        self.currentColumnEdit(columnEditReset());
+    };
+
+    self.editColumnSelectYaxisGroup = function (selectedGroup) {
+        self.currentColumnEdit().yaxisGroup = selectedGroup;
+        self.currentColumnEdit.valueHasMutated();
+    };
+
+    self.setEditedColumnData = function () {
+        var tempArray = self.listOfColumns();
+
+        tempArray[self.currentColumnEditIndex()] = self.currentColumnEdit();
+        updateListOfColumns(tempArray);
+        $editColumnModal.modal("hide");
     };
 
     self.clearColumnCalculation = function (indexOfColumn) {
@@ -3890,6 +4021,31 @@ var reportsViewModel = function () {
             column = tempArray[indexOfColumn];
         column.calculation = "";
         updateListOfColumns(tempArray);
+    };
+
+    self.globalCalculationClick = function (element, calc) {
+        var i,
+            tempArray = self.listOfColumns(),
+            column;
+
+        if (element.checked === true) {
+            for (i = 0; i < tempArray.length; i++) {
+                column = tempArray[i];
+                if (column.calculation.indexOf(calc) === -1) {
+                    column.calculation.push(calc);
+                }
+            }
+        } else {
+            for (i = 0; i < tempArray.length; i++) {
+                column = tempArray[i];
+                if (column.calculation.indexOf(calc) !== -1) {
+                    column.calculation.splice(column.calculation.indexOf(calc), 1);
+                }
+            }
+        }
+
+        updateListOfColumns(tempArray);
+        return true;
     };
 
     self.clearFilterPoint = function (indexOfColumn) {
@@ -4043,6 +4199,25 @@ var reportsViewModel = function () {
         } else { // Open the window
             window.workspaceManager.openWindowPositioned(window.location.href, point.Name, 'report', '', windowUpi, options);
         }
+    };
+
+    self.editColumn = function (column, index) {
+        self.currentColumnEdit(column);
+        self.currentColumnEditIndex(index);
+        $editColumnModal.modal("show");
+        return true;
+    };
+
+    self.showColumnSettings = function (element, column) {
+        self.currentColumnEdit(column);
+        //$viewColumnModal.modal("show");
+        return true;
+    };
+
+    self.hideColumnSettings = function (element) {
+        //$viewColumnModal.modal("hide");
+        // self.currentColumnEdit({});
+        return true;
     };
 
     self.listOfIntervalsComputed = ko.computed(function () {
