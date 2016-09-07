@@ -1462,16 +1462,16 @@ var dti = {
                 }
             });
         },
-        showNavigator: function (pointType, isStartMenu) {
+        showNavigator: function (pointType, isStartMenu, isSelectOnly) {
             dti.fire('hideMenus');
-            dti.navigator.showNavigatorModal(pointType, isStartMenu);
+            dti.navigator.showNavigatorModal(pointType, isStartMenu, isSelectOnly);
         },
         hideNavigator: function () {
             if (dti._navigatorWindow) {
                 dti._navigatorWindow.bindings.minimized(true);
             }
         },
-        showNavigatorFilterModal: function (pointType, initial) {
+        initNavigatorFilterModal: function () {
             var $el = dti.navigator.$navigatorFilterModalIframe[0],
                 initModalLookup = function () {
                     var navigatorFilterInterval;
@@ -1493,18 +1493,16 @@ var dti = {
                     }, 500);
                 };
 
-            if (initial) {
-                dti.utility.addEvent($el, 'load', initModalLookup);
-            } else {
-                dti.fire('hideMenus');
-                dti.navigator.$navigatorFilterModal.openModal();
-            }
+            dti.utility.addEvent($el, 'load', initModalLookup);
         },
-        showNavigatorModal: function (pointType, isStartMenu, initial) {
-            var loaded = false,
-                $el = dti.navigator.$navigatorModalIframe[0],
+        showNavigatorFilterModal: function (pointType) {
+            dti.fire('hideMenus');
+            dti.navigator.$navigatorFilterModal.openModal();
+        },
+        initNavigatorModal: function () {
+            var $el = dti.navigator.$navigatorModalIframe[0],
                 applyFilter = function () {
-                    dti.navigator.applyNavigatorFilter(pointType, $el.contentWindow.pointLookup, isStartMenu);
+                    dti.navigator.applyNavigatorFilter(null, $el.contentWindow.pointLookup);
                 },
                 initModalLookup = function () {
                     var navigatorInterval;
@@ -1520,26 +1518,27 @@ var dti = {
                     }, 400);
                 };
 
-            if (initial) {
-                dti.utility.addEvent($el, 'load', initModalLookup);
-            } else {
-                dti.fire('hideMenus');
+            dti.utility.addEvent($el, 'load', initModalLookup);
+        },
+        showNavigatorModal: function (pointType, isStartMenu, isSelectOnly) {
+            var loaded = false,
+                $el = dti.navigator.$navigatorModalIframe[0],
+                applyFilter = function () {
+                    dti.navigator.applyNavigatorFilter(pointType, $el.contentWindow.pointLookup, isStartMenu);
+                };
 
-                dti.navigator.$navigatorModal.openModal({
-                    ready: function () {
-                        if (!dti._navigatorModal) {
-                            dti._navigatorModal = true;
+            dti.navigator.isSelectOnly = isSelectOnly || false;
 
-                            initModalLookup.call($el);
-                        } else {
-                            applyFilter();
-                        }
-                    },
-                    complete: function () {
-                        dti.settings._workspaceNav = false;
-                    }
-                });
-            }
+            dti.fire('hideMenus');
+
+            dti.navigator.$navigatorModal.openModal({
+                ready: function () {
+                    applyFilter();
+                },
+                complete: function () {
+                    dti.settings._workspaceNav = false;
+                }
+            });
         },
         defaultNavigatorModalCallback: function (filter) {
             dti.navigator._currNavigatorFilter = filter;
@@ -1558,8 +1557,8 @@ var dti = {
             dti.navigator.$navigatorModalIframe.attr('src', '/pointlookup');
             dti.navigator.$navigatorFilterModalIframe.attr('src', '/pointlookup?mode=filter');
 
-            dti.navigator.showNavigatorModal(null, null, true);
-            dti.navigator.showNavigatorFilterModal(null, true);
+            dti.navigator.initNavigatorModal();
+            dti.navigator.initNavigatorFilterModal();
         }
     },
     utility: {
@@ -1858,7 +1857,6 @@ var dti = {
             // });
         },
         showPointSelector: function (config) {
-            //1 off 14:45
 
         },
         showPointSelectorFiltered: function (config) {

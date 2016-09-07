@@ -27,7 +27,7 @@ html
                                 a#globalSearch.waves-effect(href='javascript://')
                                     i.material-icons search
                             li.taskbarItem
-                                a.tooltipped.taskbarButton.iconOnly.waves-effect(href='javascript://', data-bind="click: function () { dti.utility.showNavigator(); }", data-position='bottom', data-tooltip='Navigator', data-delay='10')
+                                a.tooltipped.taskbarButton.iconOnly.waves-effect(href='javascript://', data-bind="click: function () { dti.navigator.showNavigator(null, true); }", data-position='bottom', data-tooltip='Navigator', data-delay='10')
                                     i.mdi.mdi-compass
                             li.taskbarItem
                                 a#showOpenItems.taskbarButton.iconOnly.waves-effect.tooltipped(href='javascript://', style='', data-position='bottom', data-tooltip='Manage Open Windows', data-delay='10')
@@ -148,7 +148,7 @@ html
                         //- a.branding(href='javascript://')
                         //-     i.material-icons.blue-grey-text settings
                         .left
-                            a.tooltipped.blue-grey-text(href='javascript://', data-bind="click: function () { dti.utility.showNavigator(); }", style="font-size: 1.4em;", data-position='right', data-tooltip='Navigator', data-delay='10')
+                            a.tooltipped.blue-grey-text(href='javascript://', data-bind="click: function () { dti.navigator.showNavigator(); }", style="font-size: 1.4em;", data-position='right', data-tooltip='Navigator', data-delay='10')
                                 i.mdi.mdi-compass
                         //- span &copy; Dorsett Technologies
 

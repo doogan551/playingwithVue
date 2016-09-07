@@ -122,17 +122,27 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
                 var devicePoint,
                     rmuPoint,
                     propertyName = point.PropertyName(),
+                    parameters = {
+                        pointType: self.parentType,
+                        pointtypes: self.utility.config.Utility.pointTypes.getAllowedPointTypes(self.parentType),
+                        deviceId: null,
+                        removeUnitId: null
+                    },
                     path = '/pointlookup/' + encodeURI(self.parentType) + '/' + encodeURI(point.PropertyName()),
                     props = ['Control Point', 'Occupied Point', 'Remote Unit Point', 'Damper Control Point', 'Digital Heat 1 Control Point', 'Digital Heat 2 Control Point', 'Digital Heat 3 Control Point', 'Fan Control Point', 'Heat 1 Control Point', 'Lights Control Point'];
+                
                 // If Control Point or RMU property, we need to restrict our selection to points on the same device
                 if (props.indexOf(propertyName) > -1) {
                     rmuPoint = self.utility.getPointRefProperty('Remote Unit Point');
                     devicePoint = self.utility.getPointRefProperty('Device Point');
+
                     // If Device Point prop exists and the device point is assigned
                     if (devicePoint && devicePoint.data.Value() !== 0) {
+                        parameters.deviceId = devicePoint.data.Value();
                         path += '/' + devicePoint.data.Value();
                         // If Remote Unit Point prop exists and the remote unit point is assigned
                         if (propertyName !== "Remote Unit Point" && rmuPoint && rmuPoint.data.Value() !== 0) {
+                            parameters.removeUnitId = rmuPoint.data.Value();
                             path += '/' + rmuPoint.data.Value();
                         }
                     }
