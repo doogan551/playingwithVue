@@ -263,7 +263,13 @@ html
                                 i.right.material-icons.closeIcon close
                                 div(data-bind="text: title")
                             .itemBody 
+                                //ko if: thumbnail() === true 
                                 img(data-bind="thumbnail: upi")
+                                // /ko
+
+                                // ko if: thumbnail() === false
+                                i.center-align.white-text(data-bind="css: iconClass, text: iconText")
+                                // /ko
                         // /ko
                         // /ko
 
@@ -450,6 +456,7 @@ html
     script(type='text/javascript', src='/js/lib/jquery-ui.js')
     script(type='text/javascript', src='/js/lib/jquery.contextMenu.min.js')
     //- script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
+    script(type='text/javascript', src='/js/lib/lodash.min.js')
     script(type='text/javascript', src='/js/lib/config.js')
     script(type='text/javascript', src='/js/lib/moment.js')
     script(type='text/javascript', src='/js/lib/store.min.js')

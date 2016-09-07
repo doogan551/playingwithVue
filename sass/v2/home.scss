@@ -666,45 +666,46 @@ footer {
     .itemsHeader {
         padding-left: 15px;
     }
+}
 
-    .item {
-        min-width: 125px;
-        height: 150px;
-        display: inline-block;
-        margin: 0 15px;
-        border: 1px solid $blueGrey;
+.item {
+    min-width: 145px;
+    height: 150px;
+    display: inline-block;
+    margin: 0 15px;
+    border: 1px solid $blueGrey;
 
-        i.closeIcon {
-            position: absolute;
-            right: 0;
+    i.closeIcon {
+        position: absolute;
+        right: 0;
+    }
+
+    .itemTitle {
+        position: relative;
+        text-align: center;
+        border-bottom: 1px solid $cardTitleBorder;
+        height: 23px;
+        padding-right: 20px;
+    }
+
+    .itemBody {
+        height: calc(100% - 24px);
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        i {
+            margin: 0 auto 10px;
+            font-size: 3em;
         }
 
-        .itemTitle {
-            position: relative;
-            text-align: center;
-            border-bottom: 1px solid $cardTitleBorder;
-            height: 23px;
+        img {
+            max-height: 124px;
         }
+    }
 
-        .itemBody {
-            height: calc(100% - 24px);
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-
-            i {
-                margin: 0 auto 10px;
-                font-size: 3em;
-            }
-
-            img {
-                max-height: 124px;
-            }
-        }
-
-        &:hover {
-            border-color: lighten($blueGrey, 15%);
-        }
+    &:hover {
+        border-color: lighten($blueGrey, 15%);
     }
 }
 

@@ -53,7 +53,10 @@ var dti = {
                 group: 'Alarm',
                 standalone: true,
                 url: '/alarms',
-                singleton: false
+                singleton: false,
+                options: {
+                    width: 1040
+                }
             },
             'Activity Log': {
                 title: 'Activity Logs',
@@ -80,8 +83,7 @@ var dti = {
                 url: '/syspref',
                 singleton: true,
                 options: {
-                    // left: 200,
-                    // top: 200
+                    width: 1280
                 }
             },
             'Security': {
@@ -783,7 +785,7 @@ var dti = {
             return newWindow;
         },
         openWindow: function (url, title, type, target, uniqueId, options) {
-            dti.utility.hideNavigator();
+            dti.navigator.hideNavigator();
             dti.windows.create({
                 url: url,
                 title: title,
@@ -1395,11 +1397,149 @@ var dti = {
             });
         }
     },
-    utility: {
+    navigator: {
         $navigatorModalIframe: $('#navigatorModal iframe'),
         $navigatorFilterModalIframe: $('#navigatorFilterModal iframe'),
         $navigatorModal: $('#navigatorModal'),
         $navigatorFilterModal: $('#navigatorFilterModal'),
+        applyNavigatorFilter: function (pointType, pointLookup, isStartMenu) {
+            var types,
+                processedTypes = [];
+
+            if (pointType && pointType !== 'Point') {
+                if (!Array.isArray(pointType)) {
+                    types = [pointType];
+                } else {
+                    types = pointType;
+                }
+            } else {
+                types = ['all'];
+            }
+
+            if (pointLookup.MODE !== 'filter') {
+                if (!isStartMenu) {
+                    pointLookup.MODE = 'select';
+                } else {
+                    pointLookup.MODE = null;
+                }
+            }
+
+            pointLookup.checkPointTypes(types);
+            pointLookup.refreshUI();
+        },
+        acceptNavigatorFilter: function () {
+            var filter = dti.navigator._currNavigatorFilter,
+                message = dti.navigator._navigatorMessage;
+
+            dti.messaging.sendMessage({
+                key: message._windowId,
+                value: {
+                    action: 'pointFilterSelected',
+                    filter: filter
+                }
+            });
+        },
+        showNavigator: function (pointType, isStartMenu) {
+            dti.fire('hideMenus');
+            dti.navigator.showNavigatorModal(pointType, isStartMenu);
+        },
+        hideNavigator: function () {
+            if (dti._navigatorWindow) {
+                dti._navigatorWindow.bindings.minimized(true);
+            }
+        },
+        showNavigatorFilterModal: function (pointType, initial) {
+            var $el = dti.navigator.$navigatorFilterModalIframe[0],
+                initModalLookup = function () {
+                    var navigatorFilterInterval;
+
+                    navigatorFilterInterval = setInterval(function initNavigatorFilter () {
+                        if ($el.contentWindow.pointLookup && $el.contentWindow.pointLookup.init) {
+                            clearInterval(navigatorFilterInterval);
+                            dti._navigatorFilterModal = true;
+                            $el.contentWindow.pointLookup.init(dti.navigator.defaultNavigatorModalCallback, {
+                                name1: '',
+                                name2: '',
+                                name3: '',
+                                name4: '',
+                                pointTypes: []
+                            });
+
+                            dti.fire('modalLoaded');
+                        }
+                    }, 500);
+                };
+
+            if (initial) {
+                dti.utility.addEvent($el, 'load', initModalLookup);
+            } else {
+                dti.fire('hideMenus');
+                dti.navigator.$navigatorFilterModal.openModal();
+            }
+        },
+        showNavigatorModal: function (pointType, isStartMenu, initial) {
+            var loaded = false,
+                $el = dti.navigator.$navigatorModalIframe[0],
+                applyFilter = function () {
+                    dti.navigator.applyNavigatorFilter(pointType, $el.contentWindow.pointLookup, isStartMenu);
+                },
+                initModalLookup = function () {
+                    var navigatorInterval;
+
+                    navigatorInterval = setInterval(function initNavigator () {
+                        if ($el.contentWindow.pointLookup && $el.contentWindow.pointLookup.init) {
+                            clearInterval(navigatorInterval);
+                            dti._navigatorModal = true;
+                            $el.contentWindow.pointLookup.init(dti.navigator.defaultNavigatorModalCallback);
+                            applyFilter();
+                            dti.fire('modalLoaded');
+                        }
+                    }, 400);
+                };
+
+            if (initial) {
+                dti.utility.addEvent($el, 'load', initModalLookup);
+            } else {
+                dti.fire('hideMenus');
+
+                dti.navigator.$navigatorModal.openModal({
+                    ready: function () {
+                        if (!dti._navigatorModal) {
+                            dti._navigatorModal = true;
+
+                            initModalLookup.call($el);
+                        } else {
+                            applyFilter();
+                        }
+                    },
+                    complete: function () {
+                        dti.settings._workspaceNav = false;
+                    }
+                });
+            }
+        },
+        defaultNavigatorModalCallback: function (filter) {
+            dti.navigator._currNavigatorFilter = filter;
+
+            if (dti.navigator.navigatorCallback) {
+                dti.messaging.sendMessage({
+                    key: dti.navigator._prevMessage._windowId,
+                    value: {
+                        filter: filter
+                    }
+                });
+            }
+            
+        },
+        init: function () {
+            dti.navigator.$navigatorModalIframe.attr('src', '/pointlookup');
+            dti.navigator.$navigatorFilterModalIframe.attr('src', '/pointlookup?mode=filter');
+
+            dti.navigator.showNavigatorModal(null, null, true);
+            dti.navigator.showNavigatorFilterModal(null, true);
+        }
+    },
+    utility: {
         systemEnums: {},
         systemEnumObjects: {},
         addEvent: function (element, event, fn) {
@@ -1543,174 +1683,7 @@ var dti = {
                 dti.bindings.user(user);
             }
         },
-        applyNavigatorFilter: function (pointType, pointLookup, isStartMenu) {
-            var types,
-                processedTypes = [];
 
-            if (pointType && pointType !== 'Point') {
-                if (!Array.isArray(pointType)) {
-                    types = [pointType];
-                } else {
-                    types = pointType;
-                }
-            } else {
-                types = ['all'];
-            }
-
-            if (pointLookup.MODE !== 'filter') {
-                if (!isStartMenu) {
-                    pointLookup.MODE = 'select';
-                } else {
-                    pointLookup.MODE = null;
-                }
-            }
-
-            pointLookup.checkPointTypes(types);
-            pointLookup.refreshUI();
-        },
-        acceptNavigatorFilter: function () {
-            var filter = dti.utility._currNavigatorFilter,
-                message = dti.utility._navigatorMessage;
-
-            dti.storage.sendMessage({
-                key: message._windowId,
-                value: {
-                    action: 'pointFilterSelected',
-                    filter: filter
-                }
-            });
-        },
-        showNavigator: function (pointType, isStartMenu) {
-            dti.fire('hideMenus');
-            dti.utility.showNavigatorModal(pointType, isStartMenu);
-        },
-        hideNavigator: function () {
-            if (dti._navigatorWindow) {
-                dti._navigatorWindow.bindings.minimized(true);
-            }
-        },
-        showNavigatorFilterModal: function (pointType, initial) {
-            var $el = dti.utility.$navigatorFilterModalIframe[0],
-                initModalLookup = function () {
-                    var navigatorFilterInterval;
-
-                    navigatorFilterInterval = setInterval(function initNavigatorFilter () {
-                        if ($el.contentWindow.pointLookup && $el.contentWindow.pointLookup.init) {
-                            clearInterval(navigatorFilterInterval);
-                            dti._navigatorFilterModal = true;
-                            $el.contentWindow.pointLookup.init(dti.utility.navigatorModalCallback, {
-                                name1: '',
-                                name2: '',
-                                name3: '',
-                                name4: '',
-                                pointTypes: []
-                            });
-
-                            dti.fire('modalLoaded');
-                        }
-                    }, 500);
-                };
-
-            if (initial) {
-                dti.utility.addEvent($el, 'load', initModalLookup);
-            } else {
-                dti.fire('hideMenus');
-                dti.utility.$navigatorFilterModal.openModal();
-            }
-        },
-        showNavigatorModal: function (pointType, isStartMenu, initial) {
-            var loaded = false,
-                $el = dti.utility.$navigatorModalIframe[0],
-                applyFilter = function () {
-                    dti.utility.applyNavigatorFilter(pointType, $el.contentWindow.pointLookup, isStartMenu);
-                },
-                initModalLookup = function () {
-                    var navigatorInterval;
-
-                    navigatorInterval = setInterval(function initNavigator () {
-                        if ($el.contentWindow.pointLookup && $el.contentWindow.pointLookup.init) {
-                            clearInterval(navigatorInterval);
-                            dti._navigatorModal = true;
-                            $el.contentWindow.pointLookup.init(dti.utility.navigatorModalCallback);
-                            applyFilter();
-                            dti.fire('modalLoaded');
-                        }
-                    }, 400);
-                };
-
-            if (initial) {
-                dti.utility.addEvent($el, 'load', initModalLookup);
-            } else {
-                dti.fire('hideMenus');
-
-                dti.utility.$navigatorModal.openModal({
-                    ready: function () {
-                        if (!dti._navigatorModal) {
-                            dti._navigatorModal = true;
-
-                            initModalLookup.call($el);
-                        } else {
-                            applyFilter();
-                        }
-                    },
-                    complete: function () {
-                        dti.settings._workspaceNav = false;
-                    }
-                });
-            }
-        },
-        navigatorModalCallback: function (filter) {
-            dti.utility._currNavigatorFilter = filter;
-        },
-        processMessage: function (e) {
-            var config,
-                ignoredProps = {
-                    '__storejs__': true,
-                    'sessionId': true,
-                    'debug': true
-                },
-                callbacks = {
-                    navigatormodal: function () {
-                        // key: navigatormodal, oldValue: windowId of recipient to send info to
-                        if (config.action === 'open') {
-                            dti.utility._navigatorMessage = config;
-                            dti.utility.showNavigatorModal();
-                        }
-                    },
-                    navigatorfiltermodal: function () {
-                        if (config.action === 'open') {
-                            dti.utility._navigatorMessage = config;
-                            dti.utility.showNavigatorFilterModal();
-                        }
-                    },
-                    windowMessage: function () {
-                        dti.windows.sendMessage(config);
-                    },
-                    closeWindow: function () {
-                        var windowId = config._windowId;
-
-                        dti.windows.closeWindow(windowId);
-                    },
-                    pointSelected: function () {
-
-                    },
-                    pointFilterSelected: function () {
-
-                    }
-                };
-
-            if (!ignoredProps[e.key]) {
-                if (callbacks[e.key]) { 
-                    config = e.newValue;
-                    if (typeof config === 'string') {
-                        config = JSON.parse(config);
-                    }
-                    // store previous call
-                    dti.utility._prevMessage = config;
-                    callbacks[e.key]();
-                }
-            }
-        },
         configureMoment: function (momentInstance) {
             // Adjust default calendar config
             momentInstance.locale('en', {
@@ -1733,13 +1706,8 @@ var dti = {
             });
         },
         init: function () {
-            dti.utility.$navigatorModalIframe.attr('src', '/pointlookup');
-            dti.utility.$navigatorFilterModalIframe.attr('src', '/pointlookup?mode=filter');
             dti.utility.pointTypeLookup = {};
             dti.utility.pointTypes = dti.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes();
-
-            dti.utility.showNavigatorModal(null, null, true);
-            dti.utility.showNavigatorFilterModal(null, true);
 
             dti.forEachArray(dti.utility.pointTypes, function processPointType (type) {
                 dti.utility.pointTypeLookup[type.key] = type;
@@ -1749,16 +1717,19 @@ var dti = {
             dti.utility.getSystemEnum('qualityCodes');
             dti.utility.getSystemEnum('telemetry');
             dti.utility.getSystemEnum('controllers', dti.utility.refreshUserCtlr);
-
-            dti.storage.onMessage(dti.utility.processMessage);
         }
     },
-    storage: {
+    pointSelector: {
+        init: function () {
+
+        }
+    },
+    messaging: {
         _messageCallbacks: [],
         init: function () {
             window.addEventListener('storage', function (e) {
                 // console.log(e);
-                dti.storage.processMessage(e);
+                dti.messaging.processMessage(e);
             });
 
             store.set('sessionId', dti.settings.sessionId);
@@ -1787,11 +1758,59 @@ var dti = {
                     store.set('startupCommands', null);
                 }
             });
+
+            dti.messaging.onMessage(dti.messaging.processMessage);
         },
-        sendMessage: function (config) {
-            config.value._timestamp = new Date().getTime();
-            config.value._windowId = window.windowId;
-            store.set(config.key, config.value);
+        doProcessMessage: function (e) {
+            var config,
+                ignoredProps = {
+                    '__storejs__': true,
+                    'sessionId': true,
+                    'debug': true
+                },
+                callbacks = {
+                    navigatormodal: function () {
+                        // key: navigatormodal, oldValue: windowId of recipient to send info to
+                        if (config.action === 'open') {
+                            dti.navigator.navigatorCallback = config.callback || false;
+
+                            dti.navigator._navigatorMessage = config;
+                            dti.navigator.showNavigatorModal();
+                        }
+                    },
+                    navigatorfiltermodal: function () {
+                        if (config.action === 'open') {
+                            dti.navigator._navigatorMessage = config;
+                            dti.navigator.showNavigatorFilterModal();
+                        }
+                    },
+                    windowMessage: function () {
+                        dti.windows.sendMessage(config);
+                    },
+                    closeWindow: function () {
+                        var windowId = config._windowId;
+
+                        dti.windows.closeWindow(windowId);
+                    },
+                    pointSelected: function () {
+
+                    },
+                    pointFilterSelected: function () {
+
+                    }
+                };
+
+            if (!ignoredProps[e.key]) {
+                if (callbacks[e.key]) { 
+                    config = e.newValue;
+                    if (typeof config === 'string') {
+                        config = JSON.parse(config);
+                    }
+                    // store previous call
+                    dti.navigator._prevMessage = config;
+                    callbacks[e.key]();
+                }
+            }
         },
         processMessage: function (e) {
             var message = {
@@ -1809,12 +1828,26 @@ var dti = {
                 message.newValue = e.newValue;
             }
 
-            dti.forEachArray(dti.storage._messageCallbacks, function (cb) {
-                cb(message);
-            });
+            dti.messaging.doProcessMessage(message);
+
+            // dti.forEachArray(dti.messaging._messageCallbacks, function (cb) {
+            //     cb(message);
+            // });
+        },
+        showPointSelector: function (config) {
+            //1 off 14:45
+
+        },
+        showPointSelectorFiltered: function (config) {
+
+        },
+        sendMessage: function (config) {
+            config.value._timestamp = new Date().getTime();
+            config.value._windowId = window.windowId;
+            store.set(config.key, config.value);
         },
         onMessage: function (cb) {
-            dti.storage._messageCallbacks.push(cb);
+            dti.messaging._messageCallbacks.push(cb);
         }
     },
     bindings: {
@@ -1915,10 +1948,10 @@ var dti = {
             dti.windows.closeAll(group);
         },
         showNavigator: function (group, isStartMenu) {
-            dti.utility.showNavigator(group, isStartMenu);
+            dti.navigator.showNavigator(group, isStartMenu);
         },
         acceptNavigatorFilter: function () {
-            dti.utility.acceptNavigatorFilter();
+            dti.navigator.acceptNavigatorFilter();
         },
         startMenuClick: function (obj) {
             dti.startMenu.handleClick(obj);
@@ -2077,7 +2110,7 @@ var dti = {
                     }
 
                     $element.click(function showNavigatorFiltered () {
-                        dti.utility.showNavigator(filter,  true);
+                        dti.navigator.showNavigator(filter,  true);
                     });
                 }
             };
@@ -2303,7 +2336,32 @@ dti.window = {
     }
 };
 
+// //change pointLookup to fire message?
+// dti.navigatorModal = {
+//     defaultCallback: cb,
+//     currentCallback: cb,
+//     showNavigatorModal: cb,
+//     showNavigatorFilterModal: cb,
+//     handleNavigatorSelect: cb, //'externalCallback'
+//     handleNavigatorFilterSelect: cb,
+//     handleNavigatorFilterAccept: cb //select on window
+// };
 
+// //openWindow is now message, optional parameters for startup, each one checks for messages
+// //sends an afterOpen message with resulting window id?  or just send 'onopen' message with it?
+
+// dti.showNavigatorModal = function (config) {
+//     var defaultCfg = {
+//         hasCallback: false,
+//         filter:  {
+//             pointTypes: [],
+//             name1: '',
+//             name2: '',
+//             name3: '',
+//             name4: ''
+//         }
+//     };
+// };
 
 
 
