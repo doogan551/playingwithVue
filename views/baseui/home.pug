@@ -386,10 +386,12 @@ html
                         a.white-text(href="javascript://")
                             i.material-icons.popInOutIcon call_made
                         | #[span(data-bind="text: title")]
-                a.white-text(href="javascript://")
-                    i.material-icons skip_previous
-                a.white-text(href="javascript://")
-                    i.material-icons skip_next
+                a.white-text(href="javascript://", data-bind="click: refresh")
+                    i.material-icons refresh
+                //- a.white-text(href="javascript://")
+                //-     i.material-icons skip_previous
+                //- a.white-text(href="javascript://")
+                //-     i.material-icons skip_next
                 .right
                     a.white-text(href="javascript://", data-bind="click: minimize, clickBubble: false")
                         i.minimizePanel.material-icons(style="position: absolute; top: 8px; right: 24px;") remove

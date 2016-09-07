@@ -1,7 +1,7 @@
 div(class='topBar',style='position: absolute; width: 100%;bottom:0px;z-index:', data-role='header', data-theme='c')
       div(style='float: left;')
-        a#minDisplay(data-swipe-close='false', data-rel='open', data-mini='true', data-role='button', data-icon='d-min', data-inline='true') Pop In
-        a#maxDisplay(data-swipe-close='false', data-rel='open', data-mini='true', data-role='button', data-icon='d-max', data-inline='true') Pop Out
+        //- a#minDisplay(data-swipe-close='false', data-rel='open', data-mini='true', data-role='button', data-icon='d-min', data-inline='true') Pop In
+        //- a#maxDisplay(data-swipe-close='false', data-rel='open', data-mini='true', data-role='button', data-icon='d-max', data-inline='true') Pop Out
         a#editDisplay(href="/displays/edit/{{display._id}}",data-ajax="false", data-mini='true', data-role='button', data-icon='edit', data-inline='true') Edit
         #editSaveCancelBtns.displayGroup.hide(data-role='controlgroup', data-type='horizontal', data-inline='true', data-mini='true')
           a#viewDisplay(href="#",ng-click="checkChanges()",data-ajax="false", data-mini='true', data-role='button', data-icon='delete',  data-inline='true') Cancel

@@ -113,7 +113,9 @@ $(document).on('pageinit', function() {
 
         displays.openWindow($(this).attr('href'), _title, pointType, '', _id, {
             width: width,
-            height: height
+            height: height,
+            sameWindow: true,
+            windowId: window.windowId
         });
         //window.close();
     });

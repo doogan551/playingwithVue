@@ -1369,7 +1369,12 @@ displays = $.extend(displays, {
                 if (angular.equals($scope.oDisplay, nDisplay)) {
                     //window.location = '/displays/view/' + $scope.display._id;
                     _title = window.displayJson.Name;
-                    $scope.openWindow('/displays/view/' + $scope.display._id, _title, window.displayJson['Point Type'].Value, '', $scope.display._id, parseInt(window.displayJson.Width, 10) + 50, parseInt(window.displayJson.Height, 10) + 100, window.screenX, window.screenY);
+                    $scope.openWindow('/displays/view/' + $scope.display._id, _title, window.displayJson['Point Type'].Value, '', $scope.display._id, {
+                        width: parseInt(window.displayJson.Width, 10) + 50, 
+                        height: parseInt(window.displayJson.Height, 10) + 100,
+                        sameWindow: true,
+                        windowId: window.windowId
+                    });
                     //window.close();
                 } else {
                     $("#confirmChanges").popup("open", {
@@ -1381,7 +1386,12 @@ displays = $.extend(displays, {
             $scope.anyway = function() {
                 //window.location = '/displays/view/' + $scope.display._id;
                 var _title = window.displayJson.Name;
-                $scope.openWindow('/displays/view/' + $scope.display._id, _title, window.displayJson['Point Type'].Value, '', $scope.display._id, parseInt(window.displayJson.Width, 10) + 50, parseInt(window.displayJson.Height, 10) + 100, window.screenX, window.screenY);
+                $scope.openWindow('/displays/view/' + $scope.display._id, _title, window.displayJson['Point Type'].Value, '', $scope.display._id, {
+                        width: parseInt(window.displayJson.Width, 10) + 50, 
+                        height: parseInt(window.displayJson.Height, 10) + 100,
+                        sameWindow: true,
+                        windowId: window.windowId
+                    });
                 //window.close();
             };
 
@@ -1607,7 +1617,12 @@ displays = $.extend(displays, {
                         width = parseInt(window.displayJson.Width, 10) + 400,
                         height = parseInt(window.displayJson.Height, 10) + 100;
 
-                    displays.openWindow('/displays/view/' + saveObj._id, _title, pointType, '', _id, width, height, window.screenX, window.screenY);
+                    displays.openWindow('/displays/view/' + saveObj._id, _title, pointType, '', _id, {
+                        width: width,
+                        height: height,
+                        sameWindow: true,
+                        windowId: window.windowId
+                    });
                 });
             };
 
@@ -1644,7 +1659,12 @@ displays = $.extend(displays, {
                         width = parseInt(window.displayJson.Width, 10) + 400,
                         height = parseInt(window.displayJson.Height, 10) + 100;
 
-                    displays.openWindow('/displays/view/' + window.upi, _title, pointType, '', _id, width, height, window.screenX, window.screenY);
+                    displays.openWindow('/displays/view/' + window.upi, _title, pointType, '', _id, {
+                        width: width,
+                        height: height,
+                        sameWindow: true,
+                        windowId: window.windowId
+                    });
                 });
             };
 
@@ -1823,7 +1843,12 @@ displays = $.extend(displays, {
                         width = parseInt(window.displayJson.Width, 10) + 400,
                         height = parseInt(window.displayJson.Height, 10) + 100;
 
-                    displays.openWindow('/displays/edit/' + upi, _title, pointType, '', _id, width, height, window.screenX, window.screenY);
+                    displays.openWindow('/displays/edit/' + upi, _title, pointType, '', _id, {
+                        width: width,
+                        height: height,
+                        sameWindow: true,
+                        windowId: window.windowId
+                    });
                     // }
                     // console.log(data);
                     // window.location = '/displays/edit/' + displayJson.vid;

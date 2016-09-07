@@ -438,6 +438,7 @@ var dti = {
         var windowId = config.id || dti.makeId(),
             iframeId = dti.makeId(),
             active = false,
+            loaded = false,
             group,
             prepMeasurement = function (x) {
                 if (typeof x === 'string') {
@@ -540,6 +541,9 @@ var dti = {
                 active = false;
                 self.bindings.active(false);
             },
+            handleIframeClick = function (event) {
+                self.bindings.activate();
+            },
             activate = function (fromManager) {
                 if (!active || fromManager === false) {
                     active = true;
@@ -550,6 +554,16 @@ var dti = {
                     self.bindings.active(true);
                 }
             },
+            clearEvents = function () {
+                $(self.$iframe[0].contentDocument).off('mousedown', handleIframeClick);
+            },
+            setUrl = function (url) {
+                clearEvents();  
+                self.bindings.url(url);
+            },
+            refresh = function () {
+                self.$iframe[0].contentWindow.location.reload();
+            },
             self = {
                 $windowEl: $($('#windowTemplate').html()),
                 $iframe: null,
@@ -557,8 +571,9 @@ var dti = {
                     title: ko.observable(config.title),
                     windowId: ko.observable(windowId),
                     group: ko.observable(getGroupName(config)),
-                    url: config.url,
+                    url: ko.observable(config.url),
                     upi: ko.observable(config.upi),
+                    refresh: refresh,
                     activate: activate,
                     minimize: minimize,
                     minimized: ko.observable(false),
@@ -590,7 +605,10 @@ var dti = {
                     // var group = this.contentWindow.pointType;
                     // self.bindings.group(group);
 
+                    dti.log('window loaded');
+
                     if (config.onLoad) {
+                        dti.log('calling config.onload');
                         config.onLoad.call(self);
                     }
 
@@ -600,9 +618,7 @@ var dti = {
                         }
                     }
 
-                    $(this.contentDocument).on('mousedown', function handleIframeClick (event) {
-                        self.bindings.activate();
-                    });
+                    $(this.contentDocument).on('mousedown', handleIframeClick);
 
                     this.contentWindow.windowId = self.bindings.windowId();
                     this.contentWindow.close = function () {
@@ -646,6 +662,7 @@ var dti = {
         ko.applyBindings(self.bindings, self.$windowEl[0]);
 
         return {
+            setUrl: setUrl,
             minimize: minimize,
             close: close,
             deactivate: deactivate,
@@ -757,30 +774,36 @@ var dti = {
         create: function (config) {
             var newWindow;
 
-            $.extend(config, config.options);
+            if (config.options.sameWindow) {
+                newWindow = dti.windows.getWindowById(config.options.windowId);
+                newWindow.setUrl(config.url);
+            } else {
+                $.extend(config, config.options);
 
-            if (!config.exempt) {
-                dti.windows.offset();
+                if (!config.exempt) {
+                    dti.windows.offset();
 
-                if (config.left === undefined) {
-                    config.left = dti.windows._offsetX;
+                    if (config.left === undefined) {
+                        config.left = dti.windows._offsetX;
+                    }
+                    if (config.top === undefined) {
+                        config.top = dti.windows._offsetY;
+                    }
                 }
-                if (config.top === undefined) {
-                    config.top = dti.windows._offsetY;
+
+                newWindow = new dti.Window(config);
+
+                dti.taskbar.addWindow(newWindow);
+
+                // config.afterLoad = dti.windows.afterLoad;
+
+                dti.windows._windowList.push(newWindow);
+
+                if (!config.isHidden) {
+                    dti.windows.activate(newWindow.windowId);
                 }
             }
 
-            newWindow = new dti.Window(config);
-
-            dti.taskbar.addWindow(newWindow);
-
-            // config.afterLoad = dti.windows.afterLoad;
-
-            dti.windows._windowList.push(newWindow);
-
-            if (!config.isHidden) {
-                dti.windows.activate(newWindow.windowId);
-            }
 
             return newWindow;
         },
@@ -2320,6 +2343,9 @@ dti.workspaceManager = window.workspaceManager = {
     },
     user: function () {
         return JSON.parse(JSON.stringify(dti.bindings.user()));
+    },
+    captureThumbnail: function () {
+        dti.log('thumbnail placeholder');
     }
 };
 

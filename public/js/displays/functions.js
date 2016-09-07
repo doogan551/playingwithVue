@@ -1242,7 +1242,10 @@ displays = $.extend(displays, {
 
         $('#minDisplay').off('click').on('click', function() {
             var _title = window.displayJson.Name;
-            displays.openWindow(window.location.href, _title, window.displayJson['Point Type'].Value, 'mainWindow', window.displayJson._id);
+            displays.openWindow(window.location.href, _title, window.displayJson['Point Type'].Value, 'mainWindow', window.displayJson._id, {
+                sameWindow: true,
+                windowId: window.windowId
+            });
         });
 
         $('#maxDisplay').off('click').on('click', function() {
@@ -1250,7 +1253,9 @@ displays = $.extend(displays, {
             // displays.openWindow(window.location.href, _title, window.displayJson['Point Type'].Value, '', window.displayJson._id, parseInt(window.displayJson.Width, 10) + 50, parseInt(window.displayJson.Height, 10) + 100);
             displays.openWindow(window.location.href, _title, window.displayJson['Point Type'].Value, '', window.displayJson._id, {
                 width: parseInt(window.displayJson.Width, 10) + 50,
-                height: parseInt(window.displayJson.Height, 10) + 100
+                height: parseInt(window.displayJson.Height, 10) + 100,
+                sameWindow: true,
+                windowId: window.windowId
             });
         });
 
