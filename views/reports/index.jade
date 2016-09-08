@@ -262,19 +262,20 @@ block content
                                                                         input.medium(data-bind="checked: $root.globalcalculateColumnSelectedvalue[$data.text], click: function () { return $root.globalCalculationClick($element, $data.text) }", type="checkbox")
                                                                         span.calcLabel(data-bind="text: ' ' + $data.text")
                                                                 // /ko
-                                                            //div Global
                                                     // /ko
                                                     // ko if: $index() > 0
-                                                    // ko if: ($parent.listOfCalculations().length > 0)
+                                                    // ko if: ($root.listOfCalculations().length > 0)
                                                     td
                                                         .calculationsCell
+                                                            // ko if: ($data.canCalculate)
                                                             ul.calculations
-                                                                // ko foreach: $parent.listOfCalculations()
+                                                                // ko foreach: $root.listOfCalculations
                                                                 li
                                                                     label.fancy-checkbox
-                                                                        input.medium(data-bind="checked: $parent.calculation[$data.text]", type="checkbox")
+                                                                        input.medium(data-bind="checked: $parent.calculation.indexOf($data.text) !== -1", type="checkbox")
                                                                         span.calcLabel(data-bind="text: ' ' + $data.text")
                                                                 // /ko
+                                                            // /ko
                                                     // /ko
                                                     // /ko
                                 div#filterByPoint.tab-pane

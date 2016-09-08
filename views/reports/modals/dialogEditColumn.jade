@@ -44,21 +44,6 @@
                                 .col-sm-8
                                     input.form-control.inputMultiplier(data-bind="value: multiplier, enable: $root.canEdit()", type="number")
                             // /ko
-                            // ko if: ($data.canCalculate && $root.currentColumnEditIndex() > 0)
-                            .form-group
-                                label.control-label.col-sm-3 Calculate:
-                                // ko if: ($root.listOfCalculations().length > 0)
-                                .col-sm-8
-                                    .calculationsCell
-                                        ul.calculations
-                                            // ko foreach: $root.listOfCalculations()
-                                            li
-                                                label.fancy-checkbox
-                                                    input.medium(data-bind="checked: $parent.calculation[text]", type="checkbox")
-                                                    span.calcLabel(data-bind="text: ' ' + text")
-                                            // /ko
-                                // /ko
-                            // /ko
                             // ko if: ($root.reportType === 'Totalizer')
                             .form-group
                                 label.control-label.col-sm-3 Type:
@@ -77,36 +62,36 @@
                                             // /ko
                                         // /ko
                             // /ko
+                            // ko if: ($data.canCalculate)
                             .form-group
-                                    // ko if: ($data.canCalculate)
-                                    label.control-label.col-sm-3 Precision:
-                                    .col-sm-8
-                                        input.form-control.inputPrecision(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")
-                                    // /ko
+                                label.control-label.col-sm-3 Precision:
+                                .col-sm-8
+                                    input.form-control.inputPrecision(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")
+                            // /ko
+                            // ko if: ($root.canEdit() && !!$data.canBeCharted && $data.canBeCharted)
                             .form-group
-                                    // ko if: ($root.canEdit() && !!$data.canBeCharted && $data.canBeCharted)
-                                    label.col-sm-3(style="text-align: right;") Chart:
-                                    .col-sm-8
-                                        input.includeInChartColumn(data-bind="checked: $data.includeInChart, enable: ($root.canEdit() && !!canBeCharted)", type="checkbox")
-                                    // /ko
+                                label.col-sm-3(style="text-align: right;") Chart:
+                                .col-sm-8
+                                    input.includeInChartColumn(data-bind="checked: $data.includeInChart, enable: ($root.canEdit() && !!canBeCharted)", type="checkbox")
+                            // /ko
+                            // ko if: ($root.canEdit() && !!$data.canBeCharted && $data.canBeCharted)
                             .form-group
-                                    // ko if: ($root.canEdit() && !!$data.canBeCharted && $data.canBeCharted)
-                                    label.control-label.col-sm-3 Group:
-                                    .col-sm-8
-                                        .dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                            button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-                                                span(data-bind="text: $data.yaxisGroup")
-                                                // ko if: ($root.yaxisGroups.length > 1)
-                                                span.caret.lm10px
-                                                // /ko
+                                label.control-label.col-sm-3 Group:
+                                .col-sm-8
+                                    .dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                        button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                            span(data-bind="text: $data.yaxisGroup")
                                             // ko if: ($root.yaxisGroups.length > 1)
-                                            ul.yaxisGroups.dropdown-menu
-                                                // ko foreach: $root.yaxisGroups
-                                                li
-                                                    a(data-bind="click: function(){ $root.editColumnSelectYaxisGroup($data) }, text: $data")
-                                                // /ko
+                                            span.caret.lm10px
                                             // /ko
-                                    // /ko
+                                        // ko if: ($root.yaxisGroups.length > 1)
+                                        ul.yaxisGroups.dropdown-menu
+                                            // ko foreach: $root.yaxisGroups
+                                            li
+                                                a(data-bind="click: function(){ $root.editColumnSelectYaxisGroup($data) }, text: $data")
+                                            // /ko
+                                        // /ko
+                            // /ko
                             // /ko
             // /ko
             .modal-footer

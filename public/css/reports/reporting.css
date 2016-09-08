@@ -264,6 +264,9 @@ span.intervalLabel {
     width: 85px;
     text-indent: 0px;
 }
+.addColumnGridButton {
+    cursor: pointer;
+}
 .operator {
     cursor: pointer;
 }
@@ -272,6 +275,9 @@ span.intervalLabel {
 }
 .condition {
     cursor: pointer;
+}
+.globallyChangedField {
+    border: 2px solid lightskyblue;
 }
 td.filterName {
     width: 275px;

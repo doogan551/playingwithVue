@@ -390,6 +390,7 @@ var reportsViewModel = function () {
         $spinnertext,
         $editColumnModal,
         $viewColumnModal,
+        $globalEditColumnModal,
         $pointName1,
         $pointName2,
         $pointName3,
@@ -1811,6 +1812,7 @@ var reportsViewModel = function () {
             $direports = $(".direports");
             $editColumnModal = $direports.find("#editColumnModal");
             $viewColumnModal = $direports.find("#viewColumnModal");
+            $globalEditColumnModal = $direports.find("#globalEditColumnModal");
             $tabs = $direports.find(".tabs");
             $tabConfiguration = $direports.find(".tabConfiguration");
             $tabViewReport = $direports.find(".tabViewReport");
@@ -3590,9 +3592,9 @@ var reportsViewModel = function () {
 
     self.globalcalculateColumnSelectedvalue = ko.observableArray([]);
 
-    self.globalColumnMultiplier = ko.observable("Mean");
+    self.globalColumnMultiplier = ko.observable(1);
 
-    self.globalColumnPrecision = ko.observable(1);
+    self.globalColumnPrecision = ko.observable(3);
 
     self.globalColumnIncludeInChart = ko.observable(false);
 
@@ -4031,8 +4033,10 @@ var reportsViewModel = function () {
         if (element.checked === true) {
             for (i = 0; i < tempArray.length; i++) {
                 column = tempArray[i];
-                if (column.calculation.indexOf(calc) === -1) {
-                    column.calculation.push(calc);
+                if (column.canCalculate === true) {
+                    if (column.calculation.indexOf(calc) === -1) {
+                        column.calculation.push(calc);
+                    }
                 }
             }
         } else {
@@ -4045,7 +4049,58 @@ var reportsViewModel = function () {
         }
 
         updateListOfColumns(tempArray);
-        return true;
+    };
+
+    self.setGlobalEditedColumnData = function () {
+        var i,
+            tempArray = self.listOfColumns(),
+            column;
+
+        for (i = 0; i < tempArray.length; i++) {
+            column = tempArray[i];
+            if (self.globalColumnMultiplier() != self.globalFieldsColumnEditBefore().multiplier) {
+                if (column.canCalculate) {
+                    column.multiplier = self.globalColumnMultiplier();
+                }
+            }
+
+            if (self.globalColumnPrecision() != self.globalFieldsColumnEditBefore().precision) {
+                if (column.canCalculate) {
+                    column.precision = self.globalColumnPrecision();
+                }
+            }
+
+            if (self.globalColumnIncludeInChart() != self.globalFieldsColumnEditBefore().includeInChart) {
+                if (column.canBeCharted) {
+                    column.includeInChart = self.globalColumnIncludeInChart();
+                }
+            }
+
+            if (self.globalColumnYaxisGroup() != self.globalFieldsColumnEditBefore().yaxisGroup) {
+                if (column.canBeCharted) {
+                    column.yaxisGroup = self.globalColumnYaxisGroup();
+                }
+            }
+        }
+
+        if (self.globalColumnMultiplier() != self.globalFieldsColumnEditBefore().multiplier) {
+            self.globalFieldsColumnEditBefore().multiplier = self.globalColumnMultiplier();
+        }
+
+        if (self.globalColumnPrecision() != self.globalFieldsColumnEditBefore().precision) {
+            self.globalFieldsColumnEditBefore().precision = self.globalColumnPrecision();
+        }
+
+        if (self.globalColumnIncludeInChart() != self.globalFieldsColumnEditBefore().includeInChart) {
+            self.globalFieldsColumnEditBefore().includeInChart = self.globalColumnIncludeInChart();
+        }
+
+        if (self.globalColumnYaxisGroup() != self.globalFieldsColumnEditBefore().yaxisGroup) {
+            self.globalFieldsColumnEditBefore().yaxisGroup = self.globalColumnYaxisGroup();
+        }
+
+        updateListOfColumns(tempArray);
+        $globalEditColumnModal.modal("hide");
     };
 
     self.clearFilterPoint = function (indexOfColumn) {
@@ -4208,6 +4263,10 @@ var reportsViewModel = function () {
         return true;
     };
 
+    self.globalEditColumnFields = function () {
+        $globalEditColumnModal.modal("show");
+    };
+
     self.showColumnSettings = function (element, column) {
         self.currentColumnEdit(column);
         //$viewColumnModal.modal("show");
@@ -4300,6 +4359,19 @@ var reportsViewModel = function () {
 
     self.displayTabCheckmark = ko.computed(function () {
         return (!self.reportResultViewed() && !self.activeDataRequest());
+    }, self);
+
+    self.pendingGlobalColumnChange = ko.computed(function () {
+        var answer = false;
+
+        if (self.globalColumnMultiplier() != self.globalFieldsColumnEditBefore().multiplier ||
+            self.globalColumnPrecision() != self.globalFieldsColumnEditBefore().precision ||
+            self.globalColumnIncludeInChart() != self.globalFieldsColumnEditBefore().includeInChart ||
+            self.globalColumnYaxisGroup() != self.globalFieldsColumnEditBefore().yaxisGroup) {
+            answer = true;
+        }
+
+        return answer;
     }, self);
 };
 

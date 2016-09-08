@@ -31,22 +31,6 @@
                                 .col-sm-8
                                     span.inputMultiplier(data-bind="text: multiplier")
                             // /ko
-                            .form-group
-                                .columnTotals
-                                    // ko if: ($data.canCalculate && $root.currentColumnEditIndex() > 0)
-                                    label.control-label.col-sm-4 Calculate:
-                                    // ko if: ($root.listOfCalculations().length > 0)
-                                    .col-sm-2
-                                        .calculationsCell
-                                            ul.calculations
-                                                // ko foreach: $root.listOfCalculations()
-                                                li
-                                                    label.fancy-checkbox
-                                                        input.medium(data-bind="checked: $parent.calculation[text], enable: false", type="checkbox")
-                                                        span.calcLabel(data-bind="text: ' ' + text")
-                                                // /ko
-                                    // /ko
-                                    // /ko
                             // ko if: ($root.reportType === 'Totalizer')
                             .form-group
                                 label.control-label.col-sm-4 Type:
