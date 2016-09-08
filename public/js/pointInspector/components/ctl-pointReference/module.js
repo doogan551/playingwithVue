@@ -147,10 +147,18 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
                         }
                     }
                 }
-                return path;
+
+                console.log(parameters, JSON.stringify(parameters, null, 3));
+                console.log(path);
+                return parameters;
+                // return path;
             },
-            pointSelectorEndPoint = [getPath(), '?mode=select'].join(''),
-            callback = function(id, name, pointType) {
+            // pointSelectorEndPoint = [getPath(), '?mode=select'].join(''),
+            callback = function (value) {
+                var selectedPoint = value.selectedPoint,
+                    id = selectedPoint.upi, 
+                    name = selectedPoint.name, 
+                    pointType = selectedPoint.pointType;
                 // Schedule entry point ref changes don't go through normal validation in configjs
                 // this is the first point that the returned id can be checked for a recursive loop.
                 if (self.point['Point Type'].Value() === 'Schedule Entry' && id === self.point._parentUpi()) {
@@ -186,15 +194,21 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
                     );
                 }
             },
-            workspaceManager = self.utility.workspace,
-            win = workspaceManager.openWindowPositioned(pointSelectorEndPoint, 'Point Selector', 'pointSelector', '', 'pointSelector' + self.parentType, {
-                width: 1250,
-                height: 750,
-                callback: function() {
-                    win.pointLookup.init(callback);
-                }
-            });
+            parameters = getPath();
+            // workspaceManager = self.utility.workspace,
+            // win = workspaceManager.openWindowPositioned(pointSelectorEndPoint, 'Point Selector', 'pointSelector', '', 'pointSelector' + self.parentType, {
+            //     width: 1250,
+            //     height: 750,
+            //     callback: function() {
+            //         win.pointLookup.init(callback);
+            //     }
+            // });
+
+        dtiMessaging.showNavigator(parameters);
+        dtiMessaging.onPointSelect(callback);
     };
+
+
     ViewModel.prototype.removePointRef = function() {
         var self = this,
             point = self.getPointRef(),

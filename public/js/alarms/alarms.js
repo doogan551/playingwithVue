@@ -2424,7 +2424,7 @@ var AlarmManager = function (conf) {
         dtiMessaging.showNavigatorFilter();
     };
 
-    dtiMessaging.onPointFilterSelect(function (cfg) {
+    dtiMessaging.onPointFilterSelect(function handlePointFilterSelect (cfg) {
         filterCallback(cfg);
         self.applyNameFilter();
     });

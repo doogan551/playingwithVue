@@ -148,7 +148,7 @@ html
                         //- a.branding(href='javascript://')
                         //-     i.material-icons.blue-grey-text settings
                         .left
-                            a.tooltipped.blue-grey-text(href='javascript://', data-bind="click: function () { dti.navigator.showNavigator(); }", style="font-size: 1.4em;", data-position='right', data-tooltip='Navigator', data-delay='10')
+                            a.tooltipped.blue-grey-text(href='javascript://', data-bind="click: function () { dti.navigator.showNavigatorNew(); }", style="font-size: 1.4em;", data-position='right', data-tooltip='Navigator', data-delay='10')
                                 i.mdi.mdi-compass
                         //- span &copy; Dorsett Technologies
 
@@ -250,7 +250,14 @@ html
                 .modal-content.modal-content-no-padding
                     iframe.iframeFull
                 .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel                    
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel    
+
+            #navigatorModalNew.navigatorModal.modal.modal-fixed-footer.modal-fixed-header
+                .modal-header Select Point
+                .modal-content.modal-content-no-padding
+                    .iframeFull Test
+                .modal-footer
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
 
             #openItemsModal.modal.modal-large
                 .modal-content

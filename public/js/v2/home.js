@@ -605,7 +605,7 @@ var dti = {
                     // var group = this.contentWindow.pointType;
                     // self.bindings.group(group);
 
-                    dti.log('window loaded');
+                    // dti.log('window loaded');
 
                     if (config.onLoad) {
                         dti.log('calling config.onload');
@@ -1425,18 +1425,31 @@ var dti = {
         $navigatorFilterModalIframe: $('#navigatorFilterModal iframe'),
         $navigatorModal: $('#navigatorModal'),
         $navigatorFilterModal: $('#navigatorFilterModal'),
-        applyNavigatorFilter: function (pointType, pointLookup, isStartMenu) {
+        $navigatorModalNew: $('#navigatorModalNew'),
+        $navigatorFilterModalIframeNew: $('#navigatorFilterModalNew iframe'),
+        applyNavigatorFilter: function (config) {
             var types,
+                pointType = config.pointType, 
+                pointLookup = config.pointLookup, 
+                isStartMenu = config.isStartMenu,
+                property = config.property,
+                parameters = dti.navigator._navigatorParameters,
                 processedTypes = [];
 
-            if (pointType && pointType !== 'Point') {
-                if (!Array.isArray(pointType)) {
-                    types = [pointType];
-                } else {
-                    types = pointType;
-                }
+            if (parameters && parameters.pointTypes) {
+                types = parameters.pointTypes;
+                // pointLookup.POINTTYPES = pointTypes;
+                // pointLookup.POINTTYPE = pointType;
             } else {
-                types = ['all'];
+                if (pointType && pointType !== 'Point') {
+                    if (!Array.isArray(pointType)) {
+                        types = [pointType];
+                    } else {
+                        types = pointType;
+                    }
+                } else {
+                    types = ['all'];
+                }
             }
 
             if (pointLookup.MODE !== 'filter') {
@@ -1462,7 +1475,29 @@ var dti = {
                 }
             });
         },
-        showNavigator: function (pointType, isStartMenu, isSelectOnly) {
+        showNavigatorModalNew: function () {
+            dti.navigator.$navigatorModalNew.openModal();
+        },
+        showNavigatorNew: function (config) {
+            dti.navigator.showNavigatorModalNew();
+        },
+        showNavigator: function (config, isStart, isSelect) {
+            var pointType,
+                isStartMenu = isStart,
+                isSelectOnly = isSelect,
+                callback;
+
+            if (typeof config === 'string') {
+                pointType = config;
+            } else {
+                if (config) {
+                    pointType = config.pointType;
+                    isStartMenu = config.isStartMenu;
+                    isSelectOnly = config.isSelectOnly;
+                    dti.navigator.navigatorCallback = config.callback || false;
+                }
+            }
+
             dti.fire('hideMenus');
             dti.navigator.showNavigatorModal(pointType, isStartMenu, isSelectOnly);
         },
@@ -1497,12 +1532,17 @@ var dti = {
         },
         showNavigatorFilterModal: function (pointType) {
             dti.fire('hideMenus');
+            dti.navigator.filterModal = true;
             dti.navigator.$navigatorFilterModal.openModal();
         },
         initNavigatorModal: function () {
             var $el = dti.navigator.$navigatorModalIframe[0],
                 applyFilter = function () {
-                    dti.navigator.applyNavigatorFilter(null, $el.contentWindow.pointLookup);
+                    dti.navigator.applyNavigatorFilter({
+                        pointType: null, 
+                        pointLookup: $el.contentWindow.pointLookup, 
+                        isStartMenu: null
+                    });
                 },
                 initModalLookup = function () {
                     var navigatorInterval;
@@ -1524,8 +1564,14 @@ var dti = {
             var loaded = false,
                 $el = dti.navigator.$navigatorModalIframe[0],
                 applyFilter = function () {
-                    dti.navigator.applyNavigatorFilter(pointType, $el.contentWindow.pointLookup, isStartMenu);
+                    dti.navigator.applyNavigatorFilter({
+                        pointType: pointType, 
+                        pointLookup: $el.contentWindow.pointLookup, 
+                        isStartMenu: isStartMenu
+                    });
                 };
+
+            dti.navigator.filterModal = false;
 
             dti.navigator.isSelectOnly = isSelectOnly || false;
 
@@ -1540,16 +1586,34 @@ var dti = {
                 }
             });
         },
-        defaultNavigatorModalCallback: function (filter) {
-            dti.navigator._currNavigatorFilter = filter;
+        defaultNavigatorModalCallback: function (upi, name, pointType) {
+            if (dti.navigator.filterModal) {
+                dti.navigator._currNavigatorFilter = upi;
+            } else {
+                dti.navigator._currNavigatorFilter = {
+                    upi: upi,
+                    name: name,
+                    pointType: pointType
+                };
+            }
+
+            dti.fire('hideMenus');
 
             if (dti.navigator.navigatorCallback) {
                 dti.messaging.sendMessage({
                     key: dti.navigator._prevMessage._windowId,
                     value: {
-                        filter: filter
+                        selectedPoint: dti.navigator._currNavigatorFilter,
+                        action: 'pointSelected'
                     }
                 });
+            } else {
+                if (dti.navigator.isSelectOnly) {
+                    if (dti.navigator.navigatorCallback) {
+
+                    }
+                    dti.log(upi, name, pointType);
+                }
             }
             
         },
@@ -1797,6 +1861,7 @@ var dti = {
                             dti.navigator.navigatorCallback = config.callback || false;
 
                             dti.navigator._navigatorMessage = config;
+                            dti.navigator._navigatorParameters = config.parameters;
                             dti.navigator.showNavigatorModal();
                         }
                     },
@@ -1876,6 +1941,9 @@ var dti = {
         openWindows: {},
         windowGroups: ko.observableArray([]), // Pinned items prepopulate this array
         startMenuItems: ko.observableArray([]),
+        showNavigatorNew: function () {
+            dti.navigator.showNavigatorNew();
+        },
         alarms: {
             unacknowledged: {
                 count: ko.observable(0),

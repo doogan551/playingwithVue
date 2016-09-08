@@ -70,11 +70,13 @@ var dtiMessaging =  {
         //if target = new, call window.top.workspaceManager.openWindow..., else change this window's url
     },
 
-    showNavigator: function () {
+    showNavigator: function (parameters) {
         // send message to navigator to open
         // dtiMessaging.utility.showNavigatorModal();
         dtiMessaging.sendMessage('navigatormodal', {
-            action: 'open'
+            action: 'open',
+            callback: true,
+            parameters: parameters
         });
     },
 
