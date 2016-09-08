@@ -144,15 +144,18 @@ function importUpdate() {
 					logger.info('number of powermeters changed:', count);
 					logger.info("before changeUpis", err, new Date());
 					changeUpis(function(err) {
-						fixUpisCollection(db, 'new_points', function (err) {
-							cleanupDB(db, function (err) {
-								if (err) {
-									logger.info("updateGPLReferences err:", err);
-								}
-								logger.info("!!Check Port 1-4 Timeouts on devices!!");
-								logger.info("done", err, new Date());
-								process.exit(0);
+						fixUpisCollection(db, 'new_points', function(err) {
+							updateHistory(function(err) {
+								logger.info('finished updateHistory', err);
+								cleanupDB(db, function(err) {
+									if (err) {
+										logger.info("updateGPLReferences err:", err);
+									}
+									logger.info("!!Check Port 1-4 Timeouts on devices!!");
+									logger.info("done", err, new Date());
+									process.exit(0);
 
+								});
 							});
 						});
 					});
@@ -2070,9 +2073,9 @@ function addReferencesToSlideShowPointRefs(db, point, cb) {
 	var referencedSlides = point.Slides,
 		upiList = [],
 		c,
-		pRefAppIndex = 1,  // skipping 0 for "Device Point"
-		matchUpisToPointRefs = function () {
-			var setPointRefIndex = function (slides) {
+		pRefAppIndex = 1, // skipping 0 for "Device Point"
+		matchUpisToPointRefs = function() {
+			var setPointRefIndex = function(slides) {
 				var slide,
 					pRef;
 
@@ -3392,6 +3395,9 @@ function updateHistory(cb) {
 	var now = moment().endOf('month');
 	var start = moment('2000/01', 'YYYY/MM');
 	var count = 0;
+	var currentYear = now.year();
+
+	logger.info('starting updateHistory upis');
 	Utility.get({
 		collection: 'new_points',
 		query: {},
@@ -3425,6 +3431,10 @@ function updateHistory(cb) {
 				});
 			}, function(err) {
 				now = now.subtract(1, 'month');
+				if(now.year() !== currentYear){
+					currentYear = now.year();
+					logger.info(currentYear, count);
+				}
 				callback(err);
 			});
 		}, cb);
