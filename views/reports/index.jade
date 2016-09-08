@@ -272,7 +272,7 @@ block content
                                                                 // ko foreach: $root.listOfCalculations
                                                                 li
                                                                     label.fancy-checkbox
-                                                                        input.medium(data-bind="checked: $parent.calculation.indexOf($data.text) !== -1", type="checkbox")
+                                                                        input.medium(data-bind="checked: $parent.calculation.indexOf($data.text) !== -1, click: function () { return $root.calculationClick($element, $data.text, $parentContext.$index()) }", type="checkbox")
                                                                         span.calcLabel(data-bind="text: ' ' + $data.text")
                                                                 // /ko
                                                             // /ko

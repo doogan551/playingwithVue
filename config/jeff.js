@@ -3,7 +3,7 @@ var jeff = {
         'dbConfig': {
             'host': 'localhost',
             'port': 27017,
-            'dbName': 'msfc',
+            'dbName': 'import',
             'driver': 'mongodb'
         },
         'files': {

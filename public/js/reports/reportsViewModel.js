@@ -2253,6 +2253,28 @@ var reportsViewModel = function () {
             $dataTablesScrollBody = $dataTablePlaceHolder.find('tbody');
             $dataTablesScrollFoot = $dataTablePlaceHolder.find('tfoot');
         },
+        adjustGridColumnTabWidth = function () {
+            var infoscanHeader = 95,
+                adjustHeight,
+                $activePane = $tabViewReport.find(".tab-pane.active");
+
+            $tabViewReport.css('width', window.innerWidth - 83);
+            $tabViewReport.find(".tab-content").css('width', $tabViewReport.width());
+
+            if ($activePane.attr("id") === "chartData") {
+                $activePane.css('height', (window.innerHeight - 90));
+                $activePane.css('width', (window.innerWidth - 130));
+                $activePane.css('margin-top', '-22px');
+            } else if ($activePane.attr("id") === "gridData") {
+                setInfoBarDateTime();
+                adjustHeight = $dataTablesScrollBody.height() - (($dataTablesWrapper.height() + infoscanHeader) - window.innerHeight);
+                $dataTablesScrollHead.css('width', $dataTablesWrapper.width() - 17); // allow for scrolly in body
+                $dataTablesScrollBody.css('height', adjustHeight);
+                $dataTablesScrollBody.css('width', $dataTablesWrapper.width());
+                $dataTablesScrollFoot.css('width', $dataTablesWrapper.width() - 17); // allow for scrolly in body
+                $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
+            }
+        },
         adjustViewReportTabHeightWidth = function () {
             var infoscanHeader = 95,
                 adjustHeight,
@@ -2956,9 +2978,12 @@ var reportsViewModel = function () {
                     return result;
                 },
                 getCalcForColumn = function (currentPageData, allData, columnDesign) {
-                    var value,
+                    var i,
+                        value,
                         allRawValues,
                         currentPageRawValues = [],
+                        collectionOfCalcs = [],
+                        typeOfCalc,
                         calc = {
                             totalCalc: 0,
                             pageCalc: 0
@@ -2984,32 +3009,38 @@ var reportsViewModel = function () {
                         currentPageRawValues = getRawData(currentPageData);
                     }
 
-                    switch (columnDesign.calculation.toLowerCase()) {
-                        case "mean":
-                            calc.totalCalc = getColumnMean(allRawValues);
-                            calc.pageCalc = (!sameDataSet ? getColumnMean(currentPageRawValues) : calc.totalCalc);
-                            break;
-                        case "max":
-                            calc.totalCalc = Math.max.apply(Math, allRawValues);
-                            calc.pageCalc = (!sameDataSet ? Math.max.apply(Math, currentPageRawValues) : calc.totalCalc);
-                            break;
-                        case "min":
-                            calc.totalCalc = Math.min.apply(Math, allRawValues);
-                            calc.pageCalc = (!sameDataSet ? Math.min.apply(Math, currentPageRawValues) : calc.totalCalc);
-                            break;
-                        case "sum":
-                            calc.totalCalc = getColumnSum(allRawValues);
-                            calc.pageCalc = (!sameDataSet ? getColumnSum(currentPageRawValues) : calc.totalCalc);
-                            break;
-                        case "std dev":
-                            calc.totalCalc = getColumnStandardDeviation(allRawValues);
-                            calc.pageCalc = (!sameDataSet ? getColumnStandardDeviation(currentPageRawValues) : calc.totalCalc);
-                            break;
-                        default:
-                            console.log(" - - - DEFAULT  getCalcForColumn()");
-                            break;
+                    for (i = 0; i < columnDesign.calculation.length; i++) {
+                        typeOfCalc = columnDesign.calculation[i].toLowerCase();
+
+                        switch (typeOfCalc) {
+                            case "mean":
+                                calc.totalCalc = getColumnMean(allRawValues);
+                                calc.pageCalc = (!sameDataSet ? getColumnMean(currentPageRawValues) : calc.totalCalc);
+                                break;
+                            case "max":
+                                calc.totalCalc = Math.max.apply(Math, allRawValues);
+                                calc.pageCalc = (!sameDataSet ? Math.max.apply(Math, currentPageRawValues) : calc.totalCalc);
+                                break;
+                            case "min":
+                                calc.totalCalc = Math.min.apply(Math, allRawValues);
+                                calc.pageCalc = (!sameDataSet ? Math.min.apply(Math, currentPageRawValues) : calc.totalCalc);
+                                break;
+                            case "sum":
+                                calc.totalCalc = getColumnSum(allRawValues);
+                                calc.pageCalc = (!sameDataSet ? getColumnSum(currentPageRawValues) : calc.totalCalc);
+                                break;
+                            case "std dev":
+                                calc.totalCalc = getColumnStandardDeviation(allRawValues);
+                                calc.pageCalc = (!sameDataSet ? getColumnStandardDeviation(currentPageRawValues) : calc.totalCalc);
+                                break;
+                            default:
+                                console.log(" - - - DEFAULT  getCalcForColumn()");
+                                break;
+                        }
+                        collectionOfCalcs.push(calc);
                     }
-                    return calc;
+
+                    return collectionOfCalcs;
                 };
 
             // if the design of the data collected has changed then we need to adjust the design of the DataTable.
@@ -3147,6 +3178,7 @@ var reportsViewModel = function () {
                             $firstColumn,
                             columnIndexesToCalc = api.columns('.calculate')[0],
                             i,
+                            j,
                             columnIndex,
                             currentPageData,
                             allData,
@@ -3154,55 +3186,71 @@ var reportsViewModel = function () {
                             numberOfColumnsToCalculate = columnIndexesToCalc.length,
                             columnConfig,
                             calc,
+                            calcs,
                             pageFooterText,
                             totalFooterText,
                             footerText,
+                            footerTitle,
                             $tdFooter;
 
                         for (i = 0; i < numberOfColumnsToCalculate; i++) {
+                            footerText = "";
+                            footerTitle = "";
                             columnIndex = columnIndexesToCalc[i];
                             columnConfig = reportColumns[columnIndex];
                             currentPageData = api.column(columnIndex, {page: 'current'}).data();
                             allData = api.column(columnIndex).data();
                             sameDataSet = (currentPageData.length === allData.length);
-                            calc = getCalcForColumn(currentPageData, allData, columnConfig);
+                            calcs = getCalcForColumn(currentPageData, allData, columnConfig);
                             $tdFooter = $(tfoot).find("td[colindex='" + columnIndex + "']");
-                            $tdFooter.attr("title", "Page Calc (Table Calc)");
+                            // $tdFooter.attr("title", "Page Calc (Table Calc)");
 
-                            switch (self.reportType) {
-                                case "History":
-                                    if (!sameDataSet) {
-                                        pageFooterText = "<span>Page " + columnConfig.calculation + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
-                                    }
-                                    totalFooterText = "<span>Total " + columnConfig.calculation + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
-                                    break;
-                                case "Totalizer":
-                                    if (columnConfig.operator.toLowerCase() === "runtime") {
+                            for (j = 0; j < columnConfig.calculation.length; j++) {
+                                calc = calcs[j];
+
+                                switch (self.reportType) {
+                                    case "History":
                                         if (!sameDataSet) {
-                                            pageFooterText = "<span>Page " + columnConfig.calculation + ": " + getDurationText(calc.pageCalc, columnConfig.precision, totalizerDurationInHours) + "</span>";
+                                            pageFooterText = "<span>Page " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
                                         }
-                                        totalFooterText = "<span>Total " + columnConfig.calculation + ": " + getDurationText(calc.totalCalc, columnConfig.precision, totalizerDurationInHours) + "</span>";
-                                    } else {
+                                        // totalFooterText = "<span>Total " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
+                                        totalFooterText = "Total " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + " ";
+                                        break;
+                                    case "Totalizer":
+                                        if (columnConfig.operator.toLowerCase() === "runtime") {
+                                            if (!sameDataSet) {
+                                                pageFooterText = "<span>Page " +   columnConfig.calculation[j] + ": " + getDurationText(calc.pageCalc, columnConfig.precision, totalizerDurationInHours) + "</span>";
+                                            }
+                                            // totalFooterText = "<span>Total " +   columnConfig.calculation[j] + ": " + getDurationText(calc.totalCalc, columnConfig.precision, totalizerDurationInHours) + "</span>";
+                                            totalFooterText = "Total " +   columnConfig.calculation[j] + ": " + getDurationText(calc.totalCalc, columnConfig.precision, totalizerDurationInHours) + " ";
+                                        } else {
+                                            if (!sameDataSet) {
+                                                pageFooterText = "<span>Page " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
+                                            }
+                                            // totalFooterText = "<span>Total " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
+                                            totalFooterText = "Total " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + " ";
+                                        }
+                                        break;
+                                    case "Property":
                                         if (!sameDataSet) {
-                                            pageFooterText = "<span>Page " + columnConfig.calculation + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
+                                            pageFooterText = "<span>Page " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + "</span>";
                                         }
-                                        totalFooterText = "<span>Total " + columnConfig.calculation + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
-                                    }
-                                    break;
-                                case "Property":
-                                    if (!sameDataSet) {
-                                        pageFooterText = "<span>Page " + columnConfig.calculation + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + "</span>";
-                                    }
-                                    totalFooterText = "<span>Total " + columnConfig.calculation + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + "</span>";
-                                    break;
-                                default:
-                                    console.log(" - - - DEFAULT  footerCallback()");
-                                    break;
+                                        // totalFooterText = "<span>Total " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + "</span>";
+                                        totalFooterText = "Total " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + " ";
+                                        break;
+                                    default:
+                                        console.log(" - - - DEFAULT  footerCallback()");
+                                        break;
+                                }
+
+                                // footerText += ((!sameDataSet ? pageFooterText + "<br>" : "" ) + totalFooterText);
+                                footerText += (!sameDataSet ? pageFooterText + "<br>" : "" );
+                                footerTitle += totalFooterText;
                             }
 
-                            footerText = ((!sameDataSet ? pageFooterText + "<br>" : "" ) + totalFooterText);
-
+                            $tdFooter.addClass("footerCalc");
                             $tdFooter.html(footerText);
+                            $tdFooter.attr("data-title", footerTitle);
                         }
 
                         if (numberOfColumnsToCalculate > 0) {
@@ -4049,6 +4097,25 @@ var reportsViewModel = function () {
         }
 
         updateListOfColumns(tempArray);
+        return true;
+    };
+
+    self.calculationClick = function (element, calc, indexOfColumn) {
+        var tempArray = self.listOfColumns(),
+            column = tempArray[indexOfColumn];
+
+        if (element.checked === true) {
+            if (column.calculation.indexOf(calc) === -1) {
+                column.calculation.push(calc);
+            }
+        } else {
+            if (column.calculation.indexOf(calc) !== -1) {
+                column.calculation.splice(column.calculation.indexOf(calc), 1);
+            }
+        }
+
+        updateListOfColumns(tempArray);
+        return true;
     };
 
     self.setGlobalEditedColumnData = function () {
