@@ -28,4 +28,7 @@ td.firstColumn.small.datetime {
     padding-left: 20px;
     padding-right: 20px;
 }
-
+.page-break {
+    page-break-after: always;
+    -webkit-column-break-after: always;
+}

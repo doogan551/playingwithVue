@@ -452,6 +452,7 @@ var reportsViewModel = function () {
         windowUpi,
         resizeTimer = 400,
         baseConfigColumnWidth = 140,
+        baseConfigColumnHeight = 14,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
         setNewPointReference = function (refPointUPI, property) {
@@ -1480,11 +1481,17 @@ var reportsViewModel = function () {
                             currentColumn.valueList = "";
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
                             currentColumn.dataColumnName = (i === 0 && currentColumn.colName === "Date" ? currentColumn.colName : "point-" + currentColumn.upi);
+                            if (!Array.isArray(currentColumn.calculation)) {
+                                currentColumn.calculation = [];
+                            }
                             break;
                         case "Totalizer":
                             currentColumn.valueList = getTotalizerValueList(currentColumn.pointType);
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
                             currentColumn.dataColumnName = (i === 0 && currentColumn.colName === "Date" ? currentColumn.colName : "point-" + currentColumn.upi + " - " + currentColumn.operator.toLowerCase());
+                            if (!Array.isArray(currentColumn.calculation)) {
+                                currentColumn.calculation = [];
+                            }
                             break;
                         default:
                             console.log(" - - - DEFAULT  initColumns()");
@@ -2135,7 +2142,7 @@ var reportsViewModel = function () {
                     result = rawValue;
                 }
             }
-            return result;
+            return (isNaN(result) || result === "" ? 0 : result);
         },
         setYaxisValues = function (chartData) {
             var i,
@@ -2386,7 +2393,9 @@ var reportsViewModel = function () {
             }
         },
         setReportEvents = function () {
-            var intervals,
+            var i,
+                numberOfRowsPerPage,
+                intervals,
                 calculations,
                 entriesPerPage,
                 chartTypes,
@@ -2407,7 +2416,7 @@ var reportsViewModel = function () {
                             colDisplayName: "",
                             valueType: "String",
                             operator: "",
-                            calculation: "",
+                            calculation: [],
                             canCalculate: false,
                             canBeCharted: false,
                             includeInChart: false,
@@ -2698,7 +2707,10 @@ var reportsViewModel = function () {
                 var numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
                     $tablePagination,
                     $pagination,
-                    $paginate_buttons;
+                    $paginate_buttons,
+                    $dataTablesTBody,
+                    $tableRows;
+
                 if (numberOfPages === 1) {
                     $tablePagination = $tabViewReport.find(".dataTables_paginate");
                     $pagination = $tablePagination.find("ul.pagination");
@@ -2708,8 +2720,19 @@ var reportsViewModel = function () {
                 }
 
                 if (!self.activeRequestDataDrawn()) {
+                    numberOfRowsPerPage = 10;
+                    $dataTablesTBody = $dataTablePlaceHolder.find('tbody');
+                    $tableRows = $dataTablesTBody.find("tr");
+                    for (i = 0; i < $tableRows.length; i+=numberOfRowsPerPage) {
+                        if (i > (numberOfRowsPerPage - 1)) {
+                            $($tableRows[i]).addClass("page-break");
+                            // $($tableRows[i]).css("page-break-after", "always");
+                        }
+                    }
+
                     // console.log('. . . . . . . . . . .   requested data has been rendered   . . . . . . . . .');
                     if (scheduled && self.chartable()) {
+                        console.log('. . . .   scheduled report  . . . .');
                         //self.requestChart();
                     } else {
                         setTimeout(function () {
@@ -3037,7 +3060,7 @@ var reportsViewModel = function () {
                                 console.log(" - - - DEFAULT  getCalcForColumn()");
                                 break;
                         }
-                        collectionOfCalcs.push(calc);
+                        collectionOfCalcs.push($.extend(true, {}, calc));
                     }
 
                     return collectionOfCalcs;
@@ -3103,6 +3126,7 @@ var reportsViewModel = function () {
                                     extend: 'pdfHtml5',
                                     text: '<i class="fa fa-file-pdf-o"></i> PDF',
                                     footer: true,
+                                    orientation: (aoColumns.length > 4 ? "landscape" : "portrait"),
                                     key: {
                                         altKey: true,
                                         key: '4'
@@ -3196,6 +3220,7 @@ var reportsViewModel = function () {
                         for (i = 0; i < numberOfColumnsToCalculate; i++) {
                             footerText = "";
                             footerTitle = "";
+                            pageFooterText = "";
                             columnIndex = columnIndexesToCalc[i];
                             columnConfig = reportColumns[columnIndex];
                             currentPageData = api.column(columnIndex, {page: 'current'}).data();
@@ -3203,7 +3228,7 @@ var reportsViewModel = function () {
                             sameDataSet = (currentPageData.length === allData.length);
                             calcs = getCalcForColumn(currentPageData, allData, columnConfig);
                             $tdFooter = $(tfoot).find("td[colindex='" + columnIndex + "']");
-                            // $tdFooter.attr("title", "Page Calc (Table Calc)");
+                            $tdFooter.popover("destroy");
 
                             for (j = 0; j < columnConfig.calculation.length; j++) {
                                 calc = calcs[j];
@@ -3211,46 +3236,48 @@ var reportsViewModel = function () {
                                 switch (self.reportType) {
                                     case "History":
                                         if (!sameDataSet) {
-                                            pageFooterText = "<span>Page " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
+                                            pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
                                         }
-                                        // totalFooterText = "<span>Total " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
-                                        totalFooterText = "Total " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + " ";
+                                        totalFooterText = "Total " + columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "<br />";
                                         break;
                                     case "Totalizer":
                                         if (columnConfig.operator.toLowerCase() === "runtime") {
                                             if (!sameDataSet) {
-                                                pageFooterText = "<span>Page " +   columnConfig.calculation[j] + ": " + getDurationText(calc.pageCalc, columnConfig.precision, totalizerDurationInHours) + "</span>";
+                                                pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + getDurationText(calc.pageCalc, columnConfig.precision, totalizerDurationInHours) + "</span>";
                                             }
-                                            // totalFooterText = "<span>Total " +   columnConfig.calculation[j] + ": " + getDurationText(calc.totalCalc, columnConfig.precision, totalizerDurationInHours) + "</span>";
-                                            totalFooterText = "Total " +   columnConfig.calculation[j] + ": " + getDurationText(calc.totalCalc, columnConfig.precision, totalizerDurationInHours) + " ";
+                                            totalFooterText = "Total " + columnConfig.calculation[j] + ": " + getDurationText(calc.totalCalc, columnConfig.precision, totalizerDurationInHours) + "<br />";
                                         } else {
                                             if (!sameDataSet) {
-                                                pageFooterText = "<span>Page " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
+                                                pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
                                             }
-                                            // totalFooterText = "<span>Total " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
-                                            totalFooterText = "Total " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + " ";
+                                            totalFooterText = "Total " + columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "<br />";
                                         }
                                         break;
                                     case "Property":
                                         if (!sameDataSet) {
-                                            pageFooterText = "<span>Page " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + "</span>";
+                                            pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + "</span>";
                                         }
-                                        // totalFooterText = "<span>Total " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + "</span>";
-                                        totalFooterText = "Total " +   columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + " ";
+                                        totalFooterText = "Total " + columnConfig.calculation[j] + ": " + toFixedComma(calc.totalCalc, columnConfig.precision) + "<br />";
                                         break;
                                     default:
                                         console.log(" - - - DEFAULT  footerCallback()");
                                         break;
                                 }
 
-                                // footerText += ((!sameDataSet ? pageFooterText + "<br>" : "" ) + totalFooterText);
-                                footerText += (!sameDataSet ? pageFooterText + "<br>" : "" );
-                                footerTitle += totalFooterText;
+                                footerText += (!sameDataSet ? pageFooterText + "<br />" : totalFooterText);
+                                footerTitle += (!sameDataSet ? totalFooterText : "");
                             }
 
-                            $tdFooter.addClass("footerCalc");
+                            // $tdFooter.addClass("footerCalc");
                             $tdFooter.html(footerText);
-                            $tdFooter.attr("data-title", footerTitle);
+                            if (!sameDataSet) {
+                                $tdFooter.attr("data-toggle", "popover");
+                                $tdFooter.attr("data-trigger", "click");
+                                $tdFooter.attr("data-html", "true");
+                                $tdFooter.attr("title", "Entire column");
+                                $tdFooter.attr("data-content", footerTitle);
+                                $tdFooter.popover({placement: 'top'});
+                            }
                         }
 
                         if (numberOfColumnsToCalculate > 0) {
@@ -3296,6 +3323,13 @@ var reportsViewModel = function () {
                 $currentDateTimeDiv.prependTo($tablePagination);
             }
         },
+        breakReportDataIntoSections = function () {
+            // var i;
+            //
+            // for () {
+            // }
+
+        },
         columnEditReset = function () {
             return {
                 colname: "Choose Point",
@@ -3320,6 +3354,9 @@ var reportsViewModel = function () {
                 self.reportResultViewed(self.currentTab() === 2);
                 blockUI($tabViewReport, false);
                 $dataTablePlaceHolder.DataTable().clear();
+                if (scheduled) {
+                    breakReportDataIntoSections();
+                }
                 $dataTablePlaceHolder.DataTable().rows.add(reportData);
                 $dataTablePlaceHolder.DataTable().draw("current");
                 $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
@@ -3417,9 +3454,9 @@ var reportsViewModel = function () {
 
             self.activeRequestForChart(true);
             if (!!formatForPrint) {
-                spinnerText = "Configuring "  + self.selectedChartType() + " Chart for printing....";
+                spinnerText = "Configuring " + self.selectedChartType() + " Chart for printing....";
             } else {
-                spinnerText = "Rending "  + self.selectedChartType() + " Chart....";
+                spinnerText = "Rending " + self.selectedChartType() + " Chart....";
             }
             self.chartSpinnerTitle(spinnerText);
             $reportChartDiv.html("");
@@ -3567,7 +3604,7 @@ var reportsViewModel = function () {
 
     self.endDate = "";
 
-    self.yaxisGroups = ["A","B","C","D","E","F","G","H","I","J"];
+    self.yaxisGroups = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 
     self.reportDisplayTitle = ko.observable("");
 
@@ -3749,7 +3786,7 @@ var reportsViewModel = function () {
                             valueType: "DateTime",
                             AppIndex: -1,
                             operator: "",
-                            calculation: "",
+                            calculation: [],
                             canCalculate: false,
                             canBeCharted: false,
                             yaxisGroup: "A",
@@ -3772,7 +3809,7 @@ var reportsViewModel = function () {
                             valueType: "String",
                             AppIndex: -1,
                             precision: 0,
-                            calculation: "",
+                            calculation: [],
                             canCalculate: false,
                             canBeCharted: false,
                             yaxisGroup: "A",
@@ -3991,6 +4028,7 @@ var reportsViewModel = function () {
     self.requestReportData = function () {
         if (!self.durationError()) {
             if (self.currentTab() !== 2) {
+                $(".tableFooter > td").popover("destroy");
                 var requestObj = buildReportDataRequest();
                 if (!!requestObj) {
                     tabSwitch(2);
@@ -4069,7 +4107,7 @@ var reportsViewModel = function () {
     self.clearColumnCalculation = function (indexOfColumn) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn];
-        column.calculation = "";
+        column.calculation = [];
         updateListOfColumns(tempArray);
     };
 
@@ -4196,7 +4234,7 @@ var reportsViewModel = function () {
         if (!!column.AppIndex) {
             delete column.AppIndex;
         }
-        column.calculation = "";
+        column.calculation = [];
         column.canCalculate = columnCanBeCalculated(column);
         column.canBeCharted = columnCanBeCharted(column);
         column.yaxisGroup = "A";
@@ -4207,7 +4245,7 @@ var reportsViewModel = function () {
     self.selectPropertyFilter = function (element, indexOfFilter, selectedItem) {
         var tempArray = self.listOfFilters(),
             $elementRow = $(element).parent().parent().parent().parent().parent();
-            //$inputField = $elementRow.find(".filterValue").find("input");  // in case we need to validate input field
+        //$inputField = $elementRow.find(".filterValue").find("input");  // in case we need to validate input field
         tempArray[indexOfFilter] = initializeNewFilter(selectedItem, tempArray[indexOfFilter]);
         updateListOfFilters(tempArray);
     };

@@ -221,7 +221,9 @@ block content
                                                             // /ko
                                                             //.placeholderVerbiage(style="font-weight: normal; color: #a7a7a7;", data-bind="text: ($index() === 0 ? 'Reserved column' : '')")
                                                             // ko if: $index() === 0
+                                                            // ko if: ($root.reportType !== 'Property')
                                                             button.btn.btn-default.globalConfigColumnItem(data-bind="click: function () { $root.globalEditColumnFields() }") Global config
+                                                            // /ko
                                                             .blankspot
                                                                 | &nbsp;
                                                             a.addColumnGridButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn(2) }")
@@ -252,6 +254,7 @@ block content
                                                         div ...
                                             tfoot
                                                 tr.calculationFooter(data-bind="foreach: listOfColumns()")
+                                                    // ko if: ($root.reportType !== 'Property')
                                                     // ko if: $index() === 0
                                                     td
                                                         .globalCalculationsCell
@@ -276,6 +279,7 @@ block content
                                                                         span.calcLabel(data-bind="text: ' ' + $data.text")
                                                                 // /ko
                                                             // /ko
+                                                    // /ko
                                                     // /ko
                                                     // /ko
                                 div#filterByPoint.tab-pane
