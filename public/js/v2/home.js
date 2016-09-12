@@ -820,6 +820,10 @@ var dti = {
                     if (!config.isHidden) {
                         dti.windows.activate(newWindow.windowId);
                     }
+
+                    if (config.options && config.options.callback) {
+                        config.options.callback();
+                    }
                 }
             }
 
