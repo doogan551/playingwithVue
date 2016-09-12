@@ -453,6 +453,7 @@ var reportsViewModel = function () {
         resizeTimer = 400,
         baseConfigColumnWidth = 140,
         baseConfigColumnHeight = 14,
+        rowsPerPage = 24,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
         setNewPointReference = function (refPointUPI, property) {
@@ -3323,12 +3324,43 @@ var reportsViewModel = function () {
                 $currentDateTimeDiv.prependTo($tablePagination);
             }
         },
-        breakReportDataIntoSections = function () {
-            // var i;
-            //
-            // for () {
-            // }
+        breakScheduledReportDataIntoPages = function () {
+            var i,
+                j,
+                row,
+                headerArray = [],
+                rowArray = [],
+                columnsArray = $.extend(true, [], self.listOfColumns()),
+                currentPage = [],
+                reportDataPages = [];
 
+            if (reportData !== undefined) {
+                for (i = 0; i < reportData.length; i++) {
+                    row = reportData[i];
+                    rowArray = [];
+                    for (j = 0; j < columnsArray.length; j++) {
+                        if (!!columnsArray[j].dataColumnName) {
+                            rowArray.push(row[columnsArray[j].dataColumnName]);
+                        }
+                    }
+                    currentPage.push({cells: rowArray});
+                    if (i > 0 && i % rowsPerPage === 0) {
+                        headerArray = [];
+                        for (j = 0; j < columnsArray.length; j++) {
+                            if (!!columnsArray[j].dataColumnName) {
+                                headerArray.push({Value: columnsArray[j].colDisplayName});
+                            }
+                        }
+
+                        reportDataPages.push({
+                            header: headerArray,
+                            rows: currentPage
+                        });
+                        currentPage = [];
+                    }
+                }
+            }
+            self.scheduledReportData({tables: reportDataPages});
         },
         columnEditReset = function () {
             return {
@@ -3353,34 +3385,33 @@ var reportsViewModel = function () {
                 $popAction.show();
                 self.reportResultViewed(self.currentTab() === 2);
                 blockUI($tabViewReport, false);
-                $dataTablePlaceHolder.DataTable().clear();
                 if (scheduled) {
-                    breakReportDataIntoSections();
-                }
-                $dataTablePlaceHolder.DataTable().rows.add(reportData);
-                $dataTablePlaceHolder.DataTable().draw("current");
-                $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
-                self.refreshData(false);
-                self.currentTimeStamp = moment().format("dddd MMMM DD, YYYY hh:mm:ss a");
-
-                if (!exportEventSet) {
-                    $tabViewReport.find("a.btn.btn-default.buttons-collection").on('click', function () {
-                        if (!exportEventSet) {
-                            setTimeout(function () {
-                                $direports.find("li.dt-button > a").on('click', function () {  // export buttons clicked
-                                    console.log($(this).text() + " button clicked");
-                                    $(this).parent().parent().hide();
-                                });
-                            }, 100);
-                        }
-                        exportEventSet = true;
-                    });
-                }
-
-                adjustViewReportTabHeightWidth();
-                if (scheduled) {
+                    breakScheduledReportDataIntoPages();
                     buildPrintableTable();
                     $(document.body).find("script").html(null);
+                } else {
+                    $dataTablePlaceHolder.DataTable().clear();
+                    $dataTablePlaceHolder.DataTable().rows.add(reportData);
+                    $dataTablePlaceHolder.DataTable().draw("current");
+                    $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
+                    self.refreshData(false);
+                    self.currentTimeStamp = moment().format("dddd MMMM DD, YYYY hh:mm:ss a");
+
+                    if (!exportEventSet) {
+                        $tabViewReport.find("a.btn.btn-default.buttons-collection").on('click', function () {
+                            if (!exportEventSet) {
+                                setTimeout(function () {
+                                    $direports.find("li.dt-button > a").on('click', function () {  // export buttons clicked
+                                        console.log($(this).text() + " button clicked");
+                                        $(this).parent().parent().hide();
+                                    });
+                                }, 100);
+                            }
+                            exportEventSet = true;
+                        });
+                    }
+
+                    adjustViewReportTabHeightWidth();
                 }
             }
         },
@@ -3638,6 +3669,8 @@ var reportsViewModel = function () {
     self.listOfIntervals = ko.observableArray([]);
 
     self.listOfCalculations = ko.observableArray([]);
+
+    self.scheduledReportData = ko.observable({});
 
     self.listOfEntriesPerPage = [];
 
@@ -4037,7 +4070,9 @@ var reportsViewModel = function () {
                         $popAction.hide();
                         self.activeDataRequest(true);
                         self.reportResultViewed(false);
-                        configureDataTable(true, true);
+                        if (!scheduled) {
+                            configureDataTable(true, true);
+                        }
                         reportData = undefined;
                         switch (self.reportType) {
                             case "History":

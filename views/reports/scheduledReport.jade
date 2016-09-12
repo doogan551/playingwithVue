@@ -11,8 +11,16 @@ block content
 			h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
 			table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
 				tfoot.tableFooter
-					tr(data-bind="foreach: listOfColumns()")
-						td.strong(data-bind="attr: { colindex:  $index() }")
+			div.formattedData(data-bind="foreach: $root.scheduledReportData().tables")
+				table.table.table-striped.table-bordered.table-responsive
+					thead
+						tr(data-bind="foreach: header")
+							th(data-bind="text: Value")
+					tbody(data-bind="foreach: rows")
+						tr(data-bind="foreach: cells")
+							td
+								div(data-bind="text: Value")
+				span(data-bind="text: 'Page ' + ($index()+1) + ' of ' + $root.scheduledReportData().tables.length")
 
 			.reportChartDiv(style="padding-top: 60px;")
 	include footer
