@@ -774,7 +774,7 @@ var dti = {
         create: function (config) {
             var newWindow;
 
-            if (config.options.sameWindow) {
+            if (config.options && config.options.sameWindow) {
                 newWindow = dti.windows.getWindowById(config.options.windowId);
                 newWindow.setUrl(config.url);
             } else {
