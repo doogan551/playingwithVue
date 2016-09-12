@@ -751,7 +751,7 @@ var Config = (function(obj) {
 
             data.ok = false; // Add 'ok' key and preset for validation fail
 
-            if (!!(data.propertyObject = obj.Utility.getPropertyObject(data.property, data.point))) {
+            if (!(data.propertyObject = obj.Utility.getPropertyObject(data.property, data.point))) {
                 data.result = "Bad property name";
                 return {
                     "err": data.result
