@@ -221,23 +221,28 @@ var dti = {
             console.log.apply(console, args);
         }
     },
+    _events: {},
+    _onceEvents: {},
     on: function (event, handler) {
-        dti.events[event] = dti.events[event] || [];
-        dti.events[event].push(handler);
+        dti._events[event] = dti._events[event] || [];
+        dti._events[event].push(handler);
+    },
+    once: function (event, handler) {
+        dti._onceEvents[event] = dti._onceEvents[event] || [];
     },
     off: function (event, handler) {
-        var handlers = dti.events[event] || [];
+        var handlers = dti._events[event] || [];
 
         dti.forEachArray(handlers, function processOffHandler (fn, idx) {
             if (fn === handler) {
-                dti.events[event].splice(idx, 1);
+                dti._events[event].splice(idx, 1);
                 return false;
             }
         });
     },
     fire: function (event, obj1, obj2) {
         var c,
-            handlers = dti.events[event] || [],
+            handlers = dti._events[event] || [],
             len = handlers.length;
 
         // dti.log('firing', event);
@@ -577,6 +582,7 @@ var dti = {
                     activate: activate,
                     minimize: minimize,
                     minimized: ko.observable(false),
+                    windowsHidden: dti.bindings.windowsHidden,
                     close: close,
                     iconClass: ko.observable(),
                     iconText: ko.observable(),
@@ -749,6 +755,14 @@ var dti = {
                         return false;
                     }
                 });
+            });
+
+            dti.on('hideWindows', function hideWindows () {
+                dti.bindings.windowsHidden(true);
+            });
+
+            dti.on('unhideWindows', function unhideWindows () {
+                dti.bindings.windowsHidden(false);
             });
         },
         offset: function () {
@@ -940,11 +954,11 @@ var dti = {
 
             dti.events.hoverMenu('.startButtonContainer', 'startmenu');
 
-            dti.events.clickMenu('#globalSearch', '#searchBox', {
-                before: function () {
-                    $('#searchBox input').focus();
-                }
-            });
+            // dti.events.clickMenu('#globalSearch', '#searchBox', {
+            //     before: function () {
+            //         $('#searchBox input').focus();
+            //     }
+            // });
         }
     },
     startMenu: {
@@ -1377,6 +1391,40 @@ var dti = {
         }
     },
     globalSearch: {
+        $taskbarEl: $('#searchNavbar'),
+        $backgroundEl: $('#searchBackground'),
+        $inputEl: $('#globalSearchInput'),
+        show: function () {
+            dti.globalSearch.visible = true;
+            dti.fire('hideWindows');
+
+            dti.animations.fadeIn(dti.globalSearch.$taskbarEl, function focusSearchInput () {
+                dti.globalSearch.$inputEl.focus();
+            });
+
+            dti.animations.fadeIn(dti.globalSearch.$backgroundEl);
+
+            //if we want to go back to home on escape (we'll have to discuss and determine the different ways to 'escape' the search view)
+            $(document).keyup(dti.globalSearch.handleKeyPress);
+        },
+        hide: function () {
+            dti.globalSearch.visible = false;
+            dti.fire('unhideWindows');
+
+            dti.animations.fadeOut(dti.globalSearch.$taskbarEl);
+            dti.animations.fadeOut(dti.globalSearch.$backgroundEl);
+        },
+        handleKeyPress: function (event) {
+            if (event.which === 27) {
+                if (dti.globalSearch.visible === true) {
+                    dti.globalSearch.visible = false;
+                    dti.globalSearch.hide();
+                }
+            }
+
+        }
+    },
+    globalSearchOld: {
         init: function () {
             dti.globalSearch.$el = $('#search');
             dti.globalSearch.$resultsEl = $('#globalSearchResults');
@@ -1418,6 +1466,258 @@ var dti = {
                 belowOrigin: true, // Displays dropdown below the button
                 alignment: 'left' // Displays dropdown with edge aligned to the left of button
             });
+        }
+    },
+    navigatorNew: {
+        _navigators: {},
+        //config contains container
+        Navigator: function (config) {
+            var self = this,
+                ajaxParameters = {
+                    url: '/api/points/search',
+                    dataType: 'json',
+                    type: 'post'
+                },
+                getBindings = function () {
+                    var pointTypes = $.extend(true, [], dti.utility.pointTypes),
+                        bindings = {
+                            name1: '',
+                            name2: '',
+                            name3: '',
+                            name4: '',
+                            showInactive: false,
+                            showDeleted: false,
+                            points: []
+                        };
+
+                    dti.forEachArray(pointTypes, function addSelectedToPointType(type) {
+                        type.selected = true;
+                        type.visible = true;
+                    });
+
+                    bindings.pointTypes = pointTypes;
+
+                    //build observable viewmodel so computeds have access to observables
+                    bindings = ko.viewmodel.fromModel(bindings);
+
+                    bindings.toggleAllPointTypes = function () {
+                        var numChecked = 0,
+                            numVisible = 0,
+                            types = bindings.pointTypes(),
+                            toSet;
+
+                        dti.forEachArray(types, function checkPointType(type) {
+                            if (type.visible()) {
+                                numVisible++;
+                            }
+
+                            if (type.selected()) {
+                                numChecked++;
+                            }
+                        });
+
+                        if (numChecked === types.length) {
+                            toSet = false;
+                        } else if (numChecked === 0) {
+                            toSet = true;
+                        } else if (numChecked > numVisible / 2) {
+                            toSet = true;
+                        } else {
+                            toSet = false;
+                        }
+
+                        dti.forEachArray(types, function doCheckPointType(type) {
+                            if (type.visible()) {
+                                type.selected(toSet);
+                            }
+                        });
+
+                    };
+
+                    bindings.handleNavigatorRowClick = function (navigator, event) {
+                        var target = event && event.target,
+                            point;
+
+                        if (target) { //open window for main one, others just send the information
+                            point = ko.dataFor(target);
+                            dti.log('row click', point);
+                            //fire event?  .once('point selected')
+                        }
+                    };
+
+                    bindings.clearBinding = function (binding) {
+                        if (self.bindings[binding]) {
+                            self.bindings[binding](null);
+                        }
+                    };
+
+                    bindings.allTypesSelected = ko.pureComputed(function allPointTypesSelected() {
+                        var currTypes = bindings.pointTypes(),
+                            numChecked = 0;
+
+                        dti.forEachArray(currTypes, function isTypeChecked(type) {
+                            if (type.selected()) {
+                                numChecked++;
+                            }
+                        });
+
+                        return numChecked === currTypes.length;
+                    });
+
+                    bindings.allTypesSelected.extend({
+                        rateLimit: 50
+                    });
+
+                    bindings.nameHasChanged = ko.computed(function nameFilterChanged() {
+                        var name1 = bindings.name1(),
+                            name2 = bindings.name2(),
+                            name3 = bindings.name3(),
+                            name4 = bindings.name4();
+
+                        if (!self._pauseRequest && self._loaded) {
+                            // dti.log('Getting points', name1, name2, name3, name4);
+                            self.getPoints();
+                        }
+                    });
+
+                    bindings.optionsChanged = ko.computed(function optionsHaveChanged() {
+                        var showInactive = bindings.showInactive(),
+                            showDeleted = bindings.showDeleted();
+
+                        if (!self._pauseRequest && self._loaded) {
+                            // dti.log('Getting points', name1, name2, name3, name4);
+                            self.getPoints();
+                        }
+                    });
+
+                    return bindings;
+                };
+
+            $.extend(self, config);
+
+            self.bindings = getBindings();
+
+            self.id = dti.makeId();
+
+            self.applyPointTypes = function (types, exclusive) {
+                dti.forEachArray(self.bindings.pointTypes, function isPointTypeChecked (type) {
+                    var isFound = types.indexOf(type.key()) > -1;
+
+                    if (exclusive) {
+                        type.visible(isFound);
+                    } else {
+                        type.visible(true);
+                    }
+                   
+                    type.selected(isFound);
+                });
+            };
+
+            self.applyPointNames = function (config) {
+                var c,
+                    name;
+
+                for (c = 1; c <= 4; c++) {
+                    name = 'Name' + c;
+                    self.bindings[name](config[name]);
+                }
+            };
+
+            self.applyConfig = function (config) {
+                self.applyPointTypes(config.pointTypes);
+
+                self.applyPointNames(config);
+            };
+
+            self.handleDataReturn = function (response) {
+                self.bindings.points(response);
+                self._request = null;
+                self._pauseRequest = false;
+                // dti.log(response);
+            };
+
+            self.getFlatPointTypes = function (pointTypes) {
+                var ret = [];
+
+                dti.forEachArray(pointTypes, function flattenPointType (type) {
+                    if (type.selected) {
+                        ret.push(type.key);
+                    }
+                });
+
+                return ret;
+            };
+
+            self.getPoints = function () {
+                var bindings = ko.toJS(self.bindings),
+                    parameters = {
+                        pointTypes: bindings.pointTypes,
+                        showDeleted: bindings.showDeleted,
+                        showInactive: bindings.showInactive,
+                        name1: bindings.name1,
+                        name2: bindings.name2,
+                        name3: bindings.name3,
+                        name4: bindings.name4
+                    };
+
+                if (self._request) {
+                    self._request.abort();
+                }
+
+                self._pauseRequest = true;
+
+                parameters.pointTypes = self.getFlatPointTypes(parameters.pointTypes);
+
+                // if (!!module.DEVICEID) {
+                //     params.deviceId = module.DEVICEID;
+                // }
+
+                // if (!!module.REMOTEUNITID) {
+                //     params.remoteUnitId = module.REMOTEUNITID;
+                // }
+
+                // if (!!module.POINTTYPE) {
+                //     params.pointType = module.POINTTYPE;
+                // }
+
+                ajaxParameters.data = parameters;
+
+                self._request = $.ajax(ajaxParameters);
+
+                self._request.done(self.handleDataReturn);
+            };
+
+            self._loaded = true;
+
+            self.getPoints();
+
+            ko.applyBindings(self.bindings, self.$container[0]);
+
+            // self.$container.find('select').material_select();
+        },
+        getTemplate: function () {
+            var markup = $('#navigatorTemplate').html();
+
+            return $(markup);
+        },
+        createNavigator: function ($container) {
+            var markup = dti.navigatorNew.getTemplate(),
+                navigator;
+
+            $container.append(markup);
+
+            navigator = new dti.navigatorNew.Navigator({
+                $container: $container                
+            });
+
+            $container.data('navigatorId', navigator.id);
+
+            dti.navigatorNew._navigators[navigator.id] = navigator;
+
+            Materialize.updateTextFields();
+        },
+        initOnLoad: function () {
+            dti.navigatorNew.createNavigator($('#navigatorModalNew .modal-content'));
         }
     },
     navigator: {
@@ -1623,6 +1923,8 @@ var dti = {
 
             dti.navigator.initNavigatorModal();
             dti.navigator.initNavigatorFilterModal();
+            // dti.fire('modalLoaded');
+            // dti.fire('modalLoaded');
         }
     },
     utility: {
@@ -1941,8 +2243,12 @@ var dti = {
         openWindows: {},
         windowGroups: ko.observableArray([]), // Pinned items prepopulate this array
         startMenuItems: ko.observableArray([]),
+        windowsHidden: ko.observable(false),
         showNavigatorNew: function () {
             dti.navigator.showNavigatorNew();
+        },
+        showGlobalSearch: function () {
+            dti.globalSearch.show();
         },
         alarms: {
             unacknowledged: {
@@ -2062,6 +2368,26 @@ var dti = {
     },
     knockout: {
         init: function () {
+            var updateLabelFn = function (element, valueAccessor) {
+                var $element = $(element),
+                    observable = valueAccessor(),
+                    currValue = observable();
+
+                //hasValue, add active class
+                if (currValue !== null && currValue !== undefined) {
+                    $element.addClass('active');
+                } else {
+                    $element.removeClass('active');
+                }
+            };
+
+
+            ko.bindingHandlers.updateLabel = {
+                init: updateLabelFn,
+                update: updateLabelFn
+            };
+
+
             ko.bindingHandlers.stopBindings = {
                 init: function () {
                     return {
@@ -2204,7 +2530,57 @@ var dti = {
                 }
             };
 
+            ko.bindingHandlers.materializeSelect = {
+                init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+                    var $element = $(element),
+                        $select = $element.children('select'),
+                        list = valueAccessor().options(),
+                        $liList;
+
+                    dti.forEachArray(list, function addItemToSelect(item) {
+                        $select.append($('<option>', {
+                                value: item.key()
+                            })
+                            .text(item.key())
+                        );
+                    });
+                    // Initial initialization:
+                    $select.material_select();
+
+                    $liList = $element.find('li');
+
+                    dti.forEachArray(list, function syncDropdownStatus (item, idx) {
+                        if (item.selected() && item.visible()) {
+                            $($liList[idx]).addClass('active');
+                            $($liList[idx]).find('input').prop('checked', true);
+                        }
+                    });
+
+                    // Find the "options" sub-binding:
+                    var boundValue = valueAccessor();
+
+                    // Register a callback for when "options" changes:
+                    boundValue.options.subscribe(function () {
+                        $select.material_select();
+                    });
+
+                    $select.on('change', function handleMaterialSelectChange (event, target) {
+                        var $target = $(target),
+                            index = $target.index(),
+                            selected = $target.hasClass('active');
+
+                        list[index].selected(selected);
+                    });
+
+                },
+                update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+
+                }
+            };
+
             ko.applyBindings(dti.bindings);
+            //needed for prefilled text input labels to not overlap
+            Materialize.updateTextFields();
         }
     },
     authentication: {
@@ -2274,8 +2650,14 @@ var dti = {
                         }
                     });
                     dti.forEach(dti, function dtiInit (val, key) {
-                        if (typeof val === 'object' && val.init) {
-                            val.init();
+                        if (typeof val === 'object') {
+                            if (val.init) {
+                                val.init();
+                            }
+
+                            if (val.initOnLoad) {
+                                dti.on('loaded', val.initOnLoad);
+                            }
                         }
                     });
 

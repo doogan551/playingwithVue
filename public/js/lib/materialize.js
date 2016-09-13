@@ -3027,7 +3027,8 @@ $(document).ready(function(){
             activateOption(options, $(this));
             $select.find('option').eq(i).prop('selected', selected);
             // Trigger onchange() event
-            $select.trigger('change');
+            // sdt 9/12/16 added parameters to change event
+            $select.trigger('change', $(this));
             if (typeof callback !== 'undefined') callback();
           }
 
@@ -3116,7 +3117,8 @@ $(document).ready(function(){
           collection.find('li.selected').removeClass('selected');
           var option = $(newOption);
           option.addClass('selected');
-          options.scrollTo(option);
+          //SDT 9/12/16 - this is highly disruptive
+          // options.scrollTo(option);
         }
       };
 
