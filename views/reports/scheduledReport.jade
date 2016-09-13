@@ -12,15 +12,16 @@ block content
 			table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
 				tfoot.tableFooter
 			div.formattedData(data-bind="foreach: $root.scheduledReportData().tables")
-				table.table.table-striped.table-bordered.table-responsive
+				table.table.table-striped.table-bordered.table-responsive(data-bind="css: { marginForFirstTable: $index() === 0, marginForTable: $index() > 0 }")
 					thead
 						tr(data-bind="foreach: header")
 							th(data-bind="text: Value")
 					tbody(data-bind="foreach: rows")
 						tr(data-bind="foreach: cells")
 							td
-								div(data-bind="text: Value")
-				span(data-bind="text: 'Page ' + ($index()+1) + ' of ' + $root.scheduledReportData().tables.length")
+								div(data-bind="text: Value, css: { small: $index() === 0 && $root.reportType !== 'Property'} ", style="title: ping")
+				div.pageNumbering(data-bind="text: 'Page ' + ($index()+1) + ' of ' + $root.scheduledReportData().tables.length")
+				div(data-bind="css: { pageBreak: (($index()+1) < $root.scheduledReportData().tables.length) }")
 
 			.reportChartDiv(style="padding-top: 60px;")
 	include footer

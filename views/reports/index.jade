@@ -201,7 +201,7 @@ block content
                                                     // /ko
                                                     // ko if: ($root.canEdit())
                                                     td.removecolumn
-                                                        a.span.removerow(data-bind="click: $parent.deleteReportColumn") Remove
+                                                        a.span.removerow(data-bind="click: function () { $parent.deleteReportColumn($index()) }") Remove
                                                     // /ko
                                             tbody
                                                 tr

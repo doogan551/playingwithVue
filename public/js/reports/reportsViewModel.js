@@ -453,7 +453,7 @@ var reportsViewModel = function () {
         resizeTimer = 400,
         baseConfigColumnWidth = 140,
         baseConfigColumnHeight = 14,
-        rowsPerPage = 24,
+        rowsPerPDFPage,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
         setNewPointReference = function (refPointUPI, property) {
@@ -2252,15 +2252,6 @@ var reportsViewModel = function () {
             }
             return setYaxisValues(result);
         },
-        buildPrintableTable = function () {
-            var $dataTablesScrollHead,
-                $dataTablesScrollBody,
-                $dataTablesScrollFoot;
-
-            $dataTablesScrollHead = $dataTablePlaceHolder.find('thead');
-            $dataTablesScrollBody = $dataTablePlaceHolder.find('tbody');
-            $dataTablesScrollFoot = $dataTablePlaceHolder.find('tfoot');
-        },
         adjustGridColumnTabWidth = function () {
             var infoscanHeader = 95,
                 adjustHeight,
@@ -3273,7 +3264,7 @@ var reportsViewModel = function () {
                             $tdFooter.html(footerText);
                             if (!sameDataSet) {
                                 $tdFooter.attr("data-toggle", "popover");
-                                $tdFooter.attr("data-trigger", "click");
+                                $tdFooter.attr("data-trigger", "hover");
                                 $tdFooter.attr("data-html", "true");
                                 $tdFooter.attr("title", "Entire column");
                                 $tdFooter.attr("data-content", footerTitle);
@@ -3332,7 +3323,54 @@ var reportsViewModel = function () {
                 rowArray = [],
                 columnsArray = $.extend(true, [], self.listOfColumns()),
                 currentPage = [],
-                reportDataPages = [];
+                reportDataPages = [],
+                avgHeaderWidth = 0,
+                maxHeaderLength = 0,
+                avgDataWidth,
+                getHeaderMaxWidthHeight = function () {
+                    var idx,
+                        maxWordSize,
+                        theSum = 0,
+                        colName,
+                        wordsInName;
+
+                    if (columnsArray.length > 0) {
+                        for (j = 0; j < columnsArray.length; j++) {  // add column headers
+                            if (!!columnsArray[j].dataColumnName) {
+                                colName = columnsArray[j].colDisplayName;
+                                wordsInName = colName.split(" ");
+                                maxWordSize = 0;
+
+                                for (idx = 0; idx < wordsInName.length; idx++) {
+                                    if (wordsInName[idx].length > maxWordSize) {
+                                        maxWordSize = wordsInName[idx].length;
+                                    }
+                                }
+
+                                if (wordsInName.length > maxHeaderLength) {
+                                    maxHeaderLength = wordsInName.length;
+                                }
+
+                                theSum += maxWordSize;
+                            }
+                        }
+
+                        avgHeaderWidth = theSum / columnsArray.length;
+                    }
+                },
+                queueNextPage = function (rowIndex) {
+                    var answer = false,
+                        firstPage = (reportDataPages.length === 0),
+                        rowsOnPage = (firstPage ? (rowsPerPDFPage - 2) : rowsPerPDFPage);
+
+                    if ((currentPage.length % rowsOnPage === 0) || (rowIndex === (reportData.length - 1))) {
+                        answer = true;
+                    }
+
+                    return answer;
+                };
+
+            getHeaderMaxWidthHeight();
 
             if (reportData !== undefined) {
                 for (i = 0; i < reportData.length; i++) {
@@ -3344,13 +3382,13 @@ var reportsViewModel = function () {
                         }
                     }
                     currentPage.push({cells: rowArray});
-                    if (i > 0 && i % rowsPerPage === 0) {
+                    if (queueNextPage(i)) {
                         headerArray = [];
-                        for (j = 0; j < columnsArray.length; j++) {
-                            if (!!columnsArray[j].dataColumnName) {
-                                headerArray.push({Value: columnsArray[j].colDisplayName});
+                            for (j = 0; j < columnsArray.length; j++) {  // add column headers
+                                if (!!columnsArray[j].dataColumnName) {
+                                    headerArray.push({Value: columnsArray[j].colDisplayName});
+                                }
                             }
-                        }
 
                         reportDataPages.push({
                             header: headerArray,
@@ -3360,6 +3398,7 @@ var reportsViewModel = function () {
                     }
                 }
             }
+
             self.scheduledReportData({tables: reportDataPages});
         },
         columnEditReset = function () {
@@ -3387,7 +3426,6 @@ var reportsViewModel = function () {
                 blockUI($tabViewReport, false);
                 if (scheduled) {
                     breakScheduledReportDataIntoPages();
-                    buildPrintableTable();
                     $(document.body).find("script").html(null);
                 } else {
                     $dataTablePlaceHolder.DataTable().clear();
@@ -3869,6 +3907,7 @@ var reportsViewModel = function () {
             self.columnPropertiesSearchFilter(""); // computed props jolt
 
             if (scheduled) {
+                rowsPerPDFPage = (self.listOfColumns().length < 6 ? 18 : 14);
                 self.requestReportData();
             } else if (!!externalConfig) {
                 if (self.reportType === "History" || self.reportType === "Totalizer") {
@@ -4116,10 +4155,16 @@ var reportsViewModel = function () {
     };
 
     self.clearColumnPoint = function (indexOfColumn) {
-        var tempArray = self.listOfColumns(),
-            column = tempArray[indexOfColumn];
-        column = columnEditReset();
+        var tempArray = self.listOfColumns();
+        tempArray[indexOfColumn] = columnEditReset();
         updateListOfColumns(tempArray);
+    };
+
+    self.deleteReportColumn = function (indexOfColumn) {
+        var tempArray = self.listOfColumns();
+        tempArray.splice(indexOfColumn, 1);
+        updateListOfColumns(tempArray);
+        return true;
     };
 
     self.clearModalColumnPoint = function (indexOfColumn) {

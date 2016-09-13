@@ -28,7 +28,25 @@ td.firstColumn.small.datetime {
     padding-left: 20px;
     padding-right: 20px;
 }
-.page-break {
-    page-break-after: always;
-    -webkit-column-break-after: always;
+.tabViewReport {
+    margin: 0px 30px 15px 15px;
+}
+.marginForFirstTable {
+    margin: 0px 15px 3px 15px;
+}
+.marginForTable {
+    margin: 25px 15px 3px 15px;
+}
+.pageNumbering {
+    float: right;
+}
+.narrowTable {
+
+}
+@media print {
+    .pageBreak {
+        display: block;
+        page-break-after: always;
+        -webkit-column-break-after: always;
+    }
 }
