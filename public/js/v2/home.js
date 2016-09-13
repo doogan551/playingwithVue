@@ -675,6 +675,7 @@ var dti = {
             activate: activate,
             $el: self.$windowEl,
             windowId: windowId,
+            upi: config.upi,
             bindings: self.bindings,
             handleMessage: self.handleMessage
         };
@@ -719,6 +720,18 @@ var dti = {
 
             dti.forEachArray(dti.windows._windowList, function checkForTargetWindow (win) {
                 if (win.windowId === id) {
+                    targetWindow = win;
+                    return false;
+                }
+            });
+
+            return targetWindow;
+        },
+        getWindowByUpi: function (upi) {
+            var targetWindow;
+
+            dti.forEachArray(dti.windows._windowList, function checkForTargetWindow (win) {
+                if (win.upi === upi) {
                     targetWindow = win;
                     return false;
                 }
@@ -788,36 +801,45 @@ var dti = {
         create: function (config) {
             var newWindow;
 
-            if (config.options.sameWindow) {
+            if (config.options && config.options.sameWindow) {
                 newWindow = dti.windows.getWindowById(config.options.windowId);
                 newWindow.setUrl(config.url);
             } else {
-                $.extend(config, config.options);
+                newWindow = dti.windows.getWindowByUpi(config.upi);
 
-                if (!config.exempt) {
-                    dti.windows.offset();
-
-                    if (config.left === undefined) {
-                        config.left = dti.windows._offsetX;
-                    }
-                    if (config.top === undefined) {
-                        config.top = dti.windows._offsetY;
-                    }
-                }
-
-                newWindow = new dti.Window(config);
-
-                dti.taskbar.addWindow(newWindow);
-
-                // config.afterLoad = dti.windows.afterLoad;
-
-                dti.windows._windowList.push(newWindow);
-
-                if (!config.isHidden) {
+                if (newWindow) {
                     dti.windows.activate(newWindow.windowId);
+                } else {
+                    $.extend(config, config.options);
+
+                    if (!config.exempt) {
+                        dti.windows.offset();
+
+                        if (config.left === undefined) {
+                            config.left = dti.windows._offsetX;
+                        }
+                        if (config.top === undefined) {
+                            config.top = dti.windows._offsetY;
+                        }
+                    }
+
+                    newWindow = new dti.Window(config);
+
+                    dti.taskbar.addWindow(newWindow);
+
+                    // config.afterLoad = dti.windows.afterLoad;
+
+                    dti.windows._windowList.push(newWindow);
+
+                    if (!config.isHidden) {
+                        dti.windows.activate(newWindow.windowId);
+                    }
+
+                    if (config.options && config.options.callback) {
+                        config.options.callback();
+                    }
                 }
             }
-
 
             return newWindow;
         },
