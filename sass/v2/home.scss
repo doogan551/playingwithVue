@@ -231,6 +231,13 @@ body {
     opacity: 0;
 }
 
+.absCenter {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
 .dorsett-logo {
     height: $navbarHeight * .75;
     width: $navbarHeight * .75;
@@ -254,6 +261,19 @@ header {
 }
 
 $modalHeaderHeight: 42px;
+
+.modal-optional-footer {
+    .modal-footer {
+        display: none;
+    }
+
+    &.modal-fixed-footer {
+        .modal-footer {
+            display: block;
+        }
+    }
+}
+
 
 .modal-fixed-header .modal-content {
     height: calc(100% - 50px - #{$modalHeaderHeight}) !important;
@@ -1051,9 +1071,105 @@ $loaderSize: 128px;
     }
 }
 
+/* loader */
+$loaderScale: 2;
+// denominator is scale
+$loaderSpeedScale: 1 / .75;
+
+.cssload-container {
+    position: relative;
+}
+
+.cssload-whirlpool,
+.cssload-whirlpool::before,
+.cssload-whirlpool::after {
+    position: absolute;
+    box-sizing: content-box;
+    top: 50%;
+    left: 50%;
+    border: 1px * $loaderScale solid #cbd6db;
+    border-left-color: #526b77;
+    border-radius: 999px * $loaderScale;
+    -o-border-radius: 999px * $loaderScale;
+    -ms-border-radius: 999px * $loaderScale;
+    -webkit-border-radius: 999px * $loaderScale;
+    -moz-border-radius: 999px * $loaderScale;
+}
+
+.cssload-whirlpool {
+    margin: -25px * $loaderScale 0 0 -25px * $loaderScale;
+    height: 50px * $loaderScale;
+    width: 50px * $loaderScale;
+    animation: cssload-rotate 1000ms * $loaderSpeedScale linear infinite;
+    -o-animation: cssload-rotate 1000ms * $loaderSpeedScale linear infinite;
+    -ms-animation: cssload-rotate 1000ms * $loaderSpeedScale linear infinite;
+    -webkit-animation: cssload-rotate 1000ms * $loaderSpeedScale linear infinite;
+    -moz-animation: cssload-rotate 1000ms * $loaderSpeedScale linear infinite;
+}
+
+.cssload-whirlpool::before {
+    content: '';
+    margin: -23px * $loaderScale 0 0 -23px * $loaderScale;
+    height: 44px * $loaderScale;
+    width: 44px * $loaderScale;
+    animation: cssload-rotate 1000ms * $loaderSpeedScale linear infinite;
+    -o-animation: cssload-rotate 1000ms * $loaderSpeedScale linear infinite;
+    -ms-animation: cssload-rotate 1000ms * $loaderSpeedScale linear infinite;
+    -webkit-animation: cssload-rotate 1000ms * $loaderSpeedScale linear infinite;
+    -moz-animation: cssload-rotate 1000ms * $loaderSpeedScale linear infinite;
+}
+
+.cssload-whirlpool::after {
+    content: '';
+    margin: -29px * $loaderScale 0 0 -29px * $loaderScale;
+    height: 56px * $loaderScale;
+    width: 56px * $loaderScale;
+    animation: cssload-rotate 2000ms * $loaderSpeedScale linear infinite;
+    -o-animation: cssload-rotate 2000ms * $loaderSpeedScale linear infinite;
+    -ms-animation: cssload-rotate 2000ms * $loaderSpeedScale linear infinite;
+    -webkit-animation: cssload-rotate 2000ms * $loaderSpeedScale linear infinite;
+    -moz-animation: cssload-rotate 2000ms * $loaderSpeedScale linear infinite;
+}
+
+@keyframes cssload-rotate {
+    100% {
+        transform: rotate(360deg);
+    }
+
+}
+
+@-o-keyframes cssload-rotate {
+    100% {
+        -o-transform: rotate(360deg);
+    }
+
+}
+
+@-ms-keyframes cssload-rotate {
+    100% {
+        -ms-transform: rotate(360deg);
+    }
+
+}
+
+@-webkit-keyframes cssload-rotate {
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+
+}
+
+@-moz-keyframes cssload-rotate {
+    100% {
+        -moz-transform: rotate(360deg);
+    }
+
+}
+/* end loader */
+
 .navigatorModal {
     width: 75%;
-    height: 80%;
+    height: 80% !important;
     max-height: 95%;
     background-color: $blueGrey;
     overflow-y: hidden;
@@ -1098,6 +1214,24 @@ $loaderSize: 128px;
 .navigatorBody {
     flex-grow: 1;
 
+    .fetching {
+        position: absolute;
+        width: 99%;
+        top: 0;
+
+        min-height: 4px !important;
+        opacity: 0;
+
+        .progress {
+            margin: 0;
+            background-color: lighten($blueGrey, 40%);
+        }
+
+        .indeterminate {
+            background-color: $blueGrey;
+        }
+    }
+
     .selectorHeader {
         min-height: 30px;
         margin-top: 5px;
@@ -1124,10 +1258,11 @@ $loaderSize: 128px;
 
     .selectorNames {
         min-height: 80px;
-        margin-right: 17px;
+        padding-right: 20px;
 
         .col {
             padding-right: 25px;
+            width: 20%;
         }
 
         input {
@@ -1154,11 +1289,15 @@ $loaderSize: 128px;
         overflow-y: auto;
         padding-left: 5px;
         flex-wrap: wrap;
+        flex-grow: 1;
+        position: relative;
 
-        div:not(.flex-break) {
+        .listEntry {
             padding: 3px 3px 3px 10px;
             text-align: left;
             width: 20%;
+            max-height: 28px;
+            display: inline-block;
         }
 
         td,
@@ -1171,16 +1310,20 @@ $loaderSize: 128px;
     .pointTypeFilter {
 
         .dropdown-content {
-            max-height: 65vh;
+            max-height: 60vh;
 
             span {
                 color: $blueGrey;
             }
         }
 
-        .active label::before {
-            border-right-color: $blueGrey;
-            border-bottom-color: $blueGrey;
+        .active {
+            background-color: #fff !important;
+
+            label::before {
+                border-right-color: $blueGrey;
+                border-bottom-color: $blueGrey;
+            }
         }
 
     }

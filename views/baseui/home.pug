@@ -27,7 +27,7 @@ html
                                 a#globalSearch.waves-effect(href='javascript://', data-bind="click: showGlobalSearch")
                                     i.material-icons search
                             li.taskbarItem
-                                a.tooltipped.taskbarButton.iconOnly.waves-effect(href='javascript://', data-bind="click: function () { dti.navigator.showNavigator(null, true); }", data-position='bottom', data-tooltip='Navigator', data-delay='10')
+                                a.tooltipped.taskbarButton.iconOnly.waves-effect(href='javascript://', data-bind="click: function () { dti.navigator.showNavigatorNew(null, true); }", data-position='bottom', data-tooltip='Navigator', data-delay='10')
                                     i.mdi.mdi-compass
                             li.taskbarItem
                                 a#showOpenItems.taskbarButton.iconOnly.waves-effect.tooltipped(href='javascript://', style='', data-position='bottom', data-tooltip='Manage Open Windows', data-delay='10')
@@ -263,94 +263,11 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel    
 
-            #navigatorModalNew.navigatorModal.modal.modal-fixed-header
+            #navigatorModalNew.navigatorModal.modal.modal-fixed-header.modal-optional-footer
                 .modal-header Select Point
                 .modal-content.modal-content-no-padding
-                    //- .iframeFull.blue-grey-form.flex.flex-row.row
-                        .pointTypes.flex.flex-column.col.s2
-                            .pointTypesHeader Point Types
-                            // ko foreach: new Array(10)
-                            
-                            p.pointType
-                                input.filled-in(type='checkbox', data-bind="attr: { id: 'pointType' + $index() }")
-                                label(data-bind="attr: { for: 'pointType' + $index() }, text: 'Point Type ' + $index()")
-
-                            // /ko
-
-                        .navigatorBody.flex.flex-column.col.s10
-                            .selectorHeader.right-align.flex.flex-row.flex-right.flex-center
-                                p.pointType
-                                    input#showInactive.filled-in(type='checkbox')
-                                    label(for="showInactive") Show Inactive
-                                p.pointType
-                                    input#showDeleted.filled-in(type='checkbox')
-                                    label(for="showDeleted") Show Deleted                                    
-                                a.waves-effect.waves-light.btn.blue-grey
-                                    i.material-icons.left clear
-                                    | Clear Names
-                                a.waves-effect.waves-light.btn.blue-grey
-                                    i.material-icons.left add
-                                    | Create Point
-                            .selectorNames.flex.flex-row.flex-even.flex-center
-                                .name1.input-field.col
-                                    input#name1(type='text')
-                                    label(for='name1') Name 1
-                                    a.clearName(href="javascript://")
-                                        i.material-icons.suffix clear
-                                .name2.input-field.col
-                                    input#name2(type='text')
-                                    label(for='name2') Name 2
-                                    a.clearName(href="javascript://")
-                                        i.material-icons.suffix clear                                    
-                                .name3.input-field.col
-                                    input#name3(type='text')
-                                    label(for='name3') Name 3
-                                    a.clearName(href="javascript://")
-                                        i.material-icons.suffix clear                                    
-                                .name4.input-field.col
-                                    input#name4(type='text')
-                                    label(for='name4') Name 4
-                                    a.clearName(href="javascript://")
-                                        i.material-icons.suffix clear                                                                                                                                       
-
-                            .selectorList
-                                table.highlight
-                                    thead
-                                        tr
-                                            th Name 1
-                                            th Name 2
-                                            th Name 3
-                                            th Name 4
-                                            th Type
-                                    tbody
-                                        tr
-                                            td 1234
-                                            td 1234
-                                            td 1234
-                                            td 1234
-                                            td Analog Value
-                                        tr
-                                            td 1234
-                                            td 1234
-                                            td 1234
-                                            td 1234
-                                            td Analog Value
-                                        tr
-                                            td 1234
-                                            td 1234
-                                            td 1234
-                                            td 1234
-                                            td Analog Value                                                                                        
-                                // ko foreach: new Array(10)
-
-                                // /ko
-
-
-
-
-
-                //- .modal-footer
-                //-     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
+                .modal-footer
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
 
             #openItemsModal.modal.modal-large
                 .modal-content
@@ -441,35 +358,38 @@ html
 
         #loading.hidden
             .loadingMask
-                .preloader-wrapper.active
-                    .spinner-layer.spinner-blue
-                        .circle-clipper.left
-                            .circle
-                        .gap-patch
-                            .circle
-                        .circle-clipper.right
-                            .circle
-                    .spinner-layer.spinner-red
-                        .circle-clipper.left
-                            .circle
-                        .gap-patch
-                            .circle
-                        .circle-clipper.right
-                            .circle
-                    .spinner-layer.spinner-yellow
-                        .circle-clipper.left
-                            .circle
-                        .gap-patch
-                            .circle
-                        .circle-clipper.right
-                            .circle
-                    .spinner-layer.spinner-green
-                        .circle-clipper.left
-                            .circle
-                        .gap-patch
-                            .circle
-                        .circle-clipper.right
-                            .circle
+                .absCenter
+                    .cssload-container
+                        .cssload-whirlpool
+                //- .preloader-wrapper.active
+                //-     .spinner-layer.spinner-blue
+                //-         .circle-clipper.left
+                //-             .circle
+                //-         .gap-patch
+                //-             .circle
+                //-         .circle-clipper.right
+                //-             .circle
+                //-     .spinner-layer.spinner-red
+                //-         .circle-clipper.left
+                //-             .circle
+                //-         .gap-patch
+                //-             .circle
+                //-         .circle-clipper.right
+                //-             .circle
+                //-     .spinner-layer.spinner-yellow
+                //-         .circle-clipper.left
+                //-             .circle
+                //-         .gap-patch
+                //-             .circle
+                //-         .circle-clipper.right
+                //-             .circle
+                //-     .spinner-layer.spinner-green
+                //-         .circle-clipper.left
+                //-             .circle
+                //-         .gap-patch
+                //-             .circle
+                //-         .circle-clipper.right
+                //-             .circle
 
     script#miniWindowTemplate(type='text/html')
         a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-target="displayPanel")
@@ -530,13 +450,13 @@ html
                     p.pointType
                         input#showDeleted.filled-in(type='checkbox', data-bind="checked: showDeleted")
                         label.label-tight(for="showDeleted") Show Deleted                                    
-                    a.waves-effect.waves-light.btn.blue-grey
+                    a.waves-effect.waves-light.btn.blue-grey(href='javascript://', data-bind="click: clearNames")
                         i.material-icons.left clear
                         | Clear Names
                     a.waves-effect.waves-light.btn.blue-grey
                         i.material-icons.left add
                         | Create Point
-                .selectorNames.flex.flex-row.flex-even.flex-center
+                .selectorNames
                     .name1.input-field.col
                         input#name1(type='text', data-bind="textInput: name1")
                         label(for='name1', data-bind="updateLabel: name1") Name 1
@@ -544,58 +464,39 @@ html
                             i.material-icons.suffix clear
                     .name2.input-field.col
                         input#name2(type='text', data-bind="textInput: name2")
-                        label(for='name2') Name 2
+                        label(for='name2', data-bind="updateLabel: name2") Name 2
                         a.clearName(href="javascript://", tabindex="-1")
                             i.material-icons.suffix clear                                    
                     .name3.input-field.col
                         input#name3(type='text', data-bind="textInput: name3")
-                        label(for='name3') Name 3
+                        label(for='name3', data-bind="updateLabel: name3") Name 3
                         a.clearName(href="javascript://", tabindex="-1")
                             i.material-icons.suffix clear                                    
                     .name4.input-field.col
                         input#name4(type='text', data-bind="textInput: name4")
-                        label(for='name4') Name 4
+                        label(for='name4', data-bind="updateLabel: name4") Name 4
                         a.clearName(href="javascript://", tabindex="-1")
                             i.material-icons.suffix clear                                                                                                                                       
-                    .pointTypeFilter.input-field.col(data-bind="materializeSelect: {options: pointTypes}")
+                    .pointTypeFilter.input-field.col(data-bind="materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
                         select#pointType(multiple, data-beloworigin="true")
                             //- // ko foreach: pointTypes
                             //- option(data-bind="value: key, text: key")
                             //- // /ko
                         label(for='pointType') Point Types
 
-                .selectorList.flex.flex-row.flex-even.flex-center(data-bind="click: handleNavigatorRowClick")
+                .selectorList(data-bind="click: handleNavigatorRowClick")
+                    .fetching(data-bind="style: { opacity: (fetchingPoints() === true) ? 1 : 0 }")
+                        .progress
+                            .indeterminate
                     // ko foreach: points
 
-                    div(data-bind="text: name1")
-                    div(data-bind="text: name2")
-                    div(data-bind="text: name3")
-                    div(data-bind="text: name4")
-                    div(data-bind="text: pointType")
-                    .flex-break
+                    .listEntry(data-bind="text: name1")
+                    .listEntry(data-bind="text: name2")
+                    .listEntry(data-bind="text: name3")
+                    .listEntry(data-bind="text: name4")
+                    .listEntry(data-bind="text: pointType")
 
                     // /ko
-                //- .selectorList
-                //-     table.highlight
-                //-         //- thead
-                //-         //-     tr
-                //-         //-         th Name 1
-                //-         //-         th Name 2
-                //-         //-         th Name 3
-                //-         //-         th Name 4
-                //-         //-         th Type
-                //-         tbody(data-bind="click: handleNavigatorRowClick")
-                //-             // ko foreach: points
-                //-             tr
-                //-                 td(data-bind="text: name1")
-                //-                 td(data-bind="text: name2")
-                //-                 td(data-bind="text: name3")
-                //-                 td(data-bind="text: name4")
-                //-                 td(data-bind="text: pointType")
-                //-             // /ko
-
-
-
 
 
     script#taskbarButtonTemplate(type='text/html')

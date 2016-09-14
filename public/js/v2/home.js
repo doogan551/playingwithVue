@@ -1492,6 +1492,9 @@ var dti = {
     },
     navigatorNew: {
         _navigators: {},
+        defaultClickHandler: function (config) {
+            
+        },
         //config contains container
         Navigator: function (config) {
             var self = this,
@@ -1509,6 +1512,8 @@ var dti = {
                             name4: '',
                             showInactive: false,
                             showDeleted: false,
+                            fetchingPoints: false,
+                            isFilterMode: false,
                             points: []
                         };
 
@@ -1521,6 +1526,20 @@ var dti = {
 
                     //build observable viewmodel so computeds have access to observables
                     bindings = ko.viewmodel.fromModel(bindings);
+
+                    bindings.onDropdownHide = function () {
+                        if (self.pointTypeChanged) {
+                            dti.log('point type changed, getting points');
+                            self.getPoints();
+                        }
+
+                        self.pointTypeChanged = false;
+                    };
+
+                    bindings.pointTypeChanged = function () {
+                        self.pointTypeChanged = true;
+                        dti.log('changed');
+                    };
 
                     bindings.toggleAllPointTypes = function () {
                         var numChecked = 0,
@@ -1567,11 +1586,29 @@ var dti = {
                         }
                     };
 
+                    bindings.clearNames = function () {
+                        var c;
+
+                        for (c=1; c<5; c++) {
+                            bindings.clearBinding('name' + c);
+                        }
+                    };
+
                     bindings.clearBinding = function (binding) {
                         if (self.bindings[binding]) {
                             self.bindings[binding](null);
                         }
                     };
+
+                    bindings.isFilterMode.subscribe(function manageFilterModeFooter (val) {
+                        var cls = 'modal-fixed-footer';
+
+                        if (val) {
+                            self.$modal.addClass(cls);
+                        } else {
+                            self.$modal.removeClass(cls);
+                        }
+                    });
 
                     bindings.allTypesSelected = ko.pureComputed(function allPointTypesSelected() {
                         var currTypes = bindings.pointTypes(),
@@ -1655,6 +1692,7 @@ var dti = {
                 self.bindings.points(response);
                 self._request = null;
                 self._pauseRequest = false;
+                self.bindings.fetchingPoints(false);
                 // dti.log(response);
             };
 
@@ -1670,7 +1708,7 @@ var dti = {
                 return ret;
             };
 
-            self.getPoints = function () {
+            self.getPoints = function (fromTimer, id) {
                 var bindings = ko.toJS(self.bindings),
                     parameters = {
                         pointTypes: bindings.pointTypes,
@@ -1680,33 +1718,51 @@ var dti = {
                         name2: bindings.name2,
                         name3: bindings.name3,
                         name4: bindings.name4
-                    };
+                    },
+                    now = new Date(),
+                    fetchDelay = 500,
+                    tmpId = dti.makeId(),
+                    longEnough = now - self.lastFetchCall >= fetchDelay;
 
-                if (self._request) {
-                    self._request.abort();
+                if (!fromTimer) {
+                    //only need to timestamp to check manual calls
+                    self.lastFetchCall = now;
                 }
 
-                self._pauseRequest = true;
+                if (fromTimer && longEnough && !self._pauseRequest) {
+                    self._pauseRequest = true;
+                    self.bindings.fetchingPoints(true);
 
-                parameters.pointTypes = self.getFlatPointTypes(parameters.pointTypes);
+                    if (self._request) {
+                        self._request.abort();
+                    }
 
-                // if (!!module.DEVICEID) {
-                //     params.deviceId = module.DEVICEID;
-                // }
+                    parameters.pointTypes = self.getFlatPointTypes(parameters.pointTypes);
 
-                // if (!!module.REMOTEUNITID) {
-                //     params.remoteUnitId = module.REMOTEUNITID;
-                // }
+                    // if (!!module.DEVICEID) {
+                    //     params.deviceId = module.DEVICEID;
+                    // }
 
-                // if (!!module.POINTTYPE) {
-                //     params.pointType = module.POINTTYPE;
-                // }
+                    // if (!!module.REMOTEUNITID) {
+                    //     params.remoteUnitId = module.REMOTEUNITID;
+                    // }
 
-                ajaxParameters.data = parameters;
+                    // if (!!module.POINTTYPE) {
+                    //     params.pointType = module.POINTTYPE;
+                    // }
 
-                self._request = $.ajax(ajaxParameters);
+                    ajaxParameters.data = parameters;
 
-                self._request.done(self.handleDataReturn);
+                    self._request = $.ajax(ajaxParameters);
+
+                    self._request.done(self.handleDataReturn);
+                } else {
+                    if (!fromTimer) {
+                        setTimeout(function doDelayedFetch () {
+                            self.getPoints(true, tmpId);
+                        }, fetchDelay);
+                    }
+                }
             };
 
             self._loaded = true;
@@ -1722,14 +1778,15 @@ var dti = {
 
             return $(markup);
         },
-        createNavigator: function ($container) {
+        createNavigator: function ($container, $modal) {
             var markup = dti.navigatorNew.getTemplate(),
                 navigator;
 
             $container.append(markup);
 
             navigator = new dti.navigatorNew.Navigator({
-                $container: $container                
+                $container: $container,
+                $modal: $modal
             });
 
             $container.data('navigatorId', navigator.id);
@@ -1739,7 +1796,7 @@ var dti = {
             Materialize.updateTextFields();
         },
         initOnLoad: function () {
-            dti.navigatorNew.createNavigator($('#navigatorModalNew .modal-content'));
+            dti.navigatorNew.createNavigator($('#navigatorModalNew .modal-content'), $('#navigatorModalNew'));
         }
     },
     navigator: {
@@ -1940,13 +1997,13 @@ var dti = {
             
         },
         init: function () {
-            dti.navigator.$navigatorModalIframe.attr('src', '/pointlookup');
-            dti.navigator.$navigatorFilterModalIframe.attr('src', '/pointlookup?mode=filter');
+            // dti.navigator.$navigatorModalIframe.attr('src', '/pointlookup');
+            // dti.navigator.$navigatorFilterModalIframe.attr('src', '/pointlookup?mode=filter');
 
-            dti.navigator.initNavigatorModal();
-            dti.navigator.initNavigatorFilterModal();
-            // dti.fire('modalLoaded');
-            // dti.fire('modalLoaded');
+            // dti.navigator.initNavigatorModal();
+            // dti.navigator.initNavigatorFilterModal();
+            dti.fire('modalLoaded');
+            dti.fire('modalLoaded');
         }
     },
     utility: {
@@ -1958,6 +2015,29 @@ var dti = {
             } else if (element.attachEvent) {
                 element.attachEvent('on' + event, fn);
             }
+        },
+        getParameterByName: function (name) {
+            var url = window.location.href,
+                regex,
+                results,
+                translatedName = name.replace(/[\[\]]/g, "\\$&");
+
+            regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
+
+            results = regex.exec(url);
+
+            //doesn't exist
+            if (!results) {
+                return null;
+            }
+
+            //exists but with no or empty value
+            if (!results[2]) {
+                return '';
+            }
+
+            //exists and has value
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
         },
         getSystemEnum: function (enumType, callback) {
             return $.ajax({
@@ -2556,18 +2636,24 @@ var dti = {
                 init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
                     var $element = $(element),
                         $select = $element.children('select'),
-                        list = valueAccessor().options(),
+                        config = valueAccessor(),
+                        list = config.options(),
+                        notifier = config.notifier,
+                        hideEvent = config.hideEvent,
                         $liList;
 
                     dti.forEachArray(list, function addItemToSelect(item) {
                         $select.append($('<option>', {
-                                value: item.key()
+                                value: item.key(),
+                                selected: true
                             })
                             .text(item.key())
                         );
                     });
                     // Initial initialization:
-                    $select.material_select();
+                    $select.material_select({
+                        belowOrigin: true
+                    });
 
                     $liList = $element.find('li');
 
@@ -2591,7 +2677,13 @@ var dti = {
                             index = $target.index(),
                             selected = $target.hasClass('active');
 
+                        notifier();
+
                         list[index].selected(selected);
+                    });
+
+                    $select.siblings('input.select-dropdown').on('close', function doHide () {
+                        hideEvent();
                     });
 
                 },
@@ -2690,6 +2782,7 @@ var dti = {
                 setTimeout(function doLoginFadeout () {
                     dti.animations.fadeOut($('#loading'), function afterLoadFadeOut () {
                         dti.fire('loaded');
+                        dti.log('Load time:', (new Date() - dti.startLoad)/1000, 'seconds');
                     });
                 }, 1500);
             },
@@ -2702,6 +2795,7 @@ var dti = {
 };
 
 $(function initWorkspaceV2 () {
+    dti.startLoad = new Date();
     dti.socket = io.connect(dti.settings.socketEndPoint);
     dti.socket.on('disconnect', function (err) {
         dti.log('server offline, disconnecting');
