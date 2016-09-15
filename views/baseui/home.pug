@@ -24,10 +24,10 @@ html
                                         i.material-icons apps
 
                             li.taskbarItem
-                                a#globalSearch.waves-effect(href='javascript://')
+                                a#globalSearch.waves-effect(href='javascript://', data-bind="click: showGlobalSearch")
                                     i.material-icons search
                             li.taskbarItem
-                                a.tooltipped.taskbarButton.iconOnly.waves-effect(href='javascript://', data-bind="click: function () { dti.navigator.showNavigator(null, true); }", data-position='bottom', data-tooltip='Navigator', data-delay='10')
+                                a.tooltipped.taskbarButton.iconOnly.waves-effect(href='javascript://', data-bind="click: function () { dti.navigatorNew.showNavigator(); }", data-position='bottom', data-tooltip='Navigator', data-delay='10')
                                     i.mdi.mdi-compass
                             li.taskbarItem
                                 a#showOpenItems.taskbarButton.iconOnly.waves-effect.tooltipped(href='javascript://', style='', data-position='bottom', data-tooltip='Manage Open Windows', data-delay='10')
@@ -52,8 +52,19 @@ html
                                     img.userAvatar(src='/img/test/avatar.png')
                                     span.userName.valign John Doe
 
-        main.hidden
+            #searchNavbar.navbar-fixed.taskbar.hidden
+                nav.blue-grey
+                    .nav-wrapper
+                        ul.center
+                            li.taskbarItem
+                                i.material-icons search
+                            li.taskbarItem.flex.flex-row.flex-center
+                                .input-field
+                                    input#globalSearchInput(type='search')
 
+        main.hidden
+            #searchBackground.hidden
+                h3 Search
             #searchBox.white.z-depth-1
                 .input-field
                     i.material-icons.prefix search
@@ -250,7 +261,13 @@ html
                 .modal-content.modal-content-no-padding
                     iframe.iframeFull
                 .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel                    
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel    
+
+            #navigatorModalNew.navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="stopBindings: true")
+                .modal-header Select Point
+                .modal-content.modal-content-no-padding
+                .modal-footer
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
 
             #openItemsModal.modal.modal-large
                 .modal-content
@@ -341,35 +358,38 @@ html
 
         #loading.hidden
             .loadingMask
-                .preloader-wrapper.active
-                    .spinner-layer.spinner-blue
-                        .circle-clipper.left
-                            .circle
-                        .gap-patch
-                            .circle
-                        .circle-clipper.right
-                            .circle
-                    .spinner-layer.spinner-red
-                        .circle-clipper.left
-                            .circle
-                        .gap-patch
-                            .circle
-                        .circle-clipper.right
-                            .circle
-                    .spinner-layer.spinner-yellow
-                        .circle-clipper.left
-                            .circle
-                        .gap-patch
-                            .circle
-                        .circle-clipper.right
-                            .circle
-                    .spinner-layer.spinner-green
-                        .circle-clipper.left
-                            .circle
-                        .gap-patch
-                            .circle
-                        .circle-clipper.right
-                            .circle
+                .absCenter
+                    .cssload-container
+                        .cssload-whirlpool
+                //- .preloader-wrapper.active
+                //-     .spinner-layer.spinner-blue
+                //-         .circle-clipper.left
+                //-             .circle
+                //-         .gap-patch
+                //-             .circle
+                //-         .circle-clipper.right
+                //-             .circle
+                //-     .spinner-layer.spinner-red
+                //-         .circle-clipper.left
+                //-             .circle
+                //-         .gap-patch
+                //-             .circle
+                //-         .circle-clipper.right
+                //-             .circle
+                //-     .spinner-layer.spinner-yellow
+                //-         .circle-clipper.left
+                //-             .circle
+                //-         .gap-patch
+                //-             .circle
+                //-         .circle-clipper.right
+                //-             .circle
+                //-     .spinner-layer.spinner-green
+                //-         .circle-clipper.left
+                //-             .circle
+                //-         .gap-patch
+                //-             .circle
+                //-         .circle-clipper.right
+                //-             .circle
 
     script#miniWindowTemplate(type='text/html')
         a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-target="displayPanel")
@@ -379,7 +399,7 @@ html
                 img(data-bind="thumbnail: upi")
 
     script#windowTemplate(type='text/html')
-        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized(), activeCard: active() }')
+        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized() || windowsHidden(), activeCard: active() }')
             .card-toolbar.blue-grey(data-bind="css: { 'lighten-3': !active() }")
                 .card-title.center-align.white-text
                     div
@@ -405,6 +425,81 @@ html
             iframe.card-body(data-bind="attr: {src: url}")
             //- .draggableMask
             .windowMask
+
+    script#navigatorTemplate(type='text/html')
+        .iframeFull.blue-grey-form.flex.flex-row.row
+            .navigatorBody.flex.flex-column
+                .selectorHeader.right-align.flex.flex-row.flex-right.flex-center
+                    p.pointType
+                        input#showInactive.filled-in(type='checkbox', data-bind="checked: showInactive")
+                        label.label-tight(for="showInactive") Show Inactive
+                    p.pointType
+                        input#showDeleted.filled-in(type='checkbox', data-bind="checked: showDeleted")
+                        label.label-tight(for="showDeleted") Show Deleted                                    
+                    a.waves-effect.waves-light.btn.blue-grey(href='javascript://', data-bind="click: clearNames")
+                        i.material-icons.left clear
+                        | Clear Names
+                    a.waves-effect.waves-light.btn.blue-grey
+                        i.material-icons.left add
+                        | Create Point
+                .selectorNames
+                    .name1.input-field.col
+                        input#name1(type='text', data-bind="textInput: name1")
+                        label(for='name1', data-bind="updateLabel: name1") Name 1
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name1'); }")
+                            i.material-icons.suffix clear
+                    .name2.input-field.col
+                        input#name2(type='text', data-bind="textInput: name2")
+                        label(for='name2', data-bind="updateLabel: name2") Name 2
+                        a.clearName(href="javascript://", tabindex="-1")
+                            i.material-icons.suffix clear                                    
+                    .name3.input-field.col
+                        input#name3(type='text', data-bind="textInput: name3")
+                        label(for='name3', data-bind="updateLabel: name3") Name 3
+                        a.clearName(href="javascript://", tabindex="-1")
+                            i.material-icons.suffix clear                                    
+                    .name4.input-field.col
+                        input#name4(type='text', data-bind="textInput: name4")
+                        label(for='name4', data-bind="updateLabel: name4") Name 4
+                        a.clearName(href="javascript://", tabindex="-1")
+                            i.material-icons.suffix clear                                                                                                                                       
+                    //- .pointTypeFilter.input-field.col(data-bind="contextMenuInvert: pointTypeInvert, materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
+                    .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
+
+                        //- input.dropdown-button(type='text', data-bind="value: pointTypeText, updateLabel: pointTypeText, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
+                        a.btn-flat.dropdown-button.pointTypeDropdownButton(href="#", data-beloworigin="true", data-bind="click: openPointTypeDropdown, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
+                            span(data-bind="text: pointTypeText")
+                            i.material-icons.dropdownCaret arrow_drop_down
+                        ul.dropdown-content.grid-dropdown(data-bind="attr: { id : id() + '_pointTypeDropdown' }, stopBubblingOnClick: true")
+                            li
+                                input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
+                                label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
+                            // ko foreach: pointTypes
+                            li
+                                input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : $parent.id() + '_pointType_' + $index() }")
+                                label.label-tight(data-bind="text: key, attr: { for: $parent.id() + '_pointType_' + $index() }")
+                            // /ko
+
+                        //- select(data-beloworigin="true")
+                            //- // ko foreach: pointTypes
+                            //- option(data-bind="value: key, text: key")
+                            //- // /ko
+                        //- label(data-bind="attr: { for: id() + '_pointTypeDropdownButton' }") Point Types
+
+                .selectorList(data-bind="click: handleNavigatorRowClick")
+                    .fetching(data-bind="visible: fetchingPoints")
+                        .progress
+                            .indeterminate
+                    // ko foreach: points
+                    .listRow
+                        .listEntry(data-bind="text: name1")
+                        .listEntry(data-bind="text: name2")
+                        .listEntry(data-bind="text: name3")
+                        .listEntry(data-bind="text: name4")
+                        .listEntry(data-bind="text: pointType")
+
+                    // /ko
+
 
     script#taskbarButtonTemplate(type='text/html')
         li.taskbarItem.active(data-bind="taskbarMenu: $data")
