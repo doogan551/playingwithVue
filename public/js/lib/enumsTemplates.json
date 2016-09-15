@@ -2203,6 +2203,11 @@
                 "valueType": "String",
                 "reportEnable": false
             },
+            "Gateway": {
+                "enum": 442,
+                "valueType": "Bool",
+                "reportEnable": true
+            },
             "GPLBlock": {
                 "enum": 439,
                 "valueType": "UniquePID",
@@ -3153,6 +3158,11 @@
                 "valueType": "MinSec",
                 "reportEnable": true
             },
+            "Read Only": {
+                "enum": 441,
+                "valueType": "Bool",
+                "reportEnable": true
+            },
             "Real Registers": {
                 "enum": 337,
                 "valueType": "Array",
@@ -3184,7 +3194,7 @@
                 "valueType": "UniquePID",
                 "reportEnable": true
             },
-            "Report Interval": {
+            "Report Config": {
                 "enum": 7,
                 "valueType": "Enum",
                 "reportEnable": false
@@ -3234,6 +3244,11 @@
             "Rise Time": {
                 "enum": 97,
                 "valueType": "Float",
+                "reportEnable": true
+            },
+            "Router Address": {
+                "enum": 443,
+                "valueType": "String",
                 "reportEnable": true
             },
             "Run Total": {
@@ -3820,6 +3835,7 @@
         },
         "Points": {
             "Report": {
+                "Report Config":{},
                 "Report Type": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -3846,7 +3862,8 @@
                 "Height": 0,
                 "Point Refs": [],
                 "Screen Objects": [],
-                "Width": 0
+                "Width": 0,
+                "vid": 0
             },
 
             "Device": {
@@ -4449,6 +4466,12 @@
                     "ValueType": 2,
                     "Value": "V2.04"
                 },
+                "Gateway": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
                 "Inactive Text": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -4554,6 +4577,12 @@
                     "isReadOnly": false,
                     "ValueType": 2,
                     "Value": ""
+                },
+                "Router Address": {
+                    "isDisplayable": false,
+                    "isReadOnly": true,
+                    "ValueType": 2,
+                    "Value": "0"
                 },
                 "Stop Scan": {
                     "isDisplayable": true,
@@ -5207,6 +5236,12 @@
                     "ValueType": 18,
                     "Value": 255
                 },
+                "Read Only": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
                 "Reliability": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -5684,6 +5719,12 @@
                     "ValueType": 18,
                     "Value": 255
                 },
+                "Read Only": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
                 "Reliability": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -6073,6 +6114,12 @@
                     "ValueType": 18,
                     "Value": 255
                 },
+                "Read Only": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
                 "Reliability": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -6419,6 +6466,12 @@
                     "isReadOnly": false,
                     "ValueType": 18,
                     "Value": 255
+                },
+                "Read Only": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
                 },
                 "Reliability": {
                     "isDisplayable": true,
@@ -6983,6 +7036,12 @@
                     "ValueType": 18,
                     "Value": 255
                 },
+                "Read Only": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
                 "Reliability": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -7381,6 +7440,12 @@
                     "ValueType": 18,
                     "Value": 255
                 },
+                "Read Only": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
                 "Reliability": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -7599,6 +7664,12 @@
                     "ValueType": 13,
                     "Value": 60
                 },
+                "Read Only": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
+                },
                 "Reliability": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -7804,6 +7875,12 @@
                     "isReadOnly": false,
                     "ValueType": 18,
                     "Value": 255
+                },
+                "Read Only": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 7,
+                    "Value": false
                 },
                 "Reliability": {
                     "isDisplayable": true,

@@ -445,6 +445,8 @@ function setupReportsCollections(db, callback) {
 }
 
 function setupSystemInfo(db, callback) {
+	var pjson = require('../package.json');
+	var curVersion = pjson.version;
 	var timezones = importconfig.timeZones;
 
 	db.collection(systemInfoCollection).insert(timezones, function(err, result) {
@@ -452,7 +454,8 @@ function setupSystemInfo(db, callback) {
 			Name: 'Preferences'
 		}, {
 			$set: {
-				'Time Zone': localTZ
+				'Time Zone': localTZ,
+				'InfoscanJS Version': curVersion
 			}
 		}, callback);
 	});
@@ -3431,7 +3434,7 @@ function updateHistory(cb) {
 				});
 			}, function(err) {
 				now = now.subtract(1, 'month');
-				if(now.year() !== currentYear){
+				if (now.year() !== currentYear) {
 					currentYear = now.year();
 					logger.info(currentYear, count);
 				}

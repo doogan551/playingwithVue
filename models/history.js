@@ -348,8 +348,8 @@ var runBackUp = function(upis, limitRange, cb) {
 				limit: 1
 			}, function(_err, last) {
 				callback(err, {
-					start: first[0].timestamp,
-					end: last[0].timestamp
+					start: !!first.length && first[0].timestamp || 0,
+					end: !!last.length && last[0].timestamp || 0
 				});
 			});
 		});
@@ -372,7 +372,6 @@ var runBackUp = function(upis, limitRange, cb) {
 		buildDates(range);
 		console.log(dates.length);
 		async.eachSeries(dates, function(date, callback) {
-
 
 			query = {
 				$and: [{

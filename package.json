@@ -12,6 +12,7 @@
     "chai": "^2.3.0",
     "chai-http": "^1.0.0",
     "cloneextend": "0.0.3",
+    "compare-versions": "^3.0.0",
     "config": "^1.13.0",
     "connect": "^3.3.5",
     "connect-redis": "^2.3.0",
