@@ -1337,6 +1337,17 @@ $loaderSpeedScale: 1 / .75;
                 color: $blueGrey;
             }
         }
+
+        .grid-dropdown {
+            width: 70vw !important;
+            right: 20px;
+
+            li {
+                clear: none;
+                width: 20%;
+                float: left;
+            }
+        }
     }
 }
 

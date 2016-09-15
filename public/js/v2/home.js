@@ -1671,8 +1671,6 @@ var dti = {
                         var target = event && event.target,
                             point;
 
-                        dti.log(self);
-
                         if (target) { //open window for main one, others just send the information
                             point = ko.dataFor(target);
                             // dti.log('row click', point);

@@ -470,7 +470,7 @@ html
                         a.btn-flat.dropdown-button.pointTypeDropdownButton(href="#", data-beloworigin="true", data-bind="click: openPointTypeDropdown, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
-                        ul.dropdown-content(data-bind="attr: { id : id() + '_pointTypeDropdown' }, stopBubblingOnClick: true")
+                        ul.dropdown-content.grid-dropdown(data-bind="attr: { id : id() + '_pointTypeDropdown' }, stopBubblingOnClick: true")
                             li
                                 input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
                                 label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
