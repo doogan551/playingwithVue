@@ -657,7 +657,8 @@ function doRefreshSequence(data, socket) {
 
 function doUpdateSequence(data, cb) {
   var name = data.sequenceName,
-    sequenceData = data.sequenceData;
+      sequenceData = data.sequenceData,
+      pointRefs = data.pointRefs;
 
   // mydb.collection('points').findOne({
   //     "Name": name
@@ -677,7 +678,8 @@ function doUpdateSequence(data, cb) {
     },
     updateObj: {
       $set: {
-        'SequenceData': sequenceData
+        'SequenceData': sequenceData,
+        'Point Refs': pointRefs
       }
     }
   }, function(updateErr, updateRecords) {
@@ -1215,6 +1217,10 @@ function checkProperties(data, callback) {
     skipProperties = {
       "Trend Last Status": 1,
       "Trend Last Value": 1,
+      'Filter Data': 1,
+      'Column Data':1,
+      'Control Array': 1,
+      'Report Config': 1
     },
     skipRefProperties = {
       "Point Register": 1,
@@ -1222,7 +1228,10 @@ function checkProperties(data, callback) {
       "Display Animation": 1,
       "Display Trend": 1,
       "Display Button": 1,
-      "Slide Display": 1
+      "Slide Display": 1,
+      'Column Point': 1,
+      'Qualifier Point': 1,
+      'GPLBlock': 1
     },
     skipDeepPropertyCheck = {
       "_actvAlmId": 1,
@@ -1302,6 +1311,8 @@ function checkProperties(data, callback) {
             if (skipDeepPropertyCheck.hasOwnProperty(prop)) {
               continue; // Go to next property
             } else if ((Config.Enums.Properties[prop].valueType === "Array") && (prop !== "Point Refs")) {
+              continue;
+            } else if (Array.isArray(template[prop]) && template[prop].length === 0){
               continue;
             }
 

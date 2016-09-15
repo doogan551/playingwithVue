@@ -172,29 +172,29 @@ displays = $.extend(displays, {
 
         for (i = 0; i < len; i++) {
             pointRef = displayJson["Point Refs"][i];
-            if (pointRef.Value === pid) {
+            if (pointRef.Value === pid && pointRef.PropertyName === propertyName) {
                 alreadyExists = true;
                 break;
-            } else {
-                pointRef = {};
             }
         }
 
-        propertyObj = displays.workspaceManager.config.Utility.getPropertyObject("Device Point", displays.getEditItem());
-        pointRef.PropertyEnum = displays.workspaceManager.config.Enums.Properties[propertyName].enum;
-        pointRef.PropertyName = propertyName;
-        pointRef.Value = pid;
-        pointRef.AppIndex = displayJson["Point Refs"].length;
-        pointRef.isDisplayable = true;
-        pointRef.isReadOnly = false;
-        pointRef.PointName = name;
-        pointRef.PointType = displays.workspaceManager.config.Enums["Point Types"][pointType].enum;
-        pointRef.PointInst = pid;
-        pointRef.DevInst = (propertyObj !== null) ? propertyObj.Value : 0;
-
         if (!alreadyExists) {
+            propertyObj = displays.workspaceManager.config.Utility.getPropertyObject("Device Point", displays.getEditItem());
+            pointRef.PropertyEnum = displays.workspaceManager.config.Enums.Properties[propertyName].enum;
+            pointRef.PropertyName = propertyName;
+            pointRef.Value = pid;
+            pointRef.AppIndex = displays.getNextAppIndex();
+            pointRef.isDisplayable = true;
+            pointRef.isReadOnly = false;
+            pointRef.PointName = name;
+            pointRef.PointType = displays.workspaceManager.config.Enums["Point Types"][pointType].enum;
+            pointRef.PointInst = pid;
+            pointRef.DevInst = (propertyObj !== null) ? propertyObj.Value : 0;
+
             displayJson["Point Refs"].push(pointRef);
         }
+
+        return pointRef;
     },
     verifyPointReferences: function (localDisplay) {
         var i,
@@ -342,21 +342,31 @@ displays = $.extend(displays, {
             $backgroundCustomColorPicker = $("#backgroundCustomColorPicker"),
             initEditDisplay = function(display) {
                 var objs = display['Screen Objects'],
+                    screenObject,
+                    pointRef,
                     upiList = [],
                     c;
 
                 displays.upiNames = window.upiNames;
+                window.displayJson = display;
 
                 for (c = 0; c < objs.length; c++) {
-                    if (objs[c].upi) {
-                        upiList.push(objs[c].upi);
-                        if (objs[c].Precision) {
-                            objs[c].uiPrecision = parseInt(displays.getEditItemPrecision(objs[c].Precision), 10);
+                    screenObject = objs[c];
+                    if (screenObject.upi > 0 || screenObject.pointRefIndex !== undefined) {
+                        pointRef = displays.getScreenObjectPointRef(screenObject);
+
+                        if (!!pointRef) {
+                            screenObject.upi = pointRef.Value;
+                            screenObject.pointRefIndex = pointRef.AppIndex;
+                        }
+
+                        upiList.push(screenObject.upi);
+                        if (screenObject.Precision) {
+                            screenObject.uiPrecision = parseInt(displays.getEditItemPrecision(screenObject.Precision), 10);
                         }
                     }
                 }
 
-                window.displayJson = display;
                 $.ajax({
                     url: '/displays/getDisplayInfo/',
                     method: 'POST',
@@ -514,11 +524,13 @@ displays = $.extend(displays, {
                 screenObject = editItem['Screen Object'],
                 propertyName = displays.resolveDisplayObjectPropertyName(screenObject),
                 pointSelectedCallback = function(pid, name, pointType) {
+                    var pointRef;
                     if (!!pid) {
                         //here you can apply the selected point's pid and/or name
 
                         editItem.upi = pid;
-                        displays.pushPointRef(pid, name, pointType, propertyName);
+                        pointRef = displays.pushPointRef(pid, name, pointType, propertyName);
+                        editItem.pointRefIndex = pointRef.AppIndex;
                         editItem["Point Type"] = displays.workspaceManager.config.Enums['Point Types'][pointType].enum;
                         displays.upiNames[pid] = displays.upiNames[pid] || name;
                         displays.updateEditItem(editItem);
@@ -1612,6 +1624,10 @@ displays = $.extend(displays, {
                 var saveObj = angular.copy(window.displayJson);
 
                 $scope.cleanActionButtons(saveObj);
+
+                displays.setDisplayPrecision(saveObj);
+                displays.verifyPointReferences(saveObj);
+                displays.verifyScreenObjects(saveObj);
 
                 saveObj.vid = saveObj._id;
                 $scope.blur();

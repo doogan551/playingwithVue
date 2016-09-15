@@ -656,24 +656,43 @@ module.exports = {
           }
         }
         Utility.getOne(criteria, function(err, sysInfo) {
-
-          criteria = {
-            collection: 'upis',
-            query: {
-              _pStatus: 1
-            },
-            sort: [
-              ['_id', 'asc']
-            ],
-            updateObj: {
-              $set: {
-                _pStatus: 0
+          if (pointType === 'Device') {
+            criteria = {
+              collection: 'upis',
+              query: {
+                _pStatus: 1
+              },
+              sort: [
+                ['_id', 'desc']
+              ],
+              updateObj: {
+                $set: {
+                  _pStatus: 0
+                }
+              },
+              options: {
+                'new': true
               }
-            },
-            options: {
-              'new': true
-            }
-          };
+            };
+          } else {
+            criteria = {
+              collection: 'upis',
+              query: {
+                _pStatus: 1
+              },
+              sort: [
+                ['_id', 'asc']
+              ],
+              updateObj: {
+                $set: {
+                  _pStatus: 0
+                }
+              },
+              options: {
+                'new': true
+              }
+            };
+          }
 
           Utility.findAndModify(criteria, function(err, upiObj) {
             if (err) {

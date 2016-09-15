@@ -45,38 +45,29 @@ var slideShowViewModel = function () {
         },
         parseSlides = function (data) {
             var i,
-                upi,
-                currentSlide,
+                slide,
+                removeSlide,
+                pointRef,
                 endPoint,
-                lenSlides = data.Slides.length;
+                lenSlides = data.Slides.length,
+                compareOrder = function (a, b) {
+                    if (a.order < b.order)
+                        return -1;
+                    if (a.order > b.order)
+                        return 1;
+                    return 0;
+                },
+                getPointRefByAppindex = function (pointRefIndex, referenceType) {
+                    var answer;
+                    if (pointRefIndex > -1) {
+                        answer = data["Point Refs"].filter(function (pointRef) {
+                            return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
+                        });
 
-            function compareOrder(a, b) {
-                if (a.order < b.order)
-                    return -1;
-                if (a.order > b.order)
-                    return 1;
-                return 0;
-            };
-
-            function upiIsActive(upi) {
-                var answer = false,
-                    i,
-                    pointRef,
-                    lenPointRefs = data["Point Refs"].length;
-
-                for (i = 0; i < lenPointRefs; i++) {
-                    pointRef = data["Point Refs"][i];
-                    if (pointRef.Value === upi) {
-                        answer = true;
-                        if (pointRef.PointInst === 0) {
-                            answer = false;
-                        }
-                        break;
+                        answer = (!!answer && answer.length > 0 ? answer[0] : null);
                     }
-                }
-
-                return answer;
-            };
+                    return answer;
+                };
 
             loadAsFullscreen = data["Maximize Displays"].Value;
             closeOnComplete = data["Close On Complete"].Value;
@@ -84,21 +75,31 @@ var slideShowViewModel = function () {
             continuousShow = data["Continuous Show"].Value;
 
             for (i = 0; i < lenSlides; i++) {
-                currentSlide = data.Slides[i];
-                if (currentSlide) {
-                    upi = currentSlide.display;
-                    if (upiIsActive(upi)) {
-                        endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint("Display", upi);
-                        currentSlide.displayURL = endPoint.review.url;
-                        if (currentSlide.duration < minDuration) {
-                            currentSlide.duration = minDuration;
+                slide = data.Slides[i];
+                removeSlide = false;
+                if (slide) {
+                    pointRef = getPointRefByAppindex(slide.pointRefIndex, "Slide Display");
+                    if (!!pointRef) {
+                        slide.display = pointRef.Value;
+                        endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint("Display", slide.display);
+                        if (!!endPoint) {
+                            slide.displayURL = endPoint.review.url;
+                            if (slide.duration < minDuration) {
+                                slide.duration = minDuration;
+                            }
+                        } else {
+                            removeSlide = true;
                         }
                     } else {
+                        removeSlide = true;
+                    }
+
+                    if (removeSlide) {
                         data.Slides.splice(i, 1);  // Slide not in ["Point Refs"]
                         i--;
                     }
                 }
-            };
+            }
 
             self.numberOfSlides = data.Slides.length;
             self.listOfSlides.push.apply(self.listOfSlides, data.Slides);
@@ -311,7 +312,7 @@ var slideShowViewModel = function () {
                     if (self.slideIndex === 0 && !continuousShow) {  // carousel has looped all the way through
                         repeatCounter++;
                     }
-                    self.play()
+                    self.play();
                 }, (currentDuration * 1000));
             }
         }
@@ -323,9 +324,10 @@ var slideShowViewModel = function () {
         self.isPaused(true);
     };
     self.setFullScreen = function () {
-        if (screenfull.enabled) {
-            screenfull.request();
-        }
+        // breaks security to request FullScreen mode without user interaction
+        // if (screenfull.enabled) {
+        //     screenfull.request();
+        // }
     };
     self.setNonFullScreen = function () {
         var adjustToWidth = (screen.width * .9),

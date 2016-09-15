@@ -50,7 +50,7 @@ app.use(morgan(':remote-addr :method :url :status :res[content-length] :response
 }));
 app.use(cookieParser());
 
-app.use(bodyParser.json({limit:100000}));
+app.use(bodyParser.json({limit:10000}));
 app.use(bodyParser.urlencoded({
   extended: true,
   parameterLimit: 4500

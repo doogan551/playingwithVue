@@ -77,15 +77,16 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
                 slide,
                 displayId;
             for (var i = 0; i < pointRefsModel.length; i++) {
-                pointRefsModel[i].AppIndex = i+1;
-                displayId = pointRefsModel[i].Value;
-                slide = self.getSlideById(displayId);
+                // pointRefsModel[i].AppIndex = i + 1;
+                // displayId = pointRefsModel[i].Value;
+                // slide = self.getSlideById(displayId);
+                slide = self.getSlideByPointRefIndex(pointRefsModel[i].AppIndex);
                 if (slide) {
                     slide.order(i);
+                    slide.pointRefIndex = pointRefsModel[i].AppIndex;
                 }
             }
             ko.viewmodel.updateFromModel(point, pointModel);
-            
         }
 
         //define any tab triggers here
@@ -117,7 +118,8 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
             slides = vm.data.Slides(),
             pointRef = pointRefs[itemIndex],
             displayId = pointRefs[itemIndex].Value(),
-            slide = vm.getSlideById(displayId);
+            // slide = vm.getSlideById(displayId);
+            slide = self.getSlideByPointRefIndex(pointRefs[itemIndex].AppIndex);
         vm.data.Slides.remove(slide);
         vm.data['Point Refs'].remove(pointRef);
     };
@@ -155,6 +157,17 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
         return null;
     };
 
+    ViewModel.prototype.getSlideByPointRefIndex = function(idx) {
+        var self = this,
+            slides = self.data.Slides();
+        for (var j = 0; j < slides.length; j++) {
+            if (slides[j].pointRefIndex == idx) {
+                return slides[j];
+            }
+        }
+        return null;
+    };
+
     ViewModel.prototype.addPointRef = function(vm, event) {
         var self = this,
             pointSelectorEndPoint = ['/pointlookup/', 'Slide Show', '/Slide Display', '?mode=select'].join(''),
@@ -179,6 +192,7 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
                             });
                             slides.push({
                                 order: ko.observable(displayCount + 1),
+                                pointRefIndex: (displayCount + 1),
                                 display: ko.observable(data._id),
                                 duration: ko.observable(10)
                             });

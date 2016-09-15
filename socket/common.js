@@ -133,7 +133,7 @@ module.exports = {
 
 (function loop() {
   setTimeout(function() {
-    logger.info('@@@@@@@ Server still active');
+    // logger.info('@@@@@@@ Server still active');
     autoAcknowledgeAlarms(function(result) {
       loop();
     });

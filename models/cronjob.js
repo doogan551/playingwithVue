@@ -1,7 +1,7 @@
 var CronJob = require('cron').CronJob;
 
 // Second Minute Hour DayOfMonth Month DayOfWeek
-// 01 01 01 01 01 01
+// 01     01     01   01         01    01
 // will run Jan 1 at 01:01:01 if it is a monday
 // 
 // 01 * * * * *
