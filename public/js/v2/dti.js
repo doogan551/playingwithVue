@@ -24,7 +24,7 @@ var dtiMessaging =  {
     },
 
     processMessage: function (newValue) {
-        var action = newValue.action,
+        var action = newValue.message,
             callbacks = {
                 pointSelected: function () {
                     if (dtiMessaging._pointSelectCb) {

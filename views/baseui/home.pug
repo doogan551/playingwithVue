@@ -263,7 +263,7 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel    
 
-            #navigatorModalNew.navigatorModal.modal.modal-fixed-header.modal-optional-footer
+            #navigatorModalNew.navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="stopBindings: true")
                 .modal-header Select Point
                 .modal-content.modal-content-no-padding
                 .modal-footer
@@ -428,20 +428,6 @@ html
 
     script#navigatorTemplate(type='text/html')
         .iframeFull.blue-grey-form.flex.flex-row.row
-            .pointTypes.flex.flex-column.hide
-                .pointTypesHeader Point Types
-                .allPointTypes
-                    p.pointType
-                        input#allPointTypes.filled-in(type='checkbox', data-bind="checked: allTypesSelected, click: toggleAllPointTypes")
-                        label.label-tight(for='allPointTypes') All
-                // ko foreach: pointTypes
-                // ko if: visible
-                p.pointType
-                    input.filled-in(type='checkbox', data-bind="checked: selected, attr: { id: 'pointType' + $index() }")
-                    label.label-tight(data-bind="attr: { for: 'pointType' + $index() }, text: key")
-                // /ko
-                // /ko
-
             .navigatorBody.flex.flex-column
                 .selectorHeader.right-align.flex.flex-row.flex-right.flex-center
                     p.pointType
@@ -477,15 +463,31 @@ html
                         label(for='name4', data-bind="updateLabel: name4") Name 4
                         a.clearName(href="javascript://", tabindex="-1")
                             i.material-icons.suffix clear                                                                                                                                       
-                    .pointTypeFilter.input-field.col(data-bind="materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
-                        select#pointType(multiple, data-beloworigin="true")
+                    //- .pointTypeFilter.input-field.col(data-bind="contextMenuInvert: pointTypeInvert, materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
+                    .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
+
+                        //- input.dropdown-button(type='text', data-bind="value: pointTypeText, updateLabel: pointTypeText, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
+                        a.btn-flat.dropdown-button.pointTypeDropdownButton(href="#", data-beloworigin="true", data-bind="click: openPointTypeDropdown, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
+                            span(data-bind="text: pointTypeText")
+                            i.material-icons.dropdownCaret arrow_drop_down
+                        ul.dropdown-content(data-bind="attr: { id : id() + '_pointTypeDropdown' }, stopBubblingOnClick: true")
+                            li
+                                input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
+                                label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
+                            // ko foreach: pointTypes
+                            li
+                                input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : $parent.id() + '_pointType_' + $index() }")
+                                label.label-tight(data-bind="text: key, attr: { for: $parent.id() + '_pointType_' + $index() }")
+                            // /ko
+
+                        //- select(data-beloworigin="true")
                             //- // ko foreach: pointTypes
                             //- option(data-bind="value: key, text: key")
                             //- // /ko
-                        label(for='pointType') Point Types
+                        //- label(data-bind="attr: { for: id() + '_pointTypeDropdownButton' }") Point Types
 
                 .selectorList(data-bind="click: handleNavigatorRowClick")
-                    .fetching(data-bind="style: { opacity: (fetchingPoints() === true) ? 1 : 0 }")
+                    .fetching(data-bind="visible: fetchingPoints")
                         .progress
                             .indeterminate
                     // ko foreach: points

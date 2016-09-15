@@ -136,6 +136,48 @@ var scripts = {
         });
     },
 
+    // 0.4.1 updates gpl point refs to be 'Device Point' rather than 'Sequence Device'
+    updateGPLDevicePointRef: function (callback) {
+        utility.iterateCursor({
+            collection: 'points',
+            query: {
+                'Point Type.Value': 'Sequence',
+                'Point Refs.PropertyName': 'Sequence Device'
+            }
+        }, function processSequence(err, doc, cb) {
+            var list = doc['Point Refs'];
+
+            list.forEach(function processPointRefs(ref) {
+                if (ref.PropertyName === 'Sequence Device') {
+                    ref.PropertyName = 'Device Point';
+                }
+            });
+
+            logger.info('updating sequence:', doc._id);
+
+            utility.update({
+                collection: 'points',
+                query: {
+                    _id: doc._id
+                },
+                updateObj: doc
+            }, function updatedSequenceHandler(err) {
+                if (err) {
+                    logger.debug('Update err:', err);
+                }
+
+                cb(null);
+            });
+
+        }, function finishUpdatingSequences(err) {
+            logger.info('Finished with updateGPLDevicePointRef');
+            callback(null, {
+                fn: 'updateGPLDevicePointRef',
+                errors: err
+            });
+        });
+    },
+
     // 0.3.10 - GPL Point Ref PropertyEnum Update.  Updated GPLBlock PropertyEnum to be 439 instead of (placeholder) 0
     updateGPLBlockPointRefEnum: function (callback) {
         utility.iterateCursor({
@@ -870,7 +912,7 @@ db.connect(connectionString, function (err) {
         return logger.debug(err);
     }
     // Array of tasks that should be run
-    var tasks = [scripts.updateCommittedBills, scripts.updateGPLBlockPointRefEnum, scripts.updateGenerateGPLPointRefs, scripts.updateGenerateDisplayPointRefs, scripts.updateExistingReports, scripts.updateDevices, scripts.removePointInstance];
+    var tasks = [scripts.updateCommittedBills, scripts.updateGPLBlockPointRefEnum, scripts.updateGenerateGPLPointRefs, scripts.updateGenerateDisplayPointRefs, scripts.updateExistingReports, scripts.updateDevices, scripts.removePointInstance, scripts.updateGPLDevicePointRef];
     // var tasks = [scripts.updateGenerateDisplayPointRefs];
 
     // Each task is provided a callback argument which should be called once the task completes.

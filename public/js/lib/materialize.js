@@ -3080,9 +3080,6 @@ $(document).ready(function(){
    *  Select Plugin  *
    ******************/
   $.fn.material_select = function (callback) {
-  	//SDT modification to allow config in dropdown
-  	var config = typeof callback === 'object' ? callback : {};
-
     $(this).each(function(){
       var $select = $(this);
 
@@ -3191,8 +3188,7 @@ $(document).ready(function(){
             activateOption(options, $(this));
             $select.find('option').eq(i).prop('selected', selected);
             // Trigger onchange() event
-            // sdt 9/12/16 added parameters to change event
-            $select.trigger('change', $(this));
+            $select.trigger('change');
             if (typeof callback !== 'undefined') callback();
           }
 
@@ -3217,8 +3213,7 @@ $(document).ready(function(){
       $newSelect.after(options);
       // Check if section element is disabled
       if (!$select.is(':disabled')) {
-      	//SDT modification to pass in config to dropdowns
-        $newSelect.dropdown($.extend({'hover': false, 'closeOnClick': false}, config));
+        $newSelect.dropdown({'hover': false, 'closeOnClick': false});
       }
 
       // Copy tabindex
@@ -3282,8 +3277,7 @@ $(document).ready(function(){
           collection.find('li.selected').removeClass('selected');
           var option = $(newOption);
           option.addClass('selected');
-          //SDT 9/12/16 - this is highly disruptive
-          // options.scrollTo(option);
+          options.scrollTo(option);
         }
       };
 
