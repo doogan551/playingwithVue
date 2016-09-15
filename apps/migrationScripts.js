@@ -1188,7 +1188,7 @@ db.connect(connectionString, function(err) {
             'InfoscanJS Version': 1
         }
     }, function(err, prefVersion) {
-        prevVersion = prefVersion['InfoscanJS Version'];
+        prevVersion = prefVersion['InfoscanJS Version'] || "0.0.0";
         async.series(tasks, function done(err, results) {
             if (err) {
                 logger.info("Error: ", err);
