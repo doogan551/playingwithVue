@@ -1292,6 +1292,11 @@ $loaderSpeedScale: 1 / .75;
         flex-grow: 1;
         position: relative;
 
+        .listRow:hover {
+            background-color: #f4f4f4;
+            cursor: default;
+        }
+
         .listEntry {
             padding: 3px 3px 3px 10px;
             text-align: left;
