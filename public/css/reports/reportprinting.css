@@ -38,15 +38,34 @@ td.firstColumn.small.datetime {
     margin: 25px 15px 3px 15px;
 }
 .pageNumbering {
-    float: right;
+    margin-left: 950px;
+    display: -webkit-box;
 }
 .narrowTable {
 
 }
+.showChart {
+    display: block;
+}
+.hideChart {
+    display: none;
+}
 @media print {
-    .pageBreak {
+    .pageBreakAfter {
         display: block;
         page-break-after: always;
         -webkit-column-break-after: always;
+    }
+
+    .pageBreakBefore {
+        display: block;
+        page-break-before: always;
+        -webkit-column-break-before: always;
+    }
+
+    .pageNumbering {
+        margin-left: 1000px;
+        display: flex;
+        width: 150px;
     }
 }

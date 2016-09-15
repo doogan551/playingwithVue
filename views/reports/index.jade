@@ -18,7 +18,7 @@ block content
                                 a.strong.toggleTab(href="#reportAttribs", data-toggle="tab") Attributes
                             li.columns(role="presentation")
                                 a.strong.toggleTab(href="#reportColumns", data-toggle="tab") Columns
-                            li.columns2(role="presentation")
+                            li.columns2(role="presentation", style="display: none")
                                 a.strong.toggleTab(href="#gridConfig", data-toggle="tab") Grid
                             // ko if: (reportType === 'Property')
                             li.filterByPoint(role="presentation")
@@ -209,7 +209,7 @@ block content
                                                     td(colspan="4")
                                                         a.addColumnButton(href="#") Add Column
                                                     // /ko
-                                div#gridConfig.tab-pane
+                                div#gridConfig.tab-pane(style="display: none")
                                     h4.strong.panel-title
                                         table.gridConfig.small.grid.table
                                             thead
@@ -226,7 +226,7 @@ block content
                                                             // /ko
                                                             .blankspot
                                                                 | &nbsp;
-                                                            a.addColumnGridButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn(2) }")
+                                                            a.addColumnGridButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn(1) }")
                                                             // /ko
                                                             // ko if: $index() > 0
                                                             button.btn.btn-default.gridConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName), click: function () { $root.editColumn($data, $index()) }, event: { mouseover: function () { $root.showColumnSettings($element, $data) }, mouseout: function() { $root.hideColumnSettings($element) } }")
