@@ -4,6 +4,23 @@ var _ = require('lodash');
 var Point = require('../models/point');
 var config = require('../public/js/lib/config.js');
 var utils = require('../helpers/utils.js');
+// Checked
+router.post('/globalSearch', function (req, res) {
+  var data = _.merge(req.params, req.body);
+
+  Point.globalSearch(data, function (err, points, count) {
+    if (err) return utils.sendResponse(res, {
+      err: err,
+      reqID: data.reqID
+    });
+    return utils.sendResponse(res, {
+      points: points,
+      count: count,
+      reqID: data.reqID
+    });
+  });
+});
+
 // Checked - slow?
 router.post('/browse', function(req, res) {
   var data = _.merge(req.params, req.body);
