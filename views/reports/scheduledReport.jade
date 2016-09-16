@@ -8,11 +8,11 @@ html.direports
 block content
     #window
         .tabViewReport
-            h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
-            table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
-                tfoot.tableFooter
+            table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder(style="display: none")
+                tfoot.tableFooter(style="display: none")
             // ko if: (!!$root.scheduledReportData() && !!$root.scheduledReportData().tables)
             div.formattedData(data-bind="foreach: $root.scheduledReportData().tables")
+                h4.small.text-center.reportDisplayTitle(data-bind="text: $root.reportDisplayTitle")
                 table.table.table-striped.table-bordered.table-responsive(data-bind="css: { marginForFirstTable: $index() === 0, marginForTable: $index() > 0 }")
                     thead
                         tr(data-bind="foreach: header")

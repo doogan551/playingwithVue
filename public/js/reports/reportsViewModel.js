@@ -3320,11 +3320,10 @@ var reportsViewModel = function () {
                 dateRangeNeeded = false,
                 reportDataPages = [],
                 columnsArray = $.extend(true, [], self.listOfColumns()),
-                rowsPerPDFPage = (self.reportType === "Property" ? 20 : 13),
+                rowsPerPDFPage = (self.reportType === "Property" ? 20 : 12),
                 insertPageBreak = function (currentPageLen, rowIndex) {
                     var answer = false,
-                        firstPage = (reportDataPages.length === 0),
-                        rowsOnPage = (firstPage ? (rowsPerPDFPage - 2) : rowsPerPDFPage);
+                        rowsOnPage = rowsPerPDFPage;
 
                     if ((currentPageLen % rowsOnPage === 0) || (rowIndex === (reportData.length - 1))) {
                         answer = true;
