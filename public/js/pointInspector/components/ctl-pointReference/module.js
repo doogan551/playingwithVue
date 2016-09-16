@@ -124,11 +124,12 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
                     propertyName = point.PropertyName(),
                     parameters = {
                         pointType: self.parentType,
-                        pointtypes: self.utility.config.Utility.pointTypes.getAllowedPointTypes(self.parentType),
+                        pointTypes: self.utility.config.Utility.pointTypes.getAllowedPointTypes(propertyName, self.parentType),
+                        property: propertyName,
                         deviceId: null,
-                        removeUnitId: null
+                        remoteUnitId: null
                     },
-                    path = '/pointlookup/' + encodeURI(self.parentType) + '/' + encodeURI(point.PropertyName()),
+                    // path = '/pointlookup/' + encodeURI(self.parentType) + '/' + encodeURI(point.PropertyName()),
                     props = ['Control Point', 'Occupied Point', 'Remote Unit Point', 'Damper Control Point', 'Digital Heat 1 Control Point', 'Digital Heat 2 Control Point', 'Digital Heat 3 Control Point', 'Fan Control Point', 'Heat 1 Control Point', 'Lights Control Point'];
                 
                 // If Control Point or RMU property, we need to restrict our selection to points on the same device
@@ -139,24 +140,23 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
                     // If Device Point prop exists and the device point is assigned
                     if (devicePoint && devicePoint.data.Value() !== 0) {
                         parameters.deviceId = devicePoint.data.Value();
-                        path += '/' + devicePoint.data.Value();
+                        // path += '/' + devicePoint.data.Value();
                         // If Remote Unit Point prop exists and the remote unit point is assigned
                         if (propertyName !== "Remote Unit Point" && rmuPoint && rmuPoint.data.Value() !== 0) {
-                            parameters.removeUnitId = rmuPoint.data.Value();
-                            path += '/' + rmuPoint.data.Value();
+                            parameters.remoteUnitId = rmuPoint.data.Value();
+                            // path += '/' + rmuPoint.data.Value();
                         }
                     }
                 }
 
-                console.log(parameters, JSON.stringify(parameters, null, 3));
-                console.log(path);
+                // console.log(parameters, JSON.stringify(parameters, null, 3));
+                // console.log(path);
                 return parameters;
                 // return path;
             },
             // pointSelectorEndPoint = [getPath(), '?mode=select'].join(''),
-            callback = function (value) {
-                var selectedPoint = value.selectedPoint,
-                    id = selectedPoint.upi, 
+            callback = function (selectedPoint) {
+                var id = selectedPoint._id, 
                     name = selectedPoint.name, 
                     pointType = selectedPoint.pointType;
                 // Schedule entry point ref changes don't go through normal validation in configjs
@@ -204,7 +204,7 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
             //     }
             // });
 
-        dtiMessaging.showNavigator(parameters);
+        dtiMessaging.showPointSelector(parameters);
         dtiMessaging.onPointSelect(callback);
     };
 

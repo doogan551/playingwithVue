@@ -1571,6 +1571,10 @@ var dti = {
                 if (config.callback) {
                     dti.navigatorNew.temporaryCallback = config.callback;
                 }
+
+                if (config.pointType && config.property) {
+                    config.pointTypes = dti.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes(config.property, config.pointType);
+                }
             }
 
             dti.navigatorNew.commonNavigator.applyConfig(config);
@@ -1689,6 +1693,8 @@ var dti = {
 
                         if (target) { //open window for main one, others just send the information
                             point = ko.dataFor(target);
+
+                            point.name = [point.name1, point.name2, point.name3, point.name4].join(' ');
                             // dti.log('row click', point);
 
                             if (point !== self.bindings) {
@@ -1858,7 +1864,7 @@ var dti = {
 
                 dti.forEachArray(pointTypes, function flattenPointType (type) {
                     if (typeof type === 'object') {
-                        if (type.selected) {
+                        if (type.selected !== false) {
                             ret.push(type.key);
                         }
                     } else {
@@ -2467,8 +2473,7 @@ var dti = {
                 },
                 callbacks = {
                     showPointSelector: function () {
-                        var navConfig = config.parameters || {},
-                            sourceWindowId = config._windowId;
+                        var sourceWindowId = config._windowId,
                             callback = function (data) {
                                 dti.messaging.sendMessage({
                                     key: sourceWindowId, 
@@ -2477,9 +2482,9 @@ var dti = {
                                 });
                             };
 
-                        navConfig.callback = callback;
+                        config.callback = callback;
 
-                        dti.navigatorNew.showNavigator(navConfig);
+                        dti.navigatorNew.showNavigator(config);
                     },
                     navigatormodal: function () {
                         // key: navigatormodal, oldValue: windowId of recipient to send info to

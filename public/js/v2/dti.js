@@ -70,6 +70,10 @@ var dtiMessaging =  {
         //if target = new, call window.top.workspaceManager.openWindow..., else change this window's url
     },
 
+    showPointSelector: function (parameters) {
+        dtiMessaging.sendMessage('showPointSelector', parameters);
+    },
+
     showNavigator: function (parameters) {
         // send message to navigator to open
         // dtiMessaging.utility.showNavigatorModal();
