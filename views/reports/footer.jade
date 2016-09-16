@@ -1,6 +1,7 @@
 script.
-    var scheduled, dataUrl, point, isViewer, title;
-    scheduled = '!{scheduled}';
+    var scheduled, scheduledIncludeChart, dataUrl, point, isViewer, title;
+    scheduled = ('!{scheduled}' == "true");
+    scheduledIncludeChart = ('!{scheduledIncludeChart}' == "true");
     dataUrl = '!{dataUrl}';
     point = JSON.parse('!{point}');
     isViewer = false;

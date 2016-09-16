@@ -1,0 +1,56 @@
+.modal-editColumn.modal.fade#globalEditColumnModal
+    .modal-dialog
+        .modal-content
+            //.modal-header
+            .modal-body
+                .panel.panel-default
+                    .panel-heading
+                        h3.panel-title
+                            | Set all columns
+                    .panel-body
+                        form.form-horizontal(role="form")
+                            .form-group
+                                //label.control-label.col-sm-4(data-bind="text: $root.globalFieldMultiplierBefore()")
+                                label.control-label.col-sm-3 Multiplier:
+                                .col-sm-8
+                                    input.form-control.inputMultiplier(data-bind="value: $root.globalColumnMultiplier, css: { globallyChangedField: ($root.globalColumnMultiplier() != $root.globalFieldsColumnEditBefore().multiplier) }", type="number")
+                                //.col-sm-2
+                                //    .globallyChangedField(data-bind="text: ($root.globalColumnMultiplier() != $root.globalFieldsColumnEditBefore().multiplier) ? '*' : ''")
+                            .form-group
+                                label.control-label.col-sm-3 Precision:
+                                .col-sm-8
+                                    input.form-control.inputPrecision(data-bind="reportPrecisionInput: $root.globalColumnPrecision, css: { globallyChangedField: ($root.globalColumnPrecision() != $root.globalFieldsColumnEditBefore().precision) }", type="text", min="0", max="20", viewModelField="$root.globalColumnPrecision")
+                                //.col-sm-2
+                                //    .globallyChangedField(data-bind="text: ($root.globalColumnPrecision() != $root.globalFieldsColumnEditBefore().precision) ? '*' : ''")
+                            .form-group
+                                label.control-label.col-sm-3 Chart:
+                                .col-sm-8.checkbox.checkbox-default(data-bind="css: { globallyChangedField: ($root.globalColumnIncludeInChart() != $root.globalFieldsColumnEditBefore().includeInChart) }", style="width: 34px;margin-left: 13px;")
+                                    input.includeInChartColumn(data-bind="checked: $root.globalColumnIncludeInChart", style="margin-top: -3px;margin-left: -20px;", type="checkbox")
+                                //.col-sm-2
+                                //    .globallyChangedField(data-bind="text: ($root.globalColumnIncludeInChart() != $root.globalFieldsColumnEditBefore().includeInChart) ? '*' : ''")
+                            .form-group
+                                label.control-label.col-sm-3 Group:
+                                .col-sm-8
+                                    .dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                        button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit(), globallyChangedField: ($root.globalColumnYaxisGroup() != $root.globalFieldsColumnEditBefore().yaxisGroup)}", data-toggle="dropdown")
+                                            span(data-bind="text: $root.globalColumnYaxisGroup")
+                                            // ko if: ($root.yaxisGroups.length > 1)
+                                            span.caret.lm10px
+                                            // /ko
+                                        // ko if: ($root.yaxisGroups.length > 1)
+                                        ul.yaxisGroups.dropdown-menu
+                                            li
+                                                a(data-bind="click: function(){ $root.globalColumnYaxisGroup('') }, text: '-'")
+                                            // ko foreach: $root.yaxisGroups
+                                            li
+                                                a(data-bind="click: function(){ $root.globalColumnYaxisGroup($data) }, text: $data")
+                                            // /ko
+                                        // /ko
+                                //.col-sm-2
+                                //    .globallyChangedField(data-bind="text: ($root.globalColumnYaxisGroup() != $root.globalFieldsColumnEditBefore().yaxisGroup) ? '*' : ''")
+                            .form-group
+                                .placeholder
+                                    label.control-label.col-sm-4
+            .modal-footer
+                button.btn.btn-primary(data-bind="click: $root.setGlobalEditedColumnData, enable: $root.pendingGlobalColumnChange()", type='button') OK
+                button.btn.btn-danger(type='button', data-dismiss='modal') Cancel
