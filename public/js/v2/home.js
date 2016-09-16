@@ -2677,6 +2677,7 @@ var dti = {
             dti.startMenu.handleClick(obj);
         },
         handleCardClick: function (obj, e) {
+            //only close menus on 'open'.  keeps modals open when closing individual windows
             if ($(e.target).hasClass('closeIcon')) {
                 obj.close();
             } else {
