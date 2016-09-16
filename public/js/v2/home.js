@@ -470,6 +470,46 @@ var dti = {
             };
         }
     },
+    keyboardShortcuts: {
+        _lastInit: true,
+        init: function () {
+            var shortcutEntries,
+                shortcut,
+                key,
+                len,
+                i;
+
+            for (key in dti.keyboardShortcuts.shortcuts) {
+                shortcutEntries = dti.keyboardShortcuts.shortcuts[key];
+                len = shortcutEntries.length;
+
+                for (i = 0; i < len; i++) {
+                    shortcut = shortcutEntries[i];
+                    el = shortcut.element || document;
+
+                    $(el).bind(shortcut.type, key, shortcut.fn);
+                }
+            }
+        },
+        shortcuts: {
+            'shift+space': [{
+                type: 'keydown',
+                fn: function () {dti.globalSearch.show();}
+            }],
+            'shift+p': [{
+                type: 'keydown',
+                fn: function () {dti.navigatorNew.showNavigator();}
+            }],
+            'esc': [{
+                type: 'keyup',
+                fn: function () {dti.globalSearch.hide();}
+            }, {
+                type: 'keyup',
+                element: '#searchNavbar input',
+                fn: function () {dti.globalSearch.hide();}
+            }]
+        }
+    },
     Window: function (config) {
         var windowId = config.id || dti.makeId(),
             iframeId = dti.makeId(),
@@ -1465,8 +1505,49 @@ var dti = {
     },
     globalSearch: {
         $taskbarEl: $('#searchNavbar'),
-        $backgroundEl: $('#searchBackground'),
-        $inputEl: $('#globalSearchInput'),
+        $resultsEl: $('#globalSearchResults'),
+        $inputEl: null, // Element added to the DOM in globalSearch.init()
+        $chips: $('#searchNavbar .chips'),
+        visible: false,
+        searchTerms: {},
+        timeoutID: 0,
+        reqID: 0,
+        init: function () {
+            var bindings = dti.bindings.globalSearch;
+
+            dti.globalSearch.chips = dti.globalSearch.$chips.material_chip({
+                placeholder: '+Search',
+                secondaryPlaceholder: 'Search'
+            });
+
+            dti.globalSearch.$chips.on('chip.add', function (e, chip) {
+                console.log('Added chip', chip);
+                dti.globalSearch.searchTerms[chip.tag] = 1;
+                dti.globalSearch.doSearch();
+            });
+
+            dti.globalSearch.$chips.on('chip.delete', function (e, chip) {
+                console.log('Deleting chip', chip);
+                delete dti.globalSearch.searchTerms[chip.tag];
+                window.clearTimeout(dti.globalSearch.timeoutID);
+
+                if (Object.keys(dti.globalSearch.searchTerms).length) {
+                    dti.globalSearch.timeoutID = window.setTimeout(function () {
+                        dti.globalSearch.doSearch();
+                    }, 750);
+                } else {
+                    bindings.showSummary(false);
+                    bindings.count(0);
+                    bindings.searchResults.removeAll();
+                }
+            });
+
+            dti.globalSearch.$inputEl = $('#searchNavbar input');
+
+            dti.globalSearch.$resultsEl.scroll(function handleScroll () {
+                console.log('scrolled');
+            });
+        },
         show: function () {
             dti.globalSearch.visible = true;
             dti.fire('hideWindows');
@@ -1475,30 +1556,77 @@ var dti = {
                 dti.globalSearch.$inputEl.focus();
             });
 
-            dti.animations.fadeIn(dti.globalSearch.$backgroundEl);
-
-            //if we want to go back to home on escape (we'll have to discuss and determine the different ways to 'escape' the search view)
-            $(document).keyup(dti.globalSearch.handleKeyPress);
+            dti.animations.fadeIn(dti.globalSearch.$resultsEl);
         },
         hide: function () {
-            dti.globalSearch.visible = false;
-            dti.fire('unhideWindows');
+            if (dti.globalSearch.visible) {
+                dti.globalSearch.visible = false;
+                dti.fire('unhideWindows');
 
-            dti.animations.fadeOut(dti.globalSearch.$taskbarEl);
-            dti.animations.fadeOut(dti.globalSearch.$backgroundEl);
-        },
-        handleKeyPress: function (event) {
-            if (event.which === 27) {
-                if (dti.globalSearch.visible === true) {
-                    dti.globalSearch.visible = false;
-                    dti.globalSearch.hide();
-                }
+                dti.animations.fadeOut(dti.globalSearch.$taskbarEl);
+                dti.animations.fadeOut(dti.globalSearch.$resultsEl, function resetSearch () {
+                    var $_chips = dti.globalSearch.$chips,
+                        chipsIndex = $_chips.data('index'),
+                        len = $_chips.data('chips').length;
+
+                    // Remove all chips (search terms)
+                    while (len--) {
+                        $_chips.deleteChip(chipsIndex, 0, $_chips);
+                    }
+                });
             }
+        },
+        doSearch: function () {
+            var bindings = dti.bindings.globalSearch,
+                data = {
+                    user: dti.bindings.user(),
+                    searchTerms: dti.globalSearch.searchTerms,
+                    reqID: dti.makeId()
+                };
 
+            dti.globalSearch.reqID = data.reqID;
+            bindings.gettingData(true);
+            bindings.showSummary(false);
+
+            $.ajax({
+                type: 'post',
+                url: '/api/points/globalSearch',
+                data: JSON.stringify(data),
+                contentType: 'application/json'
+            }).done(
+                function (data) {
+                    if (data.err) {
+                        // TODO signal error to UI
+                        return;
+                    }
+                    // If the request ID doesn't match our current request ID
+                    if (data.reqID !== dti.globalSearch.reqID) {
+                        return;
+                    }
+                    // If our global search isn't visible we need to discard results
+                    if (!dti.globalSearch.visible) {
+                        return;
+                    }
+                    bindings.searchResults(data.points);
+                    bindings.count(data.count);
+                    bindings.showSummary(true);
+                }
+            ).fail(
+                function globalSearchFail (jqXHR, textStatus) {
+                    // TODO signal error to UI
+                    dti.log('Global search failed', jqXHR, textStatus);
+                }
+            ).always (
+                function globalSearchFinished () {
+                    bindings.gettingData(false);
+                }
+            );
         }
     },
     globalSearchOld: {
         init: function () {
+            return;
+
             dti.globalSearch.$el = $('#search');
             dti.globalSearch.$resultsEl = $('#globalSearchResults');
 
@@ -2585,6 +2713,21 @@ var dti = {
         },
         showGlobalSearch: function () {
             dti.globalSearch.show();
+        },
+        hideGlobalSearch: function () {
+            dti.globalSearch.hide();
+        },
+        globalSearch: {
+            gettingData: ko.observable(false),
+            showSummary: ko.observable(false),
+            searchResults: ko.observableArray([]),
+            count: ko.observable(0),
+            show: function () {
+                dti.globalSearch.show();
+            },
+            hide: function () {
+                dti.globalSearch.hide();
+            }
         },
         closeAllWindows: function () {
             dti.windows.closeAll();

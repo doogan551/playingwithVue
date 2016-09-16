@@ -55,16 +55,33 @@ html
             #searchNavbar.navbar-fixed.taskbar.hidden
                 nav.blue-grey
                     .nav-wrapper
-                        ul.center
-                            li.taskbarItem
-                                i.material-icons search
-                            li.taskbarItem.flex.flex-row.flex-center
-                                .input-field
-                                    input#globalSearchInput(type='search')
+                        .taskbarItem
+                            i.material-icons search
+                        //- .taskbarItem.flex.flex-row.flex-center
+                            .input-field
+                                input#globalSearchInput(type='search')
+                        .taskbarItem
+                            .chips.chips-placeholder
+                        .taskbarItem
+                            i.material-icons(data-bind='click: hideGlobalSearch') close
 
         main.hidden
-            #searchBackground.hidden
-                h3 Search
+            #globalSearchResults.hidden
+                .summary.blue-grey-text(data-bind='visible: globalSearch.showSummary')
+                    .row
+                        .col.s12 Displaying #[span(data-bind='text: globalSearch.searchResults().length')] of #[span(data-bind='text: globalSearch.count')] results
+                .results
+                    .row(data-bind='foreach: globalSearch.searchResults')
+                        .col.s12.m6.l3
+                            .card
+                                .card-content
+                                    span.card-title(data-bind='text: Name')
+                                    p Point type: #[span(data-bind='text: $data["Point Type"].Value')]
+
+                .absCenter(data-bind='visible: globalSearch.gettingData')
+                    .cssload-container
+                        .cssload-whirlpool
+
             #searchBox.white.z-depth-1
                 .input-field
                     i.material-icons.prefix search
@@ -106,7 +123,7 @@ html
                         // /ko
                 .status(data-bind='visible: alarms.unacknowledged.showList() === false') Relax...none right now.
 
-            ul#globalSearchResults.dropdown-content.active(style="display: none; position: absolute; right: 109px; top: 48px; opacity: 1; width: 264px;")
+            //- ul#globalSearchResults.dropdown-content.active(style="display: none; position: absolute; right: 109px; top: 48px; opacity: 1; width: 264px;")
                 li
                     a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='4250 AH5 DISP', data-delay='10') 4250 AH5 DISP
                 li
@@ -558,6 +575,7 @@ html
     script(type='text/javascript', src='/js/lib/moment.js')
     script(type='text/javascript', src='/js/lib/store.min.js')
     script(type='text/javascript', src='/js/lib/jstree.js')
+    script(type='text/javascript', src='/js/lib/jquery.hotkeys.js')
     //- script(type='text/javascript', src='/js/lib/typeahead.bundle.js')
     script(type='text/javascript', src='/js/lib/knockout-3.2.0.debug.js')
     script(type='text/javascript', src='/js/lib/knockout.viewModel.js')

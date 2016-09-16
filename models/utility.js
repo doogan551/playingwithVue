@@ -132,16 +132,48 @@ exports.count = function(criteria, cb) {
 };
 
 exports.findAndCount = function(criteria, cb) {
-  var _points;
+  var query = (!!criteria.query) ? criteria.query : {};
+  var coll = criteria.collection;
+  var limit = (!!criteria.limit) ? criteria.limit : 0;
+  var fields = (!!criteria.fields) ? criteria.fields : {};
+  var sort = (!!criteria.sort) ? criteria.sort : {};
+  var skip = (!!criteria.skip) ? criteria.skip : 0;
+  var collection;
+  var cur;
+  var t;
+
+  if (!coll) {
+    return cb({
+      err: "Please provide a collection."
+    });
+  }
+
+  t = new Date().getTime();
+
+  // console.log(query, coll);
+  collection = db.get().collection(coll);
+  // collection.find(query, fields).limit(limit).sort(sort).skip(skip).toArray(cb);
+  cur = collection.find(query, fields);
+
+  cur.count(function (err, count) {
+    if (err) {
+      return cb(err);
+    }
+    cur.limit(limit).sort(sort).skip(skip).toArray(function (err, results) {
+      return cb(err, results, count, new Date().getTime() - t);
+    });
+  });
+};
+
+exports.findAndCountOld = function(criteria, cb) {
+  var t = new Date().getTime();
 
   exports.get(criteria, function(err, points) {
     if (err) {
       return cb(err);
     } else {
-      _points = points;
-
       exports.count(criteria, function(err, count) {
-        cb(err, _points, count);
+        cb(err, points, count, new Date().getTime() - t);
       });
     }
   });

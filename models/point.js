@@ -4,6 +4,7 @@ var Config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
 var async = require('async');
 var ObjectID = require('mongodb').ObjectID;
+var Utils = require('../helpers/utils');
 
 module.exports = {
   getPointsByQuery: function(data, cb) {
@@ -290,7 +291,12 @@ module.exports = {
         segment = nameSegments[i];
         if (typeof segment.value == 'string') {
           if (segment.value.length) {
-            query[segment.name] = new RegExp(['^', segment.value.toLowerCase()].join(''));
+            query[segment.name] = Utils.getRegex(segment.value.toLowerCase(), {matchBeginning: true});
+            // if (segment.value.indexOf('*') < 0) {
+            //   query[segment.name] = new RegExp(['^', segment.value.toLowerCase()].join(''));
+            // } else {
+            //   query[segment.name] = Utils.convertRegexWildcards(segment.value.toLowerCase());
+            // }
           }
         } else {
           query[segment.name] = '';
@@ -352,7 +358,58 @@ module.exports = {
       return cb(null, []);
     }
   },
+  globalSearch: function(data, cb) {
+    var criteria = {
+      collection: 'points',
+      limit: data.limit || 10,
+      count: true,
+      query: {
+        $and: []
+      }
+    };
+    var searchTerm;
 
+    for (searchTerm in data.searchTerms) {
+      criteria.query.$and.push({
+        _Name: {
+          $regex: Utils.getRegex(searchTerm.toLowerCase())
+        }
+      });
+    }
+
+    Utility.findAndCountOld(criteria, function handleSearchResults (err, points, count) {
+      return cb(err, points, count);
+    });
+    // return cb(null, [data.searchTerms]);
+    // function(req, res, next) {
+    //   var db, tags, query;
+    //   db = req.database;
+    //   tags = (!!req.body.tags) ? req.body.tags : [];
+    //   qTags = (!!req.params.tags) ? req.params.tags : [];
+    //   qTags = qTags.split(/[ _]+/);
+    //   tags = tags.concat(qTags);
+    //   for (var i = 0; i < tags.length; i++) {
+    //     tags[i] = new RegExp("^" + tags[i], 'i');
+    //   }
+    //   query = {
+    //     taglist: {
+    //       $all: tags
+    //     }
+    //   };
+    //   console.log(query);
+    //   db.collection(pointsCollection).find(query, {
+    //     Name: 1,
+    //     "Point Type": 1
+    //   }).limit(25).sort({Name:1}).toArray(function(err, results) {
+    //     async.forEach(results, function(result, cb) {
+    //       result.pointType = result["Point Type"].Value;
+    //       cb(null);
+    //     }, function(err) {
+    //       return Utils.sendResponse(res, results);
+    //     });
+    //   });
+    // }
+  },
   browse: function(data, cb) {
     // console.log('permissions', data.permissions);
     if (data.permissions) {
@@ -654,7 +711,7 @@ module.exports = {
           query: {
             Name: 'Preferences'
           }
-        }
+        };
         Utility.getOne(criteria, function(err, sysInfo) {
           if (pointType === 'Device') {
             criteria = {
@@ -854,8 +911,7 @@ module.exports = {
             template["Report Type"].Value = (subType) ? subType.Value : "Property";
             template["Report Type"].eValue = (subType) ? parseInt(subType.eValue, 10) : 0;
           }
-		  
-		  
+
           if (template['Point Type'].Value === 'Device') {
             template['Time Zone'].eValue = sysInfo['Time Zone'];
             template['Time Zone'].Value = Config.revEnums['Time Zones'][sysInfo['Time Zone']];
