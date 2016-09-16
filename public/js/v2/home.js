@@ -471,6 +471,7 @@ var dti = {
         }
     },
     keyboardShortcuts: {
+        _lastInit: true,
         init: function () {
             var shortcutEntries,
                 shortcut,
@@ -491,9 +492,13 @@ var dti = {
             }
         },
         shortcuts: {
-            'shift+f': [{
+            'shift+space': [{
                 type: 'keydown',
                 fn: function () {dti.globalSearch.show();}
+            }],
+            'shift+p': [{
+                type: 'keydown',
+                fn: function () {dti.navigatorNew.showNavigator();}
             }],
             'esc': [{
                 type: 'keyup',
