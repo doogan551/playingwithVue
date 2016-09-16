@@ -25,7 +25,7 @@ var systemInfoCollection = "SystemInfo";
 var processFlag = "default";
 var importProcess = new importUpdate();
 
-process.argv.forEach(function (val, index, array) {
+process.argv.forEach(function(val, index, array) {
 	if (index == 2) {
 		if (val == "gpl") {
 			// expection a command line argument to match
@@ -145,15 +145,18 @@ function importUpdate() {
 					logger.info("before changeUpis", err, new Date());
 					changeUpis(function(err) {
 						fixUpisCollection(db, 'new_points', function(err) {
-							// cleanupDB(db, function(err) {
-							if (err) {
-								logger.info("updateGPLReferences err:", err);
-							}
-							logger.info("!!Check Port 1-4 Timeouts on devices!!");
-							logger.info("done", err, new Date());
-							process.exit(0);
+							updateHistory(function(err) {
+								logger.info('finished updateHistory', err);
+								cleanupDB(db, function(err) {
+									if (err) {
+										logger.info("updateGPLReferences err:", err);
+									}
+									logger.info("!!Check Port 1-4 Timeouts on devices!!");
+									logger.info("done", err, new Date());
+									process.exit(0);
 
-							// });
+								});
+							});
 						});
 					});
 				});
@@ -442,6 +445,8 @@ function setupReportsCollections(db, callback) {
 }
 
 function setupSystemInfo(db, callback) {
+	var pjson = require('../package.json');
+	var curVersion = pjson.version;
 	var timezones = importconfig.timeZones;
 
 	db.collection(systemInfoCollection).insert(timezones, function(err, result) {
@@ -449,7 +454,8 @@ function setupSystemInfo(db, callback) {
 			Name: 'Preferences'
 		}, {
 			$set: {
-				'Time Zone': localTZ
+				'Time Zone': localTZ,
+				'InfoscanJS Version': curVersion
 			}
 		}, callback);
 	});
@@ -598,6 +604,7 @@ function fixPowerMeters(callback) {
 function changeUpis(callback) {
 	// rename schedule entries
 	// drop pointinst and devinst indexes
+	var centralDeviceUPI = 0;
 	var newPoints = 'new_points';
 	var points = 'points';
 	var newUpi = 0;
@@ -645,63 +652,85 @@ function changeUpis(callback) {
 	};
 
 	var doHistory = function() {};
-
-	Utility.iterateCursor({
-			collection: points,
-			query: {},
-			sort: {
-				_id: 1
-			}
-		}, function(err, doc, cb) {
-			var oldId = doc._id;
-			if (doc['Point Type'].Value === 'Device') {
-				newUpi = highestDevice;
-				highestDevice--;
-			} else {
-				newUpi = lowest;
-				lowest++;
-			}
-			doc._newUpi = newUpi;
-			doc._oldUpi = oldId;
-
-			Utility.update({
-				query: {
-					_id: oldId
-				},
-				updateObj: doc,
-				collection: points
-			}, function(err, result) {
-				cb();
-			});
-		},
-		function(err, count) {
-			Utility.iterateCursor({
+	Utility.getOne({
+		collection: 'SystemInfo',
+		query: {
+			Name: 'Preferences'
+		}
+	}, function(err, sysinfo) {
+		centralDeviceUPI = sysinfo['Central Device UPI'];
+		Utility.iterateCursor({
 				collection: points,
-				query: {}
+				query: {},
+				sort: {
+					_id: 1
+				}
 			}, function(err, doc, cb) {
-				doc._id = doc._newUpi;
+				var oldId = doc._id;
+				if (doc['Point Type'].Value === 'Device') {
+					newUpi = highestDevice;
+					if (doc._id === centralDeviceUPI) {
+						centralDeviceUPI = newUpi;
+					}
+					highestDevice--;
+				} else {
+					newUpi = lowest;
+					lowest++;
+				}
+				doc._newUpi = newUpi;
+				doc._oldUpi = oldId;
 
-				Utility.insert({
-					collection: newPoints,
-					insertObj: doc
-				}, function(err) {
-					cb(err);
+				Utility.update({
+					query: {
+						_id: oldId
+					},
+					updateObj: doc,
+					collection: points
+				}, function(err, result) {
+					cb();
 				});
-			}, function(err, count) {
+			},
+			function(err, count) {
+				Utility.update({
+					collection: 'SystemInfo',
+					query: {
+						Name: 'Preferences'
+					},
+					updateObj: {
+						$set: {
+							'Central Device UPI': centralDeviceUPI
+						}
+					}
+				}, function(err, sysinfo) {
+					Utility.iterateCursor({
+						collection: points,
+						query: {}
+					}, function(err, doc, cb) {
+						doc._id = doc._newUpi;
 
-				console.log('count', count);
-				Utility.iterateCursor({
-					collection: newPoints,
-					query: {}
-				}, function(err, doc, cb) {
-					updateDependencies(doc._oldUpi, doc._newUpi, newPoints, function(err, count) {
-						cb(err);
+						Utility.insert({
+							collection: newPoints,
+							insertObj: doc
+						}, function(err) {
+							cb(err);
+						});
+					}, function(err, count) {
+
+						console.log('count', count);
+						Utility.iterateCursor({
+							collection: newPoints,
+							query: {}
+						}, function(err, doc, cb) {
+							updateDependencies(doc._oldUpi, doc._newUpi, newPoints, function(err, count) {
+								cb(err);
+							});
+						}, function(err, count) {
+							callback(err);
+						});
 					});
-				}, function(err, count) {
-					callback(err);
 				});
 			});
-		});
+	});
 }
 
 function fixUpisCollection(db, baseCollection, callback) {
@@ -1136,12 +1165,41 @@ function insertScheduleEntry(db, scheduleEntry, callback) {
 }
 
 function cleanupDB(db, callback) {
-	db.dropCollection('ScheduleEntries', function(err) {
-		if (err) {
-			return callback(err);
-		}
-		db.dropCollection('OldHistLogs', function() {
-			db.dropCollection('Totalizers', callback);
+	db.dropCollection('points', function() {
+		db.collection("new_points").update({
+			_oldUpi: {
+				$exists: 1
+			}
+		}, {
+			$unset: {
+				_oldUpi: 1
+			}
+		}, {
+			multi: true
+		}, function(err, result) {
+			db.collection("new_points").update({
+				_newUpi: {
+					$exists: 1
+				}
+			}, {
+				$unset: {
+					_newUpi: 1
+				}
+			}, {
+				multi: true
+			}, function(err, result) {
+
+				db.collection('new_points').rename('points', function() {
+					db.dropCollection('ScheduleEntries', function(err) {
+						if (err) {
+							return callback(err);
+						}
+						db.dropCollection('OldHistLogs', function() {
+							db.dropCollection('Totalizers', callback);
+						});
+					});
+				});
+			});
 		});
 	});
 }
@@ -1256,7 +1314,7 @@ function updateIndexes(callback) {
 			name: "name1-4"
 		},
 		collection: pointsCollection
-	},{
+	}, {
 		index: {
 			_name1: 1,
 			_name2: 1,
@@ -1301,24 +1359,6 @@ function updateIndexes(callback) {
 		collection: pointsCollection
 	}, {
 		index: {
-			"Point Refs.Value": 1
-		},
-		options: {},
-		collection: 'new_points'
-	}, {
-		index: {
-			"Point Refs.DevInst": 1
-		},
-		options: {},
-		collection: 'new_points'
-	}, {
-		index: {
-			"Point Refs.PointInst": 1
-		},
-		options: {},
-		collection: 'new_points'
-	}, {
-		index: {
 			"Point Refs.PropertyName": 1
 		},
 		options: {},
@@ -1355,6 +1395,110 @@ function updateIndexes(callback) {
 		},
 		options: {},
 		collection: pointsCollection
+	}, {
+		index: {
+			name1: 1,
+			name2: 1,
+			name3: 1,
+			name4: 1
+		},
+		options: {
+			name: "name1-4"
+		},
+		collection: "new_points"
+	}, {
+		index: {
+			_name1: 1,
+			_name2: 1,
+			_name3: 1,
+			_name4: 1
+		},
+		options: {
+			name: "name1-4"
+		},
+		collection: "new_points"
+	}, {
+		index: {
+			Name: 1
+		},
+		options: {
+			unique: true
+		},
+		collection: "new_points"
+	}, {
+		index: {
+			_pStatus: 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Refs.Value": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Refs.DevInst": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Refs.PointInst": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Refs.PropertyName": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Refs.PropertyEnum": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Refs.PointInst": 1,
+			"Point Refs.PropertyEnum": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Type.Value": 1,
+			"name1": 1,
+			"name2": 1,
+			"name3": 1,
+			"name4": 1
+		},
+		options: {
+			name: "Pt, name1-4"
+		},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Type.Value": 1,
+			"Network Segment.Value": 1
+		},
+		options: {},
+		collection: "new_points"
+	}, {
+		index: {
+			"Point Type.Value": 1,
+			_name1: 1,
+			_name2: 1,
+			_name3: 1,
+			_name4: 1
+		},
+		options: {
+			name: "PT, _name1-4"
+		},
+		collection: "new_points"
 	}, {
 		index: {
 			"msgTime": 1
@@ -1932,9 +2076,9 @@ function addReferencesToSlideShowPointRefs(db, point, cb) {
 	var referencedSlides = point.Slides,
 		upiList = [],
 		c,
-		pRefAppIndex = 0,
-		matchUpisToPointRefs = function () {
-			var setPointRefIndex = function (slides) {
+		pRefAppIndex = 1, // skipping 0 for "Device Point"
+		matchUpisToPointRefs = function() {
+			var setPointRefIndex = function(slides) {
 				var slide,
 					pRef;
 
@@ -1942,7 +2086,7 @@ function addReferencesToSlideShowPointRefs(db, point, cb) {
 					for (c = 0; c < slides.length; c++) {
 						slide = slides[c];
 						if (!!slide.display) {
-							pRef = point["Point Refs"].filter(function (pointRef) {
+							pRef = point["Point Refs"].filter(function(pointRef) {
 								return pointRef.Value === slide.display && pointRef.PropertyName === "Slide Display";
 							});
 
@@ -1960,7 +2104,7 @@ function addReferencesToSlideShowPointRefs(db, point, cb) {
 			setPointRefIndex(referencedSlides);
 			cb();
 		},
-		makePointRef = function (refPoint) {
+		makePointRef = function(refPoint) {
 			var pointType = refPoint["Point Type"].Value,
 				baseRef = {
 					"PropertyName": "Slide Display",
@@ -1977,8 +2121,8 @@ function addReferencesToSlideShowPointRefs(db, point, cb) {
 
 			return baseRef;
 		},
-		setPointData = function () {
-			var pushPointObjectsUPIs = function (slides) {
+		setPointData = function() {
+			var pushPointObjectsUPIs = function(slides) {
 				var slide;
 
 				if (!!slides) {
@@ -2001,7 +2145,7 @@ function addReferencesToSlideShowPointRefs(db, point, cb) {
 					_id: {
 						$in: upiList
 					}
-				}).toArray(function (err, points) {
+				}).toArray(function(err, points) {
 					var referencedPoint;
 					if (!!points) {
 						for (c = 0; c < points.length; c++) {
@@ -2025,7 +2169,7 @@ function addReferencesToDisplayPointRefs(db, point, cb) {
 		upiCrossRef = [],
 		c,
 		pRefAppIndex = 0,
-		getScreenObjectType = function (screenObjectType) {
+		getScreenObjectType = function(screenObjectType) {
 			var propEnum = 0,
 				propName = "";
 
@@ -2057,18 +2201,18 @@ function addReferencesToDisplayPointRefs(db, point, cb) {
 				enum: propEnum
 			};
 		},
-		getCrossRefByUPIandName = function (upi, propertyName) {
-			return upiCrossRef.filter(function (ref) {
+		getCrossRefByUPIandName = function(upi, propertyName) {
+			return upiCrossRef.filter(function(ref) {
 				return ref.upi === upi && ref.PropertyName === propertyName;
 			});
 		},
-		getCrossRefByUPI = function (upi) {
-			return upiCrossRef.filter(function (ref) {
+		getCrossRefByUPI = function(upi) {
+			return upiCrossRef.filter(function(ref) {
 				return ref.upi === upi;
 			});
 		},
-		matchUpisToPointRefs = function () {
-			var setPointRefIndex = function (screenObjects) {
+		matchUpisToPointRefs = function() {
+			var setPointRefIndex = function(screenObjects) {
 				var screenObject,
 					prop,
 					pRef;
@@ -2078,7 +2222,7 @@ function addReferencesToDisplayPointRefs(db, point, cb) {
 						screenObject = screenObjects[c];
 						if (!!screenObject.upi) {
 							prop = getScreenObjectType(screenObject["Screen Object"]);
-							pRef = point["Point Refs"].filter(function (pointRef) {
+							pRef = point["Point Refs"].filter(function(pointRef) {
 								return pointRef.Value === screenObject.upi && pointRef.PropertyName === prop.name;
 							});
 
@@ -2096,7 +2240,7 @@ function addReferencesToDisplayPointRefs(db, point, cb) {
 			setPointRefIndex(screenObjectsCollection);
 			cb();
 		},
-		makePointRef = function (refPoint, propName, propType) {
+		makePointRef = function(refPoint, propName, propType) {
 			var pointType = refPoint["Point Type"].Value,
 				//pointRef.DevInst =
 				baseRef = {
@@ -2114,8 +2258,8 @@ function addReferencesToDisplayPointRefs(db, point, cb) {
 
 			return baseRef;
 		},
-		setDisplayPointData = function () {
-			var pushScreenObjectsUPIs = function (screenObjects) {
+		setDisplayPointData = function() {
+			var pushScreenObjectsUPIs = function(screenObjects) {
 				var screenObject,
 					prop;
 
@@ -2148,14 +2292,14 @@ function addReferencesToDisplayPointRefs(db, point, cb) {
 					_id: {
 						$in: upiList
 					}
-				}).toArray(function (err, points) {
+				}).toArray(function(err, points) {
 					var referencedPoint,
 						neededRefs,
 						i;
 					if (!!points) {
 						for (c = 0; c < points.length; c++) {
 							referencedPoint = points[c];
-							neededRefs = getCrossRefByUPI(referencedPoint._id);  // all types of screen objects
+							neededRefs = getCrossRefByUPI(referencedPoint._id); // all types of screen objects
 							for (i = 0; i < neededRefs.length; i++) {
 								point["Point Refs"].push(makePointRef(referencedPoint, neededRefs[i].name, neededRefs[i].enum));
 							}
@@ -2179,18 +2323,18 @@ function addReferencesToSequencePointRefs(db, point, cb) {
 		skipTypes = ['Constant'],
 		c,
 		pRefAppIndex = 1,
-		getCrossRefByUPIandName = function (upi, propertyName) {
-			return upiCrossRef.filter(function (ref) {
+		getCrossRefByUPIandName = function(upi, propertyName) {
+			return upiCrossRef.filter(function(ref) {
 				return ref.upi === upi && ref.PropertyName === propertyName;
 			});
 		},
-		getCrossRefByUPI = function (upi) {
-			return upiCrossRef.filter(function (ref) {
+		getCrossRefByUPI = function(upi) {
+			return upiCrossRef.filter(function(ref) {
 				return ref.upi === upi;
 			});
 		},
-		matchUpisToPointRefs = function () {
-			var setPointRefIndex = function (gplObjects, propertyName) {
+		matchUpisToPointRefs = function() {
+			var setPointRefIndex = function(gplObjects, propertyName) {
 				var gplObject,
 					pRef;
 
@@ -2199,7 +2343,7 @@ function addReferencesToSequencePointRefs(db, point, cb) {
 						gplObject = gplObjects[c];
 						if (gplObject.upi && skipTypes.indexOf(gplObject.blockType) === -1) {
 							if (!!gplObject.upi) {
-								pRef = point["Point Refs"].filter(function (pointRef) {
+								pRef = point["Point Refs"].filter(function(pointRef) {
 									return pointRef.Value === gplObject.upi && pointRef.PropertyName === propertyName;
 								});
 
@@ -2219,7 +2363,7 @@ function addReferencesToSequencePointRefs(db, point, cb) {
 			setPointRefIndex(dynamics, "GPLDynamic");
 			cb();
 		},
-		makePointRef = function (refPoint, propName, propType) {
+		makePointRef = function(refPoint, propName, propType) {
 			var pointType = refPoint["Point Type"].Value;
 			var baseRef = {
 				"PropertyName": propName,
@@ -2236,8 +2380,8 @@ function addReferencesToSequencePointRefs(db, point, cb) {
 
 			return baseRef;
 		},
-		setGPLPointData = function () {
-			var pushGPLObjectUPIs = function (gplObjects, propName, propType) {
+		setGPLPointData = function() {
+			var pushGPLObjectUPIs = function(gplObjects, propName, propType) {
 				var gplObject;
 				if (!!gplObjects) {
 					for (c = 0; c < gplObjects.length; c++) {
@@ -2267,14 +2411,14 @@ function addReferencesToSequencePointRefs(db, point, cb) {
 					_id: {
 						$in: upiList
 					}
-				}).toArray(function (err, points) {
+				}).toArray(function(err, points) {
 					var referencedPoint,
 						neededRefs,
 						i;
 					if (!!points) {
 						for (c = 0; c < points.length; c++) {
 							referencedPoint = points[c];
-							neededRefs = getCrossRefByUPI(referencedPoint._id);  // gets both Blocks and Dynamics refs
+							neededRefs = getCrossRefByUPI(referencedPoint._id); // gets both Blocks and Dynamics refs
 							for (i = 0; i < neededRefs.length; i++) {
 								point["Point Refs"].push(makePointRef(referencedPoint, neededRefs[i].name, neededRefs[i].type));
 							}
@@ -3254,6 +3398,9 @@ function updateHistory(cb) {
 	var now = moment().endOf('month');
 	var start = moment('2000/01', 'YYYY/MM');
 	var count = 0;
+	var currentYear = now.year();
+
+	logger.info('starting updateHistory upis');
 	Utility.get({
 		collection: 'new_points',
 		query: {},
@@ -3287,6 +3434,10 @@ function updateHistory(cb) {
 				});
 			}, function(err) {
 				now = now.subtract(1, 'month');
+				if (now.year() !== currentYear) {
+					currentYear = now.year();
+					logger.info(currentYear, count);
+				}
 				callback(err);
 			});
 		}, cb);

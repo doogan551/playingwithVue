@@ -62,11 +62,13 @@
                             </span>
                         </td>
                         <td>
+                            <!-- ko if: $root.point.data.Slides()[$index()] !== undefined -->
                             <!-- ko if: $parent.isInEditMode -->
                             <input type="text" data-bind="propertyName: 'duration', numeric: $root.point.data.Slides()[$index()].duration, valueType: 3, min: 0" class="form-control input-sm">
                             <!-- /ko -->
                             <!-- ko ifnot: $parent.isInEditMode -->
                             <span class="lh30" data-bind="propertyName: 'duration', numeric: $root.point.data.Slides()[$index()].duration, valueType: 3"></span>
+                            <!-- /ko -->
                             <!-- /ko -->
                         </td>
                     </tr>

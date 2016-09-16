@@ -27,7 +27,7 @@ html
                                 a#globalSearch.waves-effect(href='javascript://', data-bind="click: showGlobalSearch")
                                     i.material-icons search
                             li.taskbarItem
-                                a.tooltipped.taskbarButton.iconOnly.waves-effect(href='javascript://', data-bind="click: function () { dti.navigator.showNavigatorNew(null, true); }", data-position='bottom', data-tooltip='Navigator', data-delay='10')
+                                a.tooltipped.taskbarButton.iconOnly.waves-effect(href='javascript://', data-bind="click: function () { dti.navigatorNew.showNavigator(); }", data-position='bottom', data-tooltip='Navigator', data-delay='10')
                                     i.mdi.mdi-compass
                             li.taskbarItem
                                 a#showOpenItems.taskbarButton.iconOnly.waves-effect.tooltipped(href='javascript://', style='', data-position='bottom', data-tooltip='Manage Open Windows', data-delay='10')
@@ -280,7 +280,7 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel    
 
-            #navigatorModalNew.navigatorModal.modal.modal-fixed-header.modal-optional-footer
+            #navigatorModalNew.navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="stopBindings: true")
                 .modal-header Select Point
                 .modal-content.modal-content-no-padding
                 .modal-footer
@@ -288,27 +288,33 @@ html
 
             #openItemsModal.modal.modal-large
                 .modal-content
-                    h4 Open Items
+                    .center-align.flex.flex-column.flex-center.openItemsHeader
+                        h4 Open Items
+                        a.flex.flex-center.blue-grey-text.action(href="javascript://", data-bind="click: closeAllWindows")
+                            i.material-icons close
+                            span Close All
                     #itemlist.openItemList(data-bind="foreach: $root.windowGroups")
-                        // ko foreach: $root.openWindows[group()]
-                        // ko if: !exempt()
-                        a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: function () {activate(false);}")
-                            .itemTitle.white-text
-                                i.right.material-icons.closeIcon close
-                                div(data-bind="text: title")
-                            .itemBody 
-                                //ko if: thumbnail() === true 
-                                img(data-bind="thumbnail: upi")
-                                // /ko
+                        // ko template: { name: 'miniWindowTemplate', foreach: $root.openWindows[group()]}
+                        // /ko
+                        //- // ko foreach: $root.openWindows[group()]
+                        //- // ko if: !exempt()
+                        //- a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: function () {activate(false);}")
+                        //-     .itemTitle.white-text
+                        //-         i.right.material-icons.closeIcon close
+                        //-         div(data-bind="text: title")
+                        //-     .itemBody 
+                        //-         //ko if: thumbnail() === true 
+                        //-         img(data-bind="thumbnail: upi")
+                        //-         // /ko
 
-                                // ko if: thumbnail() === false
-                                i.center-align.white-text(data-bind="css: iconClass, text: iconText")
-                                // /ko
-                        // /ko
-                        // /ko
+                        //-         // ko if: thumbnail() === false
+                        //-         i.center-align.white-text(data-bind="css: iconClass, text: iconText")
+                        //-         // /ko
+                        //- // /ko
+                        //- // /ko
 
                 .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close                    
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel                    
 
             //- #desktop
                 .desktopTitle(style="font-size: 1.6em;") MSFC Utility Control System
@@ -409,11 +415,20 @@ html
                 //-             .circle
 
     script#miniWindowTemplate(type='text/html')
-        a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-target="displayPanel")
-            .itemTitle.white-text(data-bind="text: title")
-                i.right.material-icons close
-            .itemBody 
-                img(data-bind="thumbnail: upi")
+        // ko if: !exempt()
+        a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")
+            .itemTitle.white-text
+                i.right.material-icons.closeIcon close
+                div(data-bind="text: title")
+            .itemBody
+                //ko if: thumbnail() === true
+                img(data-bind="thumbnail: upi, visible: thumbnailFound")
+                // /ko
+
+                // ko if: thumbnail() === false || thumbnailFound() === false
+                i.center-align.white-text(data-bind="css: iconClass, text: iconText")
+                // /ko
+        // /ko
 
     script#windowTemplate(type='text/html')
         .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized() || windowsHidden(), activeCard: active() }')
@@ -445,20 +460,6 @@ html
 
     script#navigatorTemplate(type='text/html')
         .iframeFull.blue-grey-form.flex.flex-row.row
-            .pointTypes.flex.flex-column.hide
-                .pointTypesHeader Point Types
-                .allPointTypes
-                    p.pointType
-                        input#allPointTypes.filled-in(type='checkbox', data-bind="checked: allTypesSelected, click: toggleAllPointTypes")
-                        label.label-tight(for='allPointTypes') All
-                // ko foreach: pointTypes
-                // ko if: visible
-                p.pointType
-                    input.filled-in(type='checkbox', data-bind="checked: selected, attr: { id: 'pointType' + $index() }")
-                    label.label-tight(data-bind="attr: { for: 'pointType' + $index() }, text: key")
-                // /ko
-                // /ko
-
             .navigatorBody.flex.flex-column
                 .selectorHeader.right-align.flex.flex-row.flex-right.flex-center
                     p.pointType
@@ -494,24 +495,40 @@ html
                         label(for='name4', data-bind="updateLabel: name4") Name 4
                         a.clearName(href="javascript://", tabindex="-1")
                             i.material-icons.suffix clear                                                                                                                                       
-                    .pointTypeFilter.input-field.col(data-bind="materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
-                        select#pointType(multiple, data-beloworigin="true")
+                    //- .pointTypeFilter.input-field.col(data-bind="contextMenuInvert: pointTypeInvert, materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
+                    .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
+
+                        //- input.dropdown-button(type='text', data-bind="value: pointTypeText, updateLabel: pointTypeText, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
+                        a.btn-flat.dropdown-button.pointTypeDropdownButton(href="#", data-beloworigin="true", data-bind="click: openPointTypeDropdown, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
+                            span(data-bind="text: pointTypeText")
+                            i.material-icons.dropdownCaret arrow_drop_down
+                        ul.dropdown-content.grid-dropdown(data-bind="attr: { id : id() + '_pointTypeDropdown' }, stopBubblingOnClick: true")
+                            li
+                                input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
+                                label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
+                            // ko foreach: pointTypes
+                            li
+                                input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : $parent.id() + '_pointType_' + $index() }")
+                                label.label-tight(data-bind="text: key, attr: { for: $parent.id() + '_pointType_' + $index() }")
+                            // /ko
+
+                        //- select(data-beloworigin="true")
                             //- // ko foreach: pointTypes
                             //- option(data-bind="value: key, text: key")
                             //- // /ko
-                        label(for='pointType') Point Types
+                        //- label(data-bind="attr: { for: id() + '_pointTypeDropdownButton' }") Point Types
 
                 .selectorList(data-bind="click: handleNavigatorRowClick")
-                    .fetching(data-bind="style: { opacity: (fetchingPoints() === true) ? 1 : 0 }")
+                    .fetching(data-bind="visible: fetchingPoints")
                         .progress
                             .indeterminate
                     // ko foreach: points
-
-                    .listEntry(data-bind="text: name1")
-                    .listEntry(data-bind="text: name2")
-                    .listEntry(data-bind="text: name3")
-                    .listEntry(data-bind="text: name4")
-                    .listEntry(data-bind="text: pointType")
+                    .listRow
+                        .listEntry(data-bind="text: name1")
+                        .listEntry(data-bind="text: name2")
+                        .listEntry(data-bind="text: name3")
+                        .listEntry(data-bind="text: name4")
+                        .listEntry(data-bind="text: pointType")
 
                     // /ko
 
@@ -535,29 +552,14 @@ html
                 //- a.blue-grey-text.action(href="javascript://")
                 //-     i.material-icons add
                 //-     span New
-                a.blue-grey-text.action(href="javascript://", data-bind="click: function () { $root.closeWindows(group()); }")
+                a.blue-grey-text.action(href="javascript://", data-bind="visible: $root.openWindows[group()]().length > 0, click: function () { $root.closeWindows(group()); }")
                     i.material-icons close
                     span Close All
             // /ko
 
-            .items(data-bind="visible: $root.openWindows[group()]().length > 0")
+            .items.flex.flex-row(data-bind="visible: $root.openWindows[group()]().length > 0")
                 .itemsHeader.blue-grey-text Open Items
-                // ko foreach: $root.openWindows[group()]
-
-                //- span(data-bind="if: group() === $parent.group()")
-                a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")
-                    .itemTitle.white-text
-                        i.right.material-icons.closeIcon close
-                        div(data-bind="text: title")
-                    .itemBody
-                        //ko if: thumbnail() === true 
-                        img(data-bind="thumbnail: upi")
-                        // /ko
-
-                        // ko if: thumbnail() === false
-                        i.center-align.white-text(data-bind="css: iconClass, text: iconText")
-                        // /ko
-
+                // ko template: { name: 'miniWindowTemplate', foreach: $root.openWindows[group()]}
                 // /ko
         // /ko
 
@@ -567,7 +569,7 @@ html
     script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
     script(type='text/javascript', src='/js/lib/jquery-ui.js')
     script(type='text/javascript', src='/js/lib/jquery.contextMenu.min.js')
-    //- script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
+    script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
     script(type='text/javascript', src='/js/lib/lodash.min.js')
     script(type='text/javascript', src='/js/lib/config.js')
     script(type='text/javascript', src='/js/lib/moment.js')

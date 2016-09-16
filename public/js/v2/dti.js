@@ -24,7 +24,7 @@ var dtiMessaging =  {
     },
 
     processMessage: function (newValue) {
-        var action = newValue.action,
+        var action = newValue.message,
             callbacks = {
                 pointSelected: function () {
                     if (dtiMessaging._pointSelectCb) {
@@ -68,6 +68,10 @@ var dtiMessaging =  {
     // API -----------------------------------------
     openWindow: function (url, title, type, target, uniqueId, options) {
         //if target = new, call window.top.workspaceManager.openWindow..., else change this window's url
+    },
+
+    showPointSelector: function (parameters) {
+        dtiMessaging.sendMessage('showPointSelector', parameters);
     },
 
     showNavigator: function (parameters) {

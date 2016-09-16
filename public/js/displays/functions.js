@@ -736,7 +736,7 @@ displays = $.extend(displays, {
     },
     getPointRefByAppindex: function (pointRefIndex, referenceType) {
         var answer;
-        if (!!pointRefIndex) {
+        if (pointRefIndex > -1) {
             answer = displayJson["Point Refs"].filter(function (pointRef) {
                 return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
             });
@@ -796,7 +796,7 @@ displays = $.extend(displays, {
             getPointReference = function (screenobject, refType) {
                 var answer = null;
 
-                if (!!screenobject.pointRefIndex) {
+                if (screenobject.pointRefIndex !== undefined) {
                     answer = displays.getPointRefByAppindex(screenobject.pointRefIndex, refType);
                 } else if (!!screenobject.upi) {
                     answer = displays.getPointRefByUpi(screenobject.upi, refType);

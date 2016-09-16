@@ -24,3 +24,54 @@ td.firstColumn.small.datetime {
     min-width: 60px;
     width: 75px;
 }
+.dataTables_wrapper {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+.tabViewReport {
+    margin: 0px 30px 15px 15px;
+}
+.marginForFirstTable {
+    margin: 0px 15px 3px 15px;
+}
+.marginForTable {
+    margin: 25px 15px 3px 15px;
+}
+.pageNumbering {
+    margin-left: 950px;
+    display: -webkit-box;
+}
+.narrowTable {
+
+}
+.showChart {
+    display: block;
+}
+.hideChart {
+    display: none;
+}
+@media print {
+    .pageBreakAfter {
+        display: block;
+        page-break-after: always;
+        -webkit-column-break-after: always;
+    }
+
+    .pageBreakBefore {
+        display: block;
+        page-break-before: always;
+        -webkit-column-break-before: always;
+    }
+
+    .pageNumbering {
+        margin-left: 1000px;
+        display: flex;
+        width: 150px;
+    }
+
+    .reportDisplayTitle {
+        margin-top: 20px;
+        margin-left: 300px;
+        width: 400px;
+    }
+}
