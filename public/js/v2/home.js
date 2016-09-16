@@ -739,7 +739,7 @@ var dti = {
                 dti.windows.resizeStop();
             }
         },
-        _windowList: [],
+        windowList: [],
         _setInteractingFlag: function (isInteracting) {
             if (isInteracting) {
                 $('body').addClass('interacting');
@@ -750,7 +750,7 @@ var dti = {
         getWindowById: function (id) {
             var targetWindow;
 
-            dti.forEachArray(dti.windows._windowList, function checkForTargetWindow (win) {
+            dti.forEachArray(dti.windows.windowList, function checkForTargetWindow (win) {
                 if (win.windowId === id) {
                     targetWindow = win;
                     return false;
@@ -763,7 +763,7 @@ var dti = {
             var targetWindow;
 
             if (upi) {
-                dti.forEachArray(dti.windows._windowList, function checkForTargetWindow (win) {
+                dti.forEachArray(dti.windows.windowList, function checkForTargetWindow (win) {
                     if (win.upi === upi) {
                         targetWindow = win;
                         return false;
@@ -796,9 +796,9 @@ var dti = {
             dti.on('closeWindow', function handleCloseWindow (win) {
                 var windowId = win.bindings.windowId();
 
-                dti.forEachArray(dti.windows._windowList, function checkOpenWindow (openWin, idx) {
+                dti.forEachArray(dti.windows.windowList, function checkOpenWindow (openWin, idx) {
                     if (openWin.windowId === windowId) {
-                        dti.windows._windowList.splice(idx, 1);
+                        dti.windows.windowList.splice(idx, 1);
                         return false;
                     }
                 });
@@ -863,7 +863,7 @@ var dti = {
 
                     // config.afterLoad = dti.windows.afterLoad;
 
-                    dti.windows._windowList.push(newWindow);
+                    dti.windows.windowList.push(newWindow);
 
                     if (!config.isHidden) {
                         dti.windows.activate(newWindow.windowId);
@@ -906,10 +906,17 @@ var dti = {
             targetWindow.close();
         },
         closeAll: function (group) {
-            var openWindows = dti.bindings.openWindows[group];
+            var openWindows;
 
-            if (openWindows) {
-                openWindows = openWindows();
+            if (group) {
+                openWindows = dti.bindings.openWindows[group];
+
+                if (openWindows) {
+                    openWindows = openWindows();
+                }
+            } else {
+                //no group, close all of them
+                openWindows = dti.windows.windowList;
             }
 
             dti.forEachArrayRev(openWindows, function (win) {
@@ -921,7 +928,7 @@ var dti = {
         activate: function (target) {
             dti.fire('hideMenus');
 
-            dti.forEachArray(dti.windows._windowList, function processWindowActivate (win) {
+            dti.forEachArray(dti.windows.windowList, function processWindowActivate (win) {
                 if (win.windowId === target) {
                     win.activate(true);
                 } else {
@@ -932,7 +939,7 @@ var dti = {
             });
         },
         showDesktop: function () {
-            dti.forEachArray(dti.windows._windowList, function deactivateOnShowDesktop (win) {
+            dti.forEachArray(dti.windows.windowList, function deactivateOnShowDesktop (win) {
                 win.minimize(null, true);
             });
         }
@@ -2578,6 +2585,9 @@ var dti = {
         },
         showGlobalSearch: function () {
             dti.globalSearch.show();
+        },
+        closeAllWindows: function () {
+            dti.windows.closeAll();
         },
         alarms: {
             unacknowledged: {

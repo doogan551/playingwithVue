@@ -271,7 +271,11 @@ html
 
             #openItemsModal.modal.modal-large
                 .modal-content
-                    h4 Open Items
+                    .center-align.flex.flex-column.flex-center.openItemsHeader
+                        h4 Open Items
+                        a.flex.flex-center.blue-grey-text.action(href="javascript://", data-bind="click: closeAllWindows")
+                            i.material-icons close
+                            span Close All
                     #itemlist.openItemList(data-bind="foreach: $root.windowGroups")
                         // ko template: { name: 'miniWindowTemplate', foreach: $root.openWindows[group()]}
                         // /ko
@@ -293,7 +297,7 @@ html
                         //- // /ko
 
                 .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close                    
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel                    
 
             //- #desktop
                 .desktopTitle(style="font-size: 1.6em;") MSFC Utility Control System
