@@ -1,0 +1,99 @@
+.modal-editColumn.modal.fade#editColumnModal(data-bind="with: $root.currentColumnEdit")
+    .modal-dialog
+        .modal-content(style="width: 500px;")
+            //.modal-header
+            // ko if: $root.currentColumnEdit() !== undefined
+            .modal-body.small
+                .panel.panel-default
+                    .panel-heading
+                        h3.panel-title
+                            | Edit Column
+                    .panel-body
+                        form.form-horizontal(role="form")
+                            .form-group
+                                // ko if: ($root.reportType !== 'Property')
+                                // ko if: ($root.canEdit())
+                                .control-label.col-sm-3(style="padding-top: 0px;")
+                                    button.btn.btn-danger.btn-xs.fa.fa-times(data-bind="click: function(){ $root.clearModalColumnPoint($root.currentColumnEditIndex()) }, tooltip: { title: 'Clear' }")
+                                    button.btn.btn-info.btn-xs.fa.fa-pencil(data-bind="click: function(){ $root.selectPointForModalColumn($data, $root.currentColumnEditIndex()) }, tooltip: { title: 'Edit' }")
+                                // /ko
+                                .col-sm-8
+                                    .columnName(data-bind="text: $data.colName, click: function(){ $root.showPointReview($data) }")
+                                // /ko
+                                // ko if: ($root.reportType === 'Property')
+                                .dropdown.availablePropertiesContainer
+                                    button.btn.btn-default.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}",data-toggle="dropdown")
+                                        span(data-bind="text: ($data.colName !== 'Choose Point' ? $data.colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
+                                        span.caret.lm10px
+                                    ul.enumproperties.dropdown-menu
+                                        input.form-control.inputSearch(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
+                                        li(role="separator", class="divider")
+                                        // ko foreach: $root.columnFilteredProps()
+                                        li
+                                            a(data-bind="click: function(){ $root.selectPropertyColumn($element, $root.currentColumnEditIndex(), $data) }, text: $data.name")
+                                        // /ko
+                                // /ko
+                            // ko if: ($root.reportType !== 'Property')
+                            .form-group
+                                label.control-label.col-sm-3 Display Name:
+                                .col-sm-8
+                                    input.form-control.columnDisplayName(data-bind="value: $data.colDisplayName, enable: $root.canEdit(), event: { change: function() { $root.designChanged(true) } }", type="text", required)
+                            // ko if: ($data.canCalculate)
+                            .form-group
+                                label.control-label.col-sm-3 Multiplier:
+                                .col-sm-8
+                                    input.form-control.inputMultiplier(data-bind="value: multiplier, enable: $root.canEdit()", type="number")
+                            // /ko
+                            // ko if: ($root.reportType === 'Totalizer')
+                            .form-group
+                                label.control-label.col-sm-3 Type:
+                                .col-sm-8
+                                    .dropdown.availableTotalizerOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                        button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                            span(data-bind="text: $data.operator")
+                                            // ko if: (!!$data.valueList && $data.valueList.length > 1)
+                                            span.caret.lm10px
+                                            // /ko
+                                        // ko if: (!!$data.valueList && $data.valueList.length > 1)
+                                        ul.totalizerOperators.dropdown-menu
+                                            // ko foreach: $data.valueList
+                                            li
+                                                a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $root.currentColumnEditIndex(), $data.text) }, text: $data.text")
+                                            // /ko
+                                        // /ko
+                            // /ko
+                            // ko if: ($data.canCalculate)
+                            .form-group
+                                label.control-label.col-sm-3 Precision:
+                                .col-sm-8
+                                    input.form-control.inputPrecision(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")
+                            // /ko
+                            // ko if: ($root.canEdit() && !!$data.canBeCharted && $data.canBeCharted)
+                            .form-group
+                                label.col-sm-3(style="text-align: right;") Chart:
+                                .col-sm-8
+                                    input.includeInChartColumn(data-bind="checked: $data.includeInChart, enable: ($root.canEdit() && !!canBeCharted)", type="checkbox")
+                            // /ko
+                            // ko if: ($root.canEdit() && !!$data.canBeCharted && $data.canBeCharted)
+                            .form-group
+                                label.control-label.col-sm-3 Group:
+                                .col-sm-8
+                                    .dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                        button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                            span(data-bind="text: $data.yaxisGroup")
+                                            // ko if: ($root.yaxisGroups.length > 1)
+                                            span.caret.lm10px
+                                            // /ko
+                                        // ko if: ($root.yaxisGroups.length > 1)
+                                        ul.yaxisGroups.dropdown-menu
+                                            // ko foreach: $root.yaxisGroups
+                                            li
+                                                a(data-bind="click: function(){ $root.editColumnSelectYaxisGroup($data) }, text: $data")
+                                            // /ko
+                                        // /ko
+                            // /ko
+                            // /ko
+            // /ko
+            .modal-footer
+                button.btn.btn-primary(data-bind="click: $root.setEditedColumnData", type='button') OK
+                button.btn.btn-danger(type='button', data-dismiss='modal') Cancel

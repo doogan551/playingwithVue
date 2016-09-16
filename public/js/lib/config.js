@@ -4724,7 +4724,7 @@ var Config = (function(obj) {
                     console.log("Bad RMU Model Type:", point["Model Type"].Value, ", _id:", point._id, ", _devModel:", point._devModel);
                 }
             } else {
-                point.relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
+                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
 
                 // TODO Debug or production code?:
                 console.log("Bad Device Model Type:", point["Model Type"].Value, ", _id:", point._id, ", _devModel:", point._devModel);

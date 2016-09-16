@@ -941,6 +941,7 @@ define([
                             slide = slides[getSlideIndexById(pointRefs[i].PointInst)];
                             if (slide) {
                                 slide.order = i;
+                                slide.pointRefIndex = pointRefs[i].AppIndex;
                             }
                         }
                     };
@@ -1189,22 +1190,27 @@ define([
                 doValidate              = allBindingsAccessor().doValidate,
                 noConfigValidation      = ko.unwrap(allBindingsAccessor().noValidation),
                 method,
-                interceptor             = ko.computed({
-                    read: function() {
-                        var val = ko.unwrap(valueAccessor()),
-                            valIsPureNumber = /^([0-9]*)$/.test(val),
-                            valueType = allBindingsAccessor().valueType.peek();
+                interceptor = ko.computed({
+                    read: function () {
+                        var val,
+                            valIsPureNumber,
+                            valueType;
 
-                        // SCADA IO device type added support for AI channel numbers that are numeric entry OR drop down selection,
-                        // determined by another property selection (up to the point of this comment, the 'Channel' property was
-                        // always a numeric input). Dynamically changing this property to a drop-down was causing this numeric binding
-                        // to throw errors because the drop-down values are not numbers. So we'll check the value type and value
-                        // before calling formatNumber...
+                        if (underlyingObservable.peek() !== undefined) {
+                            val = ko.unwrap(underlyingObservable());
+                            valIsPureNumber = /^([0-9]*)$/.test(val);
 
-                        if (valueType === valueTypeEnums.Enum.enum) {
-                            return val;
-                        } else if ((valueType === valueTypeEnums.Unsigned.enum) && !valIsPureNumber) {
-                            return min;
+                            // SCADA IO device type added support for AI channel numbers that are numeric entry OR drop down selection,
+                            // determined by another property selection (up to the point of this comment, the 'Channel' property was
+                            // always a numeric input). Dynamically changing this property to a drop-down was causing this numeric binding
+                            // to throw errors because the drop-down values are not numbers. So we'll check the value type and value
+                            // before calling formatNumber...
+
+                            if (valueType === valueTypeEnums.Enum.enum) {
+                                return val;
+                            } else if ((valueType === valueTypeEnums.Unsigned.enum) && !valIsPureNumber) {
+                                return min;
+                            }
                         } else if ($element.is(':focus') && $element.is('input')) {
                             return ko.unwrap(underlyingObservable);
                         }

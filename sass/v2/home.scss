@@ -765,10 +765,12 @@ footer {
     }
 
     .items {
-        float: right;
+        padding-top: 15px;
     }
 
     .itemsHeader {
+        position: absolute;
+        top: 0;
         padding-left: 15px;
     }
 }

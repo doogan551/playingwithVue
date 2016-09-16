@@ -1,4 +1,5 @@
 // To run from command prompt, run from root infoscan folder as such: 'node apps/migrationScripts.js'
+// if you do not wish to update the version in the DB, pass -n from command prompt
 process.setMaxListeners(0);
 var async = require('async');
 var utility = require('../models/utility');
@@ -7,15 +8,47 @@ var config = require('config');
 var Config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
 
+var pjson = require('../package.json');
+var compareVersions = require('compare-versions');
+var commandLineArgs = require('command-line-args');
+
+var cli = commandLineArgs([{
+    name: 'noupdate',
+    alias: 'n',
+    type: Boolean
+}]);
+
+var options = cli.parse();
+
+var curVersion = pjson.version;
+var prevVersion = 0;
+
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName].join('');
 
+var checkVersions = function(version) {
+    console.log(version, prevVersion, curVersion, compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0);
+    if (compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0) {
+        return true;
+    }
+
+    return false;
+}
+
 var scripts = {
     // 0.3.10 - TOU Phase 2 - updates committed bills by adding the rate element properties from rate table to the committed bills
-    updateCommittedBills: function (callback) {
+    updateCommittedBills: function(callback) {
+        var afterVersion = '0.3.10';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'updateCommittedBills',
+                errors: null,
+                results: null
+            });
+        }
         var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
             results = [],
-            findBillCollection = function (bill, collectionName) {
+            findBillCollection = function(bill, collectionName) {
                 var collections = bill.collections,
                     len = collections.length,
                     i;
@@ -24,7 +57,7 @@ var scripts = {
                         return collections[i];
                 }
             },
-            findBillRow = function (collection, rowName) {
+            findBillRow = function(collection, rowName) {
                 var rows = collection.rows,
                     len = rows.length,
                     i;
@@ -33,7 +66,7 @@ var scripts = {
                         return rows[i];
                 }
             },
-            processRateTable = function (rateTable, touUtility) {
+            processRateTable = function(rateTable, touUtility) {
                 var changes = {},
                     title,
                     collection,
@@ -94,7 +127,7 @@ var scripts = {
                     }
                 }
             },
-            doCallback = function (err, results) {
+            doCallback = function(err, results) {
                 callback(null, {
                     fn: 'updateCommittedBills',
                     errors: err,
@@ -104,7 +137,7 @@ var scripts = {
 
         utility.get({
             collection: 'Utilities'
-        }, function (err, utilities) {
+        }, function(err, utilities) {
             if (err) {
                 return doCallback(err);
             }
@@ -136,50 +169,16 @@ var scripts = {
         });
     },
 
-    // 0.4.1 updates gpl point refs to be 'Device Point' rather than 'Sequence Device'
-    updateGPLDevicePointRef: function (callback) {
-        utility.iterateCursor({
-            collection: 'points',
-            query: {
-                'Point Type.Value': 'Sequence',
-                'Point Refs.PropertyName': 'Sequence Device'
-            }
-        }, function processSequence(err, doc, cb) {
-            var list = doc['Point Refs'];
-
-            list.forEach(function processPointRefs(ref) {
-                if (ref.PropertyName === 'Sequence Device') {
-                    ref.PropertyName = 'Device Point';
-                }
-            });
-
-            logger.info('updating sequence:', doc._id);
-
-            utility.update({
-                collection: 'points',
-                query: {
-                    _id: doc._id
-                },
-                updateObj: doc
-            }, function updatedSequenceHandler(err) {
-                if (err) {
-                    logger.debug('Update err:', err);
-                }
-
-                cb(null);
-            });
-
-        }, function finishUpdatingSequences(err) {
-            logger.info('Finished with updateGPLDevicePointRef');
+    // 0.4.1 - GPL Point Ref PropertyEnum Update.  Updated GPLBlock PropertyEnum to be 439 instead of (placeholder) 0
+    updateGPLBlockPointRefEnum: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
             callback(null, {
-                fn: 'updateGPLDevicePointRef',
-                errors: err
+                fn: 'updateGPLBlockPointRefEnum',
+                errors: null,
+                results: null
             });
-        });
-    },
-
-    // 0.3.10 - GPL Point Ref PropertyEnum Update.  Updated GPLBlock PropertyEnum to be 439 instead of (placeholder) 0
-    updateGPLBlockPointRefEnum: function (callback) {
+        }
         utility.iterateCursor({
             collection: 'points',
             query: {
@@ -194,7 +193,7 @@ var scripts = {
                 }
             });
 
-            logger.info('updating sequence:', doc._id);
+            // logger.info('updating sequence:', doc._id);
 
             utility.update({
                 collection: 'points',
@@ -218,8 +217,16 @@ var scripts = {
             });
         });
     },
-
-    updateGenerateGPLPointRefs: function (callback) {
+    // 0.4.1
+    updateGenerateGPLPointRefs: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'updateGenerateGPLPointRefs',
+                errors: null,
+                results: null
+            });
+        }
         utility.iterateCursor({
             collection: "points",
             query: {
@@ -231,13 +238,13 @@ var scripts = {
 
             // logger.info('processSequence() sequence = ', sequence);
             if (!!sequence && !!sequence.SequenceData && !!sequence.SequenceData.sequence && !!sequence.SequenceData.sequence.block) {
-                logger.info("- - updating sequence:", sequence._id);
+                // logger.info("- - updating sequence:", sequence._id);
                 var blocks = sequence.SequenceData.sequence.block,
                     dynamics = (!!sequence.SequenceData.sequence.dynamic ? sequence.SequenceData.sequence.dynamic : []),
                     pointRef,
                     pRefs = sequence["Point Refs"],
                     deviceId = !!pRefs[0] ? pRefs[0].PointInst : null,
-                    saveSequence = function () {
+                    saveSequence = function() {
                         if (sequenceNeedsSaving) {
                             // logger.info("   ___ sequenceNeedsSaving ___");
                             sequenceNeedsSaving = false;
@@ -259,10 +266,10 @@ var scripts = {
                             cb(null);
                         }
                     },
-                    adjustSequence = function () {
+                    adjustSequence = function() {
                         adjustBlocksAndDynamics();
                     },
-                    adjustBlocksAndDynamics = function () {
+                    adjustBlocksAndDynamics = function() {
                         // logger.info("- blocks.length:", blocks.length);
                         async.eachSeries(blocks, function processBlocks(block, seriesCallback) {
                             if (block.upi > 0 || block.pointRefIndex !== undefined) {
@@ -287,7 +294,7 @@ var scripts = {
                             adjustDynamics();
                         });
                     },
-                    adjustDynamics = function () {
+                    adjustDynamics = function() {
                         async.eachSeries(dynamics, function processDynamics(dynamic, seriesCallback) {
                             if (dynamic.upi > 0 || dynamic.pointRefIndex !== undefined) {
                                 sequenceNeedsSaving = true;
@@ -310,7 +317,7 @@ var scripts = {
                             saveSequence();
                         });
                     },
-                    getGplBlockObject = function (upi, cb2) {
+                    getGplBlockObject = function(upi, cb2) {
                         var criteria = {
                             collection: 'points',
                             query: {
@@ -325,14 +332,14 @@ var scripts = {
                         };
 
                         // logger.info("criteria = " + criteria);
-                        utility.getOne(criteria, function (err, referencedObj) {
+                        utility.getOne(criteria, function(err, referencedObj) {
                             if (err) {
                                 logger.info("utility.getOne err = " + err);
                                 return cb2(err);
                             } else {
                                 // logger.info("getGplBlockObject()  referencedObj = " + referencedObj);
                                 if (referencedObj === null) {
-                                    logger.info("        - - UPI Not Found: " + upi);
+                                    // logger.info("        - - UPI Not Found: " + upi);
                                     cb2(null, referencedObj);
                                 } else {
                                     // logger.info("utility.getOne found it = " + referencedObj);
@@ -341,7 +348,7 @@ var scripts = {
                             }
                         });
                     },
-                    getPointReference = function (gplobject, refType) {
+                    getPointReference = function(gplobject, refType) {
                         var answer = null;
 
                         // logger.info('gplobject.upi:'+ gplobject.upi + '   gplobject.pointRefIndex:' + gplobject.pointRefIndex);
@@ -354,8 +361,8 @@ var scripts = {
                         // logger.info('getPointReference()  answer =  ' + answer);
                         return answer;
                     },
-                    createPointRef = function (gplobject, refType, refEnum, createCallBack) {
-                        var createNewPointRef = function (err, referencedPoint) {
+                    createPointRef = function(gplobject, refType, refEnum, createCallBack) {
+                        var createNewPointRef = function(err, referencedPoint) {
                             var objRef,
                                 thePointRef = null;
                             if (err) {
@@ -386,10 +393,10 @@ var scripts = {
                             return createCallBack(null);
                         }
                     },
-                    getPointRefByAppindex = function (pointRefIndex, referenceType) {
+                    getPointRefByAppindex = function(pointRefIndex, referenceType) {
                         var answer;
-                        if (!!pointRefIndex) {
-                            answer = pRefs.filter(function (pointRef) {
+                        if (pointRefIndex > -1) {
+                            answer = pRefs.filter(function(pointRef) {
                                 return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
                             });
 
@@ -397,17 +404,17 @@ var scripts = {
                         }
                         return answer;
                     },
-                    getPointRefByUpi = function (upi, referenceType) {
+                    getPointRefByUpi = function(upi, referenceType) {
                         var answer;
                         if (!!upi && !isNaN(upi)) {
-                            answer = pRefs.filter(function (pointRef) {
+                            answer = pRefs.filter(function(pointRef) {
                                 return pointRef.PointInst === upi && pointRef.PropertyName === referenceType;
                             });
                             answer = (!!answer && answer.length > 0 ? answer[0] : null);
                         }
                         return answer;
                     },
-                    getNextAppIndex = function () {
+                    getNextAppIndex = function() {
                         var answer = 0,
                             i;
                         for (i = 0; i < pRefs.length; i++) {
@@ -417,7 +424,7 @@ var scripts = {
                         }
                         return answer + 1;
                     },
-                    makePointRef = function (theBlock, devInst, referenceType, referenceEnum) {
+                    makePointRef = function(theBlock, devInst, referenceType, referenceEnum) {
                         var pointRef = {
                             "PropertyName": referenceType,
                             "PropertyEnum": referenceEnum,
@@ -427,7 +434,7 @@ var scripts = {
                             "isReadOnly": true,
                             "PointName": theBlock.name,
                             "PointInst": theBlock.upi,
-                            "DevInst": devInst,   // TODO   what about external references?
+                            "DevInst": devInst, // TODO   what about external references?
                             "PointType": Config.Enums['Point Types'][theBlock.pointType].enum
                         };
 
@@ -444,7 +451,7 @@ var scripts = {
             } else {
                 cb();
             }
-        }, function (err) {
+        }, function(err) {
             logger.info("Finished with updateGenerateGPLPointRefs");
             callback(null, {
                 fn: "updateGenerateGPLPointRefs",
@@ -452,8 +459,16 @@ var scripts = {
             });
         });
     },
-
-    updateGenerateDisplayPointRefs: function (callback) {
+    // 0.4.1
+    updateGenerateDisplayPointRefs: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'updateGenerateDisplayPointRefs',
+                errors: null,
+                results: null
+            });
+        }
         utility.iterateCursor({
             collection: "points",
             query: {
@@ -466,19 +481,19 @@ var scripts = {
 
             // logger.info('processDisplay() display = ', display);
             if (!!display && !!display["Screen Objects"]) {
-                logger.info("- - updating display:", display._id);
+                // logger.info("- - updating display:", display._id);
                 var screenObjects = display["Screen Objects"],
                     pointRef,
                     pRefs = display["Point Refs"],
                     deviceId = 0,
-                    reIndexAppIndex = function () {
+                    reIndexAppIndex = function() {
                         var i,
                             appIndex = 0;
                         for (i = 0; i < pRefs.length; i++) {
                             pRefs[i].AppIndex = appIndex++;
                         }
                     },
-                    getScreenObjectType = function (screenObjectType) {
+                    getScreenObjectType = function(screenObjectType) {
                         var propEnum = 0,
                             propName = "";
 
@@ -510,7 +525,7 @@ var scripts = {
                             enum: propEnum
                         };
                     },
-                    saveDisplay = function () {
+                    saveDisplay = function() {
                         if (displayNeedsSaving) {
                             // logger.info("   ___ displayNeedsSaving ___");
                             displayNeedsSaving = false;
@@ -532,10 +547,10 @@ var scripts = {
                             cb(null);
                         }
                     },
-                    adjustScreenObjects = function () {
-                        reIndexAppIndex();  // existing point refs have invalid AppIndex values.
+                    adjustScreenObjects = function() {
+                        reIndexAppIndex(); // existing point refs have invalid AppIndex values.
 
-                            // logger.info("- screenObjects.length:", screenObjects.length);
+                        // logger.info("- screenObjects.length:", screenObjects.length);
                         async.eachSeries(screenObjects, function processDisplays(screenObject, seriesCallback) {
                             if (screenObject.upi > 0 || screenObject.pointRefIndex !== undefined) {
                                 displayNeedsSaving = true;
@@ -560,7 +575,7 @@ var scripts = {
                             saveDisplay();
                         });
                     },
-                    getDisplayReferencedObject = function (upi, cb2) {
+                    getDisplayReferencedObject = function(upi, cb2) {
                         var criteria = {
                             collection: 'points',
                             query: {
@@ -575,14 +590,14 @@ var scripts = {
                         };
 
                         // logger.info("criteria = " + criteria);
-                        utility.getOne(criteria, function (err, referencedObj) {
+                        utility.getOne(criteria, function(err, referencedObj) {
                             if (err) {
                                 logger.info("utility.getOne err = " + err);
                                 return cb2(err);
                             } else {
                                 // logger.info("getDisplayReferencedObject()  referencedObj = " + referencedObj);
                                 if (referencedObj === null) {
-                                    logger.info("        - - UPI Not Found: " + upi);
+                                    // logger.info("        - - UPI Not Found: " + upi);
                                     cb2(null, referencedObj);
                                 } else {
                                     // logger.info("utility.getOne found it = " + referencedObj);
@@ -591,7 +606,7 @@ var scripts = {
                             }
                         });
                     },
-                    getPointReference = function (screenObject, refType) {
+                    getPointReference = function(screenObject, refType) {
                         var answer = null;
 
                         // logger.info('screenObject.upi:'+ screenObject.upi + '   screenObject.pointRefIndex:' + screenObject.pointRefIndex);
@@ -604,8 +619,8 @@ var scripts = {
                         // logger.info('getPointReference()  answer =  ' + answer);
                         return answer;
                     },
-                    createPointRef = function (screenObject, refType, refEnum, createCallBack) {
-                        var createNewPointRef = function (err, referencedPoint) {
+                    createPointRef = function(screenObject, refType, refEnum, createCallBack) {
+                        var createNewPointRef = function(err, referencedPoint) {
                             var objRef,
                                 thePointRef = null;
                             if (err) {
@@ -636,10 +651,10 @@ var scripts = {
                             return createCallBack(null);
                         }
                     },
-                    getPointRefByAppindex = function (pointRefIndex, referenceType) {
+                    getPointRefByAppindex = function(pointRefIndex, referenceType) {
                         var answer;
-                        if (!!pointRefIndex) {
-                            answer = pRefs.filter(function (pointRef) {
+                        if (pointRefIndex > -1) {
+                            answer = pRefs.filter(function(pointRef) {
                                 return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
                             });
 
@@ -647,17 +662,17 @@ var scripts = {
                         }
                         return answer;
                     },
-                    getPointRefByUpi = function (upi, referenceType) {
+                    getPointRefByUpi = function(upi, referenceType) {
                         var answer;
                         if (!!upi && !isNaN(upi)) {
-                            answer = pRefs.filter(function (pointRef) {
+                            answer = pRefs.filter(function(pointRef) {
                                 return pointRef.PointInst === upi && pointRef.PropertyName === referenceType;
                             });
                             answer = (!!answer && answer.length > 0 ? answer[0] : null);
                         }
                         return answer;
                     },
-                    getNextAppIndex = function () {
+                    getNextAppIndex = function() {
                         var answer = 0,
                             i;
                         for (i = 0; i < pRefs.length; i++) {
@@ -667,7 +682,7 @@ var scripts = {
                         }
                         return answer + 1;
                     },
-                    makePointRef = function (theObject, devInst, referenceType, referenceEnum) {
+                    makePointRef = function(theObject, devInst, referenceType, referenceEnum) {
                         var pointRef = {
                             "PropertyName": referenceType,
                             "PropertyEnum": referenceEnum,
@@ -677,7 +692,7 @@ var scripts = {
                             "isReadOnly": true,
                             "PointName": theObject.name,
                             "PointInst": theObject.upi,
-                            "DevInst": devInst,   // TODO   what about external references?
+                            "DevInst": devInst, // TODO   what about external references?
                             "PointType": Config.Enums['Point Types'][theObject.pointType].enum
                         };
 
@@ -690,7 +705,7 @@ var scripts = {
             } else {
                 cb();
             }
-        }, function (err) {
+        }, function(err) {
             logger.info("Finished with updateGenerateGPLPointRefs");
             callback(null, {
                 fn: "updateGenerateGPLPointRefs",
@@ -700,18 +715,26 @@ var scripts = {
     },
 
     // 0.3.10 - new Report fields
-    updateExistingReports: function (callback) {
+    updateExistingReports: function(callback) {
+        var afterVersion = '0.3.10';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'updateExistingReports',
+                errors: null,
+                results: null
+            });
+        }
         logger.info("     - - - updateExistingReports() called - - - ");
         var collectionName = 'points',
             query = {
                 'Point Type.Value': 'Report'
             },
             reportUpdateCounter = 0,
-            processDoc = function (reportDoc, cb) {
+            processDoc = function(reportDoc, cb) {
                 var reportConfig = reportDoc["Report Config"],
                     columns,
                     updateDoc = false,
-                    updateReport = function (docToUpdate, cb) {
+                    updateReport = function(docToUpdate, cb) {
                         // logger.info("Updating report ._id = " + docToUpdate._id);
                         utility.update({
                             collection: 'points',
@@ -719,7 +742,7 @@ var scripts = {
                                 _id: docToUpdate._id
                             },
                             updateObj: docToUpdate
-                        }, function (err) {
+                        }, function(err) {
                             if (!!err) {
                                 logger.info('Update err:' + err);
                                 cb(err);
@@ -730,7 +753,7 @@ var scripts = {
                             }
                         });
                     },
-                    getMaxAppIndexUsed = function () {
+                    getMaxAppIndexUsed = function() {
                         var answer = 0,
                             i;
                         for (i = 0; i < reportDoc["Point Refs"].length; i++) {
@@ -740,28 +763,28 @@ var scripts = {
                         }
                         return answer;
                     },
-                    getPointRef = function (item, referenceType) {
+                    getPointRef = function(item, referenceType) {
                         var result,
                             upi = item.upi;
 
                         if (!!upi) {
-                            result = reportDoc["Point Refs"].filter(function (pointRef) {
+                            result = reportDoc["Point Refs"].filter(function(pointRef) {
                                 return pointRef.Value === upi && pointRef.PropertyName === referenceType;
                             });
                         }
 
                         return (result.length === 0 ? null : result[0]);
                     },
-                    updateColumnFromPointRefs = function (column) {
+                    updateColumnFromPointRefs = function(column) {
                         var property = "Column Point",
-                            setColumn = function (theCol, pRef) {
+                            setColumn = function(theCol, pRef) {
                                 updateDoc = true;
                                 theCol.AppIndex = pRef.AppIndex;
                                 // theCol.upi = pRef.Value;
                                 theCol.colName = pRef.PointName;
                                 delete theCol.upi;
                             },
-                            pushNewPointRef = function (refPointID) {
+                            pushNewPointRef = function(refPointID) {
                                 if (!!refPointID) {
                                     var tempRef;
                                     tempRef = {};
@@ -852,14 +875,22 @@ var scripts = {
     },
 
     // 0.3.10
-    updateDevices: function (callback) {
+    updateDevices: function(callback) {
+        var afterVersion = '0.3.10';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'updateDevices',
+                errors: null,
+                results: null
+            });
+        }
         var criteria = {
             collection: 'points',
             query: {
                 'Point Type.Value': 'Device'
             }
         };
-        utility.iterateCursor(criteria, function (err, doc, cb) {
+        utility.iterateCursor(criteria, function(err, doc, cb) {
             doc['Firmware 2 Version'] = Config.Templates.getTemplate("Device")["Firmware 2 Version"];
             if ([Config.Enums['Device Model Types']['MicroScan 5 UNV'].enum, Config.Enums['Device Model Types']['SCADA Vio'].enum].indexOf(doc['Model Type'].eValue) >= 0) {
                 doc['Firmware 2 Version'].isDisplayable = true;
@@ -879,14 +910,22 @@ var scripts = {
                 },
                 updateObj: doc
             }, cb);
-        }, function (err, count) {
+        }, function(err, count) {
             logger.info('Firmware 2 Version added to ', count, ' devices');
             callback(err);
         });
     },
 
     // 0.3.10
-    removePointInstance: function (callback) {
+    removePointInstance: function(callback) {
+        var afterVersion = '0.3.10';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'removePointInstance',
+                errors: null,
+                results: null
+            });
+        }
         var criteria = {
             collection: 'points',
             query: {},
@@ -899,20 +938,232 @@ var scripts = {
                 multi: true
             }
         };
-        utility.update(criteria, function (err, results) {
+        utility.update(criteria, function(err, results) {
             logger.info('Point Instance removed from points');
             callback(err);
+        });
+    },
+
+    // 0.4.1
+    updateGatewayReadOnlyRouterAddress: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'updateGatewayReadOnlyRouterAddress',
+                errors: null,
+                results: null
+            });
+        }
+        var criteria = {
+            collection: 'points',
+            query: {
+                'Point Type.eValue': {
+                    $in: [144]
+                },
+                'Gateway': {
+                    $exists: false
+                }
+            },
+            updateObj: {
+                $set: {
+                    "Gateway": {
+                        "isDisplayable": true,
+                        "isReadOnly": false,
+                        "ValueType": 7,
+                        "Value": false
+                    },
+                    "Router Address": {
+                        "isDisplayable": true,
+                        "isReadOnly": false,
+                        "ValueType": 2,
+                        "Value": "0"
+                    }
+                }
+            },
+            options: {
+                multi: true
+            }
+        };
+
+        utility.update(criteria, function(err, results) {
+            logger.info('Gateway and Router Address added to Remote Units.');
+            criteria = {
+                collection: 'points',
+                query: {
+                    'Point Type.eValue': {
+                        $in: [128, 0, 1, 2, 3, 4, 5, 142]
+                    },
+                    'Read Only': {
+                        $exists: false
+                    }
+                },
+                updateObj: {
+                    $set: {
+                        "Read Only": {
+                            "isDisplayable": true,
+                            "isReadOnly": false,
+                            "ValueType": 7,
+                            "Value": false
+                        }
+                    }
+                },
+                options: {
+                    multi: true
+                }
+            };
+
+            utility.update(criteria, function(err, results) {
+                logger.info('Read Only added to I/O points.');
+                callback(err);
+            });
+        });
+    },
+
+    // 0.4.1
+    updateNetworkProps: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'updateNetworkProps',
+                errors: null,
+                results: null
+            });
+        }
+        var criteria = {
+            collection: 'points',
+            query: {},
+            updateObj: {
+                $unset: {
+                    'Port 1 Network.Min': 1,
+                    'Port 1 Network.Max': 1,
+                    'Port 2 Network.Min': 1,
+                    'Port 2 Network.Max': 1,
+                    'Port 3 Network.Min': 1,
+                    'Port 3 Network.Max': 1,
+                    'Port 4 Network.Min': 1,
+                    'Port 4 Network.Max': 1
+                }
+            },
+            options: {
+                multi: true
+            }
+        };
+        utility.update(criteria, function(err, results) {
+            logger.info('Network Properties updated.');
+            criteria = {
+                collection: 'SystemInfo',
+                query: {
+                    'Name': 'Preferences'
+                }
+            };
+            utility.getOne(criteria, function(err, prefs) {
+                var netConfig = [{
+                    isDefault: true,
+                    'IP Network Segment': prefs['IP Network Segment'],
+                    'IP Port': prefs['IP Port']
+                }];
+                criteria.updateObj = {
+                    $set: {
+                        'Network Configuration': netConfig
+                    }
+                };
+                utility.update(criteria, function(err, results) {
+                    logger.info('System Info updated.');
+                    callback(err);
+                });
+            });
+        });
+    },
+
+    // 0.4.1
+    fixDorsDB: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'fixDorsDB',
+                errors: null,
+                results: null
+            });
+        }
+        var criteria = {
+            collection: 'points',
+            query: {},
+            updateObj: {
+                $rename: {
+                    'Sensor I/O Device': 'Sensor IO Device',
+                    'Sensor I/O Type': 'Sensor IO Type'
+                }
+            },
+            options: {
+                multi: true
+            }
+        };
+        utility.update(criteria, function(err, results) {
+            logger.info('Network Properties updated.');
+            callback(err);
+        });
+    },
+
+    fixSequenceDevicePropertyName: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'fixSequenceDevicePropertyName',
+                errors: null,
+                results: null
+            });
+        }
+        utility.iterateCursor({
+            collection: 'points',
+            query: {
+                'Point Type.Value': 'Sequence',
+                'Point Refs.PropertyName': 'Sequence Device'
+            }
+        }, function processSequence(err, doc, cb) {
+            var list = doc['Point Refs'];
+
+            list.forEach(function processPointRefs(ref) {
+                if (ref.PropertyName === 'Sequence Device') {
+                    ref.PropertyName = 'Device Point';
+                }
+            });
+
+            logger.info('updating sequence:', doc._id);
+
+            utility.update({
+                collection: 'points',
+                query: {
+                    _id: doc._id
+                },
+                updateObj: doc
+            }, function updatedSequenceHandler(err) {
+                if (err) {
+                    logger.debug('Update err:', err);
+                }
+
+                cb(null);
+            });
+
+        }, function finishUpdatingSequences(err) {
+            logger.info('Finished with updateGPLDevicePointRef');
+            callback(null, {
+                fn: 'updateGPLDevicePointRef',
+                errors: err
+            });
         });
     }
 };
 
 
-db.connect(connectionString, function (err) {
+db.connect(connectionString, function(err) {
     if (err) {
         return logger.debug(err);
     }
     // Array of tasks that should be run
-    var tasks = [scripts.updateCommittedBills, scripts.updateGPLBlockPointRefEnum, scripts.updateGenerateGPLPointRefs, scripts.updateGenerateDisplayPointRefs, scripts.updateExistingReports, scripts.updateDevices, scripts.removePointInstance, scripts.updateGPLDevicePointRef];
+    var tasks = [];
+    for (var task in scripts) {
+        tasks.push(scripts[task]);
+    }
     // var tasks = [scripts.updateGenerateDisplayPointRefs];
 
     // Each task is provided a callback argument which should be called once the task completes.
@@ -928,14 +1179,41 @@ db.connect(connectionString, function (err) {
     //	errors: null or error(s),
     //	results: null or result(s)
     // }
-
-    async.series(tasks, function done(err, results) {
-        if (err) {
-            logger.info("Error: ", err);
+    utility.getOne({
+        collection: 'SystemInfo',
+        query: {
+            "Name": "Preferences"
+        },
+        fields: {
+            'InfoscanJS Version': 1
         }
-        logger.info("Results: ", results);
+    }, function(err, prefVersion) {
+        prevVersion = prefVersion['InfoscanJS Version'] || "0.0.0";
+        async.series(tasks, function done(err, results) {
+            if (err) {
+                logger.info("Error: ", err);
+            }
+            console.log("Results: ", results);
 
-        //added a clean exit for when scripts are done
-        process.exit();
+            if (!!options.noupdate) {
+                logger.info('not updating db version.');
+                //added a clean exit for when scripts are done
+                process.exit(0);
+            } else {
+                utility.update({
+                    collection: 'SystemInfo',
+                    query: {
+                        "Name": "Preferences"
+                    },
+                    updateObj: {
+                        $set: {
+                            'InfoscanJS Version': curVersion
+                        }
+                    }
+                }, function(err, result) {
+                    process.exit(0);
+                })
+            }
+        });
     });
 });

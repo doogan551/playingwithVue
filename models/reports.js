@@ -637,6 +637,7 @@ module.exports = Rpt = {
                     return cb(null, {
                         id: data.id,
                         scheduled: data.scheduled,
+                        scheduledIncludeChart: data.scheduledIncludeChart,
                         point: JSON.stringify(result),
                         title: result.Name
                     }, result);
