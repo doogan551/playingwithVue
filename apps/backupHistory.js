@@ -13,8 +13,6 @@ var logger = require('../helpers/logger')(module);
 var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName];
 
-var conn = 'mongodb://localhost/infoscan';
-
 // process.env.driveLetter = "D";
 // process.env.archiveLocation = "/InfoScan/Archive/History/";
 var History = require('../models/history.js');
@@ -177,7 +175,7 @@ function backUp() {
     db.connect(connectionString.join(''), function(err) {
         calculateWeather(function(err) {
             if (err) {
-                logToFile('getMeterUpis Error: ' + err);
+                logToFile('calculateWeather Error: ' + err);
             }
             getMeterUpis(function(err) {
                 if (err) {
@@ -275,11 +273,11 @@ function newBackup() {
         });
     });
 }
-// newBackup();
+newBackup();
 
 function test() {
     db.connect(connectionString.join(''), function(err) {
         calculateWeather(function(err) {});
     });
 }
-test();
+// test();

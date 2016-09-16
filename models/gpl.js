@@ -55,7 +55,7 @@ var getGplPoints = function (seq, cb) {
         upis = [],
         getPointRef = function (pointRefIndex, referenceType) {
             var answer;
-            if (!!pointRefIndex) {
+            if (pointRefIndex > -1) {
                 answer = pointRefs.filter(function (pointRef) {
                     return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
                 });

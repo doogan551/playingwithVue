@@ -4,6 +4,80 @@ var _ = require('lodash');
 var utils = require('../helpers/utils.js');
 var Reports = require('../models/reports');
 var logger = require('../helpers/logger')(module);
+
+var reportMainCallback = function(res, err, locals, result) {
+  if (err) {
+    return utils.sendResponse(res, {
+      err: err
+    });
+  } else {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    if (!locals) {
+      res.render("reports/reportErrorNotFound");
+    } else {
+      if (result["Report Type"]) {
+        res.locals = locals;
+        switch (result["Report Type"].Value) {
+          case "Property":
+            res.render('reports/index');
+            break;
+          case "History":
+            res.render('reports/index');
+            break;
+          case "Totalizer":
+            res.render('reports/index');
+            break;
+            //case "Point Involvement":
+            //    res.render('reports/cannedReports/pointInvolvement');
+            //    break;
+          default:
+            res.render("reports/reportErrorNotFound");
+            break;
+        }
+      }
+    }
+  }
+};
+
+var scheduledReportCallback = function(res, err, locals, result) {
+  if (err) {
+    return utils.sendResponse(res, {
+      err: err
+    });
+  } else {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+
+    if (!locals) {
+      res.render("reports/reportErrorNotFound");
+    } else {
+      if (result["Report Type"]) {
+        res.locals = locals;
+        res.locals.dataUrl = "/scheduleloader";
+        switch (result["Report Type"].Value) {
+          case "Property":
+            res.render('reports/scheduledReport');
+            break;
+          case "History":
+            res.render('reports/scheduledReport');
+            break;
+          case "Totalizer":
+            res.render('reports/scheduledReport');
+            break;
+            //case "Point Involvement":
+            //    res.render('reports/cannedReports/pointInvolvement');
+            //    break;
+          default:
+            res.render("reports/reportErrorNotFound");
+            break;
+        }
+      }
+    }
+  }
+};
+
 // NOT CHECKED
 router.get('/getMRT/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
@@ -192,6 +266,7 @@ router.get('/scheduled/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
   data.scheduled = true;
+  data.scheduledIncludeChart = true;  // this could be a passed param from scheduler
 
   Reports.reportMain(data, function(err, locals, result) {
     scheduledReportCallback(res, err, locals, result);
@@ -215,78 +290,5 @@ router.get('/cr/pointInvolvement', function(req, res, next) {
     res.render('reports/cannedReports/pointInvolvement');
   });
 });
-
-var reportMainCallback = function(res, err, locals, result) {
-  if (err) {
-    return utils.sendResponse(res, {
-      err: err
-    });
-  } else {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
-    if (!locals) {
-      res.render("reports/reportErrorNotFound");
-    } else {
-      if (result["Report Type"]) {
-        res.locals = locals;
-        switch (result["Report Type"].Value) {
-          case "Property":
-            res.render('reports/index');
-            break;
-          case "History":
-            res.render('reports/index');
-            break;
-          case "Totalizer":
-            res.render('reports/index');
-            break;
-            //case "Point Involvement":
-            //    res.render('reports/cannedReports/pointInvolvement');
-            //    break;
-          default:
-            res.render("reports/reportErrorNotFound");
-            break;
-        }
-      }
-    }
-  }
-};
-
-var scheduledReportCallback = function(res, err, locals, result) {
-  if (err) {
-    return utils.sendResponse(res, {
-      err: err
-    });
-  } else {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-
-    if (!locals) {
-      res.render("reports/reportErrorNotFound");
-    } else {
-      if (result["Report Type"]) {
-        res.locals = locals;
-        res.locals.dataUrl = "/scheduleloader";
-        switch (result["Report Type"].Value) {
-          case "Property":
-            res.render('reports/scheduledReport');
-            break;
-          case "History":
-            res.render('reports/scheduledReport');
-            break;
-          case "Totalizer":
-            res.render('reports/scheduledReport');
-            break;
-            //case "Point Involvement":
-            //    res.render('reports/cannedReports/pointInvolvement');
-            //    break;
-          default:
-            res.render("reports/reportErrorNotFound");
-            break;
-        }
-      }
-    }
-  }
-};
 
 module.exports = router;
