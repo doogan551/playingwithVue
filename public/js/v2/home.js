@@ -1785,7 +1785,7 @@ var dti = {
                         if (selectedTypes.length === 1) {
                             ret = selectedTypes[0];
                         } else {
-                            ret = selectedTypes.length + ' Point Types';
+                            ret = (selectedTypes.length === currTypes.length ? 'All' : selectedTypes.length) + ' Point Types';
                         }
 
                         return ret;
@@ -2677,10 +2677,10 @@ var dti = {
             dti.startMenu.handleClick(obj);
         },
         handleCardClick: function (obj, e) {
-            dti.fire('hideMenus');
             if ($(e.target).hasClass('closeIcon')) {
                 obj.close();
             } else {
+                dti.fire('hideMenus');
                 obj.activate();
             }
         },
