@@ -1541,9 +1541,11 @@ var dti = {
         temporaryCallback: null,
         defaultClickHandler: function (pointInfo) {
             var endPoint = dti.utility.getEndpoint(pointInfo.pointType, pointInfo._id),
-                name = [pointInfo.name1, pointInfo.name2, pointInfo.name3, pointInfo.name4].join(' ');
+                name = [pointInfo.name1, pointInfo.name2, pointInfo.name3, pointInfo.name4].join(' '),
+                group = dti.config.itemGroups[pointInfo.pointType],
+                options = group && group.options || null;
 
-            dti.windows.openWindow(endPoint.review.url, name, pointInfo.pointType, null, pointInfo._id, null);
+            dti.windows.openWindow(endPoint.review.url, name, pointInfo.pointType, null, pointInfo._id, options);
         },
         handleNavigatorRowClick: function (pointInfo) {
             dti.navigatorNew.hideNavigator();
@@ -2797,7 +2799,7 @@ var dti = {
                                 )
                                 .fail(
                                     function () {
-                                        $element.hide();
+                                        thumbnailFound(false);
                                         // $icon.show();
                                     }
                                 );
