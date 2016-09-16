@@ -115,7 +115,7 @@ module.exports = function(_common) {
     });
 
     oplog.on('update', function(doc) {
-        if (doc.ns === "infoscan.points" && doc.o.$set !== undefined) {
+        if (doc.ns === dbName+".points" && doc.o.$set !== undefined) {
             var start = new Date();
             var updateArray;
             var updateValueFlag = false,
@@ -231,7 +231,7 @@ module.exports = function(_common) {
                     }
                     return;
                 });
-        } else if (doc.ns === "infoscan.Alarms") {
+        } else if (doc.ns === dbName+".Alarms") {
             if (doc.o.$set !== undefined && doc.o.$set.ackStatus === 2) {
                 for (var k = 0; k < openAlarms.length; k++) {
                     if (openAlarms[k].alarmView === "Unacknowledged") {
@@ -245,7 +245,7 @@ module.exports = function(_common) {
                     }
                 }
             }
-        } else if (doc.ns === "infoscan.SystemInfo") {
+        } else if (doc.ns === dbName+".SystemInfo") {
             var name = '';
             if (doc.o.$set !== undefined && doc.o.$set.Entries !== undefined) {
                 if (doc.o.$set.Entries[0].hasOwnProperty("Priority Level")) {
