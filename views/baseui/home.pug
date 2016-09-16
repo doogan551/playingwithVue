@@ -273,22 +273,24 @@ html
                 .modal-content
                     h4 Open Items
                     #itemlist.openItemList(data-bind="foreach: $root.windowGroups")
-                        // ko foreach: $root.openWindows[group()]
-                        // ko if: !exempt()
-                        a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: function () {activate(false);}")
-                            .itemTitle.white-text
-                                i.right.material-icons.closeIcon close
-                                div(data-bind="text: title")
-                            .itemBody 
-                                //ko if: thumbnail() === true 
-                                img(data-bind="thumbnail: upi")
-                                // /ko
+                        // ko template: { name: 'miniWindowTemplate', foreach: $root.openWindows[group()]}
+                        // /ko
+                        //- // ko foreach: $root.openWindows[group()]
+                        //- // ko if: !exempt()
+                        //- a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: function () {activate(false);}")
+                        //-     .itemTitle.white-text
+                        //-         i.right.material-icons.closeIcon close
+                        //-         div(data-bind="text: title")
+                        //-     .itemBody 
+                        //-         //ko if: thumbnail() === true 
+                        //-         img(data-bind="thumbnail: upi")
+                        //-         // /ko
 
-                                // ko if: thumbnail() === false
-                                i.center-align.white-text(data-bind="css: iconClass, text: iconText")
-                                // /ko
-                        // /ko
-                        // /ko
+                        //-         // ko if: thumbnail() === false
+                        //-         i.center-align.white-text(data-bind="css: iconClass, text: iconText")
+                        //-         // /ko
+                        //- // /ko
+                        //- // /ko
 
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close                    
@@ -392,11 +394,20 @@ html
                 //-             .circle
 
     script#miniWindowTemplate(type='text/html')
-        a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-target="displayPanel")
-            .itemTitle.white-text(data-bind="text: title")
-                i.right.material-icons close
-            .itemBody 
-                img(data-bind="thumbnail: upi")
+        // ko if: !exempt()
+        a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")
+            .itemTitle.white-text
+                i.right.material-icons.closeIcon close
+                div(data-bind="text: title")
+            .itemBody
+                //ko if: thumbnail() === true
+                img(data-bind="thumbnail: upi, visible: thumbnailFound")
+                // /ko
+
+                // ko if: thumbnail() === false || thumbnailFound() === false
+                i.center-align.white-text(data-bind="css: iconClass, text: iconText")
+                // /ko
+        // /ko
 
     script#windowTemplate(type='text/html')
         .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized() || windowsHidden(), activeCard: active() }')
@@ -520,29 +531,14 @@ html
                 //- a.blue-grey-text.action(href="javascript://")
                 //-     i.material-icons add
                 //-     span New
-                a.blue-grey-text.action(href="javascript://", data-bind="click: function () { $root.closeWindows(group()); }")
+                a.blue-grey-text.action(href="javascript://", data-bind="visible: $root.openWindows[group()]().length > 0, click: function () { $root.closeWindows(group()); }")
                     i.material-icons close
                     span Close All
             // /ko
 
-            .items(data-bind="visible: $root.openWindows[group()]().length > 0")
+            .items.flex.flex-row(data-bind="visible: $root.openWindows[group()]().length > 0")
                 .itemsHeader.blue-grey-text Open Items
-                // ko foreach: $root.openWindows[group()]
-
-                //- span(data-bind="if: group() === $parent.group()")
-                a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")
-                    .itemTitle.white-text
-                        i.right.material-icons.closeIcon close
-                        div(data-bind="text: title")
-                    .itemBody
-                        //ko if: thumbnail() === true 
-                        img(data-bind="thumbnail: upi")
-                        // /ko
-
-                        // ko if: thumbnail() === false
-                        i.center-align.white-text(data-bind="css: iconClass, text: iconText")
-                        // /ko
-
+                // ko template: { name: 'miniWindowTemplate', foreach: $root.openWindows[group()]}
                 // /ko
         // /ko
 
@@ -552,7 +548,7 @@ html
     script(type='text/javascript', src='/js/lib/jquery-1.9.1.min.js')
     script(type='text/javascript', src='/js/lib/jquery-ui.js')
     script(type='text/javascript', src='/js/lib/jquery.contextMenu.min.js')
-    //- script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
+    script(type='text/javascript', src='/js/lib/jquery.blockUI.js')
     script(type='text/javascript', src='/js/lib/lodash.min.js')
     script(type='text/javascript', src='/js/lib/config.js')
     script(type='text/javascript', src='/js/lib/moment.js')

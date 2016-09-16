@@ -35,7 +35,10 @@ var dti = {
                 iconText: 'assignment',
                 iconClass: 'material-icons',
                 group: 'Report',
-                singleton: false
+                singleton: false,
+                options: {
+                    width: 1000
+                }
             },
             'Dashboard': {
                 title: 'Dashboards',
@@ -615,6 +618,7 @@ var dti = {
                     iconClass: ko.observable(),
                     iconText: ko.observable(),
                     thumbnail: ko.observable(false),
+                    thumbnailFound: ko.observable(false),
                     active: ko.observable(false),
                     exempt: ko.observable(config.exempt || false),
                     height: ko.observable(prepMeasurement(config.height)),
@@ -874,14 +878,22 @@ var dti = {
             return newWindow;
         },
         openWindow: function (url, title, type, target, uniqueId, options) {
+            var config;
+
+            if (typeof url === 'object') {
+                config = url;
+            } else {
+                config = {
+                    url: url,
+                    title: title,
+                    type: type,
+                    upi: uniqueId,
+                    options: options
+                };
+            }
+
             dti.navigator.hideNavigator();
-            dti.windows.create({
-                url: url,
-                title: title,
-                type: type,
-                upi: uniqueId,
-                options: options
-            });
+            dti.windows.create(config);
         },
         getWindowsByType: function (type) {
             var openWindows = dti.bindings.openWindows[type];
@@ -903,6 +915,8 @@ var dti = {
             dti.forEachArrayRev(openWindows, function (win) {
                 win.close();
             });
+
+            dti.fire('hideMenus');
         },
         activate: function (target) {
             dti.fire('hideMenus');
@@ -1529,7 +1543,7 @@ var dti = {
             var endPoint = dti.utility.getEndpoint(pointInfo.pointType, pointInfo._id),
                 name = [pointInfo.name1, pointInfo.name2, pointInfo.name3, pointInfo.name4].join(' ');
 
-            dti.windows.openWindow(endPoint.review.url, name, pointInfo.pointType, null, null, null);
+            dti.windows.openWindow(endPoint.review.url, name, pointInfo.pointType, null, pointInfo._id, null);
         },
         handleNavigatorRowClick: function (pointInfo) {
             dti.navigatorNew.hideNavigator();
@@ -2743,8 +2757,9 @@ var dti = {
             };
 
             ko.bindingHandlers.thumbnail = {
-                update: function (element, valueAccessor) {
+                update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
                     var upi = valueAccessor()(),
+                        thumbnailFound = viewModel.thumbnailFound,
                         $element = $(element),
                         $bg = $element.parent(),
                         currThumb = dti.thumbs[upi],
@@ -2773,7 +2788,11 @@ var dti = {
                                         };
 
                                         $element.attr('src', image);
-                                        if (bgColor != 'undefined') $bg.css('background-color', bgColor);
+                                        if (bgColor != 'undefined') {
+                                            $bg.css('background-color', bgColor);
+                                        }
+
+                                        thumbnailFound(true);
                                     }
                                 )
                                 .fail(
