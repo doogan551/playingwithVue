@@ -67,10 +67,10 @@ block content
                                             strong.small.pull-right # of entries per Page
                                         .col-xs-2.entries
                                             .dropdown.availableEntries(data-bind="css: {disabled: !$root.canEdit()}")
-                                                a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="enteriesDropdown")
-                                                    span(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
+                                                a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="enteriesDropdown")
+                                                    span.white-text(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
                                                     // ko if: (listOfEntriesPerPage.length > 1)
-                                                    span.caret.lm10px
+                                                    span.white-text.caret.lm10px
                                                     // /ko
                                                 // ko if: (listOfEntriesPerPage.length > 1)
                                                 ul#enteriesDropdown.calculations.dropdown-content
@@ -84,10 +84,10 @@ block content
                                             strong.small.pull-right Chart Type
                                         .col-xs-2.chartTypes
                                             .dropdown.availableChartTypes(data-bind="css: {disabled: !$root.canEdit()}")
-                                                a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypesDropdown")
-                                                    span(data-bind="text: selectedChartType()")
+                                                a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypesDropdown")
+                                                    span.white-text(data-bind="text: selectedChartType()")
                                                     // ko if: ($root.listOfChartTypes.length > 1)
-                                                    span.caret.lm10px
+                                                    span.white-text.caret.lm10px
                                                     // /ko
                                                 // ko if: ($root.listOfChartTypes.length > 1)
                                                 ul#chartTypesDropdown.chartTypes.dropdown-content
@@ -197,8 +197,9 @@ block content
                                                         // /ko
                                                     td.includeInChart
                                                         // ko if: ($root.canEdit() && !!canBeCharted && canBeCharted)
-                                                        input.includeInChartColumn(data-bind="checked: includeInChart, enable: ($root.canEdit() && !!canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()} ", type="checkbox")
-                                                        label(data-bind="attr: { for: 'includeInChart' + $index() }")
+                                                        p
+                                                            input.includeInChartColumn(data-bind="checked: includeInChart, enable: ($root.canEdit() && !!canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()} ", type="checkbox")
+                                                            label(data-bind="attr: { for: 'includeInChart' + $index() }")
                                                         // /ko
                                                     td.yaxisChartGroup
                                                         // ko if: ($root.canEdit() && !!canBeCharted && canBeCharted)

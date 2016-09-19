@@ -1821,7 +1821,7 @@ var reportsViewModel = function () {
             });
         },
         getScreenFields = function () {
-            $direports = $(".direports");
+            $direports = $(document).find(".direports");
             $editColumnModal = $direports.find("#editColumnModal");
             $viewColumnModal = $direports.find("#viewColumnModal");
             $globalEditColumnModal = $direports.find("#globalEditColumnModal");
