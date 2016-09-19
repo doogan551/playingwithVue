@@ -27,7 +27,7 @@ block content
                             li.additionalFilters(role="presentation")
                                 a.strong.toggleTab(href="#additionalFilters", data-toggle="tab") Additional Filters
                         div.configurationContent
-                            h4.strong.reportTitle(data-bind="text: reportDisplayTitle")
+                            h5.strong.reportTitle(data-bind="text: reportDisplayTitle")
                             div.tab-content
                                 div.reportAttribs#reportAttribs.active.tab-pane
                                     .form-group.clearfix.direportgroup
@@ -374,29 +374,35 @@ block content
                                         // /ko
                                 .reportButtons
                                     // ko if: ($root.canEdit())
-                                    .saveReportButton.btn.btn-primary
-                                        | Save Report
+                                    a.btn.tiny.waves-effect.waves-light.saveReportButton(style="margin-right: 2px;")
+                                        //| Save
+                                        i.material-icons.tiny.center done
                                     // /ko
-                                    .runReportButton.btn.btn-primary(data-bind="enabled: reportResultViewed()")
-                                        | Run Report
+                                    a.btn.tiny.waves-effect.waves-light.runReportButton(data-bind="enabled: reportResultViewed()")
+                                        //| Run
+                                        i.material-icons.tiny.center play_arrow
                                     .screenMessages
                                         .row.well-sm
                                             .errorMessage.alert-danger
                                             .successMessage.alert-success
                     .tabViewReport.well.tab-pane.workingPane
                         // ko if: (reportType !== 'Property')
-                        ul.nav.nav-tabs
+                        ul.viewReportNav
                             // ko if: (chartable())
-                            li.gridData.active(role="presentation")
-                                a.strong.toggleTab(data-bind="click: function () { $root.focusGridView() }", href="#gridData", data-toggle="tab") Grid View
-                            li.reportChart(data-bind="click: function () { $root.requestChart() }", role="presentation")
-                                a.strong.toggleTab(href="#chartData", data-toggle="tab") Chart View
+                            li.gridData.active
+                                a.btn.waves-effect.waves-light.active.toggleTab(data-bind="click: function () { $root.focusGridView($element) }", href="#gridData", data-toggle="tab")
+                                    //| Grid View
+                                    i.material-icons.center view_list
+                            li.reportChart
+                                a.btn.waves-effect.waves-light.toggleTab(data-bind="click: function () { $root.focusChartView($element) }", href="#chartData", data-toggle="tab")
+                                    //| Chart View
+                                    i.material-icons.center insert_chart
                             // /ko
                         // /ko
                         div.tab-content
                             div#gridData.active.tab-pane
                                 .row
-                                    h4.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
+                                    h5.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
                                     table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
                                         tfoot.tableFooter
                                             tr(data-bind="foreach: listOfColumns()")
@@ -421,13 +427,6 @@ block content
                                             i.fa.fa-print
                                             | Print
                                 .reportChartDiv
-                    .pop.popInOutDiv.cursorPointer(data-bind='click: togglePop')
-                        .popOut
-                            .fa.fa-arrow-circle-up
-                            | Pop Out
-                        .popIn.hidden
-                            .fa.fa-arrow-circle-down
-                            | Pop In
     .hiddenPlaceholder.hidden
         input.form-control.globalPrecision.hidden(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
         input.form-control.globalChartCheckbox.hidden(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit()", type="checkbox")
