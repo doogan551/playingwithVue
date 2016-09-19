@@ -63,9 +63,10 @@ function runScheduleEntry(entryUpi, callback) {
     Utility.getOne({
         collection: 'points',
         query: {
-            _id: entryUpi._id
+            _id: parseInt(entryUpi._id, 10)
         }
     }, function(err, scheduleEntry) {
+		
         Utility.getOne({
             collection: 'points',
             query: {
