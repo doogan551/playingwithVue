@@ -2,14 +2,14 @@
     z-index: 5;
     padding: 0px 0px 10px 5px;
     position: absolute;
-    width: 100px;
+    width: 92px;
     height: 100%;
     color: #ffffff;
     background-color: rgb(200, 190, 170);
     border-right: 2px solid #696969;
 }
 .leftBar a {
-    padding-top: 8px;
+    /*padding-top: 0px;*/
 }
 .rightPanel {
     z-index: 0;
@@ -19,7 +19,7 @@
 }
 .rightPanel > div.container-fluid {
     padding-right: 0px;
-    padding-left: 4px;
+    padding-left: 0px;
 }
 .reportDisplayFooter {
     display: inline-block;
@@ -89,11 +89,18 @@ input.input.form-control.durationDateRangeTime {
     cursor: pointer;
     text-decoration: underline;
 }
+.viewReportNav {
+    display: inline-flex;
+    margin-right: 5px;
+}
+.viewReportNav li {
+    margin-right: 5px;
+}
 .runReportTabSpinner {
-    margin-left: 5px;
+    margin-left: 34px;
 }
 .runReportCheckMark {
-    margin-left: 5px;
+    margin-left: 34px;
 }
 .reportDisplayTitle {
     margin-top: 2px;
@@ -333,8 +340,14 @@ td.filterName {
     width: 275px;
     padding-left: 20px !important;
 }
+li.active a {
+    border: 1px solid #416933;
+}
 .filterName.open:focus {
     border-color: #d5e1f2;
+}
+.nav-tabs > li.active > a {
+    background: none;
 }
 .tabConfiguration{
     padding-top: 0px;
@@ -371,7 +384,7 @@ td.filterName {
     border-bottom: none;
 }
 .tabViewReport ul.nav.nav-tabs li.active a {
-    background-color: #dddddd;
+    /*background-color: #dddddd;*/
     border: 1px solid #416933;
 }
 .tabViewReport ul.nav.nav-tabs li a {
@@ -388,17 +401,17 @@ td.filterName {
     padding-right: 20px;
 }
 .tabViewReport div.dataTables_filter {
+    margin-left: 243px;
     display: inline-block;
-    margin-left: 50px;
 }
 .tabViewReport .chartButtons {
     display: inline-flex;
     padding: 3px;
-    margin-left: 36px;
     margin-top: -6px;
+    float: right;
 }
 .tabViewReport .chartButtons a.btn.btn-default {
-    padding: 4px 6px 0px 6px;
+    padding: 0px 7px 0px 9px;
     border-radius: 0px 4px 4px 0px;
     height: 33px;
     margin-top: 2px;
@@ -757,7 +770,7 @@ input.form-control.columnDisplayName {
     height: 33px;
 }
 .availableChartTypes.chartTab > .btn {
-    padding: 4px;
+    padding: 0px 8px 0px 8px;
     margin-top: 2px;
     border-radius: 4px 0px 0px 4px;
     height: 33px;

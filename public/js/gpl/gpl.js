@@ -23,7 +23,7 @@ var gpl = {
     boundingRectCount: 0,
     logLinePrefix: true,
     rendered: false,
-    poppedIn: window.top.location.href !== window.location.href,
+    poppedIn: false,//window.top.location.href !== window.location.href,
     idxPrefix: '_gplId_',
     toolbarFill: '#313131',
     iconPath: '/img/icons/',
@@ -195,13 +195,15 @@ var gpl = {
 
         gpl.fire('openwindow');
 
-        windowRef = gpl._openWindow.apply(this, arguments);
+        // gpl._openWindow.apply(this, arguments);
 
-        windowRef.onbeforeunload = closeFn;
+        dtUtility.openWindow.apply(this, arguments);
 
-        closeTimer = setInterval(checkUnload, 100);
+        // windowRef.onbeforeunload = closeFn;
 
-        return windowRef;
+        // closeTimer = setInterval(checkUnload, 100);
+
+        // return windowRef;
     },
     defaultBlockMessage: 'Please Wait...',
     blockUI: function (message) {
@@ -347,7 +349,7 @@ var gpl = {
                     map = gpl.pointUpiMap[upi] = {
                         Name: data.Name,
                         pointType: data['Point Type'].Value,
-                        valueType: (data['Value'].ValueType === 5) ? 'enum' : 'float'
+                        valueType: (data.Value.ValueType === 5) ? 'enum' : 'float'
                     };
                     gpl.pointData[upi] = data;
                     callback(map, data);
@@ -6078,7 +6080,7 @@ gpl.BlockManager = function (manager) {
                     return {
                         Name: ref.Name,
                         pointType: ref['Point Type'].Value,
-                        valueType: (ref['Value'] && ref['Value'].ValueType === 5) ? 'enum' : 'float',
+                        valueType: (ref.Value && ref.Value.ValueType === 5) ? 'enum' : 'float',
                         _idx: idx
                     };
                     // return ref;
@@ -7317,7 +7319,11 @@ gpl.Manager = function () {
             managerSelf.currWidth = width;
             managerSelf.currHeight = height;
 
-            window.resizeTo(width, height);
+            dtUtility.updateWindow('resize', {
+                width: width,
+                height: height
+            });
+            // window.resizeTo(width, height);
 
             if (initial) {
                 managerSelf.resizeCanvas(width, height);
@@ -7579,14 +7585,18 @@ gpl.Manager = function () {
         var endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Sequence', gpl.upi),
             url = endPoint.edit.url;
 
-        gpl.openWindow(url, gpl.point.Name, 'Sequence', '', gpl.upi);
+        gpl.openWindow(url, gpl.point.Name, 'Sequence', '', gpl.upi, {
+            sameWindow: true
+        });
     };
 
     managerSelf.doCancel = function () {
         var endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Sequence', gpl.upi),
             url = endPoint.review.url;
 
-        gpl.openWindow(url, gpl.point.Name, 'Sequence', '', gpl.upi);
+        gpl.openWindow(url, gpl.point.Name, 'Sequence', '', gpl.upi, {
+            sameWindow: true
+        });
     };
 
     managerSelf.popInOut = function () {
