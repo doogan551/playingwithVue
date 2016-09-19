@@ -27,7 +27,7 @@ var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName].join('');
 
 var checkVersions = function(version) {
-    console.log(version, prevVersion, curVersion);
+    // console.log(version, prevVersion, curVersion);
     if (prevVersion === 0 || (compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0)) {
         return true;
     }

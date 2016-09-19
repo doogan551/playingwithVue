@@ -1,12 +1,15 @@
 .leftBar {
     z-index: 5;
-    padding: 15px 0px 10px 5px;
+    padding: 0px 0px 10px 5px;
     position: absolute;
     width: 100px;
     height: 100%;
     color: #ffffff;
-    background-color: rgb(65, 105, 51);
+    background-color: rgb(200, 190, 170);
     border-right: 2px solid #696969;
+}
+.leftBar a {
+    padding-top: 8px;
 }
 .rightPanel {
     z-index: 0;
@@ -56,11 +59,11 @@
     -webkit-appearance: none;
     -moz-appearance: textfield;
 }
-.durationDateRange {
+input.input.form-control.durationDateRange {
     width: 200px;
     padding-left: 26px;
 }
-.durationDateRangeTime {
+input.input.form-control.durationDateRangeTime {
     width: 65px;
 }
 .durationError {
@@ -338,7 +341,7 @@ td.filterName {
     min-width: 850px;
 }
 .tabConfiguration ul.nav.nav-tabs {
-    background-color: rgb(65, 105, 51);
+    background-color: rgb(200, 190, 170);
     border-bottom: none;
 }
 .tabConfiguration ul.nav.nav-tabs li.active a {
@@ -391,14 +394,13 @@ td.filterName {
 .tabViewReport .chartButtons {
     display: inline-flex;
     padding: 3px;
-    margin-left: 50px;
+    margin-left: 36px;
     margin-top: -6px;
 }
 .tabViewReport .chartButtons a.btn.btn-default {
     padding: 4px 6px 0px 6px;
-    margin-left: -6px;
     border-radius: 0px 4px 4px 0px;
-    height: 30px;
+    height: 33px;
     margin-top: 2px;
 }
 .tabViewReport .chartButtons i.fa-print {
@@ -485,7 +487,7 @@ a.tab {
 html, body {
     overflow-x: hidden;
     overflow-y: hidden;
-    background-color: rgb(65, 105, 51);
+    background-color: rgb(200, 190, 170);
 }
 body {
     padding-top: 5px;
@@ -640,7 +642,7 @@ input.form-control.globalChartCheckbox {
     margin-left: 6px;
     width: 215px;
 }
-.columnDisplayName {
+input.form-control.columnDisplayName {
     width: 281px;
     display: inline-block;
 }
@@ -752,11 +754,13 @@ input.form-control.globalChartCheckbox {
 }
 .availableChartTypes.chartTab {
     padding: 0px;
+    height: 33px;
 }
 .availableChartTypes.chartTab > .btn {
     padding: 4px;
     margin-top: 2px;
     border-radius: 4px 0px 0px 4px;
+    height: 33px;
 }
 .panel-heading a.panel-anchor:after {
     font-family:'Glyphicons Halflings';
@@ -845,12 +849,8 @@ button {
     cursor: pointer;
 }
 .reportButtons {
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: -1px;
-    margin-bottom: 46px;
-    width: 320px;
-    /*border: 1px solid #73AD21;*/
+    margin: -1px auto 46px auto;
+    width: 325px;
     padding: 1px;
 }
 .reportButtons .btn.btn-primary {
