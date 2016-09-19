@@ -204,8 +204,8 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
             //     }
             // });
 
-        dtiMessaging.showPointSelector(parameters);
-        dtiMessaging.onPointSelect(callback);
+        dtUtility.showPointSelector(parameters);
+        dtUtility.onPointSelect(callback);
     };
 
 

@@ -414,7 +414,7 @@ html
         // /ko
 
     script#windowTemplate(type='text/html')
-        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized() || windowsHidden(), activeCard: active() }')
+        .card-panel.dti-card-panel.z-depth-2.lighten-3(data-bind='event: { mousedown: activate }, style: {width: width, height: height, left: left, top: top, bottom: bottom, right: right}, css: { hide: minimized() || windowsHidden(), activeCard: active(), loading: loading() }')
             .card-toolbar.blue-grey(data-bind="css: { 'lighten-3': !active() }")
                 .card-title.center-align.white-text
                     div
@@ -564,4 +564,4 @@ html
     script(type='text/javascript', src='/js/lib/socket.io.js')
     script(type='text/javascript', src='/js/lib/materialize.js')
     script(type='text/javascript', src='/js/v2/home.js')
-    script(type='text/javascript', src='/js/v2/dti.js')        
+    script(type='text/javascript', src='/js/v2/dorsettUtility.js')        

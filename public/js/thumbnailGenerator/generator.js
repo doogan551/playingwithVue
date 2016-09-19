@@ -45,7 +45,7 @@ var thumbnailGenerator = (function ($) {
             return _internal.vm.captureList();
         }
         return ko.utils.arrayFilter(_internal.vm.captureList(), function(item) {
-            return item.tn == false;
+            return item.tn === false;
         });
     };
 

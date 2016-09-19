@@ -413,15 +413,20 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     position: absolute;
     left: 0;
     right: 0;
-    top: 0;
+    top: 29px;
     bottom: 0;
     display: none;
 }
 
 .ui-resizable-resizing .windowMask,
 .ui-draggable-dragging .windowMask,
-.interacting .windowMask {
+.interacting .windowMask,
+.loading .windowMask {
     display: block;
+}
+
+.loading .windowMask {
+    background-color: rgba(0, 0, 0, .5);
 }
 
 .dti-menu-tile {
