@@ -3082,6 +3082,7 @@ var reportsViewModel = function () {
                         {
                             extend: 'collection',
                             text: 'Export',
+                            className: 'blue-grey',
                             buttons: [
                                 {
                                     extend: 'copyHtml5',
@@ -3125,6 +3126,7 @@ var reportsViewModel = function () {
                         {
                             extend: 'print',
                             text: '<i class="fa fa-print"></i> Print',
+                            className: 'blue-grey',
                             key: {
                                 altKey: true,
                                 key: '5'

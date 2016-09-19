@@ -1,11 +1,19 @@
 ul
     li.configurationButton.active
-        a.waves-effect.waves-light.btn.active(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;")
+        a.waves-effect.waves-light.btn.blue-grey.active(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;")
             //| Configuration
             i.material-icons.center settings
     li.viewReportButton
-        a.waves-effect.waves-light.btn(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;")
+        a.waves-effect.waves-light.btn.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;")
             //| Run Report
             i.material-icons.center play_arrow
-i.fa.fa-spinner.fa-spin.fa-1x.runReportTabSpinner(data-bind="css: {displayDiv: displayTabSpinner(), hideDiv: !displayTabSpinner()} ", title="Requesting Report Data")
-i.fa.fa-check.fa-1x.runReportCheckMark(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
+div.preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: displayTabSpinner(), hideDiv: !displayTabSpinner()} ", title="Requesting Report Data")
+    div.spinner-layer
+        div.circle-clipper.left
+            div.circle
+        div.gap-patch
+            div.circle
+        div.circle-clipper
+            div.circle
+.runReportCheckMark(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
+    i.material-icons.center thumb_up
