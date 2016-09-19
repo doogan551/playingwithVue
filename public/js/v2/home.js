@@ -1537,6 +1537,7 @@ var dti = {
                     }, 750);
                 } else {
                     bindings.showSummary(false);
+                    bindings.showError(false);
                     bindings.count(0);
                     bindings.searchResults.removeAll();
                 }
@@ -1596,7 +1597,8 @@ var dti = {
             }).done(
                 function (data) {
                     if (data.err) {
-                        // TODO signal error to UI
+                        bindings.errorMessage(data.err);
+                        bindings.showError(true);
                         return;
                     }
                     // If the request ID doesn't match our current request ID
@@ -1610,11 +1612,23 @@ var dti = {
                     bindings.searchResults(data.points);
                     bindings.count(data.count);
                     bindings.showSummary(true);
+                    bindings.showError(false);
                 }
             ).fail(
-                function globalSearchFail (jqXHR, textStatus) {
-                    // TODO signal error to UI
+                function globalSearchFail (jqXHR, textStatus, errorThrown) {
+                    var errorMessage;
+
                     dti.log('Global search failed', jqXHR, textStatus);
+
+                    errorMessage = jqXHR.status + ' - ' + textStatus;
+
+                    if (errorThrown) {
+                        errorMessage += ' - ' + errorThrown;
+                    }
+
+                    bindings.errorMessage(errorMessage);
+
+                    bindings.showError(true);
                 }
             ).always (
                 function globalSearchFinished () {
@@ -2720,6 +2734,8 @@ var dti = {
         globalSearch: {
             gettingData: ko.observable(false),
             showSummary: ko.observable(false),
+            showError: ko.observable(false),
+            errorMessage: ko.observable(''),
             searchResults: ko.observableArray([]),
             count: ko.observable(0),
             show: function () {
@@ -2727,6 +2743,9 @@ var dti = {
             },
             hide: function () {
                 dti.globalSearch.hide();
+            },
+            doSearch: function () {
+                dti.globalSearch.doSearch();
             }
         },
         closeAllWindows: function () {

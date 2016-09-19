@@ -384,12 +384,15 @@ var reportsViewModel = function () {
         $direports,
         $tabs,
         $tabConfiguration,
+        $configurationButton,
         $tabViewReport,
+        $viewReportButton,
         $dataTablePlaceHolder,
         $rightPanel,
         $spinnertext,
         $editColumnModal,
         $viewColumnModal,
+        $viewReportNav,
         $globalEditColumnModal,
         $pointName1,
         $pointName2,
@@ -412,7 +415,6 @@ var reportsViewModel = function () {
         $saveReportButton,
         pointSelectorRef,
         $pointSelectorIframe,
-        $popAction,
         longClickStart,
         longClickTimer = 100,
         reportData,
@@ -1781,15 +1783,21 @@ var reportsViewModel = function () {
                     case 1:
                         $tabConfiguration.addClass("active");
                         $tabConfiguration.show();
+                        $configurationButton.addClass("active");
+                        $configurationButton.find("a").addClass("active");
+                        $viewReportButton.removeClass("active");
+                        $viewReportButton.find("a").removeClass("active");
                         $tabViewReport.removeClass("active");
                         $tabViewReport.hide();
-                        $popAction.show();
                         break;
                     case 2:
                         $tabConfiguration.removeClass("active");
                         $tabConfiguration.hide();
+                        $configurationButton.removeClass("active");
+                        $configurationButton.find("a").removeClass("active");
+                        $viewReportButton.addClass("active");
+                        $viewReportButton.find("a").addClass("active");
                         $tabViewReport.addClass("active");
-                        $popAction.hide();
                         break;
                 }
             }
@@ -1819,7 +1827,10 @@ var reportsViewModel = function () {
             $globalEditColumnModal = $direports.find("#globalEditColumnModal");
             $tabs = $direports.find(".tabs");
             $tabConfiguration = $direports.find(".tabConfiguration");
+            $configurationButton = $direports.find(".configurationButton");
             $tabViewReport = $direports.find(".tabViewReport");
+            $viewReportButton = $direports.find(".viewReportButton");
+            $viewReportNav = $tabViewReport.find(".viewReportNav");
             $dataTablePlaceHolder = $direports.find(".dataTablePlaceHolder");
             $rightPanel = $direports.find(".rightPanel");
             $spinnertext = $rightPanel.find(".spinnertext");
@@ -1838,7 +1849,6 @@ var reportsViewModel = function () {
             $columnsTbody = $direports.find('.columnsGrid .sortablecolums');
             $reportColumns = $direports.find("#reportColumns");
             $additionalFilters = $direports.find("#additionalFilters");
-            $popAction = $direports.find(".pop.popInOutDiv");
             $hiddenPlaceholder = $direports.find(".hiddenPlaceholder");
             $globalPrecision = $hiddenPlaceholder.find("input.globalPrecision");
             $globalIncludeInChart = $hiddenPlaceholder.find("input.globalChartCheckbox");
@@ -2699,11 +2709,6 @@ var reportsViewModel = function () {
                     scroll: true,
                     handle: '.handle'
                 });
-
-                if (window.top.location.href === window.location.href) {
-                    $('.popOut').addClass('hidden');
-                    $('.popIn').removeClass('hidden');
-                }
             }
 
             $dataTablePlaceHolder.on('draw.dt', function (e, settings) {
@@ -3514,7 +3519,6 @@ var reportsViewModel = function () {
         },
         renderReport = function () {
             if (reportData !== undefined && self.currentTab() === 2) {
-                $popAction.show();
                 self.reportResultViewed(self.currentTab() === 2);
                 blockUI($tabViewReport, false);
                 if (scheduled) {
@@ -4190,7 +4194,6 @@ var reportsViewModel = function () {
                     tabSwitch(2);
                     self.selectViewReportTabSubTab("gridData");
                     if (self.reportResultViewed()) {
-                        $popAction.hide();
                         self.activeDataRequest(true);
                         self.reportResultViewed(false);
                         if (!scheduled) {
@@ -4233,8 +4236,18 @@ var reportsViewModel = function () {
         renderChart(printFormat, scheduled);
     };
 
-    self.focusGridView = function () {
+    self.focusChartView = function (element) {
+        self.selectViewReportTabSubTab("chartData");
+        $reportChartDiv.html("");
+        $viewReportNav.find("chartData a").addClass("active");
+        $viewReportNav.find("gridData a").removeClass("active");
+        renderChart(null, scheduled);
+    };
+
+    self.focusGridView = function (element) {
         self.selectViewReportTabSubTab("gridData");
+        $viewReportNav.find("gridData a").addClass("active");
+        $viewReportNav.find("chartData a").removeClass("active");
         adjustViewReportTabHeightWidth();
     };
 
@@ -4524,18 +4537,6 @@ var reportsViewModel = function () {
         $tabViewReport.find("ul.nav-tabs").find("li." + subTabName).addClass("active");
         $tabViewReport.find(".tab-content > .active").removeClass("active");
         $tabViewReport.find("#" + subTabName).addClass("active");
-    };
-
-    self.togglePop = function () {
-        var options = {
-            width: 1080,
-            height: 768
-        };
-        if (window.top.location.href === window.location.href) {  // If we're a pop-out; pop back in
-            window.workspaceManager.openWindowPositioned(window.location.href, point.Name, 'report', 'mainWindow', windowUpi);
-        } else { // Open the window
-            window.workspaceManager.openWindowPositioned(window.location.href, point.Name, 'report', '', windowUpi, options);
-        }
     };
 
     self.editColumn = function (column, index) {
