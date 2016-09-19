@@ -7,11 +7,25 @@ block content
             #page-content-wrapper.rightPanel
                 .container-fluid
                     .runReportSpinner(data-bind="css: { displayDiv: displayMainSpinner(), hideDiv: !displayMainSpinner()} ", title="Requesting Report Data")
-                        i.fa.fa-spinner.fa-spin.fa-3x
-                        span.spinnertext Getting Data
+                        div.preloader-wrapper.small.active
+                            div.spinner-layer
+                                div.circle-clipper.left
+                                    div.circle
+                                div.gap-patch
+                                    div.circle
+                                div.circle-clipper
+                                    div.circle
+                        span.spinnertext.teal-text Getting Data
                     .runReportChartSpinner(data-bind="css: { displayDiv: displayChartSpinner(), hideDiv: !displayChartSpinner()}", title="Requesting Report Data for Chart")
-                        i.fa.fa-spinner.fa-spin.fa-3x
-                        span.spinnertext(data-bind="text: chartSpinnerTitle")
+                        div.preloader-wrapper.small.active
+                            div.spinner-layer
+                                div.circle-clipper.left
+                                    div.circle
+                                div.gap-patch
+                                    div.circle
+                                div.circle-clipper
+                                    div.circle
+                        span.spinnertext.teal-text(data-bind="text: chartSpinnerTitle")
                     .tabConfiguration
                         ul.nav.nav-tabs
                             li.attribs.active(role="presentation")
@@ -53,7 +67,7 @@ block content
                                             strong.small.pull-right # of entries per Page
                                         .col-xs-2.entries
                                             .dropdown.availableEntries(data-bind="css: {disabled: !$root.canEdit()}")
-                                                a.dropdown-button.btn(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="enteriesDropdown")
+                                                a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="enteriesDropdown")
                                                     span(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
                                                     // ko if: (listOfEntriesPerPage.length > 1)
                                                     span.caret.lm10px
@@ -70,7 +84,7 @@ block content
                                             strong.small.pull-right Chart Type
                                         .col-xs-2.chartTypes
                                             .dropdown.availableChartTypes(data-bind="css: {disabled: !$root.canEdit()}")
-                                                a.dropdown-button.btn(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypesDropdown")
+                                                a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypesDropdown")
                                                     span(data-bind="text: selectedChartType()")
                                                     // ko if: ($root.listOfChartTypes.length > 1)
                                                     span.caret.lm10px
@@ -121,7 +135,7 @@ block content
                                                         // /ko
                                                         // ko if: ($parent.reportType === 'Property')
                                                         .dropdown.availablePropertiesContainer
-                                                            a.dropdown-button.btn(href="#", data-bind="click: function(){$root.propertySelectClick($element)}", data-activates="enumpropertiesDropdown")
+                                                            a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}", data-activates="enumpropertiesDropdown")
                                                                 span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
                                                                 span.caret.lm10px
                                                             ul#enumpropertiesDropdown.enumproperties.dropdown-content
@@ -146,9 +160,9 @@ block content
                                                             i.tiny.material-icons.center delete
                                                         // /ko
                                                         .dropdown.availableCalculations(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.dropdown-button.btn(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="calculationsDropdown")
+                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="calculationsDropdown")
                                                                 //span(data-bind="text: calculation")
-                                                                span Calcs
+                                                                span.white-text Calcs
                                                                 // ko if: ($parent.listOfCalculations.length > 1)
                                                                 span.caret.lm10px
                                                                 // /ko
@@ -164,7 +178,7 @@ block content
                                                     td.totalizerOperator
                                                         // ko if: ($parent.reportType === 'Totalizer')
                                                         .dropdown.availableTotalizerOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.dropdown-button.btn(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="totalizerOperatorsDropdown")
+                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="totalizerOperatorsDropdown")
                                                                 span(data-bind="text: operator")
                                                                 // ko if: (valueList.length > 1)
                                                                 span.caret.lm10px
@@ -189,7 +203,7 @@ block content
                                                     td.yaxisChartGroup
                                                         // ko if: ($root.canEdit() && !!canBeCharted && canBeCharted)
                                                         .dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.dropdown-button.btn(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="yaxisGroups")
+                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="yaxisGroups")
                                                                 span(data-bind="text: yaxisGroup")
                                                                 // ko if: ($root.yaxisGroups.length > 1)
                                                                 span.caret.lm10px
@@ -361,7 +375,7 @@ block content
                                             span.intervalLabel.small Interval:&nbsp;
                                             input.intervalValue.form-control(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
                                             .dropdown.availableIntervalsContainer
-                                                a.dropdown-button.btn(href="#", data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-activates="intervals")
+                                                a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-activates="intervals")
                                                     span(data-bind="text: $root.interval")
                                                     span.caret.lm10px
                                                 ul#intervals.intervals.dropdown-content
@@ -374,11 +388,11 @@ block content
                                         // /ko
                                 .reportButtons
                                     // ko if: ($root.canEdit())
-                                    a.btn.tiny.waves-effect.waves-light.saveReportButton(style="margin-right: 2px;")
+                                    a.btn.tiny.waves-effect.waves-light.blue-grey.saveReportButton(style="margin-right: 2px;")
                                         //| Save
                                         i.material-icons.tiny.center done
                                     // /ko
-                                    a.btn.tiny.waves-effect.waves-light.runReportButton(data-bind="enabled: reportResultViewed()")
+                                    a.btn.tiny.waves-effect.waves-light.blue-grey.runReportButton(data-bind="enabled: reportResultViewed()")
                                         //| Run
                                         i.material-icons.tiny.center play_arrow
                                     .screenMessages
@@ -390,11 +404,11 @@ block content
                         ul.viewReportNav
                             // ko if: (chartable())
                             li.gridData.active
-                                a.btn.waves-effect.waves-light.active.toggleTab(data-bind="click: function () { $root.focusGridView($element) }", href="#gridData", data-toggle="tab")
+                                a.btn.waves-effect.waves-light.active.blue-grey.toggleTab(data-bind="click: function () { $root.focusGridView($element) }", href="#gridData", data-toggle="tab")
                                     //| Grid View
                                     i.material-icons.center view_list
                             li.reportChart
-                                a.btn.waves-effect.waves-light.toggleTab(data-bind="click: function () { $root.focusChartView($element) }", href="#chartData", data-toggle="tab")
+                                a.btn.waves-effect.waves-light.blue-grey.toggleTab(data-bind="click: function () { $root.focusChartView($element) }", href="#chartData", data-toggle="tab")
                                     //| Chart View
                                     i.material-icons.center insert_chart
                             // /ko
@@ -410,7 +424,7 @@ block content
                             div#chartData.tab-pane
                                 .chartButtons
                                     .dropdown.availableChartTypes.chartTab(data-bind="css: {disabled: !$root.canEdit()}")
-                                        a.dropdown-button.btn(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypes")
+                                        a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypes")
                                             span(data-bind="text: selectedChartType()")
                                             // ko if: ($root.listOfChartTypes.length > 1)
                                             span.caret.lm10px
@@ -422,10 +436,9 @@ block content
                                                 a(data-bind="click: function(){ $root.selectChartType($element, $data.value, true) }, text: $data.text")
                                             // /ko
                                         // /ko
-                                    a.btn.btn-default(data-bind="click: function() { $root.printDiv() }", href="#")
-                                        span.printButton
-                                            i.fa.fa-print
-                                            | Print
+                                    a.btn-flat.waves-effect.waves-light.blue-grey(data-bind="click: function() { $root.printDiv() }", href="#")
+                                        span.printButton Print
+                                            i.material-icons.center print
                                 .reportChartDiv
     .hiddenPlaceholder.hidden
         input.form-control.globalPrecision.hidden(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
