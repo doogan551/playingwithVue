@@ -470,6 +470,46 @@ var dorsett = {
             };
         }
     },
+    keyboardShortcuts: {
+        _lastInit: true,
+        init: function () {
+            var shortcutEntries,
+                shortcut,
+                key,
+                len,
+                i;
+
+            for (key in dorsett.keyboardShortcuts.shortcuts) {
+                shortcutEntries = dorsett.keyboardShortcuts.shortcuts[key];
+                len = shortcutEntries.length;
+
+                for (i = 0; i < len; i++) {
+                    shortcut = shortcutEntries[i];
+                    el = shortcut.element || document;
+
+                    $(el).bind(shortcut.type, key, shortcut.fn);
+                }
+            }
+        },
+        shortcuts: {
+            'shift+space': [{
+                type: 'keydown',
+                fn: function () {dorsett.globalSearch.show();}
+            }],
+            'shift+p': [{
+                type: 'keydown',
+                fn: function () {dorsett.navigatorNew.showNavigator();}
+            }],
+            'esc': [{
+                type: 'keyup',
+                fn: function () {dorsett.globalSearch.hide();}
+            }, {
+                type: 'keyup',
+                element: '#searchNavbar input',
+                fn: function () {dorsett.globalSearch.hide();}
+            }]
+        }
+    },
     Window: function (config) {
         var windowId = config.id || dorsett.makeId(),
             iframeId = dorsett.makeId(),
@@ -1483,8 +1523,50 @@ var dorsett = {
     },
     globalSearch: {
         $taskbarEl: $('#searchNavbar'),
-        $backgroundEl: $('#searchBackground'),
-        $inputEl: $('#globalSearchInput'),
+        $resultsEl: $('#globalSearchResults'),
+        $inputEl: null, // Element added to the DOM in globalSearch.init()
+        $chips: $('#searchNavbar .chips'),
+        visible: false,
+        searchTerms: {},
+        timeoutID: 0,
+        reqID: 0,
+        init: function () {
+            var bindings = dorsett.bindings.globalSearch;
+
+            dorsett.globalSearch.chips = dorsett.globalSearch.$chips.material_chip({
+                placeholder: '+Search',
+                secondaryPlaceholder: 'Search'
+            });
+
+            dorsett.globalSearch.$chips.on('chip.add', function (e, chip) {
+                console.log('Added chip', chip);
+                dorsett.globalSearch.searchTerms[chip.tag] = 1;
+                dorsett.globalSearch.doSearch();
+            });
+
+            dorsett.globalSearch.$chips.on('chip.delete', function (e, chip) {
+                console.log('Deleting chip', chip);
+                delete dorsett.globalSearch.searchTerms[chip.tag];
+                window.clearTimeout(dorsett.globalSearch.timeoutID);
+
+                if (Object.keys(dorsett.globalSearch.searchTerms).length) {
+                    dorsett.globalSearch.timeoutID = window.setTimeout(function () {
+                        dorsett.globalSearch.doSearch();
+                    }, 750);
+                } else {
+                    bindings.showSummary(false);
+                    bindings.showError(false);
+                    bindings.count(0);
+                    bindings.searchResults.removeAll();
+                }
+            });
+
+            dorsett.globalSearch.$inputEl = $('#searchNavbar input');
+
+            dorsett.globalSearch.$resultsEl.scroll(function handleScroll () {
+                console.log('scrolled');
+            });
+        },
         show: function () {
             dorsett.globalSearch.visible = true;
             dorsett.fire('hideWindows');
@@ -1493,30 +1575,88 @@ var dorsett = {
                 dorsett.globalSearch.$inputEl.focus();
             });
 
-            dorsett.animations.fadeIn(dorsett.globalSearch.$backgroundEl);
-
-            //if we want to go back to home on escape (we'll have to discuss and determine the different ways to 'escape' the search view)
-            $(document).keyup(dorsett.globalSearch.handleKeyPress);
+            dorsett.animations.fadeIn(dorsett.globalSearch.$resultsEl);
         },
         hide: function () {
-            dorsett.globalSearch.visible = false;
-            dorsett.fire('unhideWindows');
+            if (dorsett.globalSearch.visible) {
+                dorsett.globalSearch.visible = false;
+                dorsett.fire('unhideWindows');
 
-            dorsett.animations.fadeOut(dorsett.globalSearch.$taskbarEl);
-            dorsett.animations.fadeOut(dorsett.globalSearch.$backgroundEl);
-        },
-        handleKeyPress: function (event) {
-            if (event.which === 27) {
-                if (dorsett.globalSearch.visible === true) {
-                    dorsett.globalSearch.visible = false;
-                    dorsett.globalSearch.hide();
-                }
+                dorsett.animations.fadeOut(dorsett.globalSearch.$taskbarEl);
+                dorsett.animations.fadeOut(dorsett.globalSearch.$resultsEl, function resetSearch () {
+                    var $_chips = dorsett.globalSearch.$chips,
+                        chipsIndex = $_chips.data('index'),
+                        len = $_chips.data('chips').length;
+
+                    // Remove all chips (search terms)
+                    while (len--) {
+                        $_chips.deleteChip(chipsIndex, 0, $_chips);
+                    }
+                });
             }
+        },
+        doSearch: function () {
+            var bindings = dorsett.bindings.globalSearch,
+                data = {
+                    user: dorsett.bindings.user(),
+                    searchTerms: dorsett.globalSearch.searchTerms,
+                    reqID: dorsett.makeId()
+                };
 
+            dorsett.globalSearch.reqID = data.reqID;
+            bindings.gettingData(true);
+            bindings.showSummary(false);
+
+            $.ajax({
+                type: 'post',
+                url: '/api/points/globalSearch',
+                data: JSON.stringify(data),
+                contentType: 'application/json'
+            }).done(
+                function (data) {
+                    if (data.err) {
+                        bindings.errorMessage(data.err);
+                        bindings.showError(true);
+                        return;
+                    }
+                    // If the request ID doesn't match our current request ID
+                    if (data.reqID !== dorsett.globalSearch.reqID) {
+                        return;
+                    }
+                    // If our global search isn't visible we need to discard results
+                    if (!dorsett.globalSearch.visible) {
+                        return;
+                    }
+                    bindings.searchResults(data.points);
+                    bindings.count(data.count);
+                    bindings.showSummary(true);
+                    bindings.showError(false);
+                }
+            ).fail(
+                function globalSearchFail (jqXHR, textStatus, errorThrown) {
+                    var errorMessage;
+
+                    dorsett.log('Global search failed', jqXHR, textStatus);
+
+                    errorMessage = jqXHR.status + ' - ' + textStatus;
+
+                    if (errorThrown) {
+                        errorMessage += ' - ' + errorThrown;
+                    }
+
+                    bindings.errorMessage(errorMessage);
+
+                    bindings.showError(true);
+                }
+            ).always (
+                function globalSearchFinished () {
+                    bindings.gettingData(false);
+                }
+            );
         }
     },
     globalSearchOld: {
-        init: function () {
+        definitelyNotInit: function () {
             dorsett.globalSearch.$el = $('#search');
             dorsett.globalSearch.$resultsEl = $('#globalSearchResults');
 
@@ -2647,6 +2787,26 @@ var dorsett = {
         },
         showGlobalSearch: function () {
             dorsett.globalSearch.show();
+        },
+        hideGlobalSearch: function () {
+            dorsett.globalSearch.hide();
+        },
+        globalSearch: {
+            gettingData: ko.observable(false),
+            showSummary: ko.observable(false),
+            showError: ko.observable(false),
+            errorMessage: ko.observable(''),
+            searchResults: ko.observableArray([]),
+            count: ko.observable(0),
+            show: function () {
+                dorsett.globalSearch.show();
+            },
+            hide: function () {
+                dorsett.globalSearch.hide();
+            },
+            doSearch: function () {
+                dorsett.globalSearch.doSearch();
+            }
         },
         closeAllWindows: function () {
             dorsett.windows.closeAll();
