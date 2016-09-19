@@ -608,8 +608,17 @@ $startmenuGutter: 15px;
     z-index: 1;
     overflow: auto;
 
-    .summary {
+    .globalSearchHeader {
         margin-top: 20px;
+    }
+
+    .globalSearchFooter {        
+        .spinner-layer {
+            border-color: lighten($blueGrey, 25%)
+        }
+        .btn {
+            background-color: $blueGrey
+        }
     }
 }
 

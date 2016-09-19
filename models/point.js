@@ -361,8 +361,8 @@ module.exports = {
   globalSearch: function(data, cb) {
     var criteria = {
       collection: 'points',
-      limit: data.limit || 10,
-      count: true,
+      limit: data.limit || 50,
+      skip: data.skip || 0,
       query: {
         $and: []
       }
@@ -377,7 +377,7 @@ module.exports = {
       });
     }
 
-    Utility.findAndCountOld(criteria, function handleSearchResults (err, points, count) {
+    Utility.findAndCount(criteria, function handleSearchResults (err, points, count) {
       return cb(err, points, count);
     });
     // return cb(null, [data.searchTerms]);
