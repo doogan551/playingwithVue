@@ -1,7 +1,11 @@
 ul
-    li
-        a.waves-effect.waves-light.btn-mini(data-bind="click: reportConfiguration.bind()") Configuration
-    li
-        a.waves-effect.waves-light.btn-mini(data-bind="click: function(){ $root.requestReportData() }") Run Report
+    li.configurationButton.active
+        a.waves-effect.waves-light.btn.active(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;")
+            //| Configuration
+            i.material-icons.center settings
+    li.viewReportButton
+        a.waves-effect.waves-light.btn(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;")
+            //| Run Report
+            i.material-icons.center play_arrow
 i.fa.fa-spinner.fa-spin.fa-1x.runReportTabSpinner(data-bind="css: {displayDiv: displayTabSpinner(), hideDiv: !displayTabSpinner()} ", title="Requesting Report Data")
 i.fa.fa-check.fa-1x.runReportCheckMark(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
