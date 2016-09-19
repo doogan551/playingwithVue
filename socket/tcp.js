@@ -24,11 +24,10 @@ module.exports = function(_common) {
 
             if (jbuf.msg == 'newtod') {
 
-                var point = jbuf.point,
-                    date = new Date(),
+                var date = new Date(),
                     dateString = date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDay() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
 
-                runScheduleEntry(jbuf.point, function(err) {
+                runScheduleEntry(jbuf.point, function(err, point) {
                     err = (err) ? err : "Success";
                     var nameString = (point.name1) ? (point.name2) ? (point.name3) ? (point.name4) ? point.name1 + "_" + point.name2 + "_" + point.name3 + "_" + point.name4 : point.name1 + "_" + point.name2 + "_" + point.name3 : point.name1 + "_" + point.name2 : point.name1 : "";
                     writeToLogs(dateString + ' -  ToD Schedule - ' + point._id + ' - ' + nameString + ' - ' + err + "\n", function(err) {
@@ -54,7 +53,7 @@ function writeToLogs(msg, callback) {
     });
 }
 
-function runScheduleEntry(entryUpi, _id callback) {
+function runScheduleEntry(entryUpi, callback) {
     // get control point
     // get props allowed based on point type value
     // if pass
@@ -75,9 +74,9 @@ function runScheduleEntry(entryUpi, _id callback) {
             }
         }, function(err, point) {
             if (err)
-                callback(err);
+                callback(err, scheduleEntry);
             else if (!point)
-                callback("No point found");
+                callback("No point found", scheduleEntry);
             var controlProperty = scheduleEntry["Control Property"].Value;
             if (Config.Enums["Point Types"][point["Point Type"].Value].schedProps.indexOf(controlProperty) !== -1) {
                 if (controlProperty === "Execute Now") {
@@ -93,7 +92,7 @@ function runScheduleEntry(entryUpi, _id callback) {
                         }
                     }, function(err, result) {
                         common.signalExecTOD(true, function(err, msg) {
-                            callback(err);
+                            callback(err, scheduleEntry);
                         });
                     });
                 } else if (["Analog Output", "Analog Value", "Binary Output", "Binary Value", "Accumulator", "MultiState Value"].indexOf(point["Point Type"].Value) !== -1 && controlProperty === "Value") {
@@ -112,9 +111,9 @@ function runScheduleEntry(entryUpi, _id callback) {
 
                     zmq.sendCommand(control, function(err, msg) {
                         if (!!err) {
-                            callback(err);
+                            callback(err, scheduleEntry);
                         } else {
-                            callback(null);
+                            callback(null, scheduleEntry);
                         }
                     });
                 } else {
@@ -128,7 +127,7 @@ function runScheduleEntry(entryUpi, _id callback) {
                         refPoint: null
                     });
                     if (result.err)
-                        callback(result.err);
+                        callback(result.err, scheduleEntry);
                     else {
                         common.newUpdate(oldPoint, point, {
                             method: "update",
@@ -136,13 +135,13 @@ function runScheduleEntry(entryUpi, _id callback) {
                         }, {
                             username: "ToD Schedule"
                         }, function(response, point) {
-                            callback(response.err);
+                            callback(response.err, scheduleEntry);
                         });
                     }
                 }
 
             } else {
-                callback(null);
+                callback(null, scheduleEntry);
             }
 
         });
