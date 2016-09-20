@@ -1638,6 +1638,12 @@ var dti = {
 
                     bindings.errorMessage(errorMessage);
                     bindings.showError(true);
+                },
+                processPoint = function (point) {
+                    if (point['Point Type'].Value === 'Display') {
+                        // Add thumbnail found observable
+                        point.thumbnailFound = ko.observable(false);
+                    }
                 };
 
             dti.globalSearch.reqID = data.reqID;
@@ -1673,6 +1679,8 @@ var dti = {
                     if (!dti.globalSearch.visible) {
                         return;
                     }
+
+                    data.points.forEach(processPoint);
 
                     if (appendResults) {
                         bindings.searchResults(bindings.searchResults().concat(data.points));
@@ -3050,7 +3058,7 @@ var dti = {
 
             ko.bindingHandlers.thumbnail = {
                 update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-                    var upi = valueAccessor()(),
+                    var upi = ko.unwrap(valueAccessor()),
                         thumbnailFound = viewModel.thumbnailFound,
                         $element = $(element),
                         $bg = $element.parent(),

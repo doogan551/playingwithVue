@@ -625,6 +625,19 @@ $startmenuGutter: 15px;
             background-color: $blueGrey
         }
     }
+
+    .card-content {
+        overflow: hidden;
+    }
+    
+    .card-image {
+        display: flex;
+        align-items: center;
+
+        i {
+            color: lighten($blueGrey, 25%)
+        }
+    }
 }
 
 .recentItems {
