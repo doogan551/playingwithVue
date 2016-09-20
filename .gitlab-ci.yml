@@ -10,8 +10,8 @@ services:
   - mongodb:latest
   - redis:latest
 
-before_script:
-  - cd \test
+variables:
+  GIT_STRATEGY: fetch
 
 
 # This folder is cached between builds
