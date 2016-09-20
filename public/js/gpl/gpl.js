@@ -197,7 +197,7 @@ var gpl = {
 
         // gpl._openWindow.apply(this, arguments);
 
-        dtUtility.openWindow.apply(this, arguments);
+        dtiUtility.openWindow.apply(this, arguments);
 
         // windowRef.onbeforeunload = closeFn;
 
@@ -7319,7 +7319,7 @@ gpl.Manager = function () {
             managerSelf.currWidth = width;
             managerSelf.currHeight = height;
 
-            dtUtility.updateWindow('resize', {
+            dtiUtility.updateWindow('resize', {
                 width: width,
                 height: height
             });

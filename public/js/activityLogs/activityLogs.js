@@ -621,10 +621,10 @@ var ActivityLogsManager = function (conf) {
         }
     };
     self.showPointFilter = function () {
-        dtUtility.showNavigatorFilter();
+        dtiUtility.showNavigatorFilter();
     };
 
-    dtUtility.onPointFilterSelect(function (cfg) {
+    dtiUtility.onPointFilterSelect(function (cfg) {
         pointNameFilterCallback(cfg);
         self.applyPointNameFilter();
     });

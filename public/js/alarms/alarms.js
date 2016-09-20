@@ -2421,10 +2421,10 @@ var AlarmManager = function (conf) {
     };
 
     self.showPointFilter = function () {
-        dtUtility.showNavigatorFilter();
+        dtiUtility.showNavigatorFilter();
     };
 
-    dtUtility.onPointFilterSelect(function handlePointFilterSelect (cfg) {
+    dtiUtility.onPointFilterSelect(function handlePointFilterSelect (cfg) {
         filterCallback(cfg);
         self.applyNameFilter();
     });

@@ -111,7 +111,7 @@ $(document).on('pageinit', function() {
             width = parseInt(window.displayJson.Width, 10) + 400,
             height = parseInt(window.displayJson.Height, 10) + 100;
 
-        dtUtility.openWindow($(this).attr('href'), _title, pointType, '', _id, {
+        dtiUtility.openWindow($(this).attr('href'), _title, pointType, '', _id, {
             width: width,
             height: height,
             sameWindow: true

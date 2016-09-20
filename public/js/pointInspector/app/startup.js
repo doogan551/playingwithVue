@@ -337,7 +337,7 @@ define([
         if (newPointData._pStatus === 1)
             pointInspector.socket.emit(emitString, emitData);
             
-        dtUtility.closeWindow();
+        dtiUtility.closeWindow();
         // window.close();
     };
     pointInspector.tabTriggers = {};
@@ -902,7 +902,7 @@ define([
             if (!!window.attach && typeof window.attach.saveCallback === 'function') {
                 window.attach.saveCallback.call(undefined, emitData);
                 // return window.close();
-                return dtUtility.closeWindow();
+                return dtiUtility.closeWindow();
             }
             $('body').css('overflow', 'hidden');
             data = data || {};
@@ -997,7 +997,7 @@ define([
                 $saveIcon.removeClass(spinClass);
                 $('body').css('overflow', 'auto');
                 if (close) {
-                    setTimeout(dtUtility.closeWindow, 1000);
+                    setTimeout(dtiUtility.closeWindow, 1000);
                 }
             });
         };
