@@ -226,6 +226,11 @@ body {
     overflow: hidden;
 }
 
+a {
+    color: $blueGrey;
+    cursor: pointer;
+}
+
 .hidden {
     display: none;
     opacity: 0;
@@ -629,14 +634,15 @@ $startmenuGutter: 15px;
     .card-content {
         overflow: hidden;
     }
-    
-    .card-image {
-        display: flex;
-        align-items: center;
 
+    .card-image {
         i {
             color: lighten($blueGrey, 25%)
         }
+    }
+
+    .highlight {
+        background-color: #FFFFC0;
     }
 }
 
