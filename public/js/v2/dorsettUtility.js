@@ -24,25 +24,25 @@ dtiMessaging.openWindow(arguments);
 
 */
 
-var dtUtility =  {
+var dtiUtility =  {
     store: window.store,
     initEventListener: function () {
-        window.addEventListener('storage', dtUtility.handleMessage);
+        window.addEventListener('storage', dtiUtility.handleMessage);
     },
 
     init: function () {
-        if (dtUtility.store === undefined) {
+        if (dtiUtility.store === undefined) {
             $.getScript('/js/lib/store.min.js', function handleGetStore () {
                 var storeInterval = setInterval(function testStore () {
                     if (window.store) {
-                        dtUtility.store = window.store;
+                        dtiUtility.store = window.store;
                         clearInterval(storeInterval);
                     }
                 }, 100);
             });
         }
 
-        dtUtility.initEventListener();
+        dtiUtility.initEventListener();
     },
 
     defaultHandler: function (e) {
@@ -53,20 +53,20 @@ var dtUtility =  {
         var action = newValue.message,
             callbacks = {
                 getConfig: function () {
-                    if (dtUtility._configCb) {
-                        dtUtility._configCb(newValue.value);
+                    if (dtiUtility._configCb) {
+                        dtiUtility._configCb(newValue.value);
                     }
 
-                    dtUtility._configCb = null;
+                    dtiUtility._configCb = null;
                 },
                 pointSelected: function () {
-                    if (dtUtility._pointSelectCb) {
-                        dtUtility._pointSelectCb(newValue);
+                    if (dtiUtility._pointSelectCb) {
+                        dtiUtility._pointSelectCb(newValue);
                     }
                 },
                 pointFilterSelected: function () {
-                    if (dtUtility._pointFilterSelectCb) {
-                        dtUtility._pointFilterSelectCb(newValue);
+                    if (dtiUtility._pointFilterSelectCb) {
+                        dtiUtility._pointFilterSelectCb(newValue);
                     }
                 }
             };
@@ -74,7 +74,7 @@ var dtUtility =  {
         if (callbacks[action]) { // store previous call
             callbacks[action]();
         } else {
-            dtUtility.defaultHandler(newValue);
+            dtiUtility.defaultHandler(newValue);
         }
     },
 
@@ -85,7 +85,7 @@ var dtUtility =  {
             if (typeof config === 'string') {
                 config = JSON.parse(config);
             }
-            dtUtility.processMessage(config);
+            dtiUtility.processMessage(config);
         }
 
         // store.remove(e.key) to clear
@@ -104,13 +104,13 @@ var dtUtility =  {
     // },
 
     showPointSelector: function (parameters) {
-        dtUtility.sendMessage('showPointSelector', parameters);
+        dtiUtility.sendMessage('showPointSelector', parameters);
     },
 
     showNavigator: function (parameters) {
         // send message to navigator to open
-        // dtUtility.utility.showNavigatorModal();
-        dtUtility.sendMessage('navigatormodal', {
+        // dtiUtility.utility.showNavigatorModal();
+        dtiUtility.sendMessage('navigatormodal', {
             action: 'open',
             callback: true,
             parameters: parameters
@@ -119,18 +119,18 @@ var dtUtility =  {
 
     showNavigatorFilter: function () {
         // send message to navigator to open
-        // dtUtility.utility.showNavigatorModal();
-        dtUtility.sendMessage('navigatorfiltermodal', {
+        // dtiUtility.utility.showNavigatorModal();
+        dtiUtility.sendMessage('navigatorfiltermodal', {
             action: 'open'
         });
     },
 
     onPointSelect: function (cb) {
-        dtUtility._pointSelectCb = cb;
+        dtiUtility._pointSelectCb = cb;
     },
 
     onPointFilterSelect: function (cb) {
-        dtUtility._pointFilterSelectCb = cb;
+        dtiUtility._pointFilterSelectCb = cb;
     },
 
     sendMessage: function (target, cfg) {
@@ -143,37 +143,43 @@ var dtUtility =  {
     },
 
     onMessage: function (cb) {
-        dtUtility.defaultHandler = cb;
+        dtiUtility.defaultHandler = cb;
     },
 
     openWindow: function (url, title, type, target, uniqueId, options) {
-        var config = {
-            url: url,
-            title: title,
-            type: type,
-            target: target,
-            uniqueId: uniqueId,
-            options: options
-        };
+        var config;
 
-        dtUtility.sendMessage('openWindow', config);
+        if (typeof url === 'object') {
+            config = url;
+        } else {
+            config = {
+                url: url,
+                title: title,
+                type: type,
+                target: target,
+                uniqueId: uniqueId,
+                options: options
+            };
+        }
+
+        dtiUtility.sendMessage('openWindow', config);
     },
 
     updateWindow: function (action, parameters) {
-        dtUtility.sendMessage('windowMessage', {
+        dtiUtility.sendMessage('windowMessage', {
             action: action,
             parameters: parameters
         });
     },
 
     closeWindow: function () {
-        dtUtility.sendMessage('closeWindow');
+        dtiUtility.sendMessage('closeWindow');
     },
 
     getConfig: function (path, parameters, cb) {
-        dtUtility._configCb = cb;
+        dtiUtility._configCb = cb;
 
-        dtUtility.sendMessage('getConfig', {
+        dtiUtility.sendMessage('getConfig', {
             path: path,
             parameters: parameters
         });
@@ -181,7 +187,7 @@ var dtUtility =  {
     }
 };
 
-// $(dtUtility.init);
-document.addEventListener("DOMContentLoaded", function loaddtUtility (event) {
-    setTimeout(dtUtility.init, 1000); 
+// $(dtiUtility.init);
+document.addEventListener("DOMContentLoaded", function loaddtiUtility (event) {
+    setTimeout(dtiUtility.init, 1000); 
 });
