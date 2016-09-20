@@ -15,3 +15,8 @@ services:
 cache:
   paths:
   - node_modules/
+  
+all_tests:
+  script:
+   - npm install
+   - node ./specs/start.js
