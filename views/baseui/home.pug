@@ -67,17 +67,10 @@ html
 
         main.hidden
             #globalSearchResults.hidden
-                .summary.blue-grey-text(data-bind='visible: globalSearch.showSummary')
-                    .row
+                .globalSearchHeader.blue-grey-text(data-bind='visible: globalSearch.showSummary')
+                    .row.center
                         .col.s12 Displaying #[span(data-bind='text: globalSearch.searchResults().length')] of #[span(data-bind='text: globalSearch.count')] results
-                .error(data-bind='visible: globalSearch.showError')
-                    .row
-                        .col.s12.center
-                            h5 Ouch. Something went wrong.
-                            p.red-text.text-darken-4(data-bind='text: globalSearch.errorMessage')
-                            p #[a(href='javascript://', data-bind='click: globalSearch.doSearch') Click here to try again.]
-
-                .results
+                .globalSearchResultsList
                     .row(data-bind='foreach: globalSearch.searchResults')
                         .col.s12.m6.l3
                             .card.hoverable
@@ -85,9 +78,30 @@ html
                                     span.card-title(data-bind='text: Name')
                                     p Point type: #[span(data-bind='text: $data["Point Type"].Value')]
 
-                .absCenter(data-bind='visible: globalSearch.gettingData')
-                    .cssload-container
-                        .cssload-whirlpool
+                .globalSearchError(data-bind='visible: globalSearch.showError')
+                    .row
+                        .col.s12.center
+                            h5 Ouch. Something went wrong.
+                            p.red-text.text-darken-4(data-bind='html: globalSearch.errorMessage')
+                            p #[a(href='javascript://', data-bind='click: globalSearch.doSearch') Click here to try again.]
+
+                .globalSearchFooter
+                    .row.center
+                        .col.s12(data-bind='visible: globalSearch.showSummary() && globalSearch.searchResults().length > 25') Displaying #[span(data-bind='text: globalSearch.searchResults().length')] of #[span(data-bind='text: globalSearch.count')] results
+                    .row.center
+                        .col.s12(data-bind='visible: globalSearch.gettingData')
+                            .preloader-wrapper.active
+                                .spinner-layer
+                                    .circle-clipper.left
+                                        .circle
+                                    .gap-patch
+                                        .circle
+                                    .circle-clipper.right
+                                        .circle
+                    .row.center
+                        .col.s12(data-bind='visible: globalSearch.showLoadMoreResultsButton')
+                            a.waves-effect.btn(href='javascript://', data-bind='click: function () { globalSearch.doSearch(true) }') Load More Results
+
 
             #searchBox.white.z-depth-1
                 .input-field

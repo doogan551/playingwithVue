@@ -1556,7 +1556,8 @@ var dti = {
         $chips: $('#searchNavbar .chips'),
         visible: false,
         searchTerms: {},
-        timeoutID: 0,
+        chipsTimeoutID: 0,
+        scrollTimeoutID: 0,
         reqID: 0,
         init: function () {
             var bindings = dti.bindings.globalSearch;
@@ -1575,24 +1576,52 @@ var dti = {
             dti.globalSearch.$chips.on('chip.delete', function (e, chip) {
                 console.log('Deleting chip', chip);
                 delete dti.globalSearch.searchTerms[chip.tag];
-                window.clearTimeout(dti.globalSearch.timeoutID);
+                window.clearTimeout(dti.globalSearch.chipsTimeoutID);
+
+                bindings.showSummary(false);
+                bindings.showError(false);
+                bindings.showLoadMoreResultsButton(false);
+                bindings.count(0);
+                bindings.searchResults.removeAll();
 
                 if (Object.keys(dti.globalSearch.searchTerms).length) {
-                    dti.globalSearch.timeoutID = window.setTimeout(function () {
+                    bindings.gettingData(true);
+                    dti.globalSearch.chipsTimeoutID = window.setTimeout(function () {
                         dti.globalSearch.doSearch();
                     }, 750);
                 } else {
-                    bindings.showSummary(false);
-                    bindings.showError(false);
-                    bindings.count(0);
-                    bindings.searchResults.removeAll();
+                    bindings.gettingData(false);
                 }
             });
 
             dti.globalSearch.$inputEl = $('#searchNavbar input');
 
             dti.globalSearch.$resultsEl.scroll(function handleScroll () {
-                console.log('scrolled');
+                window.clearTimeout(dti.globalSearch.scrollTimeoutID);
+
+                dti.globalSearch.scrollTimeoutID = window.setTimeout(function () {
+                    var $resultsEl = dti.globalSearch.$resultsEl,
+                        totalHeight = $resultsEl[0].scrollHeight,
+                        visibleHeight = $resultsEl[0].clientHeight,
+                        scrollTop = $resultsEl.scrollTop(),
+                        totalNumberOfResults = bindings.count(),
+                        numberOfResultsShown = bindings.searchResults().length;
+
+                    // If we're scrolled within 10% of page bottom
+                    if ((scrollTop + visibleHeight) >= (totalHeight * 0.9)) {
+                        // If we have more results on the server
+                        if (numberOfResultsShown < totalNumberOfResults) {
+                            // If we've haven't gathered another 200 results
+                            if (numberOfResultsShown % 200) {
+                                // Auto-get more results
+                                dti.globalSearch.doSearch(true);
+                            } else {
+                                // Show the laod more button so the user can get more results
+                                bindings.showLoadMoreResultsButton(true);
+                            }
+                        }
+                    }
+                }, 100);
             });
         },
         show: function () {
@@ -1623,17 +1652,34 @@ var dti = {
                 });
             }
         },
-        doSearch: function () {
+        doSearch: function (appendResults) {
             var bindings = dti.bindings.globalSearch,
                 data = {
                     user: dti.bindings.user(),
                     searchTerms: dti.globalSearch.searchTerms,
-                    reqID: dti.makeId()
+                    reqID: dti.makeId(),
+                    limit: 50
+                },
+                handleError = function (errorMessage) {
+                    bindings.searchResults.removeAll();
+                    bindings.showSummary(false);
+
+                    bindings.errorMessage(errorMessage);
+                    bindings.showError(true);
                 };
 
             dti.globalSearch.reqID = data.reqID;
+            
+            if (appendResults) {
+                data.skip = bindings.searchResults().length;
+            } else {
+                bindings.searchResults.removeAll();
+                bindings.showSummary(false);
+            }
+
+            bindings.showError(false);
+            bindings.showLoadMoreResultsButton(false);
             bindings.gettingData(true);
-            bindings.showSummary(false);
 
             $.ajax({
                 type: 'post',
@@ -1642,10 +1688,10 @@ var dti = {
                 contentType: 'application/json'
             }).done(
                 function (data) {
+                    var resultsEl;
+
                     if (data.err) {
-                        bindings.errorMessage(data.err);
-                        bindings.showError(true);
-                        return;
+                        return handleError(data.err);
                     }
                     // If the request ID doesn't match our current request ID
                     if (data.reqID !== dti.globalSearch.reqID) {
@@ -1655,26 +1701,31 @@ var dti = {
                     if (!dti.globalSearch.visible) {
                         return;
                     }
-                    bindings.searchResults(data.points);
+
+                    if (appendResults) {
+                        bindings.searchResults(bindings.searchResults().concat(data.points));
+                    } else {
+                        bindings.searchResults(data.points);
+
+                        resultsEl = dti.globalSearch.$resultsEl.get(0);
+                        // If scroll bar isn't visible
+                        if (resultsEl.scrollHeight <= resultsEl.clientHeight) {
+                            // If we have more results on the server
+                            if (data.count > data.points.length) {
+                                // We do this because normally the scroll event triggers loading of 
+                                // more results. But since the scroll bar isn't visible, we need to 
+                                // let the user do it manually
+                                bindings.showLoadMoreResultsButton(true);
+                            }
+                        }
+                    }
                     bindings.count(data.count);
                     bindings.showSummary(true);
-                    bindings.showError(false);
                 }
             ).fail(
                 function globalSearchFail (jqXHR, textStatus, errorThrown) {
-                    var errorMessage;
-
                     dti.log('Global search failed', jqXHR, textStatus);
-
-                    errorMessage = jqXHR.status + ' - ' + textStatus;
-
-                    if (errorThrown) {
-                        errorMessage += ' - ' + errorThrown;
-                    }
-
-                    bindings.errorMessage(errorMessage);
-
-                    bindings.showError(true);
+                    handleError([textStatus, jqXHR.status, errorThrown, jqXHR.responseText].join('</br>'));
                 }
             ).always (
                 function globalSearchFinished () {
@@ -2825,6 +2876,7 @@ var dti = {
         globalSearch: {
             gettingData: ko.observable(false),
             showSummary: ko.observable(false),
+            showLoadMoreResultsButton: ko.observable(false),
             showError: ko.observable(false),
             errorMessage: ko.observable(''),
             searchResults: ko.observableArray([]),
@@ -2835,8 +2887,8 @@ var dti = {
             hide: function () {
                 dti.globalSearch.hide();
             },
-            doSearch: function () {
-                dti.globalSearch.doSearch();
+            doSearch: function (appendResults) {
+                dti.globalSearch.doSearch(appendResults);
             }
         },
         closeAllWindows: function () {

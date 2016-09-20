@@ -179,10 +179,8 @@ var getRegex = function(str, options) {
 	options = options || {};
 
 	if (str.charAt(0) === '"' && str.charAt(len-1) === '"') {
-		return str.substring(1, len-1);
-	}
-
-	if (str.indexOf('*') < 0) { // No wildcard characters in string
+		regex = '^' + str.substring(1, len-1) + '$';
+	} else if (str.indexOf('*') < 0) { // No wildcard characters in string
 		if (options.matchBeginning) {
 			regex = '^';
 		}
