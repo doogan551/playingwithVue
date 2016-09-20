@@ -1678,8 +1678,17 @@ var dti = {
                     bindings.showError(true);
                 },
                 processPoint = function (point) {
-                    if (point['Point Type'].Value === 'Display') {
-                        // Add thumbnail found observable
+                    var pointType = point['Point Type'].Value,
+                        itemGroup = dti.config.itemGroups[pointType];
+
+                    if (itemGroup === undefined) {
+                        itemGroup = dti.config.itemGroups.Point;
+                    }
+
+                    point.iconClass = itemGroup.iconClass;
+                    point.iconText = itemGroup.iconText;
+
+                    if (pointType === 'Display') {
                         point.thumbnailFound = ko.observable(false);
                     }
 

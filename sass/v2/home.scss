@@ -637,7 +637,8 @@ $startmenuGutter: 15px;
 
     .card-image {
         i {
-            color: lighten($blueGrey, 25%)
+            color: lighten($blueGrey, 25%);
+            font-size: 48px;
         }
     }
 

@@ -74,9 +74,14 @@ html
                     .row(data-bind='foreach: globalSearch.searchResults')
                         .col.s12.m6.l3
                             .card.horizontal.hoverable
-                                .card-image.flex.flex-center(data-bind='if: $data["Point Type"].Value === "Display"')
+                                .card-image.flex.flex-center
+                                    // ko if: $data["Point Type"].Value === "Display"
                                     img(data-bind='visible: thumbnailFound, thumbnail: $data._id')
-                                    i.mdi.mdi-48px.mdi-image-area(data-bind='visible: !thumbnailFound()')
+                                    i(data-bind='visible: !thumbnailFound(), css: iconClass, text: iconText')
+                                    // /ko
+                                    // ko ifnot: $data["Point Type"].Value === "Display"
+                                    i(data-bind='css: iconClass, text: iconText')
+                                    // /ko
                                 .card-content
                                     a.card-title.truncate(data-bind='html: NameWithHighlight, attr: { title: Name }, click: $parent.globalSearch.openPoint')
                                     p(data-bind='text: $data["Point Type"].Value')
