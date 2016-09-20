@@ -646,6 +646,13 @@ var dti = {
             refresh = function () {
                 self.$iframe[0].contentWindow.location.reload();
             },
+            getTitleForPoint = function (upi) {
+                var handlePointData = function (pt) {
+                    self.bindings.title(pt.Name);
+                };
+
+                $.getJSON('/api/points/' + upi).done(handlePointData);
+            },
             self = {
                 $windowEl: $($('#windowTemplate').html()),
                 $iframe: null,
@@ -737,6 +744,10 @@ var dti = {
 
         if (config.upi !== undefined && typeof config.upi === 'number') {
             self.bindings.upi(config.upi);
+
+            if (!config.title) {
+                getTitleForPoint(config.upi);
+            }
         }
 
         group = dti.taskbar.getWindowGroup(config.type);
@@ -935,6 +946,21 @@ var dti = {
 
             return newWindow;
         },
+        processOpenWindowParameters: function (config) {
+            if (config.pointType && !config.type) {
+                config.type = config.pointType;
+            }
+
+            if (typeof config.type === 'number') {
+                config.type = dti.workspaceManager.config.Utility.pointTypes.getPointTypeNameFromEnum(config.type);
+            }
+
+            if (typeof config.url !== 'string') {
+                config.url = dti.utility.getEndpoint(config.type, config.upi).review.url;
+            }
+
+            return config;
+        },
         openWindow: function (url, title, type, target, uniqueId, options) {
             var config;
 
@@ -949,6 +975,8 @@ var dti = {
                     options: options
                 };
             }
+
+            config = dti.windows.processOpenWindowParameters(config);
 
             dti.navigator.hideNavigator();
             dti.windows.create(config);
@@ -1766,8 +1794,10 @@ var dti = {
                             showInactive: false,
                             showDeleted: false,
                             fetchingPoints: false,
-                            isFilterMode: false,
                             points: [],
+                            mode: 'select',
+                            deviceId: null,
+                            remoteUnitId: null,
                             id: self.id
                         };
 
@@ -1893,10 +1923,10 @@ var dti = {
                         }
                     };
 
-                    bindings.isFilterMode.subscribe(function manageFilterModeFooter (val) {
+                    bindings.mode.subscribe(function manageFilterModeFooter (val) {
                         var cls = 'modal-fixed-footer';
 
-                        if (val) {
+                        if (val === 'filter') {
                             self.$modal.addClass(cls);
                         } else {
                             self.$modal.removeClass(cls);
@@ -1927,7 +1957,6 @@ var dti = {
                             name4 = bindings.name4();
 
                         if (!self._pauseRequest && self._loaded) {
-                            // dti.log('Getting points', name1, name2, name3, name4);
                             self.getPoints();
                         }
                     });
@@ -1937,7 +1966,6 @@ var dti = {
                             showDeleted = bindings.showDeleted();
 
                         if (!self._pauseRequest && self._loaded) {
-                            // dti.log('Getting points', name1, name2, name3, name4);
                             self.getPoints();
                         }
                     });
@@ -2013,7 +2041,8 @@ var dti = {
 
             self.applyConfig = function (cfg) {
                 var defaultConfig = $.extend({}, self.defaultConfig),
-                    config = $.extend(defaultConfig, cfg || {});
+                    config = $.extend(defaultConfig, cfg || {}),
+                    propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId'];
 
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
 
@@ -2078,6 +2107,8 @@ var dti = {
                         pointTypes: bindings.pointTypes,
                         showDeleted: bindings.showDeleted,
                         showInactive: bindings.showInactive,
+                        deviceId: bindings.deviceId,
+                        remoteUnitId: bindings.remoteUnitId,
                         name1: bindings.name1,
                         name2: bindings.name2,
                         name3: bindings.name3,
@@ -3441,47 +3472,3 @@ dti.workspaceManager = window.workspaceManager = {
         dti.log('thumbnail placeholder');
     }
 };
-
-//include messaging.js, sets up storage listener, parses messages, etc.  grabs window id, then sets up 'onMessage' event?
-dti.window = {
-    updateUrl: null,
-    back: null,
-    forward: null,
-    saveState: null,
-    retrieveState: null,
-    initialize: function () {
-        this.id = windowPrefix + makeId();
-
-    }
-};
-
-// //change pointLookup to fire message?
-// dti.navigatorModal = {
-//     defaultCallback: cb,
-//     currentCallback: cb,
-//     showNavigatorModal: cb,
-//     showNavigatorFilterModal: cb,
-//     handleNavigatorSelect: cb, //'externalCallback'
-//     handleNavigatorFilterSelect: cb,
-//     handleNavigatorFilterAccept: cb //select on window
-// };
-
-// //openWindow is now message, optional parameters for startup, each one checks for messages
-// //sends an afterOpen message with resulting window id?  or just send 'onopen' message with it?
-
-// dti.showNavigatorModal = function (config) {
-//     var defaultCfg = {
-//         hasCallback: false,
-//         filter:  {
-//             pointTypes: [],
-//             name1: '',
-//             name2: '',
-//             name3: '',
-//             name4: ''
-//         }
-//     };
-// };
-
-
-
-
