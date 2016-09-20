@@ -10,6 +10,10 @@ services:
   - mongodb:latest
   - redis:latest
 
+before_script:
+  - cd \test
+
+
 # This folder is cached between builds
 # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
 cache:
