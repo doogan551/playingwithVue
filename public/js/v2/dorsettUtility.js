@@ -147,14 +147,20 @@ var dtUtility =  {
     },
 
     openWindow: function (url, title, type, target, uniqueId, options) {
-        var config = {
-            url: url,
-            title: title,
-            type: type,
-            target: target,
-            uniqueId: uniqueId,
-            options: options
-        };
+        var config;
+
+        if (typeof url === 'object') {
+            config = url;
+        } else {
+            config = {
+                url: url,
+                title: title,
+                type: type,
+                target: target,
+                uniqueId: uniqueId,
+                options: options
+            };
+        }
 
         dtUtility.sendMessage('openWindow', config);
     },
