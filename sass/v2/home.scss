@@ -231,14 +231,12 @@ a {
     cursor: pointer;
 }
 
-.hidden {
+.animates {
     display: none;
     opacity: 0;
 }
 
 .fades {
-    display: block;
-    opacity: 0;
     transition: opacity 300ms ease-in;
 }
 
@@ -590,7 +588,7 @@ $startmenuGutter: 15px;
             border-radius: 3px;
             font-size: initial;
             margin-top: 4px;
-            
+
         }
     }
 

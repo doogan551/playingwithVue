@@ -13,7 +13,7 @@ html
 
     body.grey.lighten-3
 
-        header.hidden
+        header.animates
             .navbar-fixed.taskbar
                 nav.blue-grey
                     .nav-wrapper
@@ -52,7 +52,7 @@ html
                                     img.userAvatar(src='/img/test/avatar.png')
                                     span.userName.valign John Doe
 
-            #searchNavbar.navbar-fixed.taskbar.hidden
+            #searchNavbar.navbar-fixed.taskbar.animates
                 nav.blue-grey
                     .nav-wrapper
                         .taskbarItem
@@ -65,8 +65,8 @@ html
                         .taskbarItem
                             i.material-icons(data-bind='click: hideGlobalSearch') close
 
-        main.hidden
-            #globalSearchResults.hidden
+        main.animates
+            #globalSearchResults.animates
                 .globalSearchHeader.blue-grey-text(data-bind='visible: globalSearch.showSummary')
                     .row.center
                         .col.s12 Displaying #[span(data-bind='text: globalSearch.searchResults().length')] of #[span(data-bind='text: globalSearch.count')] results
@@ -382,7 +382,7 @@ html
                     a.blue-grey.waves-effect.btn(href="javascript://") Active Alarms
                     a.blue-grey.waves-effect.btn(href="javascript://") Monthly Report
 
-        #login.hidden.blue-grey
+        #login.animates.blue-grey
             .container
                 .z-depth-1.grey.lighten-4.row(style='display: inline-block; padding: 32px 48px 0px 48px; border: 1px solid #EEE; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);')
                     form.col.s12(method='post')
@@ -402,7 +402,7 @@ html
                             .row
                                 button#loginBtn.col.s12.btn.btn-large.waves-effect.blue-grey(type='submit', name='btn_login') Login
 
-        #loading.hidden
+        #loading.animates
             .loadingMask
                 .absCenter
                     .cssload-container
@@ -533,7 +533,7 @@ html
                         a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { 'data-dropdown': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
-                        ul.dropdown-content.grid-dropdown.fades(data-bind="attr: { id : id() + '_pointTypeDropdown' }, style: { opacity: dropdownOpen() ? 1 : 0 }")
+                        ul.dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }")
                             li
                                 input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
                                 label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All

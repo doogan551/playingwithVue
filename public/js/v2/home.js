@@ -3374,6 +3374,26 @@ var dti = {
                 }
             };
 
+
+            ko.bindingHandlers.fadeVisible = {
+                init: function (element, valueAccessor) {
+                    // Initially set the element to be instantly visible/hidden depending on the value
+                    var value = valueAccessor();
+                    $(element).toggle(ko.unwrap(value)); // Use "unwrapObservable" so we can handle values that may or may not be observable
+                },
+                update: function (element, valueAccessor) {
+                    // Whenever the value subsequently changes, slowly fade the element in or out
+                    var value = valueAccessor(),
+                        $element = $(element);
+
+                    if (ko.unwrap(value)) {
+                        dti.animations.fadeIn($element);
+                    } else {
+                        dti.animations.fadeOut($element);
+                    }
+                }
+            };
+
             ko.applyBindings(dti.bindings);
             //needed for prefilled text input labels to not overlap
             Materialize.updateTextFields();
