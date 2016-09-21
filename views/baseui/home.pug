@@ -73,10 +73,18 @@ html
                 .globalSearchResultsList
                     .row(data-bind='foreach: globalSearch.searchResults')
                         .col.s12.m6.l3
-                            .card.hoverable
+                            .card.horizontal.hoverable
+                                .card-image.flex.flex-center
+                                    // ko if: $data["Point Type"].Value === "Display"
+                                    img(data-bind='visible: thumbnailFound, thumbnail: $data._id')
+                                    i(data-bind='visible: !thumbnailFound(), css: iconClass, text: iconText')
+                                    // /ko
+                                    // ko ifnot: $data["Point Type"].Value === "Display"
+                                    i(data-bind='css: iconClass, text: iconText')
+                                    // /ko
                                 .card-content
-                                    span.card-title(data-bind='text: Name')
-                                    p Point type: #[span(data-bind='text: $data["Point Type"].Value')]
+                                    a.card-title.truncate(data-bind='html: NameWithHighlight, attr: { title: Name }, click: $parent.globalSearch.openPoint')
+                                    p(data-bind='text: $data["Point Type"].Value')
 
                 .globalSearchError(data-bind='visible: globalSearch.showError')
                     .row

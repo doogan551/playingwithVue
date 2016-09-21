@@ -226,6 +226,11 @@ body {
     overflow: hidden;
 }
 
+a {
+    color: $blueGrey;
+    cursor: pointer;
+}
+
 .hidden {
     display: none;
     opacity: 0;
@@ -630,6 +635,21 @@ $startmenuGutter: 15px;
         .btn {
             background-color: $blueGrey
         }
+    }
+
+    .card-content {
+        overflow: hidden;
+    }
+
+    .card-image {
+        i {
+            color: lighten($blueGrey, 25%);
+            font-size: 48px;
+        }
+    }
+
+    .highlight {
+        background-color: #FFFFC0;
     }
 }
 

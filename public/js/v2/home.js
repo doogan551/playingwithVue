@@ -1568,6 +1568,9 @@ var dti = {
         chipsTimeoutID: 0,
         scrollTimeoutID: 0,
         reqID: 0,
+        options: {
+            highlightNameMatch: true
+        },
         init: function () {
             var bindings = dti.bindings.globalSearch;
 
@@ -1586,6 +1589,10 @@ var dti = {
                 console.log('Deleting chip', chip);
                 delete dti.globalSearch.searchTerms[chip.tag];
                 window.clearTimeout(dti.globalSearch.chipsTimeoutID);
+
+                // We need to clear our request ID immediately in case a previous request
+                // is in route
+                dti.globalSearch.reqID = 0;
 
                 bindings.showSummary(false);
                 bindings.showError(false);
@@ -1643,13 +1650,16 @@ var dti = {
 
             dti.animations.fadeIn(dti.globalSearch.$resultsEl);
         },
-        hide: function () {
+        hide: function (doNotResetResults) {
             if (dti.globalSearch.visible) {
                 dti.globalSearch.visible = false;
                 dti.fire('unhideWindows');
 
                 dti.animations.fadeOut(dti.globalSearch.$taskbarEl);
                 dti.animations.fadeOut(dti.globalSearch.$resultsEl, function resetSearch () {
+                    if (doNotResetResults) {
+                        return;
+                    }
                     var $_chips = dti.globalSearch.$chips,
                         chipsIndex = $_chips.data('index'),
                         len = $_chips.data('chips').length;
@@ -1675,6 +1685,28 @@ var dti = {
 
                     bindings.errorMessage(errorMessage);
                     bindings.showError(true);
+                },
+                processPoint = function (point) {
+                    var pointType = point['Point Type'].Value,
+                        itemGroup = dti.config.itemGroups[pointType];
+
+                    if (itemGroup === undefined) {
+                        itemGroup = dti.config.itemGroups.Point;
+                    }
+
+                    point.iconClass = itemGroup.iconClass;
+                    point.iconText = itemGroup.iconText;
+
+                    if (pointType === 'Display') {
+                        point.thumbnailFound = ko.observable(false);
+                    }
+
+                    if (dti.globalSearch.options.highlightNameMatch) {
+                        Object.keys(dti.globalSearch.searchTerms).forEach(function (searchTerm) {
+                            var name = point.NameWithHighlight || point.Name;
+                            point.NameWithHighlight = name.replace(new RegExp(searchTerm, 'ig'), ['<span class="highlight">', '$&', '</span>'].join(''));
+                        });
+                    }
                 };
 
             dti.globalSearch.reqID = data.reqID;
@@ -1711,6 +1743,8 @@ var dti = {
                         return;
                     }
 
+                    data.points.forEach(processPoint);
+
                     if (appendResults) {
                         bindings.searchResults(bindings.searchResults().concat(data.points));
                     } else {
@@ -1741,6 +1775,13 @@ var dti = {
                     bindings.gettingData(false);
                 }
             );
+        },
+        openPoint: function (data) {
+            dti.windows.openWindow({
+                pointType: data['Point Type'].Value,
+                upi: data._id
+            });
+            dti.globalSearch.hide(true);
         }
     },
     globalSearchOld: {
@@ -2916,6 +2957,9 @@ var dti = {
             },
             doSearch: function (appendResults) {
                 dti.globalSearch.doSearch(appendResults);
+            },
+            openPoint: function (data) {
+                dti.globalSearch.openPoint(data);
             }
         },
         closeAllWindows: function () {
@@ -3108,7 +3152,7 @@ var dti = {
 
             ko.bindingHandlers.thumbnail = {
                 update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-                    var upi = valueAccessor()(),
+                    var upi = ko.unwrap(valueAccessor()),
                         thumbnailFound = viewModel.thumbnailFound,
                         $element = $(element),
                         $bg = $element.parent(),
