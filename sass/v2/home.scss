@@ -226,9 +226,18 @@ body {
     overflow: hidden;
 }
 
-.hidden {
+a {
+    color: $blueGrey;
+    cursor: pointer;
+}
+
+.animates {
     display: none;
     opacity: 0;
+}
+
+.fades {
+    transition: opacity 300ms ease-in;
 }
 
 .absCenter {
@@ -266,11 +275,11 @@ $modalHeaderHeight: 42px;
     .modal-footer {
         display: none;
     }
+}
 
-    &.modal-fixed-footer {
-        .modal-footer {
-            display: block;
-        }
+.modal-fixed-footer {
+    .modal-footer {
+        display: block;
     }
 }
 
@@ -561,6 +570,9 @@ $startmenuGutter: 15px;
         padding: 0 10px;
         font-size: initial;
         background-color: #FFF;
+        min-height: 42px;
+        height: calc(100% - 4px);
+        margin-top: 2px;
 
         &.focus {
             border: none;
@@ -575,6 +587,8 @@ $startmenuGutter: 15px;
         .chip {
             border-radius: 3px;
             font-size: initial;
+            margin-top: 4px;
+
         }
     }
 
@@ -624,6 +638,21 @@ $startmenuGutter: 15px;
         .btn {
             background-color: $blueGrey
         }
+    }
+
+    .card-content {
+        overflow: hidden;
+    }
+
+    .card-image {
+        i {
+            color: lighten($blueGrey, 25%);
+            font-size: 48px;
+        }
+    }
+
+    .highlight {
+        background-color: #FFFFC0;
     }
 }
 
@@ -1420,7 +1449,6 @@ $loaderSpeedScale: 1 / .75;
 
         .dropdown-content {
             max-height: 62vh;
-            margin-top: 12px;
 
             label {
                 color: $blueGrey;

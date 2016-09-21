@@ -13,7 +13,7 @@ html
 
     body.grey.lighten-3
 
-        header.hidden
+        header.animates
             .navbar-fixed.taskbar
                 nav.blue-grey
                     .nav-wrapper
@@ -52,7 +52,7 @@ html
                                     img.userAvatar(src='/img/test/avatar.png')
                                     span.userName.valign John Doe
 
-            #searchNavbar.navbar-fixed.taskbar.hidden
+            #searchNavbar.navbar-fixed.taskbar.animates
                 nav.blue-grey
                     .nav-wrapper
                         .taskbarItem
@@ -61,22 +61,30 @@ html
                             .input-field
                                 input#globalSearchInput(type='search')
                         .taskbarItem
-                            .chips.chips-placeholder
+                            .chips.chips-placeholder.flex.flex-row.flex-center
                         .taskbarItem
                             i.material-icons(data-bind='click: hideGlobalSearch') close
 
-        main.hidden
-            #globalSearchResults.hidden
+        main.animates
+            #globalSearchResults.animates
                 .globalSearchHeader.blue-grey-text(data-bind='visible: globalSearch.showSummary')
                     .row.center
                         .col.s12 Displaying #[span(data-bind='text: globalSearch.searchResults().length')] of #[span(data-bind='text: globalSearch.count')] results
                 .globalSearchResultsList
                     .row(data-bind='foreach: globalSearch.searchResults')
                         .col.s12.m6.l3
-                            .card.hoverable
+                            .card.horizontal.hoverable
+                                .card-image.flex.flex-center
+                                    // ko if: $data["Point Type"].Value === "Display"
+                                    img(data-bind='visible: thumbnailFound, thumbnail: $data._id')
+                                    i(data-bind='visible: !thumbnailFound(), css: iconClass, text: iconText')
+                                    // /ko
+                                    // ko ifnot: $data["Point Type"].Value === "Display"
+                                    i(data-bind='css: iconClass, text: iconText')
+                                    // /ko
                                 .card-content
-                                    span.card-title(data-bind='text: Name')
-                                    p Point type: #[span(data-bind='text: $data["Point Type"].Value')]
+                                    a.card-title.truncate(data-bind='html: NameWithHighlight, attr: { title: Name }, click: $parent.globalSearch.openPoint')
+                                    p(data-bind='text: $data["Point Type"].Value')
 
                 .globalSearchError(data-bind='visible: globalSearch.showError')
                     .row
@@ -286,26 +294,20 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
 
-            #navigatorFilterModal.navigatorModal.modal.modal-fixed-footer.modal-fixed-header
-                .modal-header Filter Points
-                .modal-content.modal-content-no-padding
-                    iframe.iframeFull
-                .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel
-                    a.modal-action.modal-close.waves-effect.btn.blue-grey(href='javascript://', data-bind="click: acceptNavigatorFilter") Accept
+            //- #navigatorFilterModal.navigatorModal.modal.modal-fixed-footer.modal-fixed-header
+            //-     .modal-header Filter Points
+            //-     .modal-content.modal-content-no-padding
+            //-         iframe.iframeFull
+            //-     .modal-footer
+            //-         a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel
+            //-         a.modal-action.modal-close.waves-effect.btn.blue-grey(href='javascript://', data-bind="click: acceptNavigatorFilter") Accept
 
-            #navigatorModal.navigatorModal.modal.modal-fixed-footer
-                .modal-header Select Point
-                .modal-content.modal-content-no-padding
-                    iframe.iframeFull
-                .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel    
-
-            #navigatorModalNew.navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="stopBindings: true")
-                .modal-header Select Point
-                .modal-content.modal-content-no-padding
-                .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
+            //- #navigatorModal.navigatorModal.modal.modal-fixed-footer
+            //-     .modal-header Select Point
+            //-     .modal-content.modal-content-no-padding
+            //-         iframe.iframeFull
+            //-     .modal-footer
+            //-         a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel    
 
             #openItemsModal.modal.modal-large
                 .modal-content
@@ -380,7 +382,7 @@ html
                     a.blue-grey.waves-effect.btn(href="javascript://") Active Alarms
                     a.blue-grey.waves-effect.btn(href="javascript://") Monthly Report
 
-        #login.hidden.blue-grey
+        #login.animates.blue-grey
             .container
                 .z-depth-1.grey.lighten-4.row(style='display: inline-block; padding: 32px 48px 0px 48px; border: 1px solid #EEE; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);')
                     form.col.s12(method='post')
@@ -400,7 +402,7 @@ html
                             .row
                                 button#loginBtn.col.s12.btn.btn-large.waves-effect.blue-grey(type='submit', name='btn_login') Login
 
-        #loading.hidden
+        #loading.animates
             .loadingMask
                 .absCenter
                     .cssload-container
@@ -434,6 +436,14 @@ html
                 //-             .circle
                 //-         .circle-clipper.right
                 //-             .circle
+
+    script#navigatorModalTemplate(type='text/html')
+        .navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="attr: { id: id() }, css: { 'modal-fixed-footer': mode() !== 'default' }")
+            .modal-header Select Point
+            .modal-content.modal-content-no-padding
+            .modal-footer
+                span.modalControls(data-bind="visible: mode() === 'filter'")
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
 
     script#miniWindowTemplate(type='text/html')
         // ko if: !exempt()
@@ -520,10 +530,10 @@ html
                     .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
 
                         //- input.dropdown-button(type='text', data-bind="value: pointTypeText, updateLabel: pointTypeText, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
-                        a.btn-flat.dropdown-button.pointTypeDropdownButton(href="#", data-beloworigin="true", data-bind="click: openPointTypeDropdown, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
+                        a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { 'data-dropdown': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
-                        ul.dropdown-content.grid-dropdown(data-bind="attr: { id : id() + '_pointTypeDropdown' }, stopBubblingOnClick: true")
+                        ul.dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }")
                             li
                                 input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
                                 label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All

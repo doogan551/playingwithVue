@@ -454,15 +454,7 @@ var Config = (function(obj) {
                     }
                 },
                 _getPointTypeNameFromEnum = function(enumeration) {
-                    var pointType;
-
-                    for (var prop in types) {
-                        if (types[prop].enum == enumeration) {
-                            pointType = prop;
-                            break;
-                        }
-                    }
-                    return pointType;
+                    return obj.revEnums['Point Types'][enumeration];
                 },
                 _getUIEndpoint = function(pointType, id) {
                     var endPoints = JSON.parse(JSON.stringify(enumsTemplatesJson.Enums.endPoints)),
@@ -928,7 +920,7 @@ var Config = (function(obj) {
                 } else if (data.point['Uplink Port'].Value !== 'Ethernet' && val === 0) {
                     validNetwork = true;
                 }
-                for (var i = 0; i < networkConfig.length; i++) {
+                for (i = 0; i < networkConfig.length; i++) {
                     if (parseInt(networkConfig[i]['IP Network Segment'], 10) === val) {
                         validNetwork = true;
                         break;
@@ -3195,7 +3187,7 @@ var Config = (function(obj) {
                     }
                 }
                 return port;
-            }
+            };
             switch (data.property) {
                 case 'Ethernet Network':
                     data.point['Ethernet IP Port'].isReadOnly = (data.propertyObject.Value === 0) ? false : true;

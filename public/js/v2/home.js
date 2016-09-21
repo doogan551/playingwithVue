@@ -293,6 +293,15 @@ var dti = {
     thumbs: {
     },
     animations: {
+        tempinit: function () {
+            $(window).focus(function () {
+                console.log('Focus');
+            });
+
+            $(window).blur(function () {
+                console.log('Blur');
+            });
+        },
         _fade: function ($el, opacity, cb) {
             $el.velocity('stop');
             $el.velocity({
@@ -366,8 +375,8 @@ var dti = {
 
             });
 
-            dti.events.bodyClick(function checkOpenMenu (event) {
-                if (isOpen && $(event.target).parents(menuEl).length === 0) {
+            dti.events.bodyClick(function checkOpenMenu (event, $target) {
+                if (isOpen && $target.parents(menuEl).length === 0) {
                     isOpen = false;
                     dti.animations.fadeOut($menuEl);
                 }
@@ -448,9 +457,8 @@ var dti = {
                 }
             });
 
-            dti.events.bodyClick(function closeHoverMenus (event) {
-                var $target = $(event.target),
-                    notMenuClick = !$target.closest('#' + menuID).length,
+            dti.events.bodyClick(function closeHoverMenus (event, $target) {
+                var notMenuClick = !$target.closest('#' + menuID).length,
                     notButtonClick = !$target.closest(button).length;
 
                 if (menuShown && notMenuClick && notButtonClick) {
@@ -1103,7 +1111,9 @@ var dti = {
 
             $('body').mousedown(function handleBodyMouseDown (event) {
                 dti.forEachArray(dti.events._bodyClickHandlers, function bodyMouseDownHandler (handler) {
-                    handler(event);
+                    var $target = $(event.target);
+
+                    handler(event, $target);
                 });
             });
 
@@ -1559,6 +1569,9 @@ var dti = {
         chipsTimeoutID: 0,
         scrollTimeoutID: 0,
         reqID: 0,
+        options: {
+            highlightNameMatch: true
+        },
         init: function () {
             var bindings = dti.bindings.globalSearch;
 
@@ -1577,6 +1590,10 @@ var dti = {
                 console.log('Deleting chip', chip);
                 delete dti.globalSearch.searchTerms[chip.tag];
                 window.clearTimeout(dti.globalSearch.chipsTimeoutID);
+
+                // We need to clear our request ID immediately in case a previous request
+                // is in route
+                dti.globalSearch.reqID = 0;
 
                 bindings.showSummary(false);
                 bindings.showError(false);
@@ -1634,13 +1651,16 @@ var dti = {
 
             dti.animations.fadeIn(dti.globalSearch.$resultsEl);
         },
-        hide: function () {
+        hide: function (doNotResetResults) {
             if (dti.globalSearch.visible) {
                 dti.globalSearch.visible = false;
                 dti.fire('unhideWindows');
 
                 dti.animations.fadeOut(dti.globalSearch.$taskbarEl);
                 dti.animations.fadeOut(dti.globalSearch.$resultsEl, function resetSearch () {
+                    if (doNotResetResults) {
+                        return;
+                    }
                     var $_chips = dti.globalSearch.$chips,
                         chipsIndex = $_chips.data('index'),
                         len = $_chips.data('chips').length;
@@ -1666,6 +1686,28 @@ var dti = {
 
                     bindings.errorMessage(errorMessage);
                     bindings.showError(true);
+                },
+                processPoint = function (point) {
+                    var pointType = point['Point Type'].Value,
+                        itemGroup = dti.config.itemGroups[pointType];
+
+                    if (itemGroup === undefined) {
+                        itemGroup = dti.config.itemGroups.Point;
+                    }
+
+                    point.iconClass = itemGroup.iconClass;
+                    point.iconText = itemGroup.iconText;
+
+                    if (pointType === 'Display') {
+                        point.thumbnailFound = ko.observable(false);
+                    }
+
+                    if (dti.globalSearch.options.highlightNameMatch) {
+                        Object.keys(dti.globalSearch.searchTerms).forEach(function (searchTerm) {
+                            var name = point.NameWithHighlight || point.Name;
+                            point.NameWithHighlight = name.replace(new RegExp(searchTerm, 'ig'), ['<span class="highlight">', '$&', '</span>'].join(''));
+                        });
+                    }
                 };
 
             dti.globalSearch.reqID = data.reqID;
@@ -1702,6 +1744,8 @@ var dti = {
                         return;
                     }
 
+                    data.points.forEach(processPoint);
+
                     if (appendResults) {
                         bindings.searchResults(bindings.searchResults().concat(data.points));
                     } else {
@@ -1732,6 +1776,13 @@ var dti = {
                     bindings.gettingData(false);
                 }
             );
+        },
+        openPoint: function (data) {
+            dti.windows.openWindow({
+                pointType: data['Point Type'].Value,
+                upi: data._id
+            });
+            dti.globalSearch.hide(true);
         }
     },
     globalSearchOld: {
@@ -1822,7 +1873,7 @@ var dti = {
             }
 
             dti.navigatorNew.commonNavigator.applyConfig(config);
-            dti.navigatorNew.$navigatorModalNew.openModal(config);
+            dti.navigatorNew.$commonNavigatorModal.openModal(config);
         },
         hideNavigator: function () {
             dti.navigatorNew.$navigatorModalNew.closeModal();
@@ -1844,9 +1895,10 @@ var dti = {
                             name4: '',
                             showInactive: false,
                             showDeleted: false,
+                            dropdownOpen: false,
                             fetchingPoints: false,
                             points: [],
-                            mode: 'select',
+                            mode: 'default',
                             deviceId: null,
                             remoteUnitId: null,
                             id: self.id
@@ -1864,10 +1916,16 @@ var dti = {
                     //build observable viewmodel so computeds have access to observables
                     bindings = ko.viewmodel.fromModel(bindings);
 
+                    bindings.togglePointTypeDropdown = function (obj, event) {
+                        bindings.dropdownOpen(!bindings.dropdownOpen());
+                        event.preventDefault();
+                        return false;
+                    };
+
                     bindings.openPointTypeDropdown = function (obj, event) {
-                        if (!self.$dropdownButton) {
-                            self.initDropdownButton();
-                        }
+                        // if (!self.$dropdownButton) {
+                        //     self.initDropdownButton();
+                        // }
 
                         if (self._dropdownOpen) {
                             bindings.closePointTypeDropdown();
@@ -1953,10 +2011,19 @@ var dti = {
                             point.name = [point.name1, point.name2, point.name3, point.name4].join(' ');
                             // dti.log('row click', point);
 
+                            //handles click in an empty table...weird, I know
                             if (point !== self.bindings) {
-                                dti.navigatorNew.handleNavigatorRowClick(point);
+                                //valid click
+                                switch (bindings.mode()) {
+                                    case 'default':
+                                        dti.navigatorNew.handleNavigatorRowClick(point);
+                                        break;
+                                    case 'filter':
+                                    case 'create':
+                                        dti.log(point);
+                                        break;
+                                }
                             }
-                            //fire event?  .once('point selected')
                         }
                     };
 
@@ -1973,16 +2040,6 @@ var dti = {
                             self.bindings[binding](null);
                         }
                     };
-
-                    bindings.mode.subscribe(function manageFilterModeFooter (val) {
-                        var cls = 'modal-fixed-footer';
-
-                        if (val === 'filter') {
-                            self.$modal.addClass(cls);
-                        } else {
-                            self.$modal.removeClass(cls);
-                        }
-                    });
 
                     bindings.allTypesSelected = ko.pureComputed(function allPointTypesSelected() {
                         var currTypes = bindings.pointTypes(),
@@ -2055,6 +2112,10 @@ var dti = {
                 };
 
             $.extend(self, config);
+
+            // if (self.$modal) {
+            //     self.$footer = self.$modal.find('.modal-footer');
+            // }
 
             self.id = dti.makeId();
 
@@ -2233,6 +2294,14 @@ var dti = {
                 });
             };
 
+            dti.events.bodyClick(function checkNavigatorOpenMenu (event, $target) {
+                var buttonClass = '.pointTypeDropdownButton';
+
+                if (self.bindings.dropdownOpen() && $target.parents('.dropdown-content').length === 0 && !$target.hasClass(buttonClass) && $target.parents(buttonClass).length === 0) {
+                    self.bindings.dropdownOpen(false);
+                }
+            });
+
             self._loaded = true;
 
             self.getPoints();
@@ -2241,20 +2310,30 @@ var dti = {
 
             // self.$container.find('select').material_select();
         },
-        getTemplate: function () {
-            var markup = $('#navigatorTemplate').html();
+        getTemplate: function (id) {
+            var markup = $(id).html();
 
             return $(markup);
         },
-        createNavigator: function ($container, $modal) {
-            var markup = dti.navigatorNew.getTemplate(),
-                navigator;
+        createNavigator: function (isModal) {
+            var templateMarkup = dti.navigatorNew.getTemplate('#navigatorTemplate'),
+                navigatorMarkup,
+                navigator,
+                $container = (isModal === true) ? $('main') : isModal;
 
-            $container.append(markup);
+            if (isModal) {
+                navigatorModalMarkup = dti.navigatorNew.getTemplate('#navigatorModalTemplate');
+                $container.append(navigatorModalMarkup);
+                $container = navigatorModalMarkup;
+                dti.navigatorNew.$commonNavigatorModal = $container;
+                $container.find('.modal-content').append(templateMarkup);
+                // $container.leanModal();
+            } else {
+                $container.append(templateMarkup);
+            }
 
             navigator = new dti.navigatorNew.Navigator({
-                $container: $container,
-                $modal: $modal
+                $container: $container
             });
 
             $container.data('navigatorId', navigator.id);
@@ -2266,7 +2345,7 @@ var dti = {
             return navigator;
         },
         init: function () {
-            dti.navigatorNew.commonNavigator = dti.navigatorNew.createNavigator($('#navigatorModalNew .modal-content'), $('#navigatorModalNew'));
+            dti.navigatorNew.commonNavigator = dti.navigatorNew.createNavigator(true);
         }
     },
     navigator: {
@@ -2889,6 +2968,9 @@ var dti = {
             },
             doSearch: function (appendResults) {
                 dti.globalSearch.doSearch(appendResults);
+            },
+            openPoint: function (data) {
+                dti.globalSearch.openPoint(data);
             }
         },
         closeAllWindows: function () {
@@ -3081,7 +3163,7 @@ var dti = {
 
             ko.bindingHandlers.thumbnail = {
                 update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-                    var upi = valueAccessor()(),
+                    var upi = ko.unwrap(valueAccessor()),
                         thumbnailFound = viewModel.thumbnailFound,
                         $element = $(element),
                         $bg = $element.parent(),
@@ -3289,6 +3371,26 @@ var dti = {
                 },
                 update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
 
+                }
+            };
+
+
+            ko.bindingHandlers.fadeVisible = {
+                init: function (element, valueAccessor) {
+                    // Initially set the element to be instantly visible/hidden depending on the value
+                    var value = valueAccessor();
+                    $(element).toggle(ko.unwrap(value)); // Use "unwrapObservable" so we can handle values that may or may not be observable
+                },
+                update: function (element, valueAccessor) {
+                    // Whenever the value subsequently changes, slowly fade the element in or out
+                    var value = valueAccessor(),
+                        $element = $(element);
+
+                    if (ko.unwrap(value)) {
+                        dti.animations.fadeIn($element);
+                    } else {
+                        dti.animations.fadeOut($element);
+                    }
                 }
             };
 
