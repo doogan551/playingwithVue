@@ -572,6 +572,9 @@ $startmenuGutter: 15px;
         padding: 0 10px;
         font-size: initial;
         background-color: #FFF;
+        min-height: 42px;
+        height: calc(100% - 4px);
+        margin-top: 2px;
 
         &.focus {
             border: none;
@@ -586,6 +589,8 @@ $startmenuGutter: 15px;
         .chip {
             border-radius: 3px;
             font-size: initial;
+            margin-top: 4px;
+            
         }
     }
 

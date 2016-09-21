@@ -375,8 +375,8 @@ var dti = {
 
             });
 
-            dti.events.bodyClick(function checkOpenMenu (event) {
-                if (isOpen && $(event.target).parents(menuEl).length === 0) {
+            dti.events.bodyClick(function checkOpenMenu (event, $target) {
+                if (isOpen && $target.parents(menuEl).length === 0) {
                     isOpen = false;
                     dti.animations.fadeOut($menuEl);
                 }
@@ -457,9 +457,8 @@ var dti = {
                 }
             });
 
-            dti.events.bodyClick(function closeHoverMenus (event) {
-                var $target = $(event.target),
-                    notMenuClick = !$target.closest('#' + menuID).length,
+            dti.events.bodyClick(function closeHoverMenus (event, $target) {
+                var notMenuClick = !$target.closest('#' + menuID).length,
                     notButtonClick = !$target.closest(button).length;
 
                 if (menuShown && notMenuClick && notButtonClick) {
@@ -1112,7 +1111,9 @@ var dti = {
 
             $('body').mousedown(function handleBodyMouseDown (event) {
                 dti.forEachArray(dti.events._bodyClickHandlers, function bodyMouseDownHandler (handler) {
-                    handler(event);
+                    var $target = $(event.target);
+
+                    handler(event, $target);
                 });
             });
 
@@ -1917,6 +1918,8 @@ var dti = {
 
                     bindings.togglePointTypeDropdown = function (obj, event) {
                         bindings.dropdownOpen(!bindings.dropdownOpen());
+                        event.preventDefault();
+                        return false;
                     };
 
                     bindings.openPointTypeDropdown = function (obj, event) {
@@ -2290,6 +2293,14 @@ var dti = {
                     }
                 });
             };
+
+            dti.events.bodyClick(function checkNavigatorOpenMenu (event, $target) {
+                var buttonClass = '.pointTypeDropdownButton';
+
+                if (self.bindings.dropdownOpen() && $target.parents('.dropdown-content').length === 0 && !$target.hasClass(buttonClass) && $target.parents(buttonClass).length === 0) {
+                    self.bindings.dropdownOpen(false);
+                }
+            });
 
             self._loaded = true;
 
