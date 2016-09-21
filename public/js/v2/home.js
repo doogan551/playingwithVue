@@ -293,6 +293,15 @@ var dti = {
     thumbs: {
     },
     animations: {
+        tempinit: function () {
+            $(window).focus(function () {
+                console.log('Focus');
+            });
+
+            $(window).blur(function () {
+                console.log('Blur');
+            });
+        },
         _fade: function ($el, opacity, cb) {
             $el.velocity('stop');
             $el.velocity({
@@ -1822,7 +1831,7 @@ var dti = {
             }
 
             dti.navigatorNew.commonNavigator.applyConfig(config);
-            dti.navigatorNew.$navigatorModalNew.openModal(config);
+            dti.navigatorNew.$commonNavigatorModal.openModal(config);
         },
         hideNavigator: function () {
             dti.navigatorNew.$navigatorModalNew.closeModal();
@@ -1844,9 +1853,10 @@ var dti = {
                             name4: '',
                             showInactive: false,
                             showDeleted: false,
+                            dropdownOpen: false,
                             fetchingPoints: false,
                             points: [],
-                            mode: 'select',
+                            mode: 'default',
                             deviceId: null,
                             remoteUnitId: null,
                             id: self.id
@@ -1864,10 +1874,14 @@ var dti = {
                     //build observable viewmodel so computeds have access to observables
                     bindings = ko.viewmodel.fromModel(bindings);
 
+                    bindings.togglePointTypeDropdown = function (obj, event) {
+                        bindings.dropdownOpen(!bindings.dropdownOpen());
+                    };
+
                     bindings.openPointTypeDropdown = function (obj, event) {
-                        if (!self.$dropdownButton) {
-                            self.initDropdownButton();
-                        }
+                        // if (!self.$dropdownButton) {
+                        //     self.initDropdownButton();
+                        // }
 
                         if (self._dropdownOpen) {
                             bindings.closePointTypeDropdown();
@@ -1953,10 +1967,19 @@ var dti = {
                             point.name = [point.name1, point.name2, point.name3, point.name4].join(' ');
                             // dti.log('row click', point);
 
+                            //handles click in an empty table...weird, I know
                             if (point !== self.bindings) {
-                                dti.navigatorNew.handleNavigatorRowClick(point);
+                                //valid click
+                                switch (bindings.mode()) {
+                                    case 'default':
+                                        dti.navigatorNew.handleNavigatorRowClick(point);
+                                        break;
+                                    case 'filter':
+                                    case 'create':
+                                        dti.log(point);
+                                        break;
+                                }
                             }
-                            //fire event?  .once('point selected')
                         }
                     };
 
@@ -1973,16 +1996,6 @@ var dti = {
                             self.bindings[binding](null);
                         }
                     };
-
-                    bindings.mode.subscribe(function manageFilterModeFooter (val) {
-                        var cls = 'modal-fixed-footer';
-
-                        if (val === 'filter') {
-                            self.$modal.addClass(cls);
-                        } else {
-                            self.$modal.removeClass(cls);
-                        }
-                    });
 
                     bindings.allTypesSelected = ko.pureComputed(function allPointTypesSelected() {
                         var currTypes = bindings.pointTypes(),
@@ -2055,6 +2068,10 @@ var dti = {
                 };
 
             $.extend(self, config);
+
+            // if (self.$modal) {
+            //     self.$footer = self.$modal.find('.modal-footer');
+            // }
 
             self.id = dti.makeId();
 
@@ -2241,20 +2258,30 @@ var dti = {
 
             // self.$container.find('select').material_select();
         },
-        getTemplate: function () {
-            var markup = $('#navigatorTemplate').html();
+        getTemplate: function (id) {
+            var markup = $(id).html();
 
             return $(markup);
         },
-        createNavigator: function ($container, $modal) {
-            var markup = dti.navigatorNew.getTemplate(),
-                navigator;
+        createNavigator: function (isModal) {
+            var templateMarkup = dti.navigatorNew.getTemplate('#navigatorTemplate'),
+                navigatorMarkup,
+                navigator,
+                $container = (isModal === true) ? $('main') : isModal;
 
-            $container.append(markup);
+            if (isModal) {
+                navigatorModalMarkup = dti.navigatorNew.getTemplate('#navigatorModalTemplate');
+                $container.append(navigatorModalMarkup);
+                $container = navigatorModalMarkup;
+                dti.navigatorNew.$commonNavigatorModal = $container;
+                $container.find('.modal-content').append(templateMarkup);
+                // $container.leanModal();
+            } else {
+                $container.append(templateMarkup);
+            }
 
             navigator = new dti.navigatorNew.Navigator({
-                $container: $container,
-                $modal: $modal
+                $container: $container
             });
 
             $container.data('navigatorId', navigator.id);
@@ -2266,7 +2293,7 @@ var dti = {
             return navigator;
         },
         init: function () {
-            dti.navigatorNew.commonNavigator = dti.navigatorNew.createNavigator($('#navigatorModalNew .modal-content'), $('#navigatorModalNew'));
+            dti.navigatorNew.commonNavigator = dti.navigatorNew.createNavigator(true);
         }
     },
     navigator: {

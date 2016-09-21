@@ -231,6 +231,12 @@ body {
     opacity: 0;
 }
 
+.fades {
+    display: block;
+    opacity: 0;
+    transition: opacity 300ms ease-in;
+}
+
 .absCenter {
     position: absolute;
     left: 50%;
@@ -266,11 +272,11 @@ $modalHeaderHeight: 42px;
     .modal-footer {
         display: none;
     }
+}
 
-    &.modal-fixed-footer {
-        .modal-footer {
-            display: block;
-        }
+.modal-fixed-footer {
+    .modal-footer {
+        display: block;
     }
 }
 
@@ -1420,7 +1426,6 @@ $loaderSpeedScale: 1 / .75;
 
         .dropdown-content {
             max-height: 62vh;
-            margin-top: 12px;
 
             label {
                 color: $blueGrey;

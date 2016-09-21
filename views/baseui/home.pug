@@ -286,26 +286,20 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
 
-            #navigatorFilterModal.navigatorModal.modal.modal-fixed-footer.modal-fixed-header
-                .modal-header Filter Points
-                .modal-content.modal-content-no-padding
-                    iframe.iframeFull
-                .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel
-                    a.modal-action.modal-close.waves-effect.btn.blue-grey(href='javascript://', data-bind="click: acceptNavigatorFilter") Accept
+            //- #navigatorFilterModal.navigatorModal.modal.modal-fixed-footer.modal-fixed-header
+            //-     .modal-header Filter Points
+            //-     .modal-content.modal-content-no-padding
+            //-         iframe.iframeFull
+            //-     .modal-footer
+            //-         a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel
+            //-         a.modal-action.modal-close.waves-effect.btn.blue-grey(href='javascript://', data-bind="click: acceptNavigatorFilter") Accept
 
-            #navigatorModal.navigatorModal.modal.modal-fixed-footer
-                .modal-header Select Point
-                .modal-content.modal-content-no-padding
-                    iframe.iframeFull
-                .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel    
-
-            #navigatorModalNew.navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="stopBindings: true")
-                .modal-header Select Point
-                .modal-content.modal-content-no-padding
-                .modal-footer
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
+            //- #navigatorModal.navigatorModal.modal.modal-fixed-footer
+            //-     .modal-header Select Point
+            //-     .modal-content.modal-content-no-padding
+            //-         iframe.iframeFull
+            //-     .modal-footer
+            //-         a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel    
 
             #openItemsModal.modal.modal-large
                 .modal-content
@@ -435,6 +429,14 @@ html
                 //-         .circle-clipper.right
                 //-             .circle
 
+    script#navigatorModalTemplate(type='text/html')
+        .navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="attr: { id: id() }, css: { 'modal-fixed-footer': mode() !== 'default' }")
+            .modal-header Select Point
+            .modal-content.modal-content-no-padding
+            .modal-footer
+                span.modalControls(data-bind="visible: mode() === 'filter'")
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
+
     script#miniWindowTemplate(type='text/html')
         // ko if: !exempt()
         a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: $root.handleCardClick")
@@ -520,10 +522,10 @@ html
                     .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
 
                         //- input.dropdown-button(type='text', data-bind="value: pointTypeText, updateLabel: pointTypeText, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
-                        a.btn-flat.dropdown-button.pointTypeDropdownButton(href="#", data-beloworigin="true", data-bind="click: openPointTypeDropdown, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
+                        a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { 'data-dropdown': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
-                        ul.dropdown-content.grid-dropdown(data-bind="attr: { id : id() + '_pointTypeDropdown' }, stopBubblingOnClick: true")
+                        ul.dropdown-content.grid-dropdown.fades(data-bind="attr: { id : id() + '_pointTypeDropdown' }, style: { opacity: dropdownOpen() ? 1 : 0 }")
                             li
                                 input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
                                 label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
