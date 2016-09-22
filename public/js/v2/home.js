@@ -1809,10 +1809,6 @@ var dti = {
             );
         },
         clear: function () {
-            // We've got a shortcut on this so we need to check visibility before executing
-            if (!dti.globalSearch.visible) {
-                return;
-            }
             var $chips = dti.globalSearch.$chips,
                 chipsIndex = $chips.data('index'),
                 len = $chips.data('chips').length;
@@ -2998,12 +2994,6 @@ var dti = {
         showNavigatorNew: function () {
             dti.navigatorNew.showNavigator();
         },
-        showGlobalSearch: function () {
-            dti.globalSearch.show();
-        },
-        hideGlobalSearch: function () {
-            dti.globalSearch.hide();
-        },
         globalSearch: {
             gettingData: ko.observable(false),
             showSummary: ko.observable(false),
@@ -3015,7 +3005,10 @@ var dti = {
             show: function () {
                 dti.globalSearch.show();
             },
-            hide: function () {
+            hide: function (viewModel, e) {
+                // Hide the tooltip associated with the close button
+                $('#' + $(e.target).data('tooltipId')).css('display', 'none');
+                // Hide search
                 dti.globalSearch.hide();
             },
             doSearch: function (appendResults) {

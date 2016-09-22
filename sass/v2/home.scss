@@ -578,25 +578,6 @@ $startmenuGutter: 15px;
     position: absolute;
     top: 0;
 
-    //fixes weird alignment for search boxes in navbar
-    .input-field {
-        height: calc(100% - 6px);
-        background-color: #fff;
-        color: #444;
-        flex-grow: 1;
-        position: relative;
-        overflow: hidden;
-
-        // input {
-        //     padding: 0 1rem;
-        //     position: absolute;
-        //     left: 0;
-        //     top: 0;
-        //     margin: 0;
-        //     width: 100%;
-        // }
-    }
-
     .chipsAndSearchContainer {
         background-color: #FFF;
         height: calc(100% - 4px);
@@ -632,27 +613,18 @@ $startmenuGutter: 15px;
             border-radius: 3px;
             margin-bottom: 0;
             font-size: initial;
-            background-color: lighten($blue-grey, 40%);
+            background-color: $blue-grey-lighten-4;
             flex-shrink: 0;
 
             &.selected {
-                background-color: lighten($blue-grey, 10%);
+                background-color: $blue-grey-lighten-1;
             }
         }
 
         .clearAllChip {
             @extend .chip;
 
-            // The following styles were copied from materialize.css
-            height: 32px;
-            font-weight: 500;
-            color: rgba(0, 0, 0, 0.6);
-            line-height: 32px;
-            padding: 0 12px;
-            margin-right: 5px;
-            margin-left:3px;
-
-            // Custom stylings
+            margin-left: 5px;
             cursor: pointer;
         }
     }
@@ -698,7 +670,7 @@ $startmenuGutter: 15px;
 
     .globalSearchFooter {
         .spinner-layer {
-            border-color: lighten($blue-grey, 25%);
+            border-color: $blue-grey-lighten-2;
         }
 
         .btn {
@@ -712,7 +684,7 @@ $startmenuGutter: 15px;
 
     .card-image {
         i {
-            color: lighten($blue-grey, 25%);
+            color: $blue-grey-lighten-2;
             font-size: 48px;
         }
     }
