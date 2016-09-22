@@ -1962,12 +1962,12 @@ var dti = {
                         if (subTypes) {
                             dti.forEachArray(subTypes, function buildSubType (subType) {
                                 var newSubType = {
-                                    key: type.key + ' (' + subType.key + ')',
+                                    key: type.key + ' (' + subType.name + ')',
                                     enum: subType.value,
                                     selected: false,
                                     visible: true,
                                     _type: type.key,
-                                    _subType: subType.key
+                                    _subType: subType.name
                                 };
 
                                 explodedPointTypes.push(newSubType);
@@ -1995,7 +1995,9 @@ var dti = {
 
                     bindings.togglePointTypeDropdown = function (obj, event) {
                         bindings.dropdownOpen(!bindings.dropdownOpen());
-                        event.preventDefault();
+                        if (event) {
+                            event.preventDefault();
+                        }
                         return false;
                     };
 
@@ -2802,10 +2804,15 @@ var dti = {
         init: function () {
             dti.utility.pointTypeLookup = {};
             dti.utility.pointTypes = dti.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes();
-            dti.utility.subPointTypes = {
-                Report: dti.workspaceManager.config.Utility.pointTypes.getEnums('Report Types', 'Report'),
-                Sensor: dti.workspaceManager.config.Utility.pointTypes.getEnums('Sensor Types', 'Sensor')
-            };
+            dti.utility.subPointTypes = {};
+
+            dti.forEachArray(dti.utility.pointTypes, function checkForSubPointType (type) { 
+                var ret = dti.workspaceManager.config.Utility.pointTypes.getEnums(type.key + ' Types', type.key); 
+
+                if (ret) {
+                    dti.utility.subPointTypes[type.key] = ret;
+                }
+            });
 
             dti.forEachArray(dti.utility.pointTypes, function processPointType (type) {
                 dti.utility.pointTypeLookup[type.key] = type;

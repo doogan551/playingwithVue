@@ -3,7 +3,7 @@ html
     head
         title
             | Infoscan by Dorsett Technologies
-        link(rel='stylesheet', href='/css/lib/materialize.css')
+        //- link(rel='stylesheet', href='/css/lib/materialize.css')
         link(rel='stylesheet', href='/sass/v2/home')
         //- link(rel='stylesheet', href='/css/lib/font-awesome.4.6.1.css')
         link(rel='stylesheet', href='/css/lib/jstree.themes/default/style.min.css')
@@ -535,7 +535,7 @@ html
                     .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
 
                         //- input.dropdown-button(type='text', data-bind="value: pointTypeText, updateLabel: pointTypeText, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
-                        a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { 'data-dropdown': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
+                        a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { id : id() + '_pointTypeDropdownButton' }")
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
                         ul.dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }")
@@ -554,7 +554,7 @@ html
                             // ko foreach: explodedPointTypes
                             li
                                 input(type='radio', data-bind="value: key, checked: $parent.newPointType, attr: {id : $parent.id() + '_pointTypeRadio_' + $index(), name : $parent.id() + '_pointTypeRadio' }")
-                                label(data-bind="text: text, attr: { for: $parent.id() + '_pointTypeRadio_' + $index() }")
+                                label(data-bind="text: key, attr: { for: $parent.id() + '_pointTypeRadio_' + $index() }")
 
                             // /ko
                             // /ko
