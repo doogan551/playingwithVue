@@ -2603,11 +2603,15 @@ var dti = {
         },
         clone: function (toCopy) {
             var ret,
-                copyObject = function () {
-                    ret = $.extend(true, {}, toCopy);
-                },
                 copyArray = function () {
                     ret = $.extend(true, [], toCopy);
+                },
+                copyObject = function () {
+                    if (Array.isArray(toCopy)) {
+                        copyArray();
+                    } else {
+                        ret = $.extend(true, {}, toCopy);
+                    }
                 },
                 basic = function () {
                     ret = toCopy;
@@ -2615,8 +2619,6 @@ var dti = {
 
             switch (typeof toCopy) {
                 case 'object': copyObject();
-                        break;
-                case 'array': copyArray();
                         break;
                 default: basic();
                         break;
