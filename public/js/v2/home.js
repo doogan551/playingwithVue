@@ -481,23 +481,19 @@ var dti = {
     keyboardShortcuts: {
         _lastInit: true,
         init: function () {
-            var shortcutEntries,
-                shortcut,
-                key,
-                len,
-                i;
+            dti.forEach(dti.keyboardShortcuts.shortcuts, function (shortcutEntries, keyCombo) {
+                dti.forEachArray(shortcutEntries, function (shortcut) {
+                    var elements = shortcut.elements || document;
 
-            for (key in dti.keyboardShortcuts.shortcuts) {
-                shortcutEntries = dti.keyboardShortcuts.shortcuts[key];
-                len = shortcutEntries.length;
+                    if (!Array.isArray(elements)) {
+                        elements = [elements];
+                    }
 
-                for (i = 0; i < len; i++) {
-                    shortcut = shortcutEntries[i];
-                    el = shortcut.element || document;
-
-                    $(el).bind(shortcut.type, key, shortcut.fn);
-                }
-            }
+                    dti.forEachArray(elements, function (el) {
+                        $(el).bind(shortcut.type, keyCombo, shortcut.fn);
+                    });
+                });
+            });
         },
         shortcuts: {
             'shift+space': [{
@@ -510,10 +506,7 @@ var dti = {
             }],
             'esc': [{
                 type: 'keyup',
-                fn: function () {dti.globalSearch.hide();}
-            }, {
-                type: 'keyup',
-                element: '#searchNavbar input',
+                elements: [document, '#searchNavbar input'],
                 fn: function () {dti.globalSearch.hide();}
             }]
         }
@@ -1061,6 +1054,12 @@ var dti = {
 
             // dti.bindings.windowGroups(pinnedItems);
         },
+        show: function () {
+            dti.bindings.taskbarShown(true);
+        },
+        hide: function () {
+            dti.bindings.taskbarShown(false);
+        },
         addWindow: function (win) {
             var group = win.bindings.group();
 
@@ -1564,13 +1563,18 @@ var dti = {
         $resultsEl: $('#globalSearchResults'),
         $inputEl: null, // Element added to the DOM in globalSearch.init()
         $chips: $('#searchNavbar .chips'),
+        $clearAllChipEl: $('#searchNavbar .clearAllChip'),
         visible: false,
         searchTerms: {},
         chipsTimeoutID: 0,
         scrollTimeoutID: 0,
         reqID: 0,
+        performingNewSearch: true,
         options: {
-            highlightNameMatch: true
+            highlightNameMatch: true,
+            maximumResultsShown: 1000, // Maximum number of results we'll get/show in the DOM
+            infiniteScrollThreshold: 0.75, // Scroll within 75% of page bottom auto-gets more results
+            manualLoadThreshold: 200 // Infinite scroll is temporary replaced by manual load every [this many] results
         },
         init: function () {
             var bindings = dti.bindings.globalSearch;
@@ -1581,55 +1585,61 @@ var dti = {
             });
 
             dti.globalSearch.$chips.on('chip.add', function (e, chip) {
-                console.log('Added chip', chip);
                 dti.globalSearch.searchTerms[chip.tag] = 1;
+                dti.globalSearch.performingNewSearch = true;
                 dti.globalSearch.doSearch();
+                dti.globalSearch.$clearAllChipEl.removeClass('hide');
             });
 
             dti.globalSearch.$chips.on('chip.delete', function (e, chip) {
-                console.log('Deleting chip', chip);
                 delete dti.globalSearch.searchTerms[chip.tag];
                 window.clearTimeout(dti.globalSearch.chipsTimeoutID);
 
                 // We need to clear our request ID immediately in case a previous request
                 // is in route
                 dti.globalSearch.reqID = 0;
-
-                bindings.showSummary(false);
-                bindings.showError(false);
-                bindings.showLoadMoreResultsButton(false);
-                bindings.count(0);
-                bindings.searchResults.removeAll();
+                // Set our flag indicating we're going to perform a new search
+                dti.globalSearch.performingNewSearch = true;
+                // We signal the UI that we're getting data even though we're not yet because
+                // it has a glitchy feel if the search doesn't appear to begin immediately
+                // after we've changed our search criteria
+                bindings.gettingData(true);
 
                 if (Object.keys(dti.globalSearch.searchTerms).length) {
-                    bindings.gettingData(true);
                     dti.globalSearch.chipsTimeoutID = window.setTimeout(function () {
                         dti.globalSearch.doSearch();
                     }, 750);
                 } else {
                     bindings.gettingData(false);
+                    dti.globalSearch.$clearAllChipEl.addClass('hide');
                 }
             });
 
             dti.globalSearch.$inputEl = $('#searchNavbar input');
 
             dti.globalSearch.$resultsEl.scroll(function handleScroll () {
+                var numberOfResultsShown = bindings.searchResults().length;
+
                 window.clearTimeout(dti.globalSearch.scrollTimeoutID);
+
+                // If we're already in the process of getting data, or we've reached our maximum nubmer of results, get out of here!
+                if (bindings.gettingData() || (numberOfResultsShown >= dti.globalSearch.options.maximumResultsShown)) {
+                    return;
+                }
 
                 dti.globalSearch.scrollTimeoutID = window.setTimeout(function () {
                     var $resultsEl = dti.globalSearch.$resultsEl,
                         totalHeight = $resultsEl[0].scrollHeight,
                         visibleHeight = $resultsEl[0].clientHeight,
                         scrollTop = $resultsEl.scrollTop(),
-                        totalNumberOfResults = bindings.count(),
-                        numberOfResultsShown = bindings.searchResults().length;
+                        totalNumberOfResults = bindings.count();
 
-                    // If we're scrolled within 10% of page bottom
-                    if ((scrollTop + visibleHeight) >= (totalHeight * 0.9)) {
+                    // If we're scrolled within [infiniteScrollThreshold]% of page bottom
+                    if ((scrollTop + visibleHeight) >= (totalHeight * dti.globalSearch.options.infiniteScrollThreshold)) {
                         // If we have more results on the server
                         if (numberOfResultsShown < totalNumberOfResults) {
-                            // If we've haven't gathered another 200 results
-                            if (numberOfResultsShown % 200) {
+                            // If we've haven't gathered another [manualLoadThreshold] results
+                            if (numberOfResultsShown % dti.globalSearch.options.manualLoadThreshold) {
                                 // Auto-get more results
                                 dti.globalSearch.doSearch(true);
                             } else {
@@ -1640,13 +1650,53 @@ var dti = {
                     }
                 }, 100);
             });
+
+            // Add a click handler for our 'Clear All' chip button
+            dti.globalSearch.$clearAllChipEl.click(function handleClick (e) {
+                dti.globalSearch.clear();
+                dti.globalSearch.$inputEl.focus();
+            });
+
+            // Subscribe to our gettingData observable so we can setup the UI accordingly
+            bindings.gettingData.subscribe(function whatAmI (gettingData) {
+                var resultsEl;
+
+                if (gettingData) { // Search started
+                    bindings.showError(false);
+                    bindings.showLoadMoreResultsButton(false);
+
+                    if (dti.globalSearch.performingNewSearch) {
+                        bindings.showSummary(false);
+                        bindings.count(0);
+                        bindings.searchResults.removeAll();
+                    }
+                } else { // Search finished
+                    if (!bindings.showError() && Object.keys(dti.globalSearch.searchTerms).length) {
+                        bindings.showSummary(true);
+
+                        resultsEl = dti.globalSearch.$resultsEl.get(0);
+                        // If scroll bar isn't visible
+                        if (resultsEl.scrollHeight <= resultsEl.clientHeight) {
+                            // If we have more results on the server
+                            if (bindings.count() > bindings.searchResults().length) {
+                                // We do this because normally the scroll event triggers loading of 
+                                // more results. But since the scroll bar isn't visible, we need to 
+                                // let the user do it manually
+                                bindings.showLoadMoreResultsButton(true);
+                            }
+                        }
+                    }
+                }
+            });
         },
         show: function () {
             dti.globalSearch.visible = true;
             dti.fire('hideWindows');
+            dti.fire('hideMenus');
 
             dti.animations.fadeIn(dti.globalSearch.$taskbarEl, function focusSearchInput () {
                 dti.globalSearch.$inputEl.focus();
+                dti.taskbar.hide();
             });
 
             dti.animations.fadeIn(dti.globalSearch.$resultsEl);
@@ -1655,20 +1705,14 @@ var dti = {
             if (dti.globalSearch.visible) {
                 dti.globalSearch.visible = false;
                 dti.fire('unhideWindows');
+                dti.taskbar.show();
 
                 dti.animations.fadeOut(dti.globalSearch.$taskbarEl);
                 dti.animations.fadeOut(dti.globalSearch.$resultsEl, function resetSearch () {
                     if (doNotResetResults) {
                         return;
                     }
-                    var $_chips = dti.globalSearch.$chips,
-                        chipsIndex = $_chips.data('index'),
-                        len = $_chips.data('chips').length;
-
-                    // Remove all chips (search terms)
-                    while (len--) {
-                        $_chips.deleteChip(chipsIndex, 0, $_chips);
-                    }
+                    dti.globalSearch.clear();
                 });
             }
         },
@@ -1681,8 +1725,8 @@ var dti = {
                     limit: 50
                 },
                 handleError = function (errorMessage) {
-                    bindings.searchResults.removeAll();
-                    bindings.showSummary(false);
+                    // bindings.searchResults.removeAll();
+                    // bindings.showSummary(false);
 
                     bindings.errorMessage(errorMessage);
                     bindings.showError(true);
@@ -1710,17 +1754,16 @@ var dti = {
                     }
                 };
 
+            // Clear our timers just to make sure we don't encounter any unexpected race conditions
+            window.clearTimeout(dti.globalSearch.scrollTimeoutID);
+            window.clearTimeout(dti.globalSearch.chipsTimeoutID);
+
             dti.globalSearch.reqID = data.reqID;
             
-            if (appendResults) {
+            if (!dti.globalSearch.performingNewSearch) {
                 data.skip = bindings.searchResults().length;
-            } else {
-                bindings.searchResults.removeAll();
-                bindings.showSummary(false);
             }
 
-            bindings.showError(false);
-            bindings.showLoadMoreResultsButton(false);
             bindings.gettingData(true);
 
             $.ajax({
@@ -1746,25 +1789,13 @@ var dti = {
 
                     data.points.forEach(processPoint);
 
-                    if (appendResults) {
-                        bindings.searchResults(bindings.searchResults().concat(data.points));
-                    } else {
+                    if (dti.globalSearch.performingNewSearch) {
                         bindings.searchResults(data.points);
-
-                        resultsEl = dti.globalSearch.$resultsEl.get(0);
-                        // If scroll bar isn't visible
-                        if (resultsEl.scrollHeight <= resultsEl.clientHeight) {
-                            // If we have more results on the server
-                            if (data.count > data.points.length) {
-                                // We do this because normally the scroll event triggers loading of 
-                                // more results. But since the scroll bar isn't visible, we need to 
-                                // let the user do it manually
-                                bindings.showLoadMoreResultsButton(true);
-                            }
-                        }
+                    } else {
+                        bindings.searchResults(bindings.searchResults().concat(data.points));
                     }
+                    dti.globalSearch.performingNewSearch = false;
                     bindings.count(data.count);
-                    bindings.showSummary(true);
                 }
             ).fail(
                 function globalSearchFail (jqXHR, textStatus, errorThrown) {
@@ -1776,6 +1807,20 @@ var dti = {
                     bindings.gettingData(false);
                 }
             );
+        },
+        clear: function () {
+            // We've got a shortcut on this so we need to check visibility before executing
+            if (!dti.globalSearch.visible) {
+                return;
+            }
+            var $chips = dti.globalSearch.$chips,
+                chipsIndex = $chips.data('index'),
+                len = $chips.data('chips').length;
+
+            // Remove all chips (search terms)
+            while (len--) {
+                $chips.deleteChip(chipsIndex, 0, $chips);
+            }
         },
         openPoint: function (data) {
             dti.windows.openWindow({
@@ -2943,6 +2988,7 @@ var dti = {
         windowGroups: ko.observableArray([]), // Pinned items prepopulate this array
         startMenuItems: ko.observableArray([]),
         windowsHidden: ko.observable(false),
+        taskbarShown: ko.observable(true),
         showNavigatorNew: function () {
             dti.navigatorNew.showNavigator();
         },

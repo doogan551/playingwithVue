@@ -14,7 +14,7 @@ html
     body.grey.lighten-3
 
         header.animates
-            .navbar-fixed.taskbar
+            .navbar-fixed.taskbar(data-bind='visible: taskbarShown')
                 nav.blue-grey
                     .nav-wrapper
                         ul.left
@@ -61,9 +61,12 @@ html
                             .input-field
                                 input#globalSearchInput(type='search')
                         .taskbarItem
-                            .chips.chips-placeholder.flex.flex-row.flex-center
+                            .chipsAndSearchContainer.thinScroll.flex.flex-row.flex-center
+                                // globalSearch.init() attaches a click handler to our 'Clear All' chip, and handles adding/removing the '.hide' class as search terms are added and removed
+                                .clearAllChip.hide Clear All
+                                .chips.chips-placeholder
                         .taskbarItem
-                            i.material-icons(data-bind='click: hideGlobalSearch') close
+                            i.material-icons.tooltipped(data-bind='click: hideGlobalSearch', data-position='left', data-tooltip='Close Search', data-delay='10') close
 
         main.animates
             #globalSearchResults.animates
