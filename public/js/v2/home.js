@@ -1572,9 +1572,10 @@ var dti = {
         performingNewSearch: true,
         options: {
             highlightNameMatch: true,
-            maximumResultsShown: 1000, // Maximum number of results we'll get/show in the DOM
+            searchLimit: 200, // Number of results to get per search
+            maximumResultsShown: 2000, // Maximum number of results we'll get/show in the DOM
             infiniteScrollThreshold: 0.75, // Scroll within 75% of page bottom auto-gets more results
-            manualLoadThreshold: 200 // Infinite scroll is temporary replaced by manual load every [this many] results
+            manualLoadThreshold: 1000 // Infinite scroll is temporary replaced by manual load every [this many] results
         },
         init: function () {
             var bindings = dti.bindings.globalSearch;
@@ -1722,7 +1723,7 @@ var dti = {
                     user: dti.bindings.user(),
                     searchTerms: dti.globalSearch.searchTerms,
                     reqID: dti.makeId(),
-                    limit: 50
+                    limit: dti.globalSearch.options.searchLimit
                 },
                 handleError = function (errorMessage) {
                     // bindings.searchResults.removeAll();
