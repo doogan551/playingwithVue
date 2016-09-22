@@ -444,9 +444,11 @@ html
         .navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="attr: { id: id() }, css: { 'modal-fixed-footer': mode() !== 'default' }")
             .modal-header Select Point
             .modal-content.modal-content-no-padding
-            .modal-footer
-                span.modalControls(data-bind="visible: mode() === 'filter'")
+            .modal-footer(data-bind="css: mode")
+                span.modalControls.filterActions
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
+                span.modalControls.createActions
+                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="css: { disabled: !allowCreatePoint() }, click: doCreatePoint") Create Point
 
     script#miniWindowTemplate(type='text/html')
         // ko if: !exempt()
@@ -494,7 +496,7 @@ html
 
     script#navigatorTemplate(type='text/html')
         .iframeFull.blue-grey-form.flex.flex-row.row
-            .navigatorBody.flex.flex-column
+            .navigatorBody.flex.flex-column(data-bind="css: mode")
                 .selectorHeader.right-align.flex.flex-row.flex-right.flex-center
                     p.pointType
                         input#showInactive.filled-in(type='checkbox', data-bind="checked: showInactive")
@@ -505,9 +507,9 @@ html
                     a.waves-effect.waves-light.btn.blue-grey(href='javascript://', data-bind="click: clearNames")
                         i.material-icons.left clear
                         | Clear Names
-                    a.waves-effect.waves-light.btn.blue-grey
+                    a.waves-effect.waves-light.btn.blue-grey(data-bind="click: createPoint, css: { disabled: mode() === 'create' }")
                         i.material-icons.left add
-                        | Create Point
+                        | New Point
                 .selectorNames
                     .name1.input-field.col
                         input#name1(type='text', data-bind="textInput: name1")
@@ -517,17 +519,17 @@ html
                     .name2.input-field.col
                         input#name2(type='text', data-bind="textInput: name2")
                         label(for='name2', data-bind="updateLabel: name2") Name 2
-                        a.clearName(href="javascript://", tabindex="-1")
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name2'); }")
                             i.material-icons.suffix clear                                    
                     .name3.input-field.col
                         input#name3(type='text', data-bind="textInput: name3")
                         label(for='name3', data-bind="updateLabel: name3") Name 3
-                        a.clearName(href="javascript://", tabindex="-1")
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name3'); }")
                             i.material-icons.suffix clear                                    
                     .name4.input-field.col
                         input#name4(type='text', data-bind="textInput: name4")
                         label(for='name4', data-bind="updateLabel: name4") Name 4
-                        a.clearName(href="javascript://", tabindex="-1")
+                        a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name4'); }")
                             i.material-icons.suffix clear                                                                                                                                       
                     //- .pointTypeFilter.input-field.col(data-bind="contextMenuInvert: pointTypeInvert, materializeSelect: {options: pointTypes, notifier: pointTypeChanged, hideEvent: onDropdownHide}")
                     .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
@@ -537,6 +539,7 @@ html
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
                         ul.dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }")
+                            // ko if: mode() === 'default'
                             li
                                 input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
                                 label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
@@ -544,6 +547,16 @@ html
                             li
                                 input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : $parent.id() + '_pointType_' + $index() }")
                                 label.label-tight(data-bind="text: key, attr: { for: $parent.id() + '_pointType_' + $index() }")
+                            // /ko
+                            // /ko
+
+                            // ko if: mode() === 'create'
+                            // ko foreach: explodedPointTypes
+                            li
+                                input(type='radio', data-bind="value: key, checked: $parent.newPointType, attr: {id : $parent.id() + '_pointTypeRadio_' + $index(), name : $parent.id() + '_pointTypeRadio' }")
+                                label(data-bind="text: text, attr: { for: $parent.id() + '_pointTypeRadio_' + $index() }")
+
+                            // /ko
                             // /ko
 
                         //- select(data-beloworigin="true")
@@ -565,7 +578,6 @@ html
                         .listEntry(data-bind="text: pointType")
 
                     // /ko
-
 
     script#taskbarButtonTemplate(type='text/html')
         li.taskbarItem.active(data-bind="taskbarMenu: $data")

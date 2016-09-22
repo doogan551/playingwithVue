@@ -1943,63 +1943,61 @@ var dti = {
                             dropdownOpen: false,
                             fetchingPoints: false,
                             points: [],
-                            mode: 'default',
+                            mode: self.modes.DEFAULT,
                             deviceId: null,
                             remoteUnitId: null,
-                            id: self.id
-                        };
+                            id: self.id,
+                            newPointType: pointTypes[0].key,
+                            disableCreatePoint: false
+                        },
+                        explodedPointTypes = [];
 
-                    dti.forEachArray(pointTypes, function addSelectedToPointType(type) {
+                    dti.forEachArray(pointTypes, function addSelectedToPointType (type) {
+                        var subTypes = dti.utility.subPointTypes[type.key];
+
                         type.selected = true;
                         type.visible = true;
+
+                        //process sub types if exist
+                        if (subTypes) {
+                            dti.forEachArray(subTypes, function buildSubType (subType) {
+                                var newSubType = {
+                                    key: type.key + ' (' + subType.key + ')',
+                                    enum: subType.value,
+                                    selected: false,
+                                    visible: true,
+                                    _type: type.key,
+                                    _subType: subType.key
+                                };
+
+                                explodedPointTypes.push(newSubType);
+                            });
+                        } else {
+                            explodedPointTypes.push(type);
+                        }
                     });
 
                     bindings.pointTypes = pointTypes;
+                    bindings.explodedPointTypes = explodedPointTypes;
 
                     self.defaultConfig = bindings;
 
                     //build observable viewmodel so computeds have access to observables
                     bindings = ko.viewmodel.fromModel(bindings);
 
+                    bindings.createPoint = function () {
+                        self.bindings.mode(self.modes.CREATE);
+                    };
+
+                    bindings.doCreatePoint = function () {
+
+                    };
+
                     bindings.togglePointTypeDropdown = function (obj, event) {
                         bindings.dropdownOpen(!bindings.dropdownOpen());
                         event.preventDefault();
                         return false;
                     };
-
-                    bindings.openPointTypeDropdown = function (obj, event) {
-                        // if (!self.$dropdownButton) {
-                        //     self.initDropdownButton();
-                        // }
-
-                        if (self._dropdownOpen) {
-                            bindings.closePointTypeDropdown();
-                            event.preventDefault();
-                            event.stopPropagation();
-                            return false;
-                        } else {
-                            setTimeout(function doOpenDropdown () {
-                                self.$dropdownButton.trigger('open');
-                                self._dropdownOpen = true;
-                            }, 1);
-                        }
-                    };
-
-                    bindings.closePointTypeDropdown = function () {
-                        self.$dropdownButton.trigger('close');
-                        self._dropdownOpen = false;
-
-                        if (self.pointTypeChanged) {
-                            // dti.log('point type changed, getting points');
-                            self.getPoints();
-                        }
-
-                        self.pointTypeChanged = false;
-                    };
-
-                    // bindings.onDropdownHide = function () {
-                        
-                    // };
 
                     bindings.pointTypeChanged = function () {
                         self.pointTypeChanged = true;
@@ -2012,30 +2010,6 @@ var dti = {
 
                     bindings.toggleAllPointTypes = function () {
                         var types = bindings.pointTypes();
-                        // var numChecked = 0,
-                        //     numVisible = 0,
-                        //     types = bindings.pointTypes(),
-                        //     toSet;
-
-                        // dti.forEachArray(types, function checkPointType(type) {
-                        //     if (type.visible()) {
-                        //         numVisible++;
-                        //     }
-
-                        //     if (type.selected()) {
-                        //         numChecked++;
-                        //     }
-                        // });
-
-                        // if (numChecked === types.length) {
-                        //     toSet = false;
-                        // } else if (numChecked === 0) {
-                        //     toSet = true;
-                        // } else if (numChecked > numVisible / 2) {
-                        //     toSet = true;
-                        // } else {
-                        //     toSet = false;
-                        // }
 
                         dti.forEachArray(types, function doCheckPointType(type) {
                             if (type.visible()) {
@@ -2060,11 +2034,11 @@ var dti = {
                             if (point !== self.bindings) {
                                 //valid click
                                 switch (bindings.mode()) {
-                                    case 'default':
+                                    case self.modes.DEFAULT:
                                         dti.navigatorNew.handleNavigatorRowClick(point);
                                         break;
-                                    case 'filter':
-                                    case 'create':
+                                    case self.modes.FILTER:
+                                    case self.modes.CREATE:
                                         dti.log(point);
                                         break;
                                 }
@@ -2085,6 +2059,13 @@ var dti = {
                             self.bindings[binding](null);
                         }
                     };
+
+                    bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint () {
+                        var uniqueName = bindings.points().length === 0,
+                            disabled = bindings.disableCreatePoint();
+
+                        return uniqueName && !disabled;
+                    });
 
                     bindings.allTypesSelected = ko.pureComputed(function allPointTypesSelected() {
                         var currTypes = bindings.pointTypes(),
@@ -2138,16 +2119,20 @@ var dti = {
                             selectedTypes = [],
                             ret;
 
-                        dti.forEachArray(currTypes, function isTypeChecked(type) {
-                            if (type.selected()) {
-                                selectedTypes.push(type.key());
-                            }
-                        });
-
-                        if (selectedTypes.length === 1) {
-                            ret = selectedTypes[0];
+                        if (bindings.mode() === self.modes.CREATE) {
+                            ret = bindings.newPointType();
                         } else {
-                            ret = (selectedTypes.length === currTypes.length ? 'All' : selectedTypes.length) + ' Point Types';
+                            dti.forEachArray(currTypes, function isTypeChecked(type) {
+                                if (type.selected()) {
+                                    selectedTypes.push(type.key());
+                                }
+                            });
+
+                            if (selectedTypes.length === 1) {
+                                ret = selectedTypes[0];
+                            } else {
+                                ret = (selectedTypes.length === currTypes.length ? 'All' : selectedTypes.length) + ' Point Types';
+                            }
                         }
 
                         return ret;
@@ -2157,6 +2142,12 @@ var dti = {
                 };
 
             $.extend(self, config);
+
+            self.modes = {
+                CREATE: 'create',
+                FILTER: 'filter',
+                DEFAULT: 'default'
+            };
 
             // if (self.$modal) {
             //     self.$footer = self.$modal.find('.modal-footer');
@@ -2206,6 +2197,10 @@ var dti = {
                 self.applyPointTypes(config.pointTypes);
 
                 self.applyPointNames(config);
+
+                dti.forEachArray(propertiesToApply, function applyProperty (prop) {
+                    self.bindings[prop](config[prop]);
+                });
 
                 self.getPoints();
             };
@@ -2807,6 +2802,10 @@ var dti = {
         init: function () {
             dti.utility.pointTypeLookup = {};
             dti.utility.pointTypes = dti.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes();
+            dti.utility.subPointTypes = {
+                Report: dti.workspaceManager.config.Utility.pointTypes.getEnums('Report Types', 'Report'),
+                Sensor: dti.workspaceManager.config.Utility.pointTypes.getEnums('Sensor Types', 'Sensor')
+            };
 
             dti.forEachArray(dti.utility.pointTypes, function processPointType (type) {
                 dti.utility.pointTypeLookup[type.key] = type;
@@ -3218,7 +3217,7 @@ var dti = {
                         img;
 
                     if (upi !== undefined && upi !== null) {
-                        if (currThumb === undefined) {
+                        if (currThumb === undefined || currThumb === false) {
                             // dti.log('No thumb for upi', upi);
                             $.ajax({
                                     url: '/img/thumbs/' + upi + '.txt',
@@ -3248,6 +3247,7 @@ var dti = {
                                 )
                                 .fail(
                                     function () {
+                                        dti.thumbs[upi] = false;
                                         thumbnailFound(false);
                                         // $icon.show();
                                     }
