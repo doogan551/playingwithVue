@@ -1,4 +1,5 @@
 // scss-lint:disable Comment, PropertySortOrder, VendorPrefix, NameFormat, SelectorFormat, QualifyingElement, NestingDepth, SelectorDepth, ImportantRule, IdSelector, ColorVariable
+@import '../materialize/components/color';
 
 /* FONTS FOR MATERIALIZE */
 @font-face {
@@ -208,10 +209,19 @@ nav {
 
 /* GLOBAL */
 $bodyBG: #eee;
-$darkBG: #2e3135;
-$materialGreenBlue: #4cb59d;
-$blueGreyDarken1: #546e7a;
-$blueGrey: #607d8b;
+
+// Utility variables for Materialize colors.  map-get is annoying
+//....put base last.  trust me
+$blue-grey-lighten-1: map-get($blue-grey, lighten-1);
+$blue-grey-lighten-2: map-get($blue-grey, lighten-2);
+$blue-grey-lighten-3: map-get($blue-grey, lighten-3);
+$blue-grey-lighten-4: map-get($blue-grey, lighten-4);
+$blue-grey-lighten-5: map-get($blue-grey, lighten-5);
+$blue-grey-darken-1: map-get($blue-grey, darken-1);
+$blue-grey-darken-2: map-get($blue-grey, darken-2);
+$blue-grey-darken-3: map-get($blue-grey, darken-3);
+$blue-grey-darken-4: map-get($blue-grey, darken-4);
+$blue-grey: map-get($blue-grey, base);
 
 html,
 body {
@@ -227,7 +237,7 @@ body {
 }
 
 a {
-    color: $blueGrey;
+    color: $blue-grey;
     cursor: pointer;
 }
 
@@ -341,17 +351,17 @@ $modalHeaderHeight: 42px;
         color: #000;
 
         &.active {
-            color: $blueGrey !important;
+            color: $blue-grey !important;
         }
     }
 
     [type="checkbox"].filled-in:not(:checked) + label::after {
-        border-color: $blueGrey !important;
+        border-color: $blue-grey !important;
     }
 
     [type="checkbox"].filled-in:checked + label::after {
-        background-color: $blueGrey !important;
-        border-color: $blueGrey !important;
+        background-color: $blue-grey !important;
+        border-color: $blue-grey !important;
     }
 }
 
@@ -533,7 +543,7 @@ $startmenuGutter: 15px;
 
     i {
         top: 8px;
-        color: $blueGrey;
+        color: $blue-grey;
     }
 
     input {
@@ -565,17 +575,17 @@ $startmenuGutter: 15px;
     }
 
     .chips {
-        border: none;
+        border: 0;
         margin: 0;
         padding: 0 10px;
         font-size: initial;
-        background-color: #FFF;
+        background-color: #fff;
         min-height: 42px;
         height: calc(100% - 4px);
         margin-top: 2px;
 
         &.focus {
-            border: none;
+            border: 0;
             box-shadow: none;
         }
 
@@ -598,7 +608,7 @@ $startmenuGutter: 15px;
 
     .taskbarItem:first-child {
         position: absolute;
-        left: 0px;
+        left: 0;
         width: 50px;
         cursor: default;
     }
@@ -611,7 +621,7 @@ $startmenuGutter: 15px;
 
     .taskbarItem:last-child {
         position: absolute;
-        right: 0px;
+        right: 0;
         width: 50px;
         cursor: pointer;
     }
@@ -631,12 +641,13 @@ $startmenuGutter: 15px;
         margin-top: 20px;
     }
 
-    .globalSearchFooter {        
+    .globalSearchFooter {
         .spinner-layer {
-            border-color: lighten($blueGrey, 25%)
+            border-color: lighten($blue-grey, 25%);
         }
+
         .btn {
-            background-color: $blueGrey
+            background-color: $blue-grey;
         }
     }
 
@@ -646,19 +657,18 @@ $startmenuGutter: 15px;
 
     .card-image {
         i {
-            color: lighten($blueGrey, 25%);
+            color: lighten($blue-grey, 25%);
             font-size: 48px;
         }
     }
 
     .highlight {
-        background-color: #FFFFC0;
+        background-color: #ffffc0;
     }
 }
 
 .recentItems {
     width: calc(#{$startmenuWidth} *.4);
-
 
     a {
         display: block;
@@ -667,7 +677,7 @@ $startmenuGutter: 15px;
         margin-bottom: 5px;
 
         &:hover {
-            color: lighten($blueGrey, 25%) !important;
+            color: lighten($blue-grey, 25%) !important;
         }
     }
 
@@ -862,7 +872,7 @@ footer {
             }
 
             &:hover {
-                color: lighten($blueGrey, 30%) !important;
+                color: lighten($blue-grey, 30%) !important;
             }
         }
     }
@@ -883,7 +893,7 @@ footer {
     height: 150px;
     display: inline-block;
     margin: 0 15px;
-    border: 1px solid $blueGrey;
+    border: 1px solid $blue-grey;
 
     i.closeIcon {
         position: absolute;
@@ -915,7 +925,7 @@ footer {
     }
 
     &:hover {
-        border-color: lighten($blueGrey, 15%);
+        border-color: lighten($blue-grey, 15%);
     }
 }
 
@@ -1037,12 +1047,12 @@ footer {
                 width: 100%;
                 text-align: center;
                 color: #fff;
-                background-color: $blueGrey;
+                background-color: $blue-grey;
                 padding: 2px;
                 border-radius: 2px;
 
                 &:hover {
-                    background-color: lighten($blueGrey, 10%);
+                    background-color: lighten($blue-grey, 10%);
                 }
 
                 &.error {
@@ -1091,7 +1101,7 @@ footer {
         display: inline-block;
         margin-right: 15px;
         margin-bottom: 15px;
-        border: 1px solid $blueGrey;
+        border: 1px solid $blue-grey;
 
         .itemTitle {
             text-align: center;
@@ -1107,7 +1117,7 @@ footer {
         }
 
         &:hover {
-            // border-color: lighten($blueGrey, 15%);
+            // border-color: lighten($blue-grey, 15%);
         }
     }
 }
@@ -1122,12 +1132,12 @@ footer {
 
     .sectionHeader {
         font-size: 1.4rem;
-        border-bottom: 1px solid lighten($blueGrey, 20%);
+        border-bottom: 1px solid lighten($blue-grey, 20%);
     }
 
     .userDefined {
         i {
-            color: $blueGrey;
+            color: $blue-grey;
             margin-top: 4px;
         }
     }
@@ -1285,14 +1295,6 @@ $loaderSpeedScale: 1 / .75;
 }
 /* end loader */
 
-.navigatorModal {
-    width: 75%;
-    height: 80% !important;
-    max-height: 95%;
-    background-color: $blueGrey;
-    overflow-y: hidden;
-}
-
 .iframeFull {
     background-color: #fff;
     height: 100%;
@@ -1306,6 +1308,30 @@ $loaderSpeedScale: 1 / .75;
 
 
 /* new navigator */
+
+.navigatorModal {
+    width: 75%;
+    height: 80% !important;
+    max-height: 95%;
+    background-color: $blue-grey;
+    overflow-y: hidden;
+
+    .modalControls {
+        display: none;
+    }
+
+    .filter {
+        .filterActions {
+            display: block;
+        }
+    }
+
+    .create {
+        .createActions {
+            display: block;
+        }
+    }
+}
 
 .pointTypes {
     color: #000;
@@ -1333,6 +1359,11 @@ $loaderSpeedScale: 1 / .75;
     flex-grow: 1;
     position: relative;
 
+    .btn {
+        height: 32px;
+        line-height: 32px;
+    }
+
     .fetching {
         position: absolute;
         top: 0;
@@ -1347,7 +1378,7 @@ $loaderSpeedScale: 1 / .75;
         }
 
         .indeterminate {
-            background-color: $blueGrey;
+            background-color: $blue-grey;
         }
     }
 
@@ -1362,8 +1393,6 @@ $loaderSpeedScale: 1 / .75;
         .btn {
             padding: 0 1rem 0 0;
             margin-right: 5px;
-            height: 32px;
-            line-height: 32px;
         }
 
         i {
@@ -1393,7 +1422,7 @@ $loaderSpeedScale: 1 / .75;
         }
 
         label.active + .clearName .suffix {
-            color: $blueGrey;
+            color: $blue-grey;
         }
 
         .suffix {
@@ -1407,7 +1436,7 @@ $loaderSpeedScale: 1 / .75;
     .selectorList {
         overflow-y: auto;
         padding-left: 5px;
-        flex-wrap: wrap;
+        // flex-wrap: wrap;
         flex-grow: 1;
 
         .listRow:hover {
@@ -1421,12 +1450,6 @@ $loaderSpeedScale: 1 / .75;
             width: 20%;
             max-height: 28px;
             display: inline-block;
-        }
-
-        td,
-        th {
-            padding: 3px;
-            width: 20%;
         }
     }
 
@@ -1451,7 +1474,7 @@ $loaderSpeedScale: 1 / .75;
             max-height: 62vh;
 
             label {
-                color: $blueGrey;
+                color: $blue-grey;
             }
         }
 
@@ -1466,17 +1489,30 @@ $loaderSpeedScale: 1 / .75;
             }
         }
     }
+
+    .selectorCreate {
+        text-align: center;
+        display: none;
+        min-height: 20%;
+        padding-top: 15px;
+    }
+
+    &.create {
+        .selectorCreate {
+            display: block;
+        }
+    }
 }
 
 /* new navigator */
 
 /* label focus color */
 .input-field input:focus + label {
-    color: $blueGrey !important;
+    color: $blue-grey !important;
 }
 
 /* label underline focus color */
 input:focus {
-    border-bottom: 1px solid $blueGrey !important;
-    box-shadow: 0 1px 0 0 $blueGrey !important;
+    border-bottom: 1px solid $blue-grey !important;
+    box-shadow: 0 1px 0 0 $blue-grey !important;
 }
