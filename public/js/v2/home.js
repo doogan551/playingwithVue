@@ -2602,6 +2602,29 @@ var dti = {
                 element.attachEvent('on' + event, fn);
             }
         },
+        clone: function (toCopy) {
+            var ret,
+                copyObject = function () {
+                    ret = $.extend(true, {}, toCopy);
+                },
+                copyArray = function () {
+                    ret = $.extend(true, [], toCopy);
+                },
+                basic = function () {
+                    ret = toCopy;
+                };
+
+            switch (typeof toCopy) {
+                case 'object': copyObject();
+                        break;
+                case 'array': copyArray();
+                        break;
+                default: basic();
+                        break;
+            }
+
+            return ret;
+        },
         getConfig: function (path, parameters) {
             var explodedPath = path.split('.'),
                 Config = dti.workspaceManager.config,
@@ -2615,7 +2638,7 @@ var dti = {
                 result = result.apply(this, parameters);
             }
 
-            return result;
+            return dti.utility.clone(result);
         },
         getEndpoint: function (type, id) {
             return dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(type, id);
