@@ -979,7 +979,7 @@ var dti = {
 
             config = dti.windows.processOpenWindowParameters(config);
 
-            dti.navigator.hideNavigator();
+            dti.navigatorNew.hideNavigator();
             dti.windows.create(config);
         },
         getWindowsByType: function (type) {
@@ -2725,22 +2725,6 @@ var dti = {
 
                         dti.navigatorNew.showNavigator(config);
                     },
-                    navigatormodal: function () {
-                        // key: navigatormodal, oldValue: windowId of recipient to send info to
-                        if (config.action === 'open') {
-                            dti.navigator.navigatorCallback = config.callback || false;
-
-                            dti.navigator._navigatorMessage = config;
-                            dti.navigator._navigatorParameters = config.parameters;
-                            dti.navigator.showNavigatorModal();
-                        }
-                    },
-                    navigatorfiltermodal: function () {
-                        if (config.action === 'open') {
-                            dti.navigator._navigatorMessage = config;
-                            dti.navigator.showNavigatorFilterModal();
-                        }
-                    },
                     windowMessage: function () {
                         dti.windows.sendMessage(config);
                     },
@@ -2783,7 +2767,7 @@ var dti = {
                         config = JSON.parse(config);
                     }
                     // store previous call
-                    dti.navigator._prevMessage = config;
+                    dti.navigatorNew._prevMessage = config;
                     callbacks[e.key]();
                 }
             }
@@ -2957,9 +2941,6 @@ var dti = {
         showNavigator: function (group, isStartMenu) {
             dti.navigatorNew.showNavigator(group);
             // dti.navigator.showNavigator(group, isStartMenu);
-        },
-        acceptNavigatorFilter: function () {
-            dti.navigator.acceptNavigatorFilter();
         },
         startMenuClick: function (obj) {
             dti.startMenu.handleClick(obj);
@@ -3347,12 +3328,6 @@ var dti = {
             runInits = function () {
                 var lastInits = [];
                 dti.animations.fadeIn($('main, header'), function startInitFlow () {
-                    dti.on('modalLoaded', function checkDone () {
-                        num--;
-                        if (num === 0) {
-                            complete();
-                        }
-                    });
                     dti.forEach(dti, function dtiInit (val, key) {
                         if (typeof val === 'object') {
                             if (val.init) {
@@ -3376,6 +3351,8 @@ var dti = {
                     });
 
                     $('select:not(.select-processed').material_select();
+
+                    complete();
                 });
             },
             complete = function () {
