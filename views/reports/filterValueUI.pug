@@ -13,7 +13,7 @@ input.input.form-control.filterContainer(data-bind="value: value, enable: $root.
 // ko if: (valueType === "Enum")
 // ko if: (valueList.length > 0)
 .dropdown.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
-   button.btn.btn-default.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+   a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
       span(data-bind="text: value")
       span.caret.lm10px
    ul.filterValues.dropdown-menu
@@ -28,8 +28,10 @@ input.input.form-control.filterContainer(data-bind="value: value, enable: $root.
 // /ko
 // ko if: (valueType === "UniquePID")
 div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
-   button.btn.btn-danger.btn-xs.fa.fa-times(data-bind="click: function(){ $parent.clearFilterPoint($index()) }, tooltip: { title: 'Clear' }")
-   button.btn.btn-info.btn-xs.fa.fa-pencil(data-bind="click: function(){ $parent.selectPointForFilter($data, $index) }, tooltip: { title: 'Edit' }")
+   a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.clearFilterPoint($index()) }, tooltip: { title: 'Clear' }")
+      i.material-icons.tiny.center delete
+   a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.selectPointForFilter($data, $index) }, tooltip: { title: 'Edit' }")
+      i.material-icons.tiny.center edit
    // ko if: (!!$data.softDeleted)
    span [Deleted]&nbsp;
    // /ko
@@ -37,7 +39,7 @@ div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
 // /ko
 // ko if: (valueType === "Bool")
 .dropdown.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
-   button.btn.btn-default.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+   a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
       span(data-bind="text: $root.displayBool(value)")
       span.caret.lm10px
    ul.filterValues.dropdown-menu
@@ -62,8 +64,8 @@ div.durationCtrl
 // ko if: (valueType === "BitString")
 div.bitStringCtrl
    // ko foreach: bitStringEnumsArray
-   input.bitStringCheckbox(data-bind="checked: checked, enable: $root.canEdit()", type="checkbox")
-   span.bitStringLabel(data-bind="text: name")
+   input.small.bitStringCheckbox(data-bind="checked: checked, enable: $root.canEdit(), attr: { id: 'filterBitString' + $parentContext.$index() + $index() }", type="checkbox")
+   label.small.bitStringLabel(data-bind="text: name, attr: { for: 'filterBitString' + $parentContext.$index() + $index() }")
    br
    // /ko
 // /ko
