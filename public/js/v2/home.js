@@ -502,7 +502,7 @@ var dti = {
             }],
             'shift+p': [{
                 type: 'keydown',
-                fn: function () {dti.navigatorNew.showNavigator();}
+                fn: function () {dti.navigator.showNavigator();}
             }],
             'esc': [{
                 type: 'keyup',
@@ -979,7 +979,7 @@ var dti = {
 
             config = dti.windows.processOpenWindowParameters(config);
 
-            dti.navigatorNew.hideNavigator();
+            dti.navigator.hideNavigator();
             dti.windows.create(config);
         },
         getWindowsByType: function (type) {
@@ -1870,10 +1870,9 @@ var dti = {
             });
         }
     },
-    navigatorNew: {
+    navigator: {
         _lastInit: true,
         _navigators: {},
-        $navigatorModalNew: $('#navigatorModalNew'),
         temporaryCallback: null,
         defaultClickHandler: function (pointInfo) {
             var endPoint = dti.utility.getEndpoint(pointInfo.pointType, pointInfo._id),
@@ -1884,16 +1883,16 @@ var dti = {
             dti.windows.openWindow(endPoint.review.url, name, pointInfo.pointType, null, pointInfo._id, options);
         },
         handleNavigatorRowClick: function (pointInfo) {
-            dti.navigatorNew.hideNavigator();
+            dti.navigator.hideNavigator();
 
-            if (dti.navigatorNew.temporaryCallback) {
-                if (typeof dti.navigatorNew.temporaryCallback === 'function') {
-                    dti.navigatorNew.temporaryCallback(pointInfo);
-                    dti.navigatorNew.temporaryCallback = null;
+            if (dti.navigator.temporaryCallback) {
+                if (typeof dti.navigator.temporaryCallback === 'function') {
+                    dti.navigator.temporaryCallback(pointInfo);
+                    dti.navigator.temporaryCallback = null;
                 }
                 
             } else {
-                dti.navigatorNew.defaultClickHandler(pointInfo);
+                dti.navigator.defaultClickHandler(pointInfo);
             }
         },
         showNavigator: function (cfg) {
@@ -1905,7 +1904,7 @@ var dti = {
                 };
             } else {
                 if (config.callback) {
-                    dti.navigatorNew.temporaryCallback = config.callback;
+                    dti.navigator.temporaryCallback = config.callback;
                 }
 
                 if (config.pointType && config.property) {
@@ -1913,11 +1912,11 @@ var dti = {
                 }
             }
 
-            dti.navigatorNew.commonNavigator.applyConfig(config);
-            dti.navigatorNew.$commonNavigatorModal.openModal(config);
+            dti.navigator.commonNavigator.applyConfig(config);
+            dti.navigator.$commonNavigatorModal.openModal(config);
         },
         hideNavigator: function () {
-            dti.navigatorNew.$commonNavigatorModal.closeModal();
+            dti.navigator.$commonNavigatorModal.closeModal();
         },
         //config contains container
         Navigator: function (config) {
@@ -2038,7 +2037,7 @@ var dti = {
                                 //valid click
                                 switch (bindings.mode()) {
                                     case self.modes.DEFAULT:
-                                        dti.navigatorNew.handleNavigatorRowClick(point);
+                                        dti.navigator.handleNavigatorRowClick(point);
                                         break;
                                     case self.modes.FILTER:
                                     case self.modes.CREATE:
@@ -2373,36 +2372,36 @@ var dti = {
             return $(markup);
         },
         createNavigator: function (isModal) {
-            var templateMarkup = dti.navigatorNew.getTemplate('#navigatorTemplate'),
+            var templateMarkup = dti.navigator.getTemplate('#navigatorTemplate'),
                 navigatorMarkup,
                 navigator,
                 $container = (isModal === true) ? $('main') : isModal;
 
             if (isModal) {
-                navigatorModalMarkup = dti.navigatorNew.getTemplate('#navigatorModalTemplate');
+                navigatorModalMarkup = dti.navigator.getTemplate('#navigatorModalTemplate');
                 $container.append(navigatorModalMarkup);
                 $container = navigatorModalMarkup;
-                dti.navigatorNew.$commonNavigatorModal = $container;
+                dti.navigator.$commonNavigatorModal = $container;
                 $container.find('.modal-content').append(templateMarkup);
                 // $container.leanModal();
             } else {
                 $container.append(templateMarkup);
             }
 
-            navigator = new dti.navigatorNew.Navigator({
+            navigator = new dti.navigator.Navigator({
                 $container: $container
             });
 
             $container.data('navigatorId', navigator.id);
 
-            dti.navigatorNew._navigators[navigator.id] = navigator;
+            dti.navigator._navigators[navigator.id] = navigator;
 
             // Materialize.updateTextFields();
 
             return navigator;
         },
         init: function () {
-            dti.navigatorNew.commonNavigator = dti.navigatorNew.createNavigator(true);
+            dti.navigator.commonNavigator = dti.navigator.createNavigator(true);
         }
     },
     utility: {
@@ -2723,7 +2722,7 @@ var dti = {
 
                         config.callback = callback;
 
-                        dti.navigatorNew.showNavigator(config);
+                        dti.navigator.showNavigator(config);
                     },
                     windowMessage: function () {
                         dti.windows.sendMessage(config);
@@ -2767,7 +2766,7 @@ var dti = {
                         config = JSON.parse(config);
                     }
                     // store previous call
-                    dti.navigatorNew._prevMessage = config;
+                    dti.navigator._prevMessage = config;
                     callbacks[e.key]();
                 }
             }
@@ -2816,9 +2815,9 @@ var dti = {
         startMenuItems: ko.observableArray([]),
         windowsHidden: ko.observable(false),
         taskbarShown: ko.observable(true),
-        showNavigatorNew: function () {
-            dti.navigatorNew.showNavigator();
-        },
+        // showNavigator: function () {
+        //     dti.navigator.showNavigator();
+        // },
         globalSearch: {
             gettingData: ko.observable(false),
             showSummary: ko.observable(false),
@@ -2939,7 +2938,7 @@ var dti = {
             dti.windows.closeAll(group);
         },
         showNavigator: function (group, isStartMenu) {
-            dti.navigatorNew.showNavigator(group);
+            dti.navigator.showNavigator(group);
             // dti.navigator.showNavigator(group, isStartMenu);
         },
         startMenuClick: function (obj) {
@@ -3136,7 +3135,7 @@ var dti = {
                     }
 
                     $element.click(function showNavigatorFiltered () {
-                        dti.navigatorNew.showNavigator(type,  true);
+                        dti.navigator.showNavigator(type,  true);
                     });
                 }
             };
@@ -3346,6 +3345,7 @@ var dti = {
                             }
                         }
                     });
+
                     dti.forEachArray(lastInits, function runFinalInits (val) {
                         val.fn();
                     });
