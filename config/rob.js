@@ -5,7 +5,7 @@ var rob = {
       'dbName': 'dorsimport'
     },
     'zmqConfig': {
-      'server': '192.168.1.88',
+      'server': 'info-int',
     },
     'files': {
       'driveLetter': 'C'

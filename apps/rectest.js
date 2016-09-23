@@ -1,6 +1,7 @@
 var fs = require('fs');
 var async = require('async');
 var moment = require('moment');
+var ObjectID = require('mongodb').ObjectID;
 var db = require('../helpers/db');
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config.js');
@@ -684,11 +685,447 @@ function test() {
 // test();
 
 function rearrangeProperties() {
-  var test = { "_id" : 20874, "Name" : "4201_FID01", "name1" : "4201", "name2" : "FID01", "name3" : "", "name4" : "", "Security" : [  ], "_pStatus" : 0, "_cfgRequired" : true, "_cfgDevice" : false, "_forceAllCOV" : false, "_relDevice" : 0, "_relRMU" : 0, "_relPoint" : 0, "_updPoint" : false, "_updTOD" : false, "_pollTime" : 0, "_devModel" : 2, "_rmuModel" : 0, "_parentUpi" : 0, "_actvAlmId" : { "$oid" : "000000000000000000000000" }, "Alarm Messages" : [ { "msgType" : 17, "msgId" : { "$oid" : "574463492f1ead8b514070e1" }, "ack" : false, "notify" : false }, { "msgType" : 7, "msgId" : { "$oid" : "574463492f1ead8b514070d6" }, "ack" : false, "notify" : false }, { "msgType" : 8, "msgId" : { "$oid" : "574463492f1ead8b514070d7" }, "ack" : false, "notify" : false }, { "msgType" : 6, "msgId" : { "$oid" : "574463492f1ead8b514070d5" }, "ack" : false, "notify" : false }, { "msgType" : 9, "msgId" : { "$oid" : "574463492f1ead8b514070d8" }, "ack" : false, "notify" : false }, { "msgType" : 10, "msgId" : { "$oid" : "574463492f1ead8b514070d9" }, "ack" : false, "notify" : false }, { "msgType" : 11, "msgId" : { "$oid" : "574463492f1ead8b514070da" }, "ack" : false, "notify" : false }, { "msgType" : 12, "msgId" : { "$oid" : "574463492f1ead8b514070db" }, "ack" : false, "notify" : false }, { "msgType" : 45, "msgId" : { "$oid" : "574463492f1ead8b514070f4" }, "ack" : false, "notify" : false } ], "APDU Retries" : { "ValueType" : 4, "Value" : 2, "isDisplayable" : true, "isReadOnly" : false }, "APDU Timeout" : { "ValueType" : 4, "Value" : 25, "isDisplayable" : true, "isReadOnly" : false }, "Configure Device" : { "ValueType" : 7, "Value" : false, "isDisplayable" : true, "isReadOnly" : false }, "COV Period" : { "ValueType" : 13, "Value" : 10, "isDisplayable" : true, "isReadOnly" : false }, "Device Status" : { "ValueType" : 5, "Value" : "Stop Scan", "eValue" : 66, "isDisplayable" : true, "isReadOnly" : true }, "Alarm Value" : { "ValueType" : 5, "Value" : "Failed", "eValue" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Downlink Network" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Firmware Version" : { "ValueType" : 2, "Value" : "V3.20", "isDisplayable" : true, "isReadOnly" : true }, "Last Report Time" : { "ValueType" : 11, "Value" : 1463589898, "isDisplayable" : true, "isReadOnly" : true }, "Model Type" : { "ValueType" : 5, "Value" : "Field Interface Device", "eValue" : 2, "isDisplayable" : true, "isReadOnly" : false }, "Startup Delay" : { "ValueType" : 13, "Value" : 120, "isDisplayable" : true, "isReadOnly" : false }, "Time Zone" : { "ValueType" : 5, "Value" : "Central Time Zone", "eValue" : 6, "isDisplayable" : true, "isReadOnly" : false }, "Stop Scan" : { "ValueType" : 7, "Value" : true, "isDisplayable" : true, "isReadOnly" : false }, "Active Text" : { "ValueType" : 2, "Value" : "Normal", "isDisplayable" : true, "isReadOnly" : false }, "Alarm Class" : { "ValueType" : 5, "Value" : "Critical", "eValue" : 1, "isDisplayable" : true, "isReadOnly" : false }, "Alarm Delay Time" : { "ValueType" : 13, "Value" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Alarm Display Point" : { "ValueType" : 8, "Value" : 0, "isDisplayable" : true, "isReadOnly" : false, "PointName" : "", "PointType" : 0, "DevInst" : 0, "PointInst" : 0 }, "Alarm Repeat Enable" : { "ValueType" : 7, "Value" : false, "isDisplayable" : true, "isReadOnly" : false }, "Alarm Repeat Time" : { "ValueType" : 17, "Value" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Alarms Off" : { "ValueType" : 7, "Value" : false, "isDisplayable" : true, "isReadOnly" : false }, "Alarm State" : { "ValueType" : 5, "Value" : "Normal", "eValue" : 0, "isDisplayable" : true, "isReadOnly" : true }, "Inactive Text" : { "ValueType" : 2, "Value" : "Failed", "isDisplayable" : true, "isReadOnly" : false }, "Value" : { "ValueType" : 5, "Value" : "Failed", "eValue" : 0, "ValueOptions" : { "Failed" : 0, "Normal" : 1 }, "isDisplayable" : true, "isReadOnly" : true }, "Quality Code Enable" : { "ValueType" : 18, "Value" : 255, "isDisplayable" : true, "isReadOnly" : false }, "Reliability" : { "ValueType" : 5, "Value" : "No Fault", "eValue" : 0, "isDisplayable" : true, "isReadOnly" : true }, "Trend Interval" : { "ValueType" : 13, "Value" : 60, "isDisplayable" : true, "isReadOnly" : false }, "Remarks" : { "ValueType" : 2, "Value" : "", "isDisplayable" : true, "isReadOnly" : false }, "Description" : { "ValueType" : 2, "Value" : "", "isDisplayable" : true, "isReadOnly" : false }, "Point Type" : { "ValueType" : 5, "Value" : "Device", "eValue" : 8, "isDisplayable" : true, "isReadOnly" : true }, "taglist" : [ "4201", "FID01", "Device" ], "Ethernet Address" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Ethernet IP Port" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Ethernet Network" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Downlink IP Port" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Downlink Broadcast Delay" : { "ValueType" : 4, "Value" : 64, "isDisplayable" : true, "isReadOnly" : false }, "Ethernet Protocol" : { "ValueType" : 5, "Value" : "None", "eValue" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Uplink Port" : { "ValueType" : 5, "Value" : "Port 1", "eValue" : 1, "ValueOptions" : { "Port 1" : 1, "Port 2" : 2 }, "isDisplayable" : true, "isReadOnly" : false }, "Port 1 Address" : { "ValueType" : 4, "Value" : 12, "isDisplayable" : true, "isReadOnly" : false }, "Port 1 Maximum Address" : { "ValueType" : 4, "Value" : 15, "Max" : 127, "Min" : 0, "isDisplayable" : true, "isReadOnly" : false }, "Port 1 Network" : { "ValueType" : 4, "Value" : 15, "isDisplayable" : true, "isReadOnly" : false }, "Port 1 Protocol" : { "ValueType" : 5, "Value" : "MS/TP", "eValue" : 1, "isDisplayable" : true, "isReadOnly" : false }, "Port 2 Address" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 2 Maximum Address" : { "ValueType" : 4, "Value" : 0, "Max" : 127, "Min" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 2 Network" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 2 Protocol" : { "ValueType" : 5, "Value" : "MS/TP", "eValue" : 1, "isDisplayable" : false, "isReadOnly" : false }, "Port 3 Address" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 3 Maximum Address" : { "ValueType" : 4, "Value" : 0, "Max" : 127, "Min" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 3 Network" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 3 Protocol" : { "ValueType" : 5, "Value" : "MS/TP", "eValue" : 1, "isDisplayable" : false, "isReadOnly" : false }, "Port 4 Address" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 4 Maximum Address" : { "ValueType" : 4, "Value" : 0, "Max" : 127, "Min" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 4 Network" : { "ValueType" : 4, "Value" : 0, "isDisplayable" : false, "isReadOnly" : false }, "Port 4 Protocol" : { "ValueType" : 5, "Value" : "MS/TP", "eValue" : 1, "isDisplayable" : false, "isReadOnly" : false } };
+  var test = {
+    "_id": 20874,
+    "Name": "4201_FID01",
+    "name1": "4201",
+    "name2": "FID01",
+    "name3": "",
+    "name4": "",
+    "Security": [],
+    "_pStatus": 0,
+    "_cfgRequired": true,
+    "_cfgDevice": false,
+    "_forceAllCOV": false,
+    "_relDevice": 0,
+    "_relRMU": 0,
+    "_relPoint": 0,
+    "_updPoint": false,
+    "_updTOD": false,
+    "_pollTime": 0,
+    "_devModel": 2,
+    "_rmuModel": 0,
+    "_parentUpi": 0,
+    "_actvAlmId": {
+      "$oid": "000000000000000000000000"
+    },
+    "Alarm Messages": [{
+      "msgType": 17,
+      "msgId": {
+        "$oid": "574463492f1ead8b514070e1"
+      },
+      "ack": false,
+      "notify": false
+    }, {
+      "msgType": 7,
+      "msgId": {
+        "$oid": "574463492f1ead8b514070d6"
+      },
+      "ack": false,
+      "notify": false
+    }, {
+      "msgType": 8,
+      "msgId": {
+        "$oid": "574463492f1ead8b514070d7"
+      },
+      "ack": false,
+      "notify": false
+    }, {
+      "msgType": 6,
+      "msgId": {
+        "$oid": "574463492f1ead8b514070d5"
+      },
+      "ack": false,
+      "notify": false
+    }, {
+      "msgType": 9,
+      "msgId": {
+        "$oid": "574463492f1ead8b514070d8"
+      },
+      "ack": false,
+      "notify": false
+    }, {
+      "msgType": 10,
+      "msgId": {
+        "$oid": "574463492f1ead8b514070d9"
+      },
+      "ack": false,
+      "notify": false
+    }, {
+      "msgType": 11,
+      "msgId": {
+        "$oid": "574463492f1ead8b514070da"
+      },
+      "ack": false,
+      "notify": false
+    }, {
+      "msgType": 12,
+      "msgId": {
+        "$oid": "574463492f1ead8b514070db"
+      },
+      "ack": false,
+      "notify": false
+    }, {
+      "msgType": 45,
+      "msgId": {
+        "$oid": "574463492f1ead8b514070f4"
+      },
+      "ack": false,
+      "notify": false
+    }],
+    "APDU Retries": {
+      "ValueType": 4,
+      "Value": 2,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "APDU Timeout": {
+      "ValueType": 4,
+      "Value": 25,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Configure Device": {
+      "ValueType": 7,
+      "Value": false,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "COV Period": {
+      "ValueType": 13,
+      "Value": 10,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Device Status": {
+      "ValueType": 5,
+      "Value": "Stop Scan",
+      "eValue": 66,
+      "isDisplayable": true,
+      "isReadOnly": true
+    },
+    "Alarm Value": {
+      "ValueType": 5,
+      "Value": "Failed",
+      "eValue": 0,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Downlink Network": {
+      "ValueType": 4,
+      "Value": 0,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Firmware Version": {
+      "ValueType": 2,
+      "Value": "V3.20",
+      "isDisplayable": true,
+      "isReadOnly": true
+    },
+    "Last Report Time": {
+      "ValueType": 11,
+      "Value": 1463589898,
+      "isDisplayable": true,
+      "isReadOnly": true
+    },
+    "Model Type": {
+      "ValueType": 5,
+      "Value": "Field Interface Device",
+      "eValue": 2,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Startup Delay": {
+      "ValueType": 13,
+      "Value": 120,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Time Zone": {
+      "ValueType": 5,
+      "Value": "Central Time Zone",
+      "eValue": 6,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Stop Scan": {
+      "ValueType": 7,
+      "Value": true,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Active Text": {
+      "ValueType": 2,
+      "Value": "Normal",
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Alarm Class": {
+      "ValueType": 5,
+      "Value": "Critical",
+      "eValue": 1,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Alarm Delay Time": {
+      "ValueType": 13,
+      "Value": 0,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Alarm Display Point": {
+      "ValueType": 8,
+      "Value": 0,
+      "isDisplayable": true,
+      "isReadOnly": false,
+      "PointName": "",
+      "PointType": 0,
+      "DevInst": 0,
+      "PointInst": 0
+    },
+    "Alarm Repeat Enable": {
+      "ValueType": 7,
+      "Value": false,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Alarm Repeat Time": {
+      "ValueType": 17,
+      "Value": 0,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Alarms Off": {
+      "ValueType": 7,
+      "Value": false,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Alarm State": {
+      "ValueType": 5,
+      "Value": "Normal",
+      "eValue": 0,
+      "isDisplayable": true,
+      "isReadOnly": true
+    },
+    "Inactive Text": {
+      "ValueType": 2,
+      "Value": "Failed",
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Value": {
+      "ValueType": 5,
+      "Value": "Failed",
+      "eValue": 0,
+      "ValueOptions": {
+        "Failed": 0,
+        "Normal": 1
+      },
+      "isDisplayable": true,
+      "isReadOnly": true
+    },
+    "Quality Code Enable": {
+      "ValueType": 18,
+      "Value": 255,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Reliability": {
+      "ValueType": 5,
+      "Value": "No Fault",
+      "eValue": 0,
+      "isDisplayable": true,
+      "isReadOnly": true
+    },
+    "Trend Interval": {
+      "ValueType": 13,
+      "Value": 60,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Remarks": {
+      "ValueType": 2,
+      "Value": "",
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Description": {
+      "ValueType": 2,
+      "Value": "",
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Point Type": {
+      "ValueType": 5,
+      "Value": "Device",
+      "eValue": 8,
+      "isDisplayable": true,
+      "isReadOnly": true
+    },
+    "taglist": ["4201", "FID01", "Device"],
+    "Ethernet Address": {
+      "ValueType": 4,
+      "Value": 0,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Ethernet IP Port": {
+      "ValueType": 4,
+      "Value": 0,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Ethernet Network": {
+      "ValueType": 4,
+      "Value": 0,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Downlink IP Port": {
+      "ValueType": 4,
+      "Value": 0,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Downlink Broadcast Delay": {
+      "ValueType": 4,
+      "Value": 64,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Ethernet Protocol": {
+      "ValueType": 5,
+      "Value": "None",
+      "eValue": 0,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Uplink Port": {
+      "ValueType": 5,
+      "Value": "Port 1",
+      "eValue": 1,
+      "ValueOptions": {
+        "Port 1": 1,
+        "Port 2": 2
+      },
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Port 1 Address": {
+      "ValueType": 4,
+      "Value": 12,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Port 1 Maximum Address": {
+      "ValueType": 4,
+      "Value": 15,
+      "Max": 127,
+      "Min": 0,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Port 1 Network": {
+      "ValueType": 4,
+      "Value": 15,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Port 1 Protocol": {
+      "ValueType": 5,
+      "Value": "MS/TP",
+      "eValue": 1,
+      "isDisplayable": true,
+      "isReadOnly": false
+    },
+    "Port 2 Address": {
+      "ValueType": 4,
+      "Value": 0,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Port 2 Maximum Address": {
+      "ValueType": 4,
+      "Value": 0,
+      "Max": 127,
+      "Min": 0,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Port 2 Network": {
+      "ValueType": 4,
+      "Value": 0,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Port 2 Protocol": {
+      "ValueType": 5,
+      "Value": "MS/TP",
+      "eValue": 1,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Port 3 Address": {
+      "ValueType": 4,
+      "Value": 0,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Port 3 Maximum Address": {
+      "ValueType": 4,
+      "Value": 0,
+      "Max": 127,
+      "Min": 0,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Port 3 Network": {
+      "ValueType": 4,
+      "Value": 0,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Port 3 Protocol": {
+      "ValueType": 5,
+      "Value": "MS/TP",
+      "eValue": 1,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Port 4 Address": {
+      "ValueType": 4,
+      "Value": 0,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Port 4 Maximum Address": {
+      "ValueType": 4,
+      "Value": 0,
+      "Max": 127,
+      "Min": 0,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Port 4 Network": {
+      "ValueType": 4,
+      "Value": 0,
+      "isDisplayable": false,
+      "isReadOnly": false
+    },
+    "Port 4 Protocol": {
+      "ValueType": 5,
+      "Value": "MS/TP",
+      "eValue": 1,
+      "isDisplayable": false,
+      "isReadOnly": false
+    }
+  };
   var compare = function(a, b) {
     var _a = a.toLowerCase();
     var _b = b.toLowerCase();
-    if(['name','name1'].indexOf(_a) >= 0){
+    if (['name', 'name1'].indexOf(_a) >= 0) {
       console.log(typeof test[a], a);
     }
     if (_a === '_id') {
@@ -696,21 +1133,21 @@ function rearrangeProperties() {
     } else if (_b === '_id') {
       return 1;
     }
-    if(_a.match(/^name|^_/) && _b.match(/^name|^_/)){
+    if (_a.match(/^name|^_/) && _b.match(/^name|^_/)) {
       if (_a > _b) {
         return -1;
       } else if (a < _b) {
         return 1;
       }
-    } else if(!_a.match(/^name|^_/) && !_b.match(/^name|^_/)) {
+    } else if (!_a.match(/^name|^_/) && !_b.match(/^name|^_/)) {
       if (_a > _b) {
         return 1;
       } else if (a < _b) {
         return -1;
       }
-    } else if(_a.match(/^name|^_/)){
+    } else if (_a.match(/^name|^_/)) {
       return -1;
-    }else if(_b.match(/^name|^_/)){
+    } else if (_b.match(/^name|^_/)) {
       return 1;
     }
     return 0;
@@ -728,4 +1165,88 @@ function rearrangeProperties() {
   test = o;
   console.log(test);
 }
-rearrangeProperties();
+// rearrangeProperties();
+
+function testSecurity() {
+  console.time('test');
+  var _user = {
+    'System Admin': {
+      Value: false
+    },
+    username: 'robk'
+  };
+
+
+  
+  var points = [];
+
+  var calcPermissions = function(user, groups) {
+    var points = {};
+    for (var g = 0; g < groups.length; g++) {
+      var pAccess = groups[g]._pAccess;
+      var gPoints = groups[g].points;
+      for (var gPoint in gPoints) {
+        points[gPoint] = points[gPoint] | pAccess;
+      }
+    }
+    return points;
+  };
+
+  db.connect(connectionString.join(''), function(err) {
+    Utility.getOne({
+      collection: 'Users',
+      query: {
+        username: _user.username
+      }
+    }, function(err, user) {
+      if (err || !user) {
+        console.log(err || 'no user');
+      } else {
+        var groups = [];
+        for (var group in user.groups) {
+          groups.push(ObjectID(group));
+        }
+        Utility.get({
+          collection: 'User Groups',
+          query: {
+            _id: {
+              $in: groups
+            }
+          }
+        }, function(err, groups) {
+          if (err || !groups.length) {
+            console.log(err || 'no groups');
+          } else {
+            var pointPerm = calcPermissions(user, groups);
+            var upis = Object.keys(pointPerm).map(function(upi) {
+              return parseInt(upi, 10)
+            });
+            Utility.get({
+              collection: 'points',
+              query: {
+                _id: {
+                  $in: upis
+                }
+              },
+              sort: {
+                _id: -1
+              },
+              limit: 3
+            }, function(err, docs) {
+              docs.forEach(function(doc) {
+                if (pointPerm.hasOwnProperty(doc._id)) {
+                  doc._pAccess = pointPerm[doc._id];
+                  console.log(doc._id, doc._pAccess);
+                  points.push(doc);
+                }
+              });
+
+            });
+          }
+        });
+      }
+
+    });
+  });
+}
+testSecurity();

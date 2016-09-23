@@ -3808,6 +3808,7 @@
             "_cfgDevice": false,
             "_forceAllCOV": false,
             "_parentUpi": 0,
+            "_pAccess": 0,
             "_pollTime": 0,
             "_updPoint": false,
             "_updTOD": false,

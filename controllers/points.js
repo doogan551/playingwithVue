@@ -21,30 +21,6 @@ router.post('/globalSearch', function (req, res) {
   });
 });
 
-// Checked - slow?
-router.post('/browse', function(req, res) {
-  var data = _.merge(req.params, req.body);
-  data.user = req.user;
-
-  Point.browse(data, function(err, points) {
-    if (err) return utils.sendResponse(res, {
-      err: err
-    });
-    return utils.sendResponse(res, points);
-  });
-});
-// NOT CHECKED
-router.post('/togglegroup', function(req, res) {
-  var data = _.merge(req.params, req.body, req.query);
-  data.user = req.user;
-
-  Point.toggleGroup(data, function(err, points) {
-    if (err) return utils.sendResponse(res, {
-      err: err
-    });
-    return utils.sendResponse(res, points);
-  });
-});
 // Checked
 router.get('/newpoint', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
@@ -89,7 +65,7 @@ router.post('/search', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
 
-  Point.search(data, function(err, points) {
+  Point.newSearch(data, function(err, points) {
     if (err) return utils.sendResponse(res, {
       err: err
     });

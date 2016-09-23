@@ -226,8 +226,12 @@ exports.iterateCursor = function(criteria, fx, done) {
         done(err, count);
       } else {
         ++count;
-        fx(err, doc, function(err) {
-          cursor.nextObject(processDoc);
+        fx(err, doc, function(err, stop) {
+          if (!!err || !!stop) {
+            done(err, count);
+          } else {
+            cursor.nextObject(processDoc);
+          }
         });
       }
     }
