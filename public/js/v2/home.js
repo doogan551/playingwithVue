@@ -1917,7 +1917,7 @@ var dti = {
             dti.navigatorNew.$commonNavigatorModal.openModal(config);
         },
         hideNavigator: function () {
-            dti.navigatorNew.$navigatorModalNew.closeModal();
+            dti.navigatorNew.$commonNavigatorModal.closeModal();
         },
         //config contains container
         Navigator: function (config) {
@@ -1943,13 +1943,13 @@ var dti = {
                             deviceId: null,
                             remoteUnitId: null,
                             id: self.id,
-                            newPointType: pointTypes[0].key,
                             disableCreatePoint: false
                         },
                         explodedPointTypes = [];
 
                     dti.forEachArray(pointTypes, function addSelectedToPointType (type) {
-                        var subTypes = dti.utility.subPointTypes[type.key];
+                        var subTypes = dti.utility.subPointTypes[type.key],
+                            newType;
 
                         type.selected = true;
                         type.visible = true;
@@ -1969,11 +1969,15 @@ var dti = {
                                 explodedPointTypes.push(newSubType);
                             });
                         } else {
-                            explodedPointTypes.push(type);
+                            newType = $.extend(true, {}, type);
+                            newType.selected = false;
+                            explodedPointTypes.push(newType);
                         }
                     });
 
                     bindings.pointTypes = pointTypes;
+                    bindings.newPointType = explodedPointTypes[0].key;
+                    explodedPointTypes[0].selected = true;
                     bindings.explodedPointTypes = explodedPointTypes;
 
                     self.defaultConfig = bindings;
@@ -1982,6 +1986,7 @@ var dti = {
                     bindings = ko.viewmodel.fromModel(bindings);
 
                     bindings.createPoint = function () {
+                        // self.bindings.explodedPointTypes()[0].selected(true);
                         self.bindings.mode(self.modes.CREATE);
                     };
 
@@ -2057,6 +2062,20 @@ var dti = {
                             self.bindings[binding](null);
                         }
                     };
+
+                    // bindings.newPointType = ko.pureComputed(function getNewPointType () {
+                    //     var selectedType;
+
+                    //     dti.forEachArray(bindings.explodedPointTypes(), function checkExplodedPointType (type) {
+                    //         var selected = type.selected();
+
+                    //         if (selected) {
+                    //             selectedType = type.key();
+                    //         }
+                    //     });
+
+                    //     return selectedType;
+                    // });
 
                     bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint () {
                         var uniqueName = bindings.points().length === 0,
@@ -2386,211 +2405,6 @@ var dti = {
             dti.navigatorNew.commonNavigator = dti.navigatorNew.createNavigator(true);
         }
     },
-    navigator: {
-        $navigatorModalIframe: $('#navigatorModal iframe'),
-        $navigatorFilterModalIframe: $('#navigatorFilterModal iframe'),
-        $navigatorModal: $('#navigatorModal'),
-        $navigatorFilterModal: $('#navigatorFilterModal'),
-        applyNavigatorFilter: function (config) {
-            var types,
-                pointType = config.pointType, 
-                pointLookup = config.pointLookup, 
-                isStartMenu = config.isStartMenu,
-                property = config.property,
-                parameters = dti.navigator._navigatorParameters,
-                processedTypes = [];
-
-            if (parameters && parameters.pointTypes) {
-                types = parameters.pointTypes;
-                // pointLookup.POINTTYPES = pointTypes;
-                // pointLookup.POINTTYPE = pointType;
-            } else {
-                if (pointType && pointType !== 'Point') {
-                    if (!Array.isArray(pointType)) {
-                        types = [pointType];
-                    } else {
-                        types = pointType;
-                    }
-                } else {
-                    types = ['all'];
-                }
-            }
-
-            if (pointLookup.MODE !== 'filter') {
-                if (!isStartMenu) {
-                    pointLookup.MODE = 'select';
-                } else {
-                    pointLookup.MODE = null;
-                }
-            }
-
-            pointLookup.checkPointTypes(types);
-            pointLookup.refreshUI();
-        },
-        acceptNavigatorFilter: function () {
-            var filter = dti.navigator._currNavigatorFilter,
-                message = dti.navigator._navigatorMessage;
-
-            dti.messaging.sendMessage({
-                key: message._windowId,
-                value: {
-                    action: 'pointFilterSelected',
-                    filter: filter
-                }
-            });
-        },
-        showNavigatorModalNew: function () {
-            dti.navigator.$navigatorModalNew.openModal();
-        },
-        // showNavigatorNew: function (config) {
-        //     dti.navigator.showNavigatorModalNew();
-        // },
-        showNavigator: function (config, isStart, isSelect) {
-            var pointType,
-                isStartMenu = isStart,
-                isSelectOnly = isSelect,
-                callback;
-
-            if (typeof config === 'string') {
-                pointType = config;
-            } else {
-                if (config) {
-                    pointType = config.pointType;
-                    isStartMenu = config.isStartMenu;
-                    isSelectOnly = config.isSelectOnly;
-                    dti.navigator.navigatorCallback = config.callback || false;
-                }
-            }
-
-            dti.fire('hideMenus');
-            dti.navigator.showNavigatorModal(pointType, isStartMenu, isSelectOnly);
-        },
-        hideNavigator: function () {
-            if (dti._navigatorWindow) {
-                dti._navigatorWindow.bindings.minimized(true);
-            }
-        },
-        initNavigatorFilterModal: function () {
-            var $el = dti.navigator.$navigatorFilterModalIframe[0],
-                initModalLookup = function () {
-                    var navigatorFilterInterval;
-
-                    navigatorFilterInterval = setInterval(function initNavigatorFilter () {
-                        if ($el.contentWindow.pointLookup && $el.contentWindow.pointLookup.init) {
-                            clearInterval(navigatorFilterInterval);
-                            dti._navigatorFilterModal = true;
-                            $el.contentWindow.pointLookup.init(dti.navigator.defaultNavigatorModalCallback, {
-                                name1: '',
-                                name2: '',
-                                name3: '',
-                                name4: '',
-                                pointTypes: []
-                            });
-
-                            dti.fire('modalLoaded');
-                        }
-                    }, 500);
-                };
-
-            dti.utility.addEvent($el, 'load', initModalLookup);
-        },
-        showNavigatorFilterModal: function (pointType) {
-            dti.fire('hideMenus');
-            dti.navigator.filterModal = true;
-            dti.navigator.$navigatorFilterModal.openModal();
-        },
-        initNavigatorModal: function () {
-            var $el = dti.navigator.$navigatorModalIframe[0],
-                applyFilter = function () {
-                    dti.navigator.applyNavigatorFilter({
-                        pointType: null, 
-                        pointLookup: $el.contentWindow.pointLookup, 
-                        isStartMenu: null
-                    });
-                },
-                initModalLookup = function () {
-                    var navigatorInterval;
-
-                    navigatorInterval = setInterval(function initNavigator () {
-                        if ($el.contentWindow.pointLookup && $el.contentWindow.pointLookup.init) {
-                            clearInterval(navigatorInterval);
-                            dti._navigatorModal = true;
-                            $el.contentWindow.pointLookup.init(dti.navigator.defaultNavigatorModalCallback);
-                            applyFilter();
-                            dti.fire('modalLoaded');
-                        }
-                    }, 400);
-                };
-
-            dti.utility.addEvent($el, 'load', initModalLookup);
-        },
-        showNavigatorModal: function (pointType, isStartMenu, isSelectOnly) {
-            var loaded = false,
-                $el = dti.navigator.$navigatorModalIframe[0],
-                applyFilter = function () {
-                    dti.navigator.applyNavigatorFilter({
-                        pointType: pointType, 
-                        pointLookup: $el.contentWindow.pointLookup, 
-                        isStartMenu: isStartMenu
-                    });
-                };
-
-            dti.navigator.filterModal = false;
-
-            dti.navigator.isSelectOnly = isSelectOnly || false;
-
-            dti.fire('hideMenus');
-
-            dti.navigator.$navigatorModal.openModal({
-                ready: function () {
-                    applyFilter();
-                },
-                complete: function () {
-                    dti.settings._workspaceNav = false;
-                }
-            });
-        },
-        defaultNavigatorModalCallback: function (upi, name, pointType) {
-            if (dti.navigator.filterModal) {
-                dti.navigator._currNavigatorFilter = upi;
-            } else {
-                dti.navigator._currNavigatorFilter = {
-                    upi: upi,
-                    name: name,
-                    pointType: pointType
-                };
-            }
-
-            dti.fire('hideMenus');
-
-            if (dti.navigator.navigatorCallback) {
-                dti.messaging.sendMessage({
-                    key: dti.navigator._prevMessage._windowId,
-                    value: {
-                        selectedPoint: dti.navigator._currNavigatorFilter,
-                        action: 'pointSelected'
-                    }
-                });
-            } else {
-                if (dti.navigator.isSelectOnly) {
-                    if (dti.navigator.navigatorCallback) {
-
-                    }
-                    dti.log(upi, name, pointType);
-                }
-            }
-            
-        },
-        init: function () {
-            // dti.navigator.$navigatorModalIframe.attr('src', '/pointlookup');
-            // dti.navigator.$navigatorFilterModalIframe.attr('src', '/pointlookup?mode=filter');
-
-            // dti.navigator.initNavigatorModal();
-            // dti.navigator.initNavigatorFilterModal();
-            dti.fire('modalLoaded');
-            dti.fire('modalLoaded');
-        }
-    },
     utility: {
         systemEnums: {},
         systemEnumObjects: {},
@@ -2618,10 +2432,12 @@ var dti = {
                 };
 
             switch (typeof toCopy) {
-                case 'object': copyObject();
-                        break;
-                default: basic();
-                        break;
+                case 'object':
+                    copyObject();
+                    break;
+                default:
+                    basic();
+                    break;
             }
 
             return ret;
@@ -2631,7 +2447,7 @@ var dti = {
                 Config = dti.workspaceManager.config,
                 result = Config;
 
-            dti.forEachArray(explodedPath, function (segment) {
+            dti.forEachArray(explodedPath, function processPathSegment (segment) {
                 result = result[segment];
             });
 

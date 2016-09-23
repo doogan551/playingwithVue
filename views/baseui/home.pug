@@ -553,7 +553,7 @@ html
                             // ko if: mode() === 'create'
                             // ko foreach: explodedPointTypes
                             li
-                                input(type='radio', data-bind="value: key, checked: $parent.newPointType, attr: {id : $parent.id() + '_pointTypeRadio_' + $index(), name : $parent.id() + '_pointTypeRadio' }")
+                                input(type='radio', data-bind="checked: $parent.newPointType, attr: {value: key(), id : $parent.id() + '_pointTypeRadio_' + $index(), name : $parent.id() + '_pointTypeRadio' }")
                                 label(data-bind="text: key, attr: { for: $parent.id() + '_pointTypeRadio_' + $index() }")
 
                             // /ko
