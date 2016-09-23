@@ -427,13 +427,6 @@ var reportsViewModel = function () {
         Name = "dorsett.reportUI",
         getPointURL = "/api/points/getpoint",
         originalPoint = {},
-        pointFilter = {
-            name1: '',
-            name2: '',
-            name3: '',
-            name4: '',
-            selectedPointTypes: []
-        },
         pointFilterSearch = {
             name1: '',
             name2: '',
@@ -628,7 +621,10 @@ var reportsViewModel = function () {
                 if (config.bitstringEnums.hasOwnProperty(key)) {
                     if (key !== "All") {
                         enumValue = rawValue & config.bitstringEnums[key].enum;
-                        htmlString += '<input type="checkbox" ' + (enumValue > 0 ? 'checked ' : '') + (disabled ? 'disabled' : '') + '><span>' + key + '</span><br>';
+                        htmlString += '<span' + (scheduled ? ' class = "nowrap">' : '>');
+                        htmlString += '<input type="checkbox" ' + (enumValue > 0 ? 'checked ' : '') + (disabled ? 'disabled' : '');
+                        htmlString += (scheduled ? '><span>' + key + '</span><br>' : '><label>' + key + '</label><br>');
+                        htmlString += '</span>';
                     }
                 }
             }
@@ -1098,28 +1094,30 @@ var reportsViewModel = function () {
                             tempObject.colName = name;
                             tempObject.colDisplayName = name.replace(/_/g, " ");
                         }
-                    },
-                    windowOpenedCallback = function () {
-                        pointSelectorRef.pointLookup.MODE = 'select';
-                        pointSelectorRef.pointLookup.init(pointSelectedCallback, pointFilter);
-                        if (pointFilter.selectedPointTypes.length > 0) {
-                            pointSelectorRef.window.pointLookup.checkPointTypes(pointFilter.selectedPointTypes);
-                        }
-                        if (!self.canEdit()) {
-                            var $allInputFields = $pointSelectorIframe.contents().find("input,button,textarea,select"),
-                                $pointTypesListBox = $pointSelectorIframe.contents().find("#pointTypes");
-                            $allInputFields.prop("disabled", true);
-                            // TODO still need to disable the listbox so selections can't change
-                            //$pointTypesListBox.addClass("jqx-disableselect");
-                            //var items = $pointTypesListBox.jqxListBox('getItems');
-                            //$pointTypesListBox.jqxListBox('disableAt', 0 );
-                        }
                     };
+                    // windowOpenedCallback = function () {
+                    //     pointSelectorRef.pointLookup.MODE = 'select';
+                    //     pointSelectorRef.pointLookup.init(pointSelectedCallback, self.pointFilter());
+                    //     if (self.selectedPointTypesFilter().length > 0) {
+                    //         pointSelectorRef.window.pointLookup.checkPointTypes(self.selectedPointTypesFilter());
+                    //     }
+                    //     if (!self.canEdit()) {
+                    //         var $allInputFields = $pointSelectorIframe.contents().find("input,button,textarea,select"),
+                    //             $pointTypesListBox = $pointSelectorIframe.contents().find("#pointTypes");
+                    //         $allInputFields.prop("disabled", true);
+                    //         // TODO still need to disable the listbox so selections can't change
+                    //         //$pointTypesListBox.addClass("jqx-disableselect");
+                    //         //var items = $pointTypesListBox.jqxListBox('getItems');
+                    //         //$pointTypesListBox.jqxListBox('disableAt', 0 );
+                    //     }
+                    // };
 
-                pointSelectorRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'filter', {
-                    callback: windowOpenedCallback,
-                    width: 1000
-                });
+                dtUtility.showNavigator();
+
+                // pointSelectorRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'filter', {
+                //     callback: windowOpenedCallback,
+                //     width: 1000
+                // });
             }
         },
         getFilterAdjustedDatetime = function (filter) {
@@ -1502,6 +1500,19 @@ var reportsViewModel = function () {
             }
             return result;
         },
+        initPointTypesFilter = function () {
+            var i,
+                tempPointTypes = $.extend(true, [], self.pointTypes());
+
+            for (i = 0; i < tempPointTypes.length; i++) {
+                if (self.selectedPointTypesFilter.indexOf(tempPointTypes[i].key) > -1) {
+                    tempPointTypes[i].selected = true;
+                } else {
+                    tempPointTypes[i].selected = false;
+                }
+            }
+            self.pointTypes(tempPointTypes);
+        },
         getValueList = function (property, pointType) {
             var result = [],
                 i,
@@ -1640,7 +1651,7 @@ var reportsViewModel = function () {
                         i;
                     for (i = 0; i < allFilters.length; i++) {
                         filter = allFilters[i];
-                        console.log("filter  = " + JSON.stringify(filter));
+                        // console.log("filter  = " + JSON.stringify(filter));
                         if (!!filter.error) {
                             displayError(filter.error);
                             activeError = true;
@@ -1742,14 +1753,28 @@ var reportsViewModel = function () {
                             };
                             break;
                         case "Property":
-                            pointFilter = (scheduled ? point["Report Config"].pointFilter : getPointLookupFilterValues($pointSelectorIframe.contents()));
+                            var tempPointTypes =  $.extend(true, [], self.pointTypes());
+
+                            self.selectedPointTypesFilter = [];
+                            for (i = 0; i < tempPointTypes.length; i++) {
+                                if (tempPointTypes[i].selected === true) {
+                                    self.selectedPointTypesFilter.push(tempPointTypes[i].key);
+                                }
+                            }
+
                             break;
                         default:
                             console.log(" - - - DEFAULT  buildReportDataRequest()");
                             break;
                     }
 
-                    point["Report Config"].pointFilter = pointFilter;
+                    point["Report Config"].pointFilter = {
+                        "name1" : self.name1Filter(),
+                        "name2" : self.name2Filter(),
+                        "name3" : self.name3Filter(),
+                        "name4" : self.name4Filter(),
+                        "selectedPointTypes" : self.selectedPointTypesFilter
+                    };
                     point["Report Config"].columns = columns;
                     point["Report Config"].filters = filters;
 
@@ -1908,29 +1933,51 @@ var reportsViewModel = function () {
 
             return (answer !== "" ? answer : 0);
         },
-        getDataFieldHeight = function (dataField, columnConfig) {
-            var result = 0,
+        getColumnConfigWidthAndHeight = function (dataField, columnConfig) {
+            var result = {
+                    width: 0,
+                    height: 0
+                },
                 dataFieldWidth = dataField.length;
 
             if (!!columnConfig) {
                 switch (columnConfig.valueType) {
-                    case "String":
+                    case "MinSec":
+                        result.height++;
+                        result.width = "##min ##sec".length;
+                        break;
+                    case "HourMin":
+                        result.height++;
+                        result.width = "##hr ##min".length;
+                        break;
+                    case "HourMinSec":
+                        result.height++;
+                        result.width = "##hr ##min ##sec".length;
                         break;
                     case "BitString":
+                        result.width++;  // checkbox
                         for (var key in columnConfig.bitstringEnums) {
                             if (columnConfig.bitstringEnums.hasOwnProperty(key)) {
-                                result++;
+                                if (result.width < key.length) {
+                                    result.width = key.length;
+                                }
+                                if (key.toLowerCase() !== "all" ) { // special case for Bitstring  "All" not displayed
+                                    result.height++;
+                                }
                             }
                         }
                         break;
+                    case "String":
                     case "Enum":
                     case "undecided":
                     case "null":
                     case "None":
-                        result++;
+                        result.height++;
+                        result.width = dataFieldWidth;
                         break;
                     default:
-                        result++;
+                        result.height++;
+                        result.width = dataFieldWidth;
                         break;
                 }
             }
@@ -2042,7 +2089,7 @@ var reportsViewModel = function () {
                                 result.rawValue = "";
                             }
                         } else {
-                            console.log("dataField.PointInst is UNDEFINED");
+                            // console.log("dataField.PointInst is UNDEFINED");
                         }
                         break;
                     default:
@@ -2311,6 +2358,8 @@ var reportsViewModel = function () {
         },
         adjustViewReportTabHeightWidth = function () {
             var infoscanHeader = 95,
+                // headerHeight,
+                // headerHeightAdjust = 21,
                 adjustHeight,
                 $dataTablesScrollHead,
                 $dataTablesScrollBody,
@@ -2336,6 +2385,10 @@ var reportsViewModel = function () {
                 setInfoBarDateTime();
                 adjustHeight = $dataTablesScrollBody.height() - (($dataTablesWrapper.height() + infoscanHeader) - window.innerHeight);
                 $dataTablesScrollHead.css('width', $dataTablesWrapper.width() - 17); // allow for scrolly in body
+                // headerHeight = $dataTablesScrollHead.height();
+                // if (headerHeight > headerHeightAdjust) {
+                //     $dataTablesScrollHead.css('height', headerHeight - headerHeightAdjust);
+                // }
                 $dataTablesScrollBody.css('height', adjustHeight);
                 $dataTablesScrollBody.css('width', $dataTablesWrapper.width());
                 $dataTablesScrollFoot.css('width', $dataTablesWrapper.width() - 17); // allow for scrolly in body
@@ -2369,8 +2422,14 @@ var reportsViewModel = function () {
         saveReportConfig = function () {
             point["Report Config"].columns = validateColumns(true);
             point["Report Config"].filters = validateFilters(true);
-            pointFilter = getPointLookupFilterValues($pointSelectorIframe.contents());
-            point["Report Config"].pointFilter = pointFilter;
+            // self.pointFilter(getPointLookupFilterValues($pointSelectorIframe.contents()));
+            point["Report Config"].pointFilter =  {
+                "name1" : self.name1Filter(),
+                "name2" : self.name2Filter(),
+                "name3" : self.name3Filter(),
+                "name4" : self.name4Filter(),
+                "selectedPointTypes" : self.selectedPointTypesFilter
+            };
             point["Report Config"].selectedPageLength = self.selectedPageLength();
             point["Report Config"].selectedChartType = self.selectedChartType();
             point["Report Config"].reportTitle = self.reportDisplayTitle();
@@ -3313,46 +3372,66 @@ var reportsViewModel = function () {
         breakReportDataIntoPrintablePages = function () {
             // widthOfA4Portrait300PPI = 2480,
             // heightOfA4Portrait300PPI = 3508,
-            var maxNumberOfCharsPerRow = 105,
+            // maxNumberOfCharsPerRow = (self.reportType === "Property" ? 150 : 146),
+            var maxNumberOfCharsPerRow = 146,
                 dataIndex = {
                     columnStartIdx: 0,
                     columnStopIdx: 0,
                     rowStartIdx: 0,
                     rowStopIdx: 0,
                     gridRowStartIdx: 0,
+                    gridRowStopIdx: 0
                 },
-                dateRange = 1,
+                columnRange = 1,
+                pagenumber = 1,
                 j,
-                row,
-                dateRangeNeeded = false,
+                columnRangeNeeded = false,
                 reportDataPages = [],
                 columnsArray = $.extend(true, [], self.listOfColumns()),
-                rowsPerPDFPage = (self.reportType === "Property" ? 20 : 12),
-                insertPageBreak = function (currentPageLen, rowIndex) {
-                    var answer = false,
-                        rowsOnPage = rowsPerPDFPage;
+                maxRowsOnPDFPage = function () {
+                    var answer;
 
-                    if ((currentPageLen % rowsOnPage === 0) || (rowIndex === (reportData.length - 1))) {
-                        answer = true;
+                    if (self.reportType === "Property") {
+                        answer = 28;
+                    } else {  // History & Totalizer
+                        answer = 24;
                     }
 
                     return answer;
                 },
+                sortPropertyReportDataForExport = function () {
+                    reportData.sort(function(a, b){
+                        var result,
+                            aName = a.Name.Value.toLowerCase(),
+                            bName = b.Name.Value.toLowerCase();
+
+                        if (aName < bName) {
+                            result = -1;
+                        } else if (aName > bName) {
+                            result = 1;
+                        } else {
+                            result = 0;
+                        }
+                        return result;
+                    });
+
+                },
                 buildPageData = function () {
-                    var currentPage = [],
+                    var row,
+                        currentPage = [],
                         headerArray = [],
                         rowArray = [],
                         dataRowIndex = dataIndex.rowStartIdx,
                         buildHeaderArray = function () {
                             if (columnsArray[0].colDisplayName !== undefined) {
-                                if (columnsArray[0].colDisplayName === "Date" && dateRangeNeeded) {
-                                    headerArray.push({Value: columnsArray[0].colDisplayName + " Range " + dateRange});
+                                if (columnRangeNeeded) {
+                                    headerArray.push({Value: columnsArray[0].colDisplayName + " Range " + columnRange});
                                 } else {
                                     headerArray.push({Value: columnsArray[0].colDisplayName});
                                 }
 
                             }
-                            for (j = dataIndex.columnStartIdx; j <= dataIndex.columnStopIdx; j++) {  // add column headers
+                            for (j = dataIndex.columnStartIdx; j < dataIndex.columnStopIdx; j++) {  // add column headers
                                 if (!!columnsArray[j] && columnsArray[j].dataColumnName !== undefined) {
                                     headerArray.push({Value: columnsArray[j].colDisplayName});
                                 }
@@ -3361,13 +3440,14 @@ var reportsViewModel = function () {
 
                     buildHeaderArray();
 
-                    while (dataRowIndex <= dataIndex.rowStopIdx) {
+                    //console.log("  buildPageData()  dataIndex = " + JSON.stringify(dataIndex));
+                    while (dataRowIndex <= dataIndex.rowStopIdx && dataRowIndex < reportData.length) {
                         row = reportData[dataRowIndex];
                         rowArray = [];
                         if (columnsArray[0].dataColumnName !== undefined) {
                             rowArray.push(row[columnsArray[0].dataColumnName]);
                         }
-                        for (j = dataIndex.columnStartIdx; j <= dataIndex.columnStopIdx; j++) {
+                        for (j = dataIndex.columnStartIdx; j < dataIndex.columnStopIdx; j++) {
                             if (!!columnsArray[j] && columnsArray[j].dataColumnName !== undefined) {
                                 rowArray.push(row[columnsArray[j].dataColumnName]);
                             }
@@ -3383,113 +3463,182 @@ var reportsViewModel = function () {
                         });
                     }
 
-                    if (dataIndex.columnStopIdx < (columnsArray.length - 1)) {  // set indexes to next chunk of data
-                        dataIndex.columnStartIdx = dataIndex.columnStopIdx + 1;
+                    //console.log("columnsArray.length = " + columnsArray.length + "   reportData.length = " + reportData.length);
+                    if (dataIndex.columnStopIdx < (columnsArray.length - 1)) {  // set indexes to next chunk column of data
+                        dataIndex.columnStartIdx = dataIndex.columnStopIdx;
                         dataIndex.rowStartIdx = dataIndex.gridRowStartIdx;
-                    } else if (dataIndex.rowStopIdx < reportData.length && dataIndex.columnStopIdx >= (columnsArray.length - 1)) {
+                        dataIndex.gridRowStopIdx = dataIndex.rowStopIdx;
+                    } else if (dataIndex.rowStopIdx < reportData.length) {
                         dataIndex.rowStartIdx = dataIndex.rowStopIdx + 1;
                         dataIndex.gridRowStartIdx = dataIndex.rowStartIdx;
+                        dataIndex.gridRowStopIdx = reportData.length - 1;
                         dataIndex.columnStartIdx = 1;
-                        dateRange++;
+                        if (columnRangeNeeded) {
+                            columnRange++;
+                            columnRangeNeeded = false;  // displayed all data for current range
+                        }
                     } else {
                         // console.log("------ ALL DONE ------  (I think)  ");
                     }
 
-                    dataIndex.columnStopIdx = columnsArray.length;
-                    dataIndex.rowStopIdx = reportData.length;
+                    dataIndex.columnStopIdx = (columnsArray.length - 1);
+                    dataIndex.rowStopIdx = (reportData.length - 1);
                 },
                 nextPageHasData = function () {
-                    var nextPageExists = false,
+                    var nextPageFound = false,
+                        maxRowsFound = false,
+                        maxColumnsFound = false,
                         columnIndex,
-                        maxHeaderWordSize,
-                        maxDataWordSize,
-                        currentColumnWidth = 0,
-                        getColumnHeaderWidth = function (colIndex) {
-                            var idx,
-                                maxHeaderWordWidth = 0,
-                                colName,
-                                wordsInName;
+                        minColumnWidth = {},
+                        minRowHeight = {},
+                        maxHeaderHeight = 0,
+                        maxColumnOneWidth = 0,
+                        maxColumnDataWidth = 0,
+                        maxColumnDataHeight = 0,
+                        headerSize,
+                        dataSize,
+                        columnOneSize,  // "Date" || "Name" Column
+                        currentPageWidth = 0,
+                        currentPageHeight = 0,
+                        rowIndex = dataIndex.rowStartIdx,
+                        getCurrentCellWidthAndHeight = function (cellData, colIndex) {
+                            var answer = {
+                                    width: 0,
+                                    height: 1
+                                },
+                                idx,
+                                wordsInCell,
+                                wordSizes = [];
+
+                            if (typeof cellData !== "string" ) {
+                                wordsInCell = cellData.toString().split(" ");
+                            } else {
+                                wordsInCell = cellData.split(" ");
+                            }
+
+                            for (idx = 0; idx < wordsInCell.length; idx++) {
+                                wordSizes.push(wordsInCell[idx].length);
+                            }
+
+                            if (colIndex !== undefined) { // specially formatted column
+                                answer = getColumnConfigWidthAndHeight(cellData.toString(), columnsArray[colIndex]);
+                            } else {
+                                answer.height = wordSizes.length;
+                                if (wordSizes.length > 0) {
+                                    answer.width = Math.max.apply(null, wordSizes);
+                                }
+                            }
+
+                            answer.width++; // one space per cell (min)
+
+                            return answer;
+                        },
+                        getColumnHeaderWidthAndHeight = function (colIndex) {
+                            var fieldDimensions = {
+                                    width: 0,
+                                    height: 0
+                                };
 
                             if (columnsArray[colIndex].dataColumnName !== undefined) {
-                                colName = columnsArray[colIndex].colDisplayName;
-                                wordsInName = colName.split(" ");
-
-                                for (idx = 0; idx < wordsInName.length; idx++) {
-                                    if (wordsInName[idx].length > maxHeaderWordWidth) {
-                                        maxHeaderWordWidth = wordsInName[idx].length;
-                                    }
-                                }
+                                fieldDimensions = getCurrentCellWidthAndHeight(columnsArray[colIndex].colDisplayName);
                             }
-                            return maxHeaderWordWidth;
+                            return fieldDimensions;
                         },
-                        getColumnDataWidth = function (colIndex) {
-                            var rowIndex = dataIndex.rowStartIdx,
-                                idx,
-                                currentRowHeight = 0,
-                                currentPageLength = 0,
-                                maxDataWordWidth = 0,
+                        getColumnDataWidthAndHeight = function (rowIndex, colIndex) {
+                            var row = reportData[rowIndex],
                                 dataValue,
-                                fieldHeight,
-                                wordsInData;
+                                fieldDimensions = {
+                                    width: 0,
+                                    height: 0
+                                };
 
-                            while (rowIndex < dataIndex.rowStopIdx) {
-                                row = reportData[rowIndex];
-                                currentPageLength++;
-                                if (columnsArray[colIndex].dataColumnName !== undefined) {
-                                    dataValue = row[columnsArray[colIndex].dataColumnName].Value;
-                                    if (typeof dataValue !== "string" ) {
-                                        wordsInData = dataValue.toString().split(" ");
-                                    } else {
-                                        wordsInData = dataValue.split(" ");
-                                    }
-                                    fieldHeight = getDataFieldHeight(row[columnsArray[colIndex].dataColumnName], columnsArray[colIndex])
-                                    currentRowHeight = Math.max(currentRowHeight, fieldHeight);
-                                    for (idx = 0; idx < wordsInData.length; idx++) {
-                                        if (wordsInData[idx].length > maxDataWordWidth) {
-                                            maxDataWordWidth = wordsInData[idx].length;
-                                        }
-                                    }
-                                }
-                                if (insertPageBreak(currentPageLength, rowIndex)) {
-                                    nextPageExists = true;
-                                    break;
-                                } else {
-                                    rowIndex++;
-                                }
-
+                            if (columnsArray[colIndex].dataColumnName !== undefined) {
+                                dataValue = row[columnsArray[colIndex].dataColumnName].Value;
+                                fieldDimensions = getCurrentCellWidthAndHeight(dataValue, colIndex);
                             }
 
-                            dataIndex.rowStopIdx = rowIndex;
-
-                            return maxDataWordWidth;
+                            return fieldDimensions;
                         };
 
                     if (columnsArray.length > 0) {
                         columnIndex = dataIndex.columnStartIdx;
-                        while (columnIndex < columnsArray.length) {
-                            maxHeaderWordSize = getColumnHeaderWidth(columnIndex);
-                            maxDataWordSize = getColumnDataWidth(columnIndex);
+                        if (columnRangeNeeded === true) {  // table had to be broken up into a grid. don't use more/less data than first grid in table
+                            dataIndex.rowStopIdx = dataIndex.gridRowStopIdx;
+                        }
+                        if (columnIndex < columnsArray.length && rowIndex <= dataIndex.rowStopIdx) {
+                            nextPageFound = true;
+                        }
+                        while (columnIndex < columnsArray.length && !maxColumnsFound) {
+                            headerSize = getColumnHeaderWidthAndHeight(columnIndex);
 
-                            if ((currentColumnWidth + Math.max(maxHeaderWordSize, maxDataWordSize)) <= maxNumberOfCharsPerRow) {
-                                currentColumnWidth += Math.max(maxHeaderWordSize, maxDataWordSize);
+                            if (headerSize.height > maxHeaderHeight) {
+                                maxHeaderHeight = headerSize.height;
+                            }
+
+                            rowIndex = dataIndex.rowStartIdx;
+                            maxRowsFound = false;
+                            currentPageHeight = 0;
+                            minColumnWidth[columnIndex] = 0;
+                            maxColumnDataWidth = 0;
+                            maxColumnDataHeight = 0;
+                            while (rowIndex <= dataIndex.rowStopIdx && !maxRowsFound) {
+                                dataSize = getColumnDataWidthAndHeight(rowIndex, columnIndex);
+                                columnOneSize = getColumnDataWidthAndHeight(rowIndex, 0);
+
+                                if (columnOneSize.width > maxColumnOneWidth) {
+                                    maxColumnOneWidth = columnOneSize.width;
+                                }
+
+                                if (dataSize.width > maxColumnDataWidth) {
+                                    maxColumnDataWidth = dataSize.width;
+                                }
+
+                                if (dataSize.height > maxColumnDataHeight) {
+                                    maxColumnDataHeight = dataSize.height;
+                                }
+
+                                minRowHeight[rowIndex] = (!!minRowHeight[rowIndex] ? Math.max(minRowHeight[rowIndex], dataSize.height) : dataSize.height);
+                                if ((currentPageHeight + minRowHeight[rowIndex]) <= maxRowsOnPDFPage() - maxHeaderHeight) {
+                                    currentPageHeight += minRowHeight[rowIndex];
+                                    rowIndex++;
+                                } else {
+                                    dataIndex.rowStopIdx = (rowIndex < reportData.length ? rowIndex : (reportData.length - 1));
+                                    maxRowsFound = true;
+                                }
+                            }
+
+                            minColumnWidth[columnIndex] = (!!minColumnWidth[columnIndex] ? Math.max(minColumnWidth[columnIndex], headerSize.width, maxColumnDataWidth) : Math.max(headerSize.width, maxColumnDataWidth));
+                            if ((currentPageWidth + minColumnWidth[columnIndex]) <= maxNumberOfCharsPerRow) {
+                                if (currentPageWidth === 0) {
+                                    currentPageWidth += (minColumnWidth[columnIndex] + maxColumnOneWidth);
+                                } else {
+                                    currentPageWidth += minColumnWidth[columnIndex];
+                                }
                                 columnIndex++;
                             } else {
+                                columnRangeNeeded = (columnIndex < (columnsArray.length - 1));
+                                // console.log("                      columnRangeNeeded = " + columnRangeNeeded + "  columnIndex = " + columnIndex);
                                 dataIndex.columnStopIdx = columnIndex;
-                                if (dataIndex.columnStopIdx < (columnsArray.length - 1)) {
-                                    dateRangeNeeded = true;
-                                }
-                                break;
+                                maxColumnsFound = true;
                             }
                         }
                     }
-                    return nextPageExists;
+
+                    // console.log("     ------- pagenumber = " + pagenumber++ + "   Page size = " + currentPageWidth + " x " + currentPageHeight);
+                    // console.log("  nextPageHasData()  dataIndex = " + JSON.stringify(dataIndex));
+
+                    return nextPageFound;
                 };
 
             if (reportData !== undefined) {
                 dataIndex.columnStartIdx = 1;  // set indexes to full data set
-                dataIndex.columnStopIdx = columnsArray.length;
+                dataIndex.columnStopIdx = (columnsArray.length - 1);
                 dataIndex.rowStartIdx = 0;
-                dataIndex.rowStopIdx = reportData.length;
+                dataIndex.rowStopIdx = (reportData.length - 1);
+
+                if (self.reportType === "Property") {
+                    sortPropertyReportDataForExport();
+                }
 
                 while (nextPageHasData()) {
                     buildPageData();
@@ -3799,6 +3948,18 @@ var reportsViewModel = function () {
 
     self.activeRequestDataDrawn = ko.observable(true);
 
+    self.pointTypes = ko.observableArray($.extend(true, [], Config.Utility.pointTypes.getAllowedPointTypes()));
+
+    self.name1Filter = ko.observable("");
+
+    self.name2Filter = ko.observable("");
+
+    self.name3Filter = ko.observable("");
+
+    self.name4Filter = ko.observable("");
+
+    self.selectedPointTypesFilter = [];
+
     self.selectedDuration = ko.observable({
         startDate: moment(),
         endDate: moment().add(1, "day"),
@@ -3930,7 +4091,13 @@ var reportsViewModel = function () {
                 self.reportDisplayTitle((!!point["Report Config"].reportTitle ? point["Report Config"].reportTitle : point.Name.replace(/_/g, " ")));
                 self.listOfColumns(initColumns(reportConfig.columns));
                 self.listOfFilters(initFilters(reportConfig.filters));
-                pointFilter = (reportConfig.pointFilter ? reportConfig.pointFilter : pointFilter);
+                if (!!reportConfig.pointFilter) {
+                    self.name1Filter(reportConfig.pointFilter.name1);
+                    self.name2Filter(reportConfig.pointFilter.name2);
+                    self.name3Filter(reportConfig.pointFilter.name3);
+                    self.name4Filter(reportConfig.pointFilter.name4);
+                    self.selectedPointTypesFilter = reportConfig.pointFilter.selectedPointTypes;
+                }
                 self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
                 self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
                 switch (self.reportType) {
@@ -3943,7 +4110,8 @@ var reportsViewModel = function () {
                         self.intervalValue(point["Report Config"].interval.value);
                         break;
                     case "Property":
-                        filterOpenPointSelector($filterByPoint);
+                        // filterOpenPointSelector($filterByPoint);
+                        initPointTypesFilter();
                         collectEnumProperties();
                         break;
                     default:
@@ -3955,7 +4123,13 @@ var reportsViewModel = function () {
                 point["Point Refs"] = [];  // new report, clear out initial Report create data
                 point["Report Config"].columns = [];
                 point["Report Config"].filters = [];
-                point["Report Config"].pointFilter = pointFilter;
+                point["Report Config"].pointFilter = {
+                    "name1" : self.name1Filter(),
+                    "name2" : self.name2Filter(),
+                    "name3" : self.name3Filter(),
+                    "name4" : self.name4Filter(),
+                    "selectedPointTypes" : self.selectedPointTypesFilter
+                };
                 switch (self.reportType) {
                     case "History":
                     case "Totalizer":
@@ -4564,6 +4738,19 @@ var reportsViewModel = function () {
         return true;
     };
 
+    self.toggleAllPointTypes = function (element) {
+        var i,
+            allTypesSelected = self.allTypesSelected(),
+            tempPointTypes = $.extend(true, [], self.pointTypes());
+
+        for (i = 0; i < tempPointTypes.length; i++) {
+            tempPointTypes[i].selected = !allTypesSelected;
+        }
+
+        self.pointTypes(tempPointTypes);
+        return true;
+    };
+
     self.listOfIntervalsComputed = ko.computed(function () {
         var result = [],
             resetInterval = true,
@@ -4654,6 +4841,20 @@ var reportsViewModel = function () {
             self.globalColumnIncludeInChart() != self.globalFieldsColumnEditBefore().includeInChart ||
             self.globalColumnYaxisGroup() != self.globalFieldsColumnEditBefore().yaxisGroup) {
             answer = true;
+        }
+
+        return answer;
+    }, self);
+
+    self.allTypesSelected = ko.computed(function () {
+        var i,
+            answer = true;
+
+        for (i = 0; i < self.pointTypes().length; i++) {
+            if (self.pointTypes()[i].selected === false) {
+                answer = false;
+                break;
+            }
         }
 
         return answer;

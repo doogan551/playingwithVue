@@ -6,14 +6,13 @@
     height: 100%;
     color: #ffffff;
     background-color: rgb(200, 190, 170);
-    border-right: 2px solid #696969;
 }
 .leftBar a {
     /*padding-top: 0px;*/
 }
 .rightPanel {
     z-index: 0;
-    padding: 0px 0px 5px 96px;
+    padding: 0px 0px 5px 88px;
     position: relative;
     width: 100%;
 }
@@ -470,18 +469,18 @@ input.input.form-control.filterContainer:enabled {
     color: #333;
     margin-top: 10px;
 }
-.btn-default.dropdown-toggle.operatorButton {
+.btn-flat.dropdown-toggle.operatorButton {
     border: none;
 }
-.btn-default.dropdown-toggle.conditionButton {
+.btn-flat.dropdown-toggle.conditionButton {
     border: none;
     padding-left: 3px;
     padding-right: 3px;
     border-radius: 0px 18px 18px 0px;
     margin-left: 4px;
 }
-.btn-default.dropdown-toggle.conditionButton.orCondition {
-    border-radius: 18px;
+.btn-flat.dropdown-toggle.conditionButton.orCondition {
+    border-radius: 0px 9px 9px 0px;
 }
 span.caret.lm10px {
     margin-left: 3px;
@@ -497,6 +496,38 @@ span.caret.lm10px {
 a.tab {
     color: #ffffff;
 }
+a.clearName {
+    cursor: pointer;
+}
+a.clearName i {
+    margin-left: -24px;
+}
+.pointTypesFilter ul {
+    display: flex;
+    flex-wrap: wrap;
+    width: 80vw !important;
+    right: 30px;
+    padding-top: 10px;
+}
+.pointTypesFilter ul li {
+    clear: none;
+    width: 20%;
+    float: left;
+}
+.pointTypesFilter .filled-in[type="checkbox"].filled-in:checked + label:after{
+    border: 2px solid #607d8b;
+    background-color: #607d8b;
+}
+.selectorNames .form-control {
+    color: #607d8b;
+}
+.selectorNames label {
+    color: #607d8b;
+}
+div.input-field.col {
+    padding-right: 10px;
+}
+
 html, body {
     overflow-x: hidden;
     overflow-y: hidden;
