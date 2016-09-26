@@ -452,7 +452,7 @@ var reportsViewModel = function () {
             var refPoint,
                 appIndex = getMaxAppIndexUsed(),
                 tempRef,
-                setPointForColumn = function (selectedPoint) {
+                pushNewReferencedPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
                 },
                 getNewPoint = function (upi) {
@@ -478,7 +478,7 @@ var reportsViewModel = function () {
                 point["Point Refs"].push(tempRef);
             } else {
                 if (!!refPointUPI) {
-                    ajaxPost({pointid: refPointUPI}, getPointURL, setPointForColumn);
+                    ajaxPost({pointid: refPointUPI}, getPointURL, pushNewReferencedPoint);
                 }
                 console.log("setNewPointReference() refPointUPI = " + refPointUPI + " property = " + property + "  refPoint = " + refPoint);
             }
@@ -883,11 +883,11 @@ var reportsViewModel = function () {
                 $errorMessageholder.text("");
             }, 6000);  // display error message
         },
-        openPointSelectorForModalColumn = function (selectObjectIndex, upi, newUrl) {
-            var url = newUrl || '/pointlookup/' + encodeURI("Report") + '/' + encodeURI("Column Point") + "?mode=select",
-                windowRef,
+        openPointSelectorForModalColumn = function (selectObjectIndex) {
+            var parameters,
                 tempPoint,
-                tempObject = {},
+                updatedList = $.extend(true, [], self.listOfColumns()),
+                tempObject = updatedList[selectObjectIndex],
                 setColumnPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
                     if (!!tempObject.AppIndex) {
@@ -940,29 +940,22 @@ var reportsViewModel = function () {
                         self.currentColumnEdit(getNewColumnTemplate());
                     }
                 },
-                pointSelectedCallback = function (pid, name, type, filter) {
-                    if (!!pid) {
-                        ajaxPost({pointid: pid}, getPointURL, setColumnPoint);
+                pointSelectedCallback = function (pointInfo) {
+                    if (!!pointInfo) {
+                        ajaxPost({pointid: pointInfo._id}, getPointURL, setColumnPoint);
                     }
-                    pointFilterSearch.name1 = filter.filter1;
-                    pointFilterSearch.name2 = filter.filter2;
-                    pointFilterSearch.name3 = filter.filter3;
-                    pointFilterSearch.name4 = filter.filter4;
-                    pointFilterSearch.selectedPointTypes = filter.selectedPointTypes;
-                },
-                windowOpenedCallback = function () {
-                    windowRef.pointLookup.MODE = 'select';
-                    windowRef.pointLookup.init(pointSelectedCallback, pointFilterSearch);
+                    // pointFilterSearch.name1 = filter.filter1;
+                    // pointFilterSearch.name2 = filter.filter2;
+                    // pointFilterSearch.name3 = filter.filter3;
+                    // pointFilterSearch.name4 = filter.filter4;
+                    // pointFilterSearch.selectedPointTypes = filter.selectedPointTypes;
                 };
 
-            windowRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'Select Point Column', {
-                callback: windowOpenedCallback,
-                width: 1000
-            });
+            dtiUtility.showPointSelector(parameters);
+            dtiUtility.onPointSelect(pointSelectedCallback);
         },
-        openPointSelectorForColumn = function (selectObjectIndex, upi, newUrl) {
-            var url = newUrl || '/pointlookup/' + encodeURI("Report") + '/' + encodeURI("Column Point") + "?mode=select",
-                windowRef, //
+        openPointSelectorForColumn = function (selectObjectIndex) {
+            var parameters,
                 tempPoint,
                 updatedList = $.extend(true, [], self.listOfColumns()),
                 tempObject = updatedList[selectObjectIndex],
@@ -1016,32 +1009,25 @@ var reportsViewModel = function () {
                         updateListOfColumns(updatedList);
                     }
                 },
-                pointSelectedCallback = function (pid, name, type, filter) {
-                    if (!!pid) {
-                        ajaxPost({pointid: pid}, getPointURL, setColumnPoint);
+                pointSelectedCallback = function (pointInfo) {
+                    if (!!pointInfo) {
+                        ajaxPost({pointid: pointInfo._id}, getPointURL, setColumnPoint);
                     }
-                    pointFilterSearch.name1 = filter.filter1;
-                    pointFilterSearch.name2 = filter.filter2;
-                    pointFilterSearch.name3 = filter.filter3;
-                    pointFilterSearch.name4 = filter.filter4;
-                    pointFilterSearch.selectedPointTypes = filter.selectedPointTypes;
-                },
-                windowOpenedCallback = function () {
-                    windowRef.pointLookup.MODE = 'select';
-                    windowRef.pointLookup.init(pointSelectedCallback, pointFilterSearch);
+                    // pointFilterSearch.name1 = filter.filter1;
+                    // pointFilterSearch.name2 = filter.filter2;
+                    // pointFilterSearch.name3 = filter.filter3;
+                    // pointFilterSearch.name4 = filter.filter4;
+                    // pointFilterSearch.selectedPointTypes = filter.selectedPointTypes;
                 };
 
-            windowRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'Select Point Column', {
-                callback: windowOpenedCallback,
-                width: 1000
-            });
+            dtiUtility.showPointSelector(parameters);
+            dtiUtility.onPointSelect(pointSelectedCallback);
         },
-        openPointSelectorForFilter = function (selectObjectIndex, upi, newUrl) {
-            var url = newUrl || '/pointlookup/' + encodeURI("Report") + '/' + encodeURI(self.listOfFilters()[selectObjectIndex].filterName) + "?mode=select",
-                windowRef,
+        openPointSelectorForFilter = function (selectObjectIndex) {
+            var parameters,
                 tempPoint,
                 objIndex = selectObjectIndex,
-                updatedList = self.listOfFilters(),
+                updatedList = $.extend(true, [], self.listOfFilters()),
                 tempObject = updatedList[selectObjectIndex],
                 setFilterPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
@@ -1050,33 +1036,30 @@ var reportsViewModel = function () {
                     tempObject.value = selectedPoint.Name;
                     tempObject.pointType = selectedPoint["Point Type"].Value;
                     updateFilterFromPointRefs(tempObject);  // sets AppIndex;
-                    tempPoint = Config.Update.formatPoint({
-                        point: point,
-                        oldPoint: point,
-                        refPoint: selectedPoint,
-                        property: getPointRefByAppIndex(tempObject.AppIndex)
-                    });
-                    updatedList[objIndex] = tempObject;
-                    updateListOfFilters(updatedList);
-                },
-                pointSelectedCallback = function (pid, name, type, filter) {
-                    if (!!pid) {
-                        ajaxPost({pointid: pid}, getPointURL, setFilterPoint);
+                    if (tempObject.AppIndex) {
+                        tempPoint = Config.Update.formatPoint({
+                            point: point,
+                            oldPoint: point,
+                            refPoint: selectedPoint,
+                            property: getPointRefByAppIndex(tempObject.AppIndex)
+                        });
+                        updatedList[objIndex] = tempObject;
+                        updateListOfFilters(updatedList);
                     }
-                    pointFilterSearch.name1 = filter.filter1;
-                    pointFilterSearch.name2 = filter.filter2;
-                    pointFilterSearch.name3 = filter.filter3;
-                    pointFilterSearch.name4 = filter.filter4;
                 },
-                windowOpenedCallback = function () {
-                    windowRef.pointLookup.MODE = 'select';
-                    windowRef.pointLookup.init(pointSelectedCallback, pointFilterSearch);
+                pointSelectedCallback = function (pointInfo) {
+                    if (!!pointInfo) {
+                        ajaxPost({pointid: pointInfo._id}, getPointURL, setFilterPoint);
+                    }
+                    // pointFilterSearch.name1 = filter.filter1;
+                    // pointFilterSearch.name2 = filter.filter2;
+                    // pointFilterSearch.name3 = filter.filter3;
+                    // pointFilterSearch.name4 = filter.filter4;
+                    // pointFilterSearch.selectedPointTypes = filter.selectedPointTypes;
                 };
 
-            windowRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'Select Point Filter', {
-                callback: windowOpenedCallback,
-                width: 1000
-            });
+            dtiUtility.showPointSelector(parameters);
+            dtiUtility.onPointSelect(pointSelectedCallback);
         },
         filterOpenPointSelector = function () {
             if (!scheduled) {
@@ -1112,7 +1095,7 @@ var reportsViewModel = function () {
                     //     }
                     // };
 
-                dtUtility.showNavigator();
+                dtiUtility.showNavigator();
 
                 // pointSelectorRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'filter', {
                 //     callback: windowOpenedCallback,
@@ -1876,7 +1859,7 @@ var reportsViewModel = function () {
             $additionalFilters = $direports.find("#additionalFilters");
             $hiddenPlaceholder = $direports.find(".hiddenPlaceholder");
             $globalPrecision = $hiddenPlaceholder.find("input.globalPrecision");
-            $globalIncludeInChart = $hiddenPlaceholder.find("input.globalChartCheckbox");
+            $globalIncludeInChart = $hiddenPlaceholder.find("div.globalIncludeInChart");
             $availableChartTypesChartTab = $direports.find(".availableChartTypes.chartTab");
             $reportChartDiv = $direports.find(".reportChartDiv");
         },
@@ -2392,7 +2375,8 @@ var reportsViewModel = function () {
                 $dataTablesScrollBody.css('height', adjustHeight);
                 $dataTablesScrollBody.css('width', $dataTablesWrapper.width());
                 $dataTablesScrollFoot.css('width', $dataTablesWrapper.width() - 17); // allow for scrolly in body
-                $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
+                // $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;  // original way
+                // $dataTablePlaceHolder.DataTable().columns.adjust();
             }
         },
         adjustConfigTabActivePaneHeight = function () {
@@ -4315,26 +4299,24 @@ var reportsViewModel = function () {
     };
 
     self.selectPointForColumn = function (data, index) {
-        var upi = parseInt(data.upi, 10),
-            currentIndex = (typeof index === "function" ? index() : index),
+        var currentIndex = (typeof index === "function" ? index() : index),
             columnIndex = parseInt(currentIndex, 10);
 
-        openPointSelectorForColumn(columnIndex, upi);
+        openPointSelectorForColumn(columnIndex);
     };
 
     self.selectPointForModalColumn = function (data, index) {
-        var upi = parseInt(data.upi, 10),
-            currentIndex = (typeof index === "function" ? index() : index),
+        var currentIndex = (typeof index === "function" ? index() : index),
             columnIndex = parseInt(currentIndex, 10);
 
-        openPointSelectorForModalColumn(columnIndex, upi);
+        openPointSelectorForModalColumn(columnIndex);
     };
 
     self.selectPointForFilter = function (data, index) {
-        var upi = parseInt(data.upi, 10),
-            columnIndex = parseInt(index(), 10);
+        var currentIndex = (typeof index === "function" ? index() : index),
+            columnIndex = parseInt(currentIndex, 10);
 
-        openPointSelectorForFilter(columnIndex, upi);
+        openPointSelectorForFilter(columnIndex);
     };
 
     self.showPointReviewViaIndex = function (index) {
