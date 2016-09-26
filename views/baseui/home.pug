@@ -376,6 +376,10 @@ html
             iframe.card-body(data-bind="attr: {src: url}")
             //- .draggableMask
             .windowMask
+                .iframeFull
+                    .absCenter
+                        .cssload-container
+                            .cssload-whirlpool
 
     script#navigatorModalTemplate(type='text/html')
         .navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="attr: { id: id() }, css: { 'modal-fixed-footer': mode() !== 'default' }")
