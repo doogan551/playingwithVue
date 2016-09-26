@@ -155,14 +155,6 @@ html
                         // /ko
                 .status(data-bind='visible: alarms.unacknowledged.showList() === false') Relax...none right now.
 
-            //- ul#globalSearchResults.dropdown-content.active(style="display: none; position: absolute; right: 109px; top: 48px; opacity: 1; width: 264px;")
-                li
-                    a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='4250 AH5 DISP', data-delay='10') 4250 AH5 DISP
-                li
-                    a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='AIR HANDLERS', data-delay='10') AIR HANDLERS
-                li
-                    a.blue-grey-text.truncate(href='javascript://', data-position='left', data-tooltip='MONTHLY REPORT', data-delay='10') MONTHLY REPORT
-
             #startmenu.z-depth-3.white.lighten-3.white-text
                 .startmenuBody
                     .tileList(data-bind="foreachprop: startMenuItems")
@@ -171,25 +163,6 @@ html
                             i.center-align(data-bind="css: iconClass, text: iconText")
                             span(data-bind="text: title")             
                         // /ko       
-                    //- .tileList
-                    //-     a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="showNavigator: 'Display'")
-                    //-         i.material-icons.center-align tv
-                    //-         span Displays
-                    //-     span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
-                    //-         i.material-icons.center-align notifications
-                    //-         span Alarms
-                    //-     span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
-                    //-         i.material-icons.center-align assignment
-                    //-         span Reports
-                    //-     span.hoverable.dti-menu-tile.card-panel.card-panel-custom-icon.z-depth-1.blue-grey
-                    //-         i
-                    //-             img(src='/img/test/icons/file-tree-36.png')
-                    //-         span Device Tree
-                    //-     span.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey
-                    //-         i.material-icons.center-align assignment
-                            span DB Manager
-
-
 
                     .recentItems
                         .col.s12.blue-grey-text Recent Items
@@ -213,30 +186,10 @@ html
                         //- span &copy; Dorsett Technologies
 
             ul#userDropdownMenu.dropdown-content
-                li
-                    a.blue-grey-text(href='javascript://') Preferences
+                //- li
+                //-     a.blue-grey-text(href='javascript://') Preferences
                 li
                     a.blue-grey-text(href='javascript://', data-bind="click: logout") Logout
-            //- #modal1.modal.bottom-sheet
-            //-     .modal-content
-            //-         h4 Modal Header
-            //-         p A bunch of text
-            //-     .modal-footer
-            //-         a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close
-
-            //- #grouping.modal.modal-fixed-footer
-            //-     .modal-content
-            //-         //- .groupingBody
-            //-             //- ul
-            //-             //-     li Leaf
-            //-             //-     li Subtree
-            //-             //-         ul
-            //-             //-             li Leaf
-            //-             //-             li Leaf
-            //-         .propertiesList
-
-            //-     .modal-footer
-            //-         a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close                         
 
             //- #pointID.modal.modal-fixed-footer
                 .modal-content
@@ -297,21 +250,6 @@ html
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Close               
 
-            //- #navigatorFilterModal.navigatorModal.modal.modal-fixed-footer.modal-fixed-header
-            //-     .modal-header Filter Points
-            //-     .modal-content.modal-content-no-padding
-            //-         iframe.iframeFull
-            //-     .modal-footer
-            //-         a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel
-            //-         a.modal-action.modal-close.waves-effect.btn.blue-grey(href='javascript://', data-bind="click: acceptNavigatorFilter") Accept
-
-            //- #navigatorModal.navigatorModal.modal.modal-fixed-footer
-            //-     .modal-header Select Point
-            //-     .modal-content.modal-content-no-padding
-            //-         iframe.iframeFull
-            //-     .modal-footer
-            //-         a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel    
-
             #openItemsModal.modal.modal-large
                 .modal-content
                     .center-align.flex.flex-column.flex-center.openItemsHeader
@@ -322,22 +260,6 @@ html
                     #itemlist.openItemList(data-bind="foreach: $root.windowGroups")
                         // ko template: { name: 'miniWindowTemplate', foreach: $root.openWindows[group()]}
                         // /ko
-                        //- // ko foreach: $root.openWindows[group()]
-                        //- // ko if: !exempt()
-                        //- a.hoverable.item.blue-grey.z-depth-1(href='javascript://', data-bind="click: function () {activate(false);}")
-                        //-     .itemTitle.white-text
-                        //-         i.right.material-icons.closeIcon close
-                        //-         div(data-bind="text: title")
-                        //-     .itemBody 
-                        //-         //ko if: thumbnail() === true 
-                        //-         img(data-bind="thumbnail: upi")
-                        //-         // /ko
-
-                        //-         // ko if: thumbnail() === false
-                        //-         i.center-align.white-text(data-bind="css: iconClass, text: iconText")
-                        //-         // /ko
-                        //- // /ko
-                        //- // /ko
 
                 .modal-footer
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel                    
@@ -410,45 +332,6 @@ html
                 .absCenter
                     .cssload-container
                         .cssload-whirlpool
-                //- .preloader-wrapper.active
-                //-     .spinner-layer.spinner-blue
-                //-         .circle-clipper.left
-                //-             .circle
-                //-         .gap-patch
-                //-             .circle
-                //-         .circle-clipper.right
-                //-             .circle
-                //-     .spinner-layer.spinner-red
-                //-         .circle-clipper.left
-                //-             .circle
-                //-         .gap-patch
-                //-             .circle
-                //-         .circle-clipper.right
-                //-             .circle
-                //-     .spinner-layer.spinner-yellow
-                //-         .circle-clipper.left
-                //-             .circle
-                //-         .gap-patch
-                //-             .circle
-                //-         .circle-clipper.right
-                //-             .circle
-                //-     .spinner-layer.spinner-green
-                //-         .circle-clipper.left
-                //-             .circle
-                //-         .gap-patch
-                //-             .circle
-                //-         .circle-clipper.right
-                //-             .circle
-
-    script#navigatorModalTemplate(type='text/html')
-        .navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="attr: { id: id() }, css: { 'modal-fixed-footer': mode() !== 'default' }")
-            .modal-header Select Point
-            .modal-content.modal-content-no-padding
-            .modal-footer(data-bind="css: mode")
-                span.modalControls.filterActions
-                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
-                span.modalControls.createActions
-                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="css: { disabled: !allowCreatePoint() }, click: doCreatePoint") Create Point
 
     script#miniWindowTemplate(type='text/html')
         // ko if: !exempt()
@@ -493,6 +376,17 @@ html
             iframe.card-body(data-bind="attr: {src: url}")
             //- .draggableMask
             .windowMask
+
+    script#navigatorModalTemplate(type='text/html')
+        .navigatorModal.modal.modal-fixed-header.modal-optional-footer(data-bind="attr: { id: id() }, css: { 'modal-fixed-footer': mode() !== 'default' }")
+            .modal-header Select Point
+            .modal-content.modal-content-no-padding
+            .modal-footer(data-bind="css: mode")
+                span.modalControls.filterActions
+                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="click: doAcceptFilter") Accept Filter
+                    a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
+                span.modalControls.createActions
+                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="css: { disabled: !allowCreatePoint() }, click: doCreatePoint") Create Point
 
     script#navigatorTemplate(type='text/html')
         .iframeFull.blue-grey-form.flex.flex-row.row
@@ -539,7 +433,7 @@ html
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
                         ul.dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }")
-                            // ko if: mode() === 'default'
+                            // ko if: mode() === 'default' || mode () === 'filter'
                             li
                                 input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
                                 label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
@@ -553,7 +447,7 @@ html
                             // ko if: mode() === 'create'
                             // ko foreach: explodedPointTypes
                             li
-                                input(type='radio', data-bind="checked: $parent.newPointType, attr: {value: key(), id : $parent.id() + '_pointTypeRadio_' + $index(), name : $parent.id() + '_pointTypeRadio' }")
+                                input(type='radio', data-bind="checked: $parent.newPointType, click: $parent.storePointType, attr: {value: key(), id : $parent.id() + '_pointTypeRadio_' + $index(), name : $parent.id() + '_pointTypeRadio' }")
                                 label(data-bind="text: key, attr: { for: $parent.id() + '_pointTypeRadio_' + $index() }")
 
                             // /ko

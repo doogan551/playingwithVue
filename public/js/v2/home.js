@@ -1975,6 +1975,7 @@ var dti = {
                     });
 
                     bindings.pointTypes = pointTypes;
+                    bindings._newPointType = explodedPointTypes[0];
                     bindings.newPointType = explodedPointTypes[0].key;
                     explodedPointTypes[0].selected = true;
                     bindings.explodedPointTypes = explodedPointTypes;
@@ -1990,7 +1991,21 @@ var dti = {
                     };
 
                     bindings.doCreatePoint = function () {
+                        dti.log(ko.toJS(bindings));
+                    };
 
+                    bindings.doAcceptFilter = function () {
+                        var filterProperties = ['name1', 'name2', 'name3', 'name4'],
+                            filterObj = {
+                                pointTypes: self.getFlatPointTypes(ko.toJS(bindings.pointTypes))
+                            };
+
+                        dti.forEachArray(filterProperties, function buildFilterObj (prop) {
+                            filterObj[prop] = bindings[prop]();
+                        });
+
+                        // dti.log(ko.toJS(filterObj));
+                        dti.navigator.handleNavigatorRowClick(filterObj);
                     };
 
                     bindings.togglePointTypeDropdown = function (obj, event) {
@@ -1998,7 +2013,6 @@ var dti = {
                         if (event) {
                             event.preventDefault();
                         }
-                        return false;
                     };
 
                     bindings.pointTypeChanged = function () {
@@ -2062,19 +2076,9 @@ var dti = {
                         }
                     };
 
-                    // bindings.newPointType = ko.pureComputed(function getNewPointType () {
-                    //     var selectedType;
-
-                    //     dti.forEachArray(bindings.explodedPointTypes(), function checkExplodedPointType (type) {
-                    //         var selected = type.selected();
-
-                    //         if (selected) {
-                    //             selectedType = type.key();
-                    //         }
-                    //     });
-
-                    //     return selectedType;
-                    // });
+                    bindings.storePointType = function storeNewPointType (object) {
+                        bindings._newPointType = object;
+                    };
 
                     bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint () {
                         var uniqueName = bindings.points().length === 0,
