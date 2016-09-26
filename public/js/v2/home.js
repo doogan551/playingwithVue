@@ -2033,7 +2033,10 @@ var dti = {
                     };
 
                     bindings.togglePointTypeDropdown = function (obj, event) {
-                        bindings.dropdownOpen(!bindings.dropdownOpen());
+                        var dropdownShown = bindings.dropdownOpen();
+
+                        bindings.dropdownOpen(!dropdownShown);
+
                         if (event) {
                             event.preventDefault();
                         }
@@ -2041,11 +2044,14 @@ var dti = {
 
                     bindings.pointTypeChanged = function () {
                         self.pointTypeChanged = true;
+                        self.getPoints();
                     };
 
                     bindings.pointTypeInvert = function (type) {
-                        bindings.pointTypeChanged();
+                        self._pauseRequest = true;
                         self.applyPointTypes(type);
+                        self._pauseRequest = false;
+                        bindings.pointTypeChanged();
                     };
 
                     bindings.toggleAllPointTypes = function () {
@@ -2167,10 +2173,15 @@ var dti = {
                     });
 
                     bindings.pointTypesChanged = ko.pureComputed(function pointTypeHasChanged () {
-                        var currTypes = bindings.pointTypes();
+                        var currTypes = bindings.pointTypes(),
+                            pointTypeChangedInterceptor = function () {
+                                if (!self._pauseRequest) {
+                                    bindings.pointTypeChanged.apply(this, arguments);
+                                }
+                            };
 
                         dti.forEachArray(currTypes, function subscribeToCheck (type) {
-                            type.selected.subscribe(bindings.pointTypeChanged);
+                            type.selected.subscribe(pointTypeChangedInterceptor);
                         });
 
                         return true;
