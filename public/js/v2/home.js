@@ -2057,11 +2057,15 @@ var dti = {
                     bindings.toggleAllPointTypes = function () {
                         var types = bindings.pointTypes();
 
+                        self._pauseRequest = true;
+
                         dti.forEachArray(types, function doCheckPointType(type) {
                             if (type.visible()) {
                                 type.selected(true);
                             }
                         });
+
+                        self._pauseRequest = false;
 
                         bindings.pointTypeChanged();
                     };
