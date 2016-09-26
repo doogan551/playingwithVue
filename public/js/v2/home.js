@@ -527,15 +527,15 @@ var dti = {
                     return x + 'px';
                 }
             },
-            prepMeasurements = function (inConfig) {
+            prepMeasurements = function (inConfig, bindings) {
                 var cfg = inConfig || config,
                     container = $(dti.windows.draggableConfig.containment),
                     containerWidth = container.width(),
                     containerHeight = container.height(),
                     containerPadding = parseFloat(container.css('padding'), 10),
                     obj = {
-                        left: cfg.left,
-                        top: cfg.top
+                        left: cfg.left || bindings.left(),
+                        top: cfg.top || bindings.top()
                     };
 
                 if (cfg.fullScreen) {
@@ -689,7 +689,7 @@ var dti = {
                             self.bindings.title(message.parameters);
                         },
                         resize: function () {
-                            var measurements = prepMeasurements(message.parameters);
+                            var measurements = prepMeasurements(message.parameters, self.bindings);
 
                             ko.viewmodel.updateFromModel(self.bindings, measurements);
                         }
@@ -2231,6 +2231,7 @@ var dti = {
             self.bindings = getBindings();
 
             self.applyPointTypes = function (types, exclusive) {
+                self._pauseRequest = true;
                 if (types && types.length > 0) {
                     dti.forEachArray(self.bindings.pointTypes(), function isPointTypeChecked (type) {
                         var isFound = types.indexOf(type.key()) > -1;
@@ -2244,6 +2245,7 @@ var dti = {
                         type.selected(isFound);
                     });
                 }
+                self._pauseRequest = false;
             };
 
             self.applyPointNames = function (config) {
