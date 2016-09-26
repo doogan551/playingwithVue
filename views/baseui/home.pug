@@ -444,9 +444,12 @@ html
                             i.material-icons.dropdownCaret arrow_drop_down
                         ul.dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }")
                             // ko if: mode() === 'default' || mode () === 'filter'
+
+                            // ko if: mode() !== 'filter'
                             li
                                 input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
                                 label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
+                            // /ko
                             // ko foreach: pointTypes
                             li
                                 input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : $parent.id() + '_pointType_' + $index() }")

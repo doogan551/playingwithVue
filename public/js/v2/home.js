@@ -529,10 +529,10 @@ var dti = {
             },
             prepMeasurements = function (inConfig, bindings) {
                 var cfg = inConfig || config,
-                    container = $(dti.windows.draggableConfig.containment),
-                    containerWidth = container.width(),
-                    containerHeight = container.height(),
-                    containerPadding = parseFloat(container.css('padding'), 10),
+                    $container = $(dti.windows.draggableConfig.containment),
+                    containerWidth = $container.width(),
+                    containerHeight = $container.height(),
+                    containerPadding = parseFloat($container.css('padding'), 10),
                     obj = {
                         left: cfg.left || bindings.left(),
                         top: cfg.top || bindings.top()
@@ -3024,6 +3024,7 @@ var dti = {
             // dti.navigator.showNavigator(group, isStartMenu);
         },
         startMenuClick: function (obj) {
+            dti.fire('hideMenus');
             dti.startMenu.handleClick(obj);
         },
         handleCardClick: function (obj, e) {
