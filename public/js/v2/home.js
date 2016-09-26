@@ -1975,6 +1975,7 @@ var dti = {
                     });
 
                     bindings.pointTypes = pointTypes;
+                    bindings._newPointType = explodedPointTypes[0];
                     bindings.newPointType = explodedPointTypes[0].key;
                     explodedPointTypes[0].selected = true;
                     bindings.explodedPointTypes = explodedPointTypes;
@@ -1990,7 +1991,7 @@ var dti = {
                     };
 
                     bindings.doCreatePoint = function () {
-
+                        dti.log(ko.toJS(bindings));
                     };
 
                     bindings.togglePointTypeDropdown = function (obj, event) {
@@ -2060,6 +2061,10 @@ var dti = {
                         if (self.bindings[binding]) {
                             self.bindings[binding](null);
                         }
+                    };
+
+                    bindings.storePointType = function storeNewPointType (object) {
+                        bindings._newPointType = object;
                     };
 
                     // bindings.newPointType = ko.pureComputed(function getNewPointType () {
