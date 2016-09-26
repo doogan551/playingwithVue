@@ -15,3 +15,5 @@ node_modules/grunt*
 aclient.js
 apps/backup.log
 *.DS_Store
+!*.exe
+!*.dll
