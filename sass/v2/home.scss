@@ -570,7 +570,8 @@ $startmenuGutter: 15px;
     }
 
     input {
-        width: 340px;
+        width: 340px
+        back;
     }
 }
 
@@ -1342,6 +1343,12 @@ $loaderSpeedScale: 1 / .75;
     max-height: 95%;
     background-color: $blue-grey;
     overflow-y: hidden;
+
+    .navigatorLoading {
+        position: absolute;
+        z-index: 2;
+        background: none;
+    }
 
     .modalControls {
         display: none;

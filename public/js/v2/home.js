@@ -1942,7 +1942,8 @@ var dti = {
                             deviceId: null,
                             remoteUnitId: null,
                             id: self.id,
-                            disableCreatePoint: false
+                            disableCreatePoint: false,
+                            loading: false
                         },
                         explodedPointTypes = [];
 
@@ -1991,7 +1992,31 @@ var dti = {
                     };
 
                     bindings.doCreatePoint = function () {
-                        dti.log(ko.toJS(bindings));
+                        var filterProperties = ['name1', 'name2', 'name3', 'name4'],
+                            newPointType = ko.toJS(bindings._newPointType),
+                            parameters = {
+                                pointType: newPointType._type || newPointType.key,
+                                subType: newPointType._subType
+                            };
+
+                        if (bindings.allowCreatePoint()) {
+                            bindings.disableCreatePoint(true);
+                            bindings.loading(true);
+
+                            dti.forEachArray(filterProperties, function buildFilterObj (prop) {
+                                parameters[prop] = bindings[prop]();
+                            });
+
+                            self._createPointParameters = parameters;
+
+                            $.ajax({
+                                    url: '/api/points/initpoint',
+                                    dataType: 'json',
+                                    type: 'post',
+                                    data: parameters
+                                })
+                                .done(self.handleNewPoint);
+                        }
                     };
 
                     bindings.doAcceptFilter = function () {
@@ -2072,19 +2097,37 @@ var dti = {
 
                     bindings.clearBinding = function (binding) {
                         if (self.bindings[binding]) {
-                            self.bindings[binding](null);
+                            self.bindings[binding]('');
                         }
                     };
 
                     bindings.storePointType = function storeNewPointType (object) {
                         bindings._newPointType = object;
+                        return true;
                     };
 
                     bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint () {
                         var uniqueName = bindings.points().length === 0,
-                            disabled = bindings.disableCreatePoint();
+                            disabled = bindings.disableCreatePoint(),
+                            c,
+                            tmpName,
+                            noGaps = true,
+                            hasValue = 0;
 
-                        return uniqueName && !disabled;
+                        for (c = 4; c; c--) {
+                            tmpName = bindings['name' + c]() || '';
+                            if (hasValue) {
+                                if (!tmpName.length) {
+                                    noGaps = false;
+                                }
+                            } else {
+                                if (tmpName.length) {
+                                    hasValue = c;
+                                }
+                            }
+                        }
+
+                        return uniqueName && hasValue && noGaps && !disabled;
                     });
 
                     bindings.allTypesSelected = ko.pureComputed(function allPointTypesSelected() {
@@ -2210,7 +2253,7 @@ var dti = {
             self.applyConfig = function (cfg) {
                 var defaultConfig = $.extend({}, self.defaultConfig),
                     config = $.extend(defaultConfig, cfg || {}),
-                    propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId'];
+                    propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
 
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
 
@@ -2233,6 +2276,29 @@ var dti = {
                     self.bindings.fetchingPoints(false);
                 }, 250);
                 // dti.log(response);
+            };
+
+            self.handleNewPoint = function (data) {
+                if (data.err) {
+                    dti.log(data.err);
+                    self.bindings.disableCreatePoint(false);
+                } else {
+
+                    var params = self._createPointParameters,
+                        endPoint = dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(params.pointType, data._id),
+                        handoffMode = endPoint.edit || endPoint.review;
+
+                    dti.windows.openWindow({
+                        url: handoffMode.url,
+                        title: data.Name,
+                        pointType: params.pointType,
+                        upi: data._id,
+                        options: {
+                            height: 750,
+                            width: 1250
+                        }
+                    });
+                }
             };
 
             self.getFlatPointTypes = function (pointTypes) {

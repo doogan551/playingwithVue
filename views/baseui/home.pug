@@ -390,6 +390,12 @@ html
 
     script#navigatorTemplate(type='text/html')
         .iframeFull.blue-grey-form.flex.flex-row.row
+            // ko if:loading
+            .iframeFull.navigatorLoading
+                .absCenter
+                    .cssload-container
+                        .cssload-whirlpool
+            // /ko
             .navigatorBody.flex.flex-column(data-bind="css: mode")
                 .selectorHeader.right-align.flex.flex-row.flex-right.flex-center
                     p.pointType
@@ -472,6 +478,8 @@ html
                         .listEntry(data-bind="text: pointType")
 
                     // /ko
+
+
 
     script#taskbarButtonTemplate(type='text/html')
         li.taskbarItem.active(data-bind="taskbarMenu: $data")
