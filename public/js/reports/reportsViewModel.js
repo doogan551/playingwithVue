@@ -394,10 +394,6 @@ var reportsViewModel = function () {
         $viewColumnModal,
         $viewReportNav,
         $globalEditColumnModal,
-        $pointName1,
-        $pointName2,
-        $pointName3,
-        $pointName4,
         $columnsGrid,
         $filtersGrid,
         $columnsTbody,
@@ -1842,10 +1838,6 @@ var reportsViewModel = function () {
             $dataTablePlaceHolder = $direports.find(".dataTablePlaceHolder");
             $rightPanel = $direports.find(".rightPanel");
             $spinnertext = $rightPanel.find(".spinnertext");
-            $pointName1 = $direports.find(".pointName1");
-            $pointName2 = $direports.find(".pointName2");
-            $pointName3 = $direports.find(".pointName3");
-            $pointName4 = $direports.find(".pointName4");
             $columnsGrid = $direports.find(".columnsGrid");
             $filtersGrid = $direports.find(".filtersGrid");
             $columnNames = $direports.find(".columnName");
@@ -2439,10 +2431,10 @@ var reportsViewModel = function () {
                     console.log(" - - - DEFAULT  init()");
                     break;
             }
-            point.name1 = $pointName1.val();
-            point.name2 = $pointName2.val();
-            point.name3 = $pointName3.val();
-            point.name4 = $pointName4.val();
+            point.name1 = self.pointName1();
+            point.name2 = self.pointName2();
+            point.name3 = self.pointName3();
+            point.name4 = self.pointName4();
             point._name1 = point.name1.toLowerCase();
             point._name2 = point.name2.toLowerCase();
             point._name3 = point.name3.toLowerCase();
@@ -3934,6 +3926,14 @@ var reportsViewModel = function () {
 
     self.pointTypes = ko.observableArray($.extend(true, [], Config.Utility.pointTypes.getAllowedPointTypes()));
 
+    self.pointName1 = ko.observable("");
+
+    self.pointName2 = ko.observable("");
+
+    self.pointName3 = ko.observable("");
+
+    self.pointName4 = ko.observable("");
+
     self.name1Filter = ko.observable("");
 
     self.name2Filter = ko.observable("");
@@ -4062,10 +4062,10 @@ var reportsViewModel = function () {
             self.reportType = point["Report Type"].Value;
             reportConfig = (point["Report Config"] ? point["Report Config"] : undefined);
             columns = (reportConfig ? reportConfig.columns : undefined);
-            $pointName1.val(point.name1);
-            $pointName2.val(point.name2);
-            $pointName3.val(point.name3);
-            $pointName4.val(point.name4);
+            self.pointName1(point.name1);
+            self.pointName2(point.name2);
+            self.pointName3(point.name3);
+            self.pointName4(point.name4);
 
             if (!scheduled) {
                 initSocket();

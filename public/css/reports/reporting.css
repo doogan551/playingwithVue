@@ -104,7 +104,6 @@ input.input.form-control.durationDateRangeTime {
 .reportDisplayTitle {
     margin-top: 2px;
 }
-
 .direports > body > ul.dt-button-collection.dropdown-menu {
     width: 100px;
     min-width: 90px;
@@ -162,6 +161,14 @@ span.durationLabel {
 input.durationCheckbox {
     margin-left: 8px;
     vertical-align: middle;
+}
+div.reportAttribs.tab-pane {
+    padding-left: 10%;
+    padding-top: 20px;
+}
+div.additionalFilters.tab-pane {
+    padding-left: 5%;
+    padding-top: 20px;
 }
 .hideDurationDropdown {
     display: none;
@@ -833,7 +840,10 @@ input.form-control.columnDisplayName {
     cursor: pointer;
 }
 .reporttype {
-    margin-top: 8px;
+    margin-top: -14px;
+    background-color: #dddddd;
+    font-style: italic;
+    font-size: 12px;
 }
 .reportTitle {
     background-color: #dddddd;
