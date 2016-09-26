@@ -2010,12 +2010,11 @@ var dti = {
                             self._createPointParameters = parameters;
 
                             $.ajax({
-                                    url: '/api/points/initpoint',
-                                    dataType: 'json',
-                                    type: 'post',
-                                    data: parameters
-                                })
-                                .done(self.handleNewPoint);
+                                url: '/api/points/initpoint',
+                                dataType: 'json',
+                                type: 'post',
+                                data: parameters
+                            }).done(self.handleNewPoint);
                         }
                     };
 
