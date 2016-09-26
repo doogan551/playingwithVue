@@ -1994,12 +1994,25 @@ var dti = {
                         dti.log(ko.toJS(bindings));
                     };
 
+                    bindings.doAcceptFilter = function () {
+                        var filterProperties = ['name1', 'name2', 'name3', 'name4'],
+                            filterObj = {
+                                pointTypes: self.getFlatPointTypes(ko.toJS(bindings.pointTypes))
+                            };
+
+                        dti.forEachArray(filterProperties, function buildFilterObj (prop) {
+                            filterObj[prop] = bindings[prop]();
+                        });
+
+                        // dti.log(ko.toJS(filterObj));
+                        dti.navigator.handleNavigatorRowClick(filterObj);
+                    };
+
                     bindings.togglePointTypeDropdown = function (obj, event) {
                         bindings.dropdownOpen(!bindings.dropdownOpen());
                         if (event) {
                             event.preventDefault();
                         }
-                        return false;
                     };
 
                     bindings.pointTypeChanged = function () {
@@ -2066,20 +2079,6 @@ var dti = {
                     bindings.storePointType = function storeNewPointType (object) {
                         bindings._newPointType = object;
                     };
-
-                    // bindings.newPointType = ko.pureComputed(function getNewPointType () {
-                    //     var selectedType;
-
-                    //     dti.forEachArray(bindings.explodedPointTypes(), function checkExplodedPointType (type) {
-                    //         var selected = type.selected();
-
-                    //         if (selected) {
-                    //             selectedType = type.key();
-                    //         }
-                    //     });
-
-                    //     return selectedType;
-                    // });
 
                     bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint () {
                         var uniqueName = bindings.points().length === 0,

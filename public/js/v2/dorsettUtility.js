@@ -107,22 +107,12 @@ var dtiUtility =  {
         dtiUtility.sendMessage('showPointSelector', parameters);
     },
 
-    showNavigator: function (parameters) {
-        // send message to navigator to open
-        // dtiUtility.utility.showNavigatorModal();
-        dtiUtility.sendMessage('navigatormodal', {
-            action: 'open',
-            callback: true,
-            parameters: parameters
-        });
-    },
+    showPointFilter: function (parameters) {
+        var params = parameters || {};
 
-    showNavigatorFilter: function () {
-        // send message to navigator to open
-        // dtiUtility.utility.showNavigatorModal();
-        dtiUtility.sendMessage('navigatorfiltermodal', {
-            action: 'open'
-        });
+        params.mode = 'filter';
+
+        dtiUtility.sendMessage('showPointSelector', params);  
     },
 
     onPointSelect: function (cb) {

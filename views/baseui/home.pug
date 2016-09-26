@@ -383,6 +383,7 @@ html
             .modal-content.modal-content-no-padding
             .modal-footer(data-bind="css: mode")
                 span.modalControls.filterActions
+                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="click: doAcceptFilter") Accept Filter
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
                 span.modalControls.createActions
                     a.waves-effect.blue-grey.btn(href="javascript://", data-bind="css: { disabled: !allowCreatePoint() }, click: doCreatePoint") Create Point
@@ -432,7 +433,7 @@ html
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
                         ul.dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }")
-                            // ko if: mode() === 'default'
+                            // ko if: mode() === 'default' || mode () === 'filter'
                             li
                                 input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
                                 label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
