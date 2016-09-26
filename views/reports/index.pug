@@ -41,61 +41,64 @@ block content
                             li.additionalFilters(role="presentation")
                                 a.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
                         div.configurationContent
-                            h5.strong.reportTitle(data-bind="text: reportDisplayTitle")
+                            div
+                                h6.strong.reportTitle(data-bind="text: reportDisplayTitle")
+                                .reporttype.tiny.center-align(data-bind="text: '(' + reportType + ')'")
                             div.tab-content
                                 div.reportAttribs#reportAttribs.active.tab-pane
+                                    .form-inline.blue-grey-text(style="display: inline-flex")
+                                        div.input-field.col
+                                            input.pointName1.form-control.input-md#pointName1(data-bind="enable: $root.canEdit(), textInput: $root.pointName1", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName1, attr: {for: 'pointName1'}") Name 1
+                                        div.input-field.col
+                                            input.pointName2.form-control.input-md#pointName2(data-bind="enable: $root.canEdit(), textInput: $root.pointName2", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName2, attr: {for: 'pointName2'}") Name 2
+                                        div.input-field.col
+                                            input.pointName3.form-control.input-md#pointName3(data-bind="enable: $root.canEdit(), textInput: $root.pointName3", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName3, attr: {for: 'pointName3'}") Name 3
+                                        div.input-field.col
+                                            input.pointName4.form-control.input-md#pointName4(data-bind="enable: $root.canEdit(), textInput: $root.pointName4", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName4, attr: {for: 'pointName4'}") Name 4
                                     .form-group.clearfix.direportgroup
-                                        h5.col-xs-2.control-label
-                                            strong.small.center-block.pull-right Point Name
-                                        .col-xs-10
-                                            .form-inline
-                                                input.pointName1.form-control.input-md(data-bind="enable: $root.canEdit()", required, type="text", style="width:22%")
-                                                input.pointName2.form-control.input-md(data-bind="enable: $root.canEdit()", required, type="text", style="width:22%")
-                                                input.pointName3.form-control.input-md(data-bind="enable: $root.canEdit()", type="text", style="width:22%")
-                                                input.pointName4.form-control.input-md(data-bind="enable: $root.canEdit()", type="text", style="width:22%")
-                                    .form-group.clearfix.direportgroup
-                                        h5.col-xs-2.control-label
-                                            strong.small.pull-right Report Title
-                                        .col-xs-10.reporttitlediv
-                                            input.form-control.input-md(data-bind="value: reportDisplayTitle, enable: $root.canEdit()")
-                                    .form-group.clearfix.direportgroup(style="display: inline-flex;margin-left: 61px;")
-                                        h5.col-xs-4.control-label
-                                            strong.small.pull-right Report Type
-                                        .col-xs-2.reporttype
-                                            medium(data-bind="text: reportType")
-                                        h5.col-xs-4.control-label
-                                            strong.small.pull-right # of entries per Page
-                                        .col-xs-2.entries
-                                            .dropdown.availableEntries(data-bind="css: {disabled: !$root.canEdit()}")
-                                                a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="enteriesDropdown")
-                                                    span.white-text(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
+                                        div.input-field.col
+                                            input.reportTitleInput.form-control.input-md#reportTitleInput(data-bind="enable: $root.canEdit(), textInput: $root.reportDisplayTitle", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName3, attr: {for: 'pointName3'}") Report Title
+                                    .form-group.clearfix
+                                        .numberOfEnteriesPerPage
+                                            h5.col-xs-3.col
+                                                strong.small.pull-right # of entries per Page
+                                            .col-xs-2.entries
+                                                .dropdown.availableEntries(data-bind="css: {disabled: !$root.canEdit()}")
+                                                    a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="enteriesDropdown")
+                                                        span.white-text(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
+                                                        // ko if: (listOfEntriesPerPage.length > 1)
+                                                        span.white-text.caret.lm10px
+                                                        // /ko
                                                     // ko if: (listOfEntriesPerPage.length > 1)
-                                                    span.white-text.caret.lm10px
+                                                    ul#enteriesDropdown.calculations.dropdown-content
+                                                        // ko foreach: listOfEntriesPerPage
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectNumberOfEntries($element, $data.value) }, text: $data.value")
+                                                        // /ko
                                                     // /ko
-                                                // ko if: (listOfEntriesPerPage.length > 1)
-                                                ul#enteriesDropdown.calculations.dropdown-content
-                                                    // ko foreach: listOfEntriesPerPage
-                                                    li
-                                                        a(data-bind="click: function(){ $root.selectNumberOfEntries($element, $data.value) }, text: $data.value")
-                                                    // /ko
-                                                // /ko
                                         // ko if: (chartable())
-                                        h5.col-xs-4.control-label
-                                            strong.small.pull-right Chart Type
-                                        .col-xs-2.chartTypes
-                                            .dropdown.availableChartTypes(data-bind="css: {disabled: !$root.canEdit()}")
-                                                a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypesDropdown")
-                                                    span.white-text(data-bind="text: selectedChartType()")
+                                        .numberOfEnteriesPerPage
+                                            h5.col-xs-3.col
+                                                strong.small.pull-right Chart Type
+                                            .col-xs-2.chartTypes
+                                                .dropdown.availableChartTypes(data-bind="css: {disabled: !$root.canEdit()}")
+                                                    a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypesDropdown")
+                                                        span.white-text(data-bind="text: selectedChartType()")
+                                                        // ko if: ($root.listOfChartTypes.length > 1)
+                                                        span.white-text.caret.lm10px
+                                                        // /ko
                                                     // ko if: ($root.listOfChartTypes.length > 1)
-                                                    span.white-text.caret.lm10px
+                                                    ul#chartTypesDropdown.chartTypes.dropdown-content
+                                                        // ko foreach: $root.listOfChartTypes
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectChartType($element, $data.value) }, text: $data.text")
+                                                        // /ko
                                                     // /ko
-                                                // ko if: ($root.listOfChartTypes.length > 1)
-                                                ul#chartTypesDropdown.chartTypes.dropdown-content
-                                                    // ko foreach: $root.listOfChartTypes
-                                                    li
-                                                        a(data-bind="click: function(){ $root.selectChartType($element, $data.value) }, text: $data.text")
-                                                    // /ko
-                                                // /ko
                                         // /ko
                                 div#reportColumns.tab-pane
                                     h4.strong.panel-title
@@ -340,7 +343,7 @@ block content
                                                     label.blue-grey-text.label-tight(data-bind="text: key, attr: { for: 'pointType' + $index() }")
                                                 // /ko
                                     // /ko
-                                div#additionalFilters.tab-pane
+                                div.additionalFilters#additionalFilters.tab-pane
                                     h4.strong.panel-title
                                         // ko if: (reportType === 'Property')
                                         table.filtersGrid.small.grid.table
@@ -411,10 +414,10 @@ block content
                                             span.intervalLabel.small Interval:&nbsp;
                                             input.intervalValue.form-control(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
                                             .dropdown.availableIntervalsContainer
-                                                a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-toggle="dropdown")
+                                                a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-activates="intervals")
                                                     span(data-bind="text: $root.interval")
                                                     span.caret.lm10px
-                                                ul#intervals.intervals.dropdown-menu
+                                                ul#intervals.intervals.dropdown-content
                                                     // ko foreach: $root.listOfIntervalsComputed()
                                                     li
                                                         a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
