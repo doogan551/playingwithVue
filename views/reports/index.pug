@@ -29,17 +29,17 @@ block content
                     .tabConfiguration
                         ul.nav.nav-tabs
                             li.attribs.active(role="presentation")
-                                a.strong.toggleTab(href="#reportAttribs", data-toggle="tab") Attributes
+                                a.strong.toggleTab.blue-grey-text(href="#reportAttribs", data-toggle="tab") Attributes
                             li.columns(role="presentation")
-                                a.strong.toggleTab(href="#reportColumns", data-toggle="tab") Columns
+                                a.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
                             li.columns2(role="presentation", style="display: none")
-                                a.strong.toggleTab(href="#gridConfig", data-toggle="tab") Grid
+                                a.strong.toggleTab.blue-grey-text(href="#gridConfig", data-toggle="tab") Grid
                             // ko if: (reportType === 'Property')
                             li.filterByPoint(role="presentation")
-                                a.strong.toggleTab(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
+                                a.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
                             // /ko
                             li.additionalFilters(role="presentation")
-                                a.strong.toggleTab(href="#additionalFilters", data-toggle="tab") Additional Filters
+                                a.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
                         div.configurationContent
                             h5.strong.reportTitle(data-bind="text: reportDisplayTitle")
                             div.tab-content
@@ -124,9 +124,9 @@ block content
                                                         // ko if: ($parent.reportType !== 'Property')
                                                         // ko if: ($root.canEdit())
                                                         a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.clearColumnPoint($index()) }, tooltip: { title: 'Clear' }")
-                                                            i.material-icons.tiny.center delete
+                                                            i.material-icons.tiny.center.blue-grey-text delete
                                                         a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.selectPointForColumn($data, $index) }, tooltip: { title: 'Edit' }")
-                                                            i.material-icons.tiny.center edit
+                                                            i.material-icons.tiny.center.blue-grey-text edit
                                                         // /ko
                                                         // ko if: (!!$data.softDeleted)
                                                         span [Deleted]&nbsp;
@@ -157,7 +157,7 @@ block content
                                                         // ko if: ($data.canCalculate)
                                                         // ko if: ($root.canEdit())
                                                         a.btn-mini.waves-effect.waves-light(data-bind="click: function(){ $parent.clearColumnCalculation($index()) }, tooltip: { title: 'Clear' }")
-                                                            i.tiny.material-icons.center delete
+                                                            i.tiny.material-icons.center.blue-grey-text delete
                                                         // /ko
                                                         .dropdown.availableCalculations(data-bind="css: {disabled: !$root.canEdit()}")
                                                             a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
@@ -197,7 +197,7 @@ block content
                                                         // /ko
                                                     td.includeInChart
                                                         // ko if: ($root.canEdit() && !!canBeCharted && canBeCharted)
-                                                        input.includeInChartColumn(data-bind="checked: includeInChart, enable: ($root.canEdit() && !!canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()} ", type="checkbox")
+                                                        input.includeInChartColumn.filled-in(data-bind="checked: includeInChart, enable: ($root.canEdit() && !!canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()} ", type="checkbox")
                                                         label(data-bind="attr: { for: 'includeInChart' + $index() }")
                                                         // /ko
                                                     td.yaxisChartGroup
@@ -219,7 +219,7 @@ block content
                                                     // /ko
                                                     // ko if: ($root.canEdit())
                                                     td.removecolumn
-                                                        a.span.removerow(data-bind="click: function () { $parent.deleteReportColumn($index()) }") Remove
+                                                        a.span.removerow.blue-grey-text(data-bind="click: function () { $parent.deleteReportColumn($index()) }") Remove
                                                     // /ko
                                             tbody
                                                 tr
@@ -388,7 +388,7 @@ block content
                                                             include filterValueUI
                                                     // ko if: ($root.canEdit())
                                                     td.removecolumn
-                                                        a.span.removerow(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") Remove
+                                                        a.span.removerow.blue-grey-text(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") Remove
                                                     // /ko
                                         // /ko
                                         // ko if: ($root.reportType === 'Property' && $root.canEdit())
@@ -478,7 +478,9 @@ block content
                                 .reportChartDiv
     .hiddenPlaceholder.hidden
         input.form-control.globalPrecision.hidden(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
-        input.form-control.globalChartCheckbox.hidden(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit()", type="checkbox")
+        div.globalIncludeInChart
+            input.form-control.filled-in.hidden(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit(), attr: {id : 'globalIncludeInChart' }", type="checkbox")
+            label.blue-grey-text.label-tight(data-bind="attr: { for: 'globalIncludeInChart' }")
         .globalcalculateColumnDropdown.hidden.dropdown.availableCalculations(data-bind="css: {disabled: !$root.canEdit()}")
             button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
                 span(data-bind="text: $root.globalcalculateColumnSelectedvalue()")

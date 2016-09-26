@@ -1859,7 +1859,7 @@ var reportsViewModel = function () {
             $additionalFilters = $direports.find("#additionalFilters");
             $hiddenPlaceholder = $direports.find(".hiddenPlaceholder");
             $globalPrecision = $hiddenPlaceholder.find("input.globalPrecision");
-            $globalIncludeInChart = $hiddenPlaceholder.find("input.globalChartCheckbox");
+            $globalIncludeInChart = $hiddenPlaceholder.find("div.globalIncludeInChart");
             $availableChartTypesChartTab = $direports.find(".availableChartTypes.chartTab");
             $reportChartDiv = $direports.find(".reportChartDiv");
         },

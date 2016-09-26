@@ -514,7 +514,7 @@ a.clearName i {
     width: 20%;
     float: left;
 }
-.pointTypesFilter .filled-in[type="checkbox"].filled-in:checked + label:after{
+.filled-in[type="checkbox"].filled-in:checked + label:after{
     border: 2px solid #607d8b;
     background-color: #607d8b;
 }
@@ -523,6 +523,10 @@ a.clearName i {
 }
 .selectorNames label {
     color: #607d8b;
+}
+.selectorNames .input-field.col label.active{
+    color: #607d8b;
+    /*border-bottom: 1px solid #607d8b;*/
 }
 div.input-field.col {
     padding-right: 10px;
@@ -662,6 +666,7 @@ input.form-control.inputPrecision {
 }
 .yaxisChartGroup {
     width: 32px;
+    min-width: 20px;
     text-align: center;
 }
 .yaxisGroups.dropdown-menu {
@@ -678,7 +683,7 @@ input.form-control.globalPrecision {
     width: 30px;
     padding: 2px 2px 2px 5px;
 }
-input.form-control.globalChartCheckbox {
+input.form-control.globalIncludeInChart {
     width: 14px;
     margin-left: 7px;
 }

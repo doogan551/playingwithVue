@@ -29,9 +29,9 @@ input.input.form-control.filterContainer(data-bind="value: value, enable: $root.
 // ko if: (valueType === "UniquePID")
 div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
    a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.clearFilterPoint($index()) }, tooltip: { title: 'Clear' }")
-      i.material-icons.tiny.center delete
+      i.material-icons.tiny.center.blue-grey-text delete
    a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.selectPointForFilter($data, $index) }, tooltip: { title: 'Edit' }")
-      i.material-icons.tiny.center edit
+      i.material-icons.tiny.center.blue-grey-text edit
    // ko if: (!!$data.softDeleted)
    span [Deleted]&nbsp;
    // /ko
@@ -64,7 +64,7 @@ div.durationCtrl
 // ko if: (valueType === "BitString")
 div.bitStringCtrl
    // ko foreach: bitStringEnumsArray
-   input.small.bitStringCheckbox(data-bind="checked: checked, enable: $root.canEdit(), attr: { id: 'filterBitString' + $parentContext.$index() + $index() }", type="checkbox")
+   input.small.bitStringCheckbox.filled-in(data-bind="checked: checked, enable: $root.canEdit(), attr: { id: 'filterBitString' + $parentContext.$index() + $index() }", type="checkbox")
    label.small.bitStringLabel(data-bind="text: name, attr: { for: 'filterBitString' + $parentContext.$index() + $index() }")
    br
    // /ko
