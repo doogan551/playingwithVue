@@ -163,7 +163,7 @@ input.durationCheckbox {
     vertical-align: middle;
 }
 div.reportAttribs.tab-pane {
-    padding-left: 10%;
+    padding-left: 1%;
     padding-top: 20px;
 }
 div.additionalFilters.tab-pane {
@@ -509,6 +509,13 @@ a.clearName {
 a.clearName i {
     margin-left: -24px;
 }
+.pointTypesFilter {
+    padding-top: 30px;
+}
+.adjustPointTypesFilterButton {
+    margin-top: 30px;
+    margin-bottom: 50px;
+}
 .pointTypesFilter ul {
     display: flex;
     flex-wrap: wrap;
@@ -534,6 +541,10 @@ a.clearName i {
 .selectorNames .input-field.col label.active{
     color: #607d8b;
     /*border-bottom: 1px solid #607d8b;*/
+}
+.selectorNames .form-control.readOnly {
+    color: #607d8b;
+    background-color: #dddddd;
 }
 div.input-field.col {
     padding-right: 10px;

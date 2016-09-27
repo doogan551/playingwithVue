@@ -43,7 +43,7 @@ block content
                         div.configurationContent
                             div
                                 h6.strong.reportTitle(data-bind="text: reportDisplayTitle")
-                                .reporttype.tiny.center-align(data-bind="text: '(' + reportType + ')'")
+                                .reporttype.tiny.center-align(data-bind="text: reportType")
                             div.tab-content
                                 div.reportAttribs#reportAttribs.active.tab-pane
                                     .form-inline.blue-grey-text(style="display: inline-flex")
@@ -307,41 +307,27 @@ block content
                                     // ko if: ($root.reportType === 'Property')
                                     h4.strong.panel-title
                                         .selectorNames
-                                            .form-inline.blue-grey-text(style="display: inline-flex")
+                                            .form-inline.black-text(style="display: inline-flex")
                                                 div.input-field.col
-                                                    input.form-control.input-md.name1Filter#name1Filter(data-bind="textInput: $root.name1Filter", type="text")
-                                                    label(data-bind="updateLabel: $root.name1Filter, attr: {for: 'name1Filter'}") Name 1
-                                                    a.clearName(data-bind="click: function () { $root.name1Filter(''); }, css : { hideDiv: $root.name1Filter() === '' }")
-                                                        i.material-icons.suffix clear
+                                                    input.black-text.form-control.input-md.readOnly.name1Filter#name1Filter(data-bind="textInput: $root.name1Filter, attr: {disabled: 'disabled'}", type="text")
+                                                    label.grey-text.active(data-bind="updateLabel: $root.name1Filter, attr: {for: 'name1Filter'}") Name 1
                                                 div.input-field.col
-                                                    input.form-control.input-md.name2Filter#name2Filter(data-bind="textInput: $root.name2Filter", type="text")
-                                                    label(data-bind="updateLabel: $root.name2Filter, attr: {for: 'name2Filter'}") Name 2
-                                                    a.clearName(data-bind="click: function () { $root.name2Filter(''); }, css : { hideDiv: $root.name2Filter() === '' }")
-                                                        i.material-icons.suffix clear
+                                                    input.black-text.form-control.input-md.readOnly.name2Filter#name2Filter(data-bind="textInput: $root.name2Filter, attr: {disabled: 'disabled'}", type="text")
+                                                    label.grey-text.active(data-bind="updateLabel: $root.name2Filter, attr: {for: 'name2Filter'}") Name 2
                                                 div.input-field.col
-                                                    input.form-control.input-md.name3Filter#name3Filter(data-bind="textInput: $root.name3Filter", type="text")
-                                                    label(data-bind="updateLabel: $root.name3Filter, attr: {for: 'name3Filter'}") Name 3
-                                                    a.clearName(data-bind="click: function () { $root.name3Filter(''); }, css : { hideDiv: $root.name3Filter() === '' }")
-                                                        i.material-icons.suffix clear
+                                                    input.black-text.form-control.input-md.readOnly.name3Filter#name3Filter(data-bind="textInput: $root.name3Filter, attr: {disabled: 'disabled'}", type="text")
+                                                    label.grey-text.active(data-bind="updateLabel: $root.name3Filter, attr: {for: 'name3Filter'}") Name 3
                                                 div.input-field.col
-                                                    input.form-control.input-md.name4Filter#name4Filter(data-bind="textInput: $root.name4Filter", type="text")
-                                                    label(data-bind="updateLabel: $root.name4Filter, attr: {for: 'name4Filter'}") Name 4
-                                                    a.clearName(data-bind="click: function () { $root.name4Filter(''); }, css : { hideDiv: $root.name4Filter() === '' }")
-                                                        i.material-icons.suffix clear
-                                                div.input-field.col
-                                                    a.btn-flat.waves-effect.waves-light.blue-grey.white-text.clearAll(data-bind="click: function () { $root.name1Filter(''); $root.name2Filter(''); $root.name3Filter(''); $root.name4Filter(''); }") Clear Names
-                                                        //i.material-icons.suffix clear
+                                                    input.black-text.form-control.input-md.readOnly.name4Filter#name4Filter(data-bind="textInput: $root.name4Filter, attr: {disabled: 'disabled'}", type="text")
+                                                    label.grey-text.active(data-bind="updateLabel: $root.name4Filter, attr: {for: 'name4Filter'}") Name 4
                                         div.pointTypesFilter
-                                            span.title Point Types
+                                            span.title Filtered Point Types
                                             ul
+                                                // ko foreach: $root.selectedPointTypesFilter
                                                 li
-                                                    input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : 'allPointTypes' }")
-                                                    label.blue-grey-text.label-tight(data-bind="attr: { for: 'allPointTypes' }") All
-                                                // ko foreach: $root.pointTypes
-                                                li
-                                                    input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : 'pointType' + $index() }")
-                                                    label.blue-grey-text.label-tight(data-bind="text: key, attr: { for: 'pointType' + $index() }")
+                                                    label.blue-grey-text.label-tight(data-bind="text: $data")
                                                 // /ko
+                                        a.btn-flat.waves-effect.waves-light.blue-grey.white-text.right-align.adjustPointTypesFilterButton(data-bind="click: $root.pointSelectorFilter") Point Type Filter
                                     // /ko
                                 div.additionalFilters#additionalFilters.tab-pane
                                     h4.strong.panel-title

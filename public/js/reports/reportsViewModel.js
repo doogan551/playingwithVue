@@ -1057,46 +1057,25 @@ var reportsViewModel = function () {
             dtiUtility.showPointSelector(parameters);
             dtiUtility.onPointSelect(pointSelectedCallback);
         },
-        filterOpenPointSelector = function () {
+        openPointSelectorFilterMode = function () {
             if (!scheduled) {
-                var url = '/pointLookup',
-                    tempObject = {
-                        upi: 0,
-                        valueType: "",
-                        colName: "",
-                        colDisplayName: ""
+                var parameters = {
+                        name1: self.name1Filter(),
+                        name2: self.name2Filter(),
+                        name3: self.name3Filter(),
+                        name4: self.name4Filter(),
+                        pointTypes: self.selectedPointTypesFilter()
                     },
-                    pointSelectedCallback = function (pid, name, type, filter) {
-                        if (!!pid) {
-                            tempObject.upi = pid;
-                            tempObject.valueType = "String";
-                            tempObject.colName = name;
-                            tempObject.colDisplayName = name.replace(/_/g, " ");
-                        }
+                    pointSelectedCallback = function (pointFilter) {
+                        self.name1Filter(pointFilter.name1);
+                        self.name2Filter(pointFilter.name2);
+                        self.name3Filter(pointFilter.name3);
+                        self.name4Filter(pointFilter.name4);
+                        self.selectedPointTypesFilter(pointFilter.pointTypes);
                     };
-                    // windowOpenedCallback = function () {
-                    //     pointSelectorRef.pointLookup.MODE = 'select';
-                    //     pointSelectorRef.pointLookup.init(pointSelectedCallback, self.pointFilter());
-                    //     if (self.selectedPointTypesFilter().length > 0) {
-                    //         pointSelectorRef.window.pointLookup.checkPointTypes(self.selectedPointTypesFilter());
-                    //     }
-                    //     if (!self.canEdit()) {
-                    //         var $allInputFields = $pointSelectorIframe.contents().find("input,button,textarea,select"),
-                    //             $pointTypesListBox = $pointSelectorIframe.contents().find("#pointTypes");
-                    //         $allInputFields.prop("disabled", true);
-                    //         // TODO still need to disable the listbox so selections can't change
-                    //         //$pointTypesListBox.addClass("jqx-disableselect");
-                    //         //var items = $pointTypesListBox.jqxListBox('getItems');
-                    //         //$pointTypesListBox.jqxListBox('disableAt', 0 );
-                    //     }
-                    // };
 
-                dtiUtility.showNavigator();
-
-                // pointSelectorRef = window.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'filter', {
-                //     callback: windowOpenedCallback,
-                //     width: 1000
-                // });
+                dtiUtility.showPointFilter(parameters);
+                dtiUtility.onPointSelect(pointSelectedCallback);
             }
         },
         getFilterAdjustedDatetime = function (filter) {
@@ -1484,7 +1463,7 @@ var reportsViewModel = function () {
                 tempPointTypes = $.extend(true, [], self.pointTypes());
 
             for (i = 0; i < tempPointTypes.length; i++) {
-                if (self.selectedPointTypesFilter.indexOf(tempPointTypes[i].key) > -1) {
+                if (self.selectedPointTypesFilter().indexOf(tempPointTypes[i].key) > -1) {
                     tempPointTypes[i].selected = true;
                 } else {
                     tempPointTypes[i].selected = false;
@@ -1732,14 +1711,15 @@ var reportsViewModel = function () {
                             };
                             break;
                         case "Property":
-                            var tempPointTypes =  $.extend(true, [], self.pointTypes());
+                            var tempPointTypes = $.extend(true, [], self.pointTypes()),
+                                tempSelectedPointTypesFilter = [];
 
-                            self.selectedPointTypesFilter = [];
                             for (i = 0; i < tempPointTypes.length; i++) {
                                 if (tempPointTypes[i].selected === true) {
-                                    self.selectedPointTypesFilter.push(tempPointTypes[i].key);
+                                    tempSelectedPointTypesFilter.push(tempPointTypes[i].key);
                                 }
                             }
+                            self.selectedPointTypesFilter(tempSelectedPointTypesFilter);
 
                             break;
                         default:
@@ -1752,7 +1732,7 @@ var reportsViewModel = function () {
                         "name2" : self.name2Filter(),
                         "name3" : self.name3Filter(),
                         "name4" : self.name4Filter(),
-                        "selectedPointTypes" : self.selectedPointTypesFilter
+                        "selectedPointTypes" : self.selectedPointTypesFilter()
                     };
                     point["Report Config"].columns = columns;
                     point["Report Config"].filters = filters;
@@ -2404,7 +2384,7 @@ var reportsViewModel = function () {
                 "name2" : self.name2Filter(),
                 "name3" : self.name3Filter(),
                 "name4" : self.name4Filter(),
-                "selectedPointTypes" : self.selectedPointTypesFilter
+                "selectedPointTypes" : self.selectedPointTypesFilter()
             };
             point["Report Config"].selectedPageLength = self.selectedPageLength();
             point["Report Config"].selectedChartType = self.selectedChartType();
@@ -3942,7 +3922,7 @@ var reportsViewModel = function () {
 
     self.name4Filter = ko.observable("");
 
-    self.selectedPointTypesFilter = [];
+    self.selectedPointTypesFilter = ko.observableArray([]);
 
     self.selectedDuration = ko.observable({
         startDate: moment(),
@@ -4080,7 +4060,7 @@ var reportsViewModel = function () {
                     self.name2Filter(reportConfig.pointFilter.name2);
                     self.name3Filter(reportConfig.pointFilter.name3);
                     self.name4Filter(reportConfig.pointFilter.name4);
-                    self.selectedPointTypesFilter = reportConfig.pointFilter.selectedPointTypes;
+                    self.selectedPointTypesFilter(reportConfig.pointFilter.selectedPointTypes);
                 }
                 self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
                 self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
@@ -4094,7 +4074,7 @@ var reportsViewModel = function () {
                         self.intervalValue(point["Report Config"].interval.value);
                         break;
                     case "Property":
-                        // filterOpenPointSelector($filterByPoint);
+                        //openPointSelectorFilterMode($filterByPoint);
                         initPointTypesFilter();
                         collectEnumProperties();
                         break;
@@ -4112,7 +4092,7 @@ var reportsViewModel = function () {
                     "name2" : self.name2Filter(),
                     "name3" : self.name3Filter(),
                     "name4" : self.name4Filter(),
-                    "selectedPointTypes" : self.selectedPointTypesFilter
+                    "selectedPointTypes" : self.selectedPointTypesFilter()
                 };
                 switch (self.reportType) {
                     case "History":
@@ -4127,7 +4107,7 @@ var reportsViewModel = function () {
                         configureSelectedDuration();
                         break;
                     case "Property":
-                        filterOpenPointSelector($filterByPoint);
+                        // openPointSelectorFilterMode($filterByPoint);
                         collectEnumProperties();
                         point["Report Config"].returnLimit = 4000;
                         self.listOfColumns.push(getNewColumnTemplate());
@@ -4317,6 +4297,10 @@ var reportsViewModel = function () {
             columnIndex = parseInt(currentIndex, 10);
 
         openPointSelectorForFilter(columnIndex);
+    };
+
+    self.pointSelectorFilter = function () {
+        openPointSelectorFilterMode();
     };
 
     self.showPointReviewViaIndex = function (index) {
@@ -4720,7 +4704,7 @@ var reportsViewModel = function () {
         return true;
     };
 
-    self.toggleAllPointTypes = function (element) {
+    self.toggleAllPointTypesDELETEME = function (element) {
         var i,
             allTypesSelected = self.allTypesSelected(),
             tempPointTypes = $.extend(true, [], self.pointTypes());
