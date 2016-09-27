@@ -312,7 +312,10 @@ var dti = {
 
         // },
         postProcess: function () {
-
+            if (dti.thumbnails.prevUpi) {
+                dti.fire('thumbnailCaptured', dti.thumbnails.prevUpi);
+                dti.thumbnails.prevUpi = null;
+            }
         },
         capture: function (obj) {
             var upi = obj.upi,
@@ -324,6 +327,8 @@ var dti = {
                 },
                 runCapture = function () {
                     dti.log('Capturing thumbnail');
+
+                    dti.thumbnails.prevUpi = upi;
 
                     gen.captureList([{
                         'id': upi,
@@ -653,6 +658,7 @@ var dti = {
                 return groupName;
             },
             close = function (event) {
+                dti.off('thumbnailCaptured', self.handleThumbnail);
                 self.bindings.minimize();
                 dti.bindings.openWindows[self.bindings.group()].remove(self.bindings);
 
@@ -707,6 +713,7 @@ var dti = {
                 self.bindings.url(url);
             },
             refresh = function () {
+                self.bindings.loading(true);
                 self.$iframe[0].contentWindow.location.reload();
             },
             getTitleForPoint = function (upi) {
@@ -762,6 +769,12 @@ var dti = {
                         callbacks[message.action]();
                     }
                 },
+                handleThumbnail: function (obj) {
+                    if (obj === self.bindings.upi()) {
+                        self.bindings.thumbnailFound(true);
+                        self.bindings.upi.valueHasMutated();
+                    }
+                },
                 onLoad: function (event) {
                     // var group = this.contentWindow.pointType;
                     // self.bindings.group(group);
@@ -805,6 +818,7 @@ var dti = {
         self.$iframe.attr('id', iframeId);
 
         dti.utility.addEvent(self.$iframe[0], 'load', self.onLoad);
+        dti.on('thumbnailCaptured', self.handleThumbnail);
 
         if (config.upi !== undefined && typeof config.upi === 'number') {
             self.bindings.upi(config.upi);
