@@ -104,6 +104,19 @@ var dti = {
                     width: '85%',
                     height: '85%'
                 }
+            },
+            'ThumbnailGenerator': {
+                title: 'Thumbnails',
+                iconText: 'photo_camera',
+                iconClass: 'material-icons',
+                group: 'Thumbnails',
+                standalone: true,
+                singleton: true,
+                url: '/thumbnail/batch',
+                adminOnly: true,
+                options: {
+                    width: 1000
+                }
             }
         }
     },
@@ -2963,6 +2976,11 @@ var dti = {
         startMenuItems: ko.observableArray([]),
         windowsHidden: ko.observable(false),
         taskbarShown: ko.observable(true),
+        hasAccess: function (obj) {
+            var cfg = ko.toJS(obj.value);
+
+            return !cfg.adminOnly || dti.workspaceManager.user()['System Admin'].Value === true;
+        },
         // showNavigator: function () {
         //     dti.navigator.showNavigator();
         // },

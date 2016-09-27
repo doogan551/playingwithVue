@@ -158,11 +158,13 @@ html
             #startmenu.z-depth-3.white.lighten-3.white-text
                 .startmenuBody
                     .tileList(data-bind="foreachprop: startMenuItems")
+                        // ko if: $root.hasAccess($data)
                         // ko with: value
                         a.hoverable.dti-menu-tile.card-panel.z-depth-1.blue-grey(href='javascript://', data-bind="click: $root.startMenuClick")
                             i.center-align(data-bind="css: iconClass, text: iconText")
                             span(data-bind="text: title")             
-                        // /ko       
+                        // /ko
+                        // /ko
 
                     .recentItems
                         .col.s12.blue-grey-text Recent Items
