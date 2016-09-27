@@ -60,6 +60,8 @@ app.use(bodyParser.urlencoded({
 var storage = multer.memoryStorage();
 var upload = multer({ storage: storage });
 
+app.use(upload.array());
+
 app.engine('pug', require('pug').__express);
 app.set('view engine', 'pug');
 
