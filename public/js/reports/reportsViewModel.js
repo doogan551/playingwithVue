@@ -422,7 +422,7 @@ var reportsViewModel = function () {
         exportLandscape = true,
         headerAdjusted = false,
         Name = "dorsett.reportUI",
-        getPointURL = "/api/points/getpoint",
+        getPointURL = "/api/points/",
         originalPoint = {},
         pointFilterSearch = {
             name1: "",
@@ -475,7 +475,7 @@ var reportsViewModel = function () {
                 point["Point Refs"].push(tempRef);
             } else {
                 if (!!refPointUPI) {
-                    ajaxPost({pointid: refPointUPI}, getPointURL, pushNewReferencedPoint);
+                    ajaxCall("GET", null, getPointURL + refPointUPI, pushNewReferencedPoint);
                 }
                 console.log("setNewPointReference() refPointUPI = " + refPointUPI + " property = " + property + "  refPoint = " + refPoint);
             }
@@ -652,10 +652,35 @@ var reportsViewModel = function () {
                 });
             return uuid;
         },
+        noExponents = function (theNumber) {
+            var data = String(theNumber).split(/[eE]/);
+
+            if (data.length === 1) {
+                return data[0];
+            }
+
+            var z = "", sign = theNumber < 0 ? "-" : "",
+                str = data[0].replace(".", ""),
+                mag = Number(data[1]) + 1;
+
+            if (mag < 0) {
+                z = sign + "0.";
+                while (mag++) {
+                    z += "0";
+                }
+                return z + str.replace(/^\-/, "");
+            }
+            mag -= str.length;
+            while (mag--) {
+                z += "0";
+            }
+
+            return str + z;
+        },
         toFixed = function (number, p) {
             var precision = parseInt(p, 10),
-                abs = Math.abs(parseFloat(number, 10)),
-                str = abs.toString(),
+                abs = Math.abs(parseFloat(number)),
+                str = noExponents(abs),
                 digits = str.split(".")[1],
                 negative = number < 0,
                 lastNumber,
@@ -853,14 +878,14 @@ var reportsViewModel = function () {
 
             return filters;
         },
-        ajaxPost = function (input, url, callback) {
+        ajaxCall = function (type, input, url, callback) {
             self.activeRequestDataDrawn(false);
             $.ajax({
                 url: url,
-                type: "POST",
+                type: type,
                 contentType: "application/json",
                 dataType: "json",
-                data: JSON.stringify(input)
+                data: (!!input ? JSON.stringify(input) : null)
             }).done(function (returnData) {
                 if (callback) {
                     callback.call(self, returnData);
@@ -939,7 +964,7 @@ var reportsViewModel = function () {
                 },
                 pointSelectedCallback = function (pointInfo) {
                     if (!!pointInfo) {
-                        ajaxPost({pointid: pointInfo._id}, getPointURL, setColumnPoint);
+                        ajaxCall("GET", null, getPointURL + pointInfo._id, setColumnPoint);
                     }
                     // pointFilterSearch.name1 = filter.filter1;
                     // pointFilterSearch.name2 = filter.filter2;
@@ -1008,7 +1033,7 @@ var reportsViewModel = function () {
                 },
                 pointSelectedCallback = function (pointInfo) {
                     if (!!pointInfo) {
-                        ajaxPost({pointid: pointInfo._id}, getPointURL, setColumnPoint);
+                        ajaxCall("GET", null, getPointURL + pointInfo._id, setColumnPoint);
                     }
                     // pointFilterSearch.name1 = filter.filter1;
                     // pointFilterSearch.name2 = filter.filter2;
@@ -1046,7 +1071,7 @@ var reportsViewModel = function () {
                 },
                 pointSelectedCallback = function (pointInfo) {
                     if (!!pointInfo) {
-                        ajaxPost({pointid: pointInfo._id}, getPointURL, setFilterPoint);
+                        ajaxCall("GET", null, getPointURL + pointInfo._id, setFilterPoint);
                     }
                     // pointFilterSearch.name1 = filter.filter1;
                     // pointFilterSearch.name2 = filter.filter2;
@@ -1956,6 +1981,7 @@ var reportsViewModel = function () {
                         result.Value = $customField.html();
                         break;
                     case "Float":
+                    case "Double":
                     case "Integer":
                         if ($.isNumeric(rawValue)) {
                             result.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
@@ -2418,9 +2444,7 @@ var reportsViewModel = function () {
             }
         },
         setReportEvents = function () {
-            var i,
-                numberOfRowsPerPage,
-                intervals,
+            var intervals,
                 calculations,
                 entriesPerPage,
                 chartTypes,
@@ -4326,15 +4350,15 @@ var reportsViewModel = function () {
                         reportData = undefined;
                         switch (self.reportType) {
                             case "History":
-                                ajaxPost(requestObj, dataUrl + "/report/historyDataSearch", renderHistoryReport);
+                                ajaxCall("POST", requestObj, dataUrl + "/report/historyDataSearch", renderHistoryReport);
                                 //reportSocket.emit("historyDataSearch", {options: requestObj});
                                 break;
                             case "Totalizer":
-                                ajaxPost(requestObj, dataUrl + "/report/totalizerReport", renderTotalizerReport);
+                                ajaxCall("POST", requestObj, dataUrl + "/report/totalizerReport", renderTotalizerReport);
                                 //reportSocket.emit("totalizerReport", {options: requestObj});
                                 break;
                             case "Property":
-                                ajaxPost(requestObj, dataUrl + "/report/reportSearch", renderPropertyReport);
+                                ajaxCall("POST", requestObj, dataUrl + "/report/reportSearch", renderPropertyReport);
                                 //reportSocket.emit("reportSearch", {options: requestObj});
                                 break;
                             default:
