@@ -104,6 +104,19 @@ var dti = {
                     width: '85%',
                     height: '85%'
                 }
+            },
+            'ThumbnailGenerator': {
+                title: 'Thumbnails',
+                iconText: 'photo_camera',
+                iconClass: 'material-icons',
+                group: 'Thumbnails',
+                standalone: true,
+                singleton: true,
+                url: '/thumbnail/batch',
+                adminOnly: true,
+                options: {
+                    width: 1000
+                }
             }
         }
     },
@@ -291,6 +304,60 @@ var dti = {
         }
     },
     thumbs: {
+    },
+    thumbnails: {
+        $window: $('#thumbnailGen'),
+        currUpi: null,
+        // init: function () {
+
+        // },
+        postProcess: function () {
+            if (dti.thumbnails.prevUpi) {
+                dti.fire('thumbnailCaptured', dti.thumbnails.prevUpi);
+                dti.thumbnails.prevUpi = null;
+            }
+        },
+        capture: function (obj) {
+            var upi = obj.upi,
+                name = obj.name,
+                type = obj.type.toLowerCase(),
+                gen,
+                setGen = function () {
+                    gen = dti.thumbnails.thumbnailWindowRef.thumbnailGenerator;
+                },
+                runCapture = function () {
+                    dti.log('Capturing thumbnail');
+
+                    dti.thumbnails.prevUpi = upi;
+
+                    gen.captureList([{
+                        'id': upi,
+                        'name': name,
+                        'type': type,
+                        'tn': false
+                    }]);
+                    // gen.hasQueued = false;
+                    // gen.retainQueue = true;
+                    // gen.thumbnailCallback = closeOut;
+                    gen.nextCapture();
+                },
+                init = function () {
+                    setGen();
+
+                    gen.thumbnailCallback = dti.thumbnails.postProcess;  
+
+                    runCapture();
+                };
+
+            if (!dti.thumbnails.thumbnailWindowRef) {
+                dti.thumbnails.thumbnailWindowRef = dti.thumbnails.$window[0].contentWindow;
+                dti.utility.addEvent(dti.thumbnails.$window[0], 'load', init);
+                dti.thumbnails.$window.attr('src', window.location.origin + '/thumbnail/' + upi);
+            } else {
+                setGen();
+                runCapture();
+            }
+        }
     },
     animations: {
         tempinit: function () {
@@ -557,19 +624,19 @@ var dti = {
                     }
 
                     if (obj.right) {
-                        if (obj.right - (obj.left || 0) >  containerWidth) {
+                        if (parseInt(obj.right, 10) - (parseInt(obj.left || 0), 10) >  containerWidth) {
                             obj.left = containerPadding;
                             obj.right = containerPadding;
                             obj.width = containerWidth - (2 * containerPadding);
                         }
                     } else {
-                        if ((obj.left || 0) + obj.width > containerWidth) {
+                        if (parseInt(obj.left || 0, 10) + parseInt(obj.width, 10) > containerWidth) {
                             obj.width = containerWidth;
                             obj.left = containerPadding;
                         }
                     }
 
-                    if ((obj.top || 0) + obj.height > containerHeight) {
+                    if (parseInt(obj.top || 0, 10) + parseInt(obj.height, 10) > containerHeight) {
                         obj.height = containerHeight;
                         obj.top = containerPadding;
                     }
@@ -591,6 +658,7 @@ var dti = {
                 return groupName;
             },
             close = function (event) {
+                dti.off('thumbnailCaptured', self.handleThumbnail);
                 self.bindings.minimize();
                 dti.bindings.openWindows[self.bindings.group()].remove(self.bindings);
 
@@ -645,6 +713,7 @@ var dti = {
                 self.bindings.url(url);
             },
             refresh = function () {
+                self.bindings.loading(true);
                 self.$iframe[0].contentWindow.location.reload();
             },
             getTitleForPoint = function (upi) {
@@ -669,6 +738,7 @@ var dti = {
                     minimized: ko.observable(false),
                     loading: ko.observable(true),
                     windowsHidden: dti.bindings.windowsHidden,
+                    hidden: false,
                     close: close,
                     iconClass: ko.observable(),
                     iconText: ko.observable(),
@@ -697,6 +767,12 @@ var dti = {
 
                     if (callbacks[message.action]) {
                         callbacks[message.action]();
+                    }
+                },
+                handleThumbnail: function (obj) {
+                    if (obj === self.bindings.upi()) {
+                        self.bindings.thumbnailFound(true);
+                        self.bindings.upi.valueHasMutated();
                     }
                 },
                 onLoad: function (event) {
@@ -742,6 +818,7 @@ var dti = {
         self.$iframe.attr('id', iframeId);
 
         dti.utility.addEvent(self.$iframe[0], 'load', self.onLoad);
+        dti.on('thumbnailCaptured', self.handleThumbnail);
 
         if (config.upi !== undefined && typeof config.upi === 'number') {
             self.bindings.upi(config.upi);
@@ -900,7 +977,9 @@ var dti = {
 
             targetWindow = dti.windows.getWindowById(winId);
 
-            targetWindow.handleMessage(e);
+            if (targetWindow) {
+                targetWindow.handleMessage(e);
+            }
         },
         create: function (config) {
             var newWindow;
@@ -1046,6 +1125,7 @@ var dti = {
                     openWindows = dti.bindings.openWindows[group]();
 
                 if (openWindows.length === 0) {
+                    dti.fire('hideMenus');
                     dti.bindings.windowGroups.remove(function removeWindowGroup (item) {
                         return item.group() === group && item.pinned() === false;
                     });
@@ -1178,7 +1258,10 @@ var dti = {
 
             if (!obj.standalone) {
                 dti.settings._workspaceNav = true;
-                dti.bindings.showNavigator(obj.group, true);
+                dti.bindings.showNavigator({
+                    pointType: obj.group,
+                    retainNames: true
+                });
             } else {
                 if (obj.singleton) {
                     openWindows = dti.windows.getWindowsByType(obj.group);
@@ -2271,11 +2354,17 @@ var dti = {
                     config = $.extend(defaultConfig, cfg || {}),
                     propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
 
+                if (cfg.pointType && !cfg.pointTypes) {
+                    config.pointTypes = [cfg.pointType];
+                }
+
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
 
                 self.applyPointTypes(config.pointTypes);
 
-                self.applyPointNames(config);
+                if (!config.retainNames) {
+                    self.applyPointNames(config);
+                }
 
                 dti.forEachArray(propertiesToApply, function applyProperty (prop) {
                     self.bindings[prop](config[prop]);
@@ -2437,9 +2526,9 @@ var dti = {
             };
 
             dti.events.bodyClick(function checkNavigatorOpenMenu (event, $target) {
-                var buttonClass = '.pointTypeDropdownButton';
+                var buttonClass = 'pointTypeDropdownButton';
 
-                if (self.bindings.dropdownOpen() && $target.parents('.dropdown-content').length === 0 && !$target.hasClass(buttonClass) && $target.parents(buttonClass).length === 0) {
+                if (self.bindings.dropdownOpen() && $target.parents('.dropdown-content').length === 0 && !$target.hasClass(buttonClass) && $target.closest('.' + buttonClass).length === 0) {
                     self.bindings.dropdownOpen(false);
                 }
             });
@@ -2901,6 +2990,11 @@ var dti = {
         startMenuItems: ko.observableArray([]),
         windowsHidden: ko.observable(false),
         taskbarShown: ko.observable(true),
+        hasAccess: function (obj) {
+            var cfg = ko.toJS(obj.value);
+
+            return !cfg.adminOnly || dti.workspaceManager.user()['System Admin'].Value === true;
+        },
         // showNavigator: function () {
         //     dti.navigator.showNavigator();
         // },
@@ -3574,6 +3668,6 @@ dti.workspaceManager = window.workspaceManager = {
         return JSON.parse(JSON.stringify(dti.bindings.user()));
     },
     captureThumbnail: function () {
-        dti.log('thumbnail placeholder');
+        dti.thumbnails.capture.apply(this, arguments);
     }
 };

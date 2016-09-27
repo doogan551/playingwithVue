@@ -468,6 +468,12 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     display: block;
 }
 
+.ui-resizable-resizing .windowMask .iframeFull, 
+.ui-draggable-dragging .windowMask .iframeFull,
+.interacting .windowMask .iframeFull {
+    display: none;
+}
+
 .loading .windowMask {
     background-color: rgba(0, 0, 0, .5);
 }
