@@ -2802,7 +2802,7 @@ gpl.blocks.SPA = fabric.util.createClass(gpl.Block, {
             icon;
 
         if (data) {
-            reverseActing = data['Reverse Action'].Value;
+            reverseActing = data['Reverse Action'] && data['Reverse Action'].Value;
             icon = this._icon.split('.');
 
             if (reverseActing) {
@@ -6765,12 +6765,12 @@ gpl.Manager = function () {
                         currInitStep++;
                         setTimeout(function () {
                             // lastInit = new Date();
-                            log('Running next init:' + initFn);
+                            // log('Running next init:' + initFn);
                             managerSelf[initFn]();
                             doNextInit();
                         }, initDelay);
                     } else {
-                        log('Finished init functions');
+                        // log('Finished init functions');
                         managerSelf.getBoundingBox();
                         gpl.skipEventLog = false;
 
