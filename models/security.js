@@ -29,9 +29,9 @@ var Users = {
     var username = data.username;
     var password;
 
-    if(!!data.oldPassword){
+    if (!!data.oldPassword) {
       password = data.Password;
-    }else{
+    } else {
       password = utils.encrypt(data.Password);
     }
 
@@ -330,8 +330,8 @@ var Users = {
       for (var key in updateData) {
         if (key === 'Contact Info') {
           var contact = updateData[key];
-          for(var c = 0; c<contact.length; c++){
-            if(['SMS','Voice'].indexOf(contact[c].Type) >= 0){
+          for (var c = 0; c < contact.length; c++) {
+            if (['SMS', 'Voice'].indexOf(contact[c].Type) >= 0) {
               contact[c].Value = contact[c].Value.match(/\d+/g).join('');
             }
           }
@@ -1947,6 +1947,47 @@ module.exports = {
           message: "success"
         });
       });*/
+    }
+  },
+  Utility: {
+    getPermissions: function(data, cb) {
+      if (!!data.user["System Admin"].Value) {
+        return cb(null, true);
+      }
+      var userId = ObjectID(data.user._id);
+      var points = [];
+
+      var calcPermissions = function(groups) {
+        var points = {};
+        for (var g = 0; g < groups.length; g++) {
+          var pAccess = groups[g]._pAccess;
+          var gPoints = groups[g].points;
+          for (var gPoint in gPoints) {
+            points[gPoint] = points[gPoint] | pAccess;
+          }
+        }
+        return points;
+      };
+
+      var queryStr = 'Users.' + userId;
+      var query = {};
+      query[queryStr] = {
+        $exists: 1
+      };
+
+      Utility.get({
+        collection: 'User Groups',
+        query: query
+      }, function(err, groups) {
+        if (err || !groups.length) {
+          console.log(err || 'no groups');
+          return cb(err, false);
+        } else {
+          var pointPerm = calcPermissions(groups);
+          return cb(err, pointPerm);
+        }
+      });
+
     }
   }
 };

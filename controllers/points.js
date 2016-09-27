@@ -65,7 +65,7 @@ router.post('/search', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
 
-  Point.newSearch(data, function(err, points) {
+  Point.search(data, function(err, points) {
     if (err) return utils.sendResponse(res, {
       err: err
     });
@@ -74,11 +74,11 @@ router.post('/search', function(req, res) {
 });
 // Checked
 // TODO - change routes to remove '2'
-router.get('/searchdependencies2/:upi', function(req, res) {
+router.get('/searchdependencies/:upi', function(req, res) {
   var data = _.merge(req.params, req.body, req.query);
   data.user = req.user;
 
-  Point.searchDependencies2(data, function(err, result) {
+  Point.searchDependencies(data, function(err, result) {
     if (err) return utils.sendResponse(res, {
       err: err
     });

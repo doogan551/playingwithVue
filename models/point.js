@@ -1,5 +1,6 @@
 var db = require('../helpers/db');
 var Utility = require('../models/utility');
+var Security = require('../models/security');
 var Config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
 var async = require('async');
@@ -33,8 +34,8 @@ module.exports = {
     /*searchCriteria._pStatus = {
         $in: [0, 1]
     };*/
-    getPermissions(data, function(err, permissions) {
-      console.log(upi, permissions);
+    Security.Utility.getPermissions(data, function(err, permissions) {
+
       if (permissions === true || permissions.hasOwnProperty(upi)) {
         Utility.get({
           query: searchCriteria,
@@ -51,6 +52,11 @@ module.exports = {
           if (!point) {
             return cb(null, "No Point Found", null);
           } else {
+            if (permissions !== true) {
+              point._pAccess = permissions[point._id];
+            } else {
+              point._pAccess = 15;
+            }
             return cb(null, null, point);
           }
 
@@ -133,8 +139,7 @@ module.exports = {
     cb(locals);
   },
 
-  newSearch: function(data, cb) {
-    console.time('test');
+  search: function(data, cb) {
     //Group IDs the user belongs to
     var userGroupIDs = data.user.groups.map(function(group) {
       return group._id.toString();
@@ -256,38 +261,22 @@ module.exports = {
 
       return query;
     };
-    getPermissions(data, function(err, permissions) {
-      if (err || permissions === false) {
-        cb(err || permissions);
-      }
 
-      console.timeEnd('test');
-      console.time('test');
-      var query = buildQuery();
 
-      var points = [];
-      Utility.iterateCursor({
-        collection: 'points',
-        query: query,
-        sort: sort,
-        fields: projection
-      }, function(err, doc, next) {
-        doc.pointType = doc['Point Type'].Value;
-        if (!isSysAdmin) {
-          if (permissions.hasOwnProperty(doc._id)) {
-            doc._pAccess = permissions[doc._id];
-            points.push(doc);
-          }
-        } else {
-          doc._pAccess = 15;
-          points.push(doc);
-        }
-        next(err, points.length >= 200 || false);
+    var criteria = {
+      collection: 'points',
+      query: buildQuery(),
+      sort: sort,
+      _limit: limit,
+      fields: projection,
+      data: data
+    };
 
-      }, function(err, count) {
-        console.timeEnd('test');
-        cb(err, points);
+    Utility.getWithSecurity(criteria, function(err, points, count) {
+      points.forEach(function(point) {
+        point.pointType = point['Point Type'].Value;
       });
+      return cb(err, points, count);
     });
   },
 
@@ -301,15 +290,12 @@ module.exports = {
         _id: 1,
         _pStatus: 1,
         'Point Type.Value': 1,
-        name1: 1,
-        name2: 1,
-        name3: 1,
-        name4: 1,
-        _parentUpi: 1
-      }
+        Name: 1
+      },
+      data: data,
+      _skip: data.skip || 0,
+      _limit: data.limit || 200
     };
-    var skip = data.skip || 0;
-    var isSysAdmin = data.user["System Admin"].Value;
     var searchTerm;
 
     for (searchTerm in data.searchTerms) {
@@ -320,37 +306,7 @@ module.exports = {
       });
     }
 
-    getPermissions(data, function(err, permissions) {
-      if (err || permissions === false) {
-        cb(err || permissions);
-      }
-      console.log(criteria);
-      var points = [];
-      Utility.iterateCursor(criteria, function(err, doc, next) {
-        console.log(doc._id);
-        if (!isSysAdmin) {
-          if (permissions.hasOwnProperty(doc._id)) {
-            doc._pAccess = permissions[doc._id];
-            if (skip > 0) {
-              skip--;
-            } else {
-              points.push(doc);
-            }
-          }
-        } else {
-          doc._pAccess = 15;
-          if (skip > 0) {
-            skip--;
-          } else {
-            points.push(doc);
-          }
-        }
-        next(err, points.length >= (data.limit || 50) || false);
-
-      }, function(err, count) {
-        cb(err, points, count);
-      });
-    });
+    Utility.getWithSecurity(criteria, cb);
 
     // return cb(null, [data.searchTerms]);
     // function(req, res, next) {
@@ -382,7 +338,7 @@ module.exports = {
     //   });
     // }
   },
-  searchDependencies2: function(data, cb) {
+  searchDependencies: function(data, cb) {
     var refs = [];
     var returnObj = {
       target: {},
@@ -600,27 +556,6 @@ module.exports = {
       };
       Utility.getOne(criteria, callback);
     }, cb);
-  },
-  getPoint: function(data, cb) {
-    var pointid = parseInt(data.pointid, 10);
-
-    var searchCriteria = {
-      '_id': pointid,
-      _pStatus: 0
-    };
-
-    if (data.user["System Admin"].Value !== true && data.user["System Admin"].Value !== "true") {
-      searchCriteria.Security = {
-        $in: req["User Groups"]
-      };
-    }
-
-    var criteria = {
-      collection: 'points',
-      query: searchCriteria
-    };
-
-    Utility.getOne(criteria, cb);
   },
   initPoint: function(data, cb) {
     var criteria = {};
@@ -1141,59 +1076,6 @@ module.exports = {
       });
     }
   }
-};
-
-var getPermissions = function(data, cb) {
-  var _user = data.user;
-  if (!!data.user["System Admin"].Value) {
-    return cb(null, true);
-  }
-  var points = [];
-
-  var calcPermissions = function(user, groups) {
-    var points = {};
-    for (var g = 0; g < groups.length; g++) {
-      var pAccess = groups[g]._pAccess;
-      var gPoints = groups[g].points;
-      for (var gPoint in gPoints) {
-        points[gPoint] = points[gPoint] | pAccess;
-      }
-    }
-    return points;
-  };
-
-  Utility.getOne({
-    collection: 'Users',
-    query: {
-      username: _user.username
-    }
-  }, function(err, user) {
-    if (err || !user) {
-      console.log(err || 'no user');
-    } else {
-      var groups = [];
-      for (var group in user.groups) {
-        groups.push(ObjectID(group));
-      }
-      Utility.get({
-        collection: 'User Groups',
-        query: {
-          _id: {
-            $in: groups
-          }
-        }
-      }, function(err, groups) {
-        if (err || !groups.length) {
-          console.log(err || 'no groups');
-          cb(err, false);
-        } else {
-          var pointPerm = calcPermissions(user, groups);
-          cb(err, pointPerm);
-        }
-      });
-    }
-
-  });
 };
 
 exports.getInitialVals = function(id, cb) {

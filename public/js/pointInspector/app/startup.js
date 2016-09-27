@@ -594,17 +594,7 @@ define([
         }
     };
     pointInspector.authorize = function(data, requestedAccessLevel) {
-        var cumulativePermissions = 0,
-            user = workspace.user(),
-            groups = user.groups.filter(function(item) { return !!~data.Security.indexOf(item._id); }),
-            isSystemAdmin = user['System Admin'].Value;
-
-        if (isSystemAdmin) return true;
-
-        for(var i = 0, last = groups.length; i < last; i++) {
-            cumulativePermissions |= groups[i]._pAccess;
-        }
-        return !!(cumulativePermissions & requestedAccessLevel);
+        return !!(data._pAccess & requestedAccessLevel);
     };
 
     pointInspector.isSystemAdmin = function() {
