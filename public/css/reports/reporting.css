@@ -6,14 +6,13 @@
     height: 100%;
     color: #ffffff;
     background-color: rgb(200, 190, 170);
-    border-right: 2px solid #696969;
 }
 .leftBar a {
     /*padding-top: 0px;*/
 }
 .rightPanel {
     z-index: 0;
-    padding: 0px 0px 5px 96px;
+    padding: 0px 0px 5px 88px;
     position: relative;
     width: 100%;
 }
@@ -105,7 +104,6 @@ input.input.form-control.durationDateRangeTime {
 .reportDisplayTitle {
     margin-top: 2px;
 }
-
 .direports > body > ul.dt-button-collection.dropdown-menu {
     width: 100px;
     min-width: 90px;
@@ -163,6 +161,14 @@ span.durationLabel {
 input.durationCheckbox {
     margin-left: 8px;
     vertical-align: middle;
+}
+div.reportAttribs.tab-pane {
+    padding-left: 1%;
+    padding-top: 20px;
+}
+div.additionalFilters.tab-pane {
+    padding-left: 5%;
+    padding-top: 20px;
 }
 .hideDurationDropdown {
     display: none;
@@ -470,18 +476,18 @@ input.input.form-control.filterContainer:enabled {
     color: #333;
     margin-top: 10px;
 }
-.btn-default.dropdown-toggle.operatorButton {
+.btn-flat.dropdown-toggle.operatorButton {
     border: none;
 }
-.btn-default.dropdown-toggle.conditionButton {
+.btn-flat.dropdown-toggle.conditionButton {
     border: none;
     padding-left: 3px;
     padding-right: 3px;
     border-radius: 0px 18px 18px 0px;
     margin-left: 4px;
 }
-.btn-default.dropdown-toggle.conditionButton.orCondition {
-    border-radius: 18px;
+.btn-flat.dropdown-toggle.conditionButton.orCondition {
+    border-radius: 0px 9px 9px 0px;
 }
 span.caret.lm10px {
     margin-left: 3px;
@@ -497,6 +503,53 @@ span.caret.lm10px {
 a.tab {
     color: #ffffff;
 }
+a.clearName {
+    cursor: pointer;
+}
+a.clearName i {
+    margin-left: -24px;
+}
+.pointTypesFilter {
+    padding-top: 30px;
+}
+.adjustPointTypesFilterButton {
+    margin-top: 30px;
+    margin-bottom: 50px;
+}
+.pointTypesFilter ul {
+    display: flex;
+    flex-wrap: wrap;
+    width: 80vw !important;
+    right: 30px;
+    padding-top: 10px;
+}
+.pointTypesFilter ul li {
+    clear: none;
+    width: 20%;
+    float: left;
+}
+.filled-in[type="checkbox"].filled-in:checked + label:after{
+    border: 2px solid #607d8b;
+    background-color: #607d8b;
+}
+.selectorNames .form-control {
+    color: #607d8b;
+}
+.selectorNames label {
+    color: #607d8b;
+}
+.selectorNames .input-field.col label.active{
+    color: #607d8b;
+    /*border-bottom: 1px solid #607d8b;*/
+}
+.selectorNames .form-control.readOnly {
+    color: #607d8b;
+    background-color: #dddddd;
+}
+div.input-field.col {
+    padding-right: 10px;
+}
+
 html, body {
     overflow-x: hidden;
     overflow-y: hidden;
@@ -631,6 +684,7 @@ input.form-control.inputPrecision {
 }
 .yaxisChartGroup {
     width: 32px;
+    min-width: 20px;
     text-align: center;
 }
 .yaxisGroups.dropdown-menu {
@@ -647,7 +701,7 @@ input.form-control.globalPrecision {
     width: 30px;
     padding: 2px 2px 2px 5px;
 }
-input.form-control.globalChartCheckbox {
+input.form-control.globalIncludeInChart {
     width: 14px;
     margin-left: 7px;
 }
@@ -797,7 +851,10 @@ input.form-control.columnDisplayName {
     cursor: pointer;
 }
 .reporttype {
-    margin-top: 8px;
+    margin-top: -14px;
+    background-color: #dddddd;
+    font-style: italic;
+    font-size: 12px;
 }
 .reportTitle {
     background-color: #dddddd;

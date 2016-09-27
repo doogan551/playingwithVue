@@ -481,23 +481,19 @@ var dti = {
     keyboardShortcuts: {
         _lastInit: true,
         init: function () {
-            var shortcutEntries,
-                shortcut,
-                key,
-                len,
-                i;
+            dti.forEach(dti.keyboardShortcuts.shortcuts, function (shortcutEntries, keyCombo) {
+                dti.forEachArray(shortcutEntries, function (shortcut) {
+                    var elements = shortcut.elements || document;
 
-            for (key in dti.keyboardShortcuts.shortcuts) {
-                shortcutEntries = dti.keyboardShortcuts.shortcuts[key];
-                len = shortcutEntries.length;
+                    if (!Array.isArray(elements)) {
+                        elements = [elements];
+                    }
 
-                for (i = 0; i < len; i++) {
-                    shortcut = shortcutEntries[i];
-                    el = shortcut.element || document;
-
-                    $(el).bind(shortcut.type, key, shortcut.fn);
-                }
-            }
+                    dti.forEachArray(elements, function (el) {
+                        $(el).bind(shortcut.type, keyCombo, shortcut.fn);
+                    });
+                });
+            });
         },
         shortcuts: {
             'shift+space': [{
@@ -506,14 +502,11 @@ var dti = {
             }],
             'shift+p': [{
                 type: 'keydown',
-                fn: function () {dti.navigatorNew.showNavigator();}
+                fn: function () {dti.navigator.showNavigator();}
             }],
             'esc': [{
                 type: 'keyup',
-                fn: function () {dti.globalSearch.hide();}
-            }, {
-                type: 'keyup',
-                element: '#searchNavbar input',
+                elements: [document, '#searchNavbar input'],
                 fn: function () {dti.globalSearch.hide();}
             }]
         }
@@ -534,15 +527,15 @@ var dti = {
                     return x + 'px';
                 }
             },
-            prepMeasurements = function (inConfig) {
+            prepMeasurements = function (inConfig, bindings) {
                 var cfg = inConfig || config,
-                    container = $(dti.windows.draggableConfig.containment),
-                    containerWidth = container.width(),
-                    containerHeight = container.height(),
-                    containerPadding = parseFloat(container.css('padding'), 10),
+                    $container = $(dti.windows.draggableConfig.containment),
+                    containerWidth = $container.width(),
+                    containerHeight = $container.height(),
+                    containerPadding = parseFloat($container.css('padding'), 10),
                     obj = {
-                        left: cfg.left,
-                        top: cfg.top
+                        left: cfg.left || bindings.left(),
+                        top: cfg.top || bindings.top()
                     };
 
                 if (cfg.fullScreen) {
@@ -696,7 +689,7 @@ var dti = {
                             self.bindings.title(message.parameters);
                         },
                         resize: function () {
-                            var measurements = prepMeasurements(message.parameters);
+                            var measurements = prepMeasurements(message.parameters, self.bindings);
 
                             ko.viewmodel.updateFromModel(self.bindings, measurements);
                         }
@@ -1060,6 +1053,12 @@ var dti = {
             });
 
             // dti.bindings.windowGroups(pinnedItems);
+        },
+        show: function () {
+            dti.bindings.taskbarShown(true);
+        },
+        hide: function () {
+            dti.bindings.taskbarShown(false);
         },
         addWindow: function (win) {
             var group = win.bindings.group();
@@ -1564,13 +1563,18 @@ var dti = {
         $resultsEl: $('#globalSearchResults'),
         $inputEl: null, // Element added to the DOM in globalSearch.init()
         $chips: $('#searchNavbar .chips'),
+        $clearAllChipEl: $('#searchNavbar .clearAllChip'),
         visible: false,
         searchTerms: {},
         chipsTimeoutID: 0,
         scrollTimeoutID: 0,
         reqID: 0,
+        performingNewSearch: true,
         options: {
-            highlightNameMatch: true
+            highlightNameMatch: true,
+            maximumResultsShown: 1000, // Maximum number of results we'll get/show in the DOM
+            infiniteScrollThreshold: 0.75, // Scroll within 75% of page bottom auto-gets more results
+            manualLoadThreshold: 200 // Infinite scroll is temporary replaced by manual load every [this many] results
         },
         init: function () {
             var bindings = dti.bindings.globalSearch;
@@ -1581,55 +1585,61 @@ var dti = {
             });
 
             dti.globalSearch.$chips.on('chip.add', function (e, chip) {
-                console.log('Added chip', chip);
                 dti.globalSearch.searchTerms[chip.tag] = 1;
+                dti.globalSearch.performingNewSearch = true;
                 dti.globalSearch.doSearch();
+                dti.globalSearch.$clearAllChipEl.removeClass('hide');
             });
 
             dti.globalSearch.$chips.on('chip.delete', function (e, chip) {
-                console.log('Deleting chip', chip);
                 delete dti.globalSearch.searchTerms[chip.tag];
                 window.clearTimeout(dti.globalSearch.chipsTimeoutID);
 
                 // We need to clear our request ID immediately in case a previous request
                 // is in route
                 dti.globalSearch.reqID = 0;
-
-                bindings.showSummary(false);
-                bindings.showError(false);
-                bindings.showLoadMoreResultsButton(false);
-                bindings.count(0);
-                bindings.searchResults.removeAll();
+                // Set our flag indicating we're going to perform a new search
+                dti.globalSearch.performingNewSearch = true;
+                // We signal the UI that we're getting data even though we're not yet because
+                // it has a glitchy feel if the search doesn't appear to begin immediately
+                // after we've changed our search criteria
+                bindings.gettingData(true);
 
                 if (Object.keys(dti.globalSearch.searchTerms).length) {
-                    bindings.gettingData(true);
                     dti.globalSearch.chipsTimeoutID = window.setTimeout(function () {
                         dti.globalSearch.doSearch();
                     }, 750);
                 } else {
                     bindings.gettingData(false);
+                    dti.globalSearch.$clearAllChipEl.addClass('hide');
                 }
             });
 
             dti.globalSearch.$inputEl = $('#searchNavbar input');
 
             dti.globalSearch.$resultsEl.scroll(function handleScroll () {
+                var numberOfResultsShown = bindings.searchResults().length;
+
                 window.clearTimeout(dti.globalSearch.scrollTimeoutID);
+
+                // If we're already in the process of getting data, or we've reached our maximum nubmer of results, get out of here!
+                if (bindings.gettingData() || (numberOfResultsShown >= dti.globalSearch.options.maximumResultsShown)) {
+                    return;
+                }
 
                 dti.globalSearch.scrollTimeoutID = window.setTimeout(function () {
                     var $resultsEl = dti.globalSearch.$resultsEl,
                         totalHeight = $resultsEl[0].scrollHeight,
                         visibleHeight = $resultsEl[0].clientHeight,
                         scrollTop = $resultsEl.scrollTop(),
-                        totalNumberOfResults = bindings.count(),
-                        numberOfResultsShown = bindings.searchResults().length;
+                        totalNumberOfResults = bindings.count();
 
-                    // If we're scrolled within 10% of page bottom
-                    if ((scrollTop + visibleHeight) >= (totalHeight * 0.9)) {
+                    // If we're scrolled within [infiniteScrollThreshold]% of page bottom
+                    if ((scrollTop + visibleHeight) >= (totalHeight * dti.globalSearch.options.infiniteScrollThreshold)) {
                         // If we have more results on the server
                         if (numberOfResultsShown < totalNumberOfResults) {
-                            // If we've haven't gathered another 200 results
-                            if (numberOfResultsShown % 200) {
+                            // If we've haven't gathered another [manualLoadThreshold] results
+                            if (numberOfResultsShown % dti.globalSearch.options.manualLoadThreshold) {
                                 // Auto-get more results
                                 dti.globalSearch.doSearch(true);
                             } else {
@@ -1640,13 +1650,53 @@ var dti = {
                     }
                 }, 100);
             });
+
+            // Add a click handler for our 'Clear All' chip button
+            dti.globalSearch.$clearAllChipEl.click(function handleClick (e) {
+                dti.globalSearch.clear();
+                dti.globalSearch.$inputEl.focus();
+            });
+
+            // Subscribe to our gettingData observable so we can setup the UI accordingly
+            bindings.gettingData.subscribe(function whatAmI (gettingData) {
+                var resultsEl;
+
+                if (gettingData) { // Search started
+                    bindings.showError(false);
+                    bindings.showLoadMoreResultsButton(false);
+
+                    if (dti.globalSearch.performingNewSearch) {
+                        bindings.showSummary(false);
+                        bindings.count(0);
+                        bindings.searchResults.removeAll();
+                    }
+                } else { // Search finished
+                    if (!bindings.showError() && Object.keys(dti.globalSearch.searchTerms).length) {
+                        bindings.showSummary(true);
+
+                        resultsEl = dti.globalSearch.$resultsEl.get(0);
+                        // If scroll bar isn't visible
+                        if (resultsEl.scrollHeight <= resultsEl.clientHeight) {
+                            // If we have more results on the server
+                            if (bindings.count() > bindings.searchResults().length) {
+                                // We do this because normally the scroll event triggers loading of 
+                                // more results. But since the scroll bar isn't visible, we need to 
+                                // let the user do it manually
+                                bindings.showLoadMoreResultsButton(true);
+                            }
+                        }
+                    }
+                }
+            });
         },
         show: function () {
             dti.globalSearch.visible = true;
             dti.fire('hideWindows');
+            dti.fire('hideMenus');
 
             dti.animations.fadeIn(dti.globalSearch.$taskbarEl, function focusSearchInput () {
                 dti.globalSearch.$inputEl.focus();
+                dti.taskbar.hide();
             });
 
             dti.animations.fadeIn(dti.globalSearch.$resultsEl);
@@ -1655,20 +1705,14 @@ var dti = {
             if (dti.globalSearch.visible) {
                 dti.globalSearch.visible = false;
                 dti.fire('unhideWindows');
+                dti.taskbar.show();
 
                 dti.animations.fadeOut(dti.globalSearch.$taskbarEl);
                 dti.animations.fadeOut(dti.globalSearch.$resultsEl, function resetSearch () {
                     if (doNotResetResults) {
                         return;
                     }
-                    var $_chips = dti.globalSearch.$chips,
-                        chipsIndex = $_chips.data('index'),
-                        len = $_chips.data('chips').length;
-
-                    // Remove all chips (search terms)
-                    while (len--) {
-                        $_chips.deleteChip(chipsIndex, 0, $_chips);
-                    }
+                    dti.globalSearch.clear();
                 });
             }
         },
@@ -1681,8 +1725,8 @@ var dti = {
                     limit: 50
                 },
                 handleError = function (errorMessage) {
-                    bindings.searchResults.removeAll();
-                    bindings.showSummary(false);
+                    // bindings.searchResults.removeAll();
+                    // bindings.showSummary(false);
 
                     bindings.errorMessage(errorMessage);
                     bindings.showError(true);
@@ -1710,17 +1754,16 @@ var dti = {
                     }
                 };
 
+            // Clear our timers just to make sure we don't encounter any unexpected race conditions
+            window.clearTimeout(dti.globalSearch.scrollTimeoutID);
+            window.clearTimeout(dti.globalSearch.chipsTimeoutID);
+
             dti.globalSearch.reqID = data.reqID;
             
-            if (appendResults) {
+            if (!dti.globalSearch.performingNewSearch) {
                 data.skip = bindings.searchResults().length;
-            } else {
-                bindings.searchResults.removeAll();
-                bindings.showSummary(false);
             }
 
-            bindings.showError(false);
-            bindings.showLoadMoreResultsButton(false);
             bindings.gettingData(true);
 
             $.ajax({
@@ -1746,25 +1789,13 @@ var dti = {
 
                     data.points.forEach(processPoint);
 
-                    if (appendResults) {
-                        bindings.searchResults(bindings.searchResults().concat(data.points));
-                    } else {
+                    if (dti.globalSearch.performingNewSearch) {
                         bindings.searchResults(data.points);
-
-                        resultsEl = dti.globalSearch.$resultsEl.get(0);
-                        // If scroll bar isn't visible
-                        if (resultsEl.scrollHeight <= resultsEl.clientHeight) {
-                            // If we have more results on the server
-                            if (data.count > data.points.length) {
-                                // We do this because normally the scroll event triggers loading of 
-                                // more results. But since the scroll bar isn't visible, we need to 
-                                // let the user do it manually
-                                bindings.showLoadMoreResultsButton(true);
-                            }
-                        }
+                    } else {
+                        bindings.searchResults(bindings.searchResults().concat(data.points));
                     }
+                    dti.globalSearch.performingNewSearch = false;
                     bindings.count(data.count);
-                    bindings.showSummary(true);
                 }
             ).fail(
                 function globalSearchFail (jqXHR, textStatus, errorThrown) {
@@ -1776,6 +1807,16 @@ var dti = {
                     bindings.gettingData(false);
                 }
             );
+        },
+        clear: function () {
+            var $chips = dti.globalSearch.$chips,
+                chipsIndex = $chips.data('index'),
+                len = $chips.data('chips').length;
+
+            // Remove all chips (search terms)
+            while (len--) {
+                $chips.deleteChip(chipsIndex, 0, $chips);
+            }
         },
         openPoint: function (data) {
             dti.windows.openWindow({
@@ -1829,10 +1870,9 @@ var dti = {
             });
         }
     },
-    navigatorNew: {
+    navigator: {
         _lastInit: true,
         _navigators: {},
-        $navigatorModalNew: $('#navigatorModalNew'),
         temporaryCallback: null,
         defaultClickHandler: function (pointInfo) {
             var endPoint = dti.utility.getEndpoint(pointInfo.pointType, pointInfo._id),
@@ -1843,16 +1883,16 @@ var dti = {
             dti.windows.openWindow(endPoint.review.url, name, pointInfo.pointType, null, pointInfo._id, options);
         },
         handleNavigatorRowClick: function (pointInfo) {
-            dti.navigatorNew.hideNavigator();
+            dti.navigator.hideNavigator();
 
-            if (dti.navigatorNew.temporaryCallback) {
-                if (typeof dti.navigatorNew.temporaryCallback === 'function') {
-                    dti.navigatorNew.temporaryCallback(pointInfo);
-                    dti.navigatorNew.temporaryCallback = null;
+            if (dti.navigator.temporaryCallback) {
+                if (typeof dti.navigator.temporaryCallback === 'function') {
+                    dti.navigator.temporaryCallback(pointInfo);
+                    dti.navigator.temporaryCallback = null;
                 }
                 
             } else {
-                dti.navigatorNew.defaultClickHandler(pointInfo);
+                dti.navigator.defaultClickHandler(pointInfo);
             }
         },
         showNavigator: function (cfg) {
@@ -1864,7 +1904,7 @@ var dti = {
                 };
             } else {
                 if (config.callback) {
-                    dti.navigatorNew.temporaryCallback = config.callback;
+                    dti.navigator.temporaryCallback = config.callback;
                 }
 
                 if (config.pointType && config.property) {
@@ -1872,11 +1912,11 @@ var dti = {
                 }
             }
 
-            dti.navigatorNew.commonNavigator.applyConfig(config);
-            dti.navigatorNew.$commonNavigatorModal.openModal(config);
+            dti.navigator.commonNavigator.applyConfig(config);
+            dti.navigator.$commonNavigatorModal.openModal(config);
         },
         hideNavigator: function () {
-            dti.navigatorNew.$navigatorModalNew.closeModal();
+            dti.navigator.$commonNavigatorModal.closeModal();
         },
         //config contains container
         Navigator: function (config) {
@@ -1898,105 +1938,134 @@ var dti = {
                             dropdownOpen: false,
                             fetchingPoints: false,
                             points: [],
-                            mode: 'default',
+                            mode: self.modes.DEFAULT,
                             deviceId: null,
                             remoteUnitId: null,
-                            id: self.id
-                        };
+                            id: self.id,
+                            disableCreatePoint: false,
+                            loading: false
+                        },
+                        explodedPointTypes = [];
 
-                    dti.forEachArray(pointTypes, function addSelectedToPointType(type) {
+                    dti.forEachArray(pointTypes, function addSelectedToPointType (type) {
+                        var subTypes = dti.utility.subPointTypes[type.key],
+                            newType;
+
                         type.selected = true;
                         type.visible = true;
+
+                        //process sub types if exist
+                        if (subTypes) {
+                            dti.forEachArray(subTypes, function buildSubType (subType) {
+                                var newSubType = {
+                                    key: type.key + ' (' + subType.name + ')',
+                                    enum: subType.value,
+                                    selected: false,
+                                    visible: true,
+                                    _type: type.key,
+                                    _subType: subType.name
+                                };
+
+                                explodedPointTypes.push(newSubType);
+                            });
+                        } else {
+                            newType = $.extend(true, {}, type);
+                            newType.selected = false;
+                            explodedPointTypes.push(newType);
+                        }
                     });
 
                     bindings.pointTypes = pointTypes;
+                    bindings._newPointType = explodedPointTypes[0];
+                    bindings.newPointType = explodedPointTypes[0].key;
+                    explodedPointTypes[0].selected = true;
+                    bindings.explodedPointTypes = explodedPointTypes;
 
                     self.defaultConfig = bindings;
 
                     //build observable viewmodel so computeds have access to observables
                     bindings = ko.viewmodel.fromModel(bindings);
 
+                    bindings.createPoint = function () {
+                        // self.bindings.explodedPointTypes()[0].selected(true);
+                        self.bindings.mode(self.modes.CREATE);
+                    };
+
+                    bindings.doCreatePoint = function () {
+                        var filterProperties = ['name1', 'name2', 'name3', 'name4'],
+                            newPointType = ko.toJS(bindings._newPointType),
+                            parameters = {
+                                pointType: newPointType._type || newPointType.key,
+                                subType: newPointType._subType
+                            };
+
+                        if (bindings.allowCreatePoint()) {
+                            bindings.disableCreatePoint(true);
+                            bindings.loading(true);
+
+                            dti.forEachArray(filterProperties, function buildFilterObj (prop) {
+                                parameters[prop] = bindings[prop]();
+                            });
+
+                            self._createPointParameters = parameters;
+
+                            $.ajax({
+                                url: '/api/points/initpoint',
+                                dataType: 'json',
+                                type: 'post',
+                                data: parameters
+                            }).done(self.handleNewPoint);
+                        }
+                    };
+
+                    bindings.doAcceptFilter = function () {
+                        var filterProperties = ['name1', 'name2', 'name3', 'name4'],
+                            filterObj = {
+                                pointTypes: self.getFlatPointTypes(ko.toJS(bindings.pointTypes))
+                            };
+
+                        dti.forEachArray(filterProperties, function buildFilterObj (prop) {
+                            filterObj[prop] = bindings[prop]();
+                        });
+
+                        // dti.log(ko.toJS(filterObj));
+                        dti.navigator.handleNavigatorRowClick(filterObj);
+                    };
+
                     bindings.togglePointTypeDropdown = function (obj, event) {
-                        bindings.dropdownOpen(!bindings.dropdownOpen());
-                        event.preventDefault();
-                        return false;
-                    };
+                        var dropdownShown = bindings.dropdownOpen();
 
-                    bindings.openPointTypeDropdown = function (obj, event) {
-                        // if (!self.$dropdownButton) {
-                        //     self.initDropdownButton();
-                        // }
+                        bindings.dropdownOpen(!dropdownShown);
 
-                        if (self._dropdownOpen) {
-                            bindings.closePointTypeDropdown();
+                        if (event) {
                             event.preventDefault();
-                            event.stopPropagation();
-                            return false;
-                        } else {
-                            setTimeout(function doOpenDropdown () {
-                                self.$dropdownButton.trigger('open');
-                                self._dropdownOpen = true;
-                            }, 1);
                         }
                     };
-
-                    bindings.closePointTypeDropdown = function () {
-                        self.$dropdownButton.trigger('close');
-                        self._dropdownOpen = false;
-
-                        if (self.pointTypeChanged) {
-                            // dti.log('point type changed, getting points');
-                            self.getPoints();
-                        }
-
-                        self.pointTypeChanged = false;
-                    };
-
-                    // bindings.onDropdownHide = function () {
-                        
-                    // };
 
                     bindings.pointTypeChanged = function () {
                         self.pointTypeChanged = true;
+                        self.getPoints();
                     };
 
                     bindings.pointTypeInvert = function (type) {
-                        bindings.pointTypeChanged();
+                        self._pauseRequest = true;
                         self.applyPointTypes(type);
+                        self._pauseRequest = false;
+                        bindings.pointTypeChanged();
                     };
 
                     bindings.toggleAllPointTypes = function () {
                         var types = bindings.pointTypes();
-                        // var numChecked = 0,
-                        //     numVisible = 0,
-                        //     types = bindings.pointTypes(),
-                        //     toSet;
 
-                        // dti.forEachArray(types, function checkPointType(type) {
-                        //     if (type.visible()) {
-                        //         numVisible++;
-                        //     }
-
-                        //     if (type.selected()) {
-                        //         numChecked++;
-                        //     }
-                        // });
-
-                        // if (numChecked === types.length) {
-                        //     toSet = false;
-                        // } else if (numChecked === 0) {
-                        //     toSet = true;
-                        // } else if (numChecked > numVisible / 2) {
-                        //     toSet = true;
-                        // } else {
-                        //     toSet = false;
-                        // }
+                        self._pauseRequest = true;
 
                         dti.forEachArray(types, function doCheckPointType(type) {
                             if (type.visible()) {
                                 type.selected(true);
                             }
                         });
+
+                        self._pauseRequest = false;
 
                         bindings.pointTypeChanged();
                     };
@@ -2015,11 +2084,11 @@ var dti = {
                             if (point !== self.bindings) {
                                 //valid click
                                 switch (bindings.mode()) {
-                                    case 'default':
-                                        dti.navigatorNew.handleNavigatorRowClick(point);
+                                    case self.modes.DEFAULT:
+                                        dti.navigator.handleNavigatorRowClick(point);
                                         break;
-                                    case 'filter':
-                                    case 'create':
+                                    case self.modes.FILTER:
+                                    case self.modes.CREATE:
                                         dti.log(point);
                                         break;
                                 }
@@ -2037,9 +2106,38 @@ var dti = {
 
                     bindings.clearBinding = function (binding) {
                         if (self.bindings[binding]) {
-                            self.bindings[binding](null);
+                            self.bindings[binding]('');
                         }
                     };
+
+                    bindings.storePointType = function storeNewPointType (object) {
+                        bindings._newPointType = object;
+                        return true;
+                    };
+
+                    bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint () {
+                        var uniqueName = bindings.points().length === 0,
+                            disabled = bindings.disableCreatePoint(),
+                            c,
+                            tmpName,
+                            noGaps = true,
+                            hasValue = 0;
+
+                        for (c = 4; c; c--) {
+                            tmpName = bindings['name' + c]() || '';
+                            if (hasValue) {
+                                if (!tmpName.length) {
+                                    noGaps = false;
+                                }
+                            } else {
+                                if (tmpName.length) {
+                                    hasValue = c;
+                                }
+                            }
+                        }
+
+                        return uniqueName && hasValue && noGaps && !disabled;
+                    });
 
                     bindings.allTypesSelected = ko.pureComputed(function allPointTypesSelected() {
                         var currTypes = bindings.pointTypes(),
@@ -2079,10 +2177,15 @@ var dti = {
                     });
 
                     bindings.pointTypesChanged = ko.pureComputed(function pointTypeHasChanged () {
-                        var currTypes = bindings.pointTypes();
+                        var currTypes = bindings.pointTypes(),
+                            pointTypeChangedInterceptor = function () {
+                                if (!self._pauseRequest) {
+                                    bindings.pointTypeChanged.apply(this, arguments);
+                                }
+                            };
 
                         dti.forEachArray(currTypes, function subscribeToCheck (type) {
-                            type.selected.subscribe(bindings.pointTypeChanged);
+                            type.selected.subscribe(pointTypeChangedInterceptor);
                         });
 
                         return true;
@@ -2093,16 +2196,20 @@ var dti = {
                             selectedTypes = [],
                             ret;
 
-                        dti.forEachArray(currTypes, function isTypeChecked(type) {
-                            if (type.selected()) {
-                                selectedTypes.push(type.key());
-                            }
-                        });
-
-                        if (selectedTypes.length === 1) {
-                            ret = selectedTypes[0];
+                        if (bindings.mode() === self.modes.CREATE) {
+                            ret = bindings.newPointType();
                         } else {
-                            ret = (selectedTypes.length === currTypes.length ? 'All' : selectedTypes.length) + ' Point Types';
+                            dti.forEachArray(currTypes, function isTypeChecked(type) {
+                                if (type.selected()) {
+                                    selectedTypes.push(type.key());
+                                }
+                            });
+
+                            if (selectedTypes.length === 1) {
+                                ret = selectedTypes[0];
+                            } else {
+                                ret = (selectedTypes.length === currTypes.length ? 'All' : selectedTypes.length) + ' Point Types';
+                            }
                         }
 
                         return ret;
@@ -2113,6 +2220,12 @@ var dti = {
 
             $.extend(self, config);
 
+            self.modes = {
+                CREATE: 'create',
+                FILTER: 'filter',
+                DEFAULT: 'default'
+            };
+
             // if (self.$modal) {
             //     self.$footer = self.$modal.find('.modal-footer');
             // }
@@ -2122,6 +2235,7 @@ var dti = {
             self.bindings = getBindings();
 
             self.applyPointTypes = function (types, exclusive) {
+                self._pauseRequest = true;
                 if (types && types.length > 0) {
                     dti.forEachArray(self.bindings.pointTypes(), function isPointTypeChecked (type) {
                         var isFound = types.indexOf(type.key()) > -1;
@@ -2135,6 +2249,7 @@ var dti = {
                         type.selected(isFound);
                     });
                 }
+                self._pauseRequest = false;
             };
 
             self.applyPointNames = function (config) {
@@ -2154,13 +2269,17 @@ var dti = {
             self.applyConfig = function (cfg) {
                 var defaultConfig = $.extend({}, self.defaultConfig),
                     config = $.extend(defaultConfig, cfg || {}),
-                    propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId'];
+                    propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
 
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
 
                 self.applyPointTypes(config.pointTypes);
 
                 self.applyPointNames(config);
+
+                dti.forEachArray(propertiesToApply, function applyProperty (prop) {
+                    self.bindings[prop](config[prop]);
+                });
 
                 self.getPoints();
             };
@@ -2173,6 +2292,29 @@ var dti = {
                     self.bindings.fetchingPoints(false);
                 }, 250);
                 // dti.log(response);
+            };
+
+            self.handleNewPoint = function (data) {
+                if (data.err) {
+                    dti.log(data.err);
+                    self.bindings.disableCreatePoint(false);
+                } else {
+
+                    var params = self._createPointParameters,
+                        endPoint = dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(params.pointType, data._id),
+                        handoffMode = endPoint.edit || endPoint.review;
+
+                    dti.windows.openWindow({
+                        url: handoffMode.url,
+                        title: data.Name,
+                        pointType: params.pointType,
+                        upi: data._id,
+                        options: {
+                            height: 750,
+                            width: 1250
+                        }
+                    });
+                }
             };
 
             self.getFlatPointTypes = function (pointTypes) {
@@ -2316,241 +2458,36 @@ var dti = {
             return $(markup);
         },
         createNavigator: function (isModal) {
-            var templateMarkup = dti.navigatorNew.getTemplate('#navigatorTemplate'),
+            var templateMarkup = dti.navigator.getTemplate('#navigatorTemplate'),
                 navigatorMarkup,
                 navigator,
                 $container = (isModal === true) ? $('main') : isModal;
 
             if (isModal) {
-                navigatorModalMarkup = dti.navigatorNew.getTemplate('#navigatorModalTemplate');
+                navigatorModalMarkup = dti.navigator.getTemplate('#navigatorModalTemplate');
                 $container.append(navigatorModalMarkup);
                 $container = navigatorModalMarkup;
-                dti.navigatorNew.$commonNavigatorModal = $container;
+                dti.navigator.$commonNavigatorModal = $container;
                 $container.find('.modal-content').append(templateMarkup);
                 // $container.leanModal();
             } else {
                 $container.append(templateMarkup);
             }
 
-            navigator = new dti.navigatorNew.Navigator({
+            navigator = new dti.navigator.Navigator({
                 $container: $container
             });
 
             $container.data('navigatorId', navigator.id);
 
-            dti.navigatorNew._navigators[navigator.id] = navigator;
+            dti.navigator._navigators[navigator.id] = navigator;
 
             // Materialize.updateTextFields();
 
             return navigator;
         },
         init: function () {
-            dti.navigatorNew.commonNavigator = dti.navigatorNew.createNavigator(true);
-        }
-    },
-    navigator: {
-        $navigatorModalIframe: $('#navigatorModal iframe'),
-        $navigatorFilterModalIframe: $('#navigatorFilterModal iframe'),
-        $navigatorModal: $('#navigatorModal'),
-        $navigatorFilterModal: $('#navigatorFilterModal'),
-        applyNavigatorFilter: function (config) {
-            var types,
-                pointType = config.pointType, 
-                pointLookup = config.pointLookup, 
-                isStartMenu = config.isStartMenu,
-                property = config.property,
-                parameters = dti.navigator._navigatorParameters,
-                processedTypes = [];
-
-            if (parameters && parameters.pointTypes) {
-                types = parameters.pointTypes;
-                // pointLookup.POINTTYPES = pointTypes;
-                // pointLookup.POINTTYPE = pointType;
-            } else {
-                if (pointType && pointType !== 'Point') {
-                    if (!Array.isArray(pointType)) {
-                        types = [pointType];
-                    } else {
-                        types = pointType;
-                    }
-                } else {
-                    types = ['all'];
-                }
-            }
-
-            if (pointLookup.MODE !== 'filter') {
-                if (!isStartMenu) {
-                    pointLookup.MODE = 'select';
-                } else {
-                    pointLookup.MODE = null;
-                }
-            }
-
-            pointLookup.checkPointTypes(types);
-            pointLookup.refreshUI();
-        },
-        acceptNavigatorFilter: function () {
-            var filter = dti.navigator._currNavigatorFilter,
-                message = dti.navigator._navigatorMessage;
-
-            dti.messaging.sendMessage({
-                key: message._windowId,
-                value: {
-                    action: 'pointFilterSelected',
-                    filter: filter
-                }
-            });
-        },
-        showNavigatorModalNew: function () {
-            dti.navigator.$navigatorModalNew.openModal();
-        },
-        // showNavigatorNew: function (config) {
-        //     dti.navigator.showNavigatorModalNew();
-        // },
-        showNavigator: function (config, isStart, isSelect) {
-            var pointType,
-                isStartMenu = isStart,
-                isSelectOnly = isSelect,
-                callback;
-
-            if (typeof config === 'string') {
-                pointType = config;
-            } else {
-                if (config) {
-                    pointType = config.pointType;
-                    isStartMenu = config.isStartMenu;
-                    isSelectOnly = config.isSelectOnly;
-                    dti.navigator.navigatorCallback = config.callback || false;
-                }
-            }
-
-            dti.fire('hideMenus');
-            dti.navigator.showNavigatorModal(pointType, isStartMenu, isSelectOnly);
-        },
-        hideNavigator: function () {
-            if (dti._navigatorWindow) {
-                dti._navigatorWindow.bindings.minimized(true);
-            }
-        },
-        initNavigatorFilterModal: function () {
-            var $el = dti.navigator.$navigatorFilterModalIframe[0],
-                initModalLookup = function () {
-                    var navigatorFilterInterval;
-
-                    navigatorFilterInterval = setInterval(function initNavigatorFilter () {
-                        if ($el.contentWindow.pointLookup && $el.contentWindow.pointLookup.init) {
-                            clearInterval(navigatorFilterInterval);
-                            dti._navigatorFilterModal = true;
-                            $el.contentWindow.pointLookup.init(dti.navigator.defaultNavigatorModalCallback, {
-                                name1: '',
-                                name2: '',
-                                name3: '',
-                                name4: '',
-                                pointTypes: []
-                            });
-
-                            dti.fire('modalLoaded');
-                        }
-                    }, 500);
-                };
-
-            dti.utility.addEvent($el, 'load', initModalLookup);
-        },
-        showNavigatorFilterModal: function (pointType) {
-            dti.fire('hideMenus');
-            dti.navigator.filterModal = true;
-            dti.navigator.$navigatorFilterModal.openModal();
-        },
-        initNavigatorModal: function () {
-            var $el = dti.navigator.$navigatorModalIframe[0],
-                applyFilter = function () {
-                    dti.navigator.applyNavigatorFilter({
-                        pointType: null, 
-                        pointLookup: $el.contentWindow.pointLookup, 
-                        isStartMenu: null
-                    });
-                },
-                initModalLookup = function () {
-                    var navigatorInterval;
-
-                    navigatorInterval = setInterval(function initNavigator () {
-                        if ($el.contentWindow.pointLookup && $el.contentWindow.pointLookup.init) {
-                            clearInterval(navigatorInterval);
-                            dti._navigatorModal = true;
-                            $el.contentWindow.pointLookup.init(dti.navigator.defaultNavigatorModalCallback);
-                            applyFilter();
-                            dti.fire('modalLoaded');
-                        }
-                    }, 400);
-                };
-
-            dti.utility.addEvent($el, 'load', initModalLookup);
-        },
-        showNavigatorModal: function (pointType, isStartMenu, isSelectOnly) {
-            var loaded = false,
-                $el = dti.navigator.$navigatorModalIframe[0],
-                applyFilter = function () {
-                    dti.navigator.applyNavigatorFilter({
-                        pointType: pointType, 
-                        pointLookup: $el.contentWindow.pointLookup, 
-                        isStartMenu: isStartMenu
-                    });
-                };
-
-            dti.navigator.filterModal = false;
-
-            dti.navigator.isSelectOnly = isSelectOnly || false;
-
-            dti.fire('hideMenus');
-
-            dti.navigator.$navigatorModal.openModal({
-                ready: function () {
-                    applyFilter();
-                },
-                complete: function () {
-                    dti.settings._workspaceNav = false;
-                }
-            });
-        },
-        defaultNavigatorModalCallback: function (upi, name, pointType) {
-            if (dti.navigator.filterModal) {
-                dti.navigator._currNavigatorFilter = upi;
-            } else {
-                dti.navigator._currNavigatorFilter = {
-                    upi: upi,
-                    name: name,
-                    pointType: pointType
-                };
-            }
-
-            dti.fire('hideMenus');
-
-            if (dti.navigator.navigatorCallback) {
-                dti.messaging.sendMessage({
-                    key: dti.navigator._prevMessage._windowId,
-                    value: {
-                        selectedPoint: dti.navigator._currNavigatorFilter,
-                        action: 'pointSelected'
-                    }
-                });
-            } else {
-                if (dti.navigator.isSelectOnly) {
-                    if (dti.navigator.navigatorCallback) {
-
-                    }
-                    dti.log(upi, name, pointType);
-                }
-            }
-            
-        },
-        init: function () {
-            // dti.navigator.$navigatorModalIframe.attr('src', '/pointlookup');
-            // dti.navigator.$navigatorFilterModalIframe.attr('src', '/pointlookup?mode=filter');
-
-            // dti.navigator.initNavigatorModal();
-            // dti.navigator.initNavigatorFilterModal();
-            dti.fire('modalLoaded');
-            dti.fire('modalLoaded');
+            dti.navigator.commonNavigator = dti.navigator.createNavigator(true);
         }
     },
     utility: {
@@ -2563,12 +2500,39 @@ var dti = {
                 element.attachEvent('on' + event, fn);
             }
         },
+        clone: function (toCopy) {
+            var ret,
+                copyArray = function () {
+                    ret = $.extend(true, [], toCopy);
+                },
+                copyObject = function () {
+                    if (Array.isArray(toCopy)) {
+                        copyArray();
+                    } else {
+                        ret = $.extend(true, {}, toCopy);
+                    }
+                },
+                basic = function () {
+                    ret = toCopy;
+                };
+
+            switch (typeof toCopy) {
+                case 'object':
+                    copyObject();
+                    break;
+                default:
+                    basic();
+                    break;
+            }
+
+            return ret;
+        },
         getConfig: function (path, parameters) {
             var explodedPath = path.split('.'),
                 Config = dti.workspaceManager.config,
                 result = Config;
 
-            dti.forEachArray(explodedPath, function (segment) {
+            dti.forEachArray(explodedPath, function processPathSegment (segment) {
                 result = result[segment];
             });
 
@@ -2576,7 +2540,7 @@ var dti = {
                 result = result.apply(this, parameters);
             }
 
-            return result;
+            return dti.utility.clone(result);
         },
         getEndpoint: function (type, id) {
             return dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(type, id);
@@ -2762,6 +2726,15 @@ var dti = {
         init: function () {
             dti.utility.pointTypeLookup = {};
             dti.utility.pointTypes = dti.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes();
+            dti.utility.subPointTypes = {};
+
+            dti.forEachArray(dti.utility.pointTypes, function checkForSubPointType (type) { 
+                var ret = dti.workspaceManager.config.Utility.pointTypes.getEnums(type.key + ' Types', type.key); 
+
+                if (ret) {
+                    dti.utility.subPointTypes[type.key] = ret;
+                }
+            });
 
             dti.forEachArray(dti.utility.pointTypes, function processPointType (type) {
                 dti.utility.pointTypeLookup[type.key] = type;
@@ -2835,23 +2808,7 @@ var dti = {
 
                         config.callback = callback;
 
-                        dti.navigatorNew.showNavigator(config);
-                    },
-                    navigatormodal: function () {
-                        // key: navigatormodal, oldValue: windowId of recipient to send info to
-                        if (config.action === 'open') {
-                            dti.navigator.navigatorCallback = config.callback || false;
-
-                            dti.navigator._navigatorMessage = config;
-                            dti.navigator._navigatorParameters = config.parameters;
-                            dti.navigator.showNavigatorModal();
-                        }
-                    },
-                    navigatorfiltermodal: function () {
-                        if (config.action === 'open') {
-                            dti.navigator._navigatorMessage = config;
-                            dti.navigator.showNavigatorFilterModal();
-                        }
+                        dti.navigator.showNavigator(config);
                     },
                     windowMessage: function () {
                         dti.windows.sendMessage(config);
@@ -2943,15 +2900,10 @@ var dti = {
         windowGroups: ko.observableArray([]), // Pinned items prepopulate this array
         startMenuItems: ko.observableArray([]),
         windowsHidden: ko.observable(false),
-        showNavigatorNew: function () {
-            dti.navigatorNew.showNavigator();
-        },
-        showGlobalSearch: function () {
-            dti.globalSearch.show();
-        },
-        hideGlobalSearch: function () {
-            dti.globalSearch.hide();
-        },
+        taskbarShown: ko.observable(true),
+        // showNavigator: function () {
+        //     dti.navigator.showNavigator();
+        // },
         globalSearch: {
             gettingData: ko.observable(false),
             showSummary: ko.observable(false),
@@ -2963,7 +2915,10 @@ var dti = {
             show: function () {
                 dti.globalSearch.show();
             },
-            hide: function () {
+            hide: function (viewModel, e) {
+                // Hide the tooltip associated with the close button
+                $('#' + $(e.target).data('tooltipId')).css('display', 'none');
+                // Hide search
                 dti.globalSearch.hide();
             },
             doSearch: function (appendResults) {
@@ -3069,13 +3024,11 @@ var dti = {
             dti.windows.closeAll(group);
         },
         showNavigator: function (group, isStartMenu) {
-            dti.navigatorNew.showNavigator(group);
+            dti.navigator.showNavigator(group);
             // dti.navigator.showNavigator(group, isStartMenu);
         },
-        acceptNavigatorFilter: function () {
-            dti.navigator.acceptNavigatorFilter();
-        },
         startMenuClick: function (obj) {
+            dti.fire('hideMenus');
             dti.startMenu.handleClick(obj);
         },
         handleCardClick: function (obj, e) {
@@ -3172,7 +3125,7 @@ var dti = {
                         img;
 
                     if (upi !== undefined && upi !== null) {
-                        if (currThumb === undefined) {
+                        if (currThumb === undefined || currThumb === false) {
                             // dti.log('No thumb for upi', upi);
                             $.ajax({
                                     url: '/img/thumbs/' + upi + '.txt',
@@ -3202,6 +3155,7 @@ var dti = {
                                 )
                                 .fail(
                                     function () {
+                                        dti.thumbs[upi] = false;
                                         thumbnailFound(false);
                                         // $icon.show();
                                     }
@@ -3268,7 +3222,7 @@ var dti = {
                     }
 
                     $element.click(function showNavigatorFiltered () {
-                        dti.navigatorNew.showNavigator(type,  true);
+                        dti.navigator.showNavigator(type,  true);
                     });
                 }
             };
@@ -3460,12 +3414,6 @@ var dti = {
             runInits = function () {
                 var lastInits = [];
                 dti.animations.fadeIn($('main, header'), function startInitFlow () {
-                    dti.on('modalLoaded', function checkDone () {
-                        num--;
-                        if (num === 0) {
-                            complete();
-                        }
-                    });
                     dti.forEach(dti, function dtiInit (val, key) {
                         if (typeof val === 'object') {
                             if (val.init) {
@@ -3484,11 +3432,14 @@ var dti = {
                             }
                         }
                     });
+
                     dti.forEachArray(lastInits, function runFinalInits (val) {
                         val.fn();
                     });
 
                     $('select:not(.select-processed').material_select();
+
+                    complete();
                 });
             },
             complete = function () {
