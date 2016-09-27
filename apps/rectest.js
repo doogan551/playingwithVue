@@ -1175,8 +1175,6 @@ function testSecurity() {
     },
     username: 'robk'
   };
-
-
   
   var points = [];
 

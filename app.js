@@ -51,11 +51,11 @@ app.use(morgan(':remote-addr :method :url :status :res[content-length] :response
 app.use(cookieParser());
 
 app.use(bodyParser.json({
-  limit: 10000
+  limit: '50mb'
 }));
 app.use(bodyParser.urlencoded({
   extended: true,
-  parameterLimit: 4500
+  parameterLimit: 45000
 }));
 var storage = multer.memoryStorage();
 var upload = multer({ storage: storage });

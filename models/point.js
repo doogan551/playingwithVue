@@ -14,54 +14,47 @@ module.exports = {
       limit: 200
     }, cb);
   },
+
   getPointById: function(data, cb) {
     var searchCriteria = {};
     var hasPermission = false;
-    var pointid;
+    var upi = parseInt(data.id, 10);
     var properties;
     var key;
     var groups;
 
-    pointid = data.id;
     properties = [];
 
     groups = data.user.groups.map(function(group) {
       return group._id.toString();
     });
 
-    searchCriteria._id = parseInt(pointid, 10);
+    searchCriteria._id = upi;
     /*searchCriteria._pStatus = {
         $in: [0, 1]
     };*/
+    getPermissions(data, function(err, permissions) {
+      console.log(upi, permissions);
+      if (permissions === true || permissions.hasOwnProperty(upi)) {
+        Utility.get({
+          query: searchCriteria,
+          collection: 'points',
+          limit: 1
+        }, function(err, points) {
 
-    Utility.get({
-      query: searchCriteria,
-      collection: 'points',
-      limit: 1
-    }, function(err, points) {
-
-      if (err) {
-        return cb(err, null, null);
-      }
-
-      var point = points[0];
-
-      if (!point) {
-        return cb(null, "No Point Found", null);
-      }
-
-      if (!data.user["System Admin"].Value) {
-        for (var i = 0; i < point.Security.length; i++) {
-          if (groups.indexOf(point.Security[i]) !== -1) {
-            hasPermission = true;
+          if (err) {
+            return cb(err, null, null);
           }
-        }
-      } else {
-        hasPermission = true;
-      }
 
-      if (hasPermission) {
-        return cb(null, null, point);
+          var point = points[0];
+
+          if (!point) {
+            return cb(null, "No Point Found", null);
+          } else {
+            return cb(null, null, point);
+          }
+
+        });
       } else {
         return cb("Permission Denied", null, null);
       }
@@ -264,6 +257,9 @@ module.exports = {
       return query;
     };
     getPermissions(data, function(err, permissions) {
+      if (err || permissions === false) {
+        cb(err || permissions);
+      }
 
       console.timeEnd('test');
       console.time('test');
@@ -273,7 +269,6 @@ module.exports = {
       Utility.iterateCursor({
         collection: 'points',
         query: query,
-        limit: limit,
         sort: sort,
         fields: projection
       }, function(err, doc, next) {
@@ -295,238 +290,26 @@ module.exports = {
       });
     });
   },
-  //API functions
-  search: function(data, cb) {
-    console.time('test');
-    //Group IDs the user belongs to
-    var userGroupIDs = data.user.groups.map(function(group) {
-      return group._id.toString();
-    });
-    // Do we have a device ID?
-    var deviceId = data.deviceId || null;
-    // Do we have a RU ID?
-    var remoteUnitId = data.remoteUnitId || null;
-    // Do we have a point type?
-    var pointType = data.pointType || null;
-
-    // Show only active points by default
-    // 0 = Active
-    // 1 = Inactive
-    // 2 = Deleted
-    var includeSoftDeletedPoints = data.showDeleted || false;
-    var includeInactivePoints = data.showInactive || false;
-    //limit query to 200 by default
-    var limit = data.limit || 200;
-    // are we a system admin?
-    var isSysAdmin = data.user["System Admin"].Value;
-    var searchQuery;
-    // If no point type array passed in, use default
-    var pointTypes = data.pointTypes || Config.Utility.pointTypes.getAllowedPointTypes().map(function(type) {
-      return type.key;
-    });
-    // Name segments, sort names and values
-    var nameSegments = [{
-      name: '_name1',
-      value: data.name1 && data.name1.toLowerCase()
-    }, {
-      name: '_name2',
-      value: data.name2 && data.name2.toLowerCase()
-    }, {
-      name: '_name3',
-      value: data.name3 && data.name3.toLowerCase()
-    }, {
-      name: '_name4',
-      value: data.name4 && data.name4.toLowerCase()
-    }];
-    // First projection. Provides lowercase values for sorting
-    var projection = {
-      _id: 1,
-      _pStatus: 1,
-      pointType: '$Point Type.Value',
-      name1: 1,
-      name2: 1,
-      name3: 1,
-      name4: 1,
-      _parentUpi: 1
-    };
-    // sort
-    var sort = {
-      _name1: 1,
-      _name2: 1,
-      _name3: 1,
-      _name4: 1
-    };
-    var secondSort = {
-      name1: 1,
-      name2: 1,
-      name3: 1,
-      name4: 1
-    };
-    var reduceToUserGroups = function() {
-      return {
-        Security: {
-          $in: userGroupIDs
-        }
-      };
-    };
-    var groupUserGroups = function() {
-      return {
-        _id: "$_id",
-        Security: {
-          $addToSet: '$Security'
-        },
-        _name1: {
-          $first: '$_name1'
-        },
-        _name2: {
-          $first: '$_name2'
-        },
-        _name3: {
-          $first: '$_name3'
-        },
-        _name4: {
-          $first: '$_name4'
-        },
-        name1: {
-          $first: '$name1'
-        },
-        name2: {
-          $first: '$name2'
-        },
-        name3: {
-          $first: '$name3'
-        },
-        name4: {
-          $first: '$name4'
-        },
-        'Point Type': {
-          $first: {
-            Value: '$Point Type.Value'
-          }
-        },
-        _pStatus: {
-          $first: '$_pStatus'
-        }
-      };
-    };
-    // Builds $match portion of query for initial selection
-    var buildQuery = function() {
-      var query = {},
-        segment,
-        _pStatus = 0;
-
-      if (pointTypes.length == 1 && pointTypes[0] == 'Sensor') {
-        if (pointType == 'Analog Input' || pointType == 'Analog Output') {
-          query['Sensor Type.Value'] = pointType.split(' ')[1];
-        }
-      }
-
-      if (pointTypes instanceof Array) {
-        query['Point Type.Value'] = {
-          $in: pointTypes
-        };
-      }
-
-      if (!!deviceId) {
-        query.$and = [{
-          'Point Refs.PointInst': parseInt(deviceId, 10)
-        }, {
-          'Point Refs.PropertyName': 'Device Point'
-        }];
-        if (!!remoteUnitId) {
-          query.$and.push({
-            'Point Refs.PointInst': parseInt(remoteUnitId, 10)
-          });
-          query.$and.push({
-            'Point Refs.PropertyName': 'Remote Unit Point'
-          });
-        }
-      }
-
-      for (var i = 0, last = nameSegments.length; i < last; i++) {
-        segment = nameSegments[i];
-        if (typeof segment.value == 'string') {
-          if (segment.value.length) {
-            query[segment.name] = Utils.getRegex(segment.value.toLowerCase(), {
-              matchBeginning: true
-            });
-            // if (segment.value.indexOf('*') < 0) {
-            //   query[segment.name] = new RegExp(['^', segment.value.toLowerCase()].join(''));
-            // } else {
-            //   query[segment.name] = Utils.convertRegexWildcards(segment.value.toLowerCase());
-            // }
-          }
-        } else {
-          query[segment.name] = '';
-        }
-      }
-
-      // JSON.parse because these variables are received as strings
-      if (JSON.parse(includeInactivePoints)) {
-        _pStatus = 1;
-      } else if (JSON.parse(includeSoftDeletedPoints)) {
-        _pStatus = 2;
-      }
-
-      query._pStatus = _pStatus;
-
-      return query;
-    };
-
-    getPermissions(data, function(err, permissions) {
-
-      console.timeEnd('test');
-      console.time('test');
-      var upis = Object.keys(permissions).map(function(upi) {
-        return parseInt(upi, 10)
-      });
-      var query = buildQuery();
-
-      if (!isSysAdmin) {
-
-        query._id = {
-          $in: upis
-        };
-      }
-
-      searchQuery = [{
-        $match: query
-      }, {
-        $sort: sort
-      }, {
-        $limit: limit
-      }, {
-        $project: projection
-      }, {
-        $sort: secondSort
-      }];
-      console.log('---', upis.length);
-      if (!!upis.length || !!isSysAdmin) {
-        Utility.aggregate({
-          query: searchQuery,
-          collection: 'points'
-        }, function(err, points) {
-          console.timeEnd('test');
-          if (err) {
-            return cb(err, null);
-          }
-          return cb(null, points);
-        });
-      } else {
-        return cb(null, []);
-      }
-    });
-  },
 
   globalSearch: function(data, cb) {
     var criteria = {
       collection: 'points',
-      limit: data.limit || 50,
-      skip: data.skip || 0,
       query: {
         $and: []
+      },
+      fields: {
+        _id: 1,
+        _pStatus: 1,
+        'Point Type.Value': 1,
+        name1: 1,
+        name2: 1,
+        name3: 1,
+        name4: 1,
+        _parentUpi: 1
       }
     };
+    var skip = data.skip || 0;
+    var isSysAdmin = data.user["System Admin"].Value;
     var searchTerm;
 
     for (searchTerm in data.searchTerms) {
@@ -537,9 +320,38 @@ module.exports = {
       });
     }
 
-    Utility.findAndCount(criteria, function handleSearchResults(err, points, count) {
-      return cb(err, points, count);
+    getPermissions(data, function(err, permissions) {
+      if (err || permissions === false) {
+        cb(err || permissions);
+      }
+      console.log(criteria);
+      var points = [];
+      Utility.iterateCursor(criteria, function(err, doc, next) {
+        console.log(doc._id);
+        if (!isSysAdmin) {
+          if (permissions.hasOwnProperty(doc._id)) {
+            doc._pAccess = permissions[doc._id];
+            if (skip > 0) {
+              skip--;
+            } else {
+              points.push(doc);
+            }
+          }
+        } else {
+          doc._pAccess = 15;
+          if (skip > 0) {
+            skip--;
+          } else {
+            points.push(doc);
+          }
+        }
+        next(err, points.length >= (data.limit || 50) || false);
+
+      }, function(err, count) {
+        cb(err, points, count);
+      });
     });
+
     // return cb(null, [data.searchTerms]);
     // function(req, res, next) {
     //   var db, tags, query;
@@ -569,9 +381,6 @@ module.exports = {
     //     });
     //   });
     // }
-  },
-  toggleGroup: function(data, cb) {
-    toggleGroup(data, null, cb);
   },
   searchDependencies2: function(data, cb) {
     var refs = [];
@@ -1337,7 +1146,7 @@ module.exports = {
 var getPermissions = function(data, cb) {
   var _user = data.user;
   if (!!data.user["System Admin"].Value) {
-    return cb(null, []);
+    return cb(null, true);
   }
   var points = [];
 
@@ -1376,6 +1185,7 @@ var getPermissions = function(data, cb) {
       }, function(err, groups) {
         if (err || !groups.length) {
           console.log(err || 'no groups');
+          cb(err, false);
         } else {
           var pointPerm = calcPermissions(user, groups);
           cb(err, pointPerm);
