@@ -22,19 +22,14 @@ module.exports = {
     var upi = parseInt(data.id, 10);
     var properties;
     var key;
-    var groups;
 
     properties = [];
-
-    groups = data.user.groups.map(function(group) {
-      return group._id.toString();
-    });
 
     searchCriteria._id = upi;
     /*searchCriteria._pStatus = {
         $in: [0, 1]
     };*/
-    Security.Utility.getPermissions(data, function(err, permissions) {
+    Security.Utility.getPermissions(data.user, function(err, permissions) {
 
       if (permissions === true || permissions.hasOwnProperty(upi)) {
         Utility.get({
@@ -140,10 +135,6 @@ module.exports = {
   },
 
   search: function(data, cb) {
-    //Group IDs the user belongs to
-    var userGroupIDs = data.user.groups.map(function(group) {
-      return group._id.toString();
-    });
     // Do we have a device ID?
     var deviceId = data.deviceId || null;
     // Do we have a RU ID?
@@ -983,19 +974,6 @@ module.exports = {
       "Point Type.Value": "Display"
     };
 
-    var groups = data.user.groups.map(function(group) {
-      return group._id.toString();
-    });
-
-    if (!data.user["System Admin"].Value) {
-      thirdSearch.Security = {
-        $in: groups
-      };
-      secondSearch.Security = {
-        $in: groups
-      };
-    }
-
     criteria = {
       collection: 'points',
       query: firstSearch,
@@ -1034,17 +1012,19 @@ module.exports = {
             }
           };
 
-          Utility.getOne(criteria, function(err, point) {
-            if (err) {
-              return cb(err);
-            }
-            if (!point) {
-              displays = [];
-            }
-            doSecondSearch(targetPoint, function(err) {
-              return cb(err, displays);
-            });
+          Security.Utility.getPermissions(data.user, function(err, permissions) {
+            Utility.getOne(criteria, function(err, point) {
+              if (err) {
+                return cb(err);
+              }
+              if (!point || permissions === false || !permissions.hasOwnProperty(thirdSearch._id)) {
+                displays = [];
+              }
+              doSecondSearch(targetPoint, function(err) {
+                return cb(err, displays);
+              });
 
+            });
           });
         } else {
           doSecondSearch(targetPoint, function(err) {
@@ -1064,11 +1044,10 @@ module.exports = {
         query: secondSearch,
         fields: {
           Name: 1
-        }
+        },
+        data: data
       };
-
-      Utility.get(criteria, function(err, references) {
-
+      Utility.getWithSecurity(criteria, function(err, references) {
         async.eachSeries(references, function(ref, acb) {
           displays.push(ref);
           acb(null);

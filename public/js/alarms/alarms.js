@@ -84,10 +84,6 @@ var AlarmManager = function (conf) {
         workspaceManager = window.top.workspaceManager,
         sessionId = workspaceManager.sessionId(),
         user = workspaceManager.user(),
-        userPermissions     = {
-            systemAdmin : user['System Admin'].Value,
-            groups      : user.groups
-        },
         storeKey = 'alarms_' + user._id,
         openWindow = workspaceManager.openWindowPositioned,
         windowUpi = "alarm" + window.location.search.slice(1), // alarm prefix required or pop-in/pop-out don't work
@@ -197,14 +193,8 @@ var AlarmManager = function (conf) {
             }
             return temp;
         },
-        userHasPermission = function (pointGroups, requestedAccessLevel) {
-            var cumulativePermissions = 0,
-                groups = userPermissions.groups.filter(function(item) { return !!~pointGroups.indexOf(item._id); });
-
-            for(var i = 0, last = groups.length; i < last; i++) {
-                cumulativePermissions |= groups[i]._pAccess;
-            }
-            return !!(cumulativePermissions & requestedAccessLevel);
+        userHasPermission = function (alarm, requestedAccessLevel) {
+            return !!(alarm._pAccess & requestedAccessLevel);
         },
         // Simple routine to compare two values. Values are assumed to be numbers, strings, or flat arrays of numbers or strings.
         valuesAreDifferent = function (v1, v2) {
@@ -393,9 +383,9 @@ var AlarmManager = function (conf) {
             // object is empty, the stringified result is "{}", not "[]" as expected. This was causing a js error on the server
             // Not sure why, but if we overwrite the empty array with an empty array it works fine.
             // ** IE behaves as expected if the groups array is non-empty
-            if (reqObj.user.groups.length === 0) {
-                reqObj.user.groups = [];
-            }
+            // if (reqObj.user.groups.length === 0) {
+            //     reqObj.user.groups = [];
+            // }
 
             socket.emit(emitString[name], JSON.stringify(reqObj));
         },
@@ -1064,7 +1054,7 @@ var AlarmManager = function (conf) {
 
             userObj['System Admin'] = user['System Admin'];
             userObj._id = user._id;
-            userObj.groups = user.groups;
+            // userObj.groups = user.groups;
         },
         getStoreData = function () {
             var storeData = store.get(storeKey) || {};
@@ -2089,7 +2079,7 @@ var AlarmManager = function (conf) {
     };
 
     self.userHasPermissionToAck = function (alarm) {
-        var hasAckPermission = userPermissions.systemAdmin || userHasPermission(alarm.Security, permissionLevels.ACKNOWLEDGE);
+        var hasAckPermission = user['System Admin'].Value || userHasPermission(alarm, permissionLevels.ACKNOWLEDGE);
         return hasAckPermission;
     };
 

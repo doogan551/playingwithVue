@@ -1950,11 +1950,11 @@ module.exports = {
     }
   },
   Utility: {
-    getPermissions: function(data, cb) {
-      if (!!data.user["System Admin"].Value) {
+    getPermissions: function(user, cb) {
+      if (!!user["System Admin"].Value) {
         return cb(null, true);
       }
-      var userId = ObjectID(data.user._id);
+      var userId = ObjectID(user._id);
       var points = [];
 
       var calcPermissions = function(groups) {

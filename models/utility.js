@@ -248,7 +248,7 @@ exports.getWithSecurity = function(criteria, cb) {
 
   var Security = require('../models/security');
 
-  Security.Utility.getPermissions(criteria.data, function(err, permissions) {
+  Security.Utility.getPermissions(criteria.data.user, function(err, permissions) {
     if (err || permissions === false) {
       cb(err || permissions);
     }
@@ -276,10 +276,10 @@ exports.getWithSecurity = function(criteria, cb) {
       next(err, points.length >= (limit || 50) || false);
 
     }, function(err, count) {
-      if (permissions !== true || permissions !== false) {
+      if (permissions !== true && permissions !== false) {
         var upis = [];
         for (var key in permissions) {
-          upis.push(parseInt(key));
+          upis.push(parseInt(key, 10));
         }
         criteria.query[identifier] = {
           $in: upis
@@ -288,7 +288,9 @@ exports.getWithSecurity = function(criteria, cb) {
           cb(err, points, count);
         });
       } else {
-        cb(err, points, count);
+        exports.count(criteria, function(err, count) {
+          cb(err, points, count);
+        });
       }
     });
   });

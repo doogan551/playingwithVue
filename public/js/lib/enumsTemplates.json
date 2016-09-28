@@ -3311,11 +3311,6 @@
                 "valueType": "String",
                 "reportEnable": false
             },
-            "Security": {
-                "enum": 117,
-                "valueType": "Array",
-                "reportEnable": false
-            },
             "Select Input": {
                 "enum": 206,
                 "valueType": "UniquePID",
@@ -3735,6 +3730,9 @@
             "_parentUpi": {
                 "enum": 11
             },
+            "_pAccess": {
+                "enum": 117
+            },
             "_pollTime": {
                 "enum": 12
             },
@@ -3831,7 +3829,6 @@
                 "Value": "",
                 "eValue": 0
             },
-            "Security": [],
             "taglist": []
         },
         "Points": {

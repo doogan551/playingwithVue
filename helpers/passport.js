@@ -6,6 +6,7 @@ var errorMsg = "Invalid username or password";
 var User = require('../models/user.js');
 var Utility = require('../models/utility.js');
 var UserGroup = require('../models/userGroup.js');
+var Security = require('../models/security');
 
 module.exports = function(passport) {
   passport.serializeUser(function(user, done) {
@@ -35,12 +36,12 @@ module.exports = function(passport) {
       }]
     };
     Utility.aggregate(criteria, function(err, users) {
-      if(!users.length){
+      if (!users.length) {
         return done(err, false);
       }
       var user = users[0];
-      UserGroup.getGroupsWithUser(user._id, function(err, groups) {
-        user.groups = groups;
+      Security.Utility.getPermissions(user, function(err, permissions) {
+        user.permissions = permissions;
         done(err, user);
       });
     });
@@ -94,12 +95,8 @@ module.exports = function(passport) {
               '$exists': true
             };
 
-            UserGroup.getGroupsWithUser(user._id, function(
-              err, groups) {
-              if (err === null && (groups instanceof Array)) {
-                user.groups = groups;
-              }
-
+            Security.Utility.getPermissions(user, function(err, permissions) {
+              user.permissions = permissions;
               user.password = '';
 
               if (!!user.resetPass) {

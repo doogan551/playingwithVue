@@ -10,7 +10,6 @@ module.exports = {
     var startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
     var endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime()) : data.endDate;
     var usernames = data.usernames;
-    var groups = [];
     var sort = {};
 
     if (!itemsPerPage) {
