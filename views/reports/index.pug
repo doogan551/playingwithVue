@@ -108,9 +108,27 @@ block content
                                                     th.medium.strong Column Key
                                                     // ko if: (reportType !== 'Property')
                                                     th.medium.strong Display Name
-                                                    th.medium.strong.multiplierColumn
                                                     th.medium.strong
-                                                        .calculateColumn
+                                                        .multiplierColumn
+                                                    th.medium.strong
+                                                        .calculateColumn(tabindex="965")
+                                                            .columnText.displayDiv
+                                                            .globalCalculate.hideDiv
+                                                                .dropdown.availableCalculations.open(data-bind="css: {disabled: !$root.canEdit()}")
+                                                                    a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                                        span.text.white-text Calcs
+                                                                        // ko if: ($root.listOfCalculations().length > 1)
+                                                                        span.white-text.caret.lm10px
+                                                                        // /ko
+                                                                    // ko if: ($root.listOfCalculations().length > 1)
+                                                                    ul.calculations.dropdown-menu(multiple=true, data-bind="attr: { id: 'globalCalculationsDropdown' }")
+                                                                        // ko foreach: $root.listOfCalculations
+                                                                        li
+                                                                            label.fancy-checkbox
+                                                                                input.medium(data-bind="click: function () { return $root.globalCalculationClick($element, $data)}, attr: { id: 'globalCalc_' + $index()}", type="checkbox")
+                                                                                label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index()}")
+                                                                        // /ko
+                                                                    // /ko
                                                     th.medium.strong.typeColumn
                                                     th.medium.strong
                                                         .precisionColumn
@@ -158,31 +176,28 @@ block content
                                                         // /ko
                                                     td.columnTotals
                                                         // ko if: ($data.canCalculate)
-                                                        // ko if: ($root.canEdit())
-                                                        a.btn-mini.waves-effect.waves-light(data-bind="click: function(){ $parent.clearColumnCalculation($index()) }, tooltip: { title: 'Clear' }")
-                                                            i.tiny.material-icons.center.blue-grey-text delete
-                                                        // /ko
                                                         .dropdown.availableCalculations(data-bind="css: {disabled: !$root.canEdit()}")
+                                                            //click: $root.toggleCalcsDropdown,
                                                             a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-                                                                //span(data-bind="text: calculation")
-                                                                span.white-text Calcs
-                                                                // ko if: ($parent.listOfCalculations.length > 1)
-                                                                span.caret.lm10px
+                                                                span.text.white-text Calcs
+                                                                // ko if: ($parent.listOfCalculations().length > 1)
+                                                                span.white-text.caret.lm10px
                                                                 // /ko
-                                                            // ko if: ($parent.listOfCalculations.length > 1)
-                                                            ul.calculations.dropdown-menu(data-bind="attr: { id: 'calculationsDropdown'+ $index() }")
+                                                            // ko if: ($parent.listOfCalculations().length > 1)
+                                                            ul.calculations.dropdown-menu(multiple=true, data-bind="attr: { id: 'calculationsDropdown'+ $index() }")
                                                                 // ko foreach: $parent.listOfCalculations
                                                                 li
-                                                                    input(data-bind="checked: $parent.calculation[$data.text]", type="checkbox")
-                                                                    .calcLabel(data-bind="text: ' ' + $data.text")
+                                                                    label.fancy-checkbox
+                                                                        input.medium(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}, attr: { id: 'calc_' + $parentContext.$index() + '_' + $index()}", type="checkbox")
+                                                                        label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'calc_' + $parentContext.$index() + '_' + $index()}")
                                                                 // /ko
                                                             // /ko
                                                         // /ko
                                                     td.totalizerOperator
-                                                        // ko if: ($parent.reportType === 'Totalizer')
+                                                        // ko if: ($parent.reportType === 'Totalizer' && valueList.length > 0)
                                                         .dropdown.availableTotalizerOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
                                                             a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-                                                                span(data-bind="text: operator")
+                                                                span.text.white-text(data-bind="text: operator")
                                                                 // ko if: (valueList.length > 1)
                                                                 span.caret.lm10px
                                                                 // /ko
@@ -200,14 +215,14 @@ block content
                                                         // /ko
                                                     td.includeInChart
                                                         // ko if: ($root.canEdit() && !!canBeCharted && canBeCharted)
-                                                        input.includeInChartColumn.filled-in(data-bind="checked: includeInChart, enable: ($root.canEdit() && !!canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()} ", type="checkbox")
+                                                        input.includeInChartColumn.filled-in(data-bind="checked: includeInChart, enable: ($root.canEdit() && !!canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()}", type="checkbox")
                                                         label(data-bind="attr: { for: 'includeInChart' + $index() }")
                                                         // /ko
                                                     td.yaxisChartGroup
                                                         // ko if: ($root.canEdit() && !!canBeCharted && canBeCharted)
                                                         .dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
                                                             a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-                                                                span(data-bind="text: yaxisGroup")
+                                                                span.text.white-text(data-bind="text: yaxisGroup")
                                                                 // ko if: ($root.yaxisGroups.length > 1)
                                                                 span.caret.lm10px
                                                                 // /ko

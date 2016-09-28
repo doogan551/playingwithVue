@@ -406,6 +406,8 @@ var reportsViewModel = function () {
         $hiddenPlaceholder,
         $globalPrecision,
         $globalIncludeInChart,
+        $globalCalculateText,
+        $globalCalculate,
         $availableChartTypesChartTab,
         $reportChartDiv,
         $saveReportButton,
@@ -788,9 +790,9 @@ var reportsViewModel = function () {
         checkForColumnCalculations = function () {
             for (var i = 0; i < self.listOfColumns().length; i++) {
                 if (!!self.listOfColumns()[i].canCalculate && self.listOfColumns()[i].canCalculate) {
-                    $columnsGrid.find(".multiplierColumn").html("Multiplier");
-                    $columnsGrid.find(".calculateColumn").html("Calculate");
-                    $columnsGrid.find(".precisionColumn").html("Precision");
+                    $columnsGrid.find("th .multiplierColumn").html("Multiplier");
+                    $globalCalculateText.html("Calculate");
+                    $columnsGrid.find("th .precisionColumn").html("Precision");
                     break;
                 }
             }
@@ -1835,6 +1837,8 @@ var reportsViewModel = function () {
             $hiddenPlaceholder = $direports.find(".hiddenPlaceholder");
             $globalPrecision = $hiddenPlaceholder.find("input.globalPrecision");
             $globalIncludeInChart = $hiddenPlaceholder.find("div.globalIncludeInChart");
+            $globalCalculateText = $columnsGrid.find("th .calculateColumn .columnText");
+            $globalCalculate = $columnsGrid.find("th .globalCalculate");
             $availableChartTypesChartTab = $direports.find(".availableChartTypes.chartTab");
             $reportChartDiv = $direports.find(".reportChartDiv");
         },
@@ -2451,7 +2455,8 @@ var reportsViewModel = function () {
                 precisionEventsSet = false,
                 precisionOriginalField,
                 includeInChartEventsSet = false,
-                includeInChartOriginalField;
+                includeInChartOriginalField,
+                calculateEventsSet = false;
 
             $(window).resize(function () {
                 handleResize();
@@ -2563,6 +2568,7 @@ var reportsViewModel = function () {
                     updateListOfColumns(columnsArray);
                     $dataTablePlaceHolder.DataTable().draw("current");
                     console.log("moved column '" + details.from + "' to column '" + details.to + "'");
+                    return true;
                 });
 
                 $dataTablePlaceHolder.on("column-resize.dt", function (event, settings, details) {
@@ -2570,6 +2576,7 @@ var reportsViewModel = function () {
                     columnsArray[details.resizedColumn].width = details.width;
                     updateListOfColumns(columnsArray);
                     $dataTablePlaceHolder.DataTable().draw("current");
+                    return true;
                     // console.log("column '" + details.resizedColumn + "' width set to '" + details.width + "'");
                 });
 
@@ -2678,6 +2685,66 @@ var reportsViewModel = function () {
                     return true;
                 });
 
+                $columnsGrid.find("th .calculateColumn").on("mousedown", function (e) {
+                    if (self.canEdit()) {
+                        longClickStart = moment();
+                    }
+                });
+
+                $columnsGrid.find("th .calculateColumn").on("click", function (parentEvent) {
+                    var $calculateColumnDiv = $(this),
+                        stillInParentDiv = false,
+                        toggleField = function (displayGlobalButton) {
+                            if (displayGlobalButton) {
+                                $calculateColumnDiv.focus();
+                                $globalCalculateText.removeClass("displayDiv");
+                                $globalCalculateText.addClass("hideDiv");
+                                $globalCalculate.removeClass("hideDiv");
+                                $globalCalculate.addClass("displayDiv");
+                                $globalCalculate.find(".availableCalculations").addClass("open");
+                                $globalCalculate.find("a").addClass("active");
+                                $globalCalculate.find("a").attr("aria-expanded", true);
+                            } else if (!displayGlobalButton) {
+                                $globalCalculateText.addClass("displayDiv");
+                                $globalCalculateText.removeClass("hideDiv");
+                                $globalCalculate.addClass("hideDiv");
+                                $globalCalculate.removeClass("displayDiv");
+                                $globalCalculate.find(".availableCalculations").removeClass("open");
+                                $globalCalculate.find("a").removeClass("active");
+                                $globalCalculate.find("a").attr("aria-expanded", false);
+                            }
+                        };
+
+                    if (self.canEdit()) {
+                        // parentEvent.preventDefault();
+                        parentEvent.stopPropagation();
+                        if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
+
+                            toggleField($globalCalculate.has($(parentEvent.target)).length > 0);
+
+                            if (!calculateEventsSet) {
+                                calculateEventsSet = true;
+                                toggleField(true);
+                                $(this).on( "focusin", function (inEvent) {
+                                    // console.log("focusin called - - -");
+                                    stillInParentDiv = true;
+                                });
+                                $(this).on( "focusout", function (outEvent) {
+                                    // if ($globalCalculate.has($(parentEvent.target)).length === 0) {
+                                    // console.log("   ........ focusout called  ......................  $calculateColumnDiv.is(:focus) = " + $calculateColumnDiv.is(":focus"));
+                                    if ($calculateColumnDiv.is(":focus")) {  // clicked outside of calculate column div
+                                        // console.log("   ................... lost focus......................");
+                                        toggleField(false);
+                                        calculateEventsSet = false;
+                                        $(outEvent.target).off("focusout");
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    return true;
+                });
+
                 $filtersGrid.sortable({
                     appendTo: $filtersTbody,
                     disabled: false,
@@ -2765,19 +2832,7 @@ var reportsViewModel = function () {
                 }
             ];
 
-            calculations = [
-                {
-                    text: "Mean"
-                }, {
-                    text: "Max"
-                }, {
-                    text: "Min"
-                }, {
-                    text: "Sum"
-                }, {
-                    text: "Std Dev"
-                }
-            ];
+            calculations = ["Mean", "Max", "Min", "Sum", "Std Dev"];
 
             entriesPerPage = [
                 {
@@ -4024,6 +4079,7 @@ var reportsViewModel = function () {
     self.deleteColumnRow = function (item) {
         self.listOfColumns.remove(item);
         updateListOfColumns(self.listOfColumns());
+        return true;
     };
 
     self.deleteFilterRow = function (item) {
@@ -4403,6 +4459,7 @@ var reportsViewModel = function () {
         var tempArray = self.listOfColumns();
         tempArray[indexOfColumn] = getNewColumnTemplate();
         updateListOfColumns(tempArray);
+        return true;
     };
 
     self.addNewColumn = function (indexOfColumn) {
@@ -4416,6 +4473,7 @@ var reportsViewModel = function () {
         }
 
         updateListOfColumns(tempArray);
+        return true;
     };
 
     self.deleteReportColumn = function (indexOfColumn) {
@@ -4440,6 +4498,7 @@ var reportsViewModel = function () {
         tempArray[self.currentColumnEditIndex()] = self.currentColumnEdit();
         updateListOfColumns(tempArray);
         $editColumnModal.modal("hide");
+        return true;
     };
 
     self.clearColumnCalculation = function (indexOfColumn) {
@@ -4447,6 +4506,7 @@ var reportsViewModel = function () {
             column = tempArray[indexOfColumn];
         column.calculation = [];
         updateListOfColumns(tempArray);
+        return true;
     };
 
     self.globalCalculationClick = function (element, calc) {
@@ -4478,7 +4538,9 @@ var reportsViewModel = function () {
 
     self.calculationClick = function (element, calc, indexOfColumn) {
         var tempArray = self.listOfColumns(),
-            column = tempArray[indexOfColumn];
+            column = tempArray[indexOfColumn],
+            $dropdownButton = $(element).parent().parent().parent().parent().find("a"),
+            $dropdown = $dropdownButton.parent();
 
         if (element.checked === true) {
             if (column.calculation.indexOf(calc) === -1) {
@@ -4487,6 +4549,31 @@ var reportsViewModel = function () {
         } else {
             if (column.calculation.indexOf(calc) !== -1) {
                 column.calculation.splice(column.calculation.indexOf(calc), 1);
+            }
+        }
+
+        updateListOfColumns(tempArray);
+        $dropdownButton.attr("aria-expanded", true);
+        $dropdown.addClass("open");
+        return true;
+    };
+
+    self.globalCalculationClick = function (element, calc) {
+        var i,
+            tempArray = self.listOfColumns(),
+            column;
+
+        for (i = 0; i < tempArray.length; i++) {
+            column = tempArray[i];
+
+            if (element.checked === true) {
+                if (column.calculation.indexOf(calc) === -1) {
+                    column.calculation.push(calc);
+                }
+            } else {
+                if (column.calculation.indexOf(calc) !== -1) {
+                    column.calculation.splice(column.calculation.indexOf(calc), 1);
+                }
             }
         }
 
@@ -4544,6 +4631,7 @@ var reportsViewModel = function () {
 
         updateListOfColumns(tempArray);
         $globalEditColumnModal.modal("hide");
+        return true;
     };
 
     self.clearFilterPoint = function (indexOfColumn) {
@@ -4578,6 +4666,7 @@ var reportsViewModel = function () {
         column.yaxisGroup = "A";
         column.includeInChart = false;
         updateListOfColumns(tempArray);
+        return true;
     };
 
     self.selectPropertyFilter = function (element, indexOfFilter, selectedItem) {
@@ -4608,6 +4697,7 @@ var reportsViewModel = function () {
             column = tempArray[indexOfColumn];
         column.calculation = selectedItem;
         updateListOfColumns(tempArray);
+        return true;
     };
 
     self.selectNumberOfEntries = function (element, selectedItem) {
