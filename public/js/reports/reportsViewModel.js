@@ -3271,7 +3271,17 @@ var reportsViewModel = function () {
                             totalFooterText,
                             footerText,
                             footerTitle,
-                            $tdFooter;
+                            $tdFooter,
+                            $footerTableDataCollection;
+
+                        $footerTableDataCollection = $(tfoot).find("td");
+                        $footerTableDataCollection.html(""); // clear existing footers
+                        $footerTableDataCollection.attr("data-content", "&nbsp;"); // clear title data (mouse over)
+                        $footerTableDataCollection.removeAttr("data-toggle");
+                        $footerTableDataCollection.removeAttr("data-trigger");
+                        $footerTableDataCollection.removeAttr("data-html");
+                        $footerTableDataCollection.removeAttr("title");
+                        $footerTableDataCollection.removeAttr("data-original-title");
 
                         for (i = 0; i < numberOfColumnsToCalculate; i++) {
                             footerText = "";
@@ -4544,7 +4554,7 @@ var reportsViewModel = function () {
             }
         }
 
-        updateListOfColumns(tempArray);
+        // updateListOfColumns(tempArray);
         $dropdownButton.attr("aria-expanded", true);
         $dropdown.addClass("open");
         return true;

@@ -460,7 +460,7 @@ ul.yaxisGroups.dropdown-menu li a:hover {
     cursor: pointer;
     width: 30px;
 }
-ul.chartTypes.dropdown-menu li a:hover {
+.yaxisChartGroup li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
 }
@@ -628,6 +628,9 @@ div.dataTables_wrapper div.dataTables_length select {
     width: 88px;
     padding: 0px;
 }
+.dropdown.availableTotalizerOperatorsContainer li a {
+    width: 78px;
+}
 .dropdown.availableTotalizerOperatorsContainer a .text {
     margin-left: 12px;
 }
@@ -639,10 +642,12 @@ div.dataTables_wrapper div.dataTables_length select {
     margin-left: 2px;
 }
 .dropdown.availableAxisGroupsContainer ul.dropdown-menu {
+    cursor: pointer;
     width: 30px;
-    min-width: 30px;
-    text-indent: 8px;
+    min-width: 34px;
+    text-indent: 10px;
     margin-left: 11px;
+    margin-top: -10px;
 }
 
 .filterPointName {
