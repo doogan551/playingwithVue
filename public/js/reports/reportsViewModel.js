@@ -2693,7 +2693,6 @@ var reportsViewModel = function () {
 
                 $columnsGrid.find("th .calculateColumn").on("click", function (parentEvent) {
                     var $calculateColumnDiv = $(this),
-                        stillInParentDiv = false,
                         toggleField = function (displayGlobalButton) {
                             if (displayGlobalButton) {
                                 $calculateColumnDiv.focus();
@@ -2725,15 +2724,8 @@ var reportsViewModel = function () {
                             if (!calculateEventsSet) {
                                 calculateEventsSet = true;
                                 toggleField(true);
-                                $(this).on( "focusin", function (inEvent) {
-                                    // console.log("focusin called - - -");
-                                    stillInParentDiv = true;
-                                });
-                                $(this).on( "focusout", function (outEvent) {
-                                    // if ($globalCalculate.has($(parentEvent.target)).length === 0) {
-                                    // console.log("   ........ focusout called  ......................  $calculateColumnDiv.is(:focus) = " + $calculateColumnDiv.is(":focus"));
-                                    if ($calculateColumnDiv.is(":focus")) {  // clicked outside of calculate column div
-                                        // console.log("   ................... lost focus......................");
+                                $calculateColumnDiv.on( "focusout", function (outEvent) {
+                                    if (!$calculateColumnDiv.is(":focus")) {  // clicked outside of calculate column div
                                         toggleField(false);
                                         calculateEventsSet = false;
                                         $(outEvent.target).off("focusout");
