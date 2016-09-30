@@ -105,7 +105,7 @@ var dti = {
                     height: '85%'
                 }
             },
-            'ThumbnailGenerator': {
+            'Thumbnails': {
                 title: 'Thumbnails',
                 iconText: 'photo_camera',
                 iconClass: 'material-icons',
@@ -117,6 +117,19 @@ var dti = {
                 options: {
                     width: 1000
                 }
+            },
+            'Navigator': {
+                title: 'Navigator',
+                iconText: '',
+                iconClass: 'mdi mdi-compass',
+                group: 'Navigator',
+                standalone: true,
+                singleton: true,
+                initFn: 'navigator.createNavigator',
+                fullScreen: true
+                // options: {
+                //     width: 1000
+                // }
             }
         }
     },
@@ -667,14 +680,18 @@ var dti = {
 
                 dti.fire('closeWindow', self);
 
-                if (self.$iframe[0].contentWindow.destroy) {
-                    self.$iframe[0].contentWindow.destroy();
+                if (self.$iframe && self.$iframe[0].contentWindow) {
+                    if (self.$iframe[0].contentWindow.destroy) {
+                        self.$iframe[0].contentWindow.destroy();
+                    }
                 }
 
                 setTimeout(function closeWindow () {
-                    self.$iframe.attr('src', 'about:blank');
-                    ko.cleanNode(self.$windowEl[0]);
-                    $(self.$iframe[0].contentDocument).off('mousedown');
+                    if (self.$iframe) {
+                        self.$iframe.attr('src', 'about:blank');
+                        ko.cleanNode(self.$windowEl[0]);
+                        $(self.$iframe[0].contentDocument).off('mousedown');
+                    }
                     self.$windowEl.remove();
                     // dti.destroyObject(self.bindings);
                     dti.destroyObject(self, true);
@@ -703,6 +720,8 @@ var dti = {
                     self.bindings.minimized(false);
                     self.bindings.active(true);
                 }
+
+                return true;
             },
             clearEvents = function () {
                 $(self.$iframe[0].contentDocument).off('mousedown', handleIframeClick);
@@ -732,6 +751,7 @@ var dti = {
                     group: ko.observable(getGroupName(config)),
                     url: ko.observable(config.url),
                     upi: ko.observable(config.upi),
+                    hasUrl: ko.observable(!!config.url),
                     refresh: refresh,
                     activate: activate,
                     minimize: minimize,
@@ -814,10 +834,14 @@ var dti = {
 
         $('main').append(self.$windowEl);
         self.$windowEl.attr('id', windowId);
-        self.$iframe = self.$windowEl.children('iframe');
-        self.$iframe.attr('id', iframeId);
 
-        dti.utility.addEvent(self.$iframe[0], 'load', self.onLoad);
+        if (config.url) {
+            self.$iframe = self.$windowEl.children('iframe');
+            self.$iframe.attr('id', iframeId);
+
+            dti.utility.addEvent(self.$iframe[0], 'load', self.onLoad);
+        }
+
         dti.on('thumbnailCaptured', self.handleThumbnail);
 
         if (config.upi !== undefined && typeof config.upi === 'number') {
@@ -845,6 +869,18 @@ var dti = {
         // }, 100);
 
         ko.applyBindings(self.bindings, self.$windowEl[0]);
+
+        if (!config.url) {
+            self.initFn = dti.utility.getPathFromObject(config.initFn, dti);
+            // self.instance = new self.cls({
+            //     $container: self.$windowEl.children('.markupContent')
+            // });
+            self.initFn({
+                $container: self.$windowEl.find('.markupContent')
+            });
+
+            self.bindings.loading(false);
+        }
 
         return {
             setUrl: setUrl,
@@ -1035,7 +1071,7 @@ var dti = {
                 config.type = dti.workspaceManager.config.Utility.pointTypes.getPointTypeNameFromEnum(config.type);
             }
 
-            if (typeof config.url !== 'string') {
+            if (typeof config.url !== 'string' && !config.initFn) {
                 config.url = dti.utility.getEndpoint(config.type, config.upi).review.url;
             }
 
@@ -1253,7 +1289,13 @@ var dti = {
                 id = dti.makeId(),
                 openWindows,
                 doOpenWindow = function () {
-                    dti.windows.openWindow(obj.url + '?' + id, obj.title, obj.group, null, null, obj.options);
+                    if (obj.url) {
+                        obj.url += '?' + id;
+                    }
+
+                    obj.pointType = obj.group;
+
+                    dti.windows.openWindow(obj);
                 };
 
             if (!obj.standalone) {
@@ -2198,6 +2240,25 @@ var dti = {
                         return true;
                     };
 
+                    bindings.modalText = ko.pureComputed(function getModalText () {
+                        var mode = bindings.mode(),
+                            ret;
+
+                        switch (mode) {
+                            case self.modes.CREATE: 
+                                ret = 'Create Point';
+                                break;
+                            case self.modes.FILTER: 
+                                ret = 'Select Filter';
+                                break;
+                            case self.modes.DEFAULT: 
+                                ret = 'Select Point';
+                                break;
+                        }
+
+                        return ret;
+                    });
+
                     bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint () {
                         var uniqueName = bindings.points().length === 0,
                             disabled = bindings.disableCreatePoint(),
@@ -2550,9 +2611,9 @@ var dti = {
             var templateMarkup = dti.navigator.getTemplate('#navigatorTemplate'),
                 navigatorMarkup,
                 navigator,
-                $container = (isModal === true) ? $('main') : isModal;
+                $container = (isModal === true) ? $('main') : (isModal.$container || isModal);
 
-            if (isModal) {
+            if (isModal === true) {
                 navigatorModalMarkup = dti.navigator.getTemplate('#navigatorModalTemplate');
                 $container.append(navigatorModalMarkup);
                 $container = navigatorModalMarkup;
@@ -2616,10 +2677,19 @@ var dti = {
 
             return ret;
         },
-        getConfig: function (path, parameters) {
+        getPathFromObject: function (path, obj) {
             var explodedPath = path.split('.'),
-                Config = dti.workspaceManager.config,
-                result = Config;
+                result = obj;
+
+            dti.forEachArray(explodedPath, function processPathSegment (segment) {
+                result = result[segment];
+            });
+
+            return result;
+        },
+        getConfig: function (path, parameters) {
+            var Config = dti.workspaceManager.config,
+                result = dti.utility.getPathFromObject(path, Config);
 
             dti.forEachArray(explodedPath, function processPathSegment (segment) {
                 result = result[segment];
@@ -3120,6 +3190,12 @@ var dti = {
         showNavigator: function (group, isStartMenu) {
             dti.navigator.showNavigator(group);
             // dti.navigator.showNavigator(group, isStartMenu);
+        },
+        showCreatePoint: function (group) {
+            dti.navigator.showNavigator({
+                mode: 'create',
+                newPointType: group.group()
+            });
         },
         startMenuClick: function (obj) {
             dti.fire('hideMenus');

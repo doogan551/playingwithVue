@@ -441,7 +441,7 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     }
 
     .card-body {
-        height: 100%;
+        height: calc(100% - 29px);
         width: 100%;
         border: 0;
     }
@@ -1341,6 +1341,11 @@ $loaderSpeedScale: 1 / .75;
     }
 }
 
+.markupContent {
+    position: relative;
+    height: 100%;
+}
+
 
 /* new navigator */
 
@@ -1481,7 +1486,7 @@ $loaderSpeedScale: 1 / .75;
         flex-grow: 1;
 
         .listRow:hover {
-            background-color: #f4f4f4;
+            background-color: $blue-grey-lighten-5;
             cursor: default;
         }
 
