@@ -1230,6 +1230,35 @@ var scripts = {
                 errors: err
             });
         });
+    },
+
+    updateSecurity: function(callback) {
+        var afterVersion = '0.5.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'fixSequenceDevicePropertyName',
+                errors: null,
+                results: null
+            });
+        }
+        utility.update({
+            collection: 'points',
+            query: {},
+            updateObj: {
+                $unset: {
+                    'Security': 1
+                },
+                $set: {
+                    _pAccess: 0
+                }
+            }
+        }, function(err) {
+            logger.info('Finished with updateSecurity');
+            callback(null, {
+                fn: 'updateSecurity',
+                errors: err
+            });
+        });
     }
 };
 
