@@ -1147,7 +1147,7 @@ var dti = {
         }
     },
     taskbar: {
-        pinnedItems: ['Display'],
+        pinnedItems: ['Navigator', 'Display'],
         init: function () {
             dti.bindings.startMenuItems(ko.viewmodel.fromModel(dti.config.itemGroups));
             //load user preferences 
@@ -2415,7 +2415,7 @@ var dti = {
                     config = $.extend(defaultConfig, cfg || {}),
                     propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
 
-                if (cfg.pointType && !cfg.pointTypes) {
+                if (cfg.pointType && !cfg.pointTypes && cfg.pointType !== 'Point') {
                     config.pointTypes = [cfg.pointType];
                 }
 
@@ -3186,6 +3186,14 @@ var dti = {
         },
         closeWindows: function (group) {
             dti.windows.closeAll(group);
+        },
+        taskbarButtonClick: function (object) {
+            dti.fire('hideMenus');
+            if (object.singleton()) {
+                dti.bindings.startMenuClick(object);
+            } else {
+                dti.bindings.showNavigator(object.group());
+            }
         },
         showNavigator: function (group, isStartMenu) {
             dti.navigator.showNavigator(group);

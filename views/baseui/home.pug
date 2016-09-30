@@ -490,9 +490,9 @@ html
 
 
     script#taskbarButtonTemplate(type='text/html')
-        li.taskbarItem.active(data-bind="taskbarMenu: $data")
+        li.taskbarItem(data-bind="taskbarMenu: $data, css: { active: $root.openWindows[group()]().length > 0 }")
             //- div
-            a.taskbarButton.testHover.hoverButton2.waves-effect(href='javascript://')
+            a.taskbarButton.testHover.hoverButton2.waves-effect(href='javascript://', data-bind="click: $root.taskbarButtonClick")
                 i(data-bind="text: iconText, css: iconClass")
                 span(data-bind="text: title")
 
@@ -511,6 +511,12 @@ html
                 a.blue-grey-text.action(href="javascript://", data-bind="visible: $root.openWindows[group()]().length > 0, click: function () { $root.closeWindows(group()); }")
                     i.material-icons close
                     span Close All
+            // /ko
+
+            // ko if: singleton() === true && $root.openWindows[group()]().length === 0
+            .actionList
+                a.blue-grey-text.action(href="javascript://", data-bind="click: $root.startMenuClick") Open
+
             // /ko
 
             .items.flex.flex-row(data-bind="visible: $root.openWindows[group()]().length > 0")
