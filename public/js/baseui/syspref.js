@@ -1245,13 +1245,15 @@ var telemetryViewModel = function() {
                 self.dirty(false);
             }
             self.networks([]);
-            for (var n = 0; n < networks.length; n++) {
-                // self.networks.push(ko.viewmodel.fromModel(networks[n]));
-                if (!!networks[n].isDefault) {
-                    self.systemDefault(networks[n]['IP Network Segment']);
+            if (!!networks) {
+                for (var n = 0; n < networks.length; n++) {
+                    // self.networks.push(ko.viewmodel.fromModel(networks[n]));
+                    if (!!networks[n].isDefault) {
+                        self.systemDefault(networks[n]['IP Network Segment']);
+                    }
+                    self.addNetwork(null, null, ko.viewmodel.fromModel(networks[n]));
+                    self.dirty(false);
                 }
-                self.addNetwork(null, null, ko.viewmodel.fromModel(networks[n]));
-                self.dirty(false);
             }
             self.initialized(true);
             // console.log("setdata originalValues", originalValues);

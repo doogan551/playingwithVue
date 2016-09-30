@@ -426,13 +426,6 @@ var reportsViewModel = function () {
         Name = "dorsett.reportUI",
         getPointURL = "/api/points/",
         originalPoint = {},
-        pointFilterSearch = {
-            name1: "",
-            name2: "",
-            name3: "",
-            name4: "",
-            selectedPointTypes: []
-        },
         permissionLevels = {
             READ: 1,
             CONTROL: 2,
@@ -536,6 +529,15 @@ var reportsViewModel = function () {
                     }
                 }
             }
+        },
+        getPointInspectorParams = function () {
+            return {
+                name1: self.name1Filter(),
+                name2: self.name2Filter(),
+                name3: self.name3Filter(),
+                name4: self.name4Filter(),
+                pointTypes: self.selectedPointTypesFilter()
+            };
         },
         getPointRefByAppIndex = function (appIndex) {
             var result = -1,
@@ -908,8 +910,7 @@ var reportsViewModel = function () {
             }, 6000);  // display error message
         },
         openPointSelectorForModalColumn = function (selectObjectIndex) {
-            var parameters,
-                tempPoint,
+            var tempPoint,
                 updatedList = $.extend(true, [], self.listOfColumns()),
                 tempObject = updatedList[selectObjectIndex],
                 setColumnPoint = function (selectedPoint) {
@@ -968,19 +969,13 @@ var reportsViewModel = function () {
                     if (!!pointInfo) {
                         ajaxCall("GET", null, getPointURL + pointInfo._id, setColumnPoint);
                     }
-                    // pointFilterSearch.name1 = filter.filter1;
-                    // pointFilterSearch.name2 = filter.filter2;
-                    // pointFilterSearch.name3 = filter.filter3;
-                    // pointFilterSearch.name4 = filter.filter4;
-                    // pointFilterSearch.selectedPointTypes = filter.selectedPointTypes;
                 };
 
-            dtiUtility.showPointSelector(parameters);
+            dtiUtility.showPointSelector(getPointInspectorParams());
             dtiUtility.onPointSelect(pointSelectedCallback);
         },
         openPointSelectorForColumn = function (selectObjectIndex) {
-            var parameters,
-                tempPoint,
+            var tempPoint,
                 updatedList = $.extend(true, [], self.listOfColumns()),
                 tempObject = updatedList[selectObjectIndex],
                 setColumnPoint = function (selectedPoint) {
@@ -1037,19 +1032,13 @@ var reportsViewModel = function () {
                     if (!!pointInfo) {
                         ajaxCall("GET", null, getPointURL + pointInfo._id, setColumnPoint);
                     }
-                    // pointFilterSearch.name1 = filter.filter1;
-                    // pointFilterSearch.name2 = filter.filter2;
-                    // pointFilterSearch.name3 = filter.filter3;
-                    // pointFilterSearch.name4 = filter.filter4;
-                    // pointFilterSearch.selectedPointTypes = filter.selectedPointTypes;
                 };
 
-            dtiUtility.showPointSelector(parameters);
+            dtiUtility.showPointSelector(getPointInspectorParams());
             dtiUtility.onPointSelect(pointSelectedCallback);
         },
         openPointSelectorForFilter = function (selectObjectIndex) {
-            var parameters,
-                tempPoint,
+            var tempPoint,
                 objIndex = selectObjectIndex,
                 updatedList = $.extend(true, [], self.listOfFilters()),
                 tempObject = updatedList[selectObjectIndex],
@@ -1075,26 +1064,14 @@ var reportsViewModel = function () {
                     if (!!pointInfo) {
                         ajaxCall("GET", null, getPointURL + pointInfo._id, setFilterPoint);
                     }
-                    // pointFilterSearch.name1 = filter.filter1;
-                    // pointFilterSearch.name2 = filter.filter2;
-                    // pointFilterSearch.name3 = filter.filter3;
-                    // pointFilterSearch.name4 = filter.filter4;
-                    // pointFilterSearch.selectedPointTypes = filter.selectedPointTypes;
                 };
 
-            dtiUtility.showPointSelector(parameters);
+            dtiUtility.showPointSelector(getPointInspectorParams());
             dtiUtility.onPointSelect(pointSelectedCallback);
         },
         openPointSelectorFilterMode = function () {
             if (!scheduled) {
-                var parameters = {
-                        name1: self.name1Filter(),
-                        name2: self.name2Filter(),
-                        name3: self.name3Filter(),
-                        name4: self.name4Filter(),
-                        pointTypes: self.selectedPointTypesFilter()
-                    },
-                    pointSelectedCallback = function (pointFilter) {
+                var pointSelectedCallback = function (pointFilter) {
                         self.name1Filter(pointFilter.name1);
                         self.name2Filter(pointFilter.name2);
                         self.name3Filter(pointFilter.name3);
@@ -1102,7 +1079,7 @@ var reportsViewModel = function () {
                         self.selectedPointTypesFilter(pointFilter.pointTypes);
                     };
 
-                dtiUtility.showPointFilter(parameters);
+                dtiUtility.showPointFilter(getPointInspectorParams());
                 dtiUtility.onPointSelect(pointSelectedCallback);
             }
         },
@@ -4372,17 +4349,16 @@ var reportsViewModel = function () {
     };
 
     self.showPointReview = function (data) {
-        var openWindow = window.workspaceManager.openWindowPositioned,
-            upi = parseInt(data.upi, 10),
+        var upi = parseInt(data.upi, 10),
             options = {
                 width: 1250,
                 height: 750
             };
         if (upi > 0) {
             if (data.pointType === "Display") {
-                openWindow("/displays/view/" + upi, "Display", "Display", "newwindow", upi, options);
+                dtiUtility.openWindow("/displays/view/" + upi, "Display", "Display", "newwindow", upi, options);
             } else {
-                openWindow("/pointinspector/" + upi, "Point", "Point", "newwindow", upi, options);
+                dtiUtility.openWindow("/pointinspector/" + upi, "Point", "Point", "newwindow", upi, options);
             }
         }
     };

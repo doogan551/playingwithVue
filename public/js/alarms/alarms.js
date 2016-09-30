@@ -268,6 +268,7 @@ var AlarmManager = function (conf) {
                 val = (typeof data[Name] === 'function') ? data[Name]() : data[Name];
 
                 nameSegments[name].value(val.length ? val : undefined);
+                nameFilterObj[name] = nameSegments[name].value();
             }
             self.nameFilterPaused(false);
             applyFilter(true);
@@ -2473,6 +2474,14 @@ var AlarmManager = function (conf) {
         if (!self.dirty()) {
             return;
         }
+
+        nameFilterObj = {
+            name1: '',
+            name2: '',
+            name3: '',
+            name4: '',
+            pointTypes: []
+        };
 
         var view = self.currentView();
 
