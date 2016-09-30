@@ -104,6 +104,32 @@ var dti = {
                     width: '85%',
                     height: '85%'
                 }
+            },
+            'Thumbnails': {
+                title: 'Thumbnails',
+                iconText: 'photo_camera',
+                iconClass: 'material-icons',
+                group: 'Thumbnails',
+                standalone: true,
+                singleton: true,
+                url: '/thumbnail/batch',
+                adminOnly: true,
+                options: {
+                    width: 1000
+                }
+            },
+            'Navigator': {
+                title: 'Navigator',
+                iconText: '',
+                iconClass: 'mdi mdi-compass',
+                group: 'Navigator',
+                standalone: true,
+                singleton: true,
+                initFn: 'navigator.createNavigator',
+                fullScreen: true
+                // options: {
+                //     width: 1000
+                // }
             }
         }
     },
@@ -291,6 +317,60 @@ var dti = {
         }
     },
     thumbs: {
+    },
+    thumbnails: {
+        $window: $('#thumbnailGen'),
+        currUpi: null,
+        // init: function () {
+
+        // },
+        postProcess: function () {
+            if (dti.thumbnails.prevUpi) {
+                dti.fire('thumbnailCaptured', dti.thumbnails.prevUpi);
+                dti.thumbnails.prevUpi = null;
+            }
+        },
+        capture: function (obj) {
+            var upi = obj.upi,
+                name = obj.name,
+                type = obj.type.toLowerCase(),
+                gen,
+                setGen = function () {
+                    gen = dti.thumbnails.thumbnailWindowRef.thumbnailGenerator;
+                },
+                runCapture = function () {
+                    dti.log('Capturing thumbnail');
+
+                    dti.thumbnails.prevUpi = upi;
+
+                    gen.captureList([{
+                        'id': upi,
+                        'name': name,
+                        'type': type,
+                        'tn': false
+                    }]);
+                    // gen.hasQueued = false;
+                    // gen.retainQueue = true;
+                    // gen.thumbnailCallback = closeOut;
+                    gen.nextCapture();
+                },
+                init = function () {
+                    setGen();
+
+                    gen.thumbnailCallback = dti.thumbnails.postProcess;  
+
+                    runCapture();
+                };
+
+            if (!dti.thumbnails.thumbnailWindowRef) {
+                dti.thumbnails.thumbnailWindowRef = dti.thumbnails.$window[0].contentWindow;
+                dti.utility.addEvent(dti.thumbnails.$window[0], 'load', init);
+                dti.thumbnails.$window.attr('src', window.location.origin + '/thumbnail/' + upi);
+            } else {
+                setGen();
+                runCapture();
+            }
+        }
     },
     animations: {
         tempinit: function () {
@@ -557,19 +637,19 @@ var dti = {
                     }
 
                     if (obj.right) {
-                        if (obj.right - (obj.left || 0) >  containerWidth) {
+                        if (parseInt(obj.right, 10) - (parseInt(obj.left || 0), 10) >  containerWidth) {
                             obj.left = containerPadding;
                             obj.right = containerPadding;
                             obj.width = containerWidth - (2 * containerPadding);
                         }
                     } else {
-                        if ((obj.left || 0) + obj.width > containerWidth) {
+                        if (parseInt(obj.left || 0, 10) + parseInt(obj.width, 10) > containerWidth) {
                             obj.width = containerWidth;
                             obj.left = containerPadding;
                         }
                     }
 
-                    if ((obj.top || 0) + obj.height > containerHeight) {
+                    if (parseInt(obj.top || 0, 10) + parseInt(obj.height, 10) > containerHeight) {
                         obj.height = containerHeight;
                         obj.top = containerPadding;
                     }
@@ -591,6 +671,7 @@ var dti = {
                 return groupName;
             },
             close = function (event) {
+                dti.off('thumbnailCaptured', self.handleThumbnail);
                 self.bindings.minimize();
                 dti.bindings.openWindows[self.bindings.group()].remove(self.bindings);
 
@@ -599,14 +680,18 @@ var dti = {
 
                 dti.fire('closeWindow', self);
 
-                if (self.$iframe[0].contentWindow.destroy) {
-                    self.$iframe[0].contentWindow.destroy();
+                if (self.$iframe && self.$iframe[0].contentWindow) {
+                    if (self.$iframe[0].contentWindow.destroy) {
+                        self.$iframe[0].contentWindow.destroy();
+                    }
                 }
 
                 setTimeout(function closeWindow () {
-                    self.$iframe.attr('src', 'about:blank');
-                    ko.cleanNode(self.$windowEl[0]);
-                    $(self.$iframe[0].contentDocument).off('mousedown');
+                    if (self.$iframe) {
+                        self.$iframe.attr('src', 'about:blank');
+                        ko.cleanNode(self.$windowEl[0]);
+                        $(self.$iframe[0].contentDocument).off('mousedown');
+                    }
                     self.$windowEl.remove();
                     // dti.destroyObject(self.bindings);
                     dti.destroyObject(self, true);
@@ -635,6 +720,8 @@ var dti = {
                     self.bindings.minimized(false);
                     self.bindings.active(true);
                 }
+
+                return true;
             },
             clearEvents = function () {
                 $(self.$iframe[0].contentDocument).off('mousedown', handleIframeClick);
@@ -645,6 +732,7 @@ var dti = {
                 self.bindings.url(url);
             },
             refresh = function () {
+                self.bindings.loading(true);
                 self.$iframe[0].contentWindow.location.reload();
             },
             getTitleForPoint = function (upi) {
@@ -663,12 +751,14 @@ var dti = {
                     group: ko.observable(getGroupName(config)),
                     url: ko.observable(config.url),
                     upi: ko.observable(config.upi),
+                    hasUrl: ko.observable(!!config.url),
                     refresh: refresh,
                     activate: activate,
                     minimize: minimize,
                     minimized: ko.observable(false),
                     loading: ko.observable(true),
                     windowsHidden: dti.bindings.windowsHidden,
+                    hidden: false,
                     close: close,
                     iconClass: ko.observable(),
                     iconText: ko.observable(),
@@ -697,6 +787,12 @@ var dti = {
 
                     if (callbacks[message.action]) {
                         callbacks[message.action]();
+                    }
+                },
+                handleThumbnail: function (obj) {
+                    if (obj === self.bindings.upi()) {
+                        self.bindings.thumbnailFound(true);
+                        self.bindings.upi.valueHasMutated();
                     }
                 },
                 onLoad: function (event) {
@@ -738,10 +834,15 @@ var dti = {
 
         $('main').append(self.$windowEl);
         self.$windowEl.attr('id', windowId);
-        self.$iframe = self.$windowEl.children('iframe');
-        self.$iframe.attr('id', iframeId);
 
-        dti.utility.addEvent(self.$iframe[0], 'load', self.onLoad);
+        if (config.url) {
+            self.$iframe = self.$windowEl.children('iframe');
+            self.$iframe.attr('id', iframeId);
+
+            dti.utility.addEvent(self.$iframe[0], 'load', self.onLoad);
+        }
+
+        dti.on('thumbnailCaptured', self.handleThumbnail);
 
         if (config.upi !== undefined && typeof config.upi === 'number') {
             self.bindings.upi(config.upi);
@@ -768,6 +869,18 @@ var dti = {
         // }, 100);
 
         ko.applyBindings(self.bindings, self.$windowEl[0]);
+
+        if (!config.url) {
+            self.initFn = dti.utility.getPathFromObject(config.initFn, dti);
+            // self.instance = new self.cls({
+            //     $container: self.$windowEl.children('.markupContent')
+            // });
+            self.initFn({
+                $container: self.$windowEl.find('.markupContent')
+            });
+
+            self.bindings.loading(false);
+        }
 
         return {
             setUrl: setUrl,
@@ -900,7 +1013,9 @@ var dti = {
 
             targetWindow = dti.windows.getWindowById(winId);
 
-            targetWindow.handleMessage(e);
+            if (targetWindow) {
+                targetWindow.handleMessage(e);
+            }
         },
         create: function (config) {
             var newWindow;
@@ -956,7 +1071,7 @@ var dti = {
                 config.type = dti.workspaceManager.config.Utility.pointTypes.getPointTypeNameFromEnum(config.type);
             }
 
-            if (typeof config.url !== 'string') {
+            if (typeof config.url !== 'string' && !config.initFn) {
                 config.url = dti.utility.getEndpoint(config.type, config.upi).review.url;
             }
 
@@ -1046,6 +1161,7 @@ var dti = {
                     openWindows = dti.bindings.openWindows[group]();
 
                 if (openWindows.length === 0) {
+                    dti.fire('hideMenus');
                     dti.bindings.windowGroups.remove(function removeWindowGroup (item) {
                         return item.group() === group && item.pinned() === false;
                     });
@@ -1173,12 +1289,21 @@ var dti = {
                 id = dti.makeId(),
                 openWindows,
                 doOpenWindow = function () {
-                    dti.windows.openWindow(obj.url + '?' + id, obj.title, obj.group, null, null, obj.options);
+                    if (obj.url) {
+                        obj.url += '?' + id;
+                    }
+
+                    obj.pointType = obj.group;
+
+                    dti.windows.openWindow(obj);
                 };
 
             if (!obj.standalone) {
                 dti.settings._workspaceNav = true;
-                dti.bindings.showNavigator(obj.group, true);
+                dti.bindings.showNavigator({
+                    pointType: obj.group,
+                    retainNames: true
+                });
             } else {
                 if (obj.singleton) {
                     openWindows = dti.windows.getWindowsByType(obj.group);
@@ -2115,6 +2240,25 @@ var dti = {
                         return true;
                     };
 
+                    bindings.modalText = ko.pureComputed(function getModalText () {
+                        var mode = bindings.mode(),
+                            ret;
+
+                        switch (mode) {
+                            case self.modes.CREATE: 
+                                ret = 'Create Point';
+                                break;
+                            case self.modes.FILTER: 
+                                ret = 'Select Filter';
+                                break;
+                            case self.modes.DEFAULT: 
+                                ret = 'Select Point';
+                                break;
+                        }
+
+                        return ret;
+                    });
+
                     bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint () {
                         var uniqueName = bindings.points().length === 0,
                             disabled = bindings.disableCreatePoint(),
@@ -2271,11 +2415,17 @@ var dti = {
                     config = $.extend(defaultConfig, cfg || {}),
                     propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
 
+                if (cfg.pointType && !cfg.pointTypes) {
+                    config.pointTypes = [cfg.pointType];
+                }
+
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
 
                 self.applyPointTypes(config.pointTypes);
 
-                self.applyPointNames(config);
+                if (!config.retainNames) {
+                    self.applyPointNames(config);
+                }
 
                 dti.forEachArray(propertiesToApply, function applyProperty (prop) {
                     self.bindings[prop](config[prop]);
@@ -2437,9 +2587,9 @@ var dti = {
             };
 
             dti.events.bodyClick(function checkNavigatorOpenMenu (event, $target) {
-                var buttonClass = '.pointTypeDropdownButton';
+                var buttonClass = 'pointTypeDropdownButton';
 
-                if (self.bindings.dropdownOpen() && $target.parents('.dropdown-content').length === 0 && !$target.hasClass(buttonClass) && $target.parents(buttonClass).length === 0) {
+                if (self.bindings.dropdownOpen() && $target.parents('.dropdown-content').length === 0 && !$target.hasClass(buttonClass) && $target.closest('.' + buttonClass).length === 0) {
                     self.bindings.dropdownOpen(false);
                 }
             });
@@ -2461,9 +2611,9 @@ var dti = {
             var templateMarkup = dti.navigator.getTemplate('#navigatorTemplate'),
                 navigatorMarkup,
                 navigator,
-                $container = (isModal === true) ? $('main') : isModal;
+                $container = (isModal === true) ? $('main') : (isModal.$container || isModal);
 
-            if (isModal) {
+            if (isModal === true) {
                 navigatorModalMarkup = dti.navigator.getTemplate('#navigatorModalTemplate');
                 $container.append(navigatorModalMarkup);
                 $container = navigatorModalMarkup;
@@ -2527,10 +2677,19 @@ var dti = {
 
             return ret;
         },
-        getConfig: function (path, parameters) {
+        getPathFromObject: function (path, obj) {
             var explodedPath = path.split('.'),
-                Config = dti.workspaceManager.config,
-                result = Config;
+                result = obj;
+
+            dti.forEachArray(explodedPath, function processPathSegment (segment) {
+                result = result[segment];
+            });
+
+            return result;
+        },
+        getConfig: function (path, parameters) {
+            var Config = dti.workspaceManager.config,
+                result = dti.utility.getPathFromObject(path, Config);
 
             dti.forEachArray(explodedPath, function processPathSegment (segment) {
                 result = result[segment];
@@ -2901,6 +3060,11 @@ var dti = {
         startMenuItems: ko.observableArray([]),
         windowsHidden: ko.observable(false),
         taskbarShown: ko.observable(true),
+        hasAccess: function (obj) {
+            var cfg = ko.toJS(obj.value);
+
+            return !cfg.adminOnly || dti.workspaceManager.user()['System Admin'].Value === true;
+        },
         // showNavigator: function () {
         //     dti.navigator.showNavigator();
         // },
@@ -3026,6 +3190,12 @@ var dti = {
         showNavigator: function (group, isStartMenu) {
             dti.navigator.showNavigator(group);
             // dti.navigator.showNavigator(group, isStartMenu);
+        },
+        showCreatePoint: function (group) {
+            dti.navigator.showNavigator({
+                mode: 'create',
+                newPointType: group.group()
+            });
         },
         startMenuClick: function (obj) {
             dti.fire('hideMenus');
@@ -3574,6 +3744,6 @@ dti.workspaceManager = window.workspaceManager = {
         return JSON.parse(JSON.stringify(dti.bindings.user()));
     },
     captureThumbnail: function () {
-        dti.log('thumbnail placeholder');
+        dti.thumbnails.capture.apply(this, arguments);
     }
 };

@@ -406,6 +406,8 @@ var reportsViewModel = function () {
         $hiddenPlaceholder,
         $globalPrecision,
         $globalIncludeInChart,
+        $globalCalculateText,
+        $globalCalculate,
         $availableChartTypesChartTab,
         $reportChartDiv,
         $saveReportButton,
@@ -422,7 +424,7 @@ var reportsViewModel = function () {
         exportLandscape = true,
         headerAdjusted = false,
         Name = "dorsett.reportUI",
-        getPointURL = "/api/points/getpoint",
+        getPointURL = "/api/points/",
         originalPoint = {},
         pointFilterSearch = {
             name1: "",
@@ -475,7 +477,7 @@ var reportsViewModel = function () {
                 point["Point Refs"].push(tempRef);
             } else {
                 if (!!refPointUPI) {
-                    ajaxPost({pointid: refPointUPI}, getPointURL, pushNewReferencedPoint);
+                    ajaxCall("GET", null, getPointURL + refPointUPI, pushNewReferencedPoint);
                 }
                 console.log("setNewPointReference() refPointUPI = " + refPointUPI + " property = " + property + "  refPoint = " + refPoint);
             }
@@ -652,10 +654,35 @@ var reportsViewModel = function () {
                 });
             return uuid;
         },
+        noExponents = function (theNumber) {
+            var data = String(theNumber).split(/[eE]/);
+
+            if (data.length === 1) {
+                return data[0];
+            }
+
+            var z = "", sign = theNumber < 0 ? "-" : "",
+                str = data[0].replace(".", ""),
+                mag = Number(data[1]) + 1;
+
+            if (mag < 0) {
+                z = sign + "0.";
+                while (mag++) {
+                    z += "0";
+                }
+                return z + str.replace(/^\-/, "");
+            }
+            mag -= str.length;
+            while (mag--) {
+                z += "0";
+            }
+
+            return str + z;
+        },
         toFixed = function (number, p) {
             var precision = parseInt(p, 10),
-                abs = Math.abs(parseFloat(number, 10)),
-                str = abs.toString(),
+                abs = Math.abs(parseFloat(number)),
+                str = noExponents(abs),
                 digits = str.split(".")[1],
                 negative = number < 0,
                 lastNumber,
@@ -763,9 +790,9 @@ var reportsViewModel = function () {
         checkForColumnCalculations = function () {
             for (var i = 0; i < self.listOfColumns().length; i++) {
                 if (!!self.listOfColumns()[i].canCalculate && self.listOfColumns()[i].canCalculate) {
-                    $columnsGrid.find(".multiplierColumn").html("Multiplier");
-                    $columnsGrid.find(".calculateColumn").html("Calculate");
-                    $columnsGrid.find(".precisionColumn").html("Precision");
+                    $columnsGrid.find("th .multiplierColumn").html("Multiplier");
+                    $globalCalculateText.html("Calculate");
+                    $columnsGrid.find("th .precisionColumn").html("Precision");
                     break;
                 }
             }
@@ -853,14 +880,14 @@ var reportsViewModel = function () {
 
             return filters;
         },
-        ajaxPost = function (input, url, callback) {
+        ajaxCall = function (type, input, url, callback) {
             self.activeRequestDataDrawn(false);
             $.ajax({
                 url: url,
-                type: "POST",
+                type: type,
                 contentType: "application/json",
                 dataType: "json",
-                data: JSON.stringify(input)
+                data: (!!input ? JSON.stringify(input) : null)
             }).done(function (returnData) {
                 if (callback) {
                     callback.call(self, returnData);
@@ -939,7 +966,7 @@ var reportsViewModel = function () {
                 },
                 pointSelectedCallback = function (pointInfo) {
                     if (!!pointInfo) {
-                        ajaxPost({pointid: pointInfo._id}, getPointURL, setColumnPoint);
+                        ajaxCall("GET", null, getPointURL + pointInfo._id, setColumnPoint);
                     }
                     // pointFilterSearch.name1 = filter.filter1;
                     // pointFilterSearch.name2 = filter.filter2;
@@ -1008,7 +1035,7 @@ var reportsViewModel = function () {
                 },
                 pointSelectedCallback = function (pointInfo) {
                     if (!!pointInfo) {
-                        ajaxPost({pointid: pointInfo._id}, getPointURL, setColumnPoint);
+                        ajaxCall("GET", null, getPointURL + pointInfo._id, setColumnPoint);
                     }
                     // pointFilterSearch.name1 = filter.filter1;
                     // pointFilterSearch.name2 = filter.filter2;
@@ -1046,7 +1073,7 @@ var reportsViewModel = function () {
                 },
                 pointSelectedCallback = function (pointInfo) {
                     if (!!pointInfo) {
-                        ajaxPost({pointid: pointInfo._id}, getPointURL, setFilterPoint);
+                        ajaxCall("GET", null, getPointURL + pointInfo._id, setFilterPoint);
                     }
                     // pointFilterSearch.name1 = filter.filter1;
                     // pointFilterSearch.name2 = filter.filter2;
@@ -1810,6 +1837,8 @@ var reportsViewModel = function () {
             $hiddenPlaceholder = $direports.find(".hiddenPlaceholder");
             $globalPrecision = $hiddenPlaceholder.find("input.globalPrecision");
             $globalIncludeInChart = $hiddenPlaceholder.find("div.globalIncludeInChart");
+            $globalCalculateText = $columnsGrid.find("th .calculateColumn .columnText");
+            $globalCalculate = $columnsGrid.find("th .globalCalculate");
             $availableChartTypesChartTab = $direports.find(".availableChartTypes.chartTab");
             $reportChartDiv = $direports.find(".reportChartDiv");
         },
@@ -1956,6 +1985,7 @@ var reportsViewModel = function () {
                         result.Value = $customField.html();
                         break;
                     case "Float":
+                    case "Double":
                     case "Integer":
                         if ($.isNumeric(rawValue)) {
                             result.Value = toFixedComma(columnConfig.multiplier * rawValue, columnConfig.precision);
@@ -2418,16 +2448,15 @@ var reportsViewModel = function () {
             }
         },
         setReportEvents = function () {
-            var i,
-                numberOfRowsPerPage,
-                intervals,
+            var intervals,
                 calculations,
                 entriesPerPage,
                 chartTypes,
                 precisionEventsSet = false,
                 precisionOriginalField,
                 includeInChartEventsSet = false,
-                includeInChartOriginalField;
+                includeInChartOriginalField,
+                calculateEventsSet = false;
 
             $(window).resize(function () {
                 handleResize();
@@ -2539,6 +2568,7 @@ var reportsViewModel = function () {
                     updateListOfColumns(columnsArray);
                     $dataTablePlaceHolder.DataTable().draw("current");
                     console.log("moved column '" + details.from + "' to column '" + details.to + "'");
+                    return true;
                 });
 
                 $dataTablePlaceHolder.on("column-resize.dt", function (event, settings, details) {
@@ -2546,6 +2576,7 @@ var reportsViewModel = function () {
                     columnsArray[details.resizedColumn].width = details.width;
                     updateListOfColumns(columnsArray);
                     $dataTablePlaceHolder.DataTable().draw("current");
+                    return true;
                     // console.log("column '" + details.resizedColumn + "' width set to '" + details.width + "'");
                 });
 
@@ -2654,6 +2685,58 @@ var reportsViewModel = function () {
                     return true;
                 });
 
+                $columnsGrid.find("th .calculateColumn").on("mousedown", function (e) {
+                    if (self.canEdit()) {
+                        longClickStart = moment();
+                    }
+                });
+
+                $columnsGrid.find("th .calculateColumn").on("click", function (parentEvent) {
+                    var $calculateColumnDiv = $(this),
+                        toggleField = function (displayGlobalButton) {
+                            if (displayGlobalButton) {
+                                $calculateColumnDiv.focus();
+                                $globalCalculateText.removeClass("displayDiv");
+                                $globalCalculateText.addClass("hideDiv");
+                                $globalCalculate.removeClass("hideDiv");
+                                $globalCalculate.addClass("displayDiv");
+                                $globalCalculate.find(".availableCalculations").addClass("open");
+                                $globalCalculate.find("a").addClass("active");
+                                $globalCalculate.find("a").attr("aria-expanded", true);
+                            } else if (!displayGlobalButton) {
+                                $globalCalculateText.addClass("displayDiv");
+                                $globalCalculateText.removeClass("hideDiv");
+                                $globalCalculate.addClass("hideDiv");
+                                $globalCalculate.removeClass("displayDiv");
+                                $globalCalculate.find(".availableCalculations").removeClass("open");
+                                $globalCalculate.find("a").removeClass("active");
+                                $globalCalculate.find("a").attr("aria-expanded", false);
+                            }
+                        };
+
+                    if (self.canEdit()) {
+                        // parentEvent.preventDefault();
+                        parentEvent.stopPropagation();
+                        if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
+
+                            toggleField($globalCalculate.has($(parentEvent.target)).length > 0);
+
+                            if (!calculateEventsSet) {
+                                calculateEventsSet = true;
+                                toggleField(true);
+                                $calculateColumnDiv.on( "focusout", function (outEvent) {
+                                    if (!$calculateColumnDiv.is(":focus")) {  // clicked outside of calculate column div
+                                        toggleField(false);
+                                        calculateEventsSet = false;
+                                        $(outEvent.target).off("focusout");
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    return true;
+                });
+
                 $filtersGrid.sortable({
                     appendTo: $filtersTbody,
                     disabled: false,
@@ -2741,19 +2824,7 @@ var reportsViewModel = function () {
                 }
             ];
 
-            calculations = [
-                {
-                    text: "Mean"
-                }, {
-                    text: "Max"
-                }, {
-                    text: "Min"
-                }, {
-                    text: "Sum"
-                }, {
-                    text: "Std Dev"
-                }
-            ];
+            calculations = ["Mean", "Max", "Min", "Sum", "Std Dev"];
 
             entriesPerPage = [
                 {
@@ -3200,7 +3271,17 @@ var reportsViewModel = function () {
                             totalFooterText,
                             footerText,
                             footerTitle,
-                            $tdFooter;
+                            $tdFooter,
+                            $footerTableDataCollection;
+
+                        $footerTableDataCollection = $(tfoot).find("td");
+                        $footerTableDataCollection.html(""); // clear existing footers
+                        $footerTableDataCollection.attr("data-content", "&nbsp;"); // clear title data (mouse over)
+                        $footerTableDataCollection.removeAttr("data-toggle");
+                        $footerTableDataCollection.removeAttr("data-trigger");
+                        $footerTableDataCollection.removeAttr("data-html");
+                        $footerTableDataCollection.removeAttr("title");
+                        $footerTableDataCollection.removeAttr("data-original-title");
 
                         for (i = 0; i < numberOfColumnsToCalculate; i++) {
                             footerText = "";
@@ -4000,6 +4081,7 @@ var reportsViewModel = function () {
     self.deleteColumnRow = function (item) {
         self.listOfColumns.remove(item);
         updateListOfColumns(self.listOfColumns());
+        return true;
     };
 
     self.deleteFilterRow = function (item) {
@@ -4326,15 +4408,15 @@ var reportsViewModel = function () {
                         reportData = undefined;
                         switch (self.reportType) {
                             case "History":
-                                ajaxPost(requestObj, dataUrl + "/report/historyDataSearch", renderHistoryReport);
+                                ajaxCall("POST", requestObj, dataUrl + "/report/historyDataSearch", renderHistoryReport);
                                 //reportSocket.emit("historyDataSearch", {options: requestObj});
                                 break;
                             case "Totalizer":
-                                ajaxPost(requestObj, dataUrl + "/report/totalizerReport", renderTotalizerReport);
+                                ajaxCall("POST", requestObj, dataUrl + "/report/totalizerReport", renderTotalizerReport);
                                 //reportSocket.emit("totalizerReport", {options: requestObj});
                                 break;
                             case "Property":
-                                ajaxPost(requestObj, dataUrl + "/report/reportSearch", renderPropertyReport);
+                                ajaxCall("POST", requestObj, dataUrl + "/report/reportSearch", renderPropertyReport);
                                 //reportSocket.emit("reportSearch", {options: requestObj});
                                 break;
                             default:
@@ -4379,6 +4461,7 @@ var reportsViewModel = function () {
         var tempArray = self.listOfColumns();
         tempArray[indexOfColumn] = getNewColumnTemplate();
         updateListOfColumns(tempArray);
+        return true;
     };
 
     self.addNewColumn = function (indexOfColumn) {
@@ -4392,6 +4475,7 @@ var reportsViewModel = function () {
         }
 
         updateListOfColumns(tempArray);
+        return true;
     };
 
     self.deleteReportColumn = function (indexOfColumn) {
@@ -4416,6 +4500,7 @@ var reportsViewModel = function () {
         tempArray[self.currentColumnEditIndex()] = self.currentColumnEdit();
         updateListOfColumns(tempArray);
         $editColumnModal.modal("hide");
+        return true;
     };
 
     self.clearColumnCalculation = function (indexOfColumn) {
@@ -4423,6 +4508,7 @@ var reportsViewModel = function () {
             column = tempArray[indexOfColumn];
         column.calculation = [];
         updateListOfColumns(tempArray);
+        return true;
     };
 
     self.globalCalculationClick = function (element, calc) {
@@ -4454,7 +4540,9 @@ var reportsViewModel = function () {
 
     self.calculationClick = function (element, calc, indexOfColumn) {
         var tempArray = self.listOfColumns(),
-            column = tempArray[indexOfColumn];
+            column = tempArray[indexOfColumn],
+            $dropdownButton = $(element).parent().parent().parent().parent().find("a"),
+            $dropdown = $dropdownButton.parent();
 
         if (element.checked === true) {
             if (column.calculation.indexOf(calc) === -1) {
@@ -4463,6 +4551,31 @@ var reportsViewModel = function () {
         } else {
             if (column.calculation.indexOf(calc) !== -1) {
                 column.calculation.splice(column.calculation.indexOf(calc), 1);
+            }
+        }
+
+        // updateListOfColumns(tempArray);
+        $dropdownButton.attr("aria-expanded", true);
+        $dropdown.addClass("open");
+        return true;
+    };
+
+    self.globalCalculationClick = function (element, calc) {
+        var i,
+            tempArray = self.listOfColumns(),
+            column;
+
+        for (i = 0; i < tempArray.length; i++) {
+            column = tempArray[i];
+
+            if (element.checked === true) {
+                if (column.calculation.indexOf(calc) === -1) {
+                    column.calculation.push(calc);
+                }
+            } else {
+                if (column.calculation.indexOf(calc) !== -1) {
+                    column.calculation.splice(column.calculation.indexOf(calc), 1);
+                }
             }
         }
 
@@ -4520,6 +4633,7 @@ var reportsViewModel = function () {
 
         updateListOfColumns(tempArray);
         $globalEditColumnModal.modal("hide");
+        return true;
     };
 
     self.clearFilterPoint = function (indexOfColumn) {
@@ -4554,6 +4668,7 @@ var reportsViewModel = function () {
         column.yaxisGroup = "A";
         column.includeInChart = false;
         updateListOfColumns(tempArray);
+        return true;
     };
 
     self.selectPropertyFilter = function (element, indexOfFilter, selectedItem) {
@@ -4584,6 +4699,7 @@ var reportsViewModel = function () {
             column = tempArray[indexOfColumn];
         column.calculation = selectedItem;
         updateListOfColumns(tempArray);
+        return true;
     };
 
     self.selectNumberOfEntries = function (element, selectedItem) {

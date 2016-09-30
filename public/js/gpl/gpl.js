@@ -2274,6 +2274,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         this.label = this.label || (!this.config.inactive ? gpl.getLabel(this.type) : '');
 
+        if (typeof this.label === 'number') {
+            this.label = this.label.toString();
+        }
+
         if (this.config.inactive) {
             config.visible = false;
         }
@@ -2802,7 +2806,7 @@ gpl.blocks.SPA = fabric.util.createClass(gpl.Block, {
             icon;
 
         if (data) {
-            reverseActing = data['Reverse Action'].Value;
+            reverseActing = data['Reverse Action'] && data['Reverse Action'].Value;
             icon = this._icon.split('.');
 
             if (reverseActing) {
@@ -3925,30 +3929,32 @@ gpl.ActionButton = function (config) {
             return ret;
         },
         _processPointData = function (response) {
-            _local.pointData = response;
-            _local.pointName = _local.pointData.Name;
-            _local.pointType = response['Point Type'].Value;
+            if (response.message !== 'No Point Found') {
+                _local.pointData = response;
+                _local.pointName = _local.pointData.Name;
+                _local.pointType = response['Point Type'].Value;
 
-            _commandArguments.logData = {
-                user: gpl.workspaceManager.user(),
-                point: {
-                    _id: response._id,
-                    Security: response.Security,
-                    Name: response.Name,
-                    name1: response.name1,
-                    name2: response.name2,
-                    name3: response.name3,
-                    name4: response.name4,
-                    "Point Type": {
-                        eValue: response["Point Type"].eValue
+                _commandArguments.logData = {
+                    user: gpl.workspaceManager.user(),
+                    point: {
+                        _id: response._id,
+                        Security: response.Security,
+                        Name: response.Name,
+                        name1: response.name1,
+                        name2: response.name2,
+                        name3: response.name3,
+                        name4: response.name4,
+                        "Point Type": {
+                            eValue: response["Point Type"].eValue
+                        }
+                    },
+                    newValue: {
+                        Value: ''
                     }
-                },
-                newValue: {
-                    Value: ''
-                }
-            };
+                };
 
-            _validateOptions('upi');
+                _validateOptions('upi');
+            }
         },
         _getPointData = function (upi) {
             if (upi !== undefined) {
@@ -6765,12 +6771,12 @@ gpl.Manager = function () {
                         currInitStep++;
                         setTimeout(function () {
                             // lastInit = new Date();
-                            log('Running next init:' + initFn);
+                            // log('Running next init:' + initFn);
                             managerSelf[initFn]();
                             doNextInit();
                         }, initDelay);
                     } else {
-                        log('Finished init functions');
+                        // log('Finished init functions');
                         managerSelf.getBoundingBox();
                         gpl.skipEventLog = false;
 

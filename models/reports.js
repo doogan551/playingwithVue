@@ -804,13 +804,13 @@ module.exports = Rpt = {
             //logger.info(" - - orExpressions = " + orExpressions);
         }
 
-        if (expressions.length > 0) {
-            if (grouping === "$or") {
-                orExpressions.push(Rpt.groupOrExpression(expressions));
-            } else if (grouping === "$and") {
-                andExpressions = andExpressions.concat(expressions);
-            }
-        }
+        // if (expressions.length > 0) {
+        //     if (grouping === "$or") {
+        //         orExpressions.push(Rpt.groupOrExpression(expressions));
+        //     } else if (grouping === "$and") {
+        //         andExpressions = andExpressions.concat(expressions);
+        //     }
+        // }
 
         if (andExpressions.length > 0) {
             localSearchCriteria.$or = localSearchCriteria.$or.concat({
