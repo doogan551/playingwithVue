@@ -1008,7 +1008,7 @@ var reportsViewModel = function () {
                         if (self.reportType === "History") {
                             tempObject.dataColumnName = "point-" + tempObject.upi;
                         }
-                        if (!!selectedPoint.Value.ValueOptions) {
+                        if (!!selectedPoint.Value && !!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
                             tempObject.valueOptions = Config.Templates.getTemplate(tempObject.pointType).Value.ValueOptions;

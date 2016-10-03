@@ -140,7 +140,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             height = 750;
         }
         endPoint = workspace.config.Utility.pointTypes.getUIEndpoint(pointType, data._id);
-        win = workspace.openWindowPositioned(endPoint.review.url, data.Name, pointType, '', data._id,
+        dtiUtility.openWindow(endPoint.review.url, data.Name, pointType, '', data._id,
             {
                 width: width,
                 height: height

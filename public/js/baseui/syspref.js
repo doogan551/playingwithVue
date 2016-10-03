@@ -2063,25 +2063,17 @@ var weatherViewModel = function() {
         dataUrl = '/api/system/weather',
         saveUrl = '/api/system/updateWeather',
         workspaceManager = window.top && window.top.workspaceManager,
-        openWindow = workspaceManager && window.top.workspaceManager.openWindowPositioned,
         activePointStatus = workspaceManager && workspaceManager.config.Enums["Point Statuses"].Active.enum,
         originalData,
         openPointSelector = function(callback) {
-            var windowRef,
-                pointSelectedCallback = function(pid, name, type) {
-                    if (!!pid) {
-                        callback(pid, name, type);
+            var parameters,
+                pointSelectedCallback = function(pointInfo) {
+                    if (!!pointInfo) {
+                        callback(pointInfo._id, pointInfo.name, pointInfo.pointType);
                     }
-                },
-                windowOpenedCallback = function() {
-                    windowRef.pointLookup.MODE = 'select';
-                    windowRef.pointLookup.init(pointSelectedCallback);
                 };
-
-            windowRef = openWindow('/pointLookup', 'Select Point', '', '', 'Select Weather Point', {
-                callback: windowOpenedCallback,
-                width: 1000
-            });
+            dtiUtility.showPointSelector(parameters);
+            dtiUtility.onPointSelect(pointSelectedCallback);
         },
         setData = function(data) {
             var newData = [];
@@ -2192,7 +2184,7 @@ var weatherViewModel = function() {
                 width: 850,
                 height: 600
             };
-        openWindow(endPoint.review.url, point.Name, pointType, endPoint.review.target, upi, options);
+        dtiUtility.openWindow(endPoint.review.url, point.Name, pointType, endPoint.review.target, upi, options);
     };
 };
 
