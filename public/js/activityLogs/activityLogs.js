@@ -615,12 +615,6 @@ var ActivityLogsManager = function (conf) {
         dtiUtility.showPointFilter(parameters);
         dtiUtility.onPointSelect(pointNameFilterCallback);
     };
-
-    dtiUtility.onPointFilterSelect(function (cfg) {
-        pointNameFilterCallback(cfg);
-        self.applyPointNameFilter();
-    });
-
     self.applyDateTimeFilter = function () {
         self.dateFrom(self.dtFilterPlaceholder.dateFrom);
         self.timeFrom(self.dtFilterPlaceholder.timeFrom);

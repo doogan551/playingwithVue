@@ -1023,7 +1023,7 @@ displays = $.extend(displays, {
     },
 
     openWindow: function() {
-        return displays.workspaceManager.openWindowPositioned.apply(this, arguments);
+        return dtiUtility.openWindow.apply(this, arguments);
     },
 
     initScreenObjects: function(config) {

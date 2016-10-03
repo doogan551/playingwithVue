@@ -777,12 +777,11 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
 
             });
         }
-        item.openPointReview = function() {
-            var workspace = window.top.workspaceManager,
-                win = workspace.openWindowPositioned(item.url(), item.scheduleName(), self.pointType, '', indiv._parentUpi(), {
-                    width: 1250,
-                    height: 750
-                });
+        item.openPointReview = function () {
+            dtiUtility.openWindowPositioned(item.url(), item.scheduleName(), self.pointType, '', indiv._parentUpi(), {
+                width: 1250,
+                height: 750
+            });
         };
 
         item.refPoint = null;

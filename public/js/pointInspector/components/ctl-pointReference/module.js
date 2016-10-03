@@ -106,7 +106,7 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
         }
         console.log(proposedCoords.width + proposedCoords.left, proposedCoords.height + proposedCoords.top);
         console.log(screen.availWidth, screen.availHeight);
-        self.utility.workspace.openWindowPositioned(self.url(), self.data.PointName(), self.refPointType, self.target, self.data.Value(), {
+        dtiUtility.openWindow(self.url(), self.data.PointName(), self.refPointType, self.target, self.data.Value(), {
             width: proposedCoords.width,
             height: proposedCoords.height,
             left: proposedCoords.left,
@@ -195,14 +195,6 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
                 }
             },
             parameters = getPath();
-            // workspaceManager = self.utility.workspace,
-            // win = workspaceManager.openWindowPositioned(pointSelectorEndPoint, 'Point Selector', 'pointSelector', '', 'pointSelector' + self.parentType, {
-            //     width: 1250,
-            //     height: 750,
-            //     callback: function() {
-            //         win.pointLookup.init(callback);
-            //     }
-            // });
 
         dtiUtility.showPointSelector(parameters);
         dtiUtility.onPointSelect(callback);
