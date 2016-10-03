@@ -105,6 +105,19 @@ var dti = {
                     height: '85%'
                 }
             },
+            'Device Tree': {
+                title: 'Device Tree',
+                iconText: '',
+                iconClass: 'mdi mdi-file-tree',
+                group: 'Device Tree',
+                standalone: true,
+                url: '/deviceTree',
+                singleton: true,
+                options: {
+                    width: '85%',
+                    height: '85%'
+                }
+            },
             'Thumbnails': {
                 title: 'Thumbnails',
                 iconText: 'photo_camera',
@@ -2235,7 +2248,7 @@ var dti = {
                         }
                     };
 
-                    bindings.storePointType = function storeNewPointType (object) {
+                    bindings.storePointType = function (object) {
                         bindings._newPointType = object;
                         return true;
                     };
@@ -2413,7 +2426,7 @@ var dti = {
             self.applyConfig = function (cfg) {
                 var defaultConfig = $.extend({}, self.defaultConfig),
                     config = $.extend(defaultConfig, cfg || {}),
-                    propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
+                    propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading', 'newPointType'];
 
                 if (cfg.pointType && !cfg.pointTypes && cfg.pointType !== 'Point') {
                     config.pointTypes = [cfg.pointType];
@@ -2445,9 +2458,9 @@ var dti = {
             };
 
             self.handleNewPoint = function (data) {
+                self.bindings.disableCreatePoint(false);
                 if (data.err) {
                     dti.log(data.err);
-                    self.bindings.disableCreatePoint(false);
                 } else {
 
                     var params = self._createPointParameters,
