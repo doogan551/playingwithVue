@@ -1,0 +1,32 @@
+doctype html
+html.direports
+    head
+        title #{title}
+        meta(charset="utf-8")
+        include scheduledReportsScripts
+    body
+block content
+    #window
+        .tabViewReport
+            table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder(style="display: none")
+                tfoot.tableFooter(style="display: none")
+            // ko if: (!!$root.scheduledReportData() && !!$root.scheduledReportData().tables)
+            div.formattedData(data-bind="foreach: $root.scheduledReportData().tables")
+                h4.small.text-center.reportDisplayTitle(data-bind="text: $root.reportDisplayTitle")
+                table.table.table-striped.table-bordered.table-responsive(data-bind="css: { marginForFirstTable: $index() === 0, marginForTable: $index() > 0 }")
+                    thead
+                        tr(data-bind="foreach: header")
+                            th(data-bind="text: Value")
+                    tbody(data-bind="foreach: rows")
+                        tr(data-bind="foreach: cells")
+                            td(data-bind="css: { nowrap: ($root.reportType !== 'Property' && $index() === 0) }")
+                                div(data-bind="html: Value, css: { small: $index() === 0 && $root.reportType !== 'Property'} ")
+                div.pageNumbering(data-bind="text: ($index()+1) + ' of ' + ($root.chartable() && scheduledIncludeChart ? $root.numberOfScheduledReportTables() + 1 : $root.numberOfScheduledReportTables())")
+                //div.pageNumbering(data-bind="text: ($index()+1)")
+                div(data-bind="css: { pageBreakAfter: (($index()+1) < $root.numberOfScheduledReportTables() || ($root.chartable() && scheduledIncludeChart)) }")
+            // /ko
+            div(data-bind="css: {showChart: $root.chartable() && scheduledIncludeChart, hideChart: !$root.chartable() || !scheduledIncludeChart }")
+                .contrainer
+                    .reportChartDiv(style="padding-top: 60px;")
+                div.pageNumbering(data-bind="text: ($root.numberOfScheduledReportTables() + 1) + ' of ' + ($root.numberOfScheduledReportTables() + 1)")
+    include footer

@@ -1,0 +1,22 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/css/lib/bootstrap.darkly.css')
+    link(rel="stylesheet", href="/css/trendPlots/trendPlots.css")
+
+  body
+    #chartContainer
+        #container
+
+    include chartConfig.pug
+
+
+    script(src="/js/lib/jquery.min.js")
+    script(src="/js/lib/highcharts.src.js")
+    script(src="/js/lib/highcharts-more.js")
+    script(src="/js/lib/modules/exporting.src.js")
+    script(src="/js/lib/themes/dark-unica.js")
+    script(src='/js/lib/bootstrap3.min.js')
+    script(src='/js/lib/knockout-3.2.0.js')
+    script(src="/js/trendPlots/trendPlotNew.js")

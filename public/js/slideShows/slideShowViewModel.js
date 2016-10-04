@@ -1,5 +1,5 @@
 "use strict";
-window.workspaceManager = (window.opener || window.top).workspaceManager;
+window.workspaceManager = window.top.workspaceManager;
 
 var slideShowViewModel = function () {
     var self = this,
@@ -344,7 +344,7 @@ var slideShowViewModel = function () {
 
 function applyBindings() {
     var slideShowVM;
-    if (window.opener === undefined) {
+    if (window.top === undefined) {
         window.setTimeout(applyBindings, 2);
     } else {
         slideShowVM = new slideShowViewModel();

@@ -15,7 +15,7 @@ var gpl = {
     editModeOffset: 77,
     scaleValue: 1,
     defaultLoopDelay: 10,
-    resizeDelay: 150,
+    resizeDelay: 250,
     itemIdx: 0,
     editVersionStaleTimeout: 1000 * 60 * 5, //5 minutes
     gridSize: 1, //setOffset needs fixing to properly accomodate grid size > 1
@@ -23,7 +23,7 @@ var gpl = {
     boundingRectCount: 0,
     logLinePrefix: true,
     rendered: false,
-    poppedIn: window.top.location.href !== window.location.href,
+    poppedIn: false,//window.top.location.href !== window.location.href,
     idxPrefix: '_gplId_',
     toolbarFill: '#313131',
     iconPath: '/img/icons/',
@@ -195,13 +195,15 @@ var gpl = {
 
         gpl.fire('openwindow');
 
-        windowRef = gpl._openWindow.apply(this, arguments);
+        // gpl._openWindow.apply(this, arguments);
 
-        windowRef.onbeforeunload = closeFn;
+        dtiUtility.openWindow.apply(this, arguments);
 
-        closeTimer = setInterval(checkUnload, 100);
+        // windowRef.onbeforeunload = closeFn;
 
-        return windowRef;
+        // closeTimer = setInterval(checkUnload, 100);
+
+        // return windowRef;
     },
     defaultBlockMessage: 'Please Wait...',
     blockUI: function (message) {
@@ -216,38 +218,30 @@ var gpl = {
     },
     openPointSelector: function (callback, newUrl, pointType, property, nameFilter) {
         var url = newUrl || '/pointLookup',
-            windowRef,
-            pointTypes,
-            pointSelectedCallback = function (pid, name, type) {
-                if (!!pid) {
-                    callback(pid, name, type);
-                }
+            parameters = nameFilter ? {} : {
+                name1: gpl.point.name1,
+                name2: gpl.point.name2,
+                name3: gpl.point.name3,
+                name4: gpl.point.name4
             },
-            windowOpenedCallback = function () {
-                var names = nameFilter ? {} : {
-                    name1: gpl.point.name1,
-                    name2: gpl.point.name2,
-                    name3: gpl.point.name3,
-                    name4: gpl.point.name4
-                };
-
-                windowRef.pointLookup.MODE = 'select';
-                if (property) {
-                    pointTypes = gpl.getPointTypes(property);
-                    windowRef.pointLookup.POINTTYPES = pointTypes;
+            pointSelectedCallback = function (pointInfo) {
+                if (!!pointInfo) {
+                    callback(pointInfo._id, pointInfo.name, pointInfo.pointType);
                 }
-
-                windowRef.pointLookup.init(pointSelectedCallback, names);
             };
 
         if (pointType) {
             url += '/' + pointType + '/' + property;
+            if (parameters.pointTypes === undefined) {
+                parameters.pointTypes = [];
+            }
+            if (parameters.pointTypes.indexOf(pointType) === -1) {
+                parameters.pointTypes.push(pointType);
+            }
         }
 
-        windowRef = gpl.openWindow(url, 'Select Point', '', '', 'Select Dynamic Point', {
-            callback: windowOpenedCallback,
-            width: 1000
-        });
+        dtiUtility.showPointSelector(parameters);
+        dtiUtility.onPointSelect(pointSelectedCallback);
     },
     initGpl: function () {
         var count = 0,
@@ -266,6 +260,8 @@ var gpl = {
         gpl._origPoint = $.extend(true, {}, window.gplData.point);
 
         gpl.point = gpl.convertBooleanStrings(gpl.point);
+        window.point = gpl.point;
+        window.pointType = gpl.point['Point Type'].Value;
         gpl.devicePointRef = gpl.deStringObject(gpl.point['Point Refs'][0]);
 
         addFn(function (cb) {
@@ -345,7 +341,7 @@ var gpl = {
                     map = gpl.pointUpiMap[upi] = {
                         Name: data.Name,
                         pointType: data['Point Type'].Value,
-                        valueType: (data['Value'].ValueType === 5) ? 'enum' : 'float'
+                        valueType: (data.Value.ValueType === 5) ? 'enum' : 'float'
                     };
                     gpl.pointData[upi] = data;
                     callback(map, data);
@@ -583,7 +579,7 @@ var gpl = {
     },
     isEdit: document.location.href.match('/edit/') !== null,
     noSocket: document.location.href.match('nosocket') !== null,
-    noLog: document.location.href.match('nolog') !== null,
+    noLog: document.location.href.match('log') === null,
     nobg: document.location.href.match('nobg') !== null,
     skipInit: document.location.href.match('skipinit') !== null,
     formatDate: function (date, addSuffix) {
@@ -2270,6 +2266,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         this.label = this.label || (!this.config.inactive ? gpl.getLabel(this.type) : '');
 
+        if (typeof this.label === 'number') {
+            this.label = this.label.toString();
+        }
+
         if (this.config.inactive) {
             config.visible = false;
         }
@@ -2798,7 +2798,7 @@ gpl.blocks.SPA = fabric.util.createClass(gpl.Block, {
             icon;
 
         if (data) {
-            reverseActing = data['Reverse Action'].Value;
+            reverseActing = data['Reverse Action'] && data['Reverse Action'].Value;
             icon = this._icon.split('.');
 
             if (reverseActing) {
@@ -3921,30 +3921,32 @@ gpl.ActionButton = function (config) {
             return ret;
         },
         _processPointData = function (response) {
-            _local.pointData = response;
-            _local.pointName = _local.pointData.Name;
-            _local.pointType = response['Point Type'].Value;
+            if (response.message !== 'No Point Found') {
+                _local.pointData = response;
+                _local.pointName = _local.pointData.Name;
+                _local.pointType = response['Point Type'].Value;
 
-            _commandArguments.logData = {
-                user: gpl.workspaceManager.user(),
-                point: {
-                    _id: response._id,
-                    Security: response.Security,
-                    Name: response.Name,
-                    name1: response.name1,
-                    name2: response.name2,
-                    name3: response.name3,
-                    name4: response.name4,
-                    "Point Type": {
-                        eValue: response["Point Type"].eValue
+                _commandArguments.logData = {
+                    user: gpl.workspaceManager.user(),
+                    point: {
+                        _id: response._id,
+                        Security: response.Security,
+                        Name: response.Name,
+                        name1: response.name1,
+                        name2: response.name2,
+                        name3: response.name3,
+                        name4: response.name4,
+                        "Point Type": {
+                            eValue: response["Point Type"].eValue
+                        }
+                    },
+                    newValue: {
+                        Value: ''
                     }
-                },
-                newValue: {
-                    Value: ''
-                }
-            };
+                };
 
-            _validateOptions('upi');
+                _validateOptions('upi');
+            }
         },
         _getPointData = function (upi) {
             if (upi !== undefined) {
@@ -6076,7 +6078,7 @@ gpl.BlockManager = function (manager) {
                     return {
                         Name: ref.Name,
                         pointType: ref['Point Type'].Value,
-                        valueType: (ref['Value'] && ref['Value'].ValueType === 5) ? 'enum' : 'float',
+                        valueType: (ref.Value && ref.Value.ValueType === 5) ? 'enum' : 'float',
                         _idx: idx
                     };
                     // return ref;
@@ -6761,12 +6763,12 @@ gpl.Manager = function () {
                         currInitStep++;
                         setTimeout(function () {
                             // lastInit = new Date();
-                            log('Running next init:' + initFn);
+                            // log('Running next init:' + initFn);
                             managerSelf[initFn]();
                             doNextInit();
                         }, initDelay);
                     } else {
-                        log('Finished init functions');
+                        // log('Finished init functions');
                         managerSelf.getBoundingBox();
                         gpl.skipEventLog = false;
 
@@ -6789,6 +6791,10 @@ gpl.Manager = function () {
                             } else {
                                 window.loaded = true;
                             }
+
+                            window.destroy = function () {
+                                gpl.manager.destroy();
+                            };
 
                             managerSelf.postInit();
                         }, 100);
@@ -6850,10 +6856,10 @@ gpl.Manager = function () {
                 doNextInit();
             };
 
-            //fix for IE not showing window.opener when first loaded
-            gpl.getPointTypes = (window.opener || window.top) && (window.opener || window.top).workspaceManager && (window.opener || window.top).workspaceManager.config.Utility.pointTypes.getAllowedPointTypes;
-            gpl.workspaceManager = (window.opener || window.top) && (window.opener || window.top).workspaceManager;
-            gpl._openWindow = (window.opener || window.top) && (window.opener || window.top).workspaceManager && (window.opener || window.top).workspaceManager.openWindowPositioned;
+            //fix for IE not showing window.top when first loaded
+            gpl.getPointTypes = window.top && window.top.workspaceManager && window.top.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes;
+            gpl.workspaceManager = window.top && window.top.workspaceManager;
+            gpl._openWindow = dtiUtility.openWindow;
             gpl.controllers = gpl.workspaceManager.systemEnums.controllers;
             gpl.pointTypes = gpl.workspaceManager.config.Enums['Point Types'];
             gpl.formatPoint = gpl.workspaceManager.config.Update.formatPoint;
@@ -7311,7 +7317,11 @@ gpl.Manager = function () {
             managerSelf.currWidth = width;
             managerSelf.currHeight = height;
 
-            window.resizeTo(width, height);
+            dtiUtility.updateWindow('resize', {
+                width: width,
+                height: height
+            });
+            // window.resizeTo(width, height);
 
             if (initial) {
                 managerSelf.resizeCanvas(width, height);
@@ -7573,14 +7583,18 @@ gpl.Manager = function () {
         var endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Sequence', gpl.upi),
             url = endPoint.edit.url;
 
-        gpl.openWindow(url, gpl.point.Name, 'Sequence', '', gpl.upi);
+        gpl.openWindow(url, gpl.point.Name, 'Sequence', '', gpl.upi, {
+            sameWindow: true
+        });
     };
 
     managerSelf.doCancel = function () {
         var endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Sequence', gpl.upi),
             url = endPoint.review.url;
 
-        gpl.openWindow(url, gpl.point.Name, 'Sequence', '', gpl.upi);
+        gpl.openWindow(url, gpl.point.Name, 'Sequence', '', gpl.upi, {
+            sameWindow: true
+        });
     };
 
     managerSelf.popInOut = function () {
@@ -7966,6 +7980,8 @@ gpl.Manager = function () {
                 delete managerSelf.toolbar;
             }
 
+            ko.cleanNode(window.document.body);
+
             gpl.forEach(gpl.eventHandlers, function (handlers) {
                 handlers = [];
             });
@@ -7995,7 +8011,7 @@ gpl.Manager = function () {
     };
 
     managerSelf.handleNavigateAway = function (event) {
-        if (managerSelf.bindings.hasEdits()) {
+        if (gpl.isEdit && managerSelf.bindings.hasEdits()) {
             return 'You have unsaved changes. Are you sure you want to leave this page?';
         }
     };
@@ -8925,6 +8941,7 @@ gpl.Manager = function () {
             type: 'DOM',
             window: true,
             handler: function () {
+                gpl.log('destroying');
                 managerSelf.destroy();
             }
         }, {
@@ -9161,13 +9178,13 @@ gpl.Manager = function () {
                 }
             }
         }, {
-            //     event: 'resize',
-            //     type: 'DOM',
-            //     window: true,
-            //     handler: function() {
-            //         managerSelf.resizeCanvas(window.innerWidth, window.innerHeight);
-            //     }
-            // }, {
+            event: 'resize',
+            type: 'DOM',
+            window: true,
+            handler: function() {
+                managerSelf.resizeCanvas(window.innerWidth, window.innerHeight);
+            }
+        }, {
             event: 'keydown',
             handler: function (event) {
                 var objects,
@@ -9263,3 +9280,5 @@ $(function () {
         gpl.initGpl();
     }
 });
+
+window.gpl = gpl;

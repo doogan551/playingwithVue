@@ -171,6 +171,32 @@ var converters = {
 	}
 };
 
+var getRegex = function(str, options) {
+	var regex = '';
+	var len = str.length;
+	var strArray;
+
+	options = options || {};
+
+	if (str.charAt(0) === '"' && str.charAt(len-1) === '"') {
+		regex = '^' + str.substring(1, len-1) + '$';
+	} else if (str.indexOf('*') < 0) { // No wildcard characters in string
+		if (options.matchBeginning) {
+			regex = '^';
+		}
+		regex += str;
+	} else {
+		regex = '^';
+		strArray = str.split('');
+		for(var i = 0; i<strArray.length; i++){
+			regex += (strArray[i] === '*') ? '.*' : strArray[i];
+		}
+		regex += '$';
+	}
+	return new RegExp(regex);
+};
+
+
 module.exports = {
 	CONSTANTS: CONSTANTS,
 	FileLocationsForControllers: FileLocationsForControllers,
@@ -178,5 +204,6 @@ module.exports = {
 	sendResponse: sendResponse,
 	buildNameSegmentQuery: buildNameSegmentQuery,
 	buildActivityLog: buildActivityLog,
-	converters: converters
+	converters: converters,
+	getRegex: getRegex
 };

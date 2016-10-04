@@ -1,0 +1,508 @@
+extends layout
+block content
+    #window
+        #wrapper(style="display:none")
+            #sidebar-wrapper.leftBar
+                include ./tabLinks
+            #page-content-wrapper.rightPanel
+                .container-fluid
+                    .runReportSpinner(data-bind="css: { displayDiv: displayMainSpinner(), hideDiv: !displayMainSpinner()} ", title="Requesting Report Data")
+                        div.preloader-wrapper.small.active
+                            div.spinner-layer
+                                div.circle-clipper.left
+                                    div.circle
+                                div.gap-patch
+                                    div.circle
+                                div.circle-clipper
+                                    div.circle
+                        span.spinnertext.teal-text Getting Data
+                    .runReportChartSpinner(data-bind="css: { displayDiv: displayChartSpinner(), hideDiv: !displayChartSpinner()}", title="Requesting Report Data for Chart")
+                        div.preloader-wrapper.small.active
+                            div.spinner-layer
+                                div.circle-clipper.left
+                                    div.circle
+                                div.gap-patch
+                                    div.circle
+                                div.circle-clipper
+                                    div.circle
+                        span.spinnertext.teal-text(data-bind="text: chartSpinnerTitle")
+                    .tabConfiguration
+                        ul.nav.nav-tabs
+                            li.attribs.active(role="presentation")
+                                a.strong.toggleTab.blue-grey-text(href="#reportAttribs", data-toggle="tab") Attributes
+                            li.columns(role="presentation")
+                                a.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
+                            li.columns2(role="presentation", style="display: none")
+                                a.strong.toggleTab.blue-grey-text(href="#gridConfig", data-toggle="tab") Grid
+                            // ko if: (reportType === 'Property')
+                            li.filterByPoint(role="presentation")
+                                a.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
+                            // /ko
+                            li.additionalFilters(role="presentation")
+                                a.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
+                        div.configurationContent
+                            div
+                                h6.strong.reportTitle(data-bind="text: reportDisplayTitle")
+                                .reporttype.tiny.center-align(data-bind="text: reportType")
+                            div.tab-content
+                                div.reportAttribs#reportAttribs.active.tab-pane
+                                    .form-inline.blue-grey-text(style="display: inline-flex")
+                                        div.input-field.col
+                                            input.pointName1.form-control.input-md#pointName1(data-bind="enable: $root.canEdit(), textInput: $root.pointName1", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName1, attr: {for: 'pointName1'}") Name 1
+                                        div.input-field.col
+                                            input.pointName2.form-control.input-md#pointName2(data-bind="enable: $root.canEdit(), textInput: $root.pointName2", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName2, attr: {for: 'pointName2'}") Name 2
+                                        div.input-field.col
+                                            input.pointName3.form-control.input-md#pointName3(data-bind="enable: $root.canEdit(), textInput: $root.pointName3", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName3, attr: {for: 'pointName3'}") Name 3
+                                        div.input-field.col
+                                            input.pointName4.form-control.input-md#pointName4(data-bind="enable: $root.canEdit(), textInput: $root.pointName4", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName4, attr: {for: 'pointName4'}") Name 4
+                                    .form-group.clearfix.direportgroup
+                                        div.input-field.col
+                                            input.reportTitleInput.form-control.input-md#reportTitleInput(data-bind="enable: $root.canEdit(), textInput: $root.reportDisplayTitle", required, type="text")
+                                            label(data-bind="updateLabel: $root.pointName3, attr: {for: 'pointName3'}") Report Title
+                                    .form-group.clearfix
+                                        .numberOfEnteriesPerPage
+                                            h5.col-xs-3.col
+                                                strong.small.pull-right # of entries per Page
+                                            .col-xs-2.entries
+                                                .dropdown.availableEntries(data-bind="css: {disabled: !$root.canEdit()}")
+                                                    a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="enteriesDropdown")
+                                                        span.white-text(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
+                                                        // ko if: (listOfEntriesPerPage.length > 1)
+                                                        span.white-text.caret.lm10px
+                                                        // /ko
+                                                    // ko if: (listOfEntriesPerPage.length > 1)
+                                                    ul#enteriesDropdown.calculations.dropdown-content
+                                                        // ko foreach: listOfEntriesPerPage
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectNumberOfEntries($element, $data.value) }, text: $data.value")
+                                                        // /ko
+                                                    // /ko
+                                        // ko if: (chartable())
+                                        .numberOfEnteriesPerPage
+                                            h5.col-xs-3.col
+                                                strong.small.pull-right Chart Type
+                                            .col-xs-2.chartTypes
+                                                .dropdown.availableChartTypes(data-bind="css: {disabled: !$root.canEdit()}")
+                                                    a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypesDropdown")
+                                                        span.white-text(data-bind="text: selectedChartType()")
+                                                        // ko if: ($root.listOfChartTypes.length > 1)
+                                                        span.white-text.caret.lm10px
+                                                        // /ko
+                                                    // ko if: ($root.listOfChartTypes.length > 1)
+                                                    ul#chartTypesDropdown.chartTypes.dropdown-content
+                                                        // ko foreach: $root.listOfChartTypes
+                                                        li
+                                                            a(data-bind="click: function(){ $root.selectChartType($element, $data.value) }, text: $data.text")
+                                                        // /ko
+                                                    // /ko
+                                        // /ko
+                                div#reportColumns.tab-pane
+                                    h4.strong.panel-title
+                                        table.columnsGrid.small.grid.table
+                                            thead
+                                                tr.strong(style="height:44px")
+                                                    th.medium.strong Column Key
+                                                    // ko if: (reportType !== 'Property')
+                                                    th.medium.strong Display Name
+                                                    th.medium.strong
+                                                        .multiplierColumn
+                                                    th.medium.strong
+                                                        .calculateColumn(tabindex="965")
+                                                            .columnText.displayDiv
+                                                            .globalCalculate.hideDiv
+                                                                .dropdown.availableCalculations.open(data-bind="css: {disabled: !$root.canEdit()}")
+                                                                    a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                                        span.text.white-text Calcs
+                                                                        // ko if: ($root.listOfCalculations().length > 1)
+                                                                        span.white-text.caret.lm10px
+                                                                        // /ko
+                                                                    // ko if: ($root.listOfCalculations().length > 1)
+                                                                    ul.calculations.dropdown-menu(multiple=true, data-bind="attr: { id: 'globalCalculationsDropdown' }")
+                                                                        // ko foreach: $root.listOfCalculations
+                                                                        li
+                                                                            label.fancy-checkbox
+                                                                                input.medium(data-bind="click: function () { return $root.globalCalculationClick($element, $data)}, attr: { id: 'globalCalc_' + $index()}", type="checkbox")
+                                                                                label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index()}")
+                                                                        // /ko
+                                                                    // /ko
+                                                    th.medium.strong.typeColumn
+                                                    th.medium.strong
+                                                        .precisionColumn
+                                                    th.medium.strong
+                                                        .includeInChartColumn
+                                                    th.medium.strong
+                                                        .yaxisChartGroupColumn
+                                                    // /ko
+                                                    th.medium.strong
+                                            tbody.sortablecolums(data-bind="foreach: listOfColumns()")
+                                                tr.columnRowData(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name')} ")
+                                                    td.columnNameContainer(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
+                                                        .handle
+                                                        // ko if: ($parent.reportType !== 'Property')
+                                                        // ko if: ($root.canEdit())
+                                                        a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.clearColumnPoint($index()) }, tooltip: { title: 'Clear' }")
+                                                            i.material-icons.tiny.center.blue-grey-text delete
+                                                        a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.selectPointForColumn($data, $index) }, tooltip: { title: 'Edit' }")
+                                                            i.material-icons.tiny.center.blue-grey-text edit
+                                                        // /ko
+                                                        // ko if: (!!$data.softDeleted)
+                                                        span [Deleted]&nbsp;
+                                                        // /ko
+                                                        .columnName(data-bind="text: colName, click: function(){ $parent.showPointReview($data) }")
+                                                        // /ko
+                                                        // ko if: ($parent.reportType === 'Property')
+                                                        .dropdown.availablePropertiesContainer
+                                                            a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}", data-toggle="dropdown")
+                                                                span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
+                                                                span.caret.lm10px
+                                                            ul.enumproperties.dropdown-menu(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
+                                                                input.form-control.inputSearch(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
+                                                                li(role="separator", class="divider")
+                                                                // ko foreach: $parent.columnFilteredProps()
+                                                                li
+                                                                    a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
+                                                                // /ko
+                                                        // /ko
+                                                    // ko if: ($parent.reportType !== 'Property')
+                                                    td.displayName
+                                                        input.form-control.columnDisplayName(data-bind="value: colDisplayName, enable: $parent.canEdit(), event: { change: function() { $parent.designChanged(true) } }", type="text", required)
+                                                    td.columnMultiplier
+                                                        // ko if: ($data.canCalculate)
+                                                        input.form-control.inputMultiplier(data-bind="value: multiplier, enable: $root.canEdit()", type="number")
+                                                        // /ko
+                                                    td.columnTotals
+                                                        // ko if: ($data.canCalculate)
+                                                        .dropdown.availableCalculations(data-bind="css: {disabled: !$root.canEdit()}")
+                                                            //click: $root.toggleCalcsDropdown,
+                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                                span.text.white-text Calcs
+                                                                // ko if: ($parent.listOfCalculations().length > 1)
+                                                                span.white-text.caret.lm10px
+                                                                // /ko
+                                                            // ko if: ($parent.listOfCalculations().length > 1)
+                                                            ul.calculations.dropdown-menu(multiple=true, data-bind="attr: { id: 'calculationsDropdown'+ $index() }")
+                                                                // ko foreach: $parent.listOfCalculations
+                                                                li
+                                                                    label.fancy-checkbox
+                                                                        input.medium(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}, attr: { id: 'calc_' + $parentContext.$index() + '_' + $index()}", type="checkbox")
+                                                                        label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'calc_' + $parentContext.$index() + '_' + $index()}")
+                                                                // /ko
+                                                            // /ko
+                                                        // /ko
+                                                    td.totalizerOperator
+                                                        // ko if: ($parent.reportType === 'Totalizer' && valueList.length > 0)
+                                                        .dropdown.availableTotalizerOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                                span.text.white-text(data-bind="text: operator")
+                                                                // ko if: (valueList.length > 1)
+                                                                span.caret.lm10px
+                                                                // /ko
+                                                            // ko if: (valueList.length > 1)
+                                                            ul.totalizerOperators.dropdown-menu(data-bind="attr: { id: 'totalizerOperatorsDropdown'+ $index() }")
+                                                                // ko foreach: valueList
+                                                                li
+                                                                    a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $parentContext.$index(), $data.text) }, text: $data.text")
+                                                                // /ko
+                                                            // /ko
+                                                        // /ko
+                                                    td.precision
+                                                        // ko if: ($data.canCalculate)
+                                                        input.form-control.inputPrecision(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")
+                                                        // /ko
+                                                    td.includeInChart
+                                                        // ko if: ($root.canEdit() && !!canBeCharted && canBeCharted)
+                                                        input.includeInChartColumn.filled-in(data-bind="checked: includeInChart, enable: ($root.canEdit() && !!canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()}", type="checkbox")
+                                                        label(data-bind="attr: { for: 'includeInChart' + $index() }")
+                                                        // /ko
+                                                    td.yaxisChartGroup
+                                                        // ko if: ($root.canEdit() && !!canBeCharted && canBeCharted)
+                                                        .dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                                span.text.white-text(data-bind="text: yaxisGroup")
+                                                                // ko if: ($root.yaxisGroups.length > 1)
+                                                                span.caret.lm10px
+                                                                // /ko
+                                                            // ko if: ($root.yaxisGroups.length > 1)
+                                                            ul.dropdown-menu(data-bind="attr: { id: 'yaxisGroups'+ $index() }")
+                                                                // ko foreach: $root.yaxisGroups
+                                                                li
+                                                                    a(data-bind="click: function(){ $root.selectYaxisGroup($element, $parentContext.$index(), $data) }, text: $data")
+                                                                // /ko
+                                                            // /ko
+                                                        // /ko
+                                                    // /ko
+                                                    // ko if: ($root.canEdit())
+                                                    td.removecolumn
+                                                        a.span.removerow.blue-grey-text(data-bind="click: function () { $parent.deleteReportColumn($index()) }") Remove
+                                                    // /ko
+                                            tbody
+                                                tr
+                                                    // ko if: ($root.canEdit())
+                                                    td(colspan="4")
+                                                        a.addColumnButton(href="#") Add Column
+                                                    // /ko
+                                div#gridConfig.tab-pane(style="display: none")
+                                    h4.strong.panel-title
+                                        table.gridConfig.small.grid.table
+                                            thead
+                                                tr.sortablecolums(data-bind="foreach: listOfColumns()")
+                                                    th.displayName
+                                                        .columnItem(data-bind="css: { globalConfigCell: ($index() === 0)}")
+                                                            // ko if: $index() > 0
+                                                            .handle
+                                                            // /ko
+                                                            //.placeholderVerbiage(style="font-weight: normal; color: #a7a7a7;", data-bind="text: ($index() === 0 ? 'Reserved column' : '')")
+                                                            // ko if: $index() === 0
+                                                            // ko if: ($root.reportType !== 'Property')
+                                                            button.btn.btn-default.globalConfigColumnItem(data-bind="click: function () { $root.globalEditColumnFields() }") Global config
+                                                            // /ko
+                                                            .blankspot
+                                                                | &nbsp;
+                                                            a.addColumnGridButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn(1) }")
+                                                            // /ko
+                                                            // ko if: $index() > 0
+                                                            button.btn.btn-default.gridConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName), click: function () { $root.editColumn($data, $index()) }, event: { mouseover: function () { $root.showColumnSettings($element, $data) }, mouseout: function() { $root.hideColumnSettings($element) } }")
+                                                            // /ko
+                                                        // ko if: $index() > 0
+                                                        button.btn.btn-danger.btn-xs.fa.fa-times.removeColumn(data-bind="click: function(){ $root.deleteReportColumn($data) }")
+                                                        // /ko
+                                                        .addColumnContainer
+                                                        // ko if: $index() === ($root.listOfColumns().length - 1)
+                                                        a.addColumnGridButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn() }")
+                                                        // /ko
+                                                        // ko if: $index() > 0 && $index() !== ($root.listOfColumns().length - 1)
+                                                        .blankspot
+                                                            | &nbsp;
+                                                        // /ko
+                                            tbody
+                                                tr(data-bind="foreach: listOfColumns()")
+                                                    td
+                                                        div ...
+                                                tr(data-bind="foreach: listOfColumns()")
+                                                    td
+                                                        div ...
+                                                tr(data-bind="foreach: listOfColumns()")
+                                                    td
+                                                        div ...
+                                            tfoot
+                                                tr.calculationFooter(data-bind="foreach: listOfColumns()")
+                                                    // ko if: ($root.reportType !== 'Property')
+                                                    // ko if: $index() === 0
+                                                    td
+                                                        .globalCalculationsCell
+                                                            ul.globalCalculations
+                                                                // ko foreach: $root.listOfCalculations
+                                                                li
+                                                                    label.fancy-checkbox(data-bind="attr: { title: ($root.globalcalculateColumnSelectedvalue[$data.text] ? 'Selected' : 'Not Selected')}")
+                                                                        input.medium(data-bind="checked: $root.globalcalculateColumnSelectedvalue[$data.text], click: function () { return $root.globalCalculationClick($element, $data.text) }", type="checkbox")
+                                                                        span.calcLabel(data-bind="text: ' ' + $data.text")
+                                                                // /ko
+                                                    // /ko
+                                                    // ko if: $index() > 0
+                                                    // ko if: ($root.listOfCalculations().length > 0)
+                                                    td
+                                                        .calculationsCell
+                                                            // ko if: ($data.canCalculate)
+                                                            ul.calculations
+                                                                // ko foreach: $root.listOfCalculations
+                                                                li
+                                                                    label.fancy-checkbox
+                                                                        input.medium(data-bind="checked: $parent.calculation.indexOf($data.text) !== -1, click: function () { return $root.calculationClick($element, $data.text, $parentContext.$index()) }", type="checkbox")
+                                                                        span.calcLabel(data-bind="text: ' ' + $data.text")
+                                                                // /ko
+                                                            // /ko
+                                                    // /ko
+                                                    // /ko
+                                                    // /ko
+                                div#filterByPoint.tab-pane
+                                    // ko if: ($root.reportType === 'Property')
+                                    h4.strong.panel-title
+                                        .selectorNames
+                                            .form-inline.black-text(style="display: inline-flex")
+                                                div.input-field.col
+                                                    input.black-text.form-control.input-md.readOnly.name1Filter#name1Filter(data-bind="textInput: $root.name1Filter, attr: {disabled: 'disabled'}", type="text")
+                                                    label.grey-text.active(data-bind="updateLabel: $root.name1Filter, attr: {for: 'name1Filter'}") Name 1
+                                                div.input-field.col
+                                                    input.black-text.form-control.input-md.readOnly.name2Filter#name2Filter(data-bind="textInput: $root.name2Filter, attr: {disabled: 'disabled'}", type="text")
+                                                    label.grey-text.active(data-bind="updateLabel: $root.name2Filter, attr: {for: 'name2Filter'}") Name 2
+                                                div.input-field.col
+                                                    input.black-text.form-control.input-md.readOnly.name3Filter#name3Filter(data-bind="textInput: $root.name3Filter, attr: {disabled: 'disabled'}", type="text")
+                                                    label.grey-text.active(data-bind="updateLabel: $root.name3Filter, attr: {for: 'name3Filter'}") Name 3
+                                                div.input-field.col
+                                                    input.black-text.form-control.input-md.readOnly.name4Filter#name4Filter(data-bind="textInput: $root.name4Filter, attr: {disabled: 'disabled'}", type="text")
+                                                    label.grey-text.active(data-bind="updateLabel: $root.name4Filter, attr: {for: 'name4Filter'}") Name 4
+                                        div.pointTypesFilter
+                                            span.title Filtered Point Types
+                                            ul
+                                                // ko foreach: $root.selectedPointTypesFilter
+                                                li
+                                                    label.blue-grey-text.label-tight(data-bind="text: $data")
+                                                // /ko
+                                        a.btn-flat.waves-effect.waves-light.blue-grey.white-text.right-align.adjustPointTypesFilterButton(data-bind="click: $root.pointSelectorFilter") Point Type Filter
+                                    // /ko
+                                div.additionalFilters#additionalFilters.tab-pane
+                                    h4.strong.panel-title
+                                        // ko if: (reportType === 'Property')
+                                        table.filtersGrid.small.grid.table
+                                            tbody(data-bind="foreach: listOfFilters()")
+                                                tr.filterdata
+                                                    td.sorthandle
+                                                        .handle
+                                                    td(data-bind="css: {filterCondition: ($parent.listOfFilters().length > 1), childCondition: childLogic === true, firstConditionInGroup: beginGroup === true, lastConditionInGroup: endGroup === true} ")
+                                                        .dropdown.availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
+                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}", data-toggle="dropdown")
+                                                                span(data-bind="text: $root.displayCondition(condition)")
+                                                            ul.operators.dropdown-menu
+                                                                // ko foreach: $root.conditions()
+                                                                li
+                                                                    a.condition(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'condition') }, text: text", required)
+                                                                // /ko
+                                                    td.filterName
+                                                        // ko if: ($parent.reportType !== 'Property')
+                                                        span(data-bind="text: filterName.replace(/_/g, ' ')")
+                                                        // /ko
+                                                        .dropdown.availablePropertiesContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
+                                                                span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfFilterPropertiesLength + ')')")
+                                                                span.caret.lm10px
+                                                            ul.enumproperties.dropdown-menu
+                                                                input.form-control.inputSearch(data-bind="textInput: $root.filterPropertiesSearchFilter", type="text", placeholder="Search...")
+                                                                li(role="separator", class="divider")
+                                                                // ko foreach: $parent.filterFilteredProps()
+                                                                li
+                                                                    a(data-bind="click: function(){ $root.selectPropertyFilter($element, $parentContext.$index(), $data) }, text: $data.name")
+                                                                // /ko
+                                                    td.filterOperator
+                                                        .dropdown.availableOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.operatorButton(data-bind="css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
+                                                                span(data-bind="text: $root.displayOperator(operator)")
+                                                                //span.caret.lm10px
+                                                            ul.operators.dropdown-menu
+                                                                // ko foreach: $root.operators(valueType)
+                                                                li
+                                                                    a.operator(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'operator') }, text: text", required)
+                                                                // /ko
+                                                    td.emptyColumn
+                                                    td.filterValue
+                                                        div.col-md-9
+                                                            include filterValueUI
+                                                    // ko if: ($root.canEdit())
+                                                    td.removecolumn
+                                                        a.span.removerow.blue-grey-text(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") Remove
+                                                    // /ko
+                                        // /ko
+                                        // ko if: ($root.reportType === 'Property' && $root.canEdit())
+                                        a.small.addFilterbutton(href="#") Add Filter
+                                        // /ko
+                                        // ko if: (reportType !== 'Property')
+                                        span.reportDateRangePicker
+                                            i.fa.fa-calendar.glyphicon.glyphicon-calendar.durationCalendarIcon
+                                            span.reportDateRangeLabel.small Duration:&nbsp;
+                                            input.input.form-control.filterContainer.durationDateRange(data-bind="reportDateRangePicker: selectedDuration, enable: $root.canEdit(), css: { durationError: $root.durationError() }", type="text", placeholder="Select...")
+                                        br
+                                        span.timePickers
+                                            span.timePickerLabel.small From:&nbsp;
+                                            input.input.form-control.filterContainer.durationDateRangeTime(data-bind="reportTimePicker: durationStartTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="Start Time OffSet", type="text")
+                                            span.timePickerLabel.small To:&nbsp;
+                                            input.input.form-control.filterContainer.durationDateRangeTime(data-bind="reportTimePicker: durationEndTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="End Time OffSet", type="text")
+                                        br
+                                        br
+                                        span.intervalSettings
+                                            span.intervalLabel.small Interval:&nbsp;
+                                            input.intervalValue.form-control(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
+                                            .dropdown.availableIntervalsContainer
+                                                a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-activates="intervals")
+                                                    span(data-bind="text: $root.interval")
+                                                    span.caret.lm10px
+                                                ul#intervals.intervals.dropdown-content
+                                                    // ko foreach: $root.listOfIntervalsComputed()
+                                                    li
+                                                        a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
+                                                    // /ko
+                                        br
+                                        br
+                                        // /ko
+                                .reportButtons
+                                    // ko if: ($root.canEdit())
+                                    a.btn.tiny.waves-effect.waves-light.blue-grey.saveReportButton(style="margin-right: 2px;")
+                                        //| Save
+                                        i.material-icons.tiny.center done
+                                    // /ko
+                                    a.btn.tiny.waves-effect.waves-light.blue-grey.runReportButton(data-bind="enabled: reportResultViewed()")
+                                        //| Run
+                                        i.material-icons.tiny.center play_arrow
+                                    .screenMessages
+                                        .row.well-sm
+                                            .errorMessage.alert-danger
+                                            .successMessage.alert-success
+                    .tabViewReport.well.tab-pane.workingPane
+                        // ko if: (reportType !== 'Property')
+                        ul.viewReportNav
+                            // ko if: (chartable())
+                            li.gridData.active
+                                a.btn.waves-effect.waves-light.active.blue-grey.toggleTab(data-bind="click: function () { $root.focusGridView($element) }", href="#gridData", data-toggle="tab")
+                                    //| Grid View
+                                    i.material-icons.center view_list
+                            li.reportChart
+                                a.btn.waves-effect.waves-light.blue-grey.toggleTab(data-bind="click: function () { $root.focusChartView($element) }", href="#chartData", data-toggle="tab")
+                                    //| Chart View
+                                    i.material-icons.center insert_chart
+                            // /ko
+                        // /ko
+                        div.tab-content
+                            div#gridData.active.tab-pane
+                                .row
+                                    h5.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
+                                    table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
+                                        tfoot.tableFooter
+                                            tr(data-bind="foreach: listOfColumns()")
+                                                td.strong(data-bind="attr: { colindex:  $index() }")
+                            div#chartData.tab-pane
+                                .chartButtons
+                                    .dropdown.availableChartTypes.chartTab(data-bind="css: {disabled: !$root.canEdit()}")
+                                        a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypes")
+                                            span(data-bind="text: selectedChartType()")
+                                            // ko if: ($root.listOfChartTypes.length > 1)
+                                            span.caret.lm10px
+                                            // /ko
+                                        // ko if: ($root.listOfChartTypes.length > 1)
+                                        ul#chartTypes.chartTypes.dropdown-content
+                                            // ko foreach: $root.listOfChartTypes
+                                            li
+                                                a(data-bind="click: function(){ $root.selectChartType($element, $data.value, true) }, text: $data.text")
+                                            // /ko
+                                        // /ko
+                                    a.btn-flat.waves-effect.waves-light.blue-grey(data-bind="click: function() { $root.printDiv() }", href="#")
+                                        span.printButton Print
+                                            i.material-icons.center print
+                                .reportChartDiv
+    .hiddenPlaceholder.hidden
+        input.form-control.globalPrecision.hidden(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
+        div.globalIncludeInChart
+            input.form-control.filled-in.hidden(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit(), attr: {id : 'globalIncludeInChart' }", type="checkbox")
+            label.blue-grey-text.label-tight(data-bind="attr: { for: 'globalIncludeInChart' }")
+        .globalcalculateColumnDropdown.hidden.dropdown.availableCalculations(data-bind="css: {disabled: !$root.canEdit()}")
+            button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                span(data-bind="text: $root.globalcalculateColumnSelectedvalue()")
+                // ko if: ($root.listOfCalculations.length > 1)
+                span.caret.lm10px
+                // /ko
+            // ko if: ($root.listOfCalculations.length > 1)
+            ul.calculations.dropdown-menu
+                // ko foreach: $root.listOfCalculations
+                li
+                    input(type="checkbox")
+                    a(data-bind="text: ' ' + $data.text")
+                // /ko
+            // /ko
+    include footer
+    include popoverColumnSettings
+    include modals/dialogScreens
+    include modals/dialogEditColumn
+    include modals/dialogViewColumn
+    include modals/dialogGlobalFieldsEditColumn
+

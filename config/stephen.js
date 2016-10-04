@@ -1,7 +1,7 @@
 var stephen = {
     'Infoscan': {
         'dbConfig': {
-            'host': '192.168.1.88',
+            'host': 'localhost',
             'dbName': 'infoscan'
         },
         'files': {
@@ -17,8 +17,8 @@ var stephen = {
             }
         }
     },
-    runNotifications: false,
-    minifyFiles: false
+    runNotifications: false
+    // minifyFiles: false
 };
 
 stephen.redisConfig = {

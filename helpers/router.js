@@ -23,6 +23,7 @@ module.exports = function(controllers) {
   // Our inbound route is a random id so it's not guessable
   router.use('/' + inboundId, controllers.inbound);
 
+  router.use('/sass', controllers.sass);
   router.use('/scheduleloader/report', controllers.reports);
 
   // ALL ROUTES BELOW THIS WILL REQUIRE AUTHENTICATION

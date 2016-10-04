@@ -1,22 +1,24 @@
 .leftBar {
     z-index: 5;
-    padding: 15px 0px 10px 5px;
+    padding: 0px 0px 10px 5px;
     position: absolute;
-    width: 100px;
+    width: 92px;
     height: 100%;
     color: #ffffff;
-    background-color: rgb(65, 105, 51);
-    border-right: 2px solid #696969;
+    background-color: rgb(200, 190, 170);
+}
+.leftBar a {
+    /*padding-top: 0px;*/
 }
 .rightPanel {
     z-index: 0;
-    padding: 0px 0px 5px 96px;
+    padding: 0px 0px 5px 88px;
     position: relative;
     width: 100%;
 }
 .rightPanel > div.container-fluid {
     padding-right: 0px;
-    padding-left: 4px;
+    padding-left: 0px;
 }
 .reportDisplayFooter {
     display: inline-block;
@@ -56,11 +58,11 @@
     -webkit-appearance: none;
     -moz-appearance: textfield;
 }
-.durationDateRange {
+input.input.form-control.durationDateRange {
     width: 200px;
     padding-left: 26px;
 }
-.durationDateRangeTime {
+input.input.form-control.durationDateRangeTime {
     width: 65px;
 }
 .durationError {
@@ -86,16 +88,22 @@
     cursor: pointer;
     text-decoration: underline;
 }
+.viewReportNav {
+    display: inline-flex;
+    margin-right: 5px;
+}
+.viewReportNav li {
+    margin-right: 5px;
+}
 .runReportTabSpinner {
-    margin-left: 5px;
+    margin-left: 34px;
 }
 .runReportCheckMark {
-    margin-left: 5px;
+    margin-left: 34px;
 }
 .reportDisplayTitle {
     margin-top: 2px;
 }
-
 .direports > body > ul.dt-button-collection.dropdown-menu {
     width: 100px;
     min-width: 90px;
@@ -153,6 +161,14 @@ span.durationLabel {
 input.durationCheckbox {
     margin-left: 8px;
     vertical-align: middle;
+}
+div.reportAttribs.tab-pane {
+    padding-left: 1%;
+    padding-top: 20px;
+}
+div.additionalFilters.tab-pane {
+    padding-left: 5%;
+    padding-top: 20px;
 }
 .hideDurationDropdown {
     display: none;
@@ -225,7 +241,7 @@ span.intervalLabel {
 .totalizerOperators.dropdown-menu {
     width: 80px;
     min-width: 80px;
-    text-indent: -13px;
+    text-indent: 7px;
     margin-left: 15px;
     margin-top: -2px;
 }
@@ -239,11 +255,12 @@ span.intervalLabel {
     list-style-type: none;
 }
 .calculations.dropdown-menu {
-    width: 65px;
-    min-width: 50px;
-    text-indent: -13px;
-    margin-left: 24px;
-    margin-top: -2px;
+    width: 140px;
+    min-width: 70px;
+    text-indent: 7px;
+    margin-left: 6px;
+    margin-top: -8px;
+    padding-top: 10px;
 }
 .chartTypes.dropdown-menu {
     width: 65px;
@@ -330,15 +347,21 @@ td.filterName {
     width: 275px;
     padding-left: 20px !important;
 }
+li.active a {
+    border: 1px solid #416933;
+}
 .filterName.open:focus {
     border-color: #d5e1f2;
+}
+.nav-tabs > li.active > a {
+    background: none;
 }
 .tabConfiguration{
     padding-top: 0px;
     min-width: 850px;
 }
 .tabConfiguration ul.nav.nav-tabs {
-    background-color: rgb(65, 105, 51);
+    background-color: rgb(200, 190, 170);
     border-bottom: none;
 }
 .tabConfiguration ul.nav.nav-tabs li.active a {
@@ -368,7 +391,7 @@ td.filterName {
     border-bottom: none;
 }
 .tabViewReport ul.nav.nav-tabs li.active a {
-    background-color: #dddddd;
+    /*background-color: #dddddd;*/
     border: 1px solid #416933;
 }
 .tabViewReport ul.nav.nav-tabs li a {
@@ -385,20 +408,19 @@ td.filterName {
     padding-right: 20px;
 }
 .tabViewReport div.dataTables_filter {
+    margin-left: 243px;
     display: inline-block;
-    margin-left: 50px;
 }
 .tabViewReport .chartButtons {
     display: inline-flex;
     padding: 3px;
-    margin-left: 50px;
     margin-top: -6px;
+    float: right;
 }
 .tabViewReport .chartButtons a.btn.btn-default {
-    padding: 4px 6px 0px 6px;
-    margin-left: -6px;
+    padding: 0px 7px 0px 9px;
     border-radius: 0px 4px 4px 0px;
-    height: 30px;
+    height: 33px;
     margin-top: 2px;
 }
 .tabViewReport .chartButtons i.fa-print {
@@ -438,7 +460,7 @@ ul.yaxisGroups.dropdown-menu li a:hover {
     cursor: pointer;
     width: 30px;
 }
-ul.chartTypes.dropdown-menu li a:hover {
+.yaxisChartGroup li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
 }
@@ -455,18 +477,18 @@ input.input.form-control.filterContainer:enabled {
     color: #333;
     margin-top: 10px;
 }
-.btn-default.dropdown-toggle.operatorButton {
+.btn-flat.dropdown-toggle.operatorButton {
     border: none;
 }
-.btn-default.dropdown-toggle.conditionButton {
+.btn-flat.dropdown-toggle.conditionButton {
     border: none;
     padding-left: 3px;
     padding-right: 3px;
     border-radius: 0px 18px 18px 0px;
     margin-left: 4px;
 }
-.btn-default.dropdown-toggle.conditionButton.orCondition {
-    border-radius: 18px;
+.btn-flat.dropdown-toggle.conditionButton.orCondition {
+    border-radius: 0px 9px 9px 0px;
 }
 span.caret.lm10px {
     margin-left: 3px;
@@ -482,10 +504,57 @@ span.caret.lm10px {
 a.tab {
     color: #ffffff;
 }
+a.clearName {
+    cursor: pointer;
+}
+a.clearName i {
+    margin-left: -24px;
+}
+.pointTypesFilter {
+    padding-top: 30px;
+}
+.adjustPointTypesFilterButton {
+    margin-top: 30px;
+    margin-bottom: 50px;
+}
+.pointTypesFilter ul {
+    display: flex;
+    flex-wrap: wrap;
+    width: 80vw !important;
+    right: 30px;
+    padding-top: 10px;
+}
+.pointTypesFilter ul li {
+    clear: none;
+    width: 20%;
+    float: left;
+}
+.filled-in[type="checkbox"].filled-in:checked + label:after{
+    border: 2px solid #607d8b;
+    background-color: #607d8b;
+}
+.selectorNames .form-control {
+    color: #607d8b;
+}
+.selectorNames label {
+    color: #607d8b;
+}
+.selectorNames .input-field.col label.active{
+    color: #607d8b;
+    /*border-bottom: 1px solid #607d8b;*/
+}
+.selectorNames .form-control.readOnly {
+    color: #607d8b;
+    background-color: #dddddd;
+}
+div.input-field.col {
+    padding-right: 10px;
+}
+
 html, body {
     overflow-x: hidden;
     overflow-y: hidden;
-    background-color: rgb(65, 105, 51);
+    background-color: rgb(200, 190, 170);
 }
 body {
     padding-top: 5px;
@@ -539,8 +608,8 @@ div.dataTables_wrapper div.dataTables_length select {
     min-width: 310px;
 }
 .columnTotals {
-    width: 137px;
-    min-width: 135px;
+    width: 91px;
+    min-width: 91px;
 }
 .columnTotals span {
     color: #565656;
@@ -548,6 +617,39 @@ div.dataTables_wrapper div.dataTables_length select {
 .availableCalculations {
     display: inline-block;
 }
+.dropdown.availableCalculations a {
+    width: 81px;
+    padding: 0px;
+}
+.dropdown.availableCalculations a .text {
+    margin-left: 14px;
+}
+.dropdown.availableTotalizerOperatorsContainer a {
+    width: 88px;
+    padding: 0px;
+}
+.dropdown.availableTotalizerOperatorsContainer li a {
+    width: 78px;
+}
+.dropdown.availableTotalizerOperatorsContainer a .text {
+    margin-left: 12px;
+}
+.dropdown.availableAxisGroupsContainer a {
+    width: 31px;
+    padding: 0px;
+}
+.dropdown.availableAxisGroupsContainer a .text {
+    margin-left: 2px;
+}
+.dropdown.availableAxisGroupsContainer ul.dropdown-menu {
+    cursor: pointer;
+    width: 30px;
+    min-width: 34px;
+    text-indent: 10px;
+    margin-left: 11px;
+    margin-top: -10px;
+}
+
 .filterPointName {
     display: inline-block;
     margin-left: 4px;
@@ -594,6 +696,9 @@ input.form-control.inputPrecision {
 .includeInChart {
     width: 40px;
 }
+th .calculateColumn:hover {
+    cursor: pointer;
+}
 .includeInChartColumn {
     width: 30px;
 }
@@ -616,6 +721,7 @@ input.form-control.inputPrecision {
 }
 .yaxisChartGroup {
     width: 32px;
+    min-width: 20px;
     text-align: center;
 }
 .yaxisGroups.dropdown-menu {
@@ -632,7 +738,7 @@ input.form-control.globalPrecision {
     width: 30px;
     padding: 2px 2px 2px 5px;
 }
-input.form-control.globalChartCheckbox {
+input.form-control.globalIncludeInChart {
     width: 14px;
     margin-left: 7px;
 }
@@ -640,7 +746,7 @@ input.form-control.globalChartCheckbox {
     margin-left: 6px;
     width: 215px;
 }
-.columnDisplayName {
+input.form-control.columnDisplayName {
     width: 281px;
     display: inline-block;
 }
@@ -752,11 +858,13 @@ input.form-control.globalChartCheckbox {
 }
 .availableChartTypes.chartTab {
     padding: 0px;
+    height: 33px;
 }
 .availableChartTypes.chartTab > .btn {
-    padding: 4px;
+    padding: 0px 8px 0px 8px;
     margin-top: 2px;
     border-radius: 4px 0px 0px 4px;
+    height: 33px;
 }
 .panel-heading a.panel-anchor:after {
     font-family:'Glyphicons Halflings';
@@ -780,7 +888,10 @@ input.form-control.globalChartCheckbox {
     cursor: pointer;
 }
 .reporttype {
-    margin-top: 8px;
+    margin-top: -14px;
+    background-color: #dddddd;
+    font-style: italic;
+    font-size: 12px;
 }
 .reportTitle {
     background-color: #dddddd;
@@ -845,12 +956,8 @@ button {
     cursor: pointer;
 }
 .reportButtons {
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: -1px;
-    margin-bottom: 46px;
-    width: 320px;
-    /*border: 1px solid #73AD21;*/
+    margin: -1px auto 46px auto;
+    width: 325px;
     padding: 1px;
 }
 .reportButtons .btn.btn-primary {

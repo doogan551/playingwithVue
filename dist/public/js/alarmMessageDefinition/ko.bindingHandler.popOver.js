@@ -1,1 +1,0 @@
-ko.bindingHandlers.popover={init:function(a,b,c,d,e){var f=ko.utils.unwrapObservable(b()),g={template:"<span>template</span>"};f=$.extend(!0,{},g,f),$(a).popover(f)}};

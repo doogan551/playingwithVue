@@ -20,7 +20,7 @@ pageRender.renderPage('http://localhost/scheduleloader/report/scheduled/80', pat
   fs.readFile(path, function(err, data) {
     console.log('sending email', path, err, !!data);
     mailer.sendEmail({
-      to: 'rkendall@dorsett-tech.com',
+      to: '',
       fromAccount: 'infoscan',
       subject: 'REPORT',
       attachments: [{

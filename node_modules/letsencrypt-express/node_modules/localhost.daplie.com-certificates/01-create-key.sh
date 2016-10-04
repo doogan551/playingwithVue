@@ -2,5 +2,5 @@
 
 mkdir -p certs/server
 openssl genrsa \
-  -out certs/server/my-server.key.pem \
+  -out certs/server/privkey.pem \
   2048

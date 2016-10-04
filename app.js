@@ -51,18 +51,19 @@ app.use(morgan(':remote-addr :method :url :status :res[content-length] :response
 app.use(cookieParser());
 
 app.use(bodyParser.json({
-  limit: 10000
+  limit: '50mb'
 }));
 app.use(bodyParser.urlencoded({
   extended: true,
   parameterLimit: 4500
 }));
-app.use(multer({
-  inMemory: true
-}));
+var storage = multer.memoryStorage();
+var upload = multer({ storage: storage });
 
-app.engine('jade', require('jade').__express);
-app.set('view engine', 'jade');
+app.use(upload.array());
+
+app.engine('pug', require('pug').__express);
+app.set('view engine', 'pug');
 
 //if production, use dist folders
 if (config.minifyFiles !== false) {

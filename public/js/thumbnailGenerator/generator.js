@@ -9,9 +9,9 @@ var thumbnailGenerator = (function ($) {
         _fetcher;
 
     //set dummy workspaceManager obj
-    window.workspaceManager = (window.opener && window.opener.workspaceManager) || {
-        openWindow: function() {},
-        openWindowPositioned: function() {}
+    window.workspaceManager = (window.top && window.top.workspaceManager) || {
+        openWindow: function () {},
+        openWindowPositioned: function () {}
     };
 
     _internal.webEndpoint = window.location.origin;
@@ -26,26 +26,26 @@ var thumbnailGenerator = (function ($) {
     _internal.timer = null;
 
     _internal.vm = {
-        errorList          : ko.observableArray([]),
-        errorDetailList    : ko.observableArray([]),
-        captureList        : ko.observableArray(data),
+        errorList: ko.observableArray([]),
+        errorDetailList: ko.observableArray([]),
+        captureList: ko.observableArray(data),
         totalItemsToProcess: ko.observable(0),
-        currentThumbName   : ko.observable(''),
-        thumb              : ko.observable(''),
-        currentCaptureData : ko.observable({}),
-        updateAll          : ko.observable(true)
+        currentThumbName: ko.observable(''),
+        thumb: ko.observable(''),
+        currentCaptureData: ko.observable({}),
+        updateAll: ko.observable(true)
     };
 
-    _internal.vm.updateAll.subscribe(function(newValue) {
-        _internal.vm.totalItemsToProcess( _internal.getItemsToCapture().length);
+    _internal.vm.updateAll.subscribe(function (newValue) {
+        _internal.vm.totalItemsToProcess(_internal.getItemsToCapture().length);
     });
 
-    _internal.getItemsToCapture = function() {
+    _internal.getItemsToCapture = function () {
         if (_internal.vm.updateAll()) {
             return _internal.vm.captureList();
         }
-        return ko.utils.arrayFilter(_internal.vm.captureList(), function(item) {
-            return item.tn == false;
+        return ko.utils.arrayFilter(_internal.vm.captureList(), function (item) {
+            return item.tn === false;
         });
     };
 
@@ -60,11 +60,11 @@ var thumbnailGenerator = (function ($) {
         return percent.toFixed(3);
     });
 
-    _internal.createFetcher = function() {
+    _internal.createFetcher = function () {
         _captureClient = window.open('/thumbnail/capture', 'fetcher', 'width=1200,height=6100,toolbar=0,menubar=0,location=0,status=0,scrollbars=0,resizable=1,left=0,top=0');
     };
 
-    _internal.removeFetcher = function() {
+    _internal.removeFetcher = function () {
         _fetcher.onload = null;
         _fetcher.contentWindow.location = 'about:blank';
         _fetcher.contentWindow.location.reload();
@@ -75,9 +75,9 @@ var thumbnailGenerator = (function ($) {
         _captureClient = null;
         //let's wait to see if we can free up some memory
         _waiting = 1;
-        setTimeout(function() {
+        setTimeout(function () {
             _waiting = null;
-            _internal.nextCapture()
+            _internal.nextCapture();
         }, 5000);
     };
 
@@ -104,7 +104,7 @@ var thumbnailGenerator = (function ($) {
         _ui.$btnCancel.hide();
     };
 
-    _internal.nextCapture = function(name, error, errorInfo) {
+    _internal.nextCapture = function (name, error, errorInfo) {
         var _captureData;
         if (!!error) {
             _internal.vm.thumb('/js/thumbnailGenerator/thumbError.png');
@@ -113,7 +113,7 @@ var thumbnailGenerator = (function ($) {
             _internal.vm.errorDetailList.push(errorInfo);
         }
         if (_internal.cancelProcess) return;
-        if (_memoryLeakBuster > 20)  {
+        if (_memoryLeakBuster > 20) {
             _internal.removeFetcher();
             return;
         }
@@ -137,23 +137,28 @@ var thumbnailGenerator = (function ($) {
 
     _internal.load = {
         sequence: function () {
-            var _captureData =  _internal.vm.currentCaptureData();
+            var _captureData = _internal.vm.currentCaptureData();
             _fetcher.onload = function () {
-                console.log('loaded');
-//                if (typeof _fetcher.contentWindow.jQuery == 'undefined') {
-//                    _internal.nextCapture(_captureData.name, true);
-//                    return;
-//                }
-                _fetcher.contentWindow.onerror = function(err, url, lineNum) {
+                // console.log('loaded');
+                //                if (typeof _fetcher.contentWindow.jQuery == 'undefined') {
+                //                    _internal.nextCapture(_captureData.name, true);
+                //                    return;
+                //                }
+                _fetcher.contentWindow.onerror = function (err, url, lineNum) {
                     _fetcher.contentWindow.onerror = null;
                     _fetcher.contentWindow.jQuery('body').unbind('sequenceLoaded');
                     console.log('aaaaaaaaaaaarrrrrrrrrrrrrrrrrrrrrrgggg');
-                    setTimeout(function() {_internal.nextCapture(_captureData.name, true, {err:err, lineNum: lineNum})}, 100);
+                    setTimeout(function () {
+                        _internal.nextCapture(_captureData.name, true, {
+                            err: err,
+                            lineNum: lineNum
+                        });
+                    }, 100);
                     return false;
                 };
-                if(_fetcher.contentWindow.gpl) {
+                if (_fetcher.contentWindow.gpl) {
                     _fetcher.contentWindow.gpl.onRender(function (coords) {
-                        setTimeout(function(_coords) {
+                        setTimeout(function (_coords) {
                             _captureElement = _fetcher.contentWindow.jQuery(_internal.sequenceSelector)[0];
                             // console.log(_captureElement);
                             _internal.capture(_captureData.id, _captureElement, _captureData.name, _internal.nextCapture, _coords);
@@ -162,24 +167,26 @@ var thumbnailGenerator = (function ($) {
                     });
                 } else {
                     console.error('No gpl', _captureData);
-                    setTimeout(function() {_internal.nextCapture(_captureData.name, true)}, 100);
+                    setTimeout(function () {
+                        _internal.nextCapture(_captureData.name, true);
+                    }, 100);
                 }
-//                _fetcher.contentWindow.jQuery('body').bind('sequenceLoaded', function () {
-//                    _captureElement = _fetcher.contentWindow.jQuery(_internal.sequenceSelector)[0];
-//                    console.log(_captureElement);
-//                    _internal.capture(_captureData.id, _captureElement, _captureData.name, _internal.nextCapture);
-//                   // _internal.nextCapture();
-//                });
+                //                _fetcher.contentWindow.jQuery('body').bind('sequenceLoaded', function () {
+                //                    _captureElement = _fetcher.contentWindow.jQuery(_internal.sequenceSelector)[0];
+                //                    console.log(_captureElement);
+                //                    _internal.capture(_captureData.id, _captureElement, _captureData.name, _internal.nextCapture);
+                //                   // _internal.nextCapture();
+                //                });
             };
             _fetcher.src = '/gpl/view/' + _captureData.id + '?nosocket&nobg&nolog';
         },
         display: function () {
-            var _captureData =  _internal.vm.currentCaptureData(),
+            var _captureData = _internal.vm.currentCaptureData(),
                 $captureElement;
             _fetcher.onload = function () {
-                console.log('LOADED');
-                if(_fetcher.contentWindow.displays) {
-                    _fetcher.contentWindow.displays.onRender(function() {
+                // console.log('LOADED');
+                if (_fetcher.contentWindow.displays) {
+                    _fetcher.contentWindow.displays.onRender(function () {
                         if (typeof _fetcher.contentWindow.jQuery == 'undefined') {
                             console.log('JQUERY UNDEFINED');
                             _internal.nextCapture(_captureData.name, true);
@@ -199,18 +206,22 @@ var thumbnailGenerator = (function ($) {
         }
     };
 
-    _internal.thumb = {width: 250, height: 141, margin: 10};
+    _internal.thumb = {
+        width: 250,
+        height: 141,
+        margin: 10
+    };
 
     _internal.renderImage = function (upi, name, canvas, callback, bgColor) {
         var _image = new Image(),
             _imageData = canvas.toDataURL();
 
         _image.onload = function () {
-            console.log('RENDERIMAGE - IMAGE LOADED');
+            console.log('Thumbnail - Image Loaded');
             var _thumbCanvas = document.createElement("canvas"),
                 _context = _thumbCanvas.getContext("2d"),
                 _frame = {
-                    width : _internal.thumb.width - (_internal.thumb.margin * 2),
+                    width: _internal.thumb.width - (_internal.thumb.margin * 2),
                     height: _internal.thumb.height - (_internal.thumb.margin * 2)
                 };
             _context.canvas.width = _internal.thumb.width;
@@ -236,15 +247,19 @@ var thumbnailGenerator = (function ($) {
             _internal.thumb.data = _context.canvas.toDataURL();
             _internal.save(upi, _internal.thumb.data, bgColor);
             //_internal.vm.thumb(_internal.thumb.data);
-            !!callback && callback(name);
+            if (callback) {
+                callback(name);
+            }
             _image = null;
-            if(_app.thumbnailCallback) {
+            if (_app.thumbnailCallback) {
                 _app.thumbnailCallback();
             }
         };
         _image.onerror = function () {
             console.log('RENDERIMAGE - IMAGE LOAD ERROR', arguments);
-            !!callback && callback(name, true);
+            if (callback) {
+                callback(name, true);
+            }
             _image = null;
         };
         _image.src = _imageData;
@@ -258,7 +273,7 @@ var thumbnailGenerator = (function ($) {
             _internal.processCanvas(upi, domElement, name, callback, options);
         } else {
             if (typeof html2canvas == 'undefined') {
-                console.log('CAPTURING - loading html 2 canvas script');
+                // console.log('CAPTURING - loading html 2 canvas script');
                 $.getScript('/js/thumbnailGenerator/html2canvas.js').done(
                     function () {
                         //options are bg color
@@ -273,7 +288,7 @@ var thumbnailGenerator = (function ($) {
     };
 
 
-    _internal.processCanvas = function(upi, domElement, name, callback, coords) {
+    _internal.processCanvas = function (upi, domElement, name, callback, coords) {
         var _canvas = $(domElement)[0],
             _context = _canvas.getContext('2d'),
             _margin = 30,
@@ -285,17 +300,19 @@ var thumbnailGenerator = (function ($) {
 
         $('.cvs').attr('src', _canvas.toDataURL());
 
-        coords.top      = Math.floor(coords.top);
-        coords.bottom   = Math.ceil(coords.bottom);
-        coords.left     = Math.floor(coords.left);
-        coords.right    = Math.ceil(coords.right);
+        coords.top = Math.floor(coords.top);
+        coords.bottom = Math.ceil(coords.bottom);
+        coords.left = Math.floor(coords.left);
+        coords.right = Math.ceil(coords.right);
 
         // console.log(coords);
 
         trimHeight = coords.bottom - coords.top;
         trimWidth = coords.right - coords.left;
-        if (trimWidth == 0) {
-            !!callback && callback(name, true);
+        if (trimWidth === 0) {
+            if (callback) {
+                callback(name, true);
+            }
             return;
         }
         trimmed = _context.getImageData(coords.left, coords.top, trimWidth, trimHeight);
@@ -303,85 +320,89 @@ var thumbnailGenerator = (function ($) {
 
         _copy.canvas.width = trimWidth + (_margin * 2);
         _copy.canvas.height = trimHeight + (_margin * 2);
-//        _copy.fillStyle   = '#C8BEAA';
-//        _copy.fillRect  (0,   0, trimWidth + (_margin * 2), trimHeight + (_margin * 2));
+        //        _copy.fillStyle   = '#C8BEAA';
+        //        _copy.fillRect  (0,   0, trimWidth + (_margin * 2), trimHeight + (_margin * 2));
         _copy.putImageData(trimmed, _margin, _margin);
         _internal.renderImage(upi, name, _copy.canvas, callback, '#fff');
         trimmed = null;
     };
 
-    _internal.processCanvas_old = function(upi, domElement, name, callback) {
+    _internal.processCanvas_old = function (upi, domElement, name, callback) {
         var _canvas = $(domElement)[0],
             _context = _canvas.getContext('2d'),
             _margin = 30,
             _pixels, l, i, x, y, trimHeight, trimWidth, trimmed,
             _copy = document.createElement('canvas').getContext('2d'),
             bound = {
-                top   : null,
-                left  : null,
-                right : null,
+                top: null,
+                left: null,
+                right: null,
                 bottom: null
             };
-            _pixels = _context.getImageData(0, 0, _context.canvas.width, _context.canvas.height);
-            l = _pixels.data.length;
-            for (i = 0; i < l; i += 4) {
-                if (_pixels.data[i + 0] !== 200 && _pixels.data[i + 0] !== 190 && _pixels.data[i + 0] !== 170) {
-                    x = (i / 4) % _context.canvas.width;
-                    y = ~~((i / 4) / _context.canvas.width);
-                    if (bound.top === null) {
-                        bound.top = y;
-                    }
-                    if (bound.left === null) {
-                        bound.left = x;
-                    } else if (x < bound.left) {
-                        bound.left = x;
-                    }
-                    if (bound.right === null) {
-                        bound.right = x;
-                    } else if (bound.right < x) {
-                        bound.right = x;
-                    }
-                    if (bound.bottom === null) {
-                        bound.bottom = y;
-                    } else if (bound.bottom < y) {
-                        bound.bottom = y;
-                    }
+        _pixels = _context.getImageData(0, 0, _context.canvas.width, _context.canvas.height);
+        l = _pixels.data.length;
+        for (i = 0; i < l; i += 4) {
+            if (_pixels.data[i + 0] !== 200 && _pixels.data[i + 0] !== 190 && _pixels.data[i + 0] !== 170) {
+                x = (i / 4) % _context.canvas.width;
+                y = ~~((i / 4) / _context.canvas.width);
+                if (bound.top === null) {
+                    bound.top = y;
+                }
+                if (bound.left === null) {
+                    bound.left = x;
+                } else if (x < bound.left) {
+                    bound.left = x;
+                }
+                if (bound.right === null) {
+                    bound.right = x;
+                } else if (bound.right < x) {
+                    bound.right = x;
+                }
+                if (bound.bottom === null) {
+                    bound.bottom = y;
+                } else if (bound.bottom < y) {
+                    bound.bottom = y;
                 }
             }
-            trimHeight = bound.bottom - bound.top;
-            trimWidth = bound.right - bound.left;
+        }
+        trimHeight = bound.bottom - bound.top;
+        trimWidth = bound.right - bound.left;
         // console.log(trimWidth, trimHeight);
-            if (trimWidth == 0) {
-                !!callback && callback(name, true);
-                return;
+        if (trimWidth === 0) {
+            if (callback) {
+                callback(name, true);
             }
-            trimmed = _context.getImageData(bound.left, bound.top, trimWidth, trimHeight);
-            _context = null;
+            return;
+        }
+        trimmed = _context.getImageData(bound.left, bound.top, trimWidth, trimHeight);
+        _context = null;
 
-            _copy.canvas.width = trimWidth + (_margin * 2);
-            _copy.canvas.height = trimHeight + (_margin * 2);
-            _copy.fillStyle   = '#C8BEAA';
-            _copy.fillRect  (0,   0, trimWidth + (_margin * 2), trimHeight + (_margin * 2));
-            _copy.putImageData(trimmed, _margin, _margin);
-            _internal.renderImage(upi, name, _copy.canvas, callback);
-            trimmed = null;
+        _copy.canvas.width = trimWidth + (_margin * 2);
+        _copy.canvas.height = trimHeight + (_margin * 2);
+        _copy.fillStyle = '#C8BEAA';
+        _copy.fillRect(0, 0, trimWidth + (_margin * 2), trimHeight + (_margin * 2));
+        _copy.putImageData(trimmed, _margin, _margin);
+        _internal.renderImage(upi, name, _copy.canvas, callback);
+        trimmed = null;
     };
 
-    _internal.processHTML = function(upi, domElement, name, callback, bgColor) {
+    _internal.processHTML = function (upi, domElement, name, callback, bgColor) {
         try {
             html2canvas(domElement, {
-                onrendered: function(canvas) {
-                    console.log('BEFORE RENDER -----------------------------------');
-                    console.log('width', canvas.width, 'height', canvas.height);
+                onrendered: function (canvas) {
+                    // console.log('BEFORE RENDER -----------------------------------');
+                    // console.log('width', canvas.width, 'height', canvas.height);
                     domElement.parentNode.removeChild(domElement);
                     _internal.renderImage(upi, name, canvas, callback, bgColor);
                 },
-                logging: true
+                logging: false
             });
         } catch (e) {
             console.log('ERROR RENDERING');
             domElement.parentNode.removeChild(domElement);
-            !!callback && callback(name, true);
+            if (callback) {
+                callback(name, true);
+            }
         }
     };
 
@@ -389,9 +410,9 @@ var thumbnailGenerator = (function ($) {
         var _svgFix = function (xml) {
                 // based on http://goo.gl/KZDII strip off all spaces between tags
                 var _svgXmlNoSpace = xml.replace(/>\s+/g, ">").replace(/\s+</g, "<"),
-                // based on gabelerner added xmlns:xlink="http://www.w3.org/1999/xlink" into svg xlmns
+                    // based on gabelerner added xmlns:xlink="http://www.w3.org/1999/xlink" into svg xlmns
                     _svgXmlFixNamespace = _svgXmlNoSpace.replace('xmlns="http://www.w3.org/2000/svg"', 'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"'),
-                // based on http://goo.gl/KZDII image's href changed as xlink:href
+                    // based on http://goo.gl/KZDII image's href changed as xlink:href
                     _svgXmlFixImage = _svgXmlFixNamespace.replace(' href="', ' xlink:href="');
                 // based on gabelerner image must be under the same domain - no crossside
                 return _svgXmlFixImage;
@@ -406,9 +427,9 @@ var thumbnailGenerator = (function ($) {
                 var _pixels, l, i, x, y, trimHeight, trimWidth, trimmed,
                     _copy = document.createElement('canvas').getContext('2d'),
                     bound = {
-                        top   : null,
-                        left  : null,
-                        right : null,
+                        top: null,
+                        left: null,
+                        right: null,
                         bottom: null
                     };
                 _pixels = _context.getImageData(0, 0, _context.canvas.width, _context.canvas.height);
@@ -437,8 +458,8 @@ var thumbnailGenerator = (function ($) {
                         }
                     }
                 }
-                trimHeight = bound.bottom - bound.top;// + (margin * 2);
-                trimWidth = bound.right - bound.left;// + (margin * 2);
+                trimHeight = bound.bottom - bound.top; // + (margin * 2);
+                trimWidth = bound.right - bound.left; // + (margin * 2);
                 trimmed = _context.getImageData(bound.left, bound.top, trimWidth, trimHeight);
                 _canvasElement = null;
                 _context = null;
@@ -459,9 +480,9 @@ var thumbnailGenerator = (function ($) {
         newHeight = bbox.height;
 
         if (bbox.width > bbox.height) {
-            ratio = _internal.thumb.width / bbox.width;   // get ratio for scaling image
-            newHeight = bbox.height * ratio;    // Reset height to match scaled image
-            newWidth = bbox.width * ratio;    // Reset width to match scaled image
+            ratio = _internal.thumb.width / bbox.width; // get ratio for scaling image
+            newHeight = bbox.height * ratio; // Reset height to match scaled image
+            newWidth = bbox.width * ratio; // Reset width to match scaled image
             if (newHeight > _internal.thumb.height) {
                 ratio = _internal.thumb.height / newHeight;
                 newHeight = newHeight * ratio;
@@ -471,17 +492,26 @@ var thumbnailGenerator = (function ($) {
         // Check if current height is larger than max
         if (bbox.height > bbox.width) {
             ratio = _internal.thumb.height / bbox.height; // get ratio for scaling image
-            newWidth = bbox.width * ratio;    // Reset width to match scaled image
-            newHeight = bbox.height * ratio;    // Reset height to match scaled image
+            newWidth = bbox.width * ratio; // Reset width to match scaled image
+            newHeight = bbox.height * ratio; // Reset height to match scaled image
         }
-        draw.viewbox({x: bbox.x, y: bbox.y, width: bbox.width, height: bbox.height});
+        draw.viewbox({
+            x: bbox.x,
+            y: bbox.y,
+            width: bbox.width,
+            height: bbox.height
+        });
         draw.size(newWidth, newHeight);
         try {
-            canvg(_canvasElement, draw.exportSvg(), {renderCallback: _onRender });
+            canvg(_canvasElement, draw.exportSvg(), {
+                renderCallback: _onRender
+            });
         } catch (e) {
             _canvasElement = null;
             _context = null;
-            !!callback && callback(name, true);
+            if (callback) {
+                callback(name, true);
+            }
         }
         draw = null;
         $SVG.remove();
@@ -489,22 +519,18 @@ var thumbnailGenerator = (function ($) {
     };
 
     _internal.save = function (id, thumb, bgColor) {
-        console.log(id);
-        $.ajax(
-            {
-                url        : _internal.apiEndpoint + 'save',
-                contentType: 'application/json',
-                dataType   : 'json',
-                type       : 'post',
-                data       : JSON.stringify(
-                    {
-                        id: id,
-                        thumb: thumb,
-                        bgColorHex : bgColor
-                    }
-                )
-            }
-        ).done(
+        // console.log(id);
+        $.ajax({
+            url: _internal.apiEndpoint + 'save',
+            contentType: 'application/json',
+            dataType: 'json',
+            type: 'post',
+            data: JSON.stringify({
+                id: id,
+                thumb: thumb,
+                bgColorHex: bgColor
+            })
+        }).done(
             function (data) {
                 // console.log(data);
             }
@@ -522,9 +548,11 @@ var thumbnailGenerator = (function ($) {
         _ui.$btnCancel.on('click', _internal.cancelCaptureProcess);
         _internal.vm.updateAll(false);
         ko.applyBindings(_internal.vm, document.getElementById('main'));
-        window.onbeforeunload = function() {
+        window.onbeforeunload = function () {
             _waiting = 1;
-            _captureClient && _captureClient.close();
+            if (_captureClient) {
+                _captureClient.close();
+            }
         };
         //if (executeImmediately) _internal.startCaptureProcess();
     };
@@ -532,7 +560,7 @@ var thumbnailGenerator = (function ($) {
     _app.nextCapture = _internal.nextCapture;
     _app.errorList = _internal.vm.errorList;
     _app.errorDetailList = _internal.vm.errorDetailList;
-    _app.captureList = _internal.vm.captureList
+    _app.captureList = _internal.vm.captureList;
 
     return _app;
 })(jQuery);

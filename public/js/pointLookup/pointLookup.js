@@ -1,6 +1,6 @@
 "use strict";
 window.pointLookup = (function(module, ko, $) {
-    var workspaceManager = (window.opener || window.top).workspaceManager,
+    var workspaceManager = window.top.workspaceManager,
         socket = workspaceManager.socket(),
         socketHistory = {},
         dataAdapters,
@@ -714,6 +714,13 @@ window.pointLookup = (function(module, ko, $) {
         refreshPointTypes();
     };
 
+    module.hidePointTypes = function () {
+        $splitter.jqxSplitter('collapse');
+    };
+
+    module.showPointTypes = function () {
+        $splitter.jqxSplitter('expand');
+    };
 
     module.getCheckedPointTypes = function () {
         return getSelectedPointTypes();
@@ -1054,7 +1061,7 @@ window.pointLookup = (function(module, ko, $) {
                 window.close();
             } else {
                 if (!deletedDisplay) {
-                    workspaceManager.openWindowPositioned(endPoint.review.url, fullName, pointType, endPoint.review.target, rowData._id, {
+                    dtiUtility.openWindow(endPoint.review.url, fullName, pointType, endPoint.review.target, rowData._id, {
                         width: 1250,
                         height: 750
                     });
@@ -1165,19 +1172,19 @@ window.pointLookup = (function(module, ko, $) {
 
             switch (command) {
                 case 'open':
-                    workspaceManager.openWindowPositioned(endPoint.review.url, fullName, pointType, endPoint.review.target, id, {
+                    dtiUtility.openWindow(endPoint.review.url, fullName, pointType, endPoint.review.target, id, {
                         width: 1250,
                         height: 750
                     });
                     break;
                 case 'clone':
-                    workspaceManager.openWindowPositioned('/api/points/newPoint/' + id, 'New Point', '', '', 'newPoint', {
+                    dtiUtility.openWindow('/api/points/newPoint/' + id, 'New Point', '', '', 'newPoint', {
                         width: 960,
                         height: 560
                     });
                     break;
                 case 'edit':
-                    workspaceManager.openWindowPositioned(endPoint.edit.url, fullName, pointType, endPoint.edit.target, id, {
+                    dtiUtility.openWindow(endPoint.edit.url, fullName, pointType, endPoint.edit.target, id, {
                         width: 1250,
                         height: 750
                     });
@@ -1311,14 +1318,13 @@ window.pointLookup = (function(module, ko, $) {
 
         $newPointBtn.on('click', function() {
             var selectedPointType = '',
-                selectedpointTypes = getCheckedPointTypeItems(),
-                win;
+                selectedpointTypes = getCheckedPointTypeItems();
 
             if (selectedpointTypes.length === 1) {
                 selectedPointType = window.encodeURI(selectedpointTypes[0].originalItem.key);
             }
 
-            win = workspaceManager.openWindowPositioned('/api/points/newPoint/?selectedPointType=' + selectedPointType, 'New Point', '', '', 'newPoint', {
+            dtiUtility.openWindow('/api/points/newPoint/?selectedPointType=' + selectedPointType, 'New Point', '', '', 'newPoint', {
                 width: 960,
                 height: 560
             });
@@ -1448,7 +1454,7 @@ window.pointLookup = (function(module, ko, $) {
                             case 'filter':
                                 return;
                             default:
-                                workspaceManager.openWindowPositioned(endPoint.review.url, fullName, pointType, endPoint.review.target, rowData._id, {
+                                dtiUtility.openWindow(endPoint.review.url, fullName, pointType, endPoint.review.target, rowData._id, {
                                     width: 1250,
                                     height: 750
                                 });

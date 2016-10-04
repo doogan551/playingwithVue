@@ -132,16 +132,12 @@ exports.count = function(criteria, cb) {
 };
 
 exports.findAndCount = function(criteria, cb) {
-  var _points;
-
   exports.get(criteria, function(err, points) {
     if (err) {
       return cb(err);
     } else {
-      _points = points;
-
       exports.count(criteria, function(err, count) {
-        cb(err, _points, count);
+        cb(err, points, count);
       });
     }
   });

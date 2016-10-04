@@ -24,13 +24,12 @@ module.exports = function(_common) {
 
             if (jbuf.msg == 'newtod') {
 
-                var point = jbuf.point,
-                    date = new Date(),
-                    dateString = date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDay() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds(),
-                    nameString = (point.name1) ? (point.name2) ? (point.name3) ? (point.name4) ? point.name1 + "_" + point.name2 + "_" + point.name3 + "_" + point.name4 : point.name1 + "_" + point.name2 + "_" + point.name3 : point.name1 + "_" + point.name2 : point.name1 : "";
+                var date = new Date(),
+                    dateString = date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDay() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
 
-                runScheduleEntry(jbuf.point, function(err) {
+                runScheduleEntry(jbuf.point, function(err, point) {
                     err = (err) ? err : "Success";
+                    var nameString = (point.name1) ? (point.name2) ? (point.name3) ? (point.name4) ? point.name1 + "_" + point.name2 + "_" + point.name3 + "_" + point.name4 : point.name1 + "_" + point.name2 + "_" + point.name3 : point.name1 + "_" + point.name2 : point.name1 : "";
                     writeToLogs(dateString + ' -  ToD Schedule - ' + point._id + ' - ' + nameString + ' - ' + err + "\n", function(err) {
                         // logger.info(err);
                     });
@@ -54,91 +53,98 @@ function writeToLogs(msg, callback) {
     });
 }
 
-function runScheduleEntry(scheduleEntry, callback) {
+function runScheduleEntry(entryUpi, callback) {
     // get control point
     // get props allowed based on point type value
     // if pass
     // switch on control property
 
     var error;
-
     Utility.getOne({
         collection: 'points',
         query: {
-            _id: Config.Utility.getPropertyObject("Control Point", scheduleEntry).Value,
-            _pStatus: 0
+            _id: parseInt(entryUpi._id, 10)
         }
-    }, function(err, point) {
-        if (err)
-            callback(err);
-        else if (!point)
-            callback("No point found");
-        var controlProperty = scheduleEntry["Control Property"].Value;
-        if (Config.Enums["Point Types"][point["Point Type"].Value].schedProps.indexOf(controlProperty) !== -1) {
-            if (controlProperty === "Execute Now") {
-                Utility.update({
-                    collection: 'points',
-                    query: {
-                        _id: point._id
-                    },
-                    updateObj: {
-                        $set: {
-                            "Execute Now.Value": true
+    }, function(err, scheduleEntry) {
+		
+        Utility.getOne({
+            collection: 'points',
+            query: {
+                _id: Config.Utility.getPropertyObject("Control Point", scheduleEntry).Value,
+                _pStatus: 0
+            }
+        }, function(err, point) {
+            if (err)
+                callback(err, scheduleEntry);
+            else if (!point)
+                callback("No point found", scheduleEntry);
+            var controlProperty = scheduleEntry["Control Property"].Value;
+            if (Config.Enums["Point Types"][point["Point Type"].Value].schedProps.indexOf(controlProperty) !== -1) {
+                if (controlProperty === "Execute Now") {
+                    Utility.update({
+                        collection: 'points',
+                        query: {
+                            _id: point._id
+                        },
+                        updateObj: {
+                            $set: {
+                                "Execute Now.Value": true
+                            }
                         }
-                    }
-                }, function(err, result) {
-                    common.signalExecTOD(true, function(err, msg) {
-                        callback(err);
+                    }, function(err, result) {
+                        common.signalExecTOD(true, function(err, msg) {
+                            callback(err, scheduleEntry);
+                        });
                     });
-                });
-            } else if (["Analog Output", "Analog Value", "Binary Output", "Binary Value", "Accumulator", "MultiState Value"].indexOf(point["Point Type"].Value) !== -1 && controlProperty === "Value") {
-                var control = {
-                    "Command Type": 7,
-                    "upi": point._id,
-                    "Controller": scheduleEntry.Controller.eValue,
-                    "Priority": scheduleEntry["Control Priority"].eValue,
-                    "Relinquish": (scheduleEntry["Active Release"].Value === true) ? 1 : 0,
-                    "OvrTime": 0
-                };
+                } else if (["Analog Output", "Analog Value", "Binary Output", "Binary Value", "Accumulator", "MultiState Value"].indexOf(point["Point Type"].Value) !== -1 && controlProperty === "Value") {
+                    var control = {
+                        "Command Type": 7,
+                        "upi": point._id,
+                        "Controller": scheduleEntry.Controller.eValue,
+                        "Priority": scheduleEntry["Control Priority"].eValue,
+                        "Relinquish": (scheduleEntry["Active Release"].Value === true) ? 1 : 0,
+                        "OvrTime": 0
+                    };
 
-                control.Value = (scheduleEntry["Control Value"].ValueType === 5) ? scheduleEntry["Control Value"].eValue : scheduleEntry["Control Value"].Value;
+                    control.Value = (scheduleEntry["Control Value"].ValueType === 5) ? scheduleEntry["Control Value"].eValue : scheduleEntry["Control Value"].Value;
 
-                control = JSON.stringify(control);
+                    control = JSON.stringify(control);
 
-                zmq.sendCommand(control, function(err, msg) {
-                    if (!!err) {
-                        callback(err);
-                    } else {
-                        callback(null);
-                    }
-                });
-            } else {
-                var oldPoint = _.cloneDeep(point);
-                point[controlProperty].Value = scheduleEntry["Control Value"].Value;
-                point._actvAlmId = oldPoint._actvAlmId;
-                var result = Config.Update.formatPoint({
-                    oldPoint: oldPoint,
-                    point: point,
-                    property: controlProperty,
-                    refPoint: null
-                });
-                if (result.err)
-                    callback(result.err);
-                else {
-                    common.newUpdate(oldPoint, point, {
-                        method: "update",
-                        from: "updateToD"
-                    }, {
-                        username: "ToD Schedule"
-                    }, function(response, point) {
-                        callback(response.err);
+                    zmq.sendCommand(control, function(err, msg) {
+                        if (!!err) {
+                            callback(err, scheduleEntry);
+                        } else {
+                            callback(null, scheduleEntry);
+                        }
                     });
+                } else {
+                    var oldPoint = _.cloneDeep(point);
+                    point[controlProperty].Value = scheduleEntry["Control Value"].Value;
+                    point._actvAlmId = oldPoint._actvAlmId;
+                    var result = Config.Update.formatPoint({
+                        oldPoint: oldPoint,
+                        point: point,
+                        property: controlProperty,
+                        refPoint: null
+                    });
+                    if (result.err)
+                        callback(result.err, scheduleEntry);
+                    else {
+                        common.newUpdate(oldPoint, point, {
+                            method: "update",
+                            from: "updateToD"
+                        }, {
+                            username: "ToD Schedule"
+                        }, function(response, point) {
+                            callback(response.err, scheduleEntry);
+                        });
+                    }
                 }
+
+            } else {
+                callback(null, scheduleEntry);
             }
 
-        } else {
-            callback(null);
-        }
-
+        });
     });
 }

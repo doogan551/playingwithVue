@@ -2,7 +2,7 @@ var displays = window.displays || {};
 
 
 displays = $.extend(displays, {
-    workspaceManager: (window.opener || window.top).workspaceManager,
+    workspaceManager: window.top.workspaceManager,
     resize: false,
     pageX: 0,
     pageY: 0,
@@ -111,9 +111,17 @@ $(document).on('pageinit', function() {
             width = parseInt(window.displayJson.Width, 10) + 400,
             height = parseInt(window.displayJson.Height, 10) + 100;
 
+        dtiUtility.openWindow($(this).attr('href'), _title, pointType, '', _id, {
+            width: width,
+            height: height,
+            sameWindow: true
+        });
+
         displays.openWindow($(this).attr('href'), _title, pointType, '', _id, {
             width: width,
-            height: height
+            height: height,
+            sameWindow: true,
+            windowId: window.windowId
         });
         //window.close();
     });
@@ -149,6 +157,8 @@ $(document).on('pageinit', function() {
                 c;
 
             window.displayJson = response;
+            window.pointType = response['Point Type'].Value;
+            window.point = response;
 
             for (c = 0; c < list.length; c++) {
                 screenObject = list[c];

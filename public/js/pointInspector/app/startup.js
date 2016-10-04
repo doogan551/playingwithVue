@@ -92,7 +92,7 @@ define([
     'bootstrap-switch'
 ], function($, ko, io, moment, Big, bannerJS) {
     var pointInspector = {},
-        workspace = window.opener && window.opener.workspaceManager,
+        workspace = window.top.workspaceManager,
         uniqueIdRegister = [],
         formatPointErrorTimestamp = 0;
 
@@ -337,7 +337,8 @@ define([
         if (newPointData._pStatus === 1)
             pointInspector.socket.emit(emitString, emitData);
             
-        window.close();
+        dtiUtility.closeWindow();
+        // window.close();
     };
     pointInspector.tabTriggers = {};
     pointInspector.events ={
@@ -900,7 +901,8 @@ define([
 
             if (!!window.attach && typeof window.attach.saveCallback === 'function') {
                 window.attach.saveCallback.call(undefined, emitData);
-                return window.close();
+                // return window.close();
+                return dtiUtility.closeWindow();
             }
             $('body').css('overflow', 'hidden');
             data = data || {};
@@ -995,7 +997,7 @@ define([
                 $saveIcon.removeClass(spinClass);
                 $('body').css('overflow', 'auto');
                 if (close) {
-                    setTimeout(window.close, 1000);
+                    setTimeout(dtiUtility.closeWindow, 1000);
                 }
             });
         };

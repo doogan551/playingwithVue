@@ -2286,8 +2286,8 @@ var tou = {
         });
 
         tou.poppedIn = window.top.location.href !== window.location.href;
-        tou.workspaceManager = window.opener && window.opener.workspaceManager;
-        tou._openWindow = tou.workspaceManager && tou.workspaceManager.openWindowPositioned;
+        tou.workspaceManager = window.top.workspaceManager;
+        tou._openWindow = dtiUtility.openWindow;
 
         tou.processWeatherPoints(tou._weatherPoints);
 
@@ -10275,44 +10275,33 @@ tou.utilityPages.Electricity = function() {
                 myBindings.metersSortOrderNone = [];
                 myBindings.initSortable();
             },
-            openPointSelector: function (meterObjectIndex, columnsRowIndex, upi, newUrl) {
+            openPointSelector: function (meterObjectIndex, columnsRowIndex, upi) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].metersBindings,
-                    url = newUrl || '/pointLookup',
-                    windowRef,
-                    columnOriginalUpi,
+                    parameters,
                     meterPointIndex,
                     meterObjIndex,
                     meterObject,
                     updatedList,
-                    pointSelectedCallback = function (pid, name, type) {
-                        if (!!pid) {
+                    pointSelectedCallback = function (pointInfo) {
+                        if (!!pointInfo) {
+                            var pid = pointInfo._id;
                             meterObject.meterPoints[meterPointIndex].upi = pid;
-                            meterObject.meterPoints[meterPointIndex].pointType = type;
-                            meterObject.meterPoints[meterPointIndex].meterPointName = name;
+                            meterObject.meterPoints[meterPointIndex].pointType = pointInfo.pointType;
+                            meterObject.meterPoints[meterPointIndex].meterPointName = pointInfo.name;
                             updatedList[meterObjIndex] = meterObject;
                             myBindings.listOfMeters([]);
                             myBindings.listOfMeters(updatedList);
                             myBindings.$page.setInactiveMeterCount();
                         }
-                    },
-                    windowOpenedCallback = function () {
-                        windowRef.pointLookup.MODE = 'select';
-                        windowRef.pointLookup.init(pointSelectedCallback, {
-                            name2: meterObject.displayedMeterName,
-                            name3: "*SUM*"
-                        });
                     };
 
                 meterObjIndex = meterObjectIndex;
-                columnOriginalUpi = upi;
                 meterPointIndex = columnsRowIndex;
                 updatedList = myBindings.listOfMeters();
                 meterObject = updatedList[meterObjectIndex];
 
-                windowRef = tou.workspaceManager.openWindowPositioned(url, 'Select Point', '', '', 'Select Dynamic Point', {
-                    callback: windowOpenedCallback,
-                    width: 1000
-                });
+                dtiUtility.showPointSelector(parameters);
+                dtiUtility.onPointSelect(pointSelectedCallback);
             },
             changeMeterPoint: function (data, element) {
                 var myBindings = tou.bindings["utility_" + tou.currUtility.shortName].metersBindings,
@@ -10323,8 +10312,7 @@ tou.utilityPages.Electricity = function() {
                 myBindings.openPointSelector(meterIndex, meterPointIndex, upi);
             },
             showPointReview: function (data) {
-                var openWindow = tou.workspaceManager.openWindowPositioned,
-                    pointTypesUtility = tou.workspaceManager.config.Utility.pointTypes,
+                var pointTypesUtility = tou.workspaceManager.config.Utility.pointTypes,
                     pointType = data.pointType,
                     endPoint,
                     upi = parseInt(data.upi, 10),
@@ -10334,7 +10322,7 @@ tou.utilityPages.Electricity = function() {
                     };
                 endPoint = pointTypesUtility.getUIEndpoint(pointType, upi);
                 if (endPoint) {
-                    openWindow(endPoint.review.url, data.meterPointName, pointType, endPoint.review.target, upi, options);
+                    tou._openWindow(endPoint.review.url, data.meterPointName, pointType, endPoint.review.target, upi, options);
                 } else {
                     //  handle a bad UPI reference
                 }

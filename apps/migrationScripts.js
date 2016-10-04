@@ -27,8 +27,8 @@ var dbConfig = config.get('Infoscan.dbConfig');
 var connectionString = [dbConfig.driver, '://', dbConfig.host, ':', dbConfig.port, '/', dbConfig.dbName].join('');
 
 var checkVersions = function(version) {
-    console.log(version, prevVersion, curVersion, compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0);
-    if (compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0) {
+    // console.log(version, prevVersion, curVersion);
+    if (prevVersion === 0 || (compareVersions(version, prevVersion) >= 0 && compareVersions(curVersion, version) >= 0)) {
         return true;
     }
 
@@ -1100,7 +1100,86 @@ var scripts = {
         };
         utility.update(criteria, function(err, results) {
             logger.info('Network Properties updated.');
-            callback(err);
+            criteria = {
+                collection: 'Users',
+                query: {}
+            }
+            utility.get(criteria, function(err, users) {
+                async.eachSeries(users, function(user, cb) {
+                    updateControllers("add", user.username, function(err) {
+                        cb(err);
+                    });
+                }, callback);
+            });
+
+            function updateControllers(op, username, callback) {
+                var criteria = {
+                    collection: 'SystemInfo',
+                    query: {
+                        Name: "Controllers"
+                    }
+                };
+                utility.getOne(criteria, function(err, controllers) {
+                    if (op === "add") {
+                        var id = 0,
+                            ids = [],
+                            maxId = 0;
+
+                        for (var a = 0; a < controllers.Entries.length; a++) {
+                            ids.push(controllers.Entries[a]["Controller ID"]);
+                            maxId = (controllers.Entries[a]["Controller ID"] > maxId) ? controllers.Entries[a]["Controller ID"] : maxId;
+                        }
+
+                        for (var i = 0; i < ids.length; i++) {
+                            if (ids[i] !== i + 1) {
+                                id = i + 1;
+
+                                if (ids.indexOf(id) === -1) {
+                                    break;
+                                } else {
+                                    id = 0;
+                                }
+
+                            }
+                        }
+
+                        if (id === 0)
+                            id = maxId + 1;
+                        controllers.Entries.push({
+                            "Controller ID": id,
+                            "Controller Name": username,
+                            "Description": username,
+                            isUser: true
+                        });
+                        criteria.updateObj = {
+                            $set: {
+                                Entries: controllers.Entries
+                            }
+                        };
+                        utility.update(criteria, function(err, result) {
+                            callback(err);
+                        });
+                    } else {
+                        for (var j = 0; j < controllers.Entries.length; j++) {
+                            if (controllers.Entries[j]["Controller Name"] === username) {
+                                controllers.Entries.splice(j, 1);
+                                break;
+                            }
+                        }
+                        criteria.updateObj = {
+                            $set: {
+                                Entries: controllers.Entries
+                            }
+                        };
+
+                        utility.update(criteria, function(err, result) {
+                            callback(err);
+                        });
+                    }
+
+                });
+            }
+
         });
     },
 
@@ -1188,7 +1267,7 @@ db.connect(connectionString, function(err) {
             'InfoscanJS Version': 1
         }
     }, function(err, prefVersion) {
-        prevVersion = prefVersion['InfoscanJS Version'] || "0.0.0";
+        prevVersion = prefVersion['InfoscanJS Version'] || 0;
         async.series(tasks, function done(err, results) {
             if (err) {
                 logger.info("Error: ", err);

@@ -1,0 +1,82 @@
+doctype html
+html(lang="en")
+    head
+        meta(charset="utf-8")
+        meta(http-equiv="X-UA-Compatible", content="IE=edge")
+        link(href="/css/lib/bootstrap-3.3.6/bootstrap.min.css", rel="stylesheet")
+        link(href="/css/lib/bootstrap-switch.min.css", rel="stylesheet")
+        link(href="/css/lib/font-awesome-4.1.0/css/font-awesome.min.css", rel="stylesheet")
+        link(href="/css/pointInspector/style.css", rel="stylesheet")
+        link(href="/css/lib/bannerJS/style.css", rel="stylesheet")
+        link(href="/css/lib/codeMirror/codemirror.css", rel="stylesheet")
+        link(href="/css/lib/codeMirror/mdn-like.css", rel="stylesheet")
+        link(href="/css/lib/codeMirror/dialog.css", rel="stylesheet")
+        link(href="/css/lib/bootstrap-datetimepicker.min.css", rel="stylesheet")
+
+        script(src='/js/lib/store.min.js')
+        script(src='/js/v2/dorsettUtility.js')
+            
+        script(src="/js/pointInspector/app/require.config.js")
+        script(data-main="app/startup", src="/js/lib/require.min.js")
+
+    body
+        .noAccess
+            i.fa.fa-exclamation-triangle
+            .condition.permissionDenied
+                h3.msg Permission Denied
+                p Please contact your supervisor if you feel you should have access to this point.
+            .condition.pointNotFound
+                h3.msg Point not found
+                p Query failed. Unable to locate point.
+        .wrapper
+            .titleBar
+                .navToggle
+                    i.toggleOpen.fa.fa-navicon
+                    i.toggleClose.fa.fa-times-circle
+                .titleSection
+                    // ko ifnot: isInEditMode
+                    span.pointName(data-bind="text: point.data.Name")
+                    br
+                    //.btn.btn-xs.btn-default.pointRefresh(data-bind="click: function() { location.reload(true); document.title=point.data.Name(); }", title="Refresh Point")
+                    //    i.fa.fa-refresh
+                    // /ko
+                    // ko if: isInEditMode
+                    .nameForm
+                        .nameForm-group
+                            input.form-control.input-xs(data-bind="protectedText: point.data.name1, propertyName: 'name1'", type="text")
+                        .nameForm-group
+                            input.form-control.input-xs(data-bind="protectedText: point.data.name2, propertyName: 'name2'", type="text")
+                        .nameForm-group
+                            input.form-control.input-xs(data-bind="protectedText: point.data.name3, propertyName: 'name3'", type="text")
+                        .nameForm-group
+                            input.form-control.input-xs(data-bind="protectedText: point.data.name4, propertyName: 'name4'", type="text")
+                    // /ko
+                    span.pointType(data-bind="text: point.data['Point Type'].Value")
+                .actions
+                    // ko ifnot: isInEditMode
+                    // ko if: authorize(point.data, permissionLevels.WRITE)
+                    // ko if: point.data._pStatus() === 2
+                    .btn.btn-success.btn-sm(data-bind="click: restorePoint") Restore
+                    // /ko
+                    // ko ifnot: point.data._pStatus() === 2
+                    .btn.btn-info.btn-sm(data-bind="click: toggleEditMode")  Edit
+                    // /ko
+                    // /ko
+                    .btn.btn-default.btn-sm(data-bind="click: close") Close
+                    // /ko
+                    // ko if: isInEditMode
+                    .btn.btn-link.btn-sm(data-bind="click: toggleEditMode")  Cancel
+                    .btn-group
+                        button.btn.btn-success.btn-sm.btnSave(data-bind="click: point.saveAndClose")
+                            | Save & Close
+                        button.btn.btn-success.btn-sm.dropdown-toggle(data-bind="click:point.save")
+                            | Save
+                            
+                    // /ko
+            .chassis(data-bind="component: { name: baseComponent, params: $data }")
+            .statusBar(data-bind="component: { name: 'ctl-statusBar', params: $data }")
+        .viewOverlay
+        .invalidCharMsg
+            //- invalidChar has no class definition; it is only used for DOM retrieval
+            span.invalidChar
+            span  character is not allowed

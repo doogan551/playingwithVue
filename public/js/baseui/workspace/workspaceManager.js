@@ -407,8 +407,8 @@ window.workspaceManager = (function($) {
         };
 
         //are we in the top frame
-        if (!!window.opener) {
-            window.opener.location.replace(window.location);
+        if (!!window.top) {
+            window.top.location.replace(window.location);
             window.close();
         } else if (window.top !== window.self) {
             window.top.location.replace(window.location);
@@ -974,7 +974,7 @@ window.workspaceManager = (function($) {
             if (_target === 'mainWindow') {
                 _local.addEvent(frame || _newWindowRef, 'load', function() {
                     var frameWindow = this.contentWindow;
-                    frameWindow.opener = window;
+                    framewindow.top = window;
                     frameWindow.upi = upi;
                     _callback.call(_newWindowRef);
                 });
