@@ -2300,6 +2300,8 @@ var dti = {
                         var currTypes = bindings.pointTypes(),
                             numChecked = 0;
 
+                        dti.log('allTypesSelected');
+
                         dti.forEachArray(currTypes, function isTypeChecked(type) {
                             if (type.selected()) {
                                 numChecked++;
@@ -2311,6 +2313,16 @@ var dti = {
 
                     bindings.allTypesSelected.extend({
                         rateLimit: 50
+                    });
+
+                    dti.forEachArray(bindings.pointTypes(), function initPointTypeSubscription (type) {
+                        var pointTypeChangedInterceptor = function () {
+                            if (!self._pauseRequest) {
+                                bindings.pointTypeChanged.apply(this, arguments);
+                            }
+                        };
+
+                        type.selected.subscribe(pointTypeChangedInterceptor);
                     });
 
                     bindings.nameHasChanged = ko.computed(function nameFilterChanged() {
@@ -2333,25 +2345,12 @@ var dti = {
                         }
                     });
 
-                    bindings.pointTypesChanged = ko.pureComputed(function pointTypeHasChanged () {
-                        var currTypes = bindings.pointTypes(),
-                            pointTypeChangedInterceptor = function () {
-                                if (!self._pauseRequest) {
-                                    bindings.pointTypeChanged.apply(this, arguments);
-                                }
-                            };
-
-                        dti.forEachArray(currTypes, function subscribeToCheck (type) {
-                            type.selected.subscribe(pointTypeChangedInterceptor);
-                        });
-
-                        return true;
-                    });
-
                     bindings.pointTypeText = ko.pureComputed(function getPointTypeText () {
                         var currTypes = bindings.pointTypes(),
                             selectedTypes = [],
                             ret;
+
+                        dti.log('pointTypeText');
 
                         if (bindings.mode() === self.modes.CREATE) {
                             ret = bindings.newPointType();

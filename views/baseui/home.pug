@@ -452,7 +452,7 @@ html
                                 input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
                                 label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
                             // ko foreach: pointTypes
-                            li
+                            li(data-bind="click: function () { $data.selected(!$data.selected()); return false; }")
                                 input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : $parent.id() + '_pointType_' + $index() }")
                                 label.label-tight(data-bind="text: key, attr: { for: $parent.id() + '_pointType_' + $index() }")
                             // /ko
@@ -460,7 +460,7 @@ html
 
                             // ko if: mode() === 'create'
                             // ko foreach: explodedPointTypes
-                            li
+                            li(data-bind="click: function () { $parent.newPointType($data.key()); return false; }")
                                 input(type='radio', data-bind="checked: $parent.newPointType, click: $parent.storePointType, attr: {value: key(), id : $parent.id() + '_pointTypeRadio_' + $index(), name : $parent.id() + '_pointTypeRadio' }")
                                 label(data-bind="text: key, attr: { for: $parent.id() + '_pointTypeRadio_' + $index() }")
 
