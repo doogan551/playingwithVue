@@ -2418,6 +2418,19 @@ var dti = {
                 }
             };
 
+            self.getPointTypeByName = function (type) {
+                var ret;
+
+                dti.forEachArray(self.bindings.explodedPointTypes(), function findExplodedPointType (explodedType) {
+                    if (explodedType.key() === type) {
+                        ret = ko.toJS(explodedType);
+                        return false;
+                    }
+                });
+
+                return ret;
+            };
+
             self.applyConfig = function (cfg) {
                 var defaultConfig = $.extend({}, self.defaultConfig),
                     config = $.extend(defaultConfig, cfg || {}),
@@ -2425,6 +2438,11 @@ var dti = {
 
                 if (cfg.pointType && !cfg.pointTypes && cfg.pointType !== 'Point') {
                     config.pointTypes = [cfg.pointType];
+                }
+
+                if (cfg.newPointType) {
+                    config._newPointType = self.getPointTypeByName(cfg.newPointType);
+                    ko.viewmodel.updateFromModel(self.bindings._newPointType, config._newPointType);
                 }
 
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
