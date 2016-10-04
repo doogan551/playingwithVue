@@ -2250,6 +2250,7 @@ var dti = {
 
                     bindings.storePointType = function (object) {
                         bindings._newPointType = object;
+                        // bindings.togglePointTypeDropdown(); issue #53
                         return true;
                     };
 
@@ -2434,15 +2435,16 @@ var dti = {
             self.applyConfig = function (cfg) {
                 var defaultConfig = $.extend({}, self.defaultConfig),
                     config = $.extend(defaultConfig, cfg || {}),
-                    propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading', 'newPointType'];
+                    propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
 
                 if (cfg.pointType && !cfg.pointTypes && cfg.pointType !== 'Point') {
                     config.pointTypes = [cfg.pointType];
                 }
 
-                if (cfg.newPointType) {
+                if (cfg.newPointType !== 'Point' && cfg.newPointType) { //skip this for 'Point' placeholder
                     config._newPointType = self.getPointTypeByName(cfg.newPointType);
                     ko.viewmodel.updateFromModel(self.bindings._newPointType, config._newPointType);
+                    self.bindings.newPointType(cfg.newPointType);
                 }
 
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
