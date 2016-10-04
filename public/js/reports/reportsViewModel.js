@@ -4140,11 +4140,11 @@ var reportsViewModel = function () {
                     case "Totalizer":
                         point["Report Config"].returnLimit = 2000;
                         self.listOfColumns.push(getNewColumnTemplate());
-                        self.listOfColumns[0].colName = "Date";
-                        self.listOfColumns[0].colDisplayName = "Date";
-                        self.listOfColumns[0].dataColumnName = "Date";
-                        self.listOfColumns[0].valueType = "DateTime";
-                        self.listOfColumns[0].AppIndex = -1;
+                        self.listOfColumns()[0].colName = "Date";
+                        self.listOfColumns()[0].colDisplayName = "Date";
+                        self.listOfColumns()[0].dataColumnName = "Date";
+                        self.listOfColumns()[0].valueType = "DateTime";
+                        self.listOfColumns()[0].AppIndex = -1;
                         configureSelectedDuration();
                         break;
                     case "Property":
@@ -4152,11 +4152,11 @@ var reportsViewModel = function () {
                         collectEnumProperties();
                         point["Report Config"].returnLimit = 4000;
                         self.listOfColumns.push(getNewColumnTemplate());
-                        self.listOfColumns[0].colName = "Name";
-                        self.listOfColumns[0].colDisplayName = "Name";
-                        self.listOfColumns[0].dataColumnName = "Name";
-                        self.listOfColumns[0].valueType = "String";
-                        self.listOfColumns[0].AppIndex = -1;
+                        self.listOfColumns()[0].colName = "Name";
+                        self.listOfColumns()[0].colDisplayName = "Name";
+                        self.listOfColumns()[0].dataColumnName = "Name";
+                        self.listOfColumns()[0].valueType = "String";
+                        self.listOfColumns()[0].AppIndex = -1;
                         break;
                     default:
                         console.log(" - - - DEFAULT  init() null columns");
