@@ -694,6 +694,42 @@ $startmenuGutter: 15px;
     }
 }
 
+.autosuggestContainer {
+    position: absolute;
+    top: $navbarHeight;
+    left: 0;
+    z-index: 2;
+    max-height: 400px;
+    min-width: 200px;
+    overflow: auto;
+    margin-top: 10px;
+    background-color: #FFF;
+
+    .autosuggestHeader {
+        background-color: $blue-grey-lighten-5;
+        padding: 5px;
+        font-weight: bold;
+        font-size: smaller;
+    }
+
+    .autosuggestContent {
+        .autosuggestMatch {
+            padding-left: 5px;
+            padding-right: 10px;
+        }
+        
+        .autosuggestSelected {
+            background-color: $blue-grey-lighten-1;
+            color: #FFF;
+        }
+
+        .autosuggestMatch:hover {
+            @extend .autosuggestSelected;
+            cursor: pointer;
+        }
+    }
+}
+
 .recentItems {
     width: calc(#{$startmenuWidth} *.4);
 

@@ -498,16 +498,16 @@ var dti = {
         shortcuts: {
             'shift+space': [{
                 type: 'keydown',
-                fn: function () {dti.globalSearch.show();}
+                fn: function (e) {dti.globalSearch.show(e);}
             }],
             'shift+p': [{
                 type: 'keydown',
-                fn: function () {dti.navigatorNew.showNavigator();}
+                fn: function (e) {dti.navigatorNew.showNavigator(e);}
             }],
             'esc': [{
                 type: 'keyup',
                 elements: [document, '#searchNavbar input'],
-                fn: function () {dti.globalSearch.hide();}
+                fn: function (e) {dti.globalSearch.handleEscape(e);}
             }]
         }
     },
@@ -1575,8 +1575,10 @@ var dti = {
             searchLimit: 200, // Number of results to get per search
             maximumResultsShown: 2000, // Maximum number of results we'll get/show in the DOM
             infiniteScrollThreshold: 0.75, // Scroll within 75% of page bottom auto-gets more results
-            manualLoadThreshold: 1000 // Infinite scroll is temporary replaced by manual load every [this many] results
+            manualLoadThreshold: 1000 // Replace infinite scroll with manual load button every [this many] results
         },
+        autosuggest: null, // Initialized in 'initOnLoad'
+        autosuggestPropertyData: {},
         init: function () {
             var bindings = dti.bindings.globalSearch;
 
@@ -1587,9 +1589,15 @@ var dti = {
 
             dti.globalSearch.$chips.on('chip.add', function (e, chip) {
                 dti.globalSearch.searchTerms[chip.tag] = 1;
+                window.clearTimeout(dti.globalSearch.chipsTimeoutID);
+
+                // Set our flag indicating we're going to perform a new search
                 dti.globalSearch.performingNewSearch = true;
-                dti.globalSearch.doSearch();
-                dti.globalSearch.$clearAllChipEl.removeClass('hide');
+
+                dti.globalSearch.chipsTimeoutID = window.setTimeout(function () {
+                    dti.globalSearch.doSearch();
+                    dti.globalSearch.$clearAllChipEl.removeClass('hide');
+                }, 10);
             });
 
             dti.globalSearch.$chips.on('chip.delete', function (e, chip) {
@@ -1619,21 +1627,20 @@ var dti = {
             dti.globalSearch.$inputEl = $('#searchNavbar input');
 
             dti.globalSearch.$resultsEl.scroll(function handleScroll () {
-                var numberOfResultsShown = bindings.searchResults().length;
-
                 window.clearTimeout(dti.globalSearch.scrollTimeoutID);
-
-                // If we're already in the process of getting data, or we've reached our maximum nubmer of results, get out of here!
-                if (bindings.gettingData() || (numberOfResultsShown >= dti.globalSearch.options.maximumResultsShown)) {
-                    return;
-                }
 
                 dti.globalSearch.scrollTimeoutID = window.setTimeout(function () {
                     var $resultsEl = dti.globalSearch.$resultsEl,
                         totalHeight = $resultsEl[0].scrollHeight,
                         visibleHeight = $resultsEl[0].clientHeight,
                         scrollTop = $resultsEl.scrollTop(),
-                        totalNumberOfResults = bindings.count();
+                        totalNumberOfResults = bindings.count(),
+                        numberOfResultsShown = bindings.searchResults().length;
+
+                    // If we're already in the process of getting data, or we've reached our maximum nubmer of results, get out of here!
+                    if (bindings.gettingData() || (numberOfResultsShown >= dti.globalSearch.options.maximumResultsShown)) {
+                        return;
+                    }
 
                     // If we're scrolled within [infiniteScrollThreshold]% of page bottom
                     if ((scrollTop + visibleHeight) >= (totalHeight * dti.globalSearch.options.infiniteScrollThreshold)) {
@@ -1689,6 +1696,67 @@ var dti = {
                     }
                 }
             });
+
+            // Build autosuggest source for our properties list
+            var getDistinct = [];
+            dti.forEach(dti.utility.getConfig('Enums.Properties'), function buildAutosuggestData (property, name, index) {
+                var item = {
+                        isDisplayable: [true, false],
+                        isReadOnly: [true, false],
+                        ValueType: "",
+                        Value: ""
+                    },
+                    _values;
+
+                if (!property.reportEnable) {
+                    return;
+                }
+
+                if (property.valueType === 'Enum') {
+                    if (property.hasOwnProperty('enumsSet') && property.enumsSet.length) {
+                        _values = Object.keys(dti.utility.getConfig('Enums.' + property.enumsSet));
+                        item._values = _values;
+                        item.Value = _values;
+                    } else {
+                        getDistinct.push(name);
+                    }
+                } else if (property.valueType === 'BitString') {
+                    _values = Object.keys(dti.utility.getConfig('Enums.' + name + ' Bits'));
+                    item._values = _values;
+                    item.Value = _values;
+                } else if (property.valueType === 'None') {
+                    getDistinct.push(name);
+                }
+                dti.globalSearch.autosuggestPropertyData[name] = item;
+            });
+
+            // TODO async call to db to get distincts
+            
+            // We need to get and overwrite 'Control Priorities' values array with what we get back from db
+            // Here's an example of our distinct Quality Code Enable.Value values in the db:
+            // [11,255,9,251,254,247,240,250,0,248,241,244,242]
+            // But our Quality Code Enable Values the user enters are 'Override', 'COV Enable', 'Alarms Off', 'Command Pending', 'All'
+            // On the server side if we see the user searching for something with bit string, make sure to account for this type of thing
+            // db.getCollection('points').distinct('Active Value.Value', {'Active Value.ValueType': 5})
+        },
+        initOnLoad: function () {
+            // Build autosuggest data
+            
+            // Create auto suggest
+            dti.globalSearch.autosuggest = new dti.autosuggest.Autosuggest({
+                $inputElement: dti.globalSearch.$inputEl,
+                $resultsContainer: $('#searchNavbar'),
+                $chips: dti.globalSearch.$chips,
+                sources: [{
+                    name: 'Properties',
+                    nameShown: true,
+                    data: dti.globalSearch.autosuggestPropertyData
+                }]
+            });
+
+            $('#globalSearchResults').click(function (e) {
+                dti.globalSearch.autosuggest.hide();
+            });
         },
         show: function () {
             dti.globalSearch.visible = true;
@@ -1710,6 +1778,7 @@ var dti = {
 
                 dti.animations.fadeOut(dti.globalSearch.$taskbarEl);
                 dti.animations.fadeOut(dti.globalSearch.$resultsEl, function resetSearch () {
+                    dti.globalSearch.autosuggest.hide(true);
                     if (doNotResetResults) {
                         return;
                     }
@@ -1726,9 +1795,6 @@ var dti = {
                     limit: dti.globalSearch.options.searchLimit
                 },
                 handleError = function (errorMessage) {
-                    // bindings.searchResults.removeAll();
-                    // bindings.showSummary(false);
-
                     bindings.errorMessage(errorMessage);
                     bindings.showError(true);
                 },
@@ -1818,6 +1884,8 @@ var dti = {
             while (len--) {
                 $chips.deleteChip(chipsIndex, 0, $chips);
             }
+            // Hide auto suggest and clear the search box
+            dti.globalSearch.autosuggest.hide(true);
         },
         openPoint: function (data) {
             dti.windows.openWindow({
@@ -1825,6 +1893,460 @@ var dti = {
                 upi: data._id
             });
             dti.globalSearch.hide(true);
+        },
+        handleEscape: function (e) {
+            if (dti.globalSearch.autosuggest.bindings.isShown() === false) {
+                dti.globalSearch.hide();
+            }
+        }
+    },
+    autosuggest: {
+        init: function () {
+
+        },
+        Autosuggest: function (config) {
+            // cfg:
+            // {
+            //     $inputElement: $element,
+            //     $resultsContainer: $element,
+            //     sources: [{
+            //         data: [array of suggestion strings],
+            //         name: 'name of data source',
+            //         nameShown: bool (show name header before suggestion results)
+            //         * async data sources will require additional info TBD
+            //     }, {...}]
+            // }
+
+            var self = this,
+                defaults = {
+                    highlight: true,
+                    minLength: 0,
+                    classNames: {
+                        highlight: 'autosuggestHighlight',
+                        match: 'autosuggestMatch',
+                        selected: 'autosuggestSelected'
+                    },
+                    $chips: null,
+                },
+                cfg = $.extend(defaults, config),
+                selectors = {
+                    match: '.' + cfg.classNames.match,
+                    selected: '.' + cfg.classNames.selected,
+                    matchSelected: ['', cfg.classNames.match, cfg.classNames.selected].join('.')
+                },
+                $markup,
+                $inputContentUtilityEl,
+                getSource = function (name) {
+                    var sources = self.bindings.sources(),
+                        theSource;
+
+                    if (!name && sources.length === 1) {
+                        return sources[0];
+                    }
+                    
+                    dti.forEachArray(sources, function (source) {
+                        if (source.name === name) {
+                            theSource = source;
+                            return false;
+                        }
+                    });
+
+                    return theSource;
+                },
+                formatData = function (src) {
+                    // data: array of strings and/or objects
+                    var srcData = src.data,
+                        trunk,
+                        formatObj = function (parent, srcItem, text) {
+                            var item = {
+                                    _private: {
+                                        parent: parent,
+                                        text: text,
+                                        html: ko.observable(text),
+                                        values: [],
+                                        isTopLevel: !!!parent._private
+                                    }
+                                };
+
+                            parent[text] = item;
+
+                            if (Array.isArray(srcItem)) {
+                                dti.forEachArray(srcItem, function (value) {
+                                    value = value.toString();
+                                    item._private.values.push({
+                                        text: value,
+                                        html: ko.observable(value)
+                                    });
+                                });
+                            } else {
+                                dti.forEach(srcItem, function (subSource, subText) {
+                                    if (subText === '_values') {
+                                        dti.forEachArray(subSource, function (value) {
+                                            value = value.toString();
+                                            item._private.values.push({
+                                                text: value,
+                                                html: ko.observable(value)
+                                            });
+                                        });
+                                    } else { // Should be an object
+                                        formatObj(item, subSource, subText);
+                                    }
+                                });
+                            }
+                        };
+
+                    if (Array.isArray(srcData)) {
+                        self.tree[src.name] = [];
+                        trunk = self.tree[src.name];
+
+                        dti.forEachArray(srcData, function (text) {
+                            trunk.push({
+                                text: text,
+                                html: ko.observable(text),
+                                isTopLevel: true
+                            });
+                        });
+                    } else { // srcData must be an object
+                        self.tree[src.name] = {};
+                        trunk = self.tree[src.name];
+                        
+                        dti.forEach(srcData, function (item, text) {
+                            formatObj(trunk, item, text);
+                        });
+                    }
+                    return trunk;
+                },
+                selectMatch = function ($match) {
+                    if ($match.get(0)) {
+                        $match.addClass(cfg.classNames.selected);
+                    }
+                },
+                getOperator = function (inputValue) {
+                    var operatorCharacters = ['<=', '<', '>=', '>', '='],
+                        operator = null;
+
+                    // If our search includes an equality character
+                    dti.forEachArray(operatorCharacters, function (character) {
+                        if (!!~inputValue.indexOf(character)) {
+                            operator = character;
+                            return false;
+                        }
+                    });
+
+                    return operator;
+                },
+                getMatches = function (inputValue) {
+                    var regex = new RegExp(inputValue, 'ig'),
+                        beginningWhiteSpaceRegex = /^\s*/,
+                        numberMatchesFound = 0,
+                        operator = null,
+                        matches,
+                        data,
+                        chain,
+                        equationParts,
+                        stopIndex;
+
+                    dti.forEachArray(self.bindings.sources(), function (source) {
+                        matches = [];
+
+                        if (Array.isArray(source.data)) {
+                            dti.forEachArray(source.data, function (item) {
+                                if (regex.test(item.text)) {
+                                    if (cfg.highlight) {
+                                        item.html(item.text.replace(regex, ['<strong class="', cfg.classNames.highlight, '">', '$&', '</strong>'].join('')));
+                                    }
+                                    matches.push(item);
+                                }
+                            });
+                        } else { // Must be an object
+                            data = source.data;
+
+                            operator = getOperator(inputValue);
+
+                            // If our search includes an equality character
+                            if (operator !== null) {
+                                equationParts = inputValue.split(operator);
+                                // Remove white space around string
+                                equationParts[0] = equationParts[0].trim();
+                                // Remove white space from string beginning
+                                equationParts[1] = equationParts[1].replace(beginningWhiteSpaceRegex, '');
+                                inputValue = equationParts[0];
+                            }
+
+                            // If our search includes a chain character
+                            if (!!~inputValue.indexOf('.')) {
+                                chain = inputValue.split('.');
+
+                                if (operator) {
+                                    stopIndex = chain.length - 1;
+                                } else {
+                                    stopIndex = chain.length - 2;
+                                }
+
+                                dti.forEachArray(chain, function (link, ndx) {
+                                    if (data.hasOwnProperty(link)) {
+                                        data = data[link];
+                                    } else {
+                                        data = null;
+                                        return false;
+                                    }
+
+                                    if (ndx === stopIndex) {
+                                        if (operator) {
+                                            data = data._private.values;
+                                        } else {
+                                            regex = new RegExp(chain[chain.length-1], 'ig');
+                                        }
+                                        return false;
+                                    }
+                                });
+                            } else if (operator) {
+                                data = data[equationParts[0]] && data[equationParts[0]]._private.values;
+                            }
+
+                            if (data) {
+                                if (operator) {
+                                    regex = new RegExp(equationParts[1], 'ig');
+
+                                    dti.forEachArray(data, function (item, index) {
+                                        if (regex.test(item.text)) {
+                                            if (cfg.highlight) {
+                                                item.html(item.text.replace(regex, ['<strong class="', cfg.classNames.highlight, '">', '$&', '</strong>'].join('')));
+                                            }
+                                            matches.push(item);
+                                        }
+                                    });
+                                } else {
+                                    dti.forEach(data, function (item, key) {
+                                        if (key === '_private') {
+                                            return;
+                                        }
+
+                                        if (regex.test(item._private.text)) {
+                                            if (cfg.highlight) {
+                                                item._private.html(item._private.text.replace(regex, ['<strong class="', cfg.classNames.highlight, '">', '$&', '</strong>'].join('')));
+                                            }
+                                            matches.push(item._private);
+                                        }
+                                    });
+                                }
+                            }
+                        }
+
+                        source.matches(matches);
+                        numberMatchesFound += matches.length;
+                    });
+
+                    if (numberMatchesFound <= 1) {
+                        self.hide();
+                    }
+                };
+
+            self.addData = function (data, name) {
+                // data: array of suggestion strings
+                var source = getSource(name);
+                if (source) {
+                    source.data(source.data().concat(formatData(data)));
+                }
+            };
+
+            self.replaceData = function (data, name) {
+                // data: array of suggestion strings
+                var source = getSource(name);
+                if (source) {
+                    source.data(formatData(data));
+                }
+            };
+
+            self.deleteData = function (name) {
+                var source = getSource(name);
+                if (source) {
+                    source.data.removeAll();
+                }
+            };
+
+            self.show = function () {
+                if (cfg.$resultsContainer.find(selectors.match).length) {
+                    self.bindings.isShown(true);
+                }
+            };
+
+            self.hide = function (clearInputValue) {
+                cfg.$resultsContainer.find(selectors.matchSelected).removeClass(cfg.classNames.selected);
+                self.bindings.isShown(false);
+                if (clearInputValue) {
+                    self.clearInputValue();
+                }
+            };
+
+            self.clearInputValue = function () {
+                cfg.$inputElement.val('');
+            };
+
+            self.reposition = function () {
+                var leftOffset = cfg.$inputElement.get(0).getBoundingClientRect().left;
+                self.bindings.position.left(leftOffset + 'px');
+                // $markup.position({
+                //     my: 'left top',
+                //     at: 'left bottom',
+                //     of: cfg.$inputElement,
+                // });
+            };
+
+            self.selectFirst = function () {
+                selectMatch(cfg.$resultsContainer.find(selectors.match).first());
+            };
+
+            self.selectLast = function () {
+                selectMatch(cfg.$resultsContainer.find(selectors.match).last());
+            };
+
+            self.selectNext = function () {
+                var $selected = cfg.$resultsContainer.find(selectors.matchSelected);
+
+                if ($selected.length) {
+                    selectMatch($selected.removeClass(cfg.classNames.selected).next());
+                } else {
+                    self.selectFirst();
+                }
+            };
+
+            self.selectPrevious = function () {
+                var $selected = cfg.$resultsContainer.find(selectors.matchSelected);
+
+                if ($selected.length) {
+                    selectMatch($selected.removeClass(cfg.classNames.selected).prev());
+                } else {
+                    self.selectLast();
+                }
+            };
+
+            self.tree = {};
+
+            self.bindings = {
+                isShown: ko.observable(false),
+                sources: ko.observableArray([]),
+                position: {
+                    top: ko.observable('0px'),
+                    left: ko.observable('0px')
+                },
+                selectMatch: function (data, e) {
+                    var inputValue = cfg.$inputElement.val(),
+                        operator = getOperator(inputValue);
+
+                    if (data.text) {
+                        if (operator) {
+                            inputValue = inputValue.replace(new RegExp(operator + '.*'), operator + ' ' + data.text);
+                        } else {
+                            if (data.isTopLevel) {
+                                inputValue = data.text;
+                            } else {
+                                inputValue = inputValue.slice(0, inputValue.lastIndexOf('.')+1) + data.text;
+                            }
+                        }
+
+                        cfg.$inputElement.val(inputValue);
+                        cfg.$inputElement.focus();
+                        getMatches(data.text);
+                    }
+                }
+            };
+
+            // Setup the auto-suggests
+            dti.forEachArray(cfg.sources, function (source) {
+                var defaults = {
+                        name: dti.makeId(),
+                        nameShown: false
+                    },
+                    src = $.extend(defaults, source);
+
+                self.bindings.sources.push({
+                    data: formatData(src),
+                    name: ko.observable(src.name),
+                    nameShown: ko.observable(src.nameShown),
+                    matches: ko.observableArray([])
+                });
+            });
+
+            getMatches('');
+
+            $markup = dti.utility.getTemplate('#autosuggestTemplate');
+
+            // Change default class names if needed
+            dti.forEach(defaults.classNames, function (defaultClassName, key) {
+                var defaultSelector = '.' + defaultClassName,
+                    requestedClassName = cfg.classNames[key];
+
+                if (requestedClassName !== defaultClassName) {
+                    $markup.find(defaultSelector).removeClass(defaultClassName).addClass(requestedClassName);
+                }
+            });
+
+            cfg.$resultsContainer.append($markup);
+
+            ko.applyBindings(self.bindings, $markup[0]);
+
+            // Add event handlers
+            cfg.$inputElement.keyup(function (e) {
+                var inputValue = cfg.$inputElement.val(),
+                    $selected,
+                    chipsArray;
+
+                switch (e.which) {
+                    case 40: // down
+                    if (self.bindings.isShown() === false) {
+                        self.show();
+                    } else {
+                        // Navigate down list
+                        self.selectNext();
+                    }
+                    break;
+
+                    case 38: // up
+                    if (self.bindings.isShown()) {
+                        self.selectPrevious();
+                    }
+                    break;
+
+                    case 10: // return
+                    case 13:
+                    $selected = cfg.$resultsContainer.find(selectors.matchSelected);
+                    if (self.bindings.isShown() && $selected.length) {
+                        // If materialize chips is installed on this input
+                        if (cfg.$chips) {
+                            // Materialize 'return' handler was processed before us. We need to remove the
+                            // chip it created and update the input element's value
+                            chipsArray = cfg.$chips.data('chips');
+                            cfg.$inputElement.val(chipsArray[chipsArray.length - 1].tag);
+                            
+                            cfg.$chips.deleteChip(cfg.$chips.data('index'), chipsArray.length - 1, cfg.$chips);
+                        }
+                        
+                        self.bindings.selectMatch(ko.dataFor($selected[0]));
+                    }
+                    break;
+
+                    case 27: // escape
+                    self.hide();
+                    return;
+
+                    default:
+                    getMatches(inputValue);
+                    break;
+                }
+
+                self.reposition();
+
+                if (inputValue.length > cfg.minLength) {
+                    self.show();
+                }
+            });
+
+            cfg.$resultsContainer.click(function (e) {
+                if ($(e.target).is(cfg.$inputElement) === false) {
+                    dti.globalSearch.autosuggest.hide();
+                }
+            });
         }
     },
     globalSearchOld: {
@@ -2349,19 +2871,14 @@ var dti = {
 
             // self.$container.find('select').material_select();
         },
-        getTemplate: function (id) {
-            var markup = $(id).html();
-
-            return $(markup);
-        },
         createNavigator: function (isModal) {
-            var templateMarkup = dti.navigatorNew.getTemplate('#navigatorTemplate'),
+            var templateMarkup = dti.utility.getTemplate('#navigatorTemplate'),
                 navigatorMarkup,
                 navigator,
                 $container = (isModal === true) ? $('main') : isModal;
 
             if (isModal) {
-                navigatorModalMarkup = dti.navigatorNew.getTemplate('#navigatorModalTemplate');
+                navigatorModalMarkup = dti.utility.getTemplate('#navigatorModalTemplate');
                 $container.append(navigatorModalMarkup);
                 $container = navigatorModalMarkup;
                 dti.navigatorNew.$commonNavigatorModal = $container;
@@ -2624,6 +3141,11 @@ var dti = {
             }
 
             return ret;
+        },
+        getTemplate: function (id) {
+            var markup = $(id).html();
+
+            return $(markup);
         },
         getConfig: function (path, parameters) {
             var explodedPath = path.split('.'),
