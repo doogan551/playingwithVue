@@ -128,10 +128,10 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
         var workspace = ko.contextFor(event.target).$root.utility.workspace,
             displayId = data.Value(),
             endPoint = workspace.config.Utility.pointTypes.getUIEndpoint('Display', displayId);
-        workspace.openWindowPositioned(endPoint.review.url, data.PointName(), 'Display', '', displayId, {
+        dtiUtility.openWindow(endPoint.review.url, data.PointName(), 'Display', '', displayId, {
             width: 1000,
             height: 800
-        })
+        });
     };
 
     ViewModel.prototype.showPreview = function(data, event) {
@@ -169,11 +169,10 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
     };
 
     ViewModel.prototype.addPointRef = function(vm, event) {
-        var self = this,
-            pointSelectorEndPoint = ['/pointlookup/', 'Slide Show', '/Slide Display', '?mode=select'].join(''),
-            callback = function (id, name, pointType) {
-                if (!!id) {
-                    getRefData(id).done(
+        var parameters,
+            callback = function (pointInfo) {
+                if (!!pointInfo) {
+                    getRefData(pointInfo._id).done(
                         function (data) {
                             var pointRefs = vm.data['Point Refs'](),
                                 slides = vm.data.Slides(),
@@ -201,17 +200,10 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
                         }
                     );
                 }
-            },
-            workspaceManager = vm.utility.workspace,
-            win = workspaceManager.openWindowPositioned(pointSelectorEndPoint, 'Point Selector', 'pointSelector', '', 'pointSelector' + vm.data._id(),
-                {
-                    width: 980,
-                    height: 550,
-                    callback: function() {
-                        win.pointLookup.init(callback);
-                    }
-                }
-            );
+            };
+
+        dtiUtility.showPointSelector(parameters);
+        dtiUtility.onPointSelect(callback);
     };
 
     //knockout calls this when component is removed from view

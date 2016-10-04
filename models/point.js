@@ -937,7 +937,7 @@ module.exports = {
               for (var i = 0; i < template["Alarm Messages"].length; i++) {
                 for (var j = 0; j < alarmDefs.length; j++) {
                   if (template["Alarm Messages"][i].msgType === alarmDefs[j].msgType) {
-                    template["Alarm Messages"][i].msgId = alarmDefs[j]._id;
+                    template["Alarm Messages"][i].msgId = alarmDefs[j]._id.toString();
                   }
                 }
               }

@@ -104,6 +104,45 @@ var dti = {
                     width: '85%',
                     height: '85%'
                 }
+            },
+            'Device Tree': {
+                title: 'Device Tree',
+                iconText: '',
+                iconClass: 'mdi mdi-file-tree',
+                group: 'Device Tree',
+                standalone: true,
+                url: '/deviceTree',
+                singleton: true,
+                options: {
+                    width: '85%',
+                    height: '85%'
+                }
+            },
+            'Thumbnails': {
+                title: 'Thumbnails',
+                iconText: 'photo_camera',
+                iconClass: 'material-icons',
+                group: 'Thumbnails',
+                standalone: true,
+                singleton: true,
+                url: '/thumbnail/batch',
+                adminOnly: true,
+                options: {
+                    width: 1000
+                }
+            },
+            'Navigator': {
+                title: 'Navigator',
+                iconText: '',
+                iconClass: 'mdi mdi-compass',
+                group: 'Navigator',
+                standalone: true,
+                singleton: true,
+                initFn: 'navigator.createNavigator',
+                fullScreen: true
+                // options: {
+                //     width: 1000
+                // }
             }
         }
     },
@@ -291,6 +330,60 @@ var dti = {
         }
     },
     thumbs: {
+    },
+    thumbnails: {
+        $window: $('#thumbnailGen'),
+        currUpi: null,
+        // init: function () {
+
+        // },
+        postProcess: function () {
+            if (dti.thumbnails.prevUpi) {
+                dti.fire('thumbnailCaptured', dti.thumbnails.prevUpi);
+                dti.thumbnails.prevUpi = null;
+            }
+        },
+        capture: function (obj) {
+            var upi = obj.upi,
+                name = obj.name,
+                type = obj.type.toLowerCase(),
+                gen,
+                setGen = function () {
+                    gen = dti.thumbnails.thumbnailWindowRef.thumbnailGenerator;
+                },
+                runCapture = function () {
+                    dti.log('Capturing thumbnail');
+
+                    dti.thumbnails.prevUpi = upi;
+
+                    gen.captureList([{
+                        'id': upi,
+                        'name': name,
+                        'type': type,
+                        'tn': false
+                    }]);
+                    // gen.hasQueued = false;
+                    // gen.retainQueue = true;
+                    // gen.thumbnailCallback = closeOut;
+                    gen.nextCapture();
+                },
+                init = function () {
+                    setGen();
+
+                    gen.thumbnailCallback = dti.thumbnails.postProcess;  
+
+                    runCapture();
+                };
+
+            if (!dti.thumbnails.thumbnailWindowRef) {
+                dti.thumbnails.thumbnailWindowRef = dti.thumbnails.$window[0].contentWindow;
+                dti.utility.addEvent(dti.thumbnails.$window[0], 'load', init);
+                dti.thumbnails.$window.attr('src', window.location.origin + '/thumbnail/' + upi);
+            } else {
+                setGen();
+                runCapture();
+            }
+        }
     },
     animations: {
         tempinit: function () {
@@ -502,7 +595,7 @@ var dti = {
             }],
             'shift+p': [{
                 type: 'keydown',
-                fn: function (e) {dti.navigatorNew.showNavigator(e);}
+                fn: function (e) {dti.navigator.showNavigator(e);}
             }],
             'esc': [{
                 type: 'keyup',
@@ -527,15 +620,15 @@ var dti = {
                     return x + 'px';
                 }
             },
-            prepMeasurements = function (inConfig) {
+            prepMeasurements = function (inConfig, bindings) {
                 var cfg = inConfig || config,
-                    container = $(dti.windows.draggableConfig.containment),
-                    containerWidth = container.width(),
-                    containerHeight = container.height(),
-                    containerPadding = parseFloat(container.css('padding'), 10),
+                    $container = $(dti.windows.draggableConfig.containment),
+                    containerWidth = $container.width(),
+                    containerHeight = $container.height(),
+                    containerPadding = parseFloat($container.css('padding'), 10),
                     obj = {
-                        left: cfg.left,
-                        top: cfg.top
+                        left: cfg.left || bindings.left(),
+                        top: cfg.top || bindings.top()
                     };
 
                 if (cfg.fullScreen) {
@@ -557,19 +650,19 @@ var dti = {
                     }
 
                     if (obj.right) {
-                        if (obj.right - (obj.left || 0) >  containerWidth) {
+                        if (parseInt(obj.right, 10) - parseInt(obj.left || 0, 10) >  containerWidth) {
                             obj.left = containerPadding;
                             obj.right = containerPadding;
                             obj.width = containerWidth - (2 * containerPadding);
                         }
                     } else {
-                        if ((obj.left || 0) + obj.width > containerWidth) {
+                        if (parseInt(obj.left || 0, 10) + parseInt(obj.width, 10) > containerWidth) {
                             obj.width = containerWidth;
                             obj.left = containerPadding;
                         }
                     }
 
-                    if ((obj.top || 0) + obj.height > containerHeight) {
+                    if (parseInt(obj.top || 0, 10) + parseInt(obj.height, 10) > containerHeight) {
                         obj.height = containerHeight;
                         obj.top = containerPadding;
                     }
@@ -591,6 +684,7 @@ var dti = {
                 return groupName;
             },
             close = function (event) {
+                dti.off('thumbnailCaptured', self.handleThumbnail);
                 self.bindings.minimize();
                 dti.bindings.openWindows[self.bindings.group()].remove(self.bindings);
 
@@ -599,14 +693,18 @@ var dti = {
 
                 dti.fire('closeWindow', self);
 
-                if (self.$iframe[0].contentWindow.destroy) {
-                    self.$iframe[0].contentWindow.destroy();
+                if (self.$iframe && self.$iframe[0].contentWindow) {
+                    if (self.$iframe[0].contentWindow.destroy) {
+                        self.$iframe[0].contentWindow.destroy();
+                    }
                 }
 
                 setTimeout(function closeWindow () {
-                    self.$iframe.attr('src', 'about:blank');
-                    ko.cleanNode(self.$windowEl[0]);
-                    $(self.$iframe[0].contentDocument).off('mousedown');
+                    if (self.$iframe) {
+                        self.$iframe.attr('src', 'about:blank');
+                        ko.cleanNode(self.$windowEl[0]);
+                        $(self.$iframe[0].contentDocument).off('mousedown');
+                    }
                     self.$windowEl.remove();
                     // dti.destroyObject(self.bindings);
                     dti.destroyObject(self, true);
@@ -635,6 +733,8 @@ var dti = {
                     self.bindings.minimized(false);
                     self.bindings.active(true);
                 }
+
+                return true;
             },
             clearEvents = function () {
                 $(self.$iframe[0].contentDocument).off('mousedown', handleIframeClick);
@@ -645,6 +745,7 @@ var dti = {
                 self.bindings.url(url);
             },
             refresh = function () {
+                self.bindings.loading(true);
                 self.$iframe[0].contentWindow.location.reload();
             },
             getTitleForPoint = function (upi) {
@@ -663,12 +764,14 @@ var dti = {
                     group: ko.observable(getGroupName(config)),
                     url: ko.observable(config.url),
                     upi: ko.observable(config.upi),
+                    hasUrl: ko.observable(!!config.url),
                     refresh: refresh,
                     activate: activate,
                     minimize: minimize,
                     minimized: ko.observable(false),
                     loading: ko.observable(true),
                     windowsHidden: dti.bindings.windowsHidden,
+                    hidden: false,
                     close: close,
                     iconClass: ko.observable(),
                     iconText: ko.observable(),
@@ -689,7 +792,7 @@ var dti = {
                             self.bindings.title(message.parameters);
                         },
                         resize: function () {
-                            var measurements = prepMeasurements(message.parameters);
+                            var measurements = prepMeasurements(message.parameters, self.bindings);
 
                             ko.viewmodel.updateFromModel(self.bindings, measurements);
                         }
@@ -697,6 +800,12 @@ var dti = {
 
                     if (callbacks[message.action]) {
                         callbacks[message.action]();
+                    }
+                },
+                handleThumbnail: function (obj) {
+                    if (obj === self.bindings.upi()) {
+                        self.bindings.thumbnailFound(true);
+                        self.bindings.upi.valueHasMutated();
                     }
                 },
                 onLoad: function (event) {
@@ -738,10 +847,15 @@ var dti = {
 
         $('main').append(self.$windowEl);
         self.$windowEl.attr('id', windowId);
-        self.$iframe = self.$windowEl.children('iframe');
-        self.$iframe.attr('id', iframeId);
 
-        dti.utility.addEvent(self.$iframe[0], 'load', self.onLoad);
+        if (config.url) {
+            self.$iframe = self.$windowEl.children('iframe');
+            self.$iframe.attr('id', iframeId);
+
+            dti.utility.addEvent(self.$iframe[0], 'load', self.onLoad);
+        }
+
+        dti.on('thumbnailCaptured', self.handleThumbnail);
 
         if (config.upi !== undefined && typeof config.upi === 'number') {
             self.bindings.upi(config.upi);
@@ -768,6 +882,18 @@ var dti = {
         // }, 100);
 
         ko.applyBindings(self.bindings, self.$windowEl[0]);
+
+        if (!config.url) {
+            self.initFn = dti.utility.getPathFromObject(config.initFn, dti);
+            // self.instance = new self.cls({
+            //     $container: self.$windowEl.children('.markupContent')
+            // });
+            self.initFn({
+                $container: self.$windowEl.find('.markupContent')
+            });
+
+            self.bindings.loading(false);
+        }
 
         return {
             setUrl: setUrl,
@@ -900,7 +1026,9 @@ var dti = {
 
             targetWindow = dti.windows.getWindowById(winId);
 
-            targetWindow.handleMessage(e);
+            if (targetWindow) {
+                targetWindow.handleMessage(e);
+            }
         },
         create: function (config) {
             var newWindow;
@@ -956,7 +1084,7 @@ var dti = {
                 config.type = dti.workspaceManager.config.Utility.pointTypes.getPointTypeNameFromEnum(config.type);
             }
 
-            if (typeof config.url !== 'string') {
+            if (typeof config.url !== 'string' && !config.initFn) {
                 config.url = dti.utility.getEndpoint(config.type, config.upi).review.url;
             }
 
@@ -1032,7 +1160,7 @@ var dti = {
         }
     },
     taskbar: {
-        pinnedItems: ['Display'],
+        pinnedItems: ['Navigator', 'Display'],
         init: function () {
             dti.bindings.startMenuItems(ko.viewmodel.fromModel(dti.config.itemGroups));
             //load user preferences 
@@ -1046,6 +1174,7 @@ var dti = {
                     openWindows = dti.bindings.openWindows[group]();
 
                 if (openWindows.length === 0) {
+                    dti.fire('hideMenus');
                     dti.bindings.windowGroups.remove(function removeWindowGroup (item) {
                         return item.group() === group && item.pinned() === false;
                     });
@@ -1173,12 +1302,21 @@ var dti = {
                 id = dti.makeId(),
                 openWindows,
                 doOpenWindow = function () {
-                    dti.windows.openWindow(obj.url + '?' + id, obj.title, obj.group, null, null, obj.options);
+                    if (obj.url) {
+                        obj.url += '?' + id;
+                    }
+
+                    obj.pointType = obj.group;
+
+                    dti.windows.openWindow(obj);
                 };
 
             if (!obj.standalone) {
                 dti.settings._workspaceNav = true;
-                dti.bindings.showNavigator(obj.group, true);
+                dti.bindings.showNavigator({
+                    pointType: obj.group,
+                    retainNames: true
+                });
             } else {
                 if (obj.singleton) {
                     openWindows = dti.windows.getWindowsByType(obj.group);
@@ -2393,10 +2531,9 @@ var dti = {
             });
         }
     },
-    navigatorNew: {
+    navigator: {
         _lastInit: true,
         _navigators: {},
-        $navigatorModalNew: $('#navigatorModalNew'),
         temporaryCallback: null,
         defaultClickHandler: function (pointInfo) {
             var endPoint = dti.utility.getEndpoint(pointInfo.pointType, pointInfo._id),
@@ -2407,16 +2544,16 @@ var dti = {
             dti.windows.openWindow(endPoint.review.url, name, pointInfo.pointType, null, pointInfo._id, options);
         },
         handleNavigatorRowClick: function (pointInfo) {
-            dti.navigatorNew.hideNavigator();
+            dti.navigator.hideNavigator();
 
-            if (dti.navigatorNew.temporaryCallback) {
-                if (typeof dti.navigatorNew.temporaryCallback === 'function') {
-                    dti.navigatorNew.temporaryCallback(pointInfo);
-                    dti.navigatorNew.temporaryCallback = null;
+            if (dti.navigator.temporaryCallback) {
+                if (typeof dti.navigator.temporaryCallback === 'function') {
+                    dti.navigator.temporaryCallback(pointInfo);
+                    dti.navigator.temporaryCallback = null;
                 }
                 
             } else {
-                dti.navigatorNew.defaultClickHandler(pointInfo);
+                dti.navigator.defaultClickHandler(pointInfo);
             }
         },
         showNavigator: function (cfg) {
@@ -2428,7 +2565,7 @@ var dti = {
                 };
             } else {
                 if (config.callback) {
-                    dti.navigatorNew.temporaryCallback = config.callback;
+                    dti.navigator.temporaryCallback = config.callback;
                 }
 
                 if (config.pointType && config.property) {
@@ -2436,11 +2573,11 @@ var dti = {
                 }
             }
 
-            dti.navigatorNew.commonNavigator.applyConfig(config);
-            dti.navigatorNew.$commonNavigatorModal.openModal(config);
+            dti.navigator.commonNavigator.applyConfig(config);
+            dti.navigator.$commonNavigatorModal.openModal(config);
         },
         hideNavigator: function () {
-            dti.navigatorNew.$navigatorModalNew.closeModal();
+            dti.navigator.$commonNavigatorModal.closeModal();
         },
         //config contains container
         Navigator: function (config) {
@@ -2466,13 +2603,14 @@ var dti = {
                             deviceId: null,
                             remoteUnitId: null,
                             id: self.id,
-                            newPointType: pointTypes[0].key,
-                            disableCreatePoint: false
+                            disableCreatePoint: false,
+                            loading: false
                         },
                         explodedPointTypes = [];
 
                     dti.forEachArray(pointTypes, function addSelectedToPointType (type) {
-                        var subTypes = dti.utility.subPointTypes[type.key];
+                        var subTypes = dti.utility.subPointTypes[type.key],
+                            newType;
 
                         type.selected = true;
                         type.visible = true;
@@ -2492,11 +2630,16 @@ var dti = {
                                 explodedPointTypes.push(newSubType);
                             });
                         } else {
-                            explodedPointTypes.push(type);
+                            newType = $.extend(true, {}, type);
+                            newType.selected = false;
+                            explodedPointTypes.push(newType);
                         }
                     });
 
                     bindings.pointTypes = pointTypes;
+                    bindings._newPointType = explodedPointTypes[0];
+                    bindings.newPointType = explodedPointTypes[0].key;
+                    explodedPointTypes[0].selected = true;
                     bindings.explodedPointTypes = explodedPointTypes;
 
                     self.defaultConfig = bindings;
@@ -2505,38 +2648,85 @@ var dti = {
                     bindings = ko.viewmodel.fromModel(bindings);
 
                     bindings.createPoint = function () {
+                        // self.bindings.explodedPointTypes()[0].selected(true);
                         self.bindings.mode(self.modes.CREATE);
                     };
 
                     bindings.doCreatePoint = function () {
+                        var filterProperties = ['name1', 'name2', 'name3', 'name4'],
+                            newPointType = ko.toJS(bindings._newPointType),
+                            parameters = {
+                                pointType: newPointType._type || newPointType.key,
+                                subType: newPointType._subType
+                            };
 
+                        if (bindings.allowCreatePoint()) {
+                            bindings.disableCreatePoint(true);
+                            bindings.loading(true);
+
+                            dti.forEachArray(filterProperties, function buildFilterObj (prop) {
+                                parameters[prop] = bindings[prop]();
+                            });
+
+                            self._createPointParameters = parameters;
+
+                            $.ajax({
+                                url: '/api/points/initpoint',
+                                dataType: 'json',
+                                type: 'post',
+                                data: parameters
+                            }).done(self.handleNewPoint);
+                        }
+                    };
+
+                    bindings.doAcceptFilter = function () {
+                        var filterProperties = ['name1', 'name2', 'name3', 'name4'],
+                            filterObj = {
+                                pointTypes: self.getFlatPointTypes(ko.toJS(bindings.pointTypes))
+                            };
+
+                        dti.forEachArray(filterProperties, function buildFilterObj (prop) {
+                            filterObj[prop] = bindings[prop]();
+                        });
+
+                        // dti.log(ko.toJS(filterObj));
+                        dti.navigator.handleNavigatorRowClick(filterObj);
                     };
 
                     bindings.togglePointTypeDropdown = function (obj, event) {
-                        bindings.dropdownOpen(!bindings.dropdownOpen());
+                        var dropdownShown = bindings.dropdownOpen();
+
+                        bindings.dropdownOpen(!dropdownShown);
+
                         if (event) {
                             event.preventDefault();
                         }
-                        return false;
                     };
 
                     bindings.pointTypeChanged = function () {
                         self.pointTypeChanged = true;
+                        self.getPoints();
                     };
 
                     bindings.pointTypeInvert = function (type) {
-                        bindings.pointTypeChanged();
+                        self._pauseRequest = true;
                         self.applyPointTypes(type);
+                        self._pauseRequest = false;
+                        bindings.pointTypeChanged();
                     };
 
                     bindings.toggleAllPointTypes = function () {
                         var types = bindings.pointTypes();
+
+                        self._pauseRequest = true;
 
                         dti.forEachArray(types, function doCheckPointType(type) {
                             if (type.visible()) {
                                 type.selected(true);
                             }
                         });
+
+                        self._pauseRequest = false;
 
                         bindings.pointTypeChanged();
                     };
@@ -2556,11 +2746,11 @@ var dti = {
                                 //valid click
                                 switch (bindings.mode()) {
                                     case self.modes.DEFAULT:
-                                        dti.navigatorNew.handleNavigatorRowClick(point);
+                                        dti.navigator.handleNavigatorRowClick(point);
                                         break;
                                     case self.modes.FILTER:
                                     case self.modes.CREATE:
-                                        dti.log(point);
+                                        // dti.log(point);
                                         break;
                                 }
                             }
@@ -2577,15 +2767,57 @@ var dti = {
 
                     bindings.clearBinding = function (binding) {
                         if (self.bindings[binding]) {
-                            self.bindings[binding](null);
+                            self.bindings[binding]('');
                         }
                     };
 
+                    bindings.storePointType = function (object) {
+                        bindings._newPointType = object;
+                        // bindings.togglePointTypeDropdown(); issue #53
+                        return true;
+                    };
+
+                    bindings.modalText = ko.pureComputed(function getModalText () {
+                        var mode = bindings.mode(),
+                            ret;
+
+                        switch (mode) {
+                            case self.modes.CREATE: 
+                                ret = 'Create Point';
+                                break;
+                            case self.modes.FILTER: 
+                                ret = 'Select Filter';
+                                break;
+                            case self.modes.DEFAULT: 
+                                ret = 'Select Point';
+                                break;
+                        }
+
+                        return ret;
+                    });
+
                     bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint () {
                         var uniqueName = bindings.points().length === 0,
-                            disabled = bindings.disableCreatePoint();
+                            disabled = bindings.disableCreatePoint(),
+                            c,
+                            tmpName,
+                            noGaps = true,
+                            hasValue = 0;
 
-                        return uniqueName && !disabled;
+                        for (c = 4; c; c--) {
+                            tmpName = bindings['name' + c]() || '';
+                            if (hasValue) {
+                                if (!tmpName.length) {
+                                    noGaps = false;
+                                }
+                            } else {
+                                if (tmpName.length) {
+                                    hasValue = c;
+                                }
+                            }
+                        }
+
+                        return uniqueName && hasValue && noGaps && !disabled;
                     });
 
                     bindings.allTypesSelected = ko.pureComputed(function allPointTypesSelected() {
@@ -2603,6 +2835,16 @@ var dti = {
 
                     bindings.allTypesSelected.extend({
                         rateLimit: 50
+                    });
+
+                    dti.forEachArray(bindings.pointTypes(), function initPointTypeSubscription (type) {
+                        var pointTypeChangedInterceptor = function () {
+                            if (!self._pauseRequest) {
+                                bindings.pointTypeChanged.apply(this, arguments);
+                            }
+                        };
+
+                        type.selected.subscribe(pointTypeChangedInterceptor);
                     });
 
                     bindings.nameHasChanged = ko.computed(function nameFilterChanged() {
@@ -2623,16 +2865,6 @@ var dti = {
                         if (!self._pauseRequest && self._loaded) {
                             self.getPoints();
                         }
-                    });
-
-                    bindings.pointTypesChanged = ko.pureComputed(function pointTypeHasChanged () {
-                        var currTypes = bindings.pointTypes();
-
-                        dti.forEachArray(currTypes, function subscribeToCheck (type) {
-                            type.selected.subscribe(bindings.pointTypeChanged);
-                        });
-
-                        return true;
                     });
 
                     bindings.pointTypeText = ko.pureComputed(function getPointTypeText () {
@@ -2679,6 +2911,7 @@ var dti = {
             self.bindings = getBindings();
 
             self.applyPointTypes = function (types, exclusive) {
+                self._pauseRequest = true;
                 if (types && types.length > 0) {
                     dti.forEachArray(self.bindings.pointTypes(), function isPointTypeChecked (type) {
                         var isFound = types.indexOf(type.key()) > -1;
@@ -2692,6 +2925,7 @@ var dti = {
                         type.selected(isFound);
                     });
                 }
+                self._pauseRequest = false;
             };
 
             self.applyPointNames = function (config) {
@@ -2708,16 +2942,41 @@ var dti = {
                 }
             };
 
+            self.getPointTypeByName = function (type) {
+                var ret;
+
+                dti.forEachArray(self.bindings.explodedPointTypes(), function findExplodedPointType (explodedType) {
+                    if (explodedType.key() === type) {
+                        ret = ko.toJS(explodedType);
+                        return false;
+                    }
+                });
+
+                return ret;
+            };
+
             self.applyConfig = function (cfg) {
                 var defaultConfig = $.extend({}, self.defaultConfig),
                     config = $.extend(defaultConfig, cfg || {}),
-                    propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId'];
+                    propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
+
+                if (cfg.pointType && !cfg.pointTypes && cfg.pointType !== 'Point') {
+                    config.pointTypes = [cfg.pointType];
+                }
+
+                if (cfg.newPointType !== 'Point' && cfg.newPointType) { //skip this for 'Point' placeholder
+                    config._newPointType = self.getPointTypeByName(cfg.newPointType);
+                    ko.viewmodel.updateFromModel(self.bindings._newPointType, config._newPointType);
+                    self.bindings.newPointType(cfg.newPointType);
+                }
 
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
 
                 self.applyPointTypes(config.pointTypes);
 
-                self.applyPointNames(config);
+                if (!config.retainNames) {
+                    self.applyPointNames(config);
+                }
 
                 dti.forEachArray(propertiesToApply, function applyProperty (prop) {
                     self.bindings[prop](config[prop]);
@@ -2734,6 +2993,29 @@ var dti = {
                     self.bindings.fetchingPoints(false);
                 }, 250);
                 // dti.log(response);
+            };
+
+            self.handleNewPoint = function (data) {
+                self.bindings.disableCreatePoint(false);
+                if (data.err) {
+                    dti.log(data.err);
+                } else {
+
+                    var params = self._createPointParameters,
+                        endPoint = dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(params.pointType, data._id),
+                        handoffMode = endPoint.edit || endPoint.review;
+
+                    dti.windows.openWindow({
+                        url: handoffMode.url,
+                        title: data.Name,
+                        pointType: params.pointType,
+                        upi: data._id,
+                        options: {
+                            height: 750,
+                            width: 1250
+                        }
+                    });
+                }
             };
 
             self.getFlatPointTypes = function (pointTypes) {
@@ -2856,9 +3138,9 @@ var dti = {
             };
 
             dti.events.bodyClick(function checkNavigatorOpenMenu (event, $target) {
-                var buttonClass = '.pointTypeDropdownButton';
+                var buttonClass = 'pointTypeDropdownButton';
 
-                if (self.bindings.dropdownOpen() && $target.parents('.dropdown-content').length === 0 && !$target.hasClass(buttonClass) && $target.parents(buttonClass).length === 0) {
+                if (self.bindings.dropdownOpen() && $target.parents('.dropdown-content').length === 0 && !$target.hasClass(buttonClass) && $target.closest('.' + buttonClass).length === 0) {
                     self.bindings.dropdownOpen(false);
                 }
             });
@@ -2875,238 +3157,33 @@ var dti = {
             var templateMarkup = dti.utility.getTemplate('#navigatorTemplate'),
                 navigatorMarkup,
                 navigator,
-                $container = (isModal === true) ? $('main') : isModal;
+                $container = (isModal === true) ? $('main') : (isModal.$container || isModal);
 
-            if (isModal) {
+            if (isModal === true) {
                 navigatorModalMarkup = dti.utility.getTemplate('#navigatorModalTemplate');
                 $container.append(navigatorModalMarkup);
                 $container = navigatorModalMarkup;
-                dti.navigatorNew.$commonNavigatorModal = $container;
+                dti.navigator.$commonNavigatorModal = $container;
                 $container.find('.modal-content').append(templateMarkup);
                 // $container.leanModal();
             } else {
                 $container.append(templateMarkup);
             }
 
-            navigator = new dti.navigatorNew.Navigator({
+            navigator = new dti.navigator.Navigator({
                 $container: $container
             });
 
             $container.data('navigatorId', navigator.id);
 
-            dti.navigatorNew._navigators[navigator.id] = navigator;
+            dti.navigator._navigators[navigator.id] = navigator;
 
             // Materialize.updateTextFields();
 
             return navigator;
         },
         init: function () {
-            dti.navigatorNew.commonNavigator = dti.navigatorNew.createNavigator(true);
-        }
-    },
-    navigator: {
-        $navigatorModalIframe: $('#navigatorModal iframe'),
-        $navigatorFilterModalIframe: $('#navigatorFilterModal iframe'),
-        $navigatorModal: $('#navigatorModal'),
-        $navigatorFilterModal: $('#navigatorFilterModal'),
-        applyNavigatorFilter: function (config) {
-            var types,
-                pointType = config.pointType, 
-                pointLookup = config.pointLookup, 
-                isStartMenu = config.isStartMenu,
-                property = config.property,
-                parameters = dti.navigator._navigatorParameters,
-                processedTypes = [];
-
-            if (parameters && parameters.pointTypes) {
-                types = parameters.pointTypes;
-                // pointLookup.POINTTYPES = pointTypes;
-                // pointLookup.POINTTYPE = pointType;
-            } else {
-                if (pointType && pointType !== 'Point') {
-                    if (!Array.isArray(pointType)) {
-                        types = [pointType];
-                    } else {
-                        types = pointType;
-                    }
-                } else {
-                    types = ['all'];
-                }
-            }
-
-            if (pointLookup.MODE !== 'filter') {
-                if (!isStartMenu) {
-                    pointLookup.MODE = 'select';
-                } else {
-                    pointLookup.MODE = null;
-                }
-            }
-
-            pointLookup.checkPointTypes(types);
-            pointLookup.refreshUI();
-        },
-        acceptNavigatorFilter: function () {
-            var filter = dti.navigator._currNavigatorFilter,
-                message = dti.navigator._navigatorMessage;
-
-            dti.messaging.sendMessage({
-                key: message._windowId,
-                value: {
-                    action: 'pointFilterSelected',
-                    filter: filter
-                }
-            });
-        },
-        showNavigatorModalNew: function () {
-            dti.navigator.$navigatorModalNew.openModal();
-        },
-        // showNavigatorNew: function (config) {
-        //     dti.navigator.showNavigatorModalNew();
-        // },
-        showNavigator: function (config, isStart, isSelect) {
-            var pointType,
-                isStartMenu = isStart,
-                isSelectOnly = isSelect,
-                callback;
-
-            if (typeof config === 'string') {
-                pointType = config;
-            } else {
-                if (config) {
-                    pointType = config.pointType;
-                    isStartMenu = config.isStartMenu;
-                    isSelectOnly = config.isSelectOnly;
-                    dti.navigator.navigatorCallback = config.callback || false;
-                }
-            }
-
-            dti.fire('hideMenus');
-            dti.navigator.showNavigatorModal(pointType, isStartMenu, isSelectOnly);
-        },
-        hideNavigator: function () {
-            if (dti._navigatorWindow) {
-                dti._navigatorWindow.bindings.minimized(true);
-            }
-        },
-        initNavigatorFilterModal: function () {
-            var $el = dti.navigator.$navigatorFilterModalIframe[0],
-                initModalLookup = function () {
-                    var navigatorFilterInterval;
-
-                    navigatorFilterInterval = setInterval(function initNavigatorFilter () {
-                        if ($el.contentWindow.pointLookup && $el.contentWindow.pointLookup.init) {
-                            clearInterval(navigatorFilterInterval);
-                            dti._navigatorFilterModal = true;
-                            $el.contentWindow.pointLookup.init(dti.navigator.defaultNavigatorModalCallback, {
-                                name1: '',
-                                name2: '',
-                                name3: '',
-                                name4: '',
-                                pointTypes: []
-                            });
-
-                            dti.fire('modalLoaded');
-                        }
-                    }, 500);
-                };
-
-            dti.utility.addEvent($el, 'load', initModalLookup);
-        },
-        showNavigatorFilterModal: function (pointType) {
-            dti.fire('hideMenus');
-            dti.navigator.filterModal = true;
-            dti.navigator.$navigatorFilterModal.openModal();
-        },
-        initNavigatorModal: function () {
-            var $el = dti.navigator.$navigatorModalIframe[0],
-                applyFilter = function () {
-                    dti.navigator.applyNavigatorFilter({
-                        pointType: null, 
-                        pointLookup: $el.contentWindow.pointLookup, 
-                        isStartMenu: null
-                    });
-                },
-                initModalLookup = function () {
-                    var navigatorInterval;
-
-                    navigatorInterval = setInterval(function initNavigator () {
-                        if ($el.contentWindow.pointLookup && $el.contentWindow.pointLookup.init) {
-                            clearInterval(navigatorInterval);
-                            dti._navigatorModal = true;
-                            $el.contentWindow.pointLookup.init(dti.navigator.defaultNavigatorModalCallback);
-                            applyFilter();
-                            dti.fire('modalLoaded');
-                        }
-                    }, 400);
-                };
-
-            dti.utility.addEvent($el, 'load', initModalLookup);
-        },
-        showNavigatorModal: function (pointType, isStartMenu, isSelectOnly) {
-            var loaded = false,
-                $el = dti.navigator.$navigatorModalIframe[0],
-                applyFilter = function () {
-                    dti.navigator.applyNavigatorFilter({
-                        pointType: pointType, 
-                        pointLookup: $el.contentWindow.pointLookup, 
-                        isStartMenu: isStartMenu
-                    });
-                };
-
-            dti.navigator.filterModal = false;
-
-            dti.navigator.isSelectOnly = isSelectOnly || false;
-
-            dti.fire('hideMenus');
-
-            dti.navigator.$navigatorModal.openModal({
-                ready: function () {
-                    applyFilter();
-                },
-                complete: function () {
-                    dti.settings._workspaceNav = false;
-                }
-            });
-        },
-        defaultNavigatorModalCallback: function (upi, name, pointType) {
-            if (dti.navigator.filterModal) {
-                dti.navigator._currNavigatorFilter = upi;
-            } else {
-                dti.navigator._currNavigatorFilter = {
-                    upi: upi,
-                    name: name,
-                    pointType: pointType
-                };
-            }
-
-            dti.fire('hideMenus');
-
-            if (dti.navigator.navigatorCallback) {
-                dti.messaging.sendMessage({
-                    key: dti.navigator._prevMessage._windowId,
-                    value: {
-                        selectedPoint: dti.navigator._currNavigatorFilter,
-                        action: 'pointSelected'
-                    }
-                });
-            } else {
-                if (dti.navigator.isSelectOnly) {
-                    if (dti.navigator.navigatorCallback) {
-
-                    }
-                    dti.log(upi, name, pointType);
-                }
-            }
-            
-        },
-        init: function () {
-            // dti.navigator.$navigatorModalIframe.attr('src', '/pointlookup');
-            // dti.navigator.$navigatorFilterModalIframe.attr('src', '/pointlookup?mode=filter');
-
-            // dti.navigator.initNavigatorModal();
-            // dti.navigator.initNavigatorFilterModal();
-            dti.fire('modalLoaded');
-            dti.fire('modalLoaded');
+            dti.navigator.commonNavigator = dti.navigator.createNavigator(true);
         }
     },
     utility: {
@@ -3121,23 +3198,27 @@ var dti = {
         },
         clone: function (toCopy) {
             var ret,
-                copyObject = function () {
-                    ret = $.extend(true, {}, toCopy);
-                },
                 copyArray = function () {
                     ret = $.extend(true, [], toCopy);
+                },
+                copyObject = function () {
+                    if (Array.isArray(toCopy)) {
+                        copyArray();
+                    } else {
+                        ret = $.extend(true, {}, toCopy);
+                    }
                 },
                 basic = function () {
                     ret = toCopy;
                 };
 
             switch (typeof toCopy) {
-                case 'object': copyObject();
-                        break;
-                case 'array': copyArray();
-                        break;
-                default: basic();
-                        break;
+                case 'object':
+                    copyObject();
+                    break;
+                default:
+                    basic();
+                    break;
             }
 
             return ret;
@@ -3147,14 +3228,19 @@ var dti = {
 
             return $(markup);
         },
-        getConfig: function (path, parameters) {
+        getPathFromObject: function (path, obj) {
             var explodedPath = path.split('.'),
-                Config = dti.workspaceManager.config,
-                result = Config;
+                result = obj;
 
-            dti.forEachArray(explodedPath, function (segment) {
+            dti.forEachArray(explodedPath, function processPathSegment (segment) {
                 result = result[segment];
             });
+
+            return result;
+        },
+        getConfig: function (path, parameters) {
+            var Config = dti.workspaceManager.config,
+                result = dti.utility.getPathFromObject(path, Config);
 
             if (parameters) {
                 result = result.apply(this, parameters);
@@ -3428,23 +3514,7 @@ var dti = {
 
                         config.callback = callback;
 
-                        dti.navigatorNew.showNavigator(config);
-                    },
-                    navigatormodal: function () {
-                        // key: navigatormodal, oldValue: windowId of recipient to send info to
-                        if (config.action === 'open') {
-                            dti.navigator.navigatorCallback = config.callback || false;
-
-                            dti.navigator._navigatorMessage = config;
-                            dti.navigator._navigatorParameters = config.parameters;
-                            dti.navigator.showNavigatorModal();
-                        }
-                    },
-                    navigatorfiltermodal: function () {
-                        if (config.action === 'open') {
-                            dti.navigator._navigatorMessage = config;
-                            dti.navigator.showNavigatorFilterModal();
-                        }
+                        dti.navigator.showNavigator(config);
                     },
                     windowMessage: function () {
                         dti.windows.sendMessage(config);
@@ -3537,9 +3607,14 @@ var dti = {
         startMenuItems: ko.observableArray([]),
         windowsHidden: ko.observable(false),
         taskbarShown: ko.observable(true),
-        showNavigatorNew: function () {
-            dti.navigatorNew.showNavigator();
+        hasAccess: function (obj) {
+            var cfg = ko.toJS(obj.value);
+
+            return !cfg.adminOnly || dti.workspaceManager.user()['System Admin'].Value === true;
         },
+        // showNavigator: function () {
+        //     dti.navigator.showNavigator();
+        // },
         globalSearch: {
             gettingData: ko.observable(false),
             showSummary: ko.observable(false),
@@ -3659,14 +3734,26 @@ var dti = {
         closeWindows: function (group) {
             dti.windows.closeAll(group);
         },
+        taskbarButtonClick: function (object) {
+            dti.fire('hideMenus');
+            if (object.singleton()) {
+                dti.bindings.startMenuClick(object);
+            } else {
+                dti.bindings.showNavigator(object.group());
+            }
+        },
         showNavigator: function (group, isStartMenu) {
-            dti.navigatorNew.showNavigator(group);
+            dti.navigator.showNavigator(group);
             // dti.navigator.showNavigator(group, isStartMenu);
         },
-        acceptNavigatorFilter: function () {
-            dti.navigator.acceptNavigatorFilter();
+        showCreatePoint: function (group) {
+            dti.navigator.showNavigator({
+                mode: 'create',
+                newPointType: group.group()
+            });
         },
         startMenuClick: function (obj) {
+            dti.fire('hideMenus');
             dti.startMenu.handleClick(obj);
         },
         handleCardClick: function (obj, e) {
@@ -3860,7 +3947,7 @@ var dti = {
                     }
 
                     $element.click(function showNavigatorFiltered () {
-                        dti.navigatorNew.showNavigator(type,  true);
+                        dti.navigator.showNavigator(type,  true);
                     });
                 }
             };
@@ -4052,12 +4139,6 @@ var dti = {
             runInits = function () {
                 var lastInits = [];
                 dti.animations.fadeIn($('main, header'), function startInitFlow () {
-                    dti.on('modalLoaded', function checkDone () {
-                        num--;
-                        if (num === 0) {
-                            complete();
-                        }
-                    });
                     dti.forEach(dti, function dtiInit (val, key) {
                         if (typeof val === 'object') {
                             if (val.init) {
@@ -4076,11 +4157,14 @@ var dti = {
                             }
                         }
                     });
+
                     dti.forEachArray(lastInits, function runFinalInits (val) {
                         val.fn();
                     });
 
                     $('select:not(.select-processed').material_select();
+
+                    complete();
                 });
             },
             complete = function () {
@@ -4215,6 +4299,6 @@ dti.workspaceManager = window.workspaceManager = {
         return JSON.parse(JSON.stringify(dti.bindings.user()));
     },
     captureThumbnail: function () {
-        dti.log('thumbnail placeholder');
+        dti.thumbnails.capture.apply(this, arguments);
     }
 };

@@ -7,7 +7,6 @@ var ActivityLogsManager = function (conf) {
         sessionId = workspaceManager.sessionId(),
         user = workspaceManager.user(),
         storeKey = 'activityLogs_' + user._id,
-        openWindow = workspaceManager.openWindowPositioned,
         windowUpi = "activitylog" + window.location.search.slice(1), // prefix required or pop-in/pop-out don't work
         filterDataKey = "activityFilters",
         $dateFrom = $("#dateFrom"),
@@ -23,7 +22,6 @@ var ActivityLogsManager = function (conf) {
             }
         },
         nSelectedRowsOnPage = 0,
-        filterWindow,
         numberPointTypes = workspaceManager.config.Utility.pointTypes.getAllowedPointTypes().length,
         listOfUsers = ko.observableArray([]),
         listOfFilteredUsers = ko.observableArray([]),
@@ -95,30 +93,18 @@ var ActivityLogsManager = function (conf) {
             userObj._id = user._id;
             userObj.groups = user.groups;
         },
-        pointNameFilterCallback = function (newValue) {
-            //console.log('pointNameFilterCallback() called');
-            var localFilterObj = newValue.filter;
-            
-            self.name1(localFilterObj.name1);
-            self.name2(localFilterObj.name2);
-            self.name3(localFilterObj.name3);
-            self.name4(localFilterObj.name4);
+        pointNameFilterCallback = function (filter) {
+            self.name1(filter.name1);
+            self.name2(filter.name2);
+            self.name3(filter.name3);
+            self.name4(filter.name4);
 
-            if (localFilterObj.pointTypes.length === numberPointTypes) {
+            if (filter.pointTypes.length === numberPointTypes) {
                 self.pointTypes([]);
             } else {
-                self.pointTypes(localFilterObj.pointTypes);
+                self.pointTypes(filter.pointTypes);
             }
-        },
-        filterWindowCallback = function () {
-            //console.log('filterWindowCallback() called');
-            // filterWindow.pointLookup.init(pointNameFilterCallback, pointNameFilterObj);
-        },
-        initFilterWindow = function () {
-            //console.log('initFilterWindow() called');
-            // filterWindow = openWindow('/pointLookup?mode=filter', 'activityfilter', 'activityfilter', 'activityfilter', 'activityfilter', {
-            //     callback: filterWindowCallback
-            // });
+            self.refreshActivityLogsData();
         },
         getPrettyDate = function (timestamp, forceDateString) {
             var theDate = new Date(timestamp),
@@ -303,7 +289,7 @@ var ActivityLogsManager = function (conf) {
 
             reqObj.reqID = activityLogTable.reqID = uniqueID;
 
-            console.log('Requesting ' + name + ' activityLogs from server.', reqObj, date);
+            // console.log('Requesting ' + name + ' activityLogs from server.', reqObj, date);
             ajaxPOST(reqObj, '/api/activitylogs/get', processActivityLogs);
         },
         selectActivityLog = function (ActivityLog) {
@@ -410,14 +396,14 @@ var ActivityLogsManager = function (conf) {
 
         // If we're a pop-out; pop back in
         if (window.top.location.href === window.location.href) {
-            openWindow(window.location.href, 'Activities', 'activitylog', 'mainWindow', windowUpi);
+            dtiUtility.openWindow(window.location.href, 'Activities', 'activitylog', 'mainWindow', windowUpi);
         } else {
             // Open the window
-            openWindow(window.location.href, 'Activities', 'activitylog', '', windowUpi, options);
+            dtiUtility.openWindow(window.location.href, 'Activities', 'activitylog', '', windowUpi, options);
         }
     };
     self.refreshActivityLogsData = function () {
-        _log('self.refreshActivityLogsData() called........');
+        // _log('self.refreshActivityLogsData() called........');
         var localActivityLogTable = self.activityLogs();
         requestActivityLogs(localActivityLogTable);
     };
@@ -437,7 +423,7 @@ var ActivityLogsManager = function (conf) {
         pointType = pointTypesUtility.getPointTypeNameFromEnum(theData.pointType);
         endPoint = pointTypesUtility.getUIEndpoint(pointType, theData.upi);
         if (endPoint) {
-            openWindow(endPoint.review.url, theData.Name, pointType, endPoint.review.target, theData.upi, options);
+            dtiUtility.openWindow(endPoint.review.url, theData.Name, pointType, endPoint.review.target, theData.upi, options);
         } else {
             originalElementText = element.text;
             $(element).stop().fadeOut("4000", function () {
@@ -548,8 +534,6 @@ var ActivityLogsManager = function (conf) {
             storeFilterData();
             self.refreshActivityLogsData();
         }
-        // reinitialize pointname lookup page
-        filterWindowCallback();
     };
     self.clearDateTimeFilter = function (refreshTheData) {
         self.dateFrom(null);
@@ -617,18 +601,20 @@ var ActivityLogsManager = function (conf) {
             }
 
             pointNameFilterObj.pointTypes = self.pointTypes();
-            filterWindowCallback();
         }
     };
     self.showPointFilter = function () {
-        dtiUtility.showNavigatorFilter();
+        var parameters = {
+            name1: self.name1(),
+            name2: self.name2(),
+            name3: self.name3(),
+            name4: self.name4(),
+            pointTypes: self.pointTypes()
+        };
+
+        dtiUtility.showPointFilter(parameters);
+        dtiUtility.onPointSelect(pointNameFilterCallback);
     };
-
-    dtiUtility.onPointFilterSelect(function (cfg) {
-        pointNameFilterCallback(cfg);
-        self.applyPointNameFilter();
-    });
-
     self.applyDateTimeFilter = function () {
         self.dateFrom(self.dtFilterPlaceholder.dateFrom);
         self.timeFrom(self.dtFilterPlaceholder.timeFrom);
@@ -827,9 +813,6 @@ var ActivityLogsManager = function (conf) {
     }, self).extend(computedThrottle);
 
     initFilterValues();
-
-    // Init our iframe point selector window
-    initFilterWindow();
 };
 
 function initPage(manager) {

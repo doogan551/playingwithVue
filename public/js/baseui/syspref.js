@@ -1245,13 +1245,15 @@ var telemetryViewModel = function() {
                 self.dirty(false);
             }
             self.networks([]);
-            for (var n = 0; n < networks.length; n++) {
-                // self.networks.push(ko.viewmodel.fromModel(networks[n]));
-                if (!!networks[n].isDefault) {
-                    self.systemDefault(networks[n]['IP Network Segment']);
+            if (!!networks) {
+                for (var n = 0; n < networks.length; n++) {
+                    // self.networks.push(ko.viewmodel.fromModel(networks[n]));
+                    if (!!networks[n].isDefault) {
+                        self.systemDefault(networks[n]['IP Network Segment']);
+                    }
+                    self.addNetwork(null, null, ko.viewmodel.fromModel(networks[n]));
+                    self.dirty(false);
                 }
-                self.addNetwork(null, null, ko.viewmodel.fromModel(networks[n]));
-                self.dirty(false);
             }
             self.initialized(true);
             // console.log("setdata originalValues", originalValues);
@@ -2061,25 +2063,17 @@ var weatherViewModel = function() {
         dataUrl = '/api/system/weather',
         saveUrl = '/api/system/updateWeather',
         workspaceManager = window.top && window.top.workspaceManager,
-        openWindow = workspaceManager && window.top.workspaceManager.openWindowPositioned,
         activePointStatus = workspaceManager && workspaceManager.config.Enums["Point Statuses"].Active.enum,
         originalData,
         openPointSelector = function(callback) {
-            var windowRef,
-                pointSelectedCallback = function(pid, name, type) {
-                    if (!!pid) {
-                        callback(pid, name, type);
+            var parameters,
+                pointSelectedCallback = function(pointInfo) {
+                    if (!!pointInfo) {
+                        callback(pointInfo._id, pointInfo.name, pointInfo.pointType);
                     }
-                },
-                windowOpenedCallback = function() {
-                    windowRef.pointLookup.MODE = 'select';
-                    windowRef.pointLookup.init(pointSelectedCallback);
                 };
-
-            windowRef = openWindow('/pointLookup', 'Select Point', '', '', 'Select Weather Point', {
-                callback: windowOpenedCallback,
-                width: 1000
-            });
+            dtiUtility.showPointSelector(parameters);
+            dtiUtility.onPointSelect(pointSelectedCallback);
         },
         setData = function(data) {
             var newData = [];
@@ -2190,7 +2184,7 @@ var weatherViewModel = function() {
                 width: 850,
                 height: 600
             };
-        openWindow(endPoint.review.url, point.Name, pointType, endPoint.review.target, upi, options);
+        dtiUtility.openWindow(endPoint.review.url, point.Name, pointType, endPoint.review.target, upi, options);
     };
 };
 

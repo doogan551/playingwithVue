@@ -19,7 +19,7 @@ block content
                             th(data-bind="text: Value")
                     tbody(data-bind="foreach: rows")
                         tr(data-bind="foreach: cells")
-                            td
+                            td(data-bind="css: { nowrap: ($root.reportType !== 'Property' && $index() === 0) }")
                                 div(data-bind="html: Value, css: { small: $index() === 0 && $root.reportType !== 'Property'} ")
                 div.pageNumbering(data-bind="text: ($index()+1) + ' of ' + ($root.chartable() && scheduledIncludeChart ? $root.numberOfScheduledReportTables() + 1 : $root.numberOfScheduledReportTables())")
                 //div.pageNumbering(data-bind="text: ($index()+1)")

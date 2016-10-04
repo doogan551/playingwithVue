@@ -218,38 +218,30 @@ var gpl = {
     },
     openPointSelector: function (callback, newUrl, pointType, property, nameFilter) {
         var url = newUrl || '/pointLookup',
-            windowRef,
-            pointTypes,
-            pointSelectedCallback = function (pid, name, type) {
-                if (!!pid) {
-                    callback(pid, name, type);
-                }
+            parameters = nameFilter ? {} : {
+                name1: gpl.point.name1,
+                name2: gpl.point.name2,
+                name3: gpl.point.name3,
+                name4: gpl.point.name4
             },
-            windowOpenedCallback = function () {
-                var names = nameFilter ? {} : {
-                    name1: gpl.point.name1,
-                    name2: gpl.point.name2,
-                    name3: gpl.point.name3,
-                    name4: gpl.point.name4
-                };
-
-                windowRef.pointLookup.MODE = 'select';
-                if (property) {
-                    pointTypes = gpl.getPointTypes(property);
-                    windowRef.pointLookup.POINTTYPES = pointTypes;
+            pointSelectedCallback = function (pointInfo) {
+                if (!!pointInfo) {
+                    callback(pointInfo._id, pointInfo.name, pointInfo.pointType);
                 }
-
-                windowRef.pointLookup.init(pointSelectedCallback, names);
             };
 
         if (pointType) {
             url += '/' + pointType + '/' + property;
+            if (parameters.pointTypes === undefined) {
+                parameters.pointTypes = [];
+            }
+            if (parameters.pointTypes.indexOf(pointType) === -1) {
+                parameters.pointTypes.push(pointType);
+            }
         }
 
-        windowRef = gpl.openWindow(url, 'Select Point', '', '', 'Select Dynamic Point', {
-            callback: windowOpenedCallback,
-            width: 1000
-        });
+        dtiUtility.showPointSelector(parameters);
+        dtiUtility.onPointSelect(pointSelectedCallback);
     },
     initGpl: function () {
         var count = 0,
@@ -2274,6 +2266,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
 
         this.label = this.label || (!this.config.inactive ? gpl.getLabel(this.type) : '');
 
+        if (typeof this.label === 'number') {
+            this.label = this.label.toString();
+        }
+
         if (this.config.inactive) {
             config.visible = false;
         }
@@ -2802,7 +2798,7 @@ gpl.blocks.SPA = fabric.util.createClass(gpl.Block, {
             icon;
 
         if (data) {
-            reverseActing = data['Reverse Action'].Value;
+            reverseActing = data['Reverse Action'] && data['Reverse Action'].Value;
             icon = this._icon.split('.');
 
             if (reverseActing) {
@@ -3925,30 +3921,32 @@ gpl.ActionButton = function (config) {
             return ret;
         },
         _processPointData = function (response) {
-            _local.pointData = response;
-            _local.pointName = _local.pointData.Name;
-            _local.pointType = response['Point Type'].Value;
+            if (response.message !== 'No Point Found') {
+                _local.pointData = response;
+                _local.pointName = _local.pointData.Name;
+                _local.pointType = response['Point Type'].Value;
 
-            _commandArguments.logData = {
-                user: gpl.workspaceManager.user(),
-                point: {
-                    _id: response._id,
-                    Security: response.Security,
-                    Name: response.Name,
-                    name1: response.name1,
-                    name2: response.name2,
-                    name3: response.name3,
-                    name4: response.name4,
-                    "Point Type": {
-                        eValue: response["Point Type"].eValue
+                _commandArguments.logData = {
+                    user: gpl.workspaceManager.user(),
+                    point: {
+                        _id: response._id,
+                        Security: response.Security,
+                        Name: response.Name,
+                        name1: response.name1,
+                        name2: response.name2,
+                        name3: response.name3,
+                        name4: response.name4,
+                        "Point Type": {
+                            eValue: response["Point Type"].eValue
+                        }
+                    },
+                    newValue: {
+                        Value: ''
                     }
-                },
-                newValue: {
-                    Value: ''
-                }
-            };
+                };
 
-            _validateOptions('upi');
+                _validateOptions('upi');
+            }
         },
         _getPointData = function (upi) {
             if (upi !== undefined) {
@@ -6765,12 +6763,12 @@ gpl.Manager = function () {
                         currInitStep++;
                         setTimeout(function () {
                             // lastInit = new Date();
-                            log('Running next init:' + initFn);
+                            // log('Running next init:' + initFn);
                             managerSelf[initFn]();
                             doNextInit();
                         }, initDelay);
                     } else {
-                        log('Finished init functions');
+                        // log('Finished init functions');
                         managerSelf.getBoundingBox();
                         gpl.skipEventLog = false;
 
@@ -6861,7 +6859,7 @@ gpl.Manager = function () {
             //fix for IE not showing window.top when first loaded
             gpl.getPointTypes = window.top && window.top.workspaceManager && window.top.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes;
             gpl.workspaceManager = window.top && window.top.workspaceManager;
-            gpl._openWindow = window.top && window.top.workspaceManager && window.top.workspaceManager.openWindowPositioned;
+            gpl._openWindow = dtiUtility.openWindow;
             gpl.controllers = gpl.workspaceManager.systemEnums.controllers;
             gpl.pointTypes = gpl.workspaceManager.config.Enums['Point Types'];
             gpl.formatPoint = gpl.workspaceManager.config.Update.formatPoint;

@@ -20,6 +20,12 @@ h1 {
 table {
     font-size: 10pt;
 }
+.table > thead > tr > th, .table > tbody > tr > th, .table > tfoot > tr > th, .table > thead > tr > td, .table > tbody > tr > td, .table > tfoot > tr > td {
+    padding: 5px;
+}
+.nowrap {
+    white-space: nowrap;
+}
 td.firstColumn.small.datetime {
     min-width: 60px;
     width: 75px;
@@ -35,7 +41,7 @@ td.firstColumn.small.datetime {
     margin: 0px 15px 3px 15px;
 }
 .marginForTable {
-    margin: 25px 15px 3px 15px;
+    margin: 20px 15px 3px 10px;
 }
 .pageNumbering {
     margin-left: 950px;
@@ -70,7 +76,7 @@ td.firstColumn.small.datetime {
     }
 
     .reportDisplayTitle {
-        margin-top: 20px;
+        margin-top: 15px;
         margin-left: 300px;
         width: 400px;
     }

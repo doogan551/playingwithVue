@@ -270,6 +270,7 @@ main {
     bottom: 0;
     left: 0;
     right: 0;
+    padding: 15px;
 }
 
 header {
@@ -440,7 +441,7 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     }
 
     .card-body {
-        height: 100%;
+        height: calc(100% - 29px);
         width: 100%;
         border: 0;
     }
@@ -465,6 +466,12 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
 .interacting .windowMask,
 .loading .windowMask {
     display: block;
+}
+
+.ui-resizable-resizing .windowMask .iframeFull, 
+.ui-draggable-dragging .windowMask .iframeFull,
+.interacting .windowMask .iframeFull {
+    display: none;
 }
 
 .loading .windowMask {
@@ -570,7 +577,8 @@ $startmenuGutter: 15px;
     }
 
     input {
-        width: 340px;
+        width: 340px
+        back;
     }
 }
 
@@ -1369,6 +1377,11 @@ $loaderSpeedScale: 1 / .75;
     }
 }
 
+.markupContent {
+    position: relative;
+    height: 100%;
+}
+
 
 /* new navigator */
 
@@ -1378,6 +1391,12 @@ $loaderSpeedScale: 1 / .75;
     max-height: 95%;
     background-color: $blue-grey;
     overflow-y: hidden;
+
+    .navigatorLoading {
+        position: absolute;
+        z-index: 2;
+        background: none;
+    }
 
     .modalControls {
         display: none;
@@ -1503,7 +1522,7 @@ $loaderSpeedScale: 1 / .75;
         flex-grow: 1;
 
         .listRow:hover {
-            background-color: #f4f4f4;
+            background-color: $blue-grey-lighten-5;
             cursor: default;
         }
 
