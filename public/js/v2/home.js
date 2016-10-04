@@ -2227,7 +2227,7 @@ var dti = {
                                         break;
                                     case self.modes.FILTER:
                                     case self.modes.CREATE:
-                                        dti.log(point);
+                                        // dti.log(point);
                                         break;
                                 }
                             }
@@ -2300,8 +2300,6 @@ var dti = {
                         var currTypes = bindings.pointTypes(),
                             numChecked = 0;
 
-                        dti.log('allTypesSelected');
-
                         dti.forEachArray(currTypes, function isTypeChecked(type) {
                             if (type.selected()) {
                                 numChecked++;
@@ -2349,8 +2347,6 @@ var dti = {
                         var currTypes = bindings.pointTypes(),
                             selectedTypes = [],
                             ret;
-
-                        dti.log('pointTypeText');
 
                         if (bindings.mode() === self.modes.CREATE) {
                             ret = bindings.newPointType();
