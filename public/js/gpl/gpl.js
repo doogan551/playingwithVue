@@ -218,38 +218,30 @@ var gpl = {
     },
     openPointSelector: function (callback, newUrl, pointType, property, nameFilter) {
         var url = newUrl || '/pointLookup',
-            windowRef,
-            pointTypes,
-            pointSelectedCallback = function (pid, name, type) {
-                if (!!pid) {
-                    callback(pid, name, type);
-                }
+            parameters = nameFilter ? {} : {
+                name1: gpl.point.name1,
+                name2: gpl.point.name2,
+                name3: gpl.point.name3,
+                name4: gpl.point.name4
             },
-            windowOpenedCallback = function () {
-                var names = nameFilter ? {} : {
-                    name1: gpl.point.name1,
-                    name2: gpl.point.name2,
-                    name3: gpl.point.name3,
-                    name4: gpl.point.name4
-                };
-
-                windowRef.pointLookup.MODE = 'select';
-                if (property) {
-                    pointTypes = gpl.getPointTypes(property);
-                    windowRef.pointLookup.POINTTYPES = pointTypes;
+            pointSelectedCallback = function (pointInfo) {
+                if (!!pointInfo) {
+                    callback(pointInfo._id, pointInfo.name, pointInfo.pointType);
                 }
-
-                windowRef.pointLookup.init(pointSelectedCallback, names);
             };
 
         if (pointType) {
             url += '/' + pointType + '/' + property;
+            if (parameters.pointTypes === undefined) {
+                parameters.pointTypes = [];
+            }
+            if (parameters.pointTypes.indexOf(pointType) === -1) {
+                parameters.pointTypes.push(pointType);
+            }
         }
 
-        windowRef = gpl.openWindow(url, 'Select Point', '', '', 'Select Dynamic Point', {
-            callback: windowOpenedCallback,
-            width: 1000
-        });
+        dtiUtility.showPointSelector(parameters);
+        dtiUtility.onPointSelect(pointSelectedCallback);
     },
     initGpl: function () {
         var count = 0,
