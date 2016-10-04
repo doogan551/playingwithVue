@@ -203,7 +203,7 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
             };
 
         dtiUtility.showPointSelector(parameters);
-        dtiUtility.onPointSelect(pointSelectedCallback);
+        dtiUtility.onPointSelect(callback);
     };
 
     //knockout calls this when component is removed from view
