@@ -70,9 +70,9 @@ block content
                                             .col-xs-2.entries
                                                 .dropdown.availableEntries(data-bind="css: {disabled: !$root.canEdit()}")
                                                     a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="enteriesDropdown")
-                                                        span.white-text(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
+                                                        span(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
                                                         // ko if: (listOfEntriesPerPage.length > 1)
-                                                        span.white-text.caret.lm10px
+                                                        span.caret.lm10px
                                                         // /ko
                                                     // ko if: (listOfEntriesPerPage.length > 1)
                                                     ul#enteriesDropdown.calculations.dropdown-content
@@ -88,9 +88,9 @@ block content
                                             .col-xs-2.chartTypes
                                                 .dropdown.availableChartTypes(data-bind="css: {disabled: !$root.canEdit()}")
                                                     a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypesDropdown")
-                                                        span.white-text(data-bind="text: selectedChartType()")
+                                                        span(data-bind="text: selectedChartType()")
                                                         // ko if: ($root.listOfChartTypes.length > 1)
-                                                        span.white-text.caret.lm10px
+                                                        span.caret.lm10px
                                                         // /ko
                                                     // ko if: ($root.listOfChartTypes.length > 1)
                                                     ul#chartTypesDropdown.chartTypes.dropdown-content
@@ -115,10 +115,10 @@ block content
                                                             .columnText.displayDiv
                                                             .globalCalculate.hideDiv
                                                                 .dropdown.availableCalculations.open(data-bind="css: {disabled: !$root.canEdit()}")
-                                                                    a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-                                                                        span.text.white-text Calcs
+                                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                                        span.text Calcs
                                                                         // ko if: ($root.listOfCalculations().length > 1)
-                                                                        span.white-text.caret.lm10px
+                                                                        span.caret.lm10px
                                                                         // /ko
                                                                     // ko if: ($root.listOfCalculations().length > 1)
                                                                     ul.calculations.dropdown-menu(multiple=true, data-bind="attr: { id: 'globalCalculationsDropdown' }")
@@ -178,10 +178,10 @@ block content
                                                         // ko if: ($data.canCalculate)
                                                         .dropdown.availableCalculations(data-bind="css: {disabled: !$root.canEdit()}")
                                                             //click: $root.toggleCalcsDropdown,
-                                                            a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-                                                                span.text.white-text Calcs
+                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                                span.text Calcs
                                                                 // ko if: ($parent.listOfCalculations().length > 1)
-                                                                span.white-text.caret.lm10px
+                                                                span.caret.lm10px
                                                                 // /ko
                                                             // ko if: ($parent.listOfCalculations().length > 1)
                                                             ul.calculations.dropdown-menu(multiple=true, data-bind="attr: { id: 'calculationsDropdown'+ $index() }")
@@ -196,8 +196,8 @@ block content
                                                     td.totalizerOperator
                                                         // ko if: ($parent.reportType === 'Totalizer' && valueList.length > 0)
                                                         .dropdown.availableTotalizerOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-                                                                span.text.white-text(data-bind="text: operator")
+                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                                span.text(data-bind="text: operator")
                                                                 // ko if: (valueList.length > 1)
                                                                 span.caret.lm10px
                                                                 // /ko
@@ -221,8 +221,8 @@ block content
                                                     td.yaxisChartGroup
                                                         // ko if: ($root.canEdit() && !!canBeCharted && canBeCharted)
                                                         .dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-                                                                span.text.white-text(data-bind="text: yaxisGroup")
+                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                                span.text(data-bind="text: yaxisGroup")
                                                                 // ko if: ($root.yaxisGroups.length > 1)
                                                                 span.caret.lm10px
                                                                 // /ko
@@ -342,7 +342,7 @@ block content
                                                 li
                                                     label.blue-grey-text.label-tight(data-bind="text: $data")
                                                 // /ko
-                                        a.btn.waves-effect.waves-light.blue-grey.white-text.right-align.adjustPointTypesFilterButton(data-bind="click: $root.pointSelectorFilter") Point Type Filter
+                                        a.btn.waves-effect.waves-light.blue-grey.right-align.adjustPointTypesFilterButton(data-bind="click: $root.pointSelectorFilter") Point Type Filter
                                     // /ko
                                 div.additionalFilters#additionalFilters.tab-pane
                                     h4.strong.panel-title
@@ -354,7 +354,7 @@ block content
                                                         .handle
                                                     td(data-bind="css: {filterCondition: ($parent.listOfFilters().length > 1), childCondition: childLogic === true, firstConditionInGroup: beginGroup === true, lastConditionInGroup: endGroup === true} ")
                                                         .dropdown.availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
-                                                            a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}", data-toggle="dropdown")
+                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-toggle.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}", data-toggle="dropdown")
                                                                 span(data-bind="text: $root.displayCondition(condition)")
                                                             ul.operators.dropdown-menu
                                                                 // ko foreach: $root.conditions()
@@ -366,7 +366,7 @@ block content
                                                         span(data-bind="text: filterName.replace(/_/g, ' ')")
                                                         // /ko
                                                         .dropdown.availablePropertiesContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
+                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
                                                                 span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfFilterPropertiesLength + ')')")
                                                                 span.caret.lm10px
                                                             ul.enumproperties.dropdown-menu
@@ -378,7 +378,7 @@ block content
                                                                 // /ko
                                                     td.filterOperator
                                                         .dropdown.availableOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.operatorButton(data-bind="css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
+                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-toggle.operatorButton(data-bind="css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
                                                                 span(data-bind="text: $root.displayOperator(operator)")
                                                                 //span.caret.lm10px
                                                             ul.operators.dropdown-menu
@@ -415,7 +415,7 @@ block content
                                             span.intervalLabel.small Interval:&nbsp;
                                             input.intervalValue.form-control(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
                                             .dropdown.availableIntervalsContainer
-                                                a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-activates="intervals")
+                                                a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-activates="intervals")
                                                     span(data-bind="text: $root.interval")
                                                     span.caret.lm10px
                                                 ul#intervals.intervals.dropdown-content
