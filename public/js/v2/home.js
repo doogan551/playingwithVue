@@ -2601,6 +2601,7 @@ var dti = {
                             showInactive: false,
                             showDeleted: false,
                             dropdownOpen: false,
+                            restrictCreate: false,
                             fetchingPoints: false,
                             points: [],
                             mode: self.modes.DEFAULT,
@@ -2707,7 +2708,9 @@ var dti = {
                     bindings.togglePointTypeDropdown = function (obj, event) {
                         var dropdownShown = bindings.dropdownOpen();
 
-                        bindings.dropdownOpen(!dropdownShown);
+                        if (!bindings.restrictCreate() || dropdownShown === true) {
+                            bindings.dropdownOpen(!dropdownShown);
+                        }
 
                         if (event) {
                             event.preventDefault();
@@ -2973,6 +2976,13 @@ var dti = {
 
                 if (cfg.pointType && !cfg.pointTypes && cfg.pointType !== 'Point') {
                     config.pointTypes = [cfg.pointType];
+                }
+
+                if (cfg.mode === 'create' && cfg.pointType) {
+                    cfg.newPointType = cfg.pointType;
+                    self.bindings.restrictCreate(true);
+                } else {
+                    self.bindings.restrictCreate(false);
                 }
 
                 if (cfg.newPointType !== 'Point' && cfg.newPointType) { //skip this for 'Point' placeholder
@@ -3784,7 +3794,7 @@ var dti = {
         showCreatePoint: function (group) {
             dti.navigator.showNavigator({
                 mode: 'create',
-                newPointType: group.group()
+                pointType: group.group()
             });
         },
         startMenuClick: function (obj) {
