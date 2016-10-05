@@ -420,7 +420,7 @@ html
                         | New Point
                 .selectorNames
                     .name1.input-field.col
-                        input(type='text', data-bind="textInput: name1, attr: { id: id() + '_name1' }")
+                        input(type='text', data-bind="hasFocus: focus, textInput: name1, attr: { id: id() + '_name1' }")
                         label(data-bind="updateLabel: name1, attr: { for: id() + '_name1' }") Name 1
                         a.clearName(href="javascript://", tabindex="-1", data-bind="click: function () {clearBinding('name1'); }")
                             i.material-icons.suffix clear

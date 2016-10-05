@@ -889,7 +889,8 @@ var dti = {
             //     $container: self.$windowEl.children('.markupContent')
             // });
             self.initFn({
-                $container: self.$windowEl.find('.markupContent')
+                $container: self.$windowEl.find('.markupContent'),
+                onActive: self.bindings.active
             });
 
             self.bindings.loading(false);
@@ -1042,13 +1043,6 @@ var dti = {
                 if (newWindow) {
                     dti.windows.activate(newWindow.windowId);
                 } else {
-                    if (config.pointType === "Navigator" ) {
-                        if (config.options === undefined) {
-                            config.options = {};
-                        }
-                        config.options.callback = dti.navigator.focusOnName1Field;
-                    }
-
                     $.extend(config, config.options);
 
                     if (!config.exempt) {
@@ -1075,11 +1069,7 @@ var dti = {
                     }
 
                     if (config.options && config.options.callback) {
-                        if (config.pointType === "Navigator" ) {
-                            config.options.callback(newWindow.$el);
-                        } else {
-                            config.options.callback();
-                        }
+                        config.options.callback();
                     }
                 }
             }
@@ -2546,16 +2536,6 @@ var dti = {
         _lastInit: true,
         _navigators: {},
         temporaryCallback: null,
-        focusOnName1Field : function($cardPanel) {
-            var $firstInputField = $cardPanel.find('.navigatorBody .selectorNames :input').filter(':first'),
-                $firstInputLabel = $cardPanel.find('.navigatorBody .selectorNames label').filter(':first');
-
-            setTimeout(function focusOnFirstNameField () {
-                console.log(".............  focus on " + $firstInputField.attr('id') + " ...............");
-                $firstInputField.focus();
-                $firstInputLabel.addClass("active");
-            }, 300);
-        },
         defaultClickHandler: function (pointInfo) {
             var endPoint = dti.utility.getEndpoint(pointInfo.pointType, pointInfo._id),
                 name = [pointInfo.name1, pointInfo.name2, pointInfo.name3, pointInfo.name4].join(' '),
@@ -2595,8 +2575,10 @@ var dti = {
             }
 
             dti.navigator.commonNavigator.applyConfig(config);
+
+            config.ready = dti.navigator.commonNavigator.bindings.handleModalOpen;
+
             dti.navigator.$commonNavigatorModal.openModal(config);
-            dti.navigator.focusOnName1Field(dti.navigator.$commonNavigatorModal);
         },
         hideNavigator: function () {
             dti.navigator.$commonNavigatorModal.closeModal();
@@ -2626,7 +2608,8 @@ var dti = {
                             remoteUnitId: null,
                             id: self.id,
                             disableCreatePoint: false,
-                            loading: false
+                            loading: false,
+                            focus: false
                         },
                         explodedPointTypes = [];
 
@@ -2668,6 +2651,12 @@ var dti = {
 
                     //build observable viewmodel so computeds have access to observables
                     bindings = ko.viewmodel.fromModel(bindings);
+
+                    bindings.handleModalOpen = function () {
+                        setTimeout(function focusInput () {
+                            bindings.focus(true);
+                        }, 100);
+                    };
 
                     bindings.createPoint = function () {
                         // self.bindings.explodedPointTypes()[0].selected(true);
@@ -3187,14 +3176,18 @@ var dti = {
                 $container = navigatorModalMarkup;
                 dti.navigator.$commonNavigatorModal = $container;
                 $container.find('.modal-content').append(templateMarkup);
-                // $container.leanModal();
             } else {
                 $container.append(templateMarkup);
+
             }
 
             navigator = new dti.navigator.Navigator({
                 $container: $container
             });
+
+            if (!!isModal && isModal !== true) {
+                isModal.onActive.subscribe(navigator.bindings.handleModalOpen);
+            }
 
             $container.data('navigatorId', navigator.id);
 
