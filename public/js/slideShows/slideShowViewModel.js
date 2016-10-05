@@ -337,6 +337,15 @@ var slideShowViewModel = function () {
         window.resizeTo(adjustToWidth, adjustToHeight); // set window to 90% screen res
         screenfull.exit();
     };
+    self.openPointInspector = function () {
+        var upi = parseInt(getSlideShowId(), 10),
+            options = {
+                width: 1250,
+                height: 750
+            };
+        dtiUtility.openWindow("/pointinspector/" + upi, "SlideShow", "SlideShow", "newwindow", upi, options);
+        //window.close();
+    };
     self.close = function () {
         window.close();
     };
