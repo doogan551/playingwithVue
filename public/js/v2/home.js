@@ -3016,16 +3016,21 @@ var dti = {
                         endPoint = dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(params.pointType, data._id),
                         handoffMode = endPoint.edit || endPoint.review;
 
-                    dti.windows.openWindow({
-                        url: handoffMode.url,
-                        title: data.Name,
-                        pointType: params.pointType,
-                        upi: data._id,
-                        options: {
-                            height: 750,
-                            width: 1250
-                        }
-                    });
+                    if (dti.navigator.temporaryCallback) {
+                        dti.navigator.hideNavigator();
+                        dti.navigator.temporaryCallback(data);
+                    } else {
+                        dti.windows.openWindow({
+                            url: handoffMode.url,
+                            title: data.Name,
+                            pointType: params.pointType,
+                            upi: data._id,
+                            options: {
+                                height: 750,
+                                width: 1250
+                            }
+                        });
+                    }
                 }
             };
 
@@ -3528,6 +3533,21 @@ var dti = {
                             };
 
                         config.callback = callback;
+
+                        dti.navigator.showNavigator(config);
+                    },
+                    showCreatePoint: function () {
+                        var sourceWindowId = config._windowId,
+                            callback = function (data) {
+                                dti.messaging.sendMessage({
+                                    key: sourceWindowId, 
+                                    message: 'pointCreated',
+                                    value: data
+                                });
+                            };
+
+                        config.callback = callback;
+                        config.mode = 'create';
 
                         dti.navigator.showNavigator(config);
                     },

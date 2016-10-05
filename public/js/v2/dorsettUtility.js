@@ -64,6 +64,11 @@ var dtiUtility =  {
                         dtiUtility._pointSelectCb(newValue);
                     }
                 },
+                pointCreated: function () {
+                    if (dtiUtility._CreatePointCb) {
+                        dtiUtility._CreatePointCb(newValue);
+                    }
+                },
                 pointFilterSelected: function () {
                     if (dtiUtility._pointFilterSelectCb) {
                         dtiUtility._pointFilterSelectCb(newValue);
@@ -113,6 +118,16 @@ var dtiUtility =  {
         params.mode = 'filter';
 
         dtiUtility.sendMessage('showPointSelector', params);  
+    },
+
+    showCreatePoint: function (parameters) {
+        var params = parameters || {};
+
+        dtiUtility.sendMessage('showCreatePoint', params);
+    },
+
+    onCreatePoint: function (cb) {
+        dtiUtility._CreatePointCb = cb;
     },
 
     onPointSelect: function (cb) {
