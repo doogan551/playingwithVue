@@ -325,16 +325,16 @@ block content
                                             .form-inline.black-text(style="display: inline-flex")
                                                 div.input-field.col
                                                     input.black-text.form-control.input-md.readOnly.name1Filter#name1Filter(data-bind="textInput: $root.name1Filter, attr: {disabled: 'disabled'}", type="text")
-                                                    label.grey-text.active(data-bind="updateLabel: $root.name1Filter, attr: {for: 'name1Filter'}") Name 1
+                                                    label.grey-text(data-bind="updateLabel: $root.name1Filter, attr: {for: 'name1Filter'}, css: { active: ($root.name1Filter() !== '') }") Name 1
                                                 div.input-field.col
                                                     input.black-text.form-control.input-md.readOnly.name2Filter#name2Filter(data-bind="textInput: $root.name2Filter, attr: {disabled: 'disabled'}", type="text")
-                                                    label.grey-text.active(data-bind="updateLabel: $root.name2Filter, attr: {for: 'name2Filter'}") Name 2
+                                                    label.grey-text(data-bind="updateLabel: $root.name2Filter, attr: {for: 'name2Filter'}, css: { active: ($root.name2Filter() !== '') }") Name 2
                                                 div.input-field.col
                                                     input.black-text.form-control.input-md.readOnly.name3Filter#name3Filter(data-bind="textInput: $root.name3Filter, attr: {disabled: 'disabled'}", type="text")
-                                                    label.grey-text.active(data-bind="updateLabel: $root.name3Filter, attr: {for: 'name3Filter'}") Name 3
+                                                    label.grey-text(data-bind="updateLabel: $root.name3Filter, attr: {for: 'name3Filter'}, css: { active: ($root.name3Filter() !== '') }") Name 3
                                                 div.input-field.col
                                                     input.black-text.form-control.input-md.readOnly.name4Filter#name4Filter(data-bind="textInput: $root.name4Filter, attr: {disabled: 'disabled'}", type="text")
-                                                    label.grey-text.active(data-bind="updateLabel: $root.name4Filter, attr: {for: 'name4Filter'}") Name 4
+                                                    label.grey-text(data-bind="updateLabel: $root.name4Filter, attr: {for: 'name4Filter'}, css: { active: ($root.name4Filter() !== '') }") Name 4
                                         div.pointTypesFilter
                                             span.title Filtered Point Types
                                             ul
