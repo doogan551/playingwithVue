@@ -3974,7 +3974,7 @@ var dti = {
 
                     $element.contextmenu(function handleRightClick (event) {
                         var $target = $(event.target),
-                            $li = $target.parents('li'),
+                            $li = $target.is('li') ? $target : $target.parents('li'),
                             $select = $li.parent().siblings('select'),
                             text = $li.text();
 
