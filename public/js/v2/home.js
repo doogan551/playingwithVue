@@ -1042,6 +1042,13 @@ var dti = {
                 if (newWindow) {
                     dti.windows.activate(newWindow.windowId);
                 } else {
+                    if (config.pointType === "Navigator" ) {
+                        if (config.options === undefined) {
+                            config.options = {};
+                        }
+                        config.options.callback = dti.navigator.focusOnName1Field;
+                    }
+
                     $.extend(config, config.options);
 
                     if (!config.exempt) {
@@ -1068,7 +1075,11 @@ var dti = {
                     }
 
                     if (config.options && config.options.callback) {
-                        config.options.callback();
+                        if (config.pointType === "Navigator" ) {
+                            config.options.callback(newWindow.$el);
+                        } else {
+                            config.options.callback();
+                        }
                     }
                 }
             }
@@ -2535,6 +2546,16 @@ var dti = {
         _lastInit: true,
         _navigators: {},
         temporaryCallback: null,
+        focusOnName1Field : function($cardPanel) {
+            var $firstInputField = $cardPanel.find('.navigatorBody .selectorNames :input').filter(':first'),
+                $firstInputLabel = $cardPanel.find('.navigatorBody .selectorNames label').filter(':first');
+
+            setTimeout(function focusOnFirstNameField () {
+                console.log(".............  focus on " + $firstInputField.attr('id') + " ...............");
+                $firstInputField.focus();
+                $firstInputLabel.addClass("active");
+            }, 300);
+        },
         defaultClickHandler: function (pointInfo) {
             var endPoint = dti.utility.getEndpoint(pointInfo.pointType, pointInfo._id),
                 name = [pointInfo.name1, pointInfo.name2, pointInfo.name3, pointInfo.name4].join(' '),
@@ -2575,6 +2596,7 @@ var dti = {
 
             dti.navigator.commonNavigator.applyConfig(config);
             dti.navigator.$commonNavigatorModal.openModal(config);
+            dti.navigator.focusOnName1Field(dti.navigator.$commonNavigatorModal);
         },
         hideNavigator: function () {
             dti.navigator.$commonNavigatorModal.closeModal();
@@ -2608,7 +2630,7 @@ var dti = {
                         },
                         explodedPointTypes = [];
 
-                    dti.forEachArray(pointTypes, function addSelectedToPointType (type) {
+                    dti.forEachArray(pointTypes, function addSelectedToPointType(type) {
                         var subTypes = dti.utility.subPointTypes[type.key],
                             newType;
 
@@ -2617,7 +2639,7 @@ var dti = {
 
                         //process sub types if exist
                         if (subTypes) {
-                            dti.forEachArray(subTypes, function buildSubType (subType) {
+                            dti.forEachArray(subTypes, function buildSubType(subType) {
                                 var newSubType = {
                                     key: type.key + ' (' + subType.name + ')',
                                     enum: subType.value,
@@ -2664,7 +2686,7 @@ var dti = {
                             bindings.disableCreatePoint(true);
                             bindings.loading(true);
 
-                            dti.forEachArray(filterProperties, function buildFilterObj (prop) {
+                            dti.forEachArray(filterProperties, function buildFilterObj(prop) {
                                 parameters[prop] = bindings[prop]();
                             });
 
@@ -2685,7 +2707,7 @@ var dti = {
                                 pointTypes: self.getFlatPointTypes(ko.toJS(bindings.pointTypes))
                             };
 
-                        dti.forEachArray(filterProperties, function buildFilterObj (prop) {
+                        dti.forEachArray(filterProperties, function buildFilterObj(prop) {
                             filterObj[prop] = bindings[prop]();
                         });
 
@@ -2760,7 +2782,7 @@ var dti = {
                     bindings.clearNames = function () {
                         var c;
 
-                        for (c=1; c<5; c++) {
+                        for (c = 1; c < 5; c++) {
                             bindings.clearBinding('name' + c);
                         }
                     };
@@ -2777,18 +2799,18 @@ var dti = {
                         return true;
                     };
 
-                    bindings.modalText = ko.pureComputed(function getModalText () {
+                    bindings.modalText = ko.pureComputed(function getModalText() {
                         var mode = bindings.mode(),
                             ret;
 
                         switch (mode) {
-                            case self.modes.CREATE: 
+                            case self.modes.CREATE:
                                 ret = 'Create Point';
                                 break;
-                            case self.modes.FILTER: 
+                            case self.modes.FILTER:
                                 ret = 'Select Filter';
                                 break;
-                            case self.modes.DEFAULT: 
+                            case self.modes.DEFAULT:
                                 ret = 'Select Point';
                                 break;
                         }
@@ -2796,7 +2818,7 @@ var dti = {
                         return ret;
                     });
 
-                    bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint () {
+                    bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint() {
                         var uniqueName = bindings.points().length === 0,
                             disabled = bindings.disableCreatePoint(),
                             c,
@@ -2837,7 +2859,7 @@ var dti = {
                         rateLimit: 50
                     });
 
-                    dti.forEachArray(bindings.pointTypes(), function initPointTypeSubscription (type) {
+                    dti.forEachArray(bindings.pointTypes(), function initPointTypeSubscription(type) {
                         var pointTypeChangedInterceptor = function () {
                             if (!self._pauseRequest) {
                                 bindings.pointTypeChanged.apply(this, arguments);
@@ -2867,7 +2889,7 @@ var dti = {
                         }
                     });
 
-                    bindings.pointTypeText = ko.pureComputed(function getPointTypeText () {
+                    bindings.pointTypeText = ko.pureComputed(function getPointTypeText() {
                         var currTypes = bindings.pointTypes(),
                             selectedTypes = [],
                             ret;
