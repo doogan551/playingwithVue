@@ -203,6 +203,18 @@ router.post('/findalarmdisplays', function(req, res) {
     });
   });
 });
+
+router.post('/getcontrols', function(req, res) {
+  var data = _.merge(req.params, req.body, req.query);
+  data.user = req.user;
+
+  Point.getControls(data, function(err, data) {
+    if (err) return utils.sendResponse(res, {
+      err: err
+    });
+    return utils.sendResponse(res, data);
+  });
+});
 // Checked
 router.get('/:id', function(req, res) {
   var data = _.merge(req.params, req.body);

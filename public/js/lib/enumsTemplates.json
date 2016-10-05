@@ -4080,8 +4080,8 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "MicroScan 5 UNV",
-                    "eValue": 19
+                    "Value": "Unknown",
+                    "eValue": 0
                 },
                 "Network Segment": {
                     "isDisplayable": false,
@@ -4501,8 +4501,8 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 5,
-                    "Value": "MS 3 Flash",
-                    "eValue": 3
+                    "Value": "Unknown",
+                    "eValue": 0
                 },
                 "Network Segment": {
                     "isDisplayable": false,
@@ -11286,7 +11286,7 @@
                     "PropertyEnum": 139,
                     "AppIndex": 0,
                     "isDisplayable": true,
-                    "isReadOnly": true,
+                    "isReadOnly": false,
                     "Value": 0,
                     "PointName": "",
                     "PointType": 0,
@@ -11297,7 +11297,7 @@
                     "PropertyEnum": 270,
                     "AppIndex": 0,
                     "isDisplayable": true,
-                    "isReadOnly": true,
+                    "isReadOnly": false,
                     "Value": 0,
                     "PointName": "",
                     "PointType": 0,

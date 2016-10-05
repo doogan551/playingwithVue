@@ -1185,6 +1185,29 @@ module.exports = {
         }, callback);
       });
     }
+  },
+  getControls: function(data, cb){
+    var searchCriteria = {};
+    var filterProps = {
+      'Control Array': 1
+    };
+
+    var upi = data.upi;
+
+    searchCriteria._id = parseInt(upi, 10);
+
+    var criteria = {
+      collection: 'points',
+      query: searchCriteria,
+      fields: filterProps
+    };
+
+    Utility.getOne(criteria, function(err, point) {
+      if (err) {
+        return cb(err);
+      }
+      return cb(null, point);
+    });
   }
 };
 
