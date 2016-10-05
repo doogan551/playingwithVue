@@ -2,10 +2,10 @@
     z-index: 5;
     padding: 0px 0px 10px 5px;
     position: absolute;
-    width: 92px;
+    width: 86px;
     height: 100%;
     color: #ffffff;
-    background-color: rgb(200, 190, 170);
+    border-right: 1px solid #ccc;
 }
 .leftBar a {
     /*padding-top: 0px;*/
@@ -15,6 +15,8 @@
     padding: 0px 0px 5px 88px;
     position: relative;
     width: 100%;
+    height: 100vh;
+    background-color: #fff;
 }
 .rightPanel > div.container-fluid {
     padding-right: 0px;
@@ -347,11 +349,14 @@ td.filterName {
     width: 275px;
     padding-left: 20px !important;
 }
-li.active a {
+/*li.active a {
     border: 1px solid #416933;
-}
+}*/
 .filterName.open:focus {
     border-color: #d5e1f2;
+}
+.nav-tabs > li > a:hover {
+    background-color: #eceff1 !important;
 }
 .nav-tabs > li.active > a {
     background: none;
@@ -361,17 +366,16 @@ li.active a {
     min-width: 850px;
 }
 .tabConfiguration ul.nav.nav-tabs {
-    background-color: rgb(200, 190, 170);
     border-bottom: none;
 }
 .tabConfiguration ul.nav.nav-tabs li.active a {
-    background-color: #dddddd;
+    background-color: #fff !important;
 }
-.tabConfiguration ul.nav.nav-tabs li a {
+/*.tabConfiguration ul.nav.nav-tabs li a {
     background-color: #B1B1B1;
-}
+}*/
 .tabConfiguration .tab-content {
-    background-color: #dddddd;
+    background-color: #fff;
     border-radius: 0px 0px 7px 7px;
     margin-top: 0px;
     margin-left: 0px;
@@ -391,7 +395,7 @@ li.active a {
     border-bottom: none;
 }
 .tabViewReport ul.nav.nav-tabs li.active a {
-    /*background-color: #dddddd;*/
+    /*background-color: #fff;*/
     border: 1px solid #416933;
 }
 .tabViewReport ul.nav.nav-tabs li a {
@@ -498,7 +502,7 @@ span.caret.lm10px {
     text-decoration: #00B04F;
 }
 .btn:hover, .btn:focus, .btn.focus {
-    color: #397714;
+    color: #23527c;
     text-decoration: none;
 }
 a.tab {
@@ -545,7 +549,7 @@ a.clearName i {
 }
 .selectorNames .form-control.readOnly {
     color: #607d8b;
-    background-color: #dddddd;
+    background-color: #fff;
 }
 div.input-field.col {
     padding-right: 10px;
@@ -554,12 +558,11 @@ div.input-field.col {
 html, body {
     overflow-x: hidden;
     overflow-y: hidden;
-    background-color: rgb(200, 190, 170);
 }
-body {
+/*body {
     padding-top: 5px;
     padding-right: 5px;
-}
+}*/
 .displayDiv {
     display: inline-block;
 }
@@ -889,12 +892,12 @@ input.form-control.columnDisplayName {
 }
 .reporttype {
     margin-top: -14px;
-    background-color: #dddddd;
+    background-color: #fff;
     font-style: italic;
     font-size: 12px;
 }
 .reportTitle {
-    background-color: #dddddd;
+    background-color: #fff;
     border-top-right-radius: 7px;
     margin-top: 0px;
     text-align: center;

@@ -29,17 +29,17 @@ block content
                     .tabConfiguration
                         ul.nav.nav-tabs
                             li.attribs.active(role="presentation")
-                                a.strong.toggleTab.blue-grey-text(href="#reportAttribs", data-toggle="tab") Attributes
+                                a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#reportAttribs", data-toggle="tab") Attributes
                             li.columns(role="presentation")
-                                a.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
+                                a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
                             li.columns2(role="presentation", style="display: none")
-                                a.strong.toggleTab.blue-grey-text(href="#gridConfig", data-toggle="tab") Grid
+                                a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#gridConfig", data-toggle="tab") Grid
                             // ko if: (reportType === 'Property')
                             li.filterByPoint(role="presentation")
-                                a.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
+                                a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
                             // /ko
                             li.additionalFilters(role="presentation")
-                                a.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
+                                a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
                         div.configurationContent
                             div
                                 h6.strong.reportTitle(data-bind="text: reportDisplayTitle")
@@ -69,7 +69,7 @@ block content
                                                 strong.small.pull-right # of entries per Page
                                             .col-xs-2.entries
                                                 .dropdown.availableEntries(data-bind="css: {disabled: !$root.canEdit()}")
-                                                    a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="enteriesDropdown")
+                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="enteriesDropdown")
                                                         span.white-text(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
                                                         // ko if: (listOfEntriesPerPage.length > 1)
                                                         span.white-text.caret.lm10px
@@ -87,7 +87,7 @@ block content
                                                 strong.small.pull-right Chart Type
                                             .col-xs-2.chartTypes
                                                 .dropdown.availableChartTypes(data-bind="css: {disabled: !$root.canEdit()}")
-                                                    a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypesDropdown")
+                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypesDropdown")
                                                         span.white-text(data-bind="text: selectedChartType()")
                                                         // ko if: ($root.listOfChartTypes.length > 1)
                                                         span.white-text.caret.lm10px
@@ -115,7 +115,7 @@ block content
                                                             .columnText.displayDiv
                                                             .globalCalculate.hideDiv
                                                                 .dropdown.availableCalculations.open(data-bind="css: {disabled: !$root.canEdit()}")
-                                                                    a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                                    a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
                                                                         span.text.white-text Calcs
                                                                         // ko if: ($root.listOfCalculations().length > 1)
                                                                         span.white-text.caret.lm10px
@@ -156,7 +156,7 @@ block content
                                                         // /ko
                                                         // ko if: ($parent.reportType === 'Property')
                                                         .dropdown.availablePropertiesContainer
-                                                            a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}", data-toggle="dropdown")
+                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}", data-toggle="dropdown")
                                                                 span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
                                                                 span.caret.lm10px
                                                             ul.enumproperties.dropdown-menu(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
@@ -178,7 +178,7 @@ block content
                                                         // ko if: ($data.canCalculate)
                                                         .dropdown.availableCalculations(data-bind="css: {disabled: !$root.canEdit()}")
                                                             //click: $root.toggleCalcsDropdown,
-                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                            a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
                                                                 span.text.white-text Calcs
                                                                 // ko if: ($parent.listOfCalculations().length > 1)
                                                                 span.white-text.caret.lm10px
@@ -196,7 +196,7 @@ block content
                                                     td.totalizerOperator
                                                         // ko if: ($parent.reportType === 'Totalizer' && valueList.length > 0)
                                                         .dropdown.availableTotalizerOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                            a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
                                                                 span.text.white-text(data-bind="text: operator")
                                                                 // ko if: (valueList.length > 1)
                                                                 span.caret.lm10px
@@ -221,7 +221,7 @@ block content
                                                     td.yaxisChartGroup
                                                         // ko if: ($root.canEdit() && !!canBeCharted && canBeCharted)
                                                         .dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                            a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
                                                                 span.text.white-text(data-bind="text: yaxisGroup")
                                                                 // ko if: ($root.yaxisGroups.length > 1)
                                                                 span.caret.lm10px
@@ -342,7 +342,7 @@ block content
                                                 li
                                                     label.blue-grey-text.label-tight(data-bind="text: $data")
                                                 // /ko
-                                        a.btn-flat.waves-effect.waves-light.blue-grey.white-text.right-align.adjustPointTypesFilterButton(data-bind="click: $root.pointSelectorFilter") Point Type Filter
+                                        a.btn.waves-effect.waves-light.blue-grey.white-text.right-align.adjustPointTypesFilterButton(data-bind="click: $root.pointSelectorFilter") Point Type Filter
                                     // /ko
                                 div.additionalFilters#additionalFilters.tab-pane
                                     h4.strong.panel-title
@@ -354,7 +354,7 @@ block content
                                                         .handle
                                                     td(data-bind="css: {filterCondition: ($parent.listOfFilters().length > 1), childCondition: childLogic === true, firstConditionInGroup: beginGroup === true, lastConditionInGroup: endGroup === true} ")
                                                         .dropdown.availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
-                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}", data-toggle="dropdown")
+                                                            a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}", data-toggle="dropdown")
                                                                 span(data-bind="text: $root.displayCondition(condition)")
                                                             ul.operators.dropdown-menu
                                                                 // ko foreach: $root.conditions()
@@ -366,7 +366,7 @@ block content
                                                         span(data-bind="text: filterName.replace(/_/g, ' ')")
                                                         // /ko
                                                         .dropdown.availablePropertiesContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
+                                                            a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
                                                                 span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfFilterPropertiesLength + ')')")
                                                                 span.caret.lm10px
                                                             ul.enumproperties.dropdown-menu
@@ -378,7 +378,7 @@ block content
                                                                 // /ko
                                                     td.filterOperator
                                                         .dropdown.availableOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.operatorButton(data-bind="css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
+                                                            a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.operatorButton(data-bind="css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
                                                                 span(data-bind="text: $root.displayOperator(operator)")
                                                                 //span.caret.lm10px
                                                             ul.operators.dropdown-menu
@@ -415,7 +415,7 @@ block content
                                             span.intervalLabel.small Interval:&nbsp;
                                             input.intervalValue.form-control(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
                                             .dropdown.availableIntervalsContainer
-                                                a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-activates="intervals")
+                                                a.btn.waves-effect.waves-light.blue-grey.white-text.dropdown-button(href="#", data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-activates="intervals")
                                                     span(data-bind="text: $root.interval")
                                                     span.caret.lm10px
                                                 ul#intervals.intervals.dropdown-content
@@ -464,7 +464,7 @@ block content
                             div#chartData.tab-pane
                                 .chartButtons
                                     .dropdown.availableChartTypes.chartTab(data-bind="css: {disabled: !$root.canEdit()}")
-                                        a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypes")
+                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypes")
                                             span(data-bind="text: selectedChartType()")
                                             // ko if: ($root.listOfChartTypes.length > 1)
                                             span.caret.lm10px
@@ -476,7 +476,7 @@ block content
                                                 a(data-bind="click: function(){ $root.selectChartType($element, $data.value, true) }, text: $data.text")
                                             // /ko
                                         // /ko
-                                    a.btn-flat.waves-effect.waves-light.blue-grey(data-bind="click: function() { $root.printDiv() }", href="#")
+                                    a.btn.waves-effect.waves-light.blue-grey(data-bind="click: function() { $root.printDiv() }", href="#")
                                         span.printButton Print
                                             i.material-icons.center print
                                 .reportChartDiv

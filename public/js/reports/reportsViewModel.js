@@ -1749,20 +1749,20 @@ var reportsViewModel = function () {
                     case 1:
                         $tabConfiguration.addClass("active");
                         $tabConfiguration.show();
-                        $configurationButton.addClass("active");
-                        $configurationButton.find("a").addClass("active");
-                        $viewReportButton.removeClass("active");
-                        $viewReportButton.find("a").removeClass("active");
+                        // $configurationButton.addClass("active");
+                        // $configurationButton.find("a").addClass("active");
+                        // $viewReportButton.removeClass("active");
+                        // $viewReportButton.find("a").removeClass("active");
                         $tabViewReport.removeClass("active");
                         $tabViewReport.hide();
                         break;
                     case 2:
                         $tabConfiguration.removeClass("active");
                         $tabConfiguration.hide();
-                        $configurationButton.removeClass("active");
-                        $configurationButton.find("a").removeClass("active");
-                        $viewReportButton.addClass("active");
-                        $viewReportButton.find("a").addClass("active");
+                        // $configurationButton.removeClass("active");
+                        // $configurationButton.find("a").removeClass("active");
+                        // $viewReportButton.addClass("active");
+                        // $viewReportButton.find("a").addClass("active");
                         $tabViewReport.addClass("active");
                         break;
                 }
@@ -1772,7 +1772,7 @@ var reportsViewModel = function () {
             reportSocket = io.connect(window.location.origin);
 
             reportSocket.on("connect", function () {
-                console.log("SOCKETID:", reportSocket.id);
+                // console.log("SOCKETID:", reportSocket.id);
                 if (cb) {
                     cb();
                 }
