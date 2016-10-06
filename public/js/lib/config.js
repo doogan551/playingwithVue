@@ -2096,6 +2096,11 @@ var Config = (function(obj) {
             return data;
         },
 
+        "Downlink Protocol": function(data) {
+            data.point = obj.EditChanges.applyDeviceTypeDownlinkProtocol(data);
+            return data;
+        },
+
         "Ethernet Network": function(data) {
             data = this.validateUsingTheseLimits(data, 0, 65534);
 
@@ -4229,8 +4234,25 @@ var Config = (function(obj) {
 
             data.point = point;
             data.point = this.applyDeviceTypeEthernetProtocol(data);
+            data.point = this.applyDeviceTypeDownlinkProtocol(data);
             data.point = this.applyDeviceTypePortNProtocol(data);
             return data.point;
+        },
+
+        applyDeviceTypeDownlinkProtocol: function(data) {
+            var point = data.point;
+
+            if (point["Downlink Protocol"].Value == "None") {
+                point["Downlink Broadcast Delay"].isDisplayable = false;
+                point["Downlink IP Port"].isDisplayable = false;
+                point["Downlink Network"].isDisplayable = false;
+            } else {
+                point["Downlink Broadcast Delay"].isDisplayable = true;
+                point["Downlink IP Port"].isDisplayable = true;
+                point["Downlink Network"].isDisplayable = true;
+            }
+
+            return point;
         },
 
         applyDeviceTypeEthernetProtocol: function(data) {

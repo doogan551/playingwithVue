@@ -1224,9 +1224,55 @@ var scripts = {
             });
 
         }, function finishUpdatingSequences(err) {
-            logger.info('Finished with updateGPLDevicePointRef');
+            logger.info('Finished with fixSequenceDevicePropertyName');
             callback(null, {
-                fn: 'updateGPLDevicePointRef',
+                fn: 'fixSequenceDevicePropertyName',
+                errors: err
+            });
+        });
+    },
+
+    addDownlinkProtocol: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'addDownlinkProtocol',
+                errors: null,
+                results: null
+            });
+        }
+        utility.iterateCursor({
+            collection: 'points',
+            query: {
+                'Point Type.Value': 'Device'
+            }
+        }, function processSequence(err, doc, cb) {
+            doc['Downlink Protocol'] = Config.Templates.getTemplate(doc['Point Type'].Value)['Downlink Protocol'];
+            if(doc['Downlink Network'].Value !== 0){
+                doc['Downlink Protocol'].Value = 'IP'
+                doc['Downlink Protocol'].eValue = Config.Enums['Ethernet Protocols']['IP'].enum;
+            }
+
+            logger.info('updating sequence:', doc._id);
+
+            utility.update({
+                collection: 'points',
+                query: {
+                    _id: doc._id
+                },
+                updateObj: doc
+            }, function updatedSequenceHandler(err) {
+                if (err) {
+                    logger.debug('Update err:', err);
+                }
+
+                cb(null);
+            });
+
+        }, function finishUpdatingSequences(err) {
+            logger.info('Finished with addDownlinkProtocol');
+            callback(null, {
+                fn: 'addDownlinkProtocol',
                 errors: err
             });
         });

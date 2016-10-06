@@ -354,6 +354,16 @@ body {
     line-height: 50px;
 }
 
+.pointUpi {
+    background-color: transparent;
+    color: transparent;
+    border: none;
+}
+
+.pointUpi:hover {
+    color: black;
+}
+
 .btnSave i {
     margin-right: 5px;
 }

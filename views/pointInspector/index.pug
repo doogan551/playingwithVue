@@ -52,6 +52,7 @@ html(lang="en")
                             input.form-control.input-xs(data-bind="protectedText: point.data.name4, propertyName: 'name4'", type="text")
                     // /ko
                     span.pointType(data-bind="text: point.data['Point Type'].Value")
+                    span.pointUpi.text-right(data-bind="text: point.data._id")
                 .actions
                     // ko ifnot: isInEditMode
                     // ko if: authorize(point.data, permissionLevels.WRITE)

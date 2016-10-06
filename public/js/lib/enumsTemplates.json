@@ -1993,6 +1993,12 @@
                 "valueType": "Unsigned",
                 "reportEnable": true
             },
+            "Downlink Protocol": {
+                "enum": 444,
+                "valueType": "Enum",
+                "reportEnable": true,
+                "enumsSet": "Ethernet Protocols"
+            },
             "Dry Bulb Point": {
                 "enum": 140,
                 "valueType": "UniquePID",
@@ -4024,6 +4030,13 @@
                     "isReadOnly": false,
                     "ValueType": 4,
                     "Value": 0
+                },
+                "Downlink Protocol": {
+                    "isDisplayable": true,
+                    "isReadOnly": true,
+                    "ValueType": 5,
+                    "Value": "None",
+                    "eValue": 0
                 },
                 "Ethernet Address": {
                     "isDisplayable": true,
