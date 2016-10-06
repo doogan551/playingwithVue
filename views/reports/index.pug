@@ -428,11 +428,11 @@ block content
                                         // /ko
                                 .reportButtons
                                     // ko if: ($root.canEdit())
-                                    a.btn.tiny.waves-effect.waves-light.blue-grey.saveReportButton(style="margin-right: 2px;")
+                                    a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(style="margin-right: 2px;", data-position="top" data-delay="500" data-tooltip="Save report")
                                         //| Save
                                         i.material-icons.tiny.center done
                                     // /ko
-                                    a.btn.tiny.waves-effect.waves-light.blue-grey.runReportButton(data-bind="enabled: reportResultViewed()")
+                                    a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.runReportButton(data-bind="enabled: reportResultViewed()", data-position="top" data-delay="500" data-tooltip="Run report")
                                         //| Run
                                         i.material-icons.tiny.center play_arrow
                                     .screenMessages
@@ -444,11 +444,11 @@ block content
                         ul.viewReportNav
                             // ko if: (chartable())
                             li.gridData.active
-                                a.btn.waves-effect.waves-light.active.blue-grey.toggleTab(data-bind="click: function () { $root.focusGridView($element) }", href="#gridData", data-toggle="tab")
+                                a.btn.waves-effect.waves-light.active.blue-grey.tooltipped.toggleTab(data-bind="click: function () { $root.focusGridView($element) }", href="#gridData", data-toggle="tab", data-position="bottom" data-delay="500" data-tooltip="Grid view")
                                     //| Grid View
                                     i.material-icons.center view_list
                             li.reportChart
-                                a.btn.waves-effect.waves-light.blue-grey.toggleTab(data-bind="click: function () { $root.focusChartView($element) }", href="#chartData", data-toggle="tab")
+                                a.btn.waves-effect.waves-light.blue-grey.tooltipped.toggleTab(data-bind="click: function () { $root.focusChartView($element) }", href="#chartData", data-toggle="tab", data-position="bottom" data-delay="500" data-tooltip="Chart view")
                                     //| Chart View
                                     i.material-icons.center insert_chart
                             // /ko
@@ -463,8 +463,8 @@ block content
                                                 td.strong(data-bind="attr: { colindex:  $index() }")
                             div#chartData.tab-pane
                                 .chartButtons
-                                    .dropdown.availableChartTypes.chartTab(data-bind="css: {disabled: !$root.canEdit()}")
-                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypes")
+                                    .dropdown.availableChartTypes.chartTab
+                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-activates="chartTypes")
                                             span(data-bind="text: selectedChartType()")
                                             // ko if: ($root.listOfChartTypes.length > 1)
                                             span.caret.lm10px
@@ -476,7 +476,7 @@ block content
                                                 a(data-bind="click: function(){ $root.selectChartType($element, $data.value, true) }, text: $data.text")
                                             // /ko
                                         // /ko
-                                    a.btn.waves-effect.waves-light.blue-grey(data-bind="click: function() { $root.printDiv() }", href="#")
+                                    a.btn.waves-effect.waves-light.blue-grey(data-bind="click: function() { $root.printChartDiv() }", href="#")
                                         span.printButton Print
                                             i.material-icons.center print
                                 .reportChartDiv

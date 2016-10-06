@@ -1749,20 +1749,12 @@ var reportsViewModel = function () {
                     case 1:
                         $tabConfiguration.addClass("active");
                         $tabConfiguration.show();
-                        // $configurationButton.addClass("active");
-                        // $configurationButton.find("a").addClass("active");
-                        // $viewReportButton.removeClass("active");
-                        // $viewReportButton.find("a").removeClass("active");
                         $tabViewReport.removeClass("active");
                         $tabViewReport.hide();
                         break;
                     case 2:
                         $tabConfiguration.removeClass("active");
                         $tabConfiguration.hide();
-                        // $configurationButton.removeClass("active");
-                        // $configurationButton.find("a").removeClass("active");
-                        // $viewReportButton.addClass("active");
-                        // $viewReportButton.find("a").addClass("active");
                         $tabViewReport.addClass("active");
                         break;
                 }
@@ -2343,11 +2335,7 @@ var reportsViewModel = function () {
         },
         adjustConfigTabActivePaneHeight = function () {
             var $activePane = $tabConfiguration.find(".tab-pane.active");
-            if ($activePane.attr("id") === "additionalFilters" || $activePane.attr("id") === "reportColumns") {
-                $activePane.css("height", (window.innerHeight - 200));
-            } else if ($activePane.attr("id") === "reportAttribs") {
-                $activePane.css("height", (window.innerHeight - 350));
-            }
+            $activePane.css("height", (window.innerHeight - 160));
         },
         handleResize = function () {
             lastResize = new Date();
@@ -4044,14 +4032,13 @@ var reportsViewModel = function () {
 
     self.currentColumnEdit = ko.observable(getNewColumnTemplate());
 
-    self.printDiv = function () {
+    self.printChartDiv = function () {
         renderChart(true);
         setTimeout(function () {
-            $reportChartDiv.css("overflow", "visible");
             $reportChartDiv.printArea({
                 mode: "iframe"
             });
-            $reportChartDiv.css("overflow", "auto");
+            $reportChartDiv.parent().css("overflow", "auto");
         }, 1500);
     };
 
@@ -4421,6 +4408,7 @@ var reportsViewModel = function () {
     self.focusChartView = function (element) {
         self.selectViewReportTabSubTab("chartData");
         $reportChartDiv.html("");
+        $reportChartDiv.parent().css("overflow", "");
         $viewReportNav.find("chartData a").addClass("active");
         $viewReportNav.find("gridData a").removeClass("active");
         renderChart(null, scheduled);
