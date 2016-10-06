@@ -163,47 +163,8 @@ var gpl = {
         return gpl.deStringObject(obj, true);
     },
     openWindow: function () {
-        var windowRef,
-            options = Array.prototype.slice.apply(arguments).pop(),
-            attached = false,
-            stopping = false,
-            calledHandler = false,
-            closeTimer,
-            closeFn = function () {
-                if (options.gplHandler && !calledHandler) {
-                    calledHandler = true;
-                    options.gplHandler.apply(this, arguments);
-                }
-                clearInterval(closeTimer);
-            },
-            checkUnload = function () {
-                var oldUnload = windowRef.onbeforeunload;
-
-                if (oldUnload !== closeFn && !attached) {
-                    attached = true;
-                    windowRef.onbeforeunload = function () {
-                        if (!stopping) {
-                            stopping = true;
-                            closeFn();
-                            oldUnload.apply(this, arguments);
-                        } else {
-                            return;
-                        }
-                    };
-                }
-            };
-
         gpl.fire('openwindow');
-
-        // gpl._openWindow.apply(this, arguments);
-
         dtiUtility.openWindow.apply(this, arguments);
-
-        // windowRef.onbeforeunload = closeFn;
-
-        // closeTimer = setInterval(checkUnload, 100);
-
-        // return windowRef;
     },
     defaultBlockMessage: 'Please Wait...',
     blockUI: function (message) {
@@ -6456,18 +6417,24 @@ gpl.BlockManager = function (manager) {
     bmSelf.openPointEditor = function (block, override) { //for view mode clicks to edit
         var upi,
             pointData = block && block.getPointData && block.getPointData(),
-            windowRef,
             endPoint,
             url,
             pointName,
             pointType,
-            doOpenWindow = function (fn) {
-                windowRef = gpl.openWindow(url, pointName, pointType, '', upi, {
-                    width: 1250,
-                    height: 750
-                });
-
-                (fn || gpl.emptyFn)();
+            saveCallback = function (point) {
+                var pt = point;
+                if (typeof pt === 'string') {
+                    pt = JSON.parse(point);
+                }
+                block.setPointData(pt, true);
+                gpl.fire('editedblock', block);
+            },
+            doOpenWindow = function () {
+                gpl.openWindow(url, pointName, pointType, '', upi, {
+                        width: 1250,
+                        height: 750,
+                        callback: (gpl.isEdit ? saveCallback : gpl.emptyFn)
+                    });
             };
 
         if (block) {
@@ -6479,22 +6446,7 @@ gpl.BlockManager = function (manager) {
                     url = endPoint.review.url;
                     pointName = block.pointName;
                     pointType = block.pointType;
-                    doOpenWindow(function () {
-                        if (gpl.isEdit) {
-                            windowRef.attach = {
-                                point: pointData ? JSON.stringify(pointData) : null,
-                                saveCallback: function (point) {
-                                    var pt = point;
-                                    if (typeof pt === 'string') {
-                                        pt = JSON.parse(point);
-                                    }
-                                    block.setPointData(pt, true);
-                                    gpl.fire('editedblock', block);
-                                }
-                            };
-                        }
-                    });
-
+                    doOpenWindow();
                 } else {
                     //is constant/monitor/etc
                     if (block.type === 'ConstantBlock') {
@@ -7388,7 +7340,7 @@ gpl.Manager = function () {
     };
 
     managerSelf.addNewPoint = function (block) {
-        var windowRef,
+        var parameters = {},
             pointType = window.encodeURI(block.pointType),
             names = (gpl.pointNamePrefix + block.label).split('_'),
             called = false,
@@ -7441,22 +7393,14 @@ gpl.Manager = function () {
 
         if (block.isNonPoint !== true && !(block instanceof gpl.blocks.TextBlock)) {
             // gpl.blockUI();
+            parameters.name1 = name1;
+            parameters.name2 = name2;
+            parameters.name3 = name3;
+            parameters.name4 = name4;
+            parameters.pointType = block.pointType;
 
-            windowRef = gpl.openWindow('/api/points/newPoint/restrictTo/' + pointType, 'New Point', '', '', 'newPoint', {
-                width: 980,
-                height: 280,
-                gplHandler: handler
-            });
-
-            windowRef.attach = {
-                saveCallback: handler,
-                point: {
-                    name1: name1,
-                    name2: name2,
-                    name3: name3,
-                    name4: name4
-                }
-            };
+            dtiUtility.showCreatePoint(parameters);
+            dtiUtility.onCreatePoint(handler);
         } else {
             gpl.fire('newblock', block);
         }

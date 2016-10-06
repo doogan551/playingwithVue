@@ -443,7 +443,7 @@ html
                     .pointTypeFilter.input-field.col.blue-grey-form(data-bind="contextMenuInvert: pointTypeInvert")
 
                         //- input.dropdown-button(type='text', data-bind="value: pointTypeText, updateLabel: pointTypeText, attr: { 'data-activates': id() + '_pointTypeDropdown', id : id() + '_pointTypeDropdownButton' }")
-                        a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { id : id() + '_pointTypeDropdownButton' }")
+                        a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { id : id() + '_pointTypeDropdownButton' }, css: { disabled: restrictCreate }")
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
                         ul.dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }")

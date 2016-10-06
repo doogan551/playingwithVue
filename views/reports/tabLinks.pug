@@ -1,10 +1,10 @@
 ul
     li.configurationButton
-        a.waves-effect.waves-light.btn.blue-grey(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;")
+        a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Report settings")
             //| Configuration
             i.material-icons.center settings
     li.viewReportButton
-        a.waves-effect.waves-light.btn.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;")
+        a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Run report")
             //| Run Report
             i.material-icons.center play_arrow
 div.preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: displayTabSpinner(), hideDiv: !displayTabSpinner()} ", title="Requesting Report Data")

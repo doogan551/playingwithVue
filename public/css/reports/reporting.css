@@ -383,9 +383,6 @@ td.filterName {
     padding-left: 20px;
     padding-right: 20px;
 }
-.tabConfiguration .tab-pane {
-    /*height: 70vh;*/
-}
 .tabViewReport {
     padding-top: 0px;
     min-width: 850px;
@@ -430,7 +427,13 @@ td.filterName {
 .tabViewReport .chartButtons i.fa-print {
     padding-right: 3px;
 }
+#reportAttribs {
+    overflow-y: auto;
+}
 #reportColumns {
+    overflow-y: auto;
+}
+#filterByPoint {
     overflow-y: auto;
 }
 #additionalFilters {
@@ -515,7 +518,7 @@ a.clearName i {
     margin-left: -24px;
 }
 .pointTypesFilter {
-    padding-top: 30px;
+    padding-top: 12px;
 }
 .adjustPointTypesFilterButton {
     margin-top: 30px;
@@ -619,7 +622,7 @@ div.dataTables_wrapper div.dataTables_length select {
     min-width: 91px;
 }
 .columnTotals span {
-    color: #565656;
+    /*color: #565656;*/
 }
 .availableCalculations {
     display: inline-block;
@@ -868,11 +871,9 @@ input.form-control.columnDisplayName {
     height: 33px;
 }
 .availableChartTypes.chartTab > .btn {
-    padding: 0px 8px 0px 8px;
-    margin-top: 2px;
+    padding: 0px 14px 0px 8px;
     border-radius: 4px 0px 0px 4px;
-    height: 33px;
-}
+    height: 36px;}
 .panel-heading a.panel-anchor:after {
     font-family:'Glyphicons Halflings';
     content:"\e114";
@@ -890,6 +891,7 @@ input.form-control.columnDisplayName {
     height: 300px;
     overflow: hidden;
     overflow-y: auto;
+    padding-left: 7px;
 }
 .enumproperties li:hover{
     cursor: pointer;
@@ -965,7 +967,7 @@ button {
 .reportButtons {
     margin: -1px auto 46px auto;
     width: 325px;
-    padding: 1px;
+    padding: 5px 1px 1px 1px;
 }
 .reportButtons .btn.btn-primary {
     margin: 1px;
