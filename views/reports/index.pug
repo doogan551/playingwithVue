@@ -124,9 +124,8 @@ block content
                                                                     ul.calculations.dropdown-menu(multiple=true, data-bind="attr: { id: 'globalCalculationsDropdown' }")
                                                                         // ko foreach: $root.listOfCalculations
                                                                         li
-                                                                            label.fancy-checkbox
-                                                                                input.medium(data-bind="click: function () { return $root.globalCalculationClick($element, $data)}, attr: { id: 'globalCalc_' + $index()}", type="checkbox")
-                                                                                label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index()}")
+                                                                            input.medium.filled-in(data-bind="click: function () { return $root.globalCalculationClick($element, $data)}, attr: { id: 'globalCalc_' + $index()}", type="checkbox")
+                                                                            label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index()}")
                                                                         // /ko
                                                                     // /ko
                                                     th.medium.strong.typeColumn
@@ -167,7 +166,7 @@ block content
                                                                 span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
                                                                 span.caret.lm10px
                                                             ul.enumproperties.dropdown-menu(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
-                                                                input.form-control.inputSearch(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
+                                                                input.form-control.inputSearch.filled-in(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
                                                                 li(role="separator", class="divider")
                                                                 // ko foreach: $parent.columnFilteredProps()
                                                                 li
@@ -194,9 +193,8 @@ block content
                                                             ul.calculations.dropdown-menu(multiple=true, data-bind="attr: { id: 'calculationsDropdown'+ $index() }")
                                                                 // ko foreach: $parent.listOfCalculations
                                                                 li
-                                                                    label.fancy-checkbox
-                                                                        input.medium(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}, attr: { id: 'calc_' + $parentContext.$index() + '_' + $index()}", type="checkbox")
-                                                                        label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'calc_' + $parentContext.$index() + '_' + $index()}")
+                                                                    input.medium.filled-in(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}, attr: { id: 'calc_' + $parentContext.$index() + '_' + $index()}", type="checkbox")
+                                                                    label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'calc_' + $parentContext.$index() + '_' + $index()}")
                                                                 // /ko
                                                             // /ko
                                                         // /ko
@@ -484,8 +482,8 @@ block content
                                             // /ko
                                         // /ko
                                     a.btn.waves-effect.waves-light.blue-grey(data-bind="click: function() { $root.printChartDiv() }", href="#")
+                                        i.material-icons print
                                         span.printButton Print
-                                            i.material-icons.center print
                                 .reportChartDiv
     include footer
     include popoverColumnSettings
