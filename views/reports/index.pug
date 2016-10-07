@@ -112,7 +112,7 @@ block content
                                                         .multiplierColumn
                                                     th.medium.strong
                                                         .calculateColumn(tabindex="965")
-                                                            .columnText.displayDiv
+                                                            .columnText
                                                             .globalCalculate.hideDiv
                                                                 .dropdown.availableCalculations.open(data-bind="css: {disabled: !$root.canEdit()}")
                                                                     a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
@@ -131,9 +131,16 @@ block content
                                                                     // /ko
                                                     th.medium.strong.typeColumn
                                                     th.medium.strong
-                                                        .precisionColumn
+                                                        .precisionColumn(tabindex="985")
+                                                            .columnText
+                                                            .globalPrecision.hideDiv
+                                                                input.form-control.globalPrecisionInput(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
                                                     th.medium.strong
-                                                        .includeInChartColumn
+                                                        .includeInChartColumn(tabindex="995")
+                                                            .columnText
+                                                            .globalIncludeInChart.hideDiv
+                                                                input.form-control.filled-in(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit(), attr: {id : 'globalIncludeInChart' }", type="checkbox")
+                                                                label.blue-grey-text.label-tight(data-bind="attr: { for: 'globalIncludeInChart' }")
                                                     th.medium.strong
                                                         .yaxisChartGroupColumn
                                                     // /ko
@@ -345,87 +352,87 @@ block content
                                         a.btn.waves-effect.waves-light.blue-grey.right-align.adjustPointTypesFilterButton(data-bind="click: $root.pointSelectorFilter") Point Type Filter
                                     // /ko
                                 div.additionalFilters#additionalFilters.tab-pane
-                                    h4.strong.panel-title
-                                        // ko if: (reportType === 'Property')
-                                        table.filtersGrid.small.grid.table
-                                            tbody(data-bind="foreach: listOfFilters()")
-                                                tr.filterdata
-                                                    td.sorthandle
-                                                        .handle
-                                                    td(data-bind="css: {filterCondition: ($parent.listOfFilters().length > 1), childCondition: childLogic === true, firstConditionInGroup: beginGroup === true, lastConditionInGroup: endGroup === true} ")
-                                                        .dropdown.availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
-                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-toggle.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}", data-toggle="dropdown")
-                                                                span(data-bind="text: $root.displayCondition(condition)")
-                                                            ul.operators.dropdown-menu
-                                                                // ko foreach: $root.conditions()
-                                                                li
-                                                                    a.condition(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'condition') }, text: text", required)
-                                                                // /ko
-                                                    td.filterName
-                                                        // ko if: ($parent.reportType !== 'Property')
-                                                        span(data-bind="text: filterName.replace(/_/g, ' ')")
-                                                        // /ko
-                                                        .dropdown.availablePropertiesContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
-                                                                span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfFilterPropertiesLength + ')')")
-                                                                span.caret.lm10px
-                                                            ul.enumproperties.dropdown-menu
-                                                                input.form-control.inputSearch(data-bind="textInput: $root.filterPropertiesSearchFilter", type="text", placeholder="Search...")
-                                                                li(role="separator", class="divider")
-                                                                // ko foreach: $parent.filterFilteredProps()
-                                                                li
-                                                                    a(data-bind="click: function(){ $root.selectPropertyFilter($element, $parentContext.$index(), $data) }, text: $data.name")
-                                                                // /ko
-                                                    td.filterOperator
-                                                        .dropdown.availableOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-toggle.operatorButton(data-bind="css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
-                                                                span(data-bind="text: $root.displayOperator(operator)")
-                                                                //span.caret.lm10px
-                                                            ul.operators.dropdown-menu
-                                                                // ko foreach: $root.operators(valueType)
-                                                                li
-                                                                    a.operator(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'operator') }, text: text", required)
-                                                                // /ko
-                                                    td.emptyColumn
-                                                    td.filterValue
-                                                        div.col-md-9
-                                                            include filterValueUI
-                                                    // ko if: ($root.canEdit())
-                                                    td.removecolumn
-                                                        a.span.removerow.blue-grey-text(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") Remove
+                                    // ko if: (reportType === 'Property')
+                                    table.filtersGrid.small.grid.table
+                                        tbody(data-bind="foreach: listOfFilters()")
+                                            tr.filterdata
+                                                td.sorthandle
+                                                    .handle
+                                                td(data-bind="css: {filterCondition: ($parent.listOfFilters().length > 1), childCondition: childLogic === true, firstConditionInGroup: beginGroup === true, lastConditionInGroup: endGroup === true} ")
+                                                    .dropdown.availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-toggle.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}", data-toggle="dropdown")
+                                                            span(data-bind="text: $root.displayCondition(condition)")
+                                                        ul.operators.dropdown-menu
+                                                            // ko foreach: $root.conditions()
+                                                            li
+                                                                a.condition(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'condition') }, text: text", required)
+                                                            // /ko
+                                                td.filterName
+                                                    // ko if: ($parent.reportType !== 'Property')
+                                                    span(data-bind="text: filterName.replace(/_/g, ' ')")
                                                     // /ko
-                                        // /ko
-                                        // ko if: ($root.reportType === 'Property' && $root.canEdit())
-                                        a.small.addFilterbutton(href="#") Add Filter
-                                        // /ko
-                                        // ko if: (reportType !== 'Property')
-                                        span.reportDateRangePicker
+                                                    .dropdown.availablePropertiesContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
+                                                            span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfFilterPropertiesLength + ')')")
+                                                            span.caret.lm10px
+                                                        ul.enumproperties.dropdown-menu
+                                                            input.form-control.inputSearch(data-bind="textInput: $root.filterPropertiesSearchFilter", type="text", placeholder="Search...")
+                                                            li(role="separator", class="divider")
+                                                            // ko foreach: $parent.filterFilteredProps()
+                                                            li
+                                                                a(data-bind="click: function(){ $root.selectPropertyFilter($element, $parentContext.$index(), $data) }, text: $data.name")
+                                                            // /ko
+                                                td.filterOperator
+                                                    .dropdown.availableOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-toggle.operatorButton(data-bind="css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
+                                                            span(data-bind="text: $root.displayOperator(operator)")
+                                                            //span.caret.lm10px
+                                                        ul.operators.dropdown-menu
+                                                            // ko foreach: $root.operators(valueType)
+                                                            li
+                                                                a.operator(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'operator') }, text: text", required)
+                                                            // /ko
+                                                td.emptyColumn
+                                                td.filterValue
+                                                    div.col-md-9
+                                                        include filterValueUI
+                                                // ko if: ($root.canEdit())
+                                                td.removecolumn
+                                                    a.span.removerow.blue-grey-text(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") Remove
+                                                // /ko
+                                    // /ko
+                                    // ko if: ($root.reportType === 'Property' && $root.canEdit())
+                                    a.small.addFilterbutton(href="#") Add Filter
+                                    // /ko
+                                    // ko if: (reportType !== 'Property')
+                                    span.reportDateRangePicker
+                                        div.input-field
+                                            input.input.form-control.filterContainer.durationDateRange#durationDateRange(data-bind="reportDateRangePicker: selectedDuration, enable: $root.canEdit(), css: { durationError: $root.durationError() }", type="text", placeholder="Select...")
                                             i.fa.fa-calendar.glyphicon.glyphicon-calendar.durationCalendarIcon
-                                            span.reportDateRangeLabel.small Duration:&nbsp;
-                                            input.input.form-control.filterContainer.durationDateRange(data-bind="reportDateRangePicker: selectedDuration, enable: $root.canEdit(), css: { durationError: $root.durationError() }", type="text", placeholder="Select...")
-                                        br
-                                        span.timePickers
-                                            span.timePickerLabel.small From:&nbsp;
-                                            input.input.form-control.filterContainer.durationDateRangeTime(data-bind="reportTimePicker: durationStartTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="Start Time OffSet", type="text")
-                                            span.timePickerLabel.small To:&nbsp;
-                                            input.input.form-control.filterContainer.durationDateRangeTime(data-bind="reportTimePicker: durationEndTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="End Time OffSet", type="text")
-                                        br
-                                        br
-                                        span.intervalSettings
-                                            span.intervalLabel.small Interval:&nbsp;
-                                            input.intervalValue.form-control(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
-                                            .dropdown.availableIntervalsContainer
-                                                a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-activates="intervals")
-                                                    span(data-bind="text: $root.interval")
-                                                    span.caret.lm10px
-                                                ul#intervals.intervals.dropdown-content
-                                                    // ko foreach: $root.listOfIntervalsComputed()
-                                                    li
-                                                        a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
-                                                    // /ko
-                                        br
-                                        br
-                                        // /ko
+                                            label.reportDateRangeLabel.small(data-bind="attr: {for: 'durationDateRange'}") Duration:&nbsp;
+                                    br
+                                    span.timePickers
+                                        div.input-field
+                                            input.input.form-control.filterContainer.durationDateRangeTime#startTimeOffSet(data-bind="reportTimePicker: durationStartTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="Start Time OffSet", type="text")
+                                            label.timePickerLabel.small(data-bind="attr: {for: 'startTimeOffSet'}") From:&nbsp;
+                                        div.input-field
+                                            input.input.form-control.filterContainer.durationDateRangeTime#endTimeOffSet(data-bind="reportTimePicker: durationEndTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="End Time OffSet", type="text")
+                                            label.timePickerLabel.small(data-bind="attr: {for: 'endTimeOffSet'}") To:&nbsp;
+                                    br
+                                    span.intervalSettings
+                                        div.intervalsContainer.input-field
+                                            input.intervalValue.form-control.input-md#intervalValue(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
+                                            label(data-bind="attr: {for: 'intervalValue'}") Interval:
+                                        .dropdown.availableIntervalsContainer
+                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-activates="intervals")
+                                                span(data-bind="text: $root.interval")
+                                                span.caret.lm10px
+                                            ul#intervals.intervals.dropdown-content
+                                                // ko foreach: $root.listOfIntervalsComputed()
+                                                li
+                                                    a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
+                                                // /ko
+                                    // /ko
                                 .reportButtons
                                     // ko if: ($root.canEdit())
                                     a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(style="margin-right: 2px;", data-position="top" data-delay="500" data-tooltip="Save report")
@@ -480,25 +487,6 @@ block content
                                         span.printButton Print
                                             i.material-icons.center print
                                 .reportChartDiv
-    .hiddenPlaceholder.hidden
-        input.form-control.globalPrecision.hidden(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
-        div.globalIncludeInChart
-            input.form-control.filled-in.hidden(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit(), attr: {id : 'globalIncludeInChart' }", type="checkbox")
-            label.blue-grey-text.label-tight(data-bind="attr: { for: 'globalIncludeInChart' }")
-        .globalcalculateColumnDropdown.hidden.dropdown.availableCalculations(data-bind="css: {disabled: !$root.canEdit()}")
-            button.btn.btn-default.dropdown-toggle(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-                span(data-bind="text: $root.globalcalculateColumnSelectedvalue()")
-                // ko if: ($root.listOfCalculations.length > 1)
-                span.caret.lm10px
-                // /ko
-            // ko if: ($root.listOfCalculations.length > 1)
-            ul.calculations.dropdown-menu
-                // ko foreach: $root.listOfCalculations
-                li
-                    input(type="checkbox")
-                    a(data-bind="text: ' ' + $data.text")
-                // /ko
-            // /ko
     include footer
     include popoverColumnSettings
     include modals/dialogScreens

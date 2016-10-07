@@ -404,14 +404,15 @@ var reportsViewModel = function () {
         $additionalFilters,
         $columnNames,
         $hiddenPlaceholder,
+        $globalPrecisionText,
         $globalPrecision,
+        $globalIncludeInChartText,
         $globalIncludeInChart,
         $globalCalculateText,
         $globalCalculate,
         $availableChartTypesChartTab,
         $reportChartDiv,
         $saveReportButton,
-        pointSelectorRef,
         $pointSelectorIframe,
         longClickStart,
         longClickTimer = 100,
@@ -790,13 +791,21 @@ var reportsViewModel = function () {
             $control.attr("disabled", state);
         },
         checkForColumnCalculations = function () {
-            for (var i = 0; i < self.listOfColumns().length; i++) {
+            var i,
+                canCalculate = false;
+
+            for (i = 0; i < self.listOfColumns().length; i++) {
                 if (!!self.listOfColumns()[i].canCalculate && self.listOfColumns()[i].canCalculate) {
-                    $columnsGrid.find("th .multiplierColumn").html("Multiplier");
-                    $globalCalculateText.html("Calculate");
-                    $columnsGrid.find("th .precisionColumn").html("Precision");
+                    canCalculate = true;
                     break;
                 }
+            }
+
+            if (canCalculate) {
+                $columnsGrid.find("th .multiplierColumn").html("Multiplier");
+                $globalCalculateText.html("Calculate");
+                $globalPrecisionText.html("Precision");
+                $globalIncludeInChartText.html("Chart");
             }
 
             if (self.reportType === "Totalizer") {
@@ -821,7 +830,6 @@ var reportsViewModel = function () {
             }
 
             if (displayChartingHeader) {
-                $columnsGrid.find("th .includeInChartColumn").html("Chart");
                 $columnsGrid.find("th .yaxisChartGroupColumn").html("Group");
             }
 
@@ -1804,44 +1812,14 @@ var reportsViewModel = function () {
             $reportColumns = $direports.find("#reportColumns");
             $additionalFilters = $direports.find("#additionalFilters");
             $hiddenPlaceholder = $direports.find(".hiddenPlaceholder");
-            $globalPrecision = $hiddenPlaceholder.find("input.globalPrecision");
-            $globalIncludeInChart = $hiddenPlaceholder.find("div.globalIncludeInChart");
+            $globalPrecisionText = $columnsGrid.find("th .precisionColumn .columnText");
+            $globalPrecision = $columnsGrid.find("th .precisionColumn .globalPrecision");
+            $globalIncludeInChartText = $columnsGrid.find("th .includeInChartColumn .columnText");
+            $globalIncludeInChart = $columnsGrid.find("th .includeInChartColumn .globalIncludeInChart");
             $globalCalculateText = $columnsGrid.find("th .calculateColumn .columnText");
             $globalCalculate = $columnsGrid.find("th .globalCalculate");
             $availableChartTypesChartTab = $direports.find(".availableChartTypes.chartTab");
             $reportChartDiv = $direports.find(".reportChartDiv");
-        },
-        getPointLookupFilterValues = function (iFrameContents) {
-            var $nameInputField,
-                pf = {
-                    name1: "",
-                    name2: "",
-                    name3: "",
-                    name4: "",
-                    selectedPointTypes: []
-                },
-                inputCounter = 1;
-
-            iFrameContents.find(".toolbar").find(".searchInput").each(function () {
-                $nameInputField = $(this);
-                pf["name" + inputCounter++] = $nameInputField.val();
-            });
-            pf.selectedPointTypes = getPointLookupSelectedValues(pointSelectorRef);
-
-            return pf;
-        },
-        getPointLookupSelectedValues = function (pointSelectorReference) {
-            var answer = [],
-                selectedPointTypes,
-                numberOfAllPointTypes;
-            if (pointSelectorReference && pointSelectorReference.window.pointLookup) {
-                selectedPointTypes = pointSelectorReference.window.pointLookup.getCheckedPointTypes();
-                numberOfAllPointTypes = pointSelectorReference.window.pointLookup.POINTTYPES.length;
-                if (numberOfAllPointTypes !== selectedPointTypes.length) {
-                    answer = selectedPointTypes;
-                }
-            }
-            return answer;
         },
         getDurationText = function (duration, precision, hoursOnly) {
             var answer = "",
@@ -2356,7 +2334,6 @@ var reportsViewModel = function () {
         saveReportConfig = function () {
             point["Report Config"].columns = validateColumns(true);
             point["Report Config"].filters = validateFilters(true);
-            // self.pointFilter(getPointLookupFilterValues($pointSelectorIframe.contents()));
             point["Report Config"].pointFilter =  {
                 "name1" : self.name1Filter(),
                 "name2" : self.name2Filter(),
@@ -2418,9 +2395,7 @@ var reportsViewModel = function () {
                 entriesPerPage,
                 chartTypes,
                 precisionEventsSet = false,
-                precisionOriginalField,
                 includeInChartEventsSet = false,
-                includeInChartOriginalField,
                 calculateEventsSet = false;
 
             $(window).resize(function () {
@@ -2429,8 +2404,7 @@ var reportsViewModel = function () {
 
             if (!scheduled) {
                 $direports.find(".addColumnButton").on("click", function (e) {
-                    var defaultColName = ((self.reportType === "Totalizer") || (self.reportType === "History") ? "Choose Point" : "Choose Property"),
-                        rowTemplate = getNewColumnTemplate(),
+                    var rowTemplate = getNewColumnTemplate(),
                         $newRow;
                     e.preventDefault();
                     e.stopPropagation();
@@ -2506,14 +2480,13 @@ var reportsViewModel = function () {
 
                 if (!!reportSocket) {
                     reportSocket.on("pointUpdated", function (data) {
-                        var $currentmessageholder;
-                        console.log(" -  -  - reportSocket() 'pointUpdated' returned");
+                        var $messageHolder = $tabConfiguration.find(".screenMessages").find(".successMessage");
+                        // console.log(" -  -  - reportSocket() 'pointUpdated' returned");
                         if (data.err === null || data.err === undefined) {
                             self.unSavedDesignChange(false);
-                            $currentmessageholder = $tabConfiguration.find(".screenMessages").find(".successMessage");
-                            $currentmessageholder.text("Report Saved");
+                            $messageHolder.text("Report Saved");
                             setTimeout(function () {
-                                $currentmessageholder.text("");
+                                $messageHolder.text("");
                             }, 3000);  // display success message
                         } else {
                             self.unSavedDesignChange(true);
@@ -2534,15 +2507,6 @@ var reportsViewModel = function () {
                     $dataTablePlaceHolder.DataTable().draw("current");
                     console.log("moved column '" + details.from + "' to column '" + details.to + "'");
                     return true;
-                });
-
-                $dataTablePlaceHolder.on("column-resize.dt", function (event, settings, details) {
-                    var columnsArray = $.extend(true, [], self.listOfColumns());
-                    columnsArray[details.resizedColumn].width = details.width;
-                    updateListOfColumns(columnsArray);
-                    $dataTablePlaceHolder.DataTable().draw("current");
-                    return true;
-                    // console.log("column '" + details.resizedColumn + "' width set to '" + details.width + "'");
                 });
 
                 $dataTablePlaceHolder.on("length.dt", function (e, settings, len) {
@@ -2568,31 +2532,40 @@ var reportsViewModel = function () {
                 //     console.log( 'Button '+buttonApi.text()+' was activated' );
                 // });
 
-                $columnsGrid.find(".precisionColumn").on("mousedown", function (e) {
+                $columnsGrid.find("th .precisionColumn").on("mousedown", function (e) {
                     if (self.canEdit()) {
                         longClickStart = moment();
                     }
                 });
 
-                $columnsGrid.find(".precisionColumn").on("click", function (e) {
+                $columnsGrid.find("th .precisionColumn").on("click", function (e) {
+                    var $precisionColumnDiv = $(this),
+                        $precisionInputField = $precisionColumnDiv.find("input"),
+                        toggleField = function (displayInput) {
+                        if (displayInput) {
+                            $globalPrecisionText.addClass("hideDiv");
+                            $precisionInputField.focus();
+                            $precisionInputField.removeClass("hideDiv");
+                            $globalPrecision.removeClass("hideDiv");
+                        } else {
+                            $globalPrecisionText.removeClass("hideDiv");
+                            $precisionInputField.addClass("hideDiv");
+                            $globalPrecision.addClass("hideDiv");
+                        }
+                    };
                     if (self.canEdit()) {
-                        if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
-                            if (!precisionEventsSet) {
-                                precisionOriginalField = $(this).html();
-                            }
-
-                            if ($(this).html() === "Precision") {
-                                $globalPrecision.removeClass("hidden");
-                                $(this).html("");
-                                $globalPrecision.appendTo($(this));
-                                $(this).find("input").focus();
-                            }
+                        if (moment().diff(longClickStart) > longClickTimer) {
+                            toggleField(true);
 
                             if (!precisionEventsSet) {
+                                toggleField(true);
                                 precisionEventsSet = true;
-                                $(this).focusout(function (e) {
-                                    $globalPrecision.appendTo($hiddenPlaceholder);
-                                    $(this).html(precisionOriginalField);
+                                $precisionInputField.on( "focusout", function (outEvent) {
+                                    if (!$precisionInputField.is(":focus")) {  // clicked outside of div
+                                        toggleField(false);
+                                        precisionEventsSet = false;
+                                        $(outEvent.target).off("focusout");
+                                    }
                                 });
 
                                 $(this).keyup(function (event) {
@@ -2618,29 +2591,43 @@ var reportsViewModel = function () {
                 });
 
                 $columnsGrid.find("th .includeInChartColumn").on("click", function (e) {
+                    var $includeInChartColumnDiv = $(this),
+                        $includeInChartInputField = $includeInChartColumnDiv.find("input"),
+                        toggleField = function (displayInput) {
+                            if (displayInput) {
+                                $globalIncludeInChartText.addClass("hideDiv");
+                                $includeInChartColumnDiv.focus();
+                                $includeInChartInputField.removeClass("hideDiv");
+                                $globalIncludeInChart.removeClass("hideDiv");
+                            } else {
+                                $globalIncludeInChartText.removeClass("hideDiv");
+                                $includeInChartInputField.addClass("hideDiv");
+                                $globalIncludeInChart.addClass("hideDiv");
+                            }
+                        };
                     if (self.canEdit()) {
-                        if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
-                            if (!includeInChartEventsSet) {
-                                includeInChartOriginalField = $(this).html();
-                            }
-
-                            if ($(this).html() === "Chart") {
-                                $globalIncludeInChart.removeClass("hidden");
-                                $(this).html("");
-                                $globalIncludeInChart.appendTo($(this));
-                                $(this).find("input").focus();
-                            }
+                        if (moment().diff(longClickStart) > longClickTimer) {
+                            toggleField(true);
 
                             if (!includeInChartEventsSet) {
                                 includeInChartEventsSet = true;
-                                $(this).focusout(function (e) {
-                                    $globalIncludeInChart.appendTo($hiddenPlaceholder);
-                                    $(this).html(includeInChartOriginalField);
+                                toggleField(true);
+                                $includeInChartColumnDiv.on( "focusout", function (outEvent) {
+                                    if (!$includeInChartColumnDiv.is(":focus")) {  // clicked outside of div
+                                        toggleField(false);
+                                        includeInChartEventsSet = false;
+                                        $includeInChartColumnDiv.off("focusout");
+                                    }
                                 });
 
-                                $(this).click(function (event) {
+                                $includeInChartInputField.click(function (event) {
                                     if (event.target.checked !== undefined) {
                                         globalSetAllColumnValues("includeInChart", event.target.checked);
+                                        setTimeout(function () {
+                                            toggleField(false);
+                                            $includeInChartColumnDiv.blur();
+                                            $includeInChartColumnDiv.off("focusout");
+                                        }, 800);
                                         return true;
                                     }
                                 });
@@ -2659,30 +2646,35 @@ var reportsViewModel = function () {
                 $columnsGrid.find("th .calculateColumn").on("click", function (parentEvent) {
                     var $calculateColumnDiv = $(this),
                         toggleField = function (displayGlobalButton) {
+                            var $globalChangeCalcs = $globalCalculate.find(".availableCalculations"),
+                                $availableCalcs = $columnsGrid.find("tbody .availableCalculations");
+
                             if (displayGlobalButton) {
                                 $calculateColumnDiv.focus();
                                 $globalCalculateText.removeClass("displayDiv");
                                 $globalCalculateText.addClass("hideDiv");
                                 $globalCalculate.removeClass("hideDiv");
                                 $globalCalculate.addClass("displayDiv");
-                                $globalCalculate.find(".availableCalculations").addClass("open");
-                                $globalCalculate.find("a").addClass("active");
-                                $globalCalculate.find("a").attr("aria-expanded", true);
+                                $globalChangeCalcs.addClass("open");
+                                $globalChangeCalcs.find("a").addClass("active");
+                                $globalChangeCalcs.find("a").attr("aria-expanded", true);
                             } else if (!displayGlobalButton) {
                                 $globalCalculateText.addClass("displayDiv");
                                 $globalCalculateText.removeClass("hideDiv");
                                 $globalCalculate.addClass("hideDiv");
                                 $globalCalculate.removeClass("displayDiv");
-                                $globalCalculate.find(".availableCalculations").removeClass("open");
-                                $globalCalculate.find("a").removeClass("active");
-                                $globalCalculate.find("a").attr("aria-expanded", false);
+                                $globalChangeCalcs.removeClass("open");
+                                $globalChangeCalcs.find("a").removeClass("active");
+                                $globalChangeCalcs.find("a").attr("aria-expanded", false);
                             }
+                            $availableCalcs.removeClass("open");
+                            $availableCalcs.find("a").removeClass("active");
+                            $availableCalcs.find("a").attr("aria-expanded", false);
                         };
 
                     if (self.canEdit()) {
-                        // parentEvent.preventDefault();
                         parentEvent.stopPropagation();
-                        if (moment().diff(longClickStart) > longClickTimer) {  // longclicked
+                        if (moment().diff(longClickStart) > longClickTimer) {
 
                             toggleField($globalCalculate.has($(parentEvent.target)).length > 0);
 
@@ -2690,7 +2682,7 @@ var reportsViewModel = function () {
                                 calculateEventsSet = true;
                                 toggleField(true);
                                 $calculateColumnDiv.on( "focusout", function (outEvent) {
-                                    if (!$calculateColumnDiv.is(":focus")) {  // clicked outside of calculate column div
+                                    if (!$calculateColumnDiv.is(":focus")) {  // clicked outside of div
                                         toggleField(false);
                                         calculateEventsSet = false;
                                         $(outEvent.target).off("focusout");

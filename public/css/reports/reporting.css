@@ -73,12 +73,11 @@ input.input.form-control.durationDateRangeTime {
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
 }
 .reportDateRangePicker {
+}
+.reportDateRangePicker div.input-field {
     display: inline-flex;
-    margin-left: 50px;
 }
 .workingPane {
-    /*min-width: 1120px;*/
-    /*margin-left: 1px;*/
 }
 .leftBar .tabs li {
     padding: 6px 6px 6px 6px;
@@ -138,7 +137,9 @@ input.input.form-control.durationDateRangeTime {
 }
 .availableIntervalsContainer {
     cursor: pointer;
+    padding-left: 10px;
     margin-right: 7px;
+    margin-top: 26px;
 }
 .availableDurationsContainer {
     cursor: pointer;
@@ -176,12 +177,11 @@ div.additionalFilters.tab-pane {
     display: none;
 }
 .durationCalendarIcon {
-    left: 80px;
-    top: 8px;
+    left: -222px;
+    top: 12px;
 }
 .timePickers {
     display: flex;
-    margin-left: 112px;
 }
 span.timePickerLabel {
     display: flex;
@@ -195,9 +195,9 @@ span.reportDateRangeLabel {
     color: black;
     padding: 0px 3px 0px 3px;
 }
-.intervalValue {
-    width: 80px;
-    margin-left: 7px;
+input.intervalValue {
+    padding-left: 5px;
+    width: 65px;
 }
 span.intervalLabel {
     display: flex;
@@ -207,7 +207,6 @@ span.intervalLabel {
 
 .intervalSettings {
     display: inline-flex;
-    margin-left: 65px;
 }
 .emptyColumn {
     width: 10px;
@@ -458,7 +457,7 @@ ul.totalizerOperators.dropdown-menu li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
 }
-ul.calculations.dropdown-menu li a:hover {
+ul.calculations.dropdown-menu li:hover {
     background-color: #d5e1f2;
     cursor: pointer;
 }
@@ -613,6 +612,7 @@ div.dataTables_wrapper div.dataTables_length select {
 }
 .columnName {
     display: inline-block;
+    padding-left: 5px;
 }
 .columnNameContainer {
     min-width: 310px;
@@ -632,7 +632,6 @@ div.dataTables_wrapper div.dataTables_length select {
     padding: 0px;
 }
 .dropdown.availableCalculations a .text {
-    margin-left: 14px;
 }
 .dropdown.availableTotalizerOperatorsContainer a {
     width: 88px;
@@ -642,7 +641,6 @@ div.dataTables_wrapper div.dataTables_length select {
     width: 78px;
 }
 .dropdown.availableTotalizerOperatorsContainer a .text {
-    margin-left: 12px;
 }
 .dropdown.availableAxisGroupsContainer a {
     width: 31px;
@@ -729,6 +727,9 @@ th .calculateColumn:hover {
     /*margin-left: 9px;*/
     margin-bottom: 10px;
 }
+th .includeInChartColumn {
+    height: 34px;
+}
 .yaxisChartGroup {
     width: 32px;
     min-width: 20px;
@@ -759,6 +760,20 @@ input.form-control.globalIncludeInChart {
 input.form-control.columnDisplayName {
     width: 281px;
     display: inline-block;
+    padding-top: 7px;
+    height: 1rem;
+}
+input.form-control.inputMultiplier {
+    padding-top: 7px;
+    height: 1rem;
+}
+input.form-control.inputPrecision {
+    padding-top: 7px;
+    height: 1rem;
+}
+input.form-control.globalPrecisionInput {
+    height: 1rem;
+    width: 35px;
 }
 .columnsGrid .handle {
     background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGElEQVQIW2NkYGBIA+JZQMzACCJgAIUDACENAQR6zKpeAAAAAElFTkSuQmCC) repeat;
@@ -829,7 +844,7 @@ input.form-control.columnDisplayName {
 
 .columnsGrid.table > tbody > tr > td {
     border-top: 1px solid #CCC;
-    padding: 4px;
+    padding: 2px;
 }
 .columnsGrid.table > tbody.sortablecolums {
     border-bottom: 2px solid #CCC;
