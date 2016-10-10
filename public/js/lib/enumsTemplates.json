@@ -1268,13 +1268,6 @@
                 "ptRefProps": ["Display Dynamic", "Display Button", "Display Animation", "Display Trend"],
                 "schedProps": []
             },
-            "Duty Cycle": {
-                "enum": 140,
-                "lists": ["default"],
-                "endpoint": "default",
-                "ptRefProps": ["Device Point", "Remote Unit Point"],
-                "schedProps": []
-            },
             "Economizer": {
                 "enum": 132,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
@@ -1288,13 +1281,6 @@
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Dry Bulb Point", "Humidity Point"],
                 "schedProps": ["Out of Service", "Value"]
-            },
-            "Imux Watchdog": {
-                "enum": 141,
-                "lists": ["default", "dynamic"],
-                "endpoint": "default",
-                "ptRefProps": ["Device Point", "Remote Unit Point"],
-                "schedProps": []
             },
             "Lift Station": {
                 "enum": 201,

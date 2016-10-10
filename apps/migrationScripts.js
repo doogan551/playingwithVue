@@ -1077,7 +1077,7 @@ var scripts = {
 
     // 0.4.1
     fixDorsDB: function(callback) {
-        var afterVersion = '0.4.1';
+        var afterVersion = '0.0.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'fixDorsDB',
@@ -1207,7 +1207,7 @@ var scripts = {
                 }
             });
 
-            logger.info('updating sequence:', doc._id);
+            // logger.info('updating sequence:', doc._id);
 
             utility.update({
                 collection: 'points',
@@ -1253,8 +1253,6 @@ var scripts = {
                 doc['Downlink Protocol'].eValue = Config.Enums['Ethernet Protocols']['IP'].enum;
             }
 
-            logger.info('updating sequence:', doc._id);
-
             utility.update({
                 collection: 'points',
                 query: {
@@ -1289,7 +1287,8 @@ db.connect(connectionString, function(err) {
     for (var task in scripts) {
         tasks.push(scripts[task]);
     }
-    // var tasks = [scripts.updateGenerateDisplayPointRefs];
+
+    tasks = [scripts.addDownlinkProtocol];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
