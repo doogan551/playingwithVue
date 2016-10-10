@@ -358,7 +358,58 @@ module.exports = {
       return cb(null, []);
     }
   },
+  getDistinctValues: function (data, cb) {
+    // data is an array of objects indicating the properties for which you want unique Values:
+    // [{
+    //   property: 'Active Value',
+    //   valueTypes: [2,5] // Get distincts for these value types; use empty array or do not include for all unique values regardless of value type
+    // }]
+    var distinct = [];
+      getDistinct = function (item, cb) {
+        var criteria = {
+            collection: 'points',
+            field: item.property + '.Value',
+            query: {}
+          },
+          valueTypes = item.valueTypes || [];
+
+        if (valueTypes.length) {
+          criteria.query.$or = [];
+          valueTypes.forEach(function (valueType) {
+            var obj = {};
+            obj[item.property + '.' + 'ValueType'] = valueType;
+            criteria.query.$or.push(obj);
+          });
+        }
+        Utility.distinct(criteria, function queryResult (err, data) {
+          distinct.push({
+            property: item.property,
+            distinct: data
+          });
+          cb(err);
+        });
+      };
+
+    async.each(data, getDistinct, function done (err) {
+      cb(err, distinct);
+    });
+  },
   globalSearch: function(data, cb) {
+    // data = {
+    //   user: {},
+    //   searchTerms: [{
+    //     expression: string,
+    //     isEquation: bool,
+    //     isInvalid: bool,
+    //     operator: string,
+    //     value: string or int,
+    //     property: string (only present if )
+    //   }],
+    //   reqID: string,
+    //   limit: int,
+    //   skip: int
+    // }
+
     var criteria = {
       collection: 'points',
       limit: data.limit || 50,
@@ -367,14 +418,64 @@ module.exports = {
         $and: []
       }
     };
+    var $and = criteria.query.$and;
+    var operatorMap = {
+      ':': '$eq',
+      '=': '$eq',
+      '<>': '$ne',
+      '!=': '$ne',
+      '>': '$gt',
+      '>=': '$gte',
+      '<': '$lt',
+      '<=': '$lte'
+    };
     var searchTerm;
+    var key;
+    var query;
+    var preQuery;
+    var value;
+    var operator;
 
-    for (searchTerm in data.searchTerms) {
-      criteria.query.$and.push({
-        _Name: {
-          $regex: Utils.getRegex(searchTerm.toLowerCase())
+    for (key in data.searchTerms) {
+      searchTerm = data.searchTerms[key];
+      query = {};
+      preQuery = null;
+
+      if (searchTerm.isInvalid) {
+        continue; // Do not add this search term to our query
+      }
+
+      if (searchTerm.isEquation) {
+        if (searchTerm.value === 'true') {
+          searchTerm.value = true;
+        } else if (searchTerm.value === 'false') {
+          searchTerm.value = false;
+        } else if (!isNaN(+searchTerm.value)) {
+          searchTerm.value = +searchTerm.value;
         }
-      });
+        operator = operatorMap[searchTerm.operator];
+        query[searchTerm.expression] = {};
+        query[searchTerm.expression][operator] = searchTerm.value;
+
+        if (operator === '$ne') {
+          // For not-equal-to operations, we need to make sure the top-level property exists because Mongo returns 
+          // documents that do not include the field. For example, 'Alarm High Limit.Value' != 100 returns documents
+          // that don't have the 'Alarm High Limit' property
+          preQuery = {};
+          preQuery[searchTerm.property] = {
+            $exists: true
+          };
+        }
+      } else {
+        query._Name = {
+          $regex: Utils.getRegex(searchTerm.expression.toLowerCase())
+        };
+      }
+
+      if (preQuery) {
+        $and.push(preQuery);
+      }
+      $and.push(query);
     }
 
     Utility.findAndCount(criteria, function handleSearchResults (err, points, count) {

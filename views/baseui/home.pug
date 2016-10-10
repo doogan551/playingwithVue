@@ -526,7 +526,7 @@ html
         // /ko
 
     script#autosuggestTemplate(type='text/html')
-        .autosuggestContainer.z-depth-1(data-bind='visible: isShown, style: { left: position.left }')
+        .autosuggestContainer.z-depth-2(data-bind='visible: isShown, style: { left: position.left }')
             // ko foreach: sources
             .autosuggestHeader(data-bind='visibile: nameShown, text: name')
             .autosuggestContent(data-bind='foreach: { data: matches, as: "match" } ')

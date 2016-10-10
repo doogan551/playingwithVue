@@ -1727,16 +1727,28 @@ var dti = {
             });
 
             dti.globalSearch.$chips.on('chip.add', function (e, chip) {
-                dti.globalSearch.searchTerms[chip.tag] = 1;
                 window.clearTimeout(dti.globalSearch.chipsTimeoutID);
 
-                // Set our flag indicating we're going to perform a new search
-                dti.globalSearch.performingNewSearch = true;
+                var parsed = dti.globalSearch.autosuggest.parse(chip.tag);
+                
+                if (parsed.isInvalid) {
+                    dti.globalSearch.$chips.find('.chip').last().addClass('err');
+                } else {
+                    if (parsed.isEquation && !parsed.isInvalid && (parsed.expression.indexOf('.') < 0) && (parsed.expression.charAt(0) !== '_')) {
+                        parsed.expression = parsed.expression + '.Value';
+                    }
+                    
+                    parsed.property = parsed.expression.split('.')[0];
 
-                dti.globalSearch.chipsTimeoutID = window.setTimeout(function () {
+                    dti.globalSearch.searchTerms[chip.tag] = parsed;
+                    // Set our flag indicating we're going to perform a new search
+                    dti.globalSearch.performingNewSearch = true;
+                    // Do the search
                     dti.globalSearch.doSearch();
-                    dti.globalSearch.$clearAllChipEl.removeClass('hide');
-                }, 10);
+                }
+                
+                // Ensure our 'Clear All' chip is visible
+                dti.globalSearch.$clearAllChipEl.removeClass('hide');
             });
 
             dti.globalSearch.$chips.on('chip.delete', function (e, chip) {
@@ -1835,9 +1847,51 @@ var dti = {
                     }
                 }
             });
+        },
+        initOnLoad: function () {
+            var valueTypes = Object.keys(dti.utility.getConfig('Enums.Value Types')),
+                distinct = [],
+                getControlData = function () {
+                    var systemEnums = dti.workspaceManager.systemEnums,
+                        controlData = [{
+                            name: 'Control Priority',
+                            enumsSet: systemEnums.controlpriorities
+                        }, {
+                            name: 'Controller',
+                            enumsSet: systemEnums.controllers
+                        }];
 
-            // Build autosuggest source for our properties list
-            var getDistinct = [];
+                    if (!systemEnums.controlpriorities || !systemEnums.controllers) {
+                        return window.setTimeout(getControlData, 1000);
+                    }
+
+                    dti.forEachArray(controlData, function (ctrl) {
+                        var item = {
+                                isDisplayable: [true, false],
+                                isReadOnly: [true, false],
+                                ValueType: "",
+                                Value: ""
+                            },
+                            _values = [],
+                            data = {};
+
+                        dti.forEachArray(ctrl.enumsSet, function (obj) {
+                            _values.push(obj.name);
+                        });
+                        if (ctrl.name === 'Control Priority') {
+                            item._valuesNoSort = _values;
+                        } else {
+                            item._values = _values;
+                        }
+                        item.Value = _values;
+
+                        data[ctrl.name] = item;
+                        $.extend(dti.globalSearch.autosuggestPropertyData, data);
+                        dti.globalSearch.autosuggest.addData('Properties', data);
+                    });
+                };
+
+            // Build autosuggest data
             dti.forEach(dti.utility.getConfig('Enums.Properties'), function buildAutosuggestData (property, name, index) {
                 var item = {
                         isDisplayable: [true, false],
@@ -1845,42 +1899,47 @@ var dti = {
                         ValueType: "",
                         Value: ""
                     },
-                    _values;
+                    _values,
+                    arr,
+                    addDistinct = function () {
+                        distinct.push({
+                            property: name,
+                            valueTypes: [0, 2, 5] // None, string, enum
+                        });
+                    };
 
                 if (!property.reportEnable) {
                     return;
                 }
+                if ((name === 'Control Priority') || (name === 'Controller')) {
+                    return;
+                }
 
                 if (property.valueType === 'Enum') {
-                    if (property.hasOwnProperty('enumsSet') && property.enumsSet.length) {
+                    if (property.hasOwnProperty('enumsSet') && property.enumsSet.length && (property.enumsSet !== 'Default Active States')) {
                         _values = Object.keys(dti.utility.getConfig('Enums.' + property.enumsSet));
                         item._values = _values;
                         item.Value = _values;
                     } else {
-                        getDistinct.push(name);
+                        addDistinct();
                     }
                 } else if (property.valueType === 'BitString') {
                     _values = Object.keys(dti.utility.getConfig('Enums.' + name + ' Bits'));
                     item._values = _values;
                     item.Value = _values;
                 } else if (property.valueType === 'None') {
-                    getDistinct.push(name);
+                    item.ValueType = valueTypes;
+                    addDistinct();
+                } else if (property.valueType === 'String') {
+                    addDistinct();
+                } else if (property.valueType === 'Bool') {
+                    _values = [true, false];
+                    item._values = _values;
+                    item.Value = _values;
                 }
                 dti.globalSearch.autosuggestPropertyData[name] = item;
             });
 
-            // TODO async call to db to get distincts
-            
-            // We need to get and overwrite 'Control Priorities' values array with what we get back from db
-            // Here's an example of our distinct Quality Code Enable.Value values in the db:
-            // [11,255,9,251,254,247,240,250,0,248,241,244,242]
-            // But our Quality Code Enable Values the user enters are 'Override', 'COV Enable', 'Alarms Off', 'Command Pending', 'All'
-            // On the server side if we see the user searching for something with bit string, make sure to account for this type of thing
-            // db.getCollection('points').distinct('Active Value.Value', {'Active Value.ValueType': 5})
-        },
-        initOnLoad: function () {
-            // Build autosuggest data
-            
             // Create auto suggest
             dti.globalSearch.autosuggest = new dti.autosuggest.Autosuggest({
                 $inputElement: dti.globalSearch.$inputEl,
@@ -1893,9 +1952,48 @@ var dti = {
                 }]
             });
 
+            // Add click handler to hide the autosuggest
             $('#globalSearchResults').click(function (e) {
                 dti.globalSearch.autosuggest.hide();
             });
+
+            // Async call to db to get distinct values
+            $.ajax({
+                type: 'post',
+                url: '/api/points/getDistinctValues',
+                data: JSON.stringify(distinct),
+                contentType: 'application/json'
+            }).done(
+                function handleData (data) {
+                    if (data.err) {
+                        return dti.log('globalSearch getDistinctValues failed', data.err);
+                    }
+                    var obj = {};
+
+                    dti.forEachArray(data, function (item) {
+                        obj[item.property] = {
+                            Value: item.distinct,
+                            _values: item.distinct
+                        };
+                    });
+
+                    dti.globalSearch.autosuggest.addData('Properties', obj);
+                }
+            ).fail(
+                function fnName (jqXHR, textStatus, errorThrown) {
+                    dti.log('globalSearch getDistinctValues failed', jqXHR, textStatus, errorThrown);
+                }
+            ).always (
+                function finished () {
+                }
+            );
+            // Here's an example of our distinct Quality Code Enable.Value values in the db:
+            // [11,255,9,251,254,247,240,250,0,248,241,244,242]
+            // But our Quality Code Enable Values the user enters are 'Override', 'COV Enable', 'Alarms Off', 'Command Pending', 'All'
+            // On the server side if we see the user searching for something with bit string, make sure to account for this type of thing
+            
+            // Get controller and control priorities data for the autosuggest
+            getControlData();
         },
         show: function () {
             dti.globalSearch.visible = true;
@@ -2044,182 +2142,153 @@ var dti = {
 
         },
         Autosuggest: function (config) {
-            // cfg:
+            // config:
             // {
             //     $inputElement: $element,
             //     $resultsContainer: $element,
+            //     $chips: $element, // Materialize chips $ element - ONLY if the autosuggest is on an input with materialize chips installed
             //     sources: [{
             //         data: [array of suggestion strings],
             //         name: 'name of data source',
             //         nameShown: bool (show name header before suggestion results)
             //         * async data sources will require additional info TBD
-            //     }, {...}]
+            //     }, {...}],
+            //     see 'defaults' object below for additional options
             // }
 
             var self = this,
                 defaults = {
-                    highlight: true,
-                    minLength: 0,
+                    highlight: true, // If true, when suggestions are rendered, pattern matches for the current query in text nodes will be wrapped in a strong element with its class set to {{classNames.highlight}}
+                    minLength: 0, // The minimum character length needed before suggestions start getting rendered
                     classNames: {
-                        highlight: 'autosuggestHighlight',
-                        match: 'autosuggestMatch',
-                        selected: 'autosuggestSelected'
+                        highlight: 'autosuggestHighlight',  // Added to the element that wraps highlighted text
+                        match: 'autosuggestMatch',          // Added to suggestion elements in the suggestion container
+                        selected: 'autosuggestSelected',    // Added to selected suggestion elements
+                        header: 'autosuggestHeader',        // Added to suggestion source header (if shown)
+                        container: 'autosuggestContainer'   // Added to suggestion container
                     },
-                    $chips: null,
+                    autoselect: false, // If nothing selected, autoselect the first suggestion when autosuggest renders or the suggestions change
+                    chainCharacter: '.' // Delimiter character used to separate links in an object chain
                 },
                 cfg = $.extend(defaults, config),
-                selectors = {
-                    match: '.' + cfg.classNames.match,
-                    selected: '.' + cfg.classNames.selected,
-                    matchSelected: ['', cfg.classNames.match, cfg.classNames.selected].join('.')
-                },
-                $markup,
-                $inputContentUtilityEl,
-                getSource = function (name) {
-                    var sources = self.bindings.sources(),
-                        theSource;
+                selectors = (function () {
+                    var obj = {};
 
-                    if (!name && sources.length === 1) {
-                        return sources[0];
-                    }
+                    dti.forEach(cfg.classNames, function (cssClass, name) {
+                        obj[name] = '.' + cssClass;
+                    });
                     
-                    dti.forEachArray(sources, function (source) {
-                        if (source.name === name) {
-                            theSource = source;
-                            return false;
-                        }
-                    });
+                    return obj;
+                })(),
+                operatorsRegex = new RegExp('[<>]=|!=|<>|>|<|=|:'),
+                $markup,
+                $container,
+                scrollTo = function ($target) {
+                    if (!$target || !$target.length) {
+                        return $target;
+                    }
 
-                    return theSource;
-                },
-                formatData = function (src) {
-                    // data: array of strings and/or objects
-                    var srcData = src.data,
-                        trunk,
-                        formatObj = function (parent, srcItem, text) {
-                            var item = {
-                                    _private: {
-                                        parent: parent,
-                                        text: text,
-                                        html: ko.observable(text),
-                                        values: [],
-                                        isTopLevel: !!!parent._private
-                                    }
-                                };
+                    var topOffset = $target.position().top,
+                        doScroll = false;
 
-                            parent[text] = item;
-
-                            if (Array.isArray(srcItem)) {
-                                dti.forEachArray(srcItem, function (value) {
-                                    value = value.toString();
-                                    item._private.values.push({
-                                        text: value,
-                                        html: ko.observable(value)
-                                    });
-                                });
-                            } else {
-                                dti.forEach(srcItem, function (subSource, subText) {
-                                    if (subText === '_values') {
-                                        dti.forEachArray(subSource, function (value) {
-                                            value = value.toString();
-                                            item._private.values.push({
-                                                text: value,
-                                                html: ko.observable(value)
-                                            });
-                                        });
-                                    } else { // Should be an object
-                                        formatObj(item, subSource, subText);
-                                    }
-                                });
-                            }
-                        };
-
-                    if (Array.isArray(srcData)) {
-                        self.tree[src.name] = [];
-                        trunk = self.tree[src.name];
-
-                        dti.forEachArray(srcData, function (text) {
-                            trunk.push({
-                                text: text,
-                                html: ko.observable(text),
-                                isTopLevel: true
-                            });
-                        });
-                    } else { // srcData must be an object
-                        self.tree[src.name] = {};
-                        trunk = self.tree[src.name];
+                    if (topOffset < 0) {
+                        doScroll = true;
+                    } else {
+                        topOffset = (topOffset + $target.height()) - $container.height();
                         
-                        dti.forEach(srcData, function (item, text) {
-                            formatObj(trunk, item, text);
-                        });
-                    }
-                    return trunk;
-                },
-                selectMatch = function ($match) {
-                    if ($match.get(0)) {
-                        $match.addClass(cfg.classNames.selected);
-                    }
-                },
-                getOperator = function (inputValue) {
-                    var operatorCharacters = ['<=', '<', '>=', '>', '='],
-                        operator = null;
-
-                    // If our search includes an equality character
-                    dti.forEachArray(operatorCharacters, function (character) {
-                        if (!!~inputValue.indexOf(character)) {
-                            operator = character;
-                            return false;
+                        if (topOffset > 0) {
+                            doScroll = true;
                         }
-                    });
+                    }
 
-                    return operator;
+                    if (doScroll) {
+                        $container.scrollTop($container.scrollTop() + topOffset);
+                    }
+
+                    return $target;
+                },
+                sortArray = function (arr) {
+                    arr.sort(function (a,b) {
+                        return a.text.toLowerCase() > b.text.toLowerCase() ? 1:-1;
+                    });
+                },
+                getOperator = function (str) {
+                    var operator = str.match(operatorsRegex);
+
+                    return operator && operator[0];
+                },
+                parse = function (str) {
+                    var beginningWhitespaceRegex = /^\s*/,
+                        parsed = {
+                            expression: str,
+                            isEquation: false,
+                            isInvalid: false,
+                            operator: getOperator(str),
+                            value: null,
+                        },
+                        equationParts,
+                        i;
+
+                    if (parsed.operator) {
+                        parsed.isEquation = true;
+                        equationParts = str.split(parsed.operator);
+                        parsed.expression = equationParts[0].trim();
+                        parsed.value = equationParts[1].replace(beginningWhitespaceRegex, '');
+                        
+                        if (parsed.expression.length === 0) {
+                            parsed.isEquation = false;
+                            parsed.value = null;
+                            parsed.operator = null;
+                            parsed.expression = str;
+                        } else if (equationParts.length > 2) {
+                            parsed.isInvalid = true;
+                            // Our 'value' term is incomplete - finish it out
+                            i = 2;
+                            do {
+                                parsed.value += equationParts[i++];
+                            } while (i < parsed.expression.length);
+                        } else if (parsed.expression.match(operatorsRegex) || parsed.value.match(operatorsRegex)) {
+                            parsed.isInvalid = true;
+                        }
+                    }
+
+                    return parsed;
                 },
                 getMatches = function (inputValue) {
                     var regex = new RegExp(inputValue, 'ig'),
-                        beginningWhiteSpaceRegex = /^\s*/,
-                        numberMatchesFound = 0,
-                        operator = null,
+                        totalMatches = 0,
+                        parsed,
                         matches,
                         data,
                         chain,
-                        equationParts,
                         stopIndex;
 
                     dti.forEachArray(self.bindings.sources(), function (source) {
                         matches = [];
+                        data = source.data;
 
-                        if (Array.isArray(source.data)) {
-                            dti.forEachArray(source.data, function (item) {
+                        if (Array.isArray(data)) {
+                            dti.forEachArray(data, function (item) {
                                 if (regex.test(item.text)) {
                                     if (cfg.highlight) {
-                                        item.html(item.text.replace(regex, ['<strong class="', cfg.classNames.highlight, '">', '$&', '</strong>'].join('')));
+                                        item.html(item.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
                                     }
                                     matches.push(item);
                                 }
                             });
                         } else { // Must be an object
-                            data = source.data;
-
-                            operator = getOperator(inputValue);
-
-                            // If our search includes an equality character
-                            if (operator !== null) {
-                                equationParts = inputValue.split(operator);
-                                // Remove white space around string
-                                equationParts[0] = equationParts[0].trim();
-                                // Remove white space from string beginning
-                                equationParts[1] = equationParts[1].replace(beginningWhiteSpaceRegex, '');
-                                inputValue = equationParts[0];
-                            }
+                            parsed = parse(inputValue);
 
                             // If our search includes a chain character
-                            if (!!~inputValue.indexOf('.')) {
-                                chain = inputValue.split('.');
+                            if (!!~parsed.expression.indexOf(cfg.chainCharacter)) {
+                                chain = parsed.expression.split(cfg.chainCharacter);
 
-                                if (operator) {
+                                if (parsed.operator) {
                                     stopIndex = chain.length - 1;
                                 } else {
                                     stopIndex = chain.length - 2;
+                                    // Ex: Part1.Sub2.stillWorkingOnThisOne
+                                    // We want to stop on 'Sub2' so we get all of Sub2's available keys and match against string 'stillWorkingOnThisOne'
                                 }
 
                                 dti.forEachArray(chain, function (link, ndx) {
@@ -2231,26 +2300,27 @@ var dti = {
                                     }
 
                                     if (ndx === stopIndex) {
-                                        if (operator) {
+                                        if (parsed.operator) {
                                             data = data._private.values;
                                         } else {
+                                            // Update our regex; continuing the example above, we want to test against 'stillWorkingOnThisOne' instead of 'Part1.Sub2.stillWorkingOnThisOne'
                                             regex = new RegExp(chain[chain.length-1], 'ig');
                                         }
                                         return false;
                                     }
                                 });
-                            } else if (operator) {
-                                data = data[equationParts[0]] && data[equationParts[0]]._private.values;
+                            } else if (parsed.operator) {
+                                data = data[parsed.expression] && data[parsed.expression]._private.values;
                             }
 
                             if (data) {
-                                if (operator) {
-                                    regex = new RegExp(equationParts[1], 'ig');
+                                if (parsed.operator) {
+                                    regex = new RegExp(parsed.value, 'ig');
 
                                     dti.forEachArray(data, function (item, index) {
                                         if (regex.test(item.text)) {
                                             if (cfg.highlight) {
-                                                item.html(item.text.replace(regex, ['<strong class="', cfg.classNames.highlight, '">', '$&', '</strong>'].join('')));
+                                                item.html(item.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
                                             }
                                             matches.push(item);
                                         }
@@ -2263,7 +2333,7 @@ var dti = {
 
                                         if (regex.test(item._private.text)) {
                                             if (cfg.highlight) {
-                                                item._private.html(item._private.text.replace(regex, ['<strong class="', cfg.classNames.highlight, '">', '$&', '</strong>'].join('')));
+                                                item._private.html(item._private.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
                                             }
                                             matches.push(item._private);
                                         }
@@ -2272,54 +2342,222 @@ var dti = {
                             }
                         }
 
+                        sortArray(matches);
                         source.matches(matches);
-                        numberMatchesFound += matches.length;
+                        totalMatches += matches.length;
                     });
 
-                    if (numberMatchesFound <= 1) {
+                    if (totalMatches <= 1) {
                         self.hide();
+                    }
+                    self.numberOfMatches = totalMatches;
+                },
+                handleKeyup = function (e) {
+                    var inputValue = cfg.$inputElement.val(),
+                        key = e.which,
+                        catchKeys = [27, 40, 38, 10, 13]; // escape, down, up, return, return
+
+                    if (!!~catchKeys.indexOf(key)) {
+                        if (key === 27) { // escape
+                            self.hide();
+                        }
+                        return;
+                    }
+
+                    getMatches(inputValue);
+
+                    if (self.bindings.isShown() === false) {
+                        if (inputValue.length > cfg.minLength) {
+                            self.show();
+                        }
+                    } else if (!self.getSelected().length) {
+                        if (cfg.autoselect) {
+                            self.selectFirst();
+                        }
+                    } else {
+                        scrollTo(self.getSelected());   // Scroll to the selected item (JIC it's not in view)
+                    }
+                },
+                handleKeydown = function (e) {
+                    var key = e.which,
+                        $selected;
+
+                    if (key === 10 || key === 13) { // return
+                        $selected = self.getSelected();
+                        if (self.bindings.isShown() && $selected.length) {
+                            // If materialize chips is installed on this input
+                            if (cfg.$chips) {
+                                // Stop propagation so we don't create a chip
+                                e.stopImmediatePropagation();
+                            }
+
+                            self.bindings.selectMatch(ko.dataFor($selected[0]));
+                        } else {
+                            getMatches('');
+                            self.hide();
+                        }
+                    } else if (key === 40) { // down
+                        if (self.bindings.isShown() === false) {
+                            self.show();
+                        } else {
+                            self.selectNext();
+                        }
+                    } else if (key === 38) { // up
+                        if (self.bindings.isShown()) {
+                            self.selectPrevious();
+                        }
                     }
                 };
 
-            self.addData = function (data, name) {
-                // data: array of suggestion strings
-                var source = getSource(name);
-                if (source) {
-                    source.data(source.data().concat(formatData(data)));
-                }
+            if (!cfg.$inputElement || !cfg.$inputElement.length) {
+                return dti.log('Invalid $inputElement', config.$inputElement);
+            }
+            if (!cfg.$resultsContainer || !cfg.$resultsContainer.length) {
+                return dti.log('Invalid $resultsContainer', config.$resultsContainer);
+            }
+            if (cfg.$chips && !cfg.$chips.length) {
+                return dti.log('Invalid $chips', config.$chips);
+            }
+
+            self.getSource = function (name) {
+                var sources = self.bindings.sources(),
+                    source;
+
+                dti.forEachArray(sources, function (src) {
+                    if (src.name() === name) {
+                        source = src;
+                        return false;
+                    }
+                });
+
+                return source;
             };
 
-            self.replaceData = function (data, name) {
-                // data: array of suggestion strings
-                var source = getSource(name);
-                if (source) {
-                    source.data(formatData(data));
-                }
+            self.addSource = function (src) {
+                var source = {
+                        name: ko.observable(src.name || dti.makeId()),
+                        nameShown: ko.observable(src.nameShown),
+                        data: Array.isArray(src.data) ? []:{},
+                        matches: ko.observableArray([])
+                    };
+
+                self.bindings.sources.push(source);
+
+                self.addData(source.name(), src.data);
+
+                getMatches(cfg.$inputElement.val());
             };
 
-            self.deleteData = function (name) {
-                var source = getSource(name);
-                if (source) {
-                    source.data.removeAll();
+            self.addData = function (sourceName, data) {
+                // data: array of suggestion strings or an object
+                var source = self.getSource(sourceName),
+                    addValues = function (fromArray, toArray, additionalProperties) {
+                        var item;
+
+                        additionalProperties = additionalProperties || {};
+
+                        dti.forEachArray(fromArray, function (value) {
+                            value = value.toString();
+                            item = $.extend({
+                                text: value,
+                                html: ko.observable(value)
+                            }, additionalProperties);
+
+                            toArray.push(item);
+                        });
+                    },
+                    addValuesAndSort = function (fromArray, toArray, additionalProperties) {
+                        addValues(fromArray, toArray, additionalProperties);
+                        sortArray(toArray);
+                    },
+                    addObj = function (parent, srcItem, text) {
+                        var item = {
+                                _private: {
+                                    parent: parent,
+                                    text: text,
+                                    html: ko.observable(text),
+                                    values: [],
+                                    isTopLevel: !!!parent._private
+                                }
+                            };
+
+                        if (!parent[text]) {
+                            parent[text] = item;
+                        } else {
+                            item = parent[text];
+                        }
+
+                        if (Array.isArray(srcItem)) {
+                            addValuesAndSort(srcItem, item._private.values);
+                        } else {
+                            dti.forEach(srcItem, function (subSource, subText) {
+                                // Look for special keys and handle accordingly
+                                if (subText === '_values') {
+                                    return addValuesAndSort(subSource, item._private.values);
+                                }
+                                if (subText === '_valuesNoSort') {
+                                    return addValues(subSource, item._private.values);
+                                }
+
+                                addObj(item, subSource, subText);
+                            });
+                        }
+                    };
+
+                if (!source) {
+                    return dti.log('Source not found');
                 }
+
+                // If the new data is not the same type as our source
+                if (Array.isArray(data) !== Array.isArray(source.data)) {
+                    return dti.log('Invalid data');
+                }
+
+                if (Array.isArray(data)) {
+                    addValuesAndSort(data, source.data, {
+                        isTopLevel: true
+                    });
+                } else { // data must be an object
+                    dti.forEach(data, function (item, text) {
+                        addObj(source.data, item, text);
+                    });
+                }
+
+                getMatches(cfg.$inputElement.val());
+            };
+
+            self.deleteData = function (sourceName) {
+                var source = self.getSource(sourceName);
+
+                if (!source) {
+                    return dti.log('Source not found');
+                }
+
+                if (Array.isArray(source.data)) {
+                    source.data = [];
+                } else {
+                    source.data = {};
+                }
+
+                getMatches(cfg.$inputElement.val());
             };
 
             self.show = function () {
-                if (cfg.$resultsContainer.find(selectors.match).length) {
+                if (!self.bindings.isShown() && (self.numberOfMatches > 0)) {
+                    if (cfg.autoselect) {
+                        self.selectFirst();
+                    }
+                    self.reposition();
                     self.bindings.isShown(true);
                 }
             };
 
             self.hide = function (clearInputValue) {
-                cfg.$resultsContainer.find(selectors.matchSelected).removeClass(cfg.classNames.selected);
                 self.bindings.isShown(false);
+                self.selectNone();
                 if (clearInputValue) {
-                    self.clearInputValue();
+                    cfg.$inputElement.val('');
                 }
-            };
-
-            self.clearInputValue = function () {
-                cfg.$inputElement.val('');
             };
 
             self.reposition = function () {
@@ -2333,34 +2571,60 @@ var dti = {
             };
 
             self.selectFirst = function () {
-                selectMatch(cfg.$resultsContainer.find(selectors.match).first());
+                return $container.find(selectors.match).first().addClass(cfg.classNames.selected);
             };
 
             self.selectLast = function () {
-                selectMatch(cfg.$resultsContainer.find(selectors.match).last());
+                return $container.find(selectors.match).last().addClass(cfg.classNames.selected);
             };
 
             self.selectNext = function () {
-                var $selected = cfg.$resultsContainer.find(selectors.matchSelected);
+                var $selected = self.getSelected(),
+                    $next = $selected.next(),
+                    topOffset;
 
                 if ($selected.length) {
-                    selectMatch($selected.removeClass(cfg.classNames.selected).next());
+                    self.selectNone($selected);
+                    $next.addClass(cfg.classNames.selected);
                 } else {
-                    self.selectFirst();
+                    $next = self.selectFirst();
                 }
+                scrollTo($next);
+
+                return $next;
             };
 
             self.selectPrevious = function () {
-                var $selected = cfg.$resultsContainer.find(selectors.matchSelected);
+                var $selected = self.getSelected(),
+                    $previous = $selected.prev();
 
                 if ($selected.length) {
-                    selectMatch($selected.removeClass(cfg.classNames.selected).prev());
+                    self.selectNone($selected);
+                    $previous.addClass(cfg.classNames.selected);
                 } else {
-                    self.selectLast();
+                    $previous = self.selectLast();
                 }
+                scrollTo($previous);
+
+                return $previous;
             };
 
-            self.tree = {};
+            self.selectNone = function ($selected) {
+                if (!$selected) {
+                    $selected = self.getSelected();
+                }
+                return $selected.removeClass(cfg.classNames.selected);
+            };
+
+            self.getSelected = function () {
+                return $container.find(selectors.selected);
+            };
+
+            self.parse = function (str) {
+                return parse(str);
+            };
+
+            self.numberOfMatches = 0;
 
             self.bindings = {
                 isShown: ko.observable(false),
@@ -2380,39 +2644,25 @@ var dti = {
                             if (data.isTopLevel) {
                                 inputValue = data.text;
                             } else {
-                                inputValue = inputValue.slice(0, inputValue.lastIndexOf('.')+1) + data.text;
+                                inputValue = inputValue.slice(0, inputValue.lastIndexOf(cfg.chainCharacter)+1) + data.text;
                             }
                         }
 
                         cfg.$inputElement.val(inputValue);
                         cfg.$inputElement.focus();
-                        getMatches(data.text);
+                        self.hide();
                     }
                 }
             };
 
-            // Setup the auto-suggests
-            dti.forEachArray(cfg.sources, function (source) {
-                var defaults = {
-                        name: dti.makeId(),
-                        nameShown: false
-                    },
-                    src = $.extend(defaults, source);
+            // Add autosuggest sources
+            dti.forEachArray(cfg.sources, self.addSource);
 
-                self.bindings.sources.push({
-                    data: formatData(src),
-                    name: ko.observable(src.name),
-                    nameShown: ko.observable(src.nameShown),
-                    matches: ko.observableArray([])
-                });
-            });
-
-            getMatches('');
-
+            // Get autosuggest DOM template
             $markup = dti.utility.getTemplate('#autosuggestTemplate');
 
             // Change default class names if needed
-            dti.forEach(defaults.classNames, function (defaultClassName, key) {
+            dti.forEach(defaults.classNames, function changeDefaultClassName (defaultClassName, key) {
                 var defaultSelector = '.' + defaultClassName,
                     requestedClassName = cfg.classNames[key];
 
@@ -2421,71 +2671,31 @@ var dti = {
                 }
             });
 
+            // Add autosuggest DOM to the document & apply bindings
             cfg.$resultsContainer.append($markup);
-
             ko.applyBindings(self.bindings, $markup[0]);
 
+            // Cache the container
+            $container = cfg.$resultsContainer.find(selectors.container);
+
             // Add event handlers
-            cfg.$inputElement.keyup(function (e) {
-                var inputValue = cfg.$inputElement.val(),
-                    $selected,
-                    chipsArray;
+            cfg.$inputElement.keyup(handleKeyup);
 
-                switch (e.which) {
-                    case 40: // down
-                    if (self.bindings.isShown() === false) {
-                        self.show();
-                    } else {
-                        // Navigate down list
-                        self.selectNext();
-                    }
-                    break;
+            cfg.$inputElement.keydown(handleKeydown);
 
-                    case 38: // up
-                    if (self.bindings.isShown()) {
-                        self.selectPrevious();
-                    }
-                    break;
+            cfg.$resultsContainer.click(function handleClick (e) {
+                var $target = $(e.target);
 
-                    case 10: // return
-                    case 13:
-                    $selected = cfg.$resultsContainer.find(selectors.matchSelected);
-                    if (self.bindings.isShown() && $selected.length) {
-                        // If materialize chips is installed on this input
-                        if (cfg.$chips) {
-                            // Materialize 'return' handler was processed before us. We need to remove the
-                            // chip it created and update the input element's value
-                            chipsArray = cfg.$chips.data('chips');
-                            cfg.$inputElement.val(chipsArray[chipsArray.length - 1].tag);
-                            
-                            cfg.$chips.deleteChip(cfg.$chips.data('index'), chipsArray.length - 1, cfg.$chips);
-                        }
-                        
-                        self.bindings.selectMatch(ko.dataFor($selected[0]));
-                    }
-                    break;
-
-                    case 27: // escape
+                if (($target.is(cfg.$inputElement) === false) && ($target.parents(selectors.container).length) === 0) {
                     self.hide();
-                    return;
-
-                    default:
-                    getMatches(inputValue);
-                    break;
-                }
-
-                self.reposition();
-
-                if (inputValue.length > cfg.minLength) {
-                    self.show();
                 }
             });
 
-            cfg.$resultsContainer.click(function (e) {
-                if ($(e.target).is(cfg.$inputElement) === false) {
-                    dti.globalSearch.autosuggest.hide();
-                }
-            });
+            if (cfg.$chips) {
+                cfg.$chips.on('chip.delete', function (e, chip) {
+                    self.reposition();
+                });
+            }
         }
     },
     globalSearchOld: {

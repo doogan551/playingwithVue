@@ -625,7 +625,11 @@ $startmenuGutter: 15px;
             flex-shrink: 0;
 
             &.selected {
-                background-color: $blue-grey-lighten-1;
+                background-color: $blue-grey-lighten-1 !important;
+            }
+
+            &.err {
+                background-color: map-get($red, lighten-3);
             }
         }
 
@@ -734,6 +738,10 @@ $startmenuGutter: 15px;
         .autosuggestMatch:hover {
             @extend .autosuggestSelected;
             cursor: pointer;
+        }
+
+        .autosuggestHighlight {
+            font-weight: bold;
         }
     }
 }

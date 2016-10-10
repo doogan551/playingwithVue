@@ -1711,7 +1711,7 @@ var alarmMessageViewModel = function() {
                         title: columnTitle,
                         data: columnConfig.columnKey,
                         //className: setColumnClasses(columnConfig.columnKey),
-                        width: (!!columnConfig.width ? columnConfig.width : "auto"),
+                        width: (!!columnConfig.width ? columnConfig.width + "px" : "auto"),
                         render: {
                             _: "Value"
                         },
@@ -1748,6 +1748,7 @@ var alarmMessageViewModel = function() {
                     scrollY: true,
                     scrollX: true,
                     scrollCollapse: true,
+                    autoWidth: true,
                     lengthChange: true,
                     lengthMenu: [
                         [10, 18, 30, 50, 75, 100, -1],
@@ -1766,6 +1767,7 @@ var alarmMessageViewModel = function() {
                 $alarmTemplateDataTable.DataTable().clear();
                 $alarmTemplateDataTable.DataTable().rows.add(alarmTemplateData);
                 $alarmTemplateDataTable.DataTable().draw();
+                // $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
             }
         },
         buildAlarmTemplate = function(row, cloneRow) {
