@@ -798,6 +798,10 @@ input[type=text]:focus:not([readonly]) {
     border-bottom: 1px solid #607d8b;
     box-shadow: 0 1px 0 0 #607d8b;
 }
+input[type=search]:focus:not([readonly]) {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
 #pointName1:focus {
     border-bottom: 1px solid #607d8b;
     box-shadow: 0 1px 0 0 #607d8b;

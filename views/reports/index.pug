@@ -108,6 +108,7 @@ block content
                                                     th.medium.strong Column Key
                                                     // ko if: (reportType !== 'Property')
                                                     th.medium.strong Display Name
+                                                    // ko if: (chartable() === true)
                                                     th.medium.strong
                                                         .multiplierColumn
                                                     th.medium.strong
@@ -142,6 +143,7 @@ block content
                                                                 label.blue-grey-text.label-tight(data-bind="attr: { for: 'globalIncludeInChart' }")
                                                     th.medium.strong
                                                         .yaxisChartGroupColumn
+                                                    // /ko
                                                     // /ko
                                                     th.medium.strong
                                             tbody.sortablecolums(data-bind="foreach: listOfColumns()")
@@ -219,12 +221,12 @@ block content
                                                         input.form-control.inputPrecision(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")
                                                         // /ko
                                                     td.includeInChart
-                                                        // ko if: ($root.canEdit() && !!canBeCharted && canBeCharted)
-                                                        input.includeInChartColumn.filled-in(data-bind="checked: includeInChart, enable: ($root.canEdit() && !!canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()}", type="checkbox")
+                                                        // ko if: ($root.canEdit() && $data.canCalculate)
+                                                        input.includeInChartColumn.filled-in(data-bind="checked: includeInChart, enable: ($root.canEdit() && canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()}", type="checkbox")
                                                         label(data-bind="attr: { for: 'includeInChart' + $index() }")
                                                         // /ko
                                                     td.yaxisChartGroup
-                                                        // ko if: ($root.canEdit() && !!canBeCharted && canBeCharted)
+                                                        // ko if: ($root.canEdit() && $data.canCalculate)
                                                         .dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
                                                             a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
                                                                 span.text(data-bind="text: yaxisGroup")
@@ -419,7 +421,7 @@ block content
                                     br
                                     span.intervalSettings
                                         div.intervalsContainer.input-field
-                                            input.intervalValue.form-control.input-md#intervalValue(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
+                                            input.intervalValue.form-control.input-md.filled-in#intervalValue(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
                                             label(data-bind="attr: {for: 'intervalValue'}") Interval:
                                         .dropdown.availableIntervalsContainer
                                             a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: (!$root.canEdit() || $root.durationError()), durationError: $root.durationError() }", data-activates="intervals")
