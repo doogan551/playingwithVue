@@ -21,6 +21,18 @@ router.post('/globalSearch', function (req, res) {
   });
 });
 
+// Checked (JDR)
+router.post('/getDistinctValues', function (req, res) {
+  var data = _.merge(req.params, req.body);
+
+  Point.getDistinctValues(data, function (err, distinctValues) {
+    if (err) return utils.sendResponse(res, {
+      err: err
+    });
+    return utils.sendResponse(res, distinctValues);
+  });
+});
+
 // Checked - slow?
 router.post('/browse', function(req, res) {
   var data = _.merge(req.params, req.body);

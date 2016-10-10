@@ -164,10 +164,10 @@ exports.remove = function(criteria, cb) {
 };
 
 exports.distinct = function(criteria, cb) {
-  var query = criteria.query;
+  var query = criteria.query || {};
   var coll = criteria.collection;
   var field = criteria.field;
-  var options = criteria.options;
+  var options = criteria.options || {};
 
   var collection = db.get().collection(coll);
 
