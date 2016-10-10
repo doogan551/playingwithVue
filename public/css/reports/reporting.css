@@ -2,10 +2,10 @@
     z-index: 5;
     padding: 0px 0px 10px 5px;
     position: absolute;
-    width: 92px;
+    width: 86px;
     height: 100%;
     color: #ffffff;
-    background-color: rgb(200, 190, 170);
+    border-right: 1px solid #ccc;
 }
 .leftBar a {
     /*padding-top: 0px;*/
@@ -15,6 +15,8 @@
     padding: 0px 0px 5px 88px;
     position: relative;
     width: 100%;
+    height: 100vh;
+    background-color: #fff;
 }
 .rightPanel > div.container-fluid {
     padding-right: 0px;
@@ -30,7 +32,7 @@
     border: 1px solid #D0D0D0;
     border-radius: 3px;
     padding: 2px 8px 2px 2px;
-    width: 130px;
+    width: 150px;
     /*width: 100%;*/
     text-align: right;
 }
@@ -71,12 +73,11 @@ input.input.form-control.durationDateRangeTime {
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
 }
 .reportDateRangePicker {
+}
+.reportDateRangePicker div.input-field {
     display: inline-flex;
-    margin-left: 50px;
 }
 .workingPane {
-    /*min-width: 1120px;*/
-    /*margin-left: 1px;*/
 }
 .leftBar .tabs li {
     padding: 6px 6px 6px 6px;
@@ -136,7 +137,9 @@ input.input.form-control.durationDateRangeTime {
 }
 .availableIntervalsContainer {
     cursor: pointer;
+    padding-left: 10px;
     margin-right: 7px;
+    margin-top: 26px;
 }
 .availableDurationsContainer {
     cursor: pointer;
@@ -174,12 +177,11 @@ div.additionalFilters.tab-pane {
     display: none;
 }
 .durationCalendarIcon {
-    left: 80px;
-    top: 8px;
+    left: -222px;
+    top: 12px;
 }
 .timePickers {
     display: flex;
-    margin-left: 112px;
 }
 span.timePickerLabel {
     display: flex;
@@ -193,9 +195,9 @@ span.reportDateRangeLabel {
     color: black;
     padding: 0px 3px 0px 3px;
 }
-.intervalValue {
-    width: 80px;
-    margin-left: 7px;
+input.intervalValue {
+    padding-left: 5px;
+    width: 65px;
 }
 span.intervalLabel {
     display: flex;
@@ -205,7 +207,6 @@ span.intervalLabel {
 
 .intervalSettings {
     display: inline-flex;
-    margin-left: 65px;
 }
 .emptyColumn {
     width: 10px;
@@ -255,7 +256,7 @@ span.intervalLabel {
     list-style-type: none;
 }
 .calculations.dropdown-menu {
-    width: 140px;
+    width: 130px;
     min-width: 70px;
     text-indent: 7px;
     margin-left: 6px;
@@ -283,6 +284,9 @@ span.intervalLabel {
 }
 .addColumnGridButton {
     cursor: pointer;
+}
+.dropdown-content li>a, .dropdown-content li>span {
+    color: #607d8b;
 }
 .operator {
     cursor: pointer;
@@ -347,11 +351,14 @@ td.filterName {
     width: 275px;
     padding-left: 20px !important;
 }
-li.active a {
+/*li.active a {
     border: 1px solid #416933;
-}
+}*/
 .filterName.open:focus {
     border-color: #d5e1f2;
+}
+.nav-tabs > li > a:hover {
+    background-color: #eceff1 !important;
 }
 .nav-tabs > li.active > a {
     background: none;
@@ -361,26 +368,22 @@ li.active a {
     min-width: 850px;
 }
 .tabConfiguration ul.nav.nav-tabs {
-    background-color: rgb(200, 190, 170);
     border-bottom: none;
 }
 .tabConfiguration ul.nav.nav-tabs li.active a {
-    background-color: #dddddd;
+    background-color: #fff !important;
 }
-.tabConfiguration ul.nav.nav-tabs li a {
+/*.tabConfiguration ul.nav.nav-tabs li a {
     background-color: #B1B1B1;
-}
+}*/
 .tabConfiguration .tab-content {
-    background-color: #dddddd;
+    background-color: #fff;
     border-radius: 0px 0px 7px 7px;
     margin-top: 0px;
     margin-left: 0px;
     margin-right: 0px;
     padding-left: 20px;
     padding-right: 20px;
-}
-.tabConfiguration .tab-pane {
-    /*height: 70vh;*/
 }
 .tabViewReport {
     padding-top: 0px;
@@ -391,7 +394,7 @@ li.active a {
     border-bottom: none;
 }
 .tabViewReport ul.nav.nav-tabs li.active a {
-    /*background-color: #dddddd;*/
+    /*background-color: #fff;*/
     border: 1px solid #416933;
 }
 .tabViewReport ul.nav.nav-tabs li a {
@@ -426,7 +429,13 @@ li.active a {
 .tabViewReport .chartButtons i.fa-print {
     padding-right: 3px;
 }
+#reportAttribs {
+    overflow-y: auto;
+}
 #reportColumns {
+    overflow-y: auto;
+}
+#filterByPoint {
     overflow-y: auto;
 }
 #additionalFilters {
@@ -451,7 +460,7 @@ ul.totalizerOperators.dropdown-menu li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
 }
-ul.calculations.dropdown-menu li a:hover {
+ul.calculations.dropdown-menu li:hover {
     background-color: #d5e1f2;
     cursor: pointer;
 }
@@ -498,7 +507,7 @@ span.caret.lm10px {
     text-decoration: #00B04F;
 }
 .btn:hover, .btn:focus, .btn.focus {
-    color: #397714;
+    color: #23527c;
     text-decoration: none;
 }
 a.tab {
@@ -511,11 +520,15 @@ a.clearName i {
     margin-left: -24px;
 }
 .pointTypesFilter {
-    padding-top: 30px;
+    padding-top: 12px;
 }
 .adjustPointTypesFilterButton {
     margin-top: 30px;
     margin-bottom: 50px;
+    color: #fff !important;
+}
+.adjustPointTypesFilterButton:hover {
+    color: #23527c !important;
 }
 .pointTypesFilter ul {
     display: flex;
@@ -529,7 +542,7 @@ a.clearName i {
     width: 20%;
     float: left;
 }
-.filled-in[type="checkbox"].filled-in:checked + label:after{
+.filled-in[type="checkbox"].filled-in:checked + label:after {
     border: 2px solid #607d8b;
     background-color: #607d8b;
 }
@@ -545,7 +558,7 @@ a.clearName i {
 }
 .selectorNames .form-control.readOnly {
     color: #607d8b;
-    background-color: #dddddd;
+    background-color: #fff;
 }
 div.input-field.col {
     padding-right: 10px;
@@ -554,12 +567,11 @@ div.input-field.col {
 html, body {
     overflow-x: hidden;
     overflow-y: hidden;
-    background-color: rgb(200, 190, 170);
 }
-body {
+/*body {
     padding-top: 5px;
     padding-right: 5px;
-}
+}*/
 .displayDiv {
     display: inline-block;
 }
@@ -603,6 +615,7 @@ div.dataTables_wrapper div.dataTables_length select {
 }
 .columnName {
     display: inline-block;
+    padding-left: 5px;
 }
 .columnNameContainer {
     min-width: 310px;
@@ -612,7 +625,7 @@ div.dataTables_wrapper div.dataTables_length select {
     min-width: 91px;
 }
 .columnTotals span {
-    color: #565656;
+    /*color: #565656;*/
 }
 .availableCalculations {
     display: inline-block;
@@ -622,7 +635,6 @@ div.dataTables_wrapper div.dataTables_length select {
     padding: 0px;
 }
 .dropdown.availableCalculations a .text {
-    margin-left: 14px;
 }
 .dropdown.availableTotalizerOperatorsContainer a {
     width: 88px;
@@ -632,7 +644,6 @@ div.dataTables_wrapper div.dataTables_length select {
     width: 78px;
 }
 .dropdown.availableTotalizerOperatorsContainer a .text {
-    margin-left: 12px;
 }
 .dropdown.availableAxisGroupsContainer a {
     width: 31px;
@@ -719,6 +730,9 @@ th .calculateColumn:hover {
     /*margin-left: 9px;*/
     margin-bottom: 10px;
 }
+th .includeInChartColumn {
+    height: 34px;
+}
 .yaxisChartGroup {
     width: 32px;
     min-width: 20px;
@@ -749,6 +763,83 @@ input.form-control.globalIncludeInChart {
 input.form-control.columnDisplayName {
     width: 281px;
     display: inline-block;
+    padding-top: 7px;
+    height: 1rem;
+}
+input.form-control.columnDisplayName:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+input.form-control.inputMultiplier {
+    padding-top: 7px;
+    height: 1rem;
+}
+input.form-control.inputMultiplier:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+input.form-control.inputPrecision {
+    padding-top: 7px;
+    height: 1rem;
+}
+input.form-control.inputPrecision:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+input.form-control.globalPrecisionInput {
+    height: 1rem;
+    width: 35px;
+}
+input.form-control.globalPrecisionInput:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+input[type=text]:focus:not([readonly]) {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+input[type=search]:focus:not([readonly]) {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+#pointName1:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+#pointName1:focus:not([readonly])+label {
+    color: #607d8b;
+}
+#pointName2:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+#pointName2:focus:not([readonly])+label {
+    color: #607d8b;
+}
+#pointName3:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+#pointName3:focus:not([readonly])+label {
+    color: #607d8b;
+}
+#pointName4:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+#pointName4:focus:not([readonly])+label {
+    color: #607d8b;
+}
+#reportTitleInput:focus {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+input.filled-in[type=number]:focus:not([readonly]) {
+    border-bottom: 1px solid #607d8b;
+    box-shadow: 0 1px 0 0 #607d8b;
+}
+#reportTitleInput:focus:not([readonly])+label {
+    color: #607d8b;
 }
 .columnsGrid .handle {
     background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGElEQVQIW2NkYGBIA+JZQMzACCJgAIUDACENAQR6zKpeAAAAAElFTkSuQmCC) repeat;
@@ -819,7 +910,7 @@ input.form-control.columnDisplayName {
 
 .columnsGrid.table > tbody > tr > td {
     border-top: 1px solid #CCC;
-    padding: 4px;
+    padding: 2px;
 }
 .columnsGrid.table > tbody.sortablecolums {
     border-bottom: 2px solid #CCC;
@@ -861,11 +952,9 @@ input.form-control.columnDisplayName {
     height: 33px;
 }
 .availableChartTypes.chartTab > .btn {
-    padding: 0px 8px 0px 8px;
-    margin-top: 2px;
+    padding: 0px 14px 0px 8px;
     border-radius: 4px 0px 0px 4px;
-    height: 33px;
-}
+    height: 36px;}
 .panel-heading a.panel-anchor:after {
     font-family:'Glyphicons Halflings';
     content:"\e114";
@@ -883,18 +972,19 @@ input.form-control.columnDisplayName {
     height: 300px;
     overflow: hidden;
     overflow-y: auto;
+    padding-left: 7px;
 }
 .enumproperties li:hover{
     cursor: pointer;
 }
 .reporttype {
     margin-top: -14px;
-    background-color: #dddddd;
+    background-color: #fff;
     font-style: italic;
     font-size: 12px;
 }
 .reportTitle {
-    background-color: #dddddd;
+    background-color: #fff;
     border-top-right-radius: 7px;
     margin-top: 0px;
     text-align: center;
@@ -958,7 +1048,7 @@ button {
 .reportButtons {
     margin: -1px auto 46px auto;
     width: 325px;
-    padding: 1px;
+    padding: 5px 1px 1px 1px;
 }
 .reportButtons .btn.btn-primary {
     margin: 1px;

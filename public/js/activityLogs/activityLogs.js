@@ -99,10 +99,10 @@ var ActivityLogsManager = function (conf) {
             self.name3(filter.name3);
             self.name4(filter.name4);
 
-            if (filter.pointTypes.length === numberPointTypes) {
-                self.pointTypes([]);
-            } else {
+            if (!!filter.pointTypes && filter.pointTypes.length !== numberPointTypes) {
                 self.pointTypes(filter.pointTypes);
+            } else {
+                self.pointTypes([]);
             }
             self.refreshActivityLogsData();
         },

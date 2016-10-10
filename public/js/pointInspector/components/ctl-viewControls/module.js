@@ -123,12 +123,17 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             },
             getFreshControls = function() {
                 $.ajax({
-                        url: '/api/points/' + self.data._id(),
-                        type: 'GET',
-                        dataType: 'json'
+                        url: '/api/points/getcontrols',
+                        type: 'post',
+                        contentType: 'application/json',
+                        dataType: 'json',
+                        data: JSON.stringify({
+                            upi: self.data._id()
+                        })
                     })
                     .done(function(data) {
-                        ko.viewmodel.updateFromModel(self.data, data);
+                        // ko.viewmodel.updateFromModel(self.data, data);
+                        pointControls = ko.viewmodel.fromModel(data['Control Array'])();
                         styleBtn(false);
                     })
                     .fail(function(err) {

@@ -5,17 +5,17 @@ div(style="display:inline-block")
    input.input.form-control.filterContainer.dateTimeTime(data-bind="reportTimePicker: time, enable: $root.canEdit(), css: {startDateTime: (filterName === 'Start_Date'), endDateTime: (filterName === 'End_Date') }", type="text", required)
 // /ko
 // ko if: (valueType === "Float" || valueType === "Unsigned")
-input.input.form-control.filterContainer(data-bind="value: value, enable: $root.canEdit()", type="number", required)
+input.input.form-control.filterContainer.filled-in(data-bind="value: value, enable: $root.canEdit()", type="number", required)
 // /ko
 // ko if: (valueType === "String")
-input.input.form-control.filterContainer(data-bind="value: value, enable: $root.canEdit()", type="text", required)
+input.input.form-control.filterContainer.filled-in(data-bind="value: value, enable: $root.canEdit()", type="text", required)
 // /ko
 // ko if: (valueType === "Enum")
 // ko if: (valueList.length > 0)
 .dropdown.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
-   a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-      span(data-bind="text: value")
-      span.caret.lm10px
+   a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+      span.white-text(data-bind="text: value")
+      span.white-text.caret.lm10px
    ul.filterValues.dropdown-menu
       // ko foreach: valueList
       li
@@ -23,7 +23,7 @@ input.input.form-control.filterContainer(data-bind="value: value, enable: $root.
       // /ko
 // /ko
 // ko if: (valueList.length === 0)
-input.input.form-control.filterContainer(data-bind="value: value, enable: $root.canEdit()", type="text", required)
+input.input.form-control.filterContainer.filled-in(data-bind="value: value, enable: $root.canEdit()", type="text", required)
 // /ko
 // /ko
 // ko if: (valueType === "UniquePID")
@@ -39,9 +39,9 @@ div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
 // /ko
 // ko if: (valueType === "Bool")
 .dropdown.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
-   a.btn-flat.waves-effect.waves-light.blue-grey.white-text.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-      span(data-bind="text: $root.displayBool(value)")
-      span.caret.lm10px
+   a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+      span.white-text(data-bind="text: $root.displayBool(value)")
+      span.white-text.caret.lm10px
    ul.filterValues.dropdown-menu
       li
          a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'True'}, 'value') }, text: 'On'", required)
@@ -51,13 +51,13 @@ div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
 // ko if: ((valueType === "HourMinSec") || (valueType === "HourMin") || (valueType === "MinSec"))
 div.durationCtrl
    // ko if: ((valueType === "HourMinSec") || (valueType === "HourMin"))
-   input.hr(data-bind="value: hours, enable: $root.canEdit()", type="number", min="0", max="23")
+   input.hr.filled-in(data-bind="value: hours, enable: $root.canEdit()", type="number", min="0", max="23")
    span.timeSeg hr
    // /ko
-   input.min(data-bind="value: minutes, enable: $root.canEdit()", type="number", min="0", max="59")
+   input.min.filled-in(data-bind="value: minutes, enable: $root.canEdit()", type="number", min="0", max="59")
    span.timeSeg min
    // ko if: ((valueType === "HourMinSec") || (valueType === "MinSec"))
-   input.sec(data-bind="value: seconds, enable: $root.canEdit()", type="number", min="0", max="59")
+   input.sec.filled-in(data-bind="value: seconds, enable: $root.canEdit()", type="number", min="0", max="59")
    span.timeSeg sec
    // /ko
 // /ko

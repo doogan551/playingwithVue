@@ -1,8 +1,8 @@
 extends layout
 block script
-	link(rel='stylesheet', href='/css/slideShows/slideShow.css')
-	script(src='/js/lib/screenfull.min.js',type='text/javascript')
-	script(src='/js/slideShows/slideShowViewModel.js', type='text/javascript')
+	script(type='text/javascript', src='/js/lib/screenfull.min.js')
+	script(type='text/javascript', src='/js/v2/dorsettUtility.js')
+	script(type='text/javascript', src='/js/slideShows/slideShowViewModel.js')
 block content
 	#case.maximize
 		span.glyphicon.glyphicon-cog.diconfig
@@ -10,17 +10,19 @@ block content
 			.container-fluid
 				.navbar-header
 					.btn-group
-						button.btn.glyphicon.glyphicon-pause(data-bind='visible: !isPaused(), click: pause')
+						button.btn.glyphicon.glyphicon-pause(data-bind='visible: !isPaused(), click: pause, attr {title: "Pause"}')
 							span
-						button.btn.glyphicon.glyphicon-play(data-bind='visible: isPaused(), click: play')
+						button.btn.glyphicon.glyphicon-play(data-bind='visible: isPaused(), click: play, attr {title: "Play"}')
 							span
-						button.btn.glyphicon.glyphicon-step-backward(data-bind='enable:canSkip(), click: moveCarouselBackward()')
-						button.btn.glyphicon.glyphicon-step-forward(data-bind='enable:canSkip(), click: moveCarouselForward()')
-						button.btn.glyphicon.glyphicon-resize-full(data-bind='visible: (!inFullScreenMode()), click: setFullScreen()')
+						button.btn.glyphicon.glyphicon-step-backward(data-bind='enable:canSkip(), click: moveCarouselBackward(), attr {title: "Back"}')
+						button.btn.glyphicon.glyphicon-step-forward(data-bind='enable:canSkip(), click: moveCarouselForward(), attr {title: "Forward"}')
+						button.btn.glyphicon.glyphicon-resize-full(data-bind='visible: (!inFullScreenMode()), click: setFullScreen(), attr {title: "Fullscreen"}')
 							span
-						button.btn.glyphicon.glyphicon-resize-small(data-bind='visible: (inFullScreenMode()), click: setNonFullScreen()')
+						button.btn.glyphicon.glyphicon-resize-small(data-bind='visible: (inFullScreenMode()), click: setNonFullScreen(), attr {title: "Exit Fullscreen"}')
 							span
-						button.btn.glyphicon.glyphicon-remove-circle(data-bind='click: close')
+						button.btn.glyphicon.glyphicon-edit(data-bind='click: openPointInspector, attr {title: "PointInspector"}')
+							span
+						button.btn.glyphicon.glyphicon-remove-circle(data-bind='click: close, attr {title: "Close"}')
 							span
 						button.btn.glyphicon(data-bind='if:currentSlide')
 							span#left(data-bind='text: (currentSlide().order + 1) + " of " + numberOfSlides')

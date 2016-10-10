@@ -77,7 +77,7 @@ module.exports = {
       pointType: pointType,
       selectedPointType: data.selectedPointType,
       pointTypes: JSON.stringify(Config.Utility.pointTypes.getAllowedPointTypes()),
-      subType: -1
+      subType: (!!data.subType ? data.subType : -1)
     };
     var query = {
       _id: parseInt(id, 10)
@@ -776,6 +776,7 @@ module.exports = {
     var _name2;
     var _name3;
     var _name4;
+    var subType = {};
 
     var pointType = data.pointType;
     var targetUpi = (data.targetUpi) ? parseInt(data.targetUpi, 10) : 0;
@@ -783,7 +784,12 @@ module.exports = {
     if ((pointType === "Report" || pointType === "Sensor") && data.subType === undefined) {
       return cb("No type defined");
     } else {
-      subType = data.subType;
+      subType.Value = data.subType;
+      if (pointType === "Report") {
+        subType.eValue = Config.Enums["Report Types"][data.subType].enum;
+      } else {
+        subType.eValue = 0;  // TODO
+      }
     }
 
     doInitPoint(name1, name2, name3, name4, pointType, targetUpi, subType, cb);
@@ -1280,6 +1286,29 @@ module.exports = {
         }, callback);
       });
     }
+  },
+  getControls: function(data, cb){
+    var searchCriteria = {};
+    var filterProps = {
+      'Control Array': 1
+    };
+
+    var upi = data.upi;
+
+    searchCriteria._id = parseInt(upi, 10);
+
+    var criteria = {
+      collection: 'points',
+      query: searchCriteria,
+      fields: filterProps
+    };
+
+    Utility.getOne(criteria, function(err, point) {
+      if (err) {
+        return cb(err);
+      }
+      return cb(null, point);
+    });
   }
 };
 

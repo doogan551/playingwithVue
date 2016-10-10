@@ -889,7 +889,8 @@ var dti = {
             //     $container: self.$windowEl.children('.markupContent')
             // });
             self.initFn({
-                $container: self.$windowEl.find('.markupContent')
+                $container: self.$windowEl.find('.markupContent'),
+                onActive: self.bindings.active
             });
 
             self.bindings.loading(false);
@@ -2784,6 +2785,9 @@ var dti = {
             }
 
             dti.navigator.commonNavigator.applyConfig(config);
+
+            config.ready = dti.navigator.commonNavigator.bindings.handleModalOpen;
+
             dti.navigator.$commonNavigatorModal.openModal(config);
         },
         hideNavigator: function () {
@@ -2807,6 +2811,7 @@ var dti = {
                             showInactive: false,
                             showDeleted: false,
                             dropdownOpen: false,
+                            restrictCreate: false,
                             fetchingPoints: false,
                             points: [],
                             mode: self.modes.DEFAULT,
@@ -2814,11 +2819,12 @@ var dti = {
                             remoteUnitId: null,
                             id: self.id,
                             disableCreatePoint: false,
-                            loading: false
+                            loading: false,
+                            focus: false
                         },
                         explodedPointTypes = [];
 
-                    dti.forEachArray(pointTypes, function addSelectedToPointType (type) {
+                    dti.forEachArray(pointTypes, function addSelectedToPointType(type) {
                         var subTypes = dti.utility.subPointTypes[type.key],
                             newType;
 
@@ -2827,7 +2833,7 @@ var dti = {
 
                         //process sub types if exist
                         if (subTypes) {
-                            dti.forEachArray(subTypes, function buildSubType (subType) {
+                            dti.forEachArray(subTypes, function buildSubType(subType) {
                                 var newSubType = {
                                     key: type.key + ' (' + subType.name + ')',
                                     enum: subType.value,
@@ -2857,6 +2863,12 @@ var dti = {
                     //build observable viewmodel so computeds have access to observables
                     bindings = ko.viewmodel.fromModel(bindings);
 
+                    bindings.handleModalOpen = function () {
+                        setTimeout(function focusInput () {
+                            bindings.focus(true);
+                        }, 100);
+                    };
+
                     bindings.createPoint = function () {
                         // self.bindings.explodedPointTypes()[0].selected(true);
                         self.bindings.mode(self.modes.CREATE);
@@ -2874,7 +2886,7 @@ var dti = {
                             bindings.disableCreatePoint(true);
                             bindings.loading(true);
 
-                            dti.forEachArray(filterProperties, function buildFilterObj (prop) {
+                            dti.forEachArray(filterProperties, function buildFilterObj(prop) {
                                 parameters[prop] = bindings[prop]();
                             });
 
@@ -2895,7 +2907,7 @@ var dti = {
                                 pointTypes: self.getFlatPointTypes(ko.toJS(bindings.pointTypes))
                             };
 
-                        dti.forEachArray(filterProperties, function buildFilterObj (prop) {
+                        dti.forEachArray(filterProperties, function buildFilterObj(prop) {
                             filterObj[prop] = bindings[prop]();
                         });
 
@@ -2906,7 +2918,9 @@ var dti = {
                     bindings.togglePointTypeDropdown = function (obj, event) {
                         var dropdownShown = bindings.dropdownOpen();
 
-                        bindings.dropdownOpen(!dropdownShown);
+                        if (!bindings.restrictCreate() || dropdownShown === true) {
+                            bindings.dropdownOpen(!dropdownShown);
+                        }
 
                         if (event) {
                             event.preventDefault();
@@ -2970,7 +2984,7 @@ var dti = {
                     bindings.clearNames = function () {
                         var c;
 
-                        for (c=1; c<5; c++) {
+                        for (c = 1; c < 5; c++) {
                             bindings.clearBinding('name' + c);
                         }
                     };
@@ -2987,18 +3001,18 @@ var dti = {
                         return true;
                     };
 
-                    bindings.modalText = ko.pureComputed(function getModalText () {
+                    bindings.modalText = ko.pureComputed(function getModalText() {
                         var mode = bindings.mode(),
                             ret;
 
                         switch (mode) {
-                            case self.modes.CREATE: 
+                            case self.modes.CREATE:
                                 ret = 'Create Point';
                                 break;
-                            case self.modes.FILTER: 
+                            case self.modes.FILTER:
                                 ret = 'Select Filter';
                                 break;
-                            case self.modes.DEFAULT: 
+                            case self.modes.DEFAULT:
                                 ret = 'Select Point';
                                 break;
                         }
@@ -3006,7 +3020,7 @@ var dti = {
                         return ret;
                     });
 
-                    bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint () {
+                    bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint() {
                         var uniqueName = bindings.points().length === 0,
                             disabled = bindings.disableCreatePoint(),
                             c,
@@ -3047,7 +3061,7 @@ var dti = {
                         rateLimit: 50
                     });
 
-                    dti.forEachArray(bindings.pointTypes(), function initPointTypeSubscription (type) {
+                    dti.forEachArray(bindings.pointTypes(), function initPointTypeSubscription(type) {
                         var pointTypeChangedInterceptor = function () {
                             if (!self._pauseRequest) {
                                 bindings.pointTypeChanged.apply(this, arguments);
@@ -3077,7 +3091,7 @@ var dti = {
                         }
                     });
 
-                    bindings.pointTypeText = ko.pureComputed(function getPointTypeText () {
+                    bindings.pointTypeText = ko.pureComputed(function getPointTypeText() {
                         var currTypes = bindings.pointTypes(),
                             selectedTypes = [],
                             ret;
@@ -3174,6 +3188,13 @@ var dti = {
                     config.pointTypes = [cfg.pointType];
                 }
 
+                if (cfg.mode === 'create' && cfg.pointType) {
+                    cfg.newPointType = cfg.pointType;
+                    self.bindings.restrictCreate(true);
+                } else {
+                    self.bindings.restrictCreate(false);
+                }
+
                 if (cfg.newPointType !== 'Point' && cfg.newPointType) { //skip this for 'Point' placeholder
                     config._newPointType = self.getPointTypeByName(cfg.newPointType);
                     ko.viewmodel.updateFromModel(self.bindings._newPointType, config._newPointType);
@@ -3215,16 +3236,21 @@ var dti = {
                         endPoint = dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(params.pointType, data._id),
                         handoffMode = endPoint.edit || endPoint.review;
 
-                    dti.windows.openWindow({
-                        url: handoffMode.url,
-                        title: data.Name,
-                        pointType: params.pointType,
-                        upi: data._id,
-                        options: {
-                            height: 750,
-                            width: 1250
-                        }
-                    });
+                    if (dti.navigator.temporaryCallback) {
+                        dti.navigator.hideNavigator();
+                        dti.navigator.temporaryCallback(data);
+                    } else {
+                        dti.windows.openWindow({
+                            url: handoffMode.url,
+                            title: data.Name,
+                            pointType: params.pointType,
+                            upi: data._id,
+                            options: {
+                                height: 750,
+                                width: 1250
+                            }
+                        });
+                    }
                 }
             };
 
@@ -3375,14 +3401,18 @@ var dti = {
                 $container = navigatorModalMarkup;
                 dti.navigator.$commonNavigatorModal = $container;
                 $container.find('.modal-content').append(templateMarkup);
-                // $container.leanModal();
             } else {
                 $container.append(templateMarkup);
+
             }
 
             navigator = new dti.navigator.Navigator({
                 $container: $container
             });
+
+            if (!!isModal && isModal !== true) {
+                isModal.onActive.subscribe(navigator.bindings.handleModalOpen);
+            }
 
             $container.data('navigatorId', navigator.id);
 
@@ -3726,6 +3756,21 @@ var dti = {
 
                         dti.navigator.showNavigator(config);
                     },
+                    showCreatePoint: function () {
+                        var sourceWindowId = config._windowId,
+                            callback = function (data) {
+                                dti.messaging.sendMessage({
+                                    key: sourceWindowId, 
+                                    message: 'pointCreated',
+                                    value: data
+                                });
+                            };
+
+                        config.callback = callback;
+                        config.mode = 'create';
+
+                        dti.navigator.showNavigator(config);
+                    },
                     windowMessage: function () {
                         dti.windows.sendMessage(config);
                     },
@@ -3959,7 +4004,7 @@ var dti = {
         showCreatePoint: function (group) {
             dti.navigator.showNavigator({
                 mode: 'create',
-                newPointType: group.group()
+                pointType: group.group()
             });
         },
         startMenuClick: function (obj) {
@@ -4169,7 +4214,7 @@ var dti = {
 
                     $element.contextmenu(function handleRightClick (event) {
                         var $target = $(event.target),
-                            $li = $target.parents('li'),
+                            $li = $target.is('li') ? $target : $target.parents('li'),
                             $select = $li.parent().siblings('select'),
                             text = $li.text();
 
