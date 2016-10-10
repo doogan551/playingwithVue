@@ -2036,7 +2036,6 @@ var dti = {
         doSearch: function (appendResults) {
             var bindings = dti.bindings.globalSearch,
                 data = {
-                    user: dti.bindings.user(),
                     searchTerms: dti.globalSearch.searchTerms,
                     reqID: dti.makeId(),
                     limit: dti.globalSearch.options.searchLimit

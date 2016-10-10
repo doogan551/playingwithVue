@@ -396,14 +396,13 @@ module.exports = {
   },
   globalSearch: function(data, cb) {
     // data = {
-    //   user: {},
     //   searchTerms: [{
     //     expression: string,
     //     isEquation: bool,
     //     isInvalid: bool,
     //     operator: string,
     //     value: string or int,
-    //     property: string (only present if )
+    //     property: string
     //   }],
     //   reqID: string,
     //   limit: int,

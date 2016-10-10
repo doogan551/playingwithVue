@@ -7,6 +7,7 @@ var utils = require('../helpers/utils.js');
 // Checked
 router.post('/globalSearch', function (req, res) {
   var data = _.merge(req.params, req.body);
+  data.user = req.user;
 
   Point.globalSearch(data, function (err, points, count) {
     if (err) return utils.sendResponse(res, {
@@ -24,6 +25,7 @@ router.post('/globalSearch', function (req, res) {
 // Checked (JDR)
 router.post('/getDistinctValues', function (req, res) {
   var data = _.merge(req.params, req.body);
+  data.user = req.user;
 
   Point.getDistinctValues(data, function (err, distinctValues) {
     if (err) return utils.sendResponse(res, {
