@@ -1719,7 +1719,10 @@ var dti = {
         autosuggest: null, // Initialized in 'initOnLoad'
         autosuggestPropertyData: {},
         init: function () {
-            var bindings = dti.bindings.globalSearch;
+            var bindings = dti.bindings.globalSearch,
+                expressionMap = {
+                    upi: '_id'
+                };
 
             dti.globalSearch.chips = dti.globalSearch.$chips.material_chip({
                 placeholder: '+Search',
@@ -1734,8 +1737,15 @@ var dti = {
                 if (parsed.isInvalid) {
                     dti.globalSearch.$chips.find('.chip').last().addClass('err');
                 } else {
-                    if (parsed.isEquation && !parsed.isInvalid && (parsed.expression.indexOf('.') < 0) && (parsed.expression.charAt(0) !== '_')) {
-                        parsed.expression = parsed.expression + '.Value';
+                    if (parsed.isEquation && !parsed.isInvalid) {
+                        if (expressionMap[parsed.expression]) {
+                            parsed.expression = expressionMap[parsed.expression];
+                        }
+                        // If it's not a chained expression or an internal property (they start with '_')
+                        if ((parsed.expression.indexOf('.') < 0) && (parsed.expression.charAt(0) !== '_')) {
+                            // Append the Value key
+                            parsed.expression = parsed.expression + '.Value';
+                        }
                     }
                     
                     parsed.property = parsed.expression.split('.')[0];
