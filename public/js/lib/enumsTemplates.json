@@ -1268,13 +1268,6 @@
                 "ptRefProps": ["Display Dynamic", "Display Button", "Display Animation", "Display Trend"],
                 "schedProps": []
             },
-            "Duty Cycle": {
-                "enum": 140,
-                "lists": ["default"],
-                "endpoint": "default",
-                "ptRefProps": ["Device Point", "Remote Unit Point"],
-                "schedProps": []
-            },
             "Economizer": {
                 "enum": 132,
                 "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
@@ -1288,13 +1281,6 @@
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Control Point", "Shutdown Point", "Dry Bulb Point", "Humidity Point"],
                 "schedProps": ["Out of Service", "Value"]
-            },
-            "Imux Watchdog": {
-                "enum": 141,
-                "lists": ["default", "dynamic"],
-                "endpoint": "default",
-                "ptRefProps": ["Device Point", "Remote Unit Point"],
-                "schedProps": []
             },
             "Lift Station": {
                 "enum": 201,
@@ -1992,6 +1978,12 @@
                 "enum": 164,
                 "valueType": "Unsigned",
                 "reportEnable": true
+            },
+            "Downlink Protocol": {
+                "enum": 444,
+                "valueType": "Enum",
+                "reportEnable": true,
+                "enumsSet": "Ethernet Protocols"
             },
             "Dry Bulb Point": {
                 "enum": 140,
@@ -4024,6 +4016,13 @@
                     "isReadOnly": false,
                     "ValueType": 4,
                     "Value": 0
+                },
+                "Downlink Protocol": {
+                    "isDisplayable": true,
+                    "isReadOnly": true,
+                    "ValueType": 5,
+                    "Value": "None",
+                    "eValue": 0
                 },
                 "Ethernet Address": {
                     "isDisplayable": true,

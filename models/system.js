@@ -196,7 +196,7 @@ module.exports = {
     var searchCriteria = {
       "Name": "Preferences"
     };
-    console.log(data);
+
     var updateCriteria = {
       $set: {
         "IP Network Segment": ipSegment,
@@ -214,15 +214,35 @@ module.exports = {
       updateObj: updateCriteria,
       collection: 'SystemInfo'
     };
-
-    Utility.update(criteria, function(err, data) {
-
-      if (err) {
-        return cb(err.message);
+    Utility.getOne({
+      collection: 'SystemInfo',
+      query: {
+        Name: 'Preferences'
       }
+    }, function(err, data) {
+      var centralUpi = data['Central Device UPI'];
+      Utility.update({
+        collection: 'points',
+        query: {
+          _id: centralUpi
+        },
+        updateObj: {
+          $set: {
+            'Ethernet IP Port.Value': ipPort
+          }
+        }
+      }, function(err, results) {
 
-      return cb();
+        Utility.update(criteria, function(err, data) {
 
+          if (err) {
+            return cb(err.message);
+          }
+
+          return cb();
+
+        });
+      });
     });
   },
   getStatus: function(data, cb) {

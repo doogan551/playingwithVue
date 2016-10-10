@@ -1077,7 +1077,7 @@ var scripts = {
 
     // 0.4.1
     fixDorsDB: function(callback) {
-        var afterVersion = '0.4.1';
+        var afterVersion = '0.0.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
                 fn: 'fixDorsDB',
@@ -1207,7 +1207,7 @@ var scripts = {
                 }
             });
 
-            logger.info('updating sequence:', doc._id);
+            // logger.info('updating sequence:', doc._id);
 
             utility.update({
                 collection: 'points',
@@ -1224,9 +1224,53 @@ var scripts = {
             });
 
         }, function finishUpdatingSequences(err) {
-            logger.info('Finished with updateGPLDevicePointRef');
+            logger.info('Finished with fixSequenceDevicePropertyName');
             callback(null, {
-                fn: 'updateGPLDevicePointRef',
+                fn: 'fixSequenceDevicePropertyName',
+                errors: err
+            });
+        });
+    },
+
+    addDownlinkProtocol: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'addDownlinkProtocol',
+                errors: null,
+                results: null
+            });
+        }
+        utility.iterateCursor({
+            collection: 'points',
+            query: {
+                'Point Type.Value': 'Device'
+            }
+        }, function processSequence(err, doc, cb) {
+            doc['Downlink Protocol'] = Config.Templates.getTemplate(doc['Point Type'].Value)['Downlink Protocol'];
+            if(doc['Downlink Network'].Value !== 0){
+                doc['Downlink Protocol'].Value = 'IP'
+                doc['Downlink Protocol'].eValue = Config.Enums['Ethernet Protocols']['IP'].enum;
+            }
+
+            utility.update({
+                collection: 'points',
+                query: {
+                    _id: doc._id
+                },
+                updateObj: doc
+            }, function updatedSequenceHandler(err) {
+                if (err) {
+                    logger.debug('Update err:', err);
+                }
+
+                cb(null);
+            });
+
+        }, function finishUpdatingSequences(err) {
+            logger.info('Finished with addDownlinkProtocol');
+            callback(null, {
+                fn: 'addDownlinkProtocol',
                 errors: err
             });
         });
@@ -1243,7 +1287,8 @@ db.connect(connectionString, function(err) {
     for (var task in scripts) {
         tasks.push(scripts[task]);
     }
-    // var tasks = [scripts.updateGenerateDisplayPointRefs];
+
+    tasks = [scripts.addDownlinkProtocol];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result

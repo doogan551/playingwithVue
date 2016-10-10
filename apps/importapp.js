@@ -143,22 +143,22 @@ function importUpdate() {
 				fixPowerMeters(function(err, count) {
 					logger.info('number of powermeters changed:', count);
 					logger.info("before changeUpis", err, new Date());
-					changeUpis(function(err) {
-						fixUpisCollection(db, 'new_points', function(err) {
-							updateHistory(function(err) {
-								logger.info('finished updateHistory', err);
-								cleanupDB(db, function(err) {
-									if (err) {
-										logger.info("updateGPLReferences err:", err);
-									}
-									logger.info("!!Check Port 1-4 Timeouts on devices!!");
-									logger.info("done", err, new Date());
-									process.exit(0);
+					// changeUpis(function(err) {
+					fixUpisCollection(db, 'new_points', function(err) {
+						// updateHistory(function(err) {
+						// logger.info('finished updateHistory', err);
+						// cleanupDB(db, function(err) {
+						if (err) {
+							logger.info("updateGPLReferences err:", err);
+						}
+						logger.info("!!Check Port 1-4 Timeouts on devices!!");
+						logger.info("done", err, new Date());
+						process.exit(0);
 
-								});
-							});
-						});
+						// });
 					});
+					// });
+					// });
 				});
 			});
 		});
@@ -787,55 +787,46 @@ function fixUpisCollection(db, baseCollection, callback) {
 			});
 		}, function(err) {
 			logger.info("done with indexing");
-		});
-
-		db.collection('upis').update({}, {
-			$set: {
-				_pStatus: 1
-			}
-		}, {
-			multi: true
-		}, function(err, result) {
-			if (err) callback(err);
-			db.collection(baseCollection).find({}, {
-				_id: 1
-			}).toArray(function(err, points) {
+			db.collection('upis').update({}, {
+				$set: {
+					_pStatus: 1
+				}
+			}, {
+				multi: true
+			}, function(err, result) {
 				if (err) callback(err);
-				async.forEach(points, function(point, callback) {
+				Utility.distinct({
+					collection: 'points',
+					field: '_id'
+				}, function(err, results) {
+					console.log('-----', results.length);
 					var criteria = {
 						collection: 'upis',
 						query: {
-							_id: point._id
+							_id: {
+								$in: results
+							}
 						},
-						sort: [
-							['_id', 'asc']
-						],
 						updateObj: {
 							$set: {
 								_pStatus: 0
 							}
 						},
 						options: {
-							'new': true
+							multi: true
 						}
 					};
-					Utility.findAndModify(criteria, function(err, result) {
-						if (!!err)
-							logger.info(err);
-						/*else if (!result)
-							logger.info(point._id);
-						else if (result._pStatus !== 0)
-							logger.info(result);*/
-						callback(err);
+
+					Utility.update(criteria, function(err, result) {
+						if (err) logger.info("fixUpisCollection err", err);
+						logger.info("finished fixUpisCollection");
+						return callback(err);
 					});
-				}, function(err) {
-					if (err) logger.info("fixUpisCollection err", err);
-					logger.info("finished fixUpisCollection");
-					return callback(err);
 				});
 			});
 		});
 	});
+
 }
 
 function testHistory() {
@@ -963,7 +954,6 @@ function convertTotalizerReports(callback) {
 		report["Report Type"].eValue = Config.Enums["Report Types"]["Totalizer"].enum;
 		report["Point Refs"] = [];
 		report._pStatus = 0;
-		report._id = doc._id;
 		report.Name = doc.Name;
 		//report._Name = point.Name.toLowerCase();
 		delete report._Name;
@@ -1059,10 +1049,30 @@ function convertTotalizerReports(callback) {
 
 			});
 		}, function(err) {
-			Utility.insert({
-				collection: pointsCollection,
-				insertObj: report
-			}, cb);
+			criteria = {
+				collection: 'upis',
+				query: {
+					_pStatus: 1
+				},
+				sort: [
+					['_id', 'asc']
+				],
+				updateObj: {
+					$set: {
+						_pStatus: 0
+					}
+				},
+				options: {
+					'new': true
+				}
+			};
+			Utility.findAndModify(criteria, function(err, upiObj) {
+				report._id = upiObj._id;
+				Utility.insert({
+					collection: pointsCollection,
+					insertObj: report
+				}, cb);
+			});
 		});
 	}, function(err, count) {
 		console.log('convertTotalizerReports', err, count);
@@ -2907,15 +2917,15 @@ function setUpCollections(db, callback) {
 	logger.info("setUpCollections");
 	setupAlarms(db, function(err) {
 		setUserGroups(db, function(err) {
-			setupUsers(db, function(err) {
-				setupHistoryData(db, function(err) {
-					setupUpis(db, function(err) {
-						setupVersions(db, function(err) {
-							callback();
-						});
+			// setupUsers(db, function(err) {
+			setupHistoryData(db, function(err) {
+				setupUpis(db, function(err) {
+					setupVersions(db, function(err) {
+						callback();
 					});
 				});
 			});
+			// });
 		});
 	});
 }
