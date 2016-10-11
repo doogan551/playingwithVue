@@ -3036,7 +3036,8 @@ var dti = {
                     });
 
                     bindings.allowCreatePoint = ko.pureComputed(function shouldAllowCreatePoint() {
-                        var uniqueName = bindings.points().length === 0,
+                        // var uniqueName = bindings.points().length === 0,
+                        var uniqueName = true,
                             disabled = bindings.disableCreatePoint(),
                             c,
                             tmpName,
