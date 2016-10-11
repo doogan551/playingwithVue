@@ -890,7 +890,8 @@ var dti = {
             // });
             self.initFn({
                 $container: self.$windowEl.find('.markupContent'),
-                onActive: self.bindings.active
+                onActive: self.bindings.active,
+                id: windowId
             });
 
             self.bindings.loading(false);
@@ -3139,7 +3140,7 @@ var dti = {
             //     self.$footer = self.$modal.find('.modal-footer');
             // }
 
-            self.id = dti.makeId();
+            self.id = config.id || dti.makeId();
 
             self.bindings = getBindings();
 
