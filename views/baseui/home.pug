@@ -395,6 +395,7 @@ html
                     a.modal-action.modal-close.waves-effect.btn-flat(href='javascript://') Cancel             
                 span.modalControls.createActions
                     a.waves-effect.blue-grey.btn(href="javascript://", data-bind="css: { disabled: !allowCreatePoint() }, click: doCreatePoint") Create Point
+                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="click: cancelCreatePoint") Cancel
 
     script#navigatorTemplate(type='text/html')
         .iframeFull.blue-grey-form.flex.flex-row.row
@@ -404,6 +405,7 @@ html
                     .cssload-container
                         .cssload-whirlpool
             // /ko
+            // ko ifnot: loading
             .navigatorBody.flex.flex-column(data-bind="css: mode")
                 .selectorHeader.right-align.flex.flex-row.flex-right.flex-center
                     p.pointType
@@ -487,6 +489,12 @@ html
 
                     // /ko
 
+                // ko if: !isModal() && mode() === 'create'
+                .selectorFooter
+                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="click: cancelCreatePoint") Cancel
+                    a.waves-effect.blue-grey.btn(href="javascript://", data-bind="css: { disabled: !allowCreatePoint() }, click: doCreatePoint") Create Point
+                // /ko
+            // /ko
 
 
     script#taskbarButtonTemplate(type='text/html')
