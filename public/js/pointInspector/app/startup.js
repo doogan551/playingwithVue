@@ -594,7 +594,8 @@ define([
         }
     };
     pointInspector.authorize = function(data, requestedAccessLevel) {
-        return !!(data._pAccess & requestedAccessLevel);
+        var pAccess = (ko.isObservable(data._pAccess)) ? data._pAccess() : data._pAccess;
+        return !!(pAccess & requestedAccessLevel);
     };
 
     pointInspector.isSystemAdmin = function() {

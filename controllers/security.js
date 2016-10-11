@@ -209,6 +209,20 @@ router.post('/points/removeusers', function(req, res, next) {
     return utils.sendResponse(res, {});
   });
 });
+
+router.get('/points/getGroups/:upi', function(req, res, next) {
+  var data = _.merge(req.params, req.body);
+  data.user = req.user;
+
+  Security.Points.getGroups(data, function(err, groups) {
+    if (err) {
+      return utils.sendResponse(res, {
+        err: err
+      });
+    }
+    return utils.sendResponse(res, groups);
+  });
+});
 // NOT CHECKED
 router.post('/users/createpassword', function(req, res, next) {
   var data = _.merge(req.params, req.body);

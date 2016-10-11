@@ -159,7 +159,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
       timestamp: Date.now(),
       point: newPoint
     };
-  readOnlyProps = ["_id", "_cfgDevice", "_updTOD", "_pollTime",
+  readOnlyProps = ["_id", "_cfgDevice", "_updTOD", "_pollTime","_pAccess",
     "_forceAllCOV", "_actvAlmId", "Alarm State", "Control Pending", "Device Status",
     "Last Report Time", "Point Type", "Reliability"
   ];
@@ -908,56 +908,58 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
           updateObject._updPoint = true;
           downloadPoint = false;
         }
-        Utility.findAndModify({
-          collection: 'points',
-          query: {
-            _id: newPoint._id
-          },
-          sort: [],
-          updateObj: {
-            $set: updateObject
-          },
-          options: {
-            new: true
-          }
-        }, function(err, result) {
-          if (err) return callback({
-            err: err
-          }, null);
-          var error = null;
-          updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, function(err) {
-            if (err)
-              return callback({
-                err: err
-              }, result);
-            updPoint(downloadPoint, newPoint, function(err, msg) {
+
+        updSecurity(newPoint, function(err) {
+          Utility.findAndModify({
+            collection: 'points',
+            query: {
+              _id: newPoint._id
+            },
+            sort: [],
+            updateObj: {
+              $set: updateObject
+            },
+            options: {
+              new: true
+            }
+          }, function(err, result) {
+            if (err) return callback({
+              err: err
+            }, null);
+            var error = null;
+            updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, function(err) {
               if (err)
-                error = err;
-              signalExecTOD(executeTOD, function(err) {
+                return callback({
+                  err: err
+                }, result);
+              updPoint(downloadPoint, newPoint, function(err, msg) {
                 if (err)
-                  error = error;
-                doActivityLogs(generateActivityLog, activityLogObjects, function(err) {
+                  error = err;
+                signalExecTOD(executeTOD, function(err) {
                   if (err)
-                    return callback({
-                      err: err
-                    }, result);
-                  updateRefs(updateReferences, newPoint, flags, user, function(err) {
+                    error = error;
+                  doActivityLogs(generateActivityLog, activityLogObjects, function(err) {
                     if (err)
                       return callback({
                         err: err
                       }, result);
-                    else if (error)
-                      return callback({
-                        err: error
-                      }, result);
-                    else {
-                      msg = (msg !== undefined && msg !== null) ? msg : "success";
-                      return callback({
-                        message: msg
-                      }, result);
-                    }
+                    updateRefs(updateReferences, newPoint, flags, user, function(err) {
+                      if (err)
+                        return callback({
+                          err: err
+                        }, result);
+                      else if (error)
+                        return callback({
+                          err: error
+                        }, result);
+                      else {
+                        msg = (msg !== undefined && msg !== null) ? msg : "success";
+                        return callback({
+                          message: msg
+                        }, result);
+                      }
+                    });
                   });
-
                 });
               });
             });
@@ -1118,6 +1120,47 @@ function doActivityLogs(generateActivityLog, logs, callback) {
   } else {
     return callback(null);
   }
+}
+
+function updSecurity(point, callback) {
+  if (!point.hasOwnProperty('Security')) {
+    return callback();
+  }
+  point.Security = point.Security.map(function(groupId) {
+    return ObjectID(groupId);
+  });
+
+  var updateObj = {
+    $set: {}
+  };
+  updateObj.$set['Points.' + point._id] = true;
+
+  Utility.update({
+    collection: 'User Groups',
+    query: {
+      _id: {
+        $in: point.Security
+      }
+    },
+    updateObj: updateObj
+  }, function(err, group) {
+    var updateObj = {
+      $unset: {}
+    };
+    updateObj.$unset['Points.' + point._id] = 1;
+    Utility.update({
+      collection: 'User Groups',
+      query: {
+        _id: {
+          $nin: point.Security
+        }
+      },
+      updateObj: updateObj
+    }, function(err, group) {
+      point.Security = [];
+      return callback(err);
+    });
+  });
 }
 // newupdate
 function updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
@@ -2093,7 +2136,7 @@ function getActiveAlarmsNew(data, callback) {
     _limit: numberItems,
     data: data
   }, function(err, alarms, count) {
-      callback(err, alarms, count);
+    callback(err, alarms, count);
   });
 }
 

@@ -1947,6 +1947,21 @@ module.exports = {
           message: "success"
         });
       });*/
+    },
+    getGroups: function(data, cb) {
+      var upi = data.upi;
+      var criteria = {
+        collection: 'User Groups',
+        query: {},
+        fields: {
+          Points: 0
+        }
+      };
+      criteria.query['Points.' + upi] = {
+        $exists: 1
+      };
+      console.log(criteria);
+      Utility.get(criteria, cb);
     }
   },
   Utility: {
@@ -1961,7 +1976,7 @@ module.exports = {
         var points = {};
         for (var g = 0; g < groups.length; g++) {
           var pAccess = groups[g]._pAccess;
-          var gPoints = groups[g].points;
+          var gPoints = groups[g].Points;
           for (var gPoint in gPoints) {
             points[gPoint] = points[gPoint] | pAccess;
           }
