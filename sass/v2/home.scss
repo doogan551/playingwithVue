@@ -1419,6 +1419,10 @@ $loaderSpeedScale: 1 / .75;
     .create {
         .createActions {
             display: block;
+
+            a.btn {
+                margin-left: 10px;
+            }
         }
     }
 }
@@ -1540,6 +1544,17 @@ $loaderSpeedScale: 1 / .75;
             width: 20%;
             max-height: 28px;
             display: inline-block;
+        }
+    }
+
+    .selectorFooter {
+        padding: 10px 30px;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        background-color: #fafafa;
+        text-align: right;
+
+        a.btn {
+            margin-left: 10px;
         }
     }
 

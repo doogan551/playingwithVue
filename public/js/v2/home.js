@@ -2830,7 +2830,8 @@ var dti = {
                             id: self.id,
                             disableCreatePoint: false,
                             loading: false,
-                            focus: false
+                            focus: false,
+                            isModal: config.isModal
                         },
                         explodedPointTypes = [];
 
@@ -2877,6 +2878,10 @@ var dti = {
                         setTimeout(function focusInput () {
                             bindings.focus(true);
                         }, 100);
+                    };
+
+                    bindings.cancelCreatePoint = function () {
+                        self.bindings.mode(self.modes.DEFAULT);
                     };
 
                     bindings.createPoint = function () {
@@ -3262,6 +3267,10 @@ var dti = {
                             }
                         });
                     }
+
+                    if (!config.isModal) {
+                        dti.windows.closeWindow(self.id);
+                    }
                 }
             };
 
@@ -3414,11 +3423,11 @@ var dti = {
                 $container.find('.modal-content').append(templateMarkup);
             } else {
                 $container.append(templateMarkup);
-
             }
 
             navigator = new dti.navigator.Navigator({
-                $container: $container
+                $container: $container,
+                isModal: (isModal === true)
             });
 
             if (!!isModal && isModal !== true) {
