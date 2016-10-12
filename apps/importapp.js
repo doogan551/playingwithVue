@@ -1332,7 +1332,7 @@ function updateIndexes(callback) {
 			_name4: 1
 		},
 		options: {
-			name: "name1-4"
+			name: "_name1-4"
 		},
 		collection: pointsCollection
 	}, {
@@ -1407,6 +1407,18 @@ function updateIndexes(callback) {
 		collection: pointsCollection
 	}, {
 		index: {
+			"Point Type.Value": 1,
+			_name1: 1,
+			_name2: 1,
+			_name3: 1,
+			_name4: 1
+		},
+		options: {
+			name: "PT, _name1-4"
+		},
+		collection: pointsCollection
+	}, {
+		index: {
 			name1: 1,
 			name2: 1,
 			name3: 1,
@@ -1424,7 +1436,7 @@ function updateIndexes(callback) {
 			_name4: 1
 		},
 		options: {
-			name: "name1-4"
+			name: "_name1-4"
 		},
 		collection: "new_points"
 	}, {
