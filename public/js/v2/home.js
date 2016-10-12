@@ -1335,6 +1335,8 @@ var dti = {
     },
     alarms: {
         init: function () {
+        },
+        initOnLoad: function () {
             var alarms = dti.bindings.alarms,
                 unacknowledgedAlarms = alarms.unacknowledged,
                 constants = dti.bindings.alarms.constants,
@@ -1360,14 +1362,13 @@ var dti = {
                         alarm.almClassText = dti.workspaceManager.config.revEnums['Alarm Classes'][alarm.almClass];
                         alarm.cssClass = 'type-' + alarm.almClassText;
 
-                        date = new Date(alarm.msgTime);
                         alarm.dateTime = ko.observable(moment(+(alarm.msgTime + '000')).calendar());
                     }
                     return dataIsArray ? list:data;
                 },
-                getUnacknowledgedAlarms = function () {
+                getUnacknowledgedAlarms = function (init) {
                     if (debug.enable) {
-                        debug.loadAlarms();
+                        debug.loadAlarms(init ? 75:undefined);
                         return;
                     }
 
@@ -1406,7 +1407,7 @@ var dti = {
                     unacknowledgedAlarms.count(data.count);
                     unacknowledgedAlarms.showList(!!data.count);
 
-                    if (initDone && data.count && !dti.alarms.annunciator.active) {
+                    if (data.count && !dti.alarms.annunciator.active) {
                         dti.alarms.annunciator.start();
                     }
                 },
@@ -1494,34 +1495,22 @@ var dti = {
                     // the alarm list and count.
                 };
 
+            // Initialize our unacknowledged alarms hover menu
+            dti.alarms.hoverMenu = dti.events.hoverMenu('#alarmIcon');
+
             if (debug.enable) {
                 // Expose these normally private methods for access from within our debug routines
                 dti.alarms.receiveUnacknowledgedAlarms = receiveUnacknowledgedAlarms;
                 dti.alarms.newUnackAlarm = newUnackAlarm;
                 dti.alarms.removingUnackAlarm = removingUnackAlarm;
-            } else {
-                dti.socket.on('unacknowledged', receiveUnacknowledgedAlarms);
-                dti.socket.on('newUnackAlarm', newUnackAlarm);
-                dti.socket.on('removingUnackAlarm', removingUnackAlarm);
-                dti.socket.on('acknowledgeResponse', acknowledgeResponse);
-                getUnacknowledgedAlarms();
             }
 
-            // Initialize our unacknowledged alarms hover menu
-            dti.alarms.hoverMenu = dti.events.hoverMenu('#alarmIcon');
-
-            dti.on('loaded', function () {
-                initDone = true;
-
-                if (debug.enable) {
-                    debug.loadAlarms(75);
-                }
-
-                if (unacknowledgedAlarms.count() > 0) {
-                    dti.alarms.annunciator.start();
-                }
-
-            });
+            dti.socket.on('unacknowledged', receiveUnacknowledgedAlarms);
+            dti.socket.on('newUnackAlarm', newUnackAlarm);
+            dti.socket.on('removingUnackAlarm', removingUnackAlarm);
+            dti.socket.on('acknowledgeResponse', acknowledgeResponse);
+            
+            getUnacknowledgedAlarms(true);
         },
         sendAcknowledge: function (alarmList) {
             var request = {
@@ -3938,33 +3927,7 @@ var dti = {
                 BUFFER_MAX: 150
             },
             toggleMute: function (bindings, element) {
-                var alarmBindings = dti.bindings.alarms,
-                    isMuted = !alarmBindings.isMuted(),
-                    $el = $(element.currentTarget),
-                    $tooltip = $('#' + $el.attr('data-tooltip-id')),
-                    $tooltipTextContainer =  $tooltip.find('span:first'),
-                    offset = $tooltip.offset(),
-                    originalWidth = $tooltip.width(),
-                    newWidth;
-
-                alarmBindings.isMuted(isMuted);
-
-                // We have to manually update the tooltip text because it isn't updated until after the user
-                // mouses out and then back over the mute control icon. We also update our observable text
-                // so the tooltip will be correct if/when the user does mouseout and back over the icon.
-
-                if (isMuted) {
-                    $tooltipTextContainer.text('Un-mute');
-                    alarmBindings.muteTooltip('Un-mute');
-                } else {
-                    $tooltipTextContainer.text('Mute');
-                    alarmBindings.muteTooltip('Mute');
-                }
-                newWidth = $tooltip.width();
-
-                // Recenter the tooltip
-                offset.left = offset.left + parseInt((originalWidth - newWidth)/2, 10);
-                $tooltip.offset(offset);
+                dti.bindings.alarms.isMuted(!dti.bindings.alarms.isMuted());
             },
             slideUp: function (element, index, alarm) {
                 var unacknowledgedAlarms = dti.bindings.alarms.unacknowledged;

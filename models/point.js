@@ -6,6 +6,8 @@ var async = require('async');
 var ObjectID = require('mongodb').ObjectID;
 var Utils = require('../helpers/utils');
 
+var distinctProperties = {}; // Temporary workaround to improve UI performance on app load
+
 module.exports = {
   getPointsByQuery: function(data, cb) {
     Utility.get({
@@ -366,6 +368,11 @@ module.exports = {
     // }]
     var distinct = [];
       getDistinct = function (item, cb) {
+        if (distinctProperties[item.property]) { // Temporary workaround to improve UI performance on app load
+          distinct.push(distinctProperties[item.property]);
+          return cb(null);
+        }
+
         var criteria = {
             collection: 'points',
             field: item.property + '.Value',
@@ -382,10 +389,12 @@ module.exports = {
           });
         }
         Utility.distinct(criteria, function queryResult (err, data) {
-          distinct.push({
+          var obj = {
             property: item.property,
             distinct: data
-          });
+          };
+          distinct.push(obj);
+          distinctProperties[item.property] = obj; // Temporary workaround to improve UI performance on app load
           cb(err);
         });
       };

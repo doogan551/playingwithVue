@@ -125,9 +125,9 @@ html
                 .alarmHeader
                     span Unacknowledged Alarms
                     .right
-                        a.muteIcon.blue-grey-text.waves-effect.tooltipped(href='javascript://', data-bind='click: alarms.toggleMute, attr: { "data-tooltip": alarms.muteTooltip }' data-position='bottom', data-alignment='right' data-delay='750')
-                            i.material-icons(data-bind='visible: !alarms.isMuted()') volume_up
-                            i.material-icons(data-bind='visible: alarms.isMuted') volume_off
+                        a.muteIcon.blue-grey-text.waves-effect(href='javascript://', data-bind='click: alarms.toggleMute')
+                            i.material-icons.tooltipped(data-bind='visible: !alarms.isMuted()', data-tooltip='Mute', data-position='bottom', data-delay='750') volume_up
+                            i.material-icons.tooltipped(data-bind='visible: alarms.isMuted', data-tooltip='Un-Mute', data-position='bottom', data-delay='750') volume_off
                         //- a.blue-grey-text.waves-effect.tooltipped(href="javascript://", data-position='bottom', data-tooltip='Open Alarm Console', data-delay='10')
                             i.material-icons notifications_active
                     .alarmBody
