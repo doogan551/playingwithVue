@@ -395,6 +395,8 @@ var reportsViewModel = function () {
         $viewReportNav,
         $globalEditColumnModal,
         $columnsGrid,
+        $gridColumnConfig,
+        $gridColumnConfigTable,
         $filtersGrid,
         $columnsTbody,
         $filtersTbody,
@@ -792,25 +794,17 @@ var reportsViewModel = function () {
         },
         checkForColumnCalculations = function () {
             var i,
+                column,
                 canCalculate = false;
 
             for (i = 0; i < self.listOfColumns().length; i++) {
-                if (!!self.listOfColumns()[i].canCalculate && self.listOfColumns()[i].canCalculate) {
+                column = self.listOfColumns()[i];
+                if (columnCanBeCalculated(column)) {
                     canCalculate = true;
                     break;
                 }
             }
-
-            if (canCalculate) {
-                $columnsGrid.find("th .multiplierColumn").html("Multiplier");
-                $globalCalculateText.html("Calculate");
-                $globalPrecisionText.html("Precision");
-                $globalIncludeInChartText.html("Chart");
-            }
-
-            if (self.reportType === "Totalizer") {
-                $columnsGrid.find(".typeColumn").html("Type");
-            }
+            self.calculatable(canCalculate);
         },
         checkForIncludeInChart = function () {
             var displayChartingHeader = false,
@@ -917,10 +911,9 @@ var reportsViewModel = function () {
                 $errorMessageholder.text("");
             }, 6000);  // display error message
         },
-        openPointSelectorForModalColumn = function (selectObjectIndex) {
+        openPointSelectorForModalColumn = function () {
             var tempPoint,
-                updatedList = $.extend(true, [], self.listOfColumns()),
-                tempObject = updatedList[selectObjectIndex],
+                tempObject = getNewColumnTemplate(),
                 setColumnPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
                     if (!!tempObject.AppIndex) {
@@ -946,10 +939,10 @@ var reportsViewModel = function () {
                     if (self.reportType === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
                         tempObject.operator = tempObject.valueList[0].text;
-                        tempObject.dataColumnName = "point-" + tempObject.upi + " - " + tempObject.operator.toLowerCase();
+                        tempObject.dataColumnName = tempObject.upi + " - " + tempObject.operator.toLowerCase();
                     } else {
                         if (self.reportType === "History") {
-                            tempObject.dataColumnName = "point-" + tempObject.upi;
+                            tempObject.dataColumnName = tempObject.upi;
                         }
                         if (!!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
@@ -967,11 +960,10 @@ var reportsViewModel = function () {
                             refPoint: selectedPoint,
                             property: getPointRefByAppIndex(tempObject.AppIndex)
                         });
-                        self.currentColumnEdit(tempObject);
                     } else {
                         console.log("openPointSelectorForModalColumn() couldn't find AppIndex.........");
-                        self.currentColumnEdit(getNewColumnTemplate());
                     }
+                    self.currentColumnEdit(tempObject);
                 },
                 pointSelectedCallback = function (pointInfo) {
                     if (!!pointInfo) {
@@ -1011,10 +1003,10 @@ var reportsViewModel = function () {
                     if (self.reportType === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
                         tempObject.operator = tempObject.valueList[0].text;
-                        tempObject.dataColumnName = "point-" + tempObject.upi + " - " + tempObject.operator.toLowerCase();
+                        tempObject.dataColumnName = tempObject.upi + " - " + tempObject.operator.toLowerCase();
                     } else {
                         if (self.reportType === "History") {
-                            tempObject.dataColumnName = "point-" + tempObject.upi;
+                            tempObject.dataColumnName = tempObject.upi;
                         }
                         if (!!selectedPoint.Value && !!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
@@ -1448,7 +1440,7 @@ var reportsViewModel = function () {
                         case "History":
                             currentColumn.valueList = "";
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
-                            currentColumn.dataColumnName = (i === 0 && currentColumn.colName === "Date" ? currentColumn.colName : "point-" + currentColumn.upi);
+                            currentColumn.dataColumnName = (i === 0 && currentColumn.colName === "Date" ? currentColumn.colName : currentColumn.upi);
                             if (!Array.isArray(currentColumn.calculation)) {
                                 currentColumn.calculation = [];
                             }
@@ -1456,7 +1448,7 @@ var reportsViewModel = function () {
                         case "Totalizer":
                             currentColumn.valueList = getTotalizerValueList(currentColumn.pointType);
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
-                            currentColumn.dataColumnName = (i === 0 && currentColumn.colName === "Date" ? currentColumn.colName : "point-" + currentColumn.upi + " - " + currentColumn.operator.toLowerCase());
+                            currentColumn.dataColumnName = (i === 0 && currentColumn.colName === "Date" ? currentColumn.colName : currentColumn.upi + " - " + currentColumn.operator.toLowerCase());
                             if (!Array.isArray(currentColumn.calculation)) {
                                 currentColumn.calculation = [];
                             }
@@ -1674,8 +1666,12 @@ var reportsViewModel = function () {
                         displayError(columns[i].error);
                         activeError = true;
                         $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("danger");
+                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("danger");
+                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").addClass("danger");
                     } else {
                         $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("danger");
+                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("danger");
+                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("danger");
                         if (columns[i].upi > 0) {
                             upis.push({
                                 upi: parseInt(columns[i].upi, 10),
@@ -1801,6 +1797,8 @@ var reportsViewModel = function () {
             $rightPanel = $direports.find(".rightPanel");
             $spinnertext = $rightPanel.find(".spinnertext");
             $columnsGrid = $direports.find(".columnsGrid");
+            $gridColumnConfig = $direports.find("#gridColumnConfig");
+            $gridColumnConfigTable = $direports.find(".gridColumnConfigTable");
             $filtersGrid = $direports.find(".filtersGrid");
             $columnNames = $direports.find(".columnName");
             $filterByPoint = $direports.find("#filterByPoint");
@@ -2037,7 +2035,7 @@ var reportsViewModel = function () {
                 tempPivot.Date.rawValue = historyData[i].timestamp;
                 for (j = 0; j < historyResults.length; j++) {
                     columnUPI = historyResults[j].upi;
-                    columnKey = "point-" + columnUPI;
+                    columnKey = columnUPI;
                     tempPivot[columnKey] = {};
                     if (historyResults[j].Value === undefined) {
                         tempPivot[columnKey].Value = "";
@@ -2078,7 +2076,7 @@ var reportsViewModel = function () {
                         operator = totalizerData[i].op.toLowerCase();
                         columnConfig = getColumnConfigByOperatorAndUPI(operator, totalizerData[i].upi);
                         columnUPI = columnConfig.upi + " - " + operator;
-                        columnKey = "point-" + columnUPI;
+                        columnKey = columnUPI;
                         rawValue = totalizerData[i].totals[j].total;
                         tempPivot[columnKey] = {};
                         //console.log("totalizerData[" + i + "].totals[" + j + "].total = " + totalizerData[i].totals[j]);
@@ -2743,6 +2741,35 @@ var reportsViewModel = function () {
                         self.listOfColumns.splice(newIndex, 0, item);
                         tempArray = self.listOfColumns();
                         updateListOfColumns(tempArray);
+                    },
+                    scroll: true,
+                    handle: ".handle"
+                });
+
+                $gridColumnConfigTable.sortable({
+                    appendTo: $columnsTbody,
+                    disabled: false,
+                    items: "th:not(.fixed)",
+                    forceHelperSize: true,
+                    helper: "original",
+                    stop: function (event, ui) {
+                        var tempArray,
+                            item = ko.dataFor(ui.item[0]),
+                            newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                        if (newIndex > 0) {
+                            if (newIndex >= self.listOfColumns().length) {
+                                newIndex = self.listOfColumns().length - 1;
+                            }
+                            if (newIndex < 0) {
+                                newIndex = 0;
+                            }
+
+                            ui.item.remove();
+                            self.listOfColumns.remove(item);
+                            self.listOfColumns.splice(newIndex, 0, item);
+                            tempArray = self.listOfColumns();
+                            updateListOfColumns(tempArray);
+                        }
                     },
                     scroll: true,
                     handle: ".handle"
@@ -3997,6 +4024,8 @@ var reportsViewModel = function () {
 
     self.chartable = ko.observable(false);
 
+    self.calculatable = ko.observable(false);
+
     self.currentTab = ko.observable(1);
 
     self.listOfColumns = ko.observableArray([]);
@@ -4305,11 +4334,8 @@ var reportsViewModel = function () {
         openPointSelectorForColumn(columnIndex);
     };
 
-    self.selectPointForModalColumn = function (data, index) {
-        var currentIndex = (typeof index === "function" ? index() : index),
-            columnIndex = parseInt(currentIndex, 10);
-
-        openPointSelectorForModalColumn(columnIndex);
+    self.selectPointForModalColumn = function () {
+        openPointSelectorForModalColumn();
     };
 
     self.selectPointForFilter = function (data, index) {
@@ -4420,7 +4446,7 @@ var reportsViewModel = function () {
         return true;
     };
 
-    self.addNewColumn = function (indexOfColumn) {
+    self.addNewColumn = function (element, indexOfColumn) {
         var newColumn = getNewColumnTemplate(),
             tempArray = self.listOfColumns();
 
@@ -4431,6 +4457,11 @@ var reportsViewModel = function () {
         }
 
         updateListOfColumns(tempArray);
+        if ($(element).hasClass("rightSideAddButton")) {
+            $gridColumnConfig.stop().animate({
+                scrollLeft: $gridColumnConfigTable.get(0).scrollWidth
+            }, 600);
+        }
         return true;
     };
 
@@ -4441,7 +4472,7 @@ var reportsViewModel = function () {
         return true;
     };
 
-    self.clearModalColumnPoint = function (indexOfColumn) {
+    self.clearModalColumnPoint = function () {
         self.currentColumnEdit(getNewColumnTemplate());
     };
 
@@ -4450,46 +4481,29 @@ var reportsViewModel = function () {
         self.currentColumnEdit.valueHasMutated();
     };
 
+    self.setCurrentColumnField = function (fieldName, newValue) {
+        self.currentColumnEdit()[fieldName] = newValue;
+        self.currentColumnEdit().dataColumnName = self.currentColumnEdit().upi + " - " + self.currentColumnEdit().operator.toLowerCase();
+        self.currentColumnEdit.valueHasMutated();
+    };
+
     self.setEditedColumnData = function () {
         var tempArray = self.listOfColumns();
 
         tempArray[self.currentColumnEditIndex()] = self.currentColumnEdit();
         updateListOfColumns(tempArray);
-        $editColumnModal.modal("hide");
+        $editColumnModal.closeModal();
         return true;
+    };
+
+    self.closeEditColumnModal = function () {
+        $editColumnModal.closeModal();
     };
 
     self.clearColumnCalculation = function (indexOfColumn) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn];
         column.calculation = [];
-        updateListOfColumns(tempArray);
-        return true;
-    };
-
-    self.globalCalculationClick = function (element, calc) {
-        var i,
-            tempArray = self.listOfColumns(),
-            column;
-
-        if (element.checked === true) {
-            for (i = 0; i < tempArray.length; i++) {
-                column = tempArray[i];
-                if (column.canCalculate === true) {
-                    if (column.calculation.indexOf(calc) === -1) {
-                        column.calculation.push(calc);
-                    }
-                }
-            }
-        } else {
-            for (i = 0; i < tempArray.length; i++) {
-                column = tempArray[i];
-                if (column.calculation.indexOf(calc) !== -1) {
-                    column.calculation.splice(column.calculation.indexOf(calc), 1);
-                }
-            }
-        }
-
         updateListOfColumns(tempArray);
         return true;
     };
@@ -4532,6 +4546,16 @@ var reportsViewModel = function () {
                 if (column.calculation.indexOf(calc) !== -1) {
                     column.calculation.splice(column.calculation.indexOf(calc), 1);
                 }
+            }
+        }
+
+        if (element.checked === true) {
+            if (self.globalcalculateColumnSelectedvalue().indexOf(calc) === -1) {
+                self.globalcalculateColumnSelectedvalue.push(calc);
+            }
+        } else {
+            if (self.globalcalculateColumnSelectedvalue().indexOf(calc) !== -1) {
+                self.globalcalculateColumnSelectedvalue.splice(self.globalcalculateColumnSelectedvalue().indexOf(calc), 1);
             }
         }
 
@@ -4588,7 +4612,7 @@ var reportsViewModel = function () {
         }
 
         updateListOfColumns(tempArray);
-        $globalEditColumnModal.modal("hide");
+        $globalEditColumnModal.closeModal();
         return true;
     };
 
@@ -4691,6 +4715,11 @@ var reportsViewModel = function () {
         return true;
     };
 
+    self.globalColumnIncludeInChartClick = function () {
+        self.globalColumnIncludeInChart(!self.globalColumnIncludeInChart());  // toggle
+        return true;
+    };
+
     self.selectInterval = function (selectedInterval) {
         self.interval(selectedInterval);
     };
@@ -4736,14 +4765,14 @@ var reportsViewModel = function () {
     };
 
     self.editColumn = function (column, index) {
-        self.currentColumnEdit(column);
+        self.currentColumnEdit($.extend(true, {}, column));
         self.currentColumnEditIndex(index);
-        $editColumnModal.modal("show");
+        $editColumnModal.openModal();
         return true;
     };
 
     self.globalEditColumnFields = function () {
-        $globalEditColumnModal.modal("show");
+        $globalEditColumnModal.openModal();
     };
 
     self.showColumnSettings = function (element, column) {
@@ -4853,19 +4882,19 @@ var reportsViewModel = function () {
         return answer;
     }, self);
 
-    self.allTypesSelected = ko.computed(function () {
-        var i,
-            answer = true;
-
-        for (i = 0; i < self.pointTypes().length; i++) {
-            if (self.pointTypes()[i].selected === false) {
-                answer = false;
-                break;
-            }
-        }
-
-        return answer;
-    }, self);
+    // self.allTypesSelected = ko.computed(function () {
+    //     var i,
+    //         answer = true;
+    //
+    //     for (i = 0; i < self.pointTypes().length; i++) {
+    //         if (self.pointTypes()[i].selected === false) {
+    //             answer = false;
+    //             break;
+    //         }
+    //     }
+    //
+    //     return answer;
+    // }, self);
 };
 
 function applyBindings(extConfig) {
