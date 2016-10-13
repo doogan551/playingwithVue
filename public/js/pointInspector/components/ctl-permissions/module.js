@@ -36,11 +36,11 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         }, this);
 
         this.showPermissionsTable = ko.computed(function() {
-            return !this.networkError() && (this.security().length || this.root.isInEditMode());
+            return !this.networkError() && (this.groupsOnPoint().length || this.root.isInEditMode());
         }, this);
 
         this.showNoPermissionsMsg = ko.computed(function() {
-            return !this.networkError() && (this.security().length === 0) && !this.root.isInEditMode();
+            return !this.networkError() && (this.groupsOnPoint().length === 0) && !this.root.isInEditMode();
         }, this);
 
         this.userCanEditPermissions = ko.computed(function() {
@@ -91,7 +91,12 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                 return;
 
             // Build groups assigned to this point
-            for (var i = 0, len = security.length; i < len; i++) {
+            for (groupId in allGroups) {
+                if (!!allGroups[groupId].points.hasOwnProperty(self.root.point.data._id())) {
+                    groupsOnPoint.push(allGroups[groupId]);
+                }
+            }
+            /*for (var i = 0, len = security.length; i < len; i++) {
                 _id = security[i];
                 group = allGroups[_id];
 
@@ -108,14 +113,13 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                         "users": [],
                     });
                 }
-            }
+            }*/
 
             // Build groups NOT assigned this point
             // TODO Only get the groups for which the acting user is a group administrator
-            for (_id in allGroups) {
-                group = allGroups[_id];
-                if (security.indexOf(_id) == -1) {
-                    groupsNotOnPoint.push(group);
+            for (groupId in allGroups) {
+                if (!allGroups[groupId].points.hasOwnProperty(self.root.point.data._id())) {
+                    groupsNotOnPoint.push(allGroups[groupId]);
                 }
             }
 
@@ -175,6 +179,23 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             throttle: 50
         });
 
+        this.root.point.status.subscribe(function(status) {
+
+            if (status === "saving") {
+                $.ajax({
+                    url: apiEndpoint + 'security/groups/updatePermissions',
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    type: 'post',
+                    data: JSON.stringify({
+                        groups: this.groupsOnPoint().concat(this.groupsNotOnPoint())
+                    })
+                }).done(function(data) {
+                    console.log('groups updated');
+                });
+            }
+        }, self);
+
         apiEndpoint = params.rootContext.apiEndpoint;
     }
 
@@ -203,7 +224,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                         "canWrite": hasAccess(group, 'WRITE'),
                         "canControl": hasAccess(group, 'CONTROL'),
                         "canAcknowledge": hasAccess(group, 'ACKNOWLEDGE'),
-                        "users": group.Users
+                        "users": group.Users,
+                        "points": group.Points
                     };
                 }
             },
@@ -230,36 +252,28 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                     return;
                 }
                 processGroupData(data);
+
+
                 $.ajax({
-                        url: apiEndpoint + 'security/points/getGroups/'+self.root.point.data._id(),
+                        url: apiEndpoint + 'security/users/getallusers',
                         contentType: 'application/json',
-                        type: 'get'
+                        type: 'post'
                     })
                     .done(function(data) {
-                        console.log(data);
+                        if (!!data.err) {
+                            self.networkError(true);
+                            return;
+                        }
+                        processUserData(data.Users);
 
-                        $.ajax({
-                                url: apiEndpoint + 'security/users/getallusers',
-                                contentType: 'application/json',
-                                type: 'post'
-                            })
-                            .done(function(data) {
-                                if (!!data.err) {
-                                    self.networkError(true);
-                                    return;
-                                }
-                                processUserData(data.Users);
+                        // Now that we've received our group and user data, we trigger the building of our groups
+                        // listings by touching the security computed
+                        var security = self.security(); // Save the current security information
+                        self.root.point.data.Security([]); // Remove security information
+                        self.root.point.data.Security(security); // Re-add security information
 
-                                // Now that we've received our group and user data, we trigger the building of our groups
-                                // listings by touching the security computed
-                                var security = self.security(); // Save the current security information
-                                self.root.point.data.Security([]); // Remove security information
-                                self.root.point.data.Security(security); // Re-add security information
-
-                                self.gettingData(false);
-                                self.networkError(false);
-                            })
-                            .fail(failAction);
+                        self.gettingData(false);
+                        self.networkError(false);
                     })
                     .fail(failAction);
             })
@@ -345,12 +359,29 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
 
     ViewModel.prototype.removeGroup = function(data, group) {
         if (!data.userCanEditPermissions()) return;
-        data.security.remove(group._id);
+        var upi = data.root.point.data._id();
+        var groupsOnPoint = data.groupsOnPoint;
+
+        delete data.allGroups[group._id].points[upi];
+        for (var g = 0; g < groupsOnPoint().length; g++) {
+            if (groupsOnPoint()[g]._id === group._id) {
+                groupsOnPoint.splice(g, 1);
+                g--;
+            }
+        }
+
+        //used to trigger the computed that updates the screen
+        data.security.valueHasMutated();
     };
 
     ViewModel.prototype.addGroup = function(data, group) {
         if (!data.userCanEditPermissions()) return;
-        data.security.push(group._id);
+        var upi = data.root.point.data._id();
+        data.allGroups[group._id].points[upi] = true;
+        data.groupsOnPoint.push(data.allGroups[group._id]);
+
+        //used to trigger the computed that updates the screen
+        data.security.valueHasMutated();
     };
 
     //knockout calls this when component is removed from view

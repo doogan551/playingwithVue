@@ -707,7 +707,6 @@ var Groups = {
     });
   },
   updateGroup: function(data, cb) {
-    var groupName = data["User Group Name"];
     var groupUpi = data["User Group Upi"];
     var updateData = data["Update Data"];
     var users = (updateData.Users !== undefined) ? updateData.Users : [];
@@ -1573,6 +1572,23 @@ module.exports = {
         }
       });
     },
+    updatePermissions: function(data, cb) {
+      var groups = data.groups;
+
+      async.each(groups, function(group, callback) {
+        Utility.update({
+          collection: 'User Groups',
+          query: {
+            _id: ObjectID(group._id)
+          },
+          updateObj: {
+            $set: {
+              Points: group.points
+            }
+          }
+        }, callback);
+      }, cb);
+    },
     saveGroup: Groups.saveGroup,
     newGroup: Groups.newGroup,
     updateGroup: Groups.updateGroup
@@ -1947,21 +1963,6 @@ module.exports = {
           message: "success"
         });
       });*/
-    },
-    getGroups: function(data, cb) {
-      var upi = data.upi;
-      var criteria = {
-        collection: 'User Groups',
-        query: {},
-        fields: {
-          Points: 0
-        }
-      };
-      criteria.query['Points.' + upi] = {
-        $exists: 1
-      };
-      console.log(criteria);
-      Utility.get(criteria, cb);
     }
   },
   Utility: {

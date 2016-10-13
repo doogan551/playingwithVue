@@ -1123,9 +1123,9 @@ function doActivityLogs(generateActivityLog, logs, callback) {
 }
 
 function updSecurity(point, callback) {
-  if (!point.hasOwnProperty('Security')) {
+  // if (!point.hasOwnProperty('Security')) {
     return callback();
-  }
+  // }
   point.Security = point.Security.map(function(groupId) {
     return ObjectID(groupId);
   });
