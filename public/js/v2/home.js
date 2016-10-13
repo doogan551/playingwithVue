@@ -4337,6 +4337,8 @@ var dti = {
                 }))
             }).done(
                 function handleAuthenticateData (data) {
+                    var $errorMessage = $('#login .loginError');
+
                     dti.$loginBtn.removeAttr('disabled');
 
                     // if (!!data.resetPass) {
@@ -4345,16 +4347,17 @@ var dti = {
                     //     $('#oldPassword').focus();
                     //     return;
                     // }
-                    // if (!!data.message) {
-                    //     _local.login.errorMessage(data.message);
-                    //     return;
-                    // }
-                    // if (!!data.err) {
-                    //     _local.login.errorMessage(data.err);
-                    //     return;
-                    // }
+                    if (!!data.message) {
+                        $errorMessage.text(data.message);
+                        return;
+                    }
+                    if (!!data.err) {
+                        $errorMessage.text(data.err);
+                        return;
+                    }
 
                     if (!!data._id) {
+                        $errorMessage.text('');
                         window.userData = data;
                         dti.bindings.user(data);
                         // _local.login.setupAutoLogout(window.userData);
