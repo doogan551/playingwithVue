@@ -305,15 +305,6 @@ span.intervalLabel {
 }
 .footerCalc:hover:after {
     content: attr(data-title);
-
-    /*border: 1px solid #fc0;*/
-    /*padding: 3px 6px;*/
-    /*background: #fffea1;*/
-    /*content: attr(data-title);*/
-    /*position: relative;*/
-    /*right: -40px;*/
-    /*top: -26px;*/
-
     border: 1px solid #cccccc;
     background-color: #efefef;
     position: relative;
@@ -323,37 +314,11 @@ span.intervalLabel {
     margin-left: 40px;
     margin-top: -30px;
     width: 130px;
-
-    /*padding: 4px 8px;*/
-    /*color: #333;*/
-    /*position: relative;*/
-    /*margin-left: 80px;*/
-    /*margin-top: -100px;*/
-    /*width: 200px;*/
-    /*word-wrap: normal;*/
-    /*left: 0;*/
-    /*top: 100%;*/
-    /*white-space: normal;*/
-    /*-moz-border-radius: 5px;*/
-    /*-webkit-border-radius: 5px;*/
-    /*border-radius: 5px;*/
-    /*-moz-box-shadow: 0px 0px 4px #222;*/
-    /*-webkit-box-shadow: 0px 0px 4px #222;*/
-    /*box-shadow: 0px 0px 4px #222;*/
-    /*background-image: -moz-linear-gradient(top, #eeeeee, #cccccc);*/
-    /*background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #eeeeee), color-stop(1, #cccccc));*/
-    /*background-image: -webkit-linear-gradient(top, #eeeeee, #cccccc);*/
-    /*background-image: -moz-linear-gradient(top, #eeeeee, #cccccc);*/
-    /*background-image: -ms-linear-gradient(top, #eeeeee, #cccccc);*/
-    /*background-image: -o-linear-gradient(top, #eeeeee, #cccccc);*/
 }
 td.filterName {
     width: 275px;
     padding-left: 20px !important;
 }
-/*li.active a {
-    border: 1px solid #416933;
-}*/
 .filterName.open:focus {
     border-color: #d5e1f2;
 }
@@ -373,9 +338,6 @@ td.filterName {
 .tabConfiguration ul.nav.nav-tabs li.active a {
     background-color: #fff !important;
 }
-/*.tabConfiguration ul.nav.nav-tabs li a {
-    background-color: #B1B1B1;
-}*/
 .tabConfiguration .tab-content {
     background-color: #fff;
     border-radius: 0px 0px 7px 7px;
@@ -390,15 +352,12 @@ td.filterName {
     min-width: 850px;
 }
 .tabViewReport ul.nav.nav-tabs {
-    /*background-color: rgb(65, 105, 51);*/
     border-bottom: none;
 }
 .tabViewReport ul.nav.nav-tabs li.active a {
-    /*background-color: #fff;*/
     border: 1px solid #416933;
 }
 .tabViewReport ul.nav.nav-tabs li a {
-    /*background-color: #B1B1B1;*/
     padding: 1px 3px 1px 3px;
     border-radius: 4px 4px 4px 4px;
 }
@@ -434,6 +393,9 @@ td.filterName {
 }
 #reportColumns {
     overflow-y: auto;
+}
+#gridColumnConfig {
+    overflow-x: auto;
 }
 #filterByPoint {
     overflow-y: auto;
@@ -660,6 +622,37 @@ div.dataTables_wrapper div.dataTables_length select {
     margin-left: 11px;
     margin-top: -10px;
 }
+.dropdown.globalAvailableAxisGroupsContainer a {
+    width: 31px;
+    padding: 0px;
+}
+.dropdown.globalAvailableAxisGroupsContainer a .text {
+    margin-left: 2px;
+}
+.dropdown.globalAvailableAxisGroupsContainer ul.dropdown-menu {
+    cursor: pointer;
+    width: 30px;
+    min-width: 34px;
+    text-indent: 0px;
+    margin-left: 11px;
+    margin-top: -10px;
+}
+.dropdown.availableGlobalAxisGroupsContainer {
+}
+.dropdown.availableGlobalAxisGroupsContainer a.dropdown-button {
+    width: 30px;
+    padding-left: 10px;
+    border-radius: 8px;
+}
+.dropdown.availableGlobalAxisGroupsContainer ul.dropdown-menu {
+    width: 33px;
+    min-width: 8px;
+    margin-left: 7px;
+    margin-top: -5px;
+}
+.dropdown.availableGlobalAxisGroupsContainer ul.yaxisGroups li {
+    padding: 0px;
+}
 
 .filterPointName {
     display: inline-block;
@@ -685,7 +678,7 @@ div.dataTables_wrapper div.dataTables_length select {
     width: 60px;
 }
 .inputMultiplier {
-    width: 50px;
+    width: 50px !important;
     -webkit-appearance: none;
     padding: 2px 5px 2px 5px;
 }
@@ -737,12 +730,6 @@ th .includeInChartColumn {
     width: 32px;
     min-width: 20px;
     text-align: center;
-}
-.yaxisGroups.dropdown-menu {
-    width: 32px;
-    min-width: 8px;
-    margin-left: 15px;
-    margin-top: -2px;
 }
 ul.yaxisGroups.dropdown-menu li a {
     padding: 3px 1px 3px 1px;
@@ -859,16 +846,93 @@ input.filled-in[type=number]:focus:not([readonly]) {
     cursor: move;
     margin-right: 5px;
 }
-.gridConfig > thead > tr > th {
-    border-top: 1px solid #CCC;
+.gridColumnConfigTable .handle {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGElEQVQIW2NkYGBIA+JZQMzACCJgAIUDACENAQR6zKpeAAAAAElFTkSuQmCC) repeat;
+    width: 10px;
+    vertical-align: middle;
+    cursor: move;
+    padding-right: 8px;
+    margin-right: 2px;
+}
+.gridColumnConfigTable .columnItem {
+    /*display: inline-flex;*/
+}
+.gridColumnConfigTable .displayName {
+    position: relative;
+    vertical-align: top;
+}
+.gridColumnConfigTable .displayName .deleteColumnLink{
+    position: absolute;
+    right: 0;
+    bottom: 0;
+}
+.gridColumnConfigTable .displayName div.cellContent {
+    display: inline-flex;
+}
+.gridColumnConfigTable .columnItem.globalConfigCell {
+    display: block;
+}
+#editColumnModal .headerInfo {
+    background-color: #f1f1f1;
+    padding: 6px;
+    border-radius: 4px;
+}
+#globalEditColumnModal .headerInfo {
+    background-color: #f1f1f1;
+    padding: 6px;
+    border-radius: 4px;
+}
+.gridColumnConfigTable > thead > tr > th {
+    border-top: 1px solid #CCC !important;
     border-left: 1px solid #CCC;
 }
-.gridConfig > tbody > tr > td {
+.gridColumnConfigTable > tbody > tr > td {
     border-left: 1px solid #CCC;
 }
-.gridConfig > tfoot > tr > td {
+.gridColumnConfigTable > tfoot > tr > td {
     border-left: 1px solid #CCC;
     border-bottom: 1px solid #CCC;
+}
+.gridColumnConfigTable th div.columnGlobalConfig {
+    background-color: #607d8b;
+    padding: 8px;
+    border-radius: 3px;
+    font-size: 1rem;
+    color: white;
+    margin-bottom: 10px;
+}
+.gridColumnConfigTable th div.columnGlobalConfig:hover {
+    cursor: pointer;
+}
+.gridColumnConfigTable th div.columnGlobalConfig:hover label {
+    cursor: pointer;
+    color: #23527c;
+}
+.gridColumnConfigTable th div.columnGlobalConfig label {
+    font-size: 1rem;
+    color: white;
+    white-space: normal;
+}
+.gridColumnConfigTable th div.columnNames {
+    background-color: #607d8b;
+    padding: 4px;
+    border-radius: 3px;
+    color: white;
+}
+.gridColumnConfigTable th div.columnNames:hover {
+    cursor: pointer;
+}
+.gridColumnConfigTable th div.columnNames:hover label {
+    cursor: pointer;
+    color: #23527c;
+}
+.gridColumnConfigTable th div.columnNames label{
+    font-size: 1rem;
+    color: white;
+    white-space: normal;
+}
+.gridColumnConfigTable th a.addColumnGridButton {
+    background-color: white;
 }
 .columnsGrid tr.ui-sortable-helper {
     border: 2px solid #33B171 !important;
