@@ -1418,6 +1418,7 @@ var dti = {
                     // * The newAlarm object format is commented in the 'unacknowledged' socket handler
                     var list = unacknowledgedAlarms.list(),
                         count = unacknowledgedAlarms.count,
+                        annunciator = dti.alarms.annunciator,
                         sortFn = function (a,b) {
                             return (a.msgTime - b.msgTime);
                         };
@@ -1443,8 +1444,8 @@ var dti = {
 
                     unacknowledgedAlarms.showList(true);
                     
-                    if (!alarms.annunciator.active) {
-                        alarms.annunciator.start();
+                    if (!annunciator.active) {
+                        annunciator.start();
                     }
                 },
                 removingUnackAlarm = function (data) {
@@ -1455,6 +1456,10 @@ var dti = {
                     //      ackTime: int (Unix Epoch)
                     // }
                     var count = unacknowledgedAlarms.count;
+
+                    if (count() === 0) { // Purely CYB - this shouldn't happen
+                        return;
+                    }
 
                     // Update our alarm count - we have to do this before we remove the unacknowledged alarm
                     // because we have listeners on the unacknowledged.list array and the count must be updated
@@ -1570,6 +1575,8 @@ var dti = {
                 }, annunciator.interval);
             },
             stop: function () {
+                var annunciator = dti.alarms.annunciator;
+
                 annunciator.active = false;
                 window.clearInterval(annunciator.id);
             },
