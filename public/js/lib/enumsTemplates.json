@@ -712,16 +712,16 @@
             }
         },
         "Modbus Orders": {
-            "MSR First, MSB First": {
+            "None": {
                 "enum": 0
             },
-            "LSR First, MSB First": {
+            "Registers": {
                 "enum": 1
             },
-            "MSR First, LSB First": {
+            "Bytes": {
                 "enum": 2
             },
-            "LSR First, LSB First": {
+            "Both": {
                 "enum": 3
             }
         },
@@ -2656,7 +2656,7 @@
                 "reportEnable": true
             },
             "Maximum Sensor Value": {
-                "enum":397,
+                "enum": 397,
                 "valueType": "Float",
                 "reportEnable": true
             },
@@ -2676,7 +2676,7 @@
                 "reportEnable": true
             },
             "Minimum Sensor Value": {
-                "enum":398,
+                "enum": 398,
                 "valueType": "Float",
                 "reportEnable": true
             },
@@ -3320,13 +3320,13 @@
                 "enumsSet": ""
             },
             "Sensor IO Device": {
-                "enum":399,
+                "enum": 399,
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": ""
             },
             "Sensor IO Type": {
-                "enum":400,
+                "enum": 400,
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": ""
@@ -3337,7 +3337,7 @@
                 "reportEnable": true
             },
             "Sensor RTD Type": {
-                "enum":401,
+                "enum": 401,
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": ""
@@ -3610,17 +3610,17 @@
                 "enumsSet": ""
             },
             "Velocity Flow": {
-                "enum":402,
+                "enum": 402,
                 "valueType": "Float",
                 "reportEnable": true
             },
             "Velocity Type": {
-                "enum":403,
+                "enum": 403,
                 "valueType": "Enum",
                 "reportEnable": false
             },
             "Velocity Pressure": {
-                "enum":404,
+                "enum": 404,
                 "valueType": "Float",
                 "reportEnable": true
             },
@@ -3827,7 +3827,7 @@
         },
         "Points": {
             "Report": {
-                "Report Config":{},
+                "Report Config": {},
                 "Report Type": {
                     "isDisplayable": true,
                     "isReadOnly": true,
@@ -4489,13 +4489,6 @@
                     "ValueType": 11,
                     "Value": 0
                 },
-                "Modbus Order": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 5,
-                    "Value": "MSR First, MSB First",
-                    "eValue": 0
-                },
                 "Model Type": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -5135,6 +5128,13 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
+                "Modbus Order": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Both",
+                    "eValue": 3
+                },
                 "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
@@ -5588,6 +5588,13 @@
                     "isReadOnly": false,
                     "ValueType": 1,
                     "Value": 0.0
+                },
+                "Modbus Order": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Both",
+                    "eValue": 3
                 },
                 "Notify Policies": [],
                 "Open Channel": {
@@ -6358,6 +6365,13 @@
                     "ValueType": 11,
                     "Value": 0
                 },
+                "Modbus Order": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Both",
+                    "eValue": 3
+                },
                 "Momentary Delay": {
                     "isDisplayable": false,
                     "isReadOnly": false,
@@ -6832,6 +6846,13 @@
                     "isReadOnly": false,
                     "ValueType": 12,
                     "Value": 0
+                },
+                "Modbus Order": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Both",
+                    "eValue": 3
                 },
                 "Momentary Delay": {
                     "isDisplayable": false,
@@ -7595,6 +7616,13 @@
                     "ValueType": 1,
                     "Value": 100.0
                 },
+                "Modbus Order": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Both",
+                    "eValue": 3
+                },
                 "Notify Policies": [],
                 "Out of Service": {
                     "isDisplayable": true,
@@ -7818,6 +7846,13 @@
                     "isReadOnly": true,
                     "ValueType": 11,
                     "Value": 0
+                },
+                "Modbus Order": {
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 5,
+                    "Value": "Both",
+                    "eValue": 3
                 },
                 "Notify Policies": [],
                 "Out of Service": {
