@@ -311,7 +311,7 @@ html
 
         #login.animates.blue-grey
             .container
-                .z-depth-1.grey.lighten-4.row(style='display: inline-block; padding: 32px 48px 0px 48px; border: 1px solid #EEE; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);')
+                .z-depth-1.grey.lighten-4.row(style='display: inline-block; padding: 32px 48px 0px 48px; border: 1px solid #EEE; border-radius: 3px; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);')
                     form.col.s12(method='post')
                         .row
                             .col.s12
@@ -324,8 +324,8 @@ html
                             .input-field.col.s12
                                 input#password(type='password', name='password', autocomplete='off')
                                 label(for='password') Password
-                        br
                         center
+                            .row.loginError(style='color: red;')
                             .row
                                 button#loginBtn.col.s12.btn.btn-large.waves-effect.blue-grey(type='submit', name='btn_login') Login
 
