@@ -15,7 +15,7 @@ html
 
         header.animates
             .navbar-fixed.taskbar(data-bind='visible: taskbarShown')
-                nav.blue-grey
+                nav(data-bind='css: { "blue-grey": system.status() === "ok" }')
                     .nav-wrapper
                         ul.left
                             li.taskbarItem
@@ -38,6 +38,9 @@ html
                             // /ko
 
                         ul.right
+                            li.taskbarItem(data-bind='visible: system.status() !== "ok" ')
+                                a#systemErrorsIcon(href='javascript://', data-menu='systemErrorLogDropdown')
+                                    i.mdi.mdi-alert
                             li.taskbarItem
                                 a#alarmIcon.waves-effect(href='javascript://', data-menu='alarmDropdown')
                                     i.material-icons(data-bind='visible: !alarms.isMuted()') notifications_active
@@ -53,7 +56,7 @@ html
                                     span.userName.valign John Doe
 
             #searchNavbar.navbar-fixed.taskbar.animates
-                nav.blue-grey
+                nav(data-bind='css: { "blue-grey": system.status() === "ok" }')
                     .nav-wrapper
                         .taskbarItem
                             i.material-icons search
@@ -154,6 +157,14 @@ html
                         .row *Displaying&nbsp;#[span(data-bind='text: alarms.unacknowledged.list().length')]&nbsp;of&nbsp;#[span(data-bind='text: alarms.unacknowledged.count()')].
                         // /ko
                 .status(data-bind='visible: alarms.unacknowledged.showList() === false') Relax...none right now.
+
+            #systemErrorLogDropdown.white.z-depth-1
+                .errorLogHeader System Error Log
+                .errorLogBody(data-bind='foreach: system.eventLog.errors')
+                    .row
+                        .errorDate(data-bind='text: dateTime')
+                        .errorMessageContainer
+                            .errorMessage(data-bind='text: message')
 
             #startmenu.z-depth-3.white.lighten-3.white-text
                 .startmenuBody

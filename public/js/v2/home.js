@@ -447,6 +447,15 @@ var dti = {
             dti.on('hideMenus', function hideMenu () {
                 $('.modal.open').closeModal();
             });
+
+            // Setup listener for body clicks
+            $('body').mousedown(function handleBodyMouseDown (event) {
+                dti.forEachArray(dti.events._bodyClickHandlers, function bodyMouseDownHandler (handler) {
+                    var $target = $(event.target);
+
+                    handler(event, $target);
+                });
+            });
         },
         _bodyClickHandlers: [],
         bodyClick: function (fn) {
@@ -1238,14 +1247,6 @@ var dti = {
     startButton: {
         init: function () {
             dti.startButton.$el = $('#startButton');
-
-            $('body').mousedown(function handleBodyMouseDown (event) {
-                dti.forEachArray(dti.events._bodyClickHandlers, function bodyMouseDownHandler (handler) {
-                    var $target = $(event.target);
-
-                    handler(event, $target);
-                });
-            });
 
             $('#openItems').click(function showOpenItems () {
                 $('#modal2').openModal();
@@ -3871,6 +3872,92 @@ var dti = {
             dti.messaging._messageCallbacks.push(cb);
         }
     },
+    system: {
+        init: function () {
+            dti.bindings.system.status = ko.computed(function () {
+                if (dti.bindings.socketStatus() !== 'connect') {
+                    return 'error';
+                } else {
+                    return 'ok';
+                }
+            });
+
+            dti.bindings.system.eventLog.errors = ko.computed(function () {
+                return ko.utils.arrayFilter(dti.bindings.system.eventLog.allLogs(), function (log) {
+                    return log.type === 'error';
+                });
+            });
+
+            dti.bindings.system.eventLog.info = ko.computed(function () {
+                return ko.utils.arrayFilter(dti.bindings.system.eventLog.allLogs(), function (log) {
+                    return log.type === 'info';
+                });
+            });
+
+            // Initialize our system errors hover menu
+            dti.system.eventLog.systemErrorsHoverMenu = dti.events.hoverMenu('#systemErrorsIcon');
+        },
+        eventLog: {
+            options: {
+                maxErrors: 500,
+                maxInfo: 500
+            },
+            systemErrorsHoverMenu: null, // installed in dti.system.init
+            add: function (log) {
+                var defaults = {
+                        id: dti.makeId(),
+                        timestamp: new Date().getTime(),
+                    },
+                    target,
+                    len,
+                    max;
+
+                log = $.extend(defaults, log);
+
+                log.dateTime = ko.observable(moment(log.timestamp).calendar());
+
+                if (log.type === 'error') {
+                    target = dti.bindings.system.eventLog.errors;
+                    max = dti.system.eventLog.options.maxErrors;
+                } else if (log.type === 'info') {
+                    target = dti.bindings.system.eventLog.info;
+                    max = dti.system.eventLog.options.maxInfo;
+                } else {
+                    return;
+                }
+
+                dti.bindings.system.eventLog.allLogs.unshift(log);
+
+                len = target().length;
+
+                if (len > max) {
+                    remove(target()[max]);
+                }
+            },
+            remove: function (log) {
+                var logs = dti.bindings.system.eventLog.allLogs;
+                
+                dti.forEachArrayRev(logs(), function (logEntry, index) {
+                    if (logEntry.id === log.id) {
+                        logs.splice(index, 1); // Remove this entry
+                        return false; // Stop iterating the array
+                    }
+                });
+            },
+            addError: function (message) {
+                dti.system.eventLog.add({
+                    type: 'error',
+                    message: message
+                });
+            },
+            addInfo: function (message) {
+                dti.system.eventLog.add({
+                    type: 'error',
+                    message: message
+                });
+            }
+        }
+    },
     bindings: {
         user: ko.observable(window.userData || {}),
         openWindows: {},
@@ -3974,6 +4061,15 @@ var dti = {
             },
             acknowledgeOne: function (alarm) {
                 dti.alarms.sendAcknowledge([alarm]);
+            }
+        },
+        socketStatus: ko.observable(),
+        system: {
+            status: null, // ko computed; installed in dti.system.init
+            eventLog: {
+                allLogs: ko.observableArray([]), // all logs
+                errors: null, // ko computed; filters log; installed in dti.eventLog.init
+                info: null, // ko computed; filters log; installed in dti.eventLog.init
             }
         },
         closeWindows: function (group) {
@@ -4382,6 +4478,85 @@ var dti = {
             sound.play();
         }
     },
+    socket: {
+        manager: null,
+        options: {
+            reconnection: true,             // Do retry
+            reconnectionDelay: 5000,        // 5 second initial minimum delay (increases w/ each retry using a randomizing algorithm)
+            reconnectionDelayMax: 120000,   // 2 minutes maximum delay
+            reconnectionAttempts: Infinity, // Duh
+            randomizationFactor: 0.5,       // Delay randomization factor
+            timeout: 20000                  // 20s socket inactivity timeout
+        },
+        initSocket: function () { // DO NOT RENAME THIS FN "init" or "initOnLoad" (it must be initialized prior to dti.inits)
+            var events = ['connect', 'connect_error', 'connect_timeout', 'reconnect', 'reconnecting', 'reconnect_failed', 'disconnect'];
+
+            dti.socket.connect();
+
+            dti.forEachArray(events, function (event) {
+                dti.socket.on(event, function () {
+                    dti.log('socket ' + event);
+                    dti.bindings.socketStatus(event);
+
+                    if (event !== 'connect' && event !== 'reconnect') {
+                        dti.system.eventLog.addError('Socket ' + event);
+                    }
+                    if (event === 'disconnect') {
+                        dti.toast('Server connection interrupted.');
+                    }
+                });
+            });
+        },
+        connect: function () {
+            if (!dti.socket.manager) {
+                dti.socket.manager = io.connect(dti.settings.socketEndPoint, dti.socket.options);
+            } else {
+                dti.socket.manager.connect();
+            }
+        },
+        disconnect: function () {
+            dti.socket.manager.disconnect();
+        },
+        emit: function () {
+            dti.socket.manager.emit.apply(dti.socket.manager, arguments);
+        },
+        on: function (event, fn) {
+            var addEventHandler = function () {
+                    dti.socket.manager.on(event, function handleEvent () {
+                        var _arguments = arguments;
+
+                        dti.forEachArray(dti.socket.events[event], function callEventListener (fn) {
+                            fn.apply(window, _arguments);
+                        });
+                    });
+                },
+                addEventListener = function () {
+                    if (!dti.socket.events[event]) {
+                        dti.socket.events[event] = [];
+                        addEventHandler(event);
+                    }
+                    dti.socket.events[event].push(fn);
+                };
+
+            addEventListener();
+        },
+        events: {}
+    },
+    toast: function () {
+        var $closeMarkup = $('<i class="material-icons">close</i>');
+        
+        $closeMarkup.click(function (e) {
+            var $toast = $(e.target).parent();
+
+            dti.animations.fadeOut($toast, function () {
+                $toast.remove();
+            });
+        });
+
+        Materialize.toast.apply(window, arguments);
+
+        $('#toast-container').find('.toast').last().append($closeMarkup);
+    },
     init: function () {
         var num = 2,
             runInits = function () {
@@ -4433,11 +4608,8 @@ var dti = {
 
 $(function initWorkspaceV2 () {
     dti.startLoad = new Date();
-    dti.socket = io.connect(dti.settings.socketEndPoint);
-    dti.socket.on('disconnect', function (err) {
-        dti.log('server offline, disconnecting');
-        dti.socket.disconnect();
-    });
+    
+    dti.socket.initSocket();
 
     dti.$loginBtn.click(function validateLogin (event) {
         var user = $('#username').val(),
