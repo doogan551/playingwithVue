@@ -424,8 +424,6 @@ var reportsViewModel = function () {
         reportSocket,
         exportEventSet,
         totalizerDurationInHours = true,
-        exportLandscape = true,
-        headerAdjusted = false,
         Name = "dorsett.reportUI",
         getPointURL = "/api/points/",
         originalPoint = {},
@@ -435,6 +433,15 @@ var reportsViewModel = function () {
             ACKNOWLEDGE: 4,
             WRITE: 8
         },
+        initialFilterSettings = {
+            name1: "",
+            name2: "",
+            name3: "",
+            name4: "",
+            pointTypes: []
+        },
+        columnsFilter = initialFilterSettings,
+        filtersFilter = initialFilterSettings,
         filtersPropertyFields = [],
         columnsPropertyFields = [],
         newlyReferencedPoints = [],
@@ -533,14 +540,21 @@ var reportsViewModel = function () {
                 }
             }
         },
-        getPointInspectorParams = function () {
+        getPointInspectorParams = function (filter) {
             return {
-                name1: self.name1Filter(),
-                name2: self.name2Filter(),
-                name3: self.name3Filter(),
-                name4: self.name4Filter(),
-                pointTypes: self.selectedPointTypesFilter()
+                name1: filter.name1,
+                name2: filter.name2,
+                name3: filter.name3,
+                name4: filter.name4,
+                pointTypes: filter.pointTypes
             };
+        },
+        setPointInspectorParams = function (filterObject, filter) {
+            filterObject.name1 = filter.name1;
+            filterObject.name2 = filter.name2;
+            filterObject.name3 = filter.name3;
+            filterObject.name4 = filter.name4;
+            filterObject.pointTypes = filter.pointTypes;
         },
         getPointRefByAppIndex = function (appIndex) {
             var result = -1,
@@ -967,11 +981,12 @@ var reportsViewModel = function () {
                 },
                 pointSelectedCallback = function (pointInfo) {
                     if (!!pointInfo) {
+                        setPointInspectorParams(columnsFilter, pointInfo.filter);
                         ajaxCall("GET", null, getPointURL + pointInfo._id, setColumnPoint);
                     }
                 };
 
-            dtiUtility.showPointSelector(getPointInspectorParams());
+            dtiUtility.showPointSelector(getPointInspectorParams(columnsFilter));
             dtiUtility.onPointSelect(pointSelectedCallback);
         },
         openPointSelectorForColumn = function (selectObjectIndex) {
@@ -1030,11 +1045,12 @@ var reportsViewModel = function () {
                 },
                 pointSelectedCallback = function (pointInfo) {
                     if (!!pointInfo) {
+                        setPointInspectorParams(columnsFilter, pointInfo.filter);
                         ajaxCall("GET", null, getPointURL + pointInfo._id, setColumnPoint);
                     }
                 };
 
-            dtiUtility.showPointSelector(getPointInspectorParams());
+            dtiUtility.showPointSelector(getPointInspectorParams(columnsFilter));
             dtiUtility.onPointSelect(pointSelectedCallback);
         },
         openPointSelectorForFilter = function (selectObjectIndex) {
@@ -1062,26 +1078,35 @@ var reportsViewModel = function () {
                 },
                 pointSelectedCallback = function (pointInfo) {
                     if (!!pointInfo) {
+                        setPointInspectorParams(filtersFilter, pointInfo.filter);
                         ajaxCall("GET", null, getPointURL + pointInfo._id, setFilterPoint);
                     }
                 };
 
-            dtiUtility.showPointSelector(getPointInspectorParams());
+            dtiUtility.showPointSelector(getPointInspectorParams(filtersFilter));
             dtiUtility.onPointSelect(pointSelectedCallback);
         },
         openPointSelectorFilterMode = function () {
             if (!scheduled) {
                 var pointSelectedCallback = function (pointFilter) {
+                    if (!!pointFilter) {
                         self.name1Filter(pointFilter.name1);
                         self.name2Filter(pointFilter.name2);
                         self.name3Filter(pointFilter.name3);
                         self.name4Filter(pointFilter.name4);
                         self.selectedPointTypesFilter(pointFilter.pointTypes);
-                    };
+                    }
+                };
 
-                dtiUtility.showPointFilter(getPointInspectorParams());
-                dtiUtility.onPointSelect(pointSelectedCallback);
-            }
+            dtiUtility.showPointFilter({
+                name1: self.name1Filter(),
+                name2: self.name2Filter(),
+                name3: self.name3Filter(),
+                name4: self.name4Filter(),
+                pointTypes: self.selectedPointTypesFilter()
+            });
+            dtiUtility.onPointSelect(pointSelectedCallback);
+        }
         },
         getFilterAdjustedDatetime = function (filter) {
             return getAdjustedDatetimeUnix(moment.unix(filter.date), filter.time.toString());
@@ -2242,36 +2267,8 @@ var reportsViewModel = function () {
             }
             return setYaxisValues(result);
         },
-        adjustGridColumnTabWidth = function () {
-            var infoscanHeader = 95,
-                adjustHeight,
-                $dataTablesScrollHead,
-                $dataTablesScrollBody,
-                $dataTablesScrollFoot,
-                $dataTablesWrapper,
-                $activePane = $tabViewReport.find(".tab-pane.active");
-
-            // $tabViewReport.css("width", window.innerWidth - 83);
-            // $tabViewReport.find(".tab-content").css("width", $tabViewReport.width());
-            //
-            // if ($activePane.attr("id") === "chartData") {
-            //     $activePane.css("height", (window.innerHeight - 90));
-            //     $activePane.css("width", (window.innerWidth - 130));
-            //     $activePane.css("margin-top", "-22px");
-            // } else if ($activePane.attr("id") === "gridData") {
-            //     setInfoBarDateTime();
-            //     adjustHeight = $dataTablesScrollBody.height() - (($dataTablesWrapper.height() + infoscanHeader) - window.innerHeight);
-            //     $dataTablesScrollHead.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
-            //     $dataTablesScrollBody.css("height", adjustHeight);
-            //     $dataTablesScrollBody.css("width", $dataTablesWrapper.width());
-            //     $dataTablesScrollFoot.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
-            //     $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;
-            // }
-        },
         adjustViewReportTabHeightWidth = function () {
             var infoscanHeader = 95,
-                // headerHeight,
-                // headerHeightAdjust = 21,
                 adjustHeight,
                 $dataTablesScrollHead,
                 $dataTablesScrollBody,
@@ -2297,11 +2294,6 @@ var reportsViewModel = function () {
                 setInfoBarDateTime();
                 adjustHeight = $dataTablesScrollBody.height() - (($dataTablesWrapper.height() + infoscanHeader) - window.innerHeight);
                 $dataTablesScrollHead.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
-                // headerHeight = $dataTablesScrollHead.height();
-                // if (!headerAdjusted && headerHeight > 0) {
-                //     $dataTablesScrollHead.css("height", headerHeight - headerHeightAdjust);
-                //     headerAdjusted = true;
-                // }
                 $dataTablesScrollBody.css("height", adjustHeight);
                 $dataTablesScrollBody.css("width", $dataTablesWrapper.width());
                 $dataTablesScrollFoot.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
@@ -3676,7 +3668,6 @@ var reportsViewModel = function () {
             if (reportData !== undefined && self.currentTab() === 2) {
                 self.reportResultViewed(self.currentTab() === 2);
                 blockUI($tabViewReport, false);
-                headerAdjusted = false;
                 if (scheduled) {
                     breakReportDataIntoPrintablePages();
                     if (!self.activeRequestDataDrawn()) {
@@ -4181,6 +4172,7 @@ var reportsViewModel = function () {
             }, 1500);
             setReportEvents();
             adjustConfigTabActivePaneHeight();
+            // myWindowID = window.frameElement.id;
             self.filterPropertiesSearchFilter(""); // computed props jolt
             self.columnPropertiesSearchFilter(""); // computed props jolt
 

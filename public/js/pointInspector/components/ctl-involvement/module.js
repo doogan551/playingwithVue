@@ -125,18 +125,18 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
             $e = $(e.currentTarget),
             col = $e.data('col');
 
-        if(!!col){
+        if (!!col) {
             pointType = col;
             data = data.Device;
-            width = 1250;
+            width = 1000;
             height = 750;
-        } else if(data['Point Type'] !== 'Schedule Entry' && data['Point Type'] !== 'Schedule'){
+        } else if (data['Point Type'] !== 'Schedule Entry' && data['Point Type'] !== 'Schedule') {
             pointType = data['Point Type'];
-            width = 1250;
+            width = 1000;
             height = 750;
-        }else{
+        } else {
             pointType = 'Schedule';
-            width = 1250;
+            width = 1000;
             height = 750;
         }
         endPoint = workspace.config.Utility.pointTypes.getUIEndpoint(pointType, data._id);

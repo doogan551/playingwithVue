@@ -20,7 +20,10 @@ var dti = {
                 iconClass: 'material-icons',
                 group: 'Display',
                 thumbnail: true,
-                singleton: false
+                singleton: false,
+                options: {
+                    retainNames: false
+                }
             },
             'Sequence': {
                 title: 'Sequences',
@@ -28,7 +31,10 @@ var dti = {
                 iconClass: 'material-icons',
                 group: 'Sequence',
                 thumbnail: true,
-                singleton: false
+                singleton: false,
+                options: {
+                    retainNames: false
+                }
             },
             'Report': {
                 title: 'Reports',
@@ -37,7 +43,8 @@ var dti = {
                 group: 'Report',
                 singleton: false,
                 options: {
-                    width: 1000
+                    width: 1000,
+                    retainNames: false
                 }
             },
             'Dashboard': {
@@ -78,7 +85,10 @@ var dti = {
                 iconText: 'memory',
                 iconClass: 'material-icons',
                 group: 'Point',
-                singleton: false
+                singleton: false,
+                options: {
+                    retainNames: false
+                }
             },
             'Settings': {
                 title: 'System Prefs',
@@ -139,7 +149,10 @@ var dti = {
                 standalone: true,
                 singleton: true,
                 initFn: 'navigator.createNavigator',
-                fullScreen: true
+                fullScreen: true,
+                options: {
+                    retainNames: false
+                }
                 // options: {
                 //     width: 1000
                 // }
@@ -1317,8 +1330,7 @@ var dti = {
             if (!obj.standalone) {
                 dti.settings._workspaceNav = true;
                 dti.bindings.showNavigator({
-                    pointType: obj.group,
-                    retainNames: true
+                    pointType: obj.group
                 });
             } else {
                 if (obj.singleton) {
@@ -2784,6 +2796,8 @@ var dti = {
             } else {
                 if (config.callback) {
                     dti.navigator.temporaryCallback = config.callback;
+                } else { // clear any existing callback (not in config)
+                    dti.navigator.temporaryCallback = null;
                 }
 
                 if (config.pointType && config.property) {
@@ -2976,6 +2990,13 @@ var dti = {
 
                             point.name = [point.name1, point.name2, point.name3, point.name4].join(' ');
                             // dti.log('row click', point);
+                            point.filter = {
+                                name1: self.bindings.name1(),
+                                name2: self.bindings.name2(),
+                                name3: self.bindings.name3(),
+                                name4: self.bindings.name4(),
+                                pointTypes: self.getFlatPointTypes(ko.toJS(self.bindings.pointTypes()))
+                            };
 
                             //handles click in an empty table...weird, I know
                             if (point !== self.bindings) {
@@ -3149,18 +3170,22 @@ var dti = {
 
             self.applyPointTypes = function (types, exclusive) {
                 self._pauseRequest = true;
-                if (types && types.length > 0) {
-                    dti.forEachArray(self.bindings.pointTypes(), function isPointTypeChecked (type) {
-                        var isFound = types.indexOf(type.key()) > -1;
+                if (types) {
+                    if (types.length > 0) {
+                        dti.forEachArray(self.bindings.pointTypes(), function isPointTypeChecked (type) {
+                            var isFound = types.indexOf(type.key()) > -1;
 
-                        if (exclusive) {
-                            type.visible(isFound);
-                        } else {
-                            type.visible(true);
-                        }
-                       
-                        type.selected(isFound);
-                    });
+                            if (exclusive) {
+                                type.visible(isFound);
+                            } else {
+                                type.visible(true);
+                            }
+
+                            type.selected(isFound);
+                        });
+                    } else {
+                        self.bindings.toggleAllPointTypes();
+                    }
                 }
                 self._pauseRequest = false;
             };
