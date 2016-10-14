@@ -72,12 +72,8 @@ input.input.form-control.durationDateRangeTime {
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
 }
-.reportDateRangePicker {
-}
 .reportDateRangePicker div.input-field {
     display: inline-flex;
-}
-.workingPane {
 }
 .leftBar .tabs li {
     padding: 6px 6px 6px 6px;
@@ -147,24 +143,6 @@ input.input.form-control.durationDateRangeTime {
     margin-left: 7px;
     margin-right: 7px;
 }
-.intervalDurationSettings {
-    display: -webkit-box;
-    color: black;
-}
-span.durationSettings {
-    margin-left: 292px;
-    color: black;
-}
-span.durationLabel {
-    color: black;
-}
-.durationSettings .checkbox input {
-    margin-left: 5px;
-}
-input.durationCheckbox {
-    margin-left: 8px;
-    vertical-align: middle;
-}
 div.reportAttribs.tab-pane {
     padding-left: 1%;
     padding-top: 20px;
@@ -172,9 +150,6 @@ div.reportAttribs.tab-pane {
 div.additionalFilters.tab-pane {
     padding-left: 5%;
     padding-top: 20px;
-}
-.hideDurationDropdown {
-    display: none;
 }
 .durationCalendarIcon {
     left: -222px;
@@ -199,12 +174,6 @@ input.intervalValue {
     padding-left: 5px;
     width: 65px;
 }
-span.intervalLabel {
-    display: flex;
-    align-items: center;
-    color: black;
-}
-
 .intervalSettings {
     display: inline-flex;
 }
@@ -475,12 +444,6 @@ span.caret.lm10px {
 a.tab {
     color: #ffffff;
 }
-a.clearName {
-    cursor: pointer;
-}
-a.clearName i {
-    margin-left: -24px;
-}
 .pointTypesFilter {
     padding-top: 12px;
 }
@@ -530,10 +493,6 @@ html, body {
     overflow-x: hidden;
     overflow-y: hidden;
 }
-/*body {
-    padding-top: 5px;
-    padding-right: 5px;
-}*/
 .displayDiv {
     display: inline-block;
 }
@@ -1000,17 +959,6 @@ input.filled-in[type=number]:focus:not([readonly]) {
 .filtersGrid tr.ui-sortable-helper a.span.removerow {
     display: none;
 }
-.chartSettingsGrid.table > thead > tr > th {
-    border-bottom: 2px solid #CCC;
-    padding: 4px;
-}
-.chartSettingsGrid.table > tbody > tr > td {
-    border-top: 1px solid #CCC;
-    padding: 4px;
-}
-.chartSettingsGrid.table > tbody {
-    border-bottom: 2px solid #CCC;
-}
 .availableChartTypes.chartTab {
     padding: 0px;
     height: 33px;
@@ -1106,9 +1054,6 @@ td.filterCondition.lastConditionInGroup {
 button {
     margin-right: 5px;
 }
-.cursorPointer {
-    cursor: pointer;
-}
 .reportButtons {
     margin: -1px auto 46px auto;
     width: 325px;
@@ -1119,27 +1064,6 @@ button {
 }
 .btn.btn-sm.btn-success {
     background-color: #08c;
-}
-.popInOutDiv {
-    width: 75px;
-}
-.pop {
-    display: -webkit-box;
-    margin-top: -65px;
-    margin-left: 6px;
-}
-.pop .fa {
-    margin-right: 5px;
-}
-.pop .fa-arrow-circle-up {
-    -ms-transform: rotate(45deg); /* IE 9 */
-    -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
-    transform: rotate(45deg);
-}
-.pop .fa-arrow-circle-down {
-    -ms-transform: rotate(45deg); /* IE 9 */
-    -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
-    transform: rotate(45deg);
 }
 .strikethrough {
     text-decoration:line-through
