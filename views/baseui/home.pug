@@ -323,22 +323,40 @@ html
         #login.animates.blue-grey
             .container
                 .z-depth-1.grey.lighten-4.row(style='display: inline-block; padding: 32px 48px 0px 48px; border: 1px solid #EEE; border-radius: 3px; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);')
-                    form.col.s12(method='post')
+                    .col.s12
                         .row
                             .col.s12
                                 img(src='/img/Dorsett_logo.png')
-                        .row
-                            .input-field.col.s12
-                                input#username(type='text', name='username', autocomplete='off')
-                                label(for='username') Username
-                        .row
-                            .input-field.col.s12
-                                input#password(type='password', name='password', autocomplete='off')
-                                label(for='password') Password
-                        center
-                            .row.loginError(style='color: red;')
+                        form#loginForm
                             .row
-                                button#loginBtn.col.s12.btn.btn-large.waves-effect.blue-grey(type='submit', name='btn_login') Login
+                                .input-field.col.s12
+                                    input#username(type='text', name='username', autocomplete='off')
+                                    label(for='username') Username
+                            .row
+                                .input-field.col.s12
+                                    input#password(type='password', name='password', autocomplete='off')
+                                    label(for='password') Password
+                            center
+                                .row.authenticateError(style='color: red;')
+                                .row
+                                    button#loginBtn.col.s12.btn.btn-large.waves-effect.blue-grey(type='submit', name='btn_login') Login
+
+                        form#resetPasswordForm.hide
+                            .row
+                                .col.s12
+                                    h6.light.center Looks like it's time to change your password:
+                            .row
+                                .input-field.col.s12
+                                    input#newPassword(type='password', name='newPassword', autocomplete='off')
+                                    label(for='newPassword') New Password
+                            .row
+                                .input-field.col.s12
+                                    input#newPasswordConfirm(type='password', name='newPasswordConfirm', autocomplete='off')
+                                    label(for='newPasswordConfirm') Retype New Password
+                            center
+                                .row.authenticateError(style='color: red;')
+                                .row
+                                    button#resetPasswordBtn.col.s12.btn.btn-large.waves-effect.blue-grey(type='submit', name='btn_resetPassword') Continue
 
         #loading.animates
             .loadingMask
