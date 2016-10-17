@@ -391,6 +391,11 @@ $modalHeaderHeight: 42px;
 
 /* global */
 
+#toast-container .toast i {
+    cursor: pointer;
+    padding-left: 10px;
+}
+
 .activeCard {
     z-index: 101 !important;
 }
@@ -1147,6 +1152,59 @@ footer {
                 background-color: #fff;
                 padding: 0 2px;
             }
+        }
+    }
+}
+
+#systemErrorLogDropdown {
+    position: absolute;
+    right: 240px;
+    top: 0;
+    z-index: 105;
+    min-width: 500px;
+    max-width: 800px;
+    opacity: 0;
+    display: none;
+
+    .errorLogHeader {
+        font-size: 1.4em;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 10px;
+    }
+
+    .errorLogBody {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        padding: 0 10px;
+        max-height: 400px;
+        overflow-x: hidden;
+        overflow-y: auto;
+
+        .row {
+            display: flex;
+            flex-direction: row;
+            flex-shrink: 0;
+            align-items: center;
+            width: 100%;
+            margin: 0;
+            padding: 5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .errorDate {
+            flex: 0 0 160px;
+        }
+
+        .errorMessageContainer {
+            display: inline-block;
+            flex-grow: 1;
+        }
+
+        .errorMessage {
+            display: inline-block;
+            padding: 0 5px;
+            border-radius: 3px;
         }
     }
 }

@@ -45,6 +45,9 @@ module.exports = {
 			}
 
 			bcrypt.compare(oldPass, user.Password.Value, function(err, result) {
+				if (!!err) {
+					return cb(err);
+				}
 				if (!result) {
 					return cb("Current password and old password do not match");
 				} else {
