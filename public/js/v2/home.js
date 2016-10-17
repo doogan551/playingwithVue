@@ -2972,22 +2972,23 @@ var dti = {
 
                     bindings.togglePointType = function (indexOfPointType) {
                         var currTypes = bindings.pointTypes(),
-                            numChecked = 0,
+                            currentPointType = currTypes[indexOfPointType],
                             toggleType = true;
 
-                        if (bindings.restrictPointTypes) {
+                        if (bindings.restrictPointTypes()) {
+                            var numChecked = 0;
                             dti.forEachArray(currTypes, function isTypeChecked(type) {
                                 if (type.selected()) {
                                     numChecked++;
                                 }
                             });
-                            if (numChecked === 1 && currTypes[indexOfPointType].selected()) { // restricted no less than one can be selected
+                            if (numChecked === 1 && currentPointType.selected()) { // restricted no less than one can be selected
                                 toggleType = false;
                             }
                         }
 
                         if (toggleType) {
-                            currTypes[indexOfPointType].selected(!currTypes[indexOfPointType].selected());
+                            currentPointType.selected(!currentPointType.selected());
                         }
 
                         return true;
