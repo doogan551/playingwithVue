@@ -1,6 +1,7 @@
 var dti = {
     $loginBtn: $('#loginBtn'),
     $resetPasswordBtn: $('#resetPasswordBtn'),
+    loggingOut: false,
     itemIdx: 0,
     settings: {
         logLinePrefix: true,
@@ -4136,6 +4137,8 @@ var dti = {
             dti.windows.showDesktop();
         },
         logout: function () {
+            dti.loggingOut = true;
+            dti.socket.disconnect();
             window.location.href = '/logout';
         }
     },
@@ -4476,6 +4479,12 @@ var dti = {
                     }
 
                     if (!!data._id) {
+                        // Clear the authentication forms
+                        $('#username').val('');
+                        $('#password').val('');
+                        $('#newPassword').val('');
+                        $('#newPasswordConfirm').val('');
+
                         $errorMessage.text('');
                         window.userData = data;
                         dti.bindings.user(data);
@@ -4568,6 +4577,12 @@ var dti = {
             dti.forEachArray(events, function (event) {
                 dti.socket.on(event, function () {
                     dti.log('socket ' + event);
+
+                    // Do not update socket status if we're logging out (we don't want the UI to indicate the intentional socket disconnection - see the system.status computed)
+                    if (dti.loggingOut) {
+                        return;
+                    }
+
                     dti.bindings.socketStatus(event);
 
                     if (event !== 'connect' && event !== 'reconnect') {
@@ -4674,6 +4689,8 @@ var dti = {
                 dti.animations.fadeIn($('#loading'), runInits);
             };
 
+        dti.socket.initSocket();
+
         dti.animations.fadeOut($('#login'), showLoading);
     }
 };
@@ -4681,8 +4698,6 @@ var dti = {
 $(function initWorkspaceV2 () {
     dti.startLoad = new Date();
     
-    dti.socket.initSocket();
-
     dti.$loginBtn.click(function validateLogin (event) {
         var user = $('#username').val(),
             pw = $('#password').val();
