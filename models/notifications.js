@@ -5,7 +5,7 @@ var async = require('async'),
 	config = require('config'),
 	Config = require('../public/js/lib/config.js'),
 	appConfig = require('config'),
-	cronJob = require('../models/cronjob'),
+	CronJob = require('../models/cronjob'),
 	ObjectID = require('mongodb').ObjectID,
 	logger = require('../helpers/logger')(module),
 	Notifier = require('../models/notifierutility');
@@ -2101,5 +2101,5 @@ if (appConfig.runNotifications) {
 	// Run notifications once per minute; if this ever changes, we need to update RUNINTERVAL
 	// Also, date.setSeconds(0) near the top of 'run' may have to be removed; it's just CYA 
 	// anyway - seconds should always be 0 if the CRON fires and we execute on time
-	new cronJob('00 * * * * *', run);
+	new CronJob('00 * * * * *', run);
 }

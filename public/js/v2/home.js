@@ -1980,7 +1980,9 @@ var dti = {
             $.ajax({
                 type: 'post',
                 url: '/api/points/getDistinctValues',
-                data: JSON.stringify(distinct),
+                data: JSON.stringify({
+                    distinct: distinct
+                }),
                 contentType: 'application/json'
             }).done(
                 function handleData (data) {

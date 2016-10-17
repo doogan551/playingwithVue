@@ -4373,12 +4373,8 @@ var Config = (function(obj) {
                 "Port 4": enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"]
             };
 
-            if (!point.hasOwnProperty('Modbus Order'))
-                point["Modbus Order"] = Config.Templates.getTemplate("Remote Unit")["Modbus Order"];
-
             point["Poll Function"].isDisplayable = false;
             point["Poll Register"].isDisplayable = false;
-            point["Modbus Order"].isDisplayable = false;
             point["Instance"].isDisplayable = false;
 
             point["Network Type"].isDisplayable = false;
@@ -4442,7 +4438,6 @@ var Config = (function(obj) {
 
                     point["Poll Function"].isDisplayable = true;
                     point["Poll Register"].isDisplayable = true;
-                    point["Modbus Order"].isDisplayable = true;
 
                 } else if (point["Model Type"].Value == "MS3 RT" || point["Model Type"].Value == "MS 3 EEPROM" || point["Model Type"].Value == "MS 3 Flash" || point["Model Type"].Value == "MS 4 VAV") {
 
@@ -4549,7 +4544,6 @@ var Config = (function(obj) {
 
                     point["Poll Function"].isDisplayable = true;
                     point["Poll Register"].isDisplayable = true;
-                    point["Modbus Order"].isDisplayable = true;
 
                 } else if (point["Model Type"].Value == "MS3 RT" || point["Model Type"].Value == "MS 3 EEPROM" || point["Model Type"].Value == "MS 3 Flash" || point["Model Type"].Value == "MS 4 VAV") {
 
@@ -4636,7 +4630,6 @@ var Config = (function(obj) {
 
                     point["Poll Function"].isDisplayable = true;
                     point["Poll Register"].isDisplayable = true;
-                    point["Modbus Order"].isDisplayable = true;
 
                 } else {
                     point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
@@ -4874,10 +4867,19 @@ var Config = (function(obj) {
                 },
                 setupInputType = function(ValueOptions) {
                     var inputType = point["Input Type"],
-                        key = Object.keys(ValueOptions)[0];
+                        key = Object.keys(ValueOptions)[0],
+                        eValue = inputType.eValue;
 
                     inputType.isDisplayable = true;
                     inputType.ValueOptions = ValueOptions;
+
+                    for(var prop in ValueOptions){
+                        if(ValueOptions[prop] === eValue){
+                            inputType.Value = prop;
+                            return;
+                        }
+                    }
+                    // unknown eValue
                     inputType.Value = key;
                     inputType.eValue = ValueOptions[key];
                 };

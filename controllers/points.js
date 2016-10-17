@@ -27,7 +27,7 @@ router.post('/getDistinctValues', function (req, res) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
 
-  Point.getDistinctValues(data, function (err, distinctValues) {
+  Point.getDistinctValuesTemp(data, function (err, distinctValues) {
     if (err) return utils.sendResponse(res, {
       err: err
     });
