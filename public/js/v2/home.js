@@ -1,5 +1,7 @@
 var dti = {
     $loginBtn: $('#loginBtn'),
+    $resetPasswordBtn: $('#resetPasswordBtn'),
+    loggingOut: false,
     itemIdx: 0,
     settings: {
         logLinePrefix: true,
@@ -1981,7 +1983,9 @@ var dti = {
             $.ajax({
                 type: 'post',
                 url: '/api/points/getDistinctValues',
-                data: JSON.stringify(distinct),
+                data: JSON.stringify({
+                    distinct: distinct
+                }),
                 contentType: 'application/json'
             }).done(
                 function handleData (data) {
@@ -4138,6 +4142,8 @@ var dti = {
             dti.windows.showDesktop();
         },
         logout: function () {
+            dti.loggingOut = true;
+            dti.socket.disconnect();
             window.location.href = '/logout';
         }
     },
@@ -4448,7 +4454,9 @@ var dti = {
         }
     },
     authentication: {
-        logIn: function (username, password) {
+        logIn: function (username, password, cb) {
+            var $errorMessage = $('#loginForm .authenticateError');
+
             $.ajax({
                 url: dti.settings.webEndpoint + '/authenticate',
                 contentType: 'application/json',
@@ -4461,16 +4469,11 @@ var dti = {
                 }))
             }).done(
                 function handleAuthenticateData (data) {
-                    var $errorMessage = $('#login .loginError');
-
-                    dti.$loginBtn.removeAttr('disabled');
-
-                    // if (!!data.resetPass) {
-                    //     _local.login.errorMessage(data.message);
-                    //     _local.login.isLogIn(false);
-                    //     $('#oldPassword').focus();
-                    //     return;
-                    // }
+                    if (!!data.resetPass) {
+                        $('#loginForm').addClass('hide');
+                        $('#resetPasswordForm').removeClass('hide');
+                        return;
+                    }
                     if (!!data.message) {
                         $errorMessage.text(data.message);
                         return;
@@ -4481,6 +4484,12 @@ var dti = {
                     }
 
                     if (!!data._id) {
+                        // Clear the authentication forms
+                        $('#username').val('');
+                        $('#password').val('');
+                        $('#newPassword').val('');
+                        $('#newPasswordConfirm').val('');
+
                         $errorMessage.text('');
                         window.userData = data;
                         dti.bindings.user(data);
@@ -4489,6 +4498,55 @@ var dti = {
                         // store.set('sessionId', sessionId);
                         dti.init();
                     }
+                }
+            ).fail(
+                function handleFail () {
+                    $errorMessage.text('Ouch. We encountered a network communication error. Please try again.');
+                }
+            ).always(
+                function finish () {
+                    dti.$loginBtn.removeAttr('disabled');
+
+                    if (cb) {
+                        cb();
+                    }
+                }
+            );
+        },
+        resetPassword: function (username, oldPassword, newPassword) {
+            var $errorMessage = $('#resetPasswordForm .authenticateError');
+
+            $.ajax({
+                url: dti.settings.webEndpoint + '/reset-password',
+                contentType: 'application/json',
+                dataType: 'json',
+                type: 'post',
+                data: (ko.toJSON({
+                    username: username,
+                    oldPass: oldPassword,
+                    newPass: newPassword
+                }))
+            }).done(
+                function handleAuthenticateData (data) {
+                    if (!!data.err) {
+                        $errorMessage.text(data.err);
+                        return;
+                    }
+
+                    $errorMessage.text('');
+
+                    dti.authentication.logIn(username, newPassword, function () {
+                        $('#loginForm').removeClass('hide');
+                        $('#resetPasswordForm').addClass('hide');
+                    });
+                }
+            ).fail(
+                function handleFail () {
+                    $errorMessage.text('Ouch. We encountered a network communication error. Please try again.');
+                }
+            ).always(
+                function finish () {
+                    dti.$resetPasswordBtn.removeAttr('disabled');
                 }
             );
         }
@@ -4524,6 +4582,12 @@ var dti = {
             dti.forEachArray(events, function (event) {
                 dti.socket.on(event, function () {
                     dti.log('socket ' + event);
+
+                    // Do not update socket status if we're logging out (we don't want the UI to indicate the intentional socket disconnection - see the system.status computed)
+                    if (dti.loggingOut) {
+                        return;
+                    }
+
                     dti.bindings.socketStatus(event);
 
                     if (event !== 'connect' && event !== 'reconnect') {
@@ -4630,6 +4694,8 @@ var dti = {
                 dti.animations.fadeIn($('#loading'), runInits);
             };
 
+        dti.socket.initSocket();
+
         dti.animations.fadeOut($('#login'), showLoading);
     }
 };
@@ -4637,14 +4703,31 @@ var dti = {
 $(function initWorkspaceV2 () {
     dti.startLoad = new Date();
     
-    dti.socket.initSocket();
-
     dti.$loginBtn.click(function validateLogin (event) {
         var user = $('#username').val(),
             pw = $('#password').val();
 
+        event.preventDefault(); // Stop the form from submitting using the form params
+
         dti.$loginBtn.attr('disabled', 'disabled');
         dti.authentication.logIn(user, pw);
+    });
+
+    dti.$resetPasswordBtn.click(function resetPassword (event) {
+        var user = $('#username').val(),
+            oldpw = $('#password').val(),
+            newpw = $('#newPassword').val(),
+            newpwConfirm = $('#newPasswordConfirm').val(),
+            $authenticateError = $('#resetPasswordForm .authenticateError');
+
+        event.preventDefault(); // Stop the form from submitting using the form params
+
+        if (newpw !== newpwConfirm) {
+            $authenticateError.text('The passwords you typed do not match. Please try again.');
+            return;
+        }
+        dti.$resetPasswordBtn.attr('disabled', 'disabled');
+        dti.authentication.resetPassword(user, oldpw, newpw);
     });
 
     if (window.isAuthenticated) {

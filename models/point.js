@@ -293,7 +293,9 @@ module.exports = {
         segment = nameSegments[i];
         if (typeof segment.value == 'string') {
           if (segment.value.length) {
-            query[segment.name] = Utils.getRegex(segment.value.toLowerCase(), {matchBeginning: true});
+            query[segment.name] = Utils.getRegex(segment.value.toLowerCase(), {
+              matchBeginning: true
+            });
             // if (segment.value.indexOf('*') < 0) {
             //   query[segment.name] = new RegExp(['^', segment.value.toLowerCase()].join(''));
             // } else {
@@ -360,47 +362,75 @@ module.exports = {
       return cb(null, []);
     }
   },
-  getDistinctValues: function (data, cb) {
+  getDistinctValues: function(data, cb) {
     // data is an array of objects indicating the properties for which you want unique Values:
     // [{
     //   property: 'Active Value',
     //   valueTypes: [2,5] // Get distincts for these value types; use empty array or do not include for all unique values regardless of value type
     // }]
     var distinct = [];
-      getDistinct = function (item, cb) {
-        if (distinctProperties[item.property]) { // Temporary workaround to improve UI performance on app load
-          distinct.push(distinctProperties[item.property]);
-          return cb(null);
-        }
+    var getDistinct = function(item, cb) {
+      if (distinctProperties[item.property]) { // Temporary workaround to improve UI performance on app load
+        distinct.push(distinctProperties[item.property]);
+        return cb(null);
+      }
 
-        var criteria = {
-            collection: 'points',
-            field: item.property + '.Value',
-            query: {}
-          },
-          valueTypes = item.valueTypes || [];
+      var criteria = {
+          collection: 'points',
+          field: item.property + '.Value',
+          query: {}
+        },
+        valueTypes = item.valueTypes || [];
 
-        if (valueTypes.length) {
-          criteria.query.$or = [];
-          valueTypes.forEach(function (valueType) {
-            var obj = {};
-            obj[item.property + '.' + 'ValueType'] = valueType;
-            criteria.query.$or.push(obj);
-          });
-        }
-        Utility.distinct(criteria, function queryResult (err, data) {
-          var obj = {
-            property: item.property,
-            distinct: data
-          };
-          distinct.push(obj);
-          distinctProperties[item.property] = obj; // Temporary workaround to improve UI performance on app load
-          cb(err);
+      if (valueTypes.length) {
+        criteria.query.$or = [];
+        valueTypes.forEach(function(valueType) {
+          var obj = {};
+          obj[item.property + '.' + 'ValueType'] = valueType;
+          criteria.query.$or.push(obj);
         });
-      };
+      }
 
-    async.each(data, getDistinct, function done (err) {
-      cb(err, distinct);
+      Utility.distinct(criteria, function queryResult(err, results) {
+        var obj = {
+          property: item.property,
+          distinct: results
+        };
+        distinct.push(obj);
+        distinctProperties[item.property] = obj; // Temporary workaround to improve UI performance on app load
+        cb(err);
+      });
+    };
+
+    async.each(data.distinct, getDistinct, function done(err) {
+      // cb(err, distinct);
+      Utility.update({
+        collection: 'dev',
+        query: {
+          item: 'distinct'
+        },
+        updateObj: {
+          $set: {
+            values: distinct
+          }
+        }
+      }, function(err, results){
+        cb(err, distinct);
+      });
+    });
+  },
+  getDistinctValuesTemp: function(data, cb) {
+    Utility.getOne({
+      collection: 'dev',
+      query: {
+        item: 'distinct'
+      }
+    }, function(err, results) {
+      if (!results || !results.length) {
+        module.exports.getDistinctValues(data, cb);
+      } else {
+        cb(err, results.values);
+      }
     });
   },
   globalSearch: function(data, cb) {
@@ -486,7 +516,7 @@ module.exports = {
       $and.push(query);
     }
 
-    Utility.findAndCount(criteria, function handleSearchResults (err, points, count) {
+    Utility.findAndCount(criteria, function handleSearchResults(err, points, count) {
       return cb(err, points, count);
     });
     // return cb(null, [data.searchTerms]);
@@ -796,7 +826,7 @@ module.exports = {
       if (pointType === "Report") {
         subType.eValue = Config.Enums["Report Types"][data.subType].enum;
       } else {
-        subType.eValue = 0;  // TODO
+        subType.eValue = 0; // TODO
       }
     }
 
@@ -1295,7 +1325,7 @@ module.exports = {
       });
     }
   },
-  getControls: function(data, cb){
+  getControls: function(data, cb) {
     var searchCriteria = {};
     var filterProps = {
       'Control Array': 1

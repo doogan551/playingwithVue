@@ -1248,7 +1248,7 @@ var scripts = {
             }
         }, function processSequence(err, doc, cb) {
             doc['Downlink Protocol'] = Config.Templates.getTemplate(doc['Point Type'].Value)['Downlink Protocol'];
-            if(doc['Downlink Network'].Value !== 0){
+            if (doc['Downlink Network'].Value !== 0) {
                 doc['Downlink Protocol'].Value = 'IP'
                 doc['Downlink Protocol'].eValue = Config.Enums['Ethernet Protocols']['IP'].enum;
             }
@@ -1274,6 +1274,81 @@ var scripts = {
                 errors: err
             });
         });
+    },
+
+    switchModbusOrder: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'switchModbusOrder',
+                errors: null,
+                results: null
+            });
+        }
+        utility.update({
+            collection: 'points',
+            query: {
+                'Point Type.Value': $in: ['Analog Input', 'Analog Output', 'Accumulator', 'Binary Input', 'Binary Output', 'MultiState Value']
+            },
+            updateObj: {
+                $set: {
+                    'Modbus Order': {
+                        "isDisplayable": false,
+                        "isReadOnly": false,
+                        "ValueType": 5,
+                        "Value": "Both",
+                        "eValue": 3
+                    }
+                }
+            }
+        }, function(err, results) {
+            utility.update({
+                collection: 'points',
+                query: {
+                    $or: [{
+                        'Point Type.Value': 'Analog Input',
+                        'Input Type.eValue': {
+                            $ne: 0
+                        }
+                    }, {
+                        'Point Type.Value': 'Analog Output',
+                        'Output Type.eValue': {
+                            $ne: 0
+                        }
+                    }]
+                },
+                updateObj: {
+                    $set: {
+                        'Modbus Order': {
+                            "isDisplayable": false,
+                            "isReadOnly": false,
+                            "ValueType": 5,
+                            "Value": "Bytes",
+                            "eValue": 2
+                        }
+                    }
+                }
+            }, function(err, results) {
+                utility.update({
+                    collection: 'points',
+                    query: {
+                        'Point Type.Value': 'Remote Unit'
+                    },
+                    updateObj: {
+                        $unset: {
+                            'Modbus Order': 1
+                        }
+                    }
+                }, function(err, results) {
+                    logger.info('Finished with addDownlinkProtocol');
+                    callback(null, {
+                        fn: 'addDownlinkProtocol',
+                        errors: err
+                    });
+                });
+            });
+        });
+
     }
 };
 
