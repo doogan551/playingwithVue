@@ -486,8 +486,8 @@ html
                             // /ko
                             // ko foreach: pointTypes
                             // ko if: visible() === true
-                            li(data-bind="click: ($parent.restrictPointTypes() ? function () {} : function () { $data.selected(!$data.selected()); return false; } ")
-                                input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : $parent.id() + '_pointType_' + $index(), disabled: ($parent.restrictPointTypes() ? 'disabled' : null) }")
+                            li(data-bind="click: function () { $parent.togglePointType($index()) } ")
+                                input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : $parent.id() + '_pointType_' + $index() }")
                                 label.label-tight(data-bind="text: key, attr: { for: $parent.id() + '_pointType_' + $index() }")
                             // /ko
                             // /ko

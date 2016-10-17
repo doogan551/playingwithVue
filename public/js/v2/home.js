@@ -2970,6 +2970,29 @@ var dti = {
                         bindings.pointTypeChanged();
                     };
 
+                    bindings.togglePointType = function (indexOfPointType) {
+                        var currTypes = bindings.pointTypes(),
+                            numChecked = 0,
+                            toggleType = true;
+
+                        if (bindings.restrictPointTypes) {
+                            dti.forEachArray(currTypes, function isTypeChecked(type) {
+                                if (type.selected()) {
+                                    numChecked++;
+                                }
+                            });
+                            if (numChecked === 1 && currTypes[indexOfPointType].selected()) { // restricted no less than one can be selected
+                                toggleType = false;
+                            }
+                        }
+
+                        if (toggleType) {
+                            currTypes[indexOfPointType].selected(!currTypes[indexOfPointType].selected());
+                        }
+
+                        return true;
+                    };
+
                     bindings.toggleAllPointTypes = function () {
                         var types = bindings.pointTypes();
 
