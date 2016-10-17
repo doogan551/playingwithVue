@@ -122,9 +122,11 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
                 var devicePoint,
                     rmuPoint,
                     propertyName = point.PropertyName(),
+                    allowedPointTypes = self.utility.config.Utility.pointTypes.getAllowedPointTypes(propertyName, self.parentType),
                     parameters = {
                         pointType: self.parentType,
-                        pointTypes: self.utility.config.Utility.pointTypes.getAllowedPointTypes(propertyName, self.parentType),
+                        pointTypes: allowedPointTypes,
+                        restrictPointTypes: allowedPointTypes.length > 0,
                         property: propertyName,
                         deviceId: null,
                         remoteUnitId: null

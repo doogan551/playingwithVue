@@ -460,26 +460,31 @@ html
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
                         ul.dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }")
-                            // ko if: mode() === 'default' || mode () === 'filter'
+                            // ko if: (mode() === 'default' || mode() === 'filter')
+                            // ko if: restrictPointTypes() !== true
                             li
-                                input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes' }")
+                                input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes'}")
                                 label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
+                            // /ko
                             // ko foreach: pointTypes
-                            li(data-bind="click: function () { $data.selected(!$data.selected()); return false; }")
-                                input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : $parent.id() + '_pointType_' + $index() }")
+                            // ko if: visible() === true
+                            li(data-bind="click: ($parent.restrictPointTypes() ? function () {} : function () { $data.selected(!$data.selected()); return false; } ")
+                                input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : $parent.id() + '_pointType_' + $index(), disabled: ($parent.restrictPointTypes() ? 'disabled' : null) }")
                                 label.label-tight(data-bind="text: key, attr: { for: $parent.id() + '_pointType_' + $index() }")
+                            // /ko
                             // /ko
                             // /ko
 
                             // ko if: mode() === 'create'
                             // ko foreach: explodedPointTypes
+                            // ko if: visible() === true
                             li(data-bind="click: function () { $parent.newPointType($data.key()); $parent.storePointType($data); return false; }")
                                 input(type='radio', data-bind="checked: $parent.newPointType, click: $parent.storePointType, attr: {value: key(), id : $parent.id() + '_pointTypeRadio_' + $index(), name : $parent.id() + '_pointTypeRadio' }")
                                 label(data-bind="text: key, attr: { for: $parent.id() + '_pointTypeRadio_' + $index() }")
 
                             // /ko
                             // /ko
-
+                            // /ko
                         //- select(data-beloworigin="true")
                             //- // ko foreach: pointTypes
                             //- option(data-bind="value: key, text: key")

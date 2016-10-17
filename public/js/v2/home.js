@@ -2839,6 +2839,7 @@ var dti = {
                             deviceId: null,
                             remoteUnitId: null,
                             id: self.id,
+                            restrictPointTypes: false,
                             disableCreatePoint: false,
                             loading: false,
                             focus: false,
@@ -3222,6 +3223,8 @@ var dti = {
                     config = $.extend(defaultConfig, cfg || {}),
                     propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
 
+                self.bindings.restrictPointTypes(config.restrictPointTypes);
+
                 if (cfg.pointType && !cfg.pointTypes && cfg.pointType !== 'Point') {
                     config.pointTypes = [cfg.pointType];
                 }
@@ -3241,7 +3244,7 @@ var dti = {
 
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
 
-                self.applyPointTypes(config.pointTypes);
+                self.applyPointTypes(config.pointTypes, config.restrictPointTypes);
 
                 if (!config.retainNames) {
                     self.applyPointNames(config);
