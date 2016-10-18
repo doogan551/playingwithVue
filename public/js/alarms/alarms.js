@@ -1545,12 +1545,8 @@ var AlarmManager = function (conf) {
         showPointReview = function (data) {
             var pointTypesUtility = workspaceManager.config.Utility.pointTypes,
                 pointType = pointTypesUtility.getPointTypeNameFromEnum(data.PointType),
-                endPoint = pointTypesUtility.getUIEndpoint(pointType, data.upi),
-                options = {
-                    width: 1250,
-                    height: 750
-                };
-            dtiUtility.openWindow(endPoint.review.url, data.Name, pointType, endPoint.review.target, data.upi, options);
+                endPoint = pointTypesUtility.getUIEndpoint(pointType, data.upi);
+            dtiUtility.openWindow(endPoint.review.url, data.Name, pointType, endPoint.review.target, data.upi);
         },
         findView = function (key, keyValue) {
             var i,
@@ -2018,17 +2014,13 @@ var AlarmManager = function (conf) {
 
     //------ Misc. interactivity functions-------------------------
     self.togglePop = function () {
-        var title = self.alarms().name + ' Alarms',
-            options = {
-                width: 1250,
-                    height: 750
-            };
+        var title = self.alarms().name + ' Alarms';
 
         // If we're a pop-out; pop back in
         if (window.top.location.href === window.location.href) {
             dtiUtility.openWindow(window.location.href, title, 'alarm', 'mainWindow', windowUpi);
         } else {
-            dtiUtility.openWindow(window.location.href, title, 'alarm', '', windowUpi, options);
+            dtiUtility.openWindow(window.location.href, title, 'alarm', '', windowUpi);
         }
     };
 
@@ -2143,12 +2135,8 @@ var AlarmManager = function (conf) {
 
     self.openDisplay = function (data) {
         var endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint("Display", data._id),
-            name = data.Name || '',
-            options = {
-                width: 1250,
-                    height: 750
-            };
-        dtiUtility.openWindow(endPoint.review.url, name, 'Display', '', data._id, options);
+            name = data.Name || '';
+        dtiUtility.openWindow(endPoint.review.url, name, 'Display', '', data._id);
     };
 
     self.refreshAlarms = function () {

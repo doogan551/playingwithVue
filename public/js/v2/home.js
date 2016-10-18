@@ -24,6 +24,8 @@ var dti = {
                 thumbnail: true,
                 singleton: false,
                 options: {
+                    width: 1000,
+                    height: 700,
                     retainNames: false
                 }
             },
@@ -45,7 +47,8 @@ var dti = {
                 group: 'Report',
                 singleton: false,
                 options: {
-                    width: 1000,
+                    width: 1200,
+                    height: 750,
                     retainNames: false
                 }
             },
@@ -56,7 +59,11 @@ var dti = {
                 group: 'Dashboard',
                 standalone: true,
                 url: '/dashboard',
-                singleton: true
+                singleton: true,
+                options: {
+                    width: 1000,
+                    height: 650
+                }
             },
             'Alarm': {
                 title: 'Alarms',
@@ -101,7 +108,8 @@ var dti = {
                 url: '/syspref',
                 singleton: true,
                 options: {
-                    width: 1280
+                    width: 1280,
+                    height: 650
                 }
             },
             'Security': {
@@ -155,9 +163,6 @@ var dti = {
                 options: {
                     retainNames: false
                 }
-                // options: {
-                //     width: 1000
-                // }
             }
         }
     },
@@ -663,7 +668,7 @@ var dti = {
                 } else {
 
                     obj.right = cfg.right;
-                    obj.width = cfg.width || 800;
+                    obj.width = cfg.width || 900;
 
                     if (cfg.bottom !== undefined) {
                         obj.bottom = cfg.bottom;
@@ -1114,9 +1119,17 @@ var dti = {
                 config.url = dti.utility.getEndpoint(config.type, config.upi).review.url;
             }
 
+            if (config.options === undefined) {
+                config.options = {};
+            }
+            if (!!dti.config.itemGroups[config.type] && !!dti.config.itemGroups[config.type].options) {  // use itemGroup config if applicable
+                config.options.width = config.options.width || dti.config.itemGroups[config.type].options.width;
+                config.options.height = config.options.height || dti.config.itemGroups[config.type].options.height;
+            }
+
             return config;
         },
-        openWindow: function (url, title, type, target, uniqueId, options) {
+        openWindow: function (url, title, type, target, upi, options) {
             var config;
 
             if (typeof url === 'object') {
@@ -1126,7 +1139,7 @@ var dti = {
                     url: url,
                     title: title,
                     type: type,
-                    upi: uniqueId,
+                    upi: upi,
                     options: options
                 };
             }
@@ -2510,20 +2523,22 @@ var dti = {
                             item = parent[text];
                         }
 
-                        if (Array.isArray(srcItem)) {
-                            addValuesAndSort(srcItem, item._private.values);
-                        } else {
-                            dti.forEach(srcItem, function (subSource, subText) {
-                                // Look for special keys and handle accordingly
-                                if (subText === '_values') {
-                                    return addValuesAndSort(subSource, item._private.values);
-                                }
-                                if (subText === '_valuesNoSort') {
-                                    return addValues(subSource, item._private.values);
-                                }
+                        if (!!srcItem) {
+                            if (Array.isArray(srcItem)) {
+                                addValuesAndSort(srcItem, item._private.values);
+                            } else {
+                                dti.forEach(srcItem, function (subSource, subText) {
+                                    // Look for special keys and handle accordingly
+                                    if (subText === '_values') {
+                                        return addValuesAndSort(subSource, item._private.values);
+                                    }
+                                    if (subText === '_valuesNoSort') {
+                                        return addValues(subSource, item._private.values);
+                                    }
 
-                                addObj(item, subSource, subText);
-                            });
+                                    addObj(item, subSource, subText);
+                                });
+                            }
                         }
                     };
 
@@ -2843,6 +2858,7 @@ var dti = {
                             deviceId: null,
                             remoteUnitId: null,
                             id: self.id,
+                            restrictPointTypes: false,
                             disableCreatePoint: false,
                             loading: false,
                             focus: false,
@@ -2967,6 +2983,30 @@ var dti = {
                         self.applyPointTypes(type);
                         self._pauseRequest = false;
                         bindings.pointTypeChanged();
+                    };
+
+                    bindings.togglePointType = function (indexOfPointType) {
+                        var currTypes = bindings.pointTypes(),
+                            currentPointType = currTypes[indexOfPointType],
+                            numChecked = 0,
+                            toggleType = true;
+
+                        if (bindings.restrictPointTypes()) {
+                            dti.forEachArray(currTypes, function isTypeChecked(type) {
+                                if (type.selected()) {
+                                    numChecked++;
+                                }
+                            });
+                            if (numChecked === 1 && currentPointType.selected()) { // restricted no less than one can be selected
+                                toggleType = false;
+                            }
+                        }
+
+                        if (toggleType) {
+                            currentPointType.selected(!currentPointType.selected());
+                        }
+
+                        return true;
                     };
 
                     bindings.toggleAllPointTypes = function () {
@@ -3226,6 +3266,8 @@ var dti = {
                     config = $.extend(defaultConfig, cfg || {}),
                     propertiesToApply = ['showInactive', 'showDeleted', 'mode', 'deviceId', 'remoteUnitId', 'loading'];
 
+                self.bindings.restrictPointTypes(config.restrictPointTypes);
+
                 if (cfg.pointType && !cfg.pointTypes && cfg.pointType !== 'Point') {
                     config.pointTypes = [cfg.pointType];
                 }
@@ -3245,7 +3287,7 @@ var dti = {
 
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
 
-                self.applyPointTypes(config.pointTypes);
+                self.applyPointTypes(config.pointTypes, config.restrictPointTypes);
 
                 if (!config.retainNames) {
                     self.applyPointNames(config);

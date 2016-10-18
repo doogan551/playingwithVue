@@ -338,12 +338,8 @@ var slideShowViewModel = function () {
         screenfull.exit();
     };
     self.openPointInspector = function () {
-        var upi = parseInt(getSlideShowId(), 10),
-            options = {
-                width: 1250,
-                height: 750
-            };
-        dtiUtility.openWindow("/pointinspector/" + upi, "SlideShow", "SlideShow", "newwindow", upi, options);
+        var upi = parseInt(getSlideShowId(), 10);
+        dtiUtility.openWindow("/pointinspector/" + upi, "SlideShow", "SlideShow", "newwindow", upi);
         //window.close();
     };
     self.close = function () {

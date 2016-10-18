@@ -151,7 +151,7 @@ var dtiUtility =  {
         dtiUtility.defaultHandler = cb;
     },
 
-    openWindow: function (url, title, type, target, uniqueId, options) {
+    openWindow: function (url, title, type, target, upi, options) {
         var config;
 
         if (typeof url === 'object') {
@@ -162,7 +162,7 @@ var dtiUtility =  {
                 title: title,
                 type: type,
                 target: target,
-                uniqueId: uniqueId,
+                upi: upi,
                 options: options
             };
         }

@@ -93,8 +93,6 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
     ViewModel.prototype.openWindow = function() {
         var self = this,
             proposedCoords = {
-                width: 1250,
-                height: 750,
                 left: (typeof window.screenLeft == 'undefined' ? screen.left : window.screenLeft) + 20,
                 top: (typeof window.screenTop == 'undefined' ? screen.top : window.screenTop) + 20
             };
@@ -107,8 +105,6 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
         console.log(proposedCoords.width + proposedCoords.left, proposedCoords.height + proposedCoords.top);
         console.log(screen.availWidth, screen.availHeight);
         dtiUtility.openWindow(self.url(), self.data.PointName(), self.refPointType, self.target, self.data.Value(), {
-            width: proposedCoords.width,
-            height: proposedCoords.height,
             left: proposedCoords.left,
             top: proposedCoords.top
         });
@@ -122,9 +118,11 @@ define(['knockout', 'bannerJS', 'text!./view.html'], function(ko, bannerJS, view
                 var devicePoint,
                     rmuPoint,
                     propertyName = point.PropertyName(),
+                    allowedPointTypes = self.utility.config.Utility.pointTypes.getAllowedPointTypes(propertyName, self.parentType),
                     parameters = {
                         pointType: self.parentType,
-                        pointTypes: self.utility.config.Utility.pointTypes.getAllowedPointTypes(propertyName, self.parentType),
+                        pointTypes: allowedPointTypes,
+                        restrictPointTypes: allowedPointTypes.length > 0,
                         property: propertyName,
                         deviceId: null,
                         remoteUnitId: null
