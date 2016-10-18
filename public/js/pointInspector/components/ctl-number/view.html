@@ -1,4 +1,4 @@
-<!-- ko if: data.isDisplayable -->
+<!-- ko if: !!data && data.isDisplayable -->
 <div data-bind="attr: { class: columnClasses }">
     <div class="dataField">
         <label data-bind="visible: showLabel">

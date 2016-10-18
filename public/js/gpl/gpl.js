@@ -6431,10 +6431,8 @@ gpl.BlockManager = function (manager) {
             },
             doOpenWindow = function () {
                 gpl.openWindow(url, pointName, pointType, '', upi, {
-                        width: 1250,
-                        height: 750,
-                        callback: (gpl.isEdit ? saveCallback : gpl.emptyFn)
-                    });
+                    callback: (gpl.isEdit ? saveCallback : gpl.emptyFn)
+                });
             };
 
         if (block) {
