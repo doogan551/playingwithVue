@@ -2696,6 +2696,11 @@
                 "reportEnable": true,
                 "enumsSet": "Modbus Orders"
             },
+            "Modbus Unit Id": {
+                "enum": 445,
+                "valueType": "Unsigned",
+                "reportEnable": true
+            },
             "Model Type": {
                 "enum": 50,
                 "valueType": "Enum",
@@ -4489,6 +4494,12 @@
                     "ValueType": 11,
                     "Value": 0
                 },
+                "Modbus Unit Id":{
+                    "isDisplayable": false,
+                    "isReadOnly": false,
+                    "ValueType": 4,
+                    "Value": 255
+                },
                 "Model Type": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -4572,7 +4583,7 @@
                 },
                 "Router Address": {
                     "isDisplayable": false,
-                    "isReadOnly": true,
+                    "isReadOnly": false,
                     "ValueType": 2,
                     "Value": "0"
                 },

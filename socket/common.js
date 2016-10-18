@@ -565,33 +565,18 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
 
               case "Channel":
               case "Close Channel":
-              case "Control Data Type":
-              case "Control Function":
-              case "Control Register":
               case "Device Address":
               case "Device Port":
               case "Downlink IP Port":
               case "Feedback Channel":
               case "Feedback Type":
               case "Input Type":
-              case "Instance":
               case "Network Segment":
               case "Network Type":
               case "Off Channel":
-              case "Off Control Data Type":
-              case "Off Control Function":
-              case "Off Control Register":
-              case "Off Control Value":
               case "On Channel":
-              case "On Control Data Type":
-              case "On Control Function":
-              case "On Control Register":
-              case "On Control Value":
               case "Open Channel":
               case "Output Type":
-              case "Poll Data Type":
-              case "Poll Function":
-              case "Poll Register":
               case "Port 1 Address":
               case "Port 1 Maximum Address":
               case "Port 1 Network":
