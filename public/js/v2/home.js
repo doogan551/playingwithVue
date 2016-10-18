@@ -1129,7 +1129,7 @@ var dti = {
 
             return config;
         },
-        openWindow: function (url, title, type, target, uniqueId, options) {
+        openWindow: function (url, title, type, target, upi, options) {
             var config;
 
             if (typeof url === 'object') {
@@ -1139,7 +1139,7 @@ var dti = {
                     url: url,
                     title: title,
                     type: type,
-                    upi: uniqueId,
+                    upi: upi,
                     options: options
                 };
             }
