@@ -710,6 +710,7 @@ input.form-control.columnDisplayName {
     width: 281px;
     display: inline-block;
     padding-top: 7px;
+    padding-bottom: 4px;
     height: 1rem;
 }
 input.form-control.columnDisplayName:focus {
