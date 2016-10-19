@@ -1288,7 +1288,9 @@ var scripts = {
         utility.update({
             collection: 'points',
             query: {
-                'Point Type.Value': $in: ['Analog Input', 'Analog Output', 'Accumulator', 'Binary Input', 'Binary Output', 'MultiState Value']
+                'Point Type.Value': {
+                    $in: ['Analog Input', 'Analog Output', 'Accumulator', 'Binary Input', 'Binary Output', 'MultiState Value']
+                }
             },
             updateObj: {
                 $set: {
@@ -1300,6 +1302,9 @@ var scripts = {
                         "eValue": 3
                     }
                 }
+            },
+            options: {
+                multi: true
             }
         }, function(err, results) {
             utility.update({
@@ -1327,6 +1332,9 @@ var scripts = {
                             "eValue": 2
                         }
                     }
+                },
+                options: {
+                    multi: true
                 }
             }, function(err, results) {
                 utility.update({
@@ -1337,12 +1345,18 @@ var scripts = {
                     updateObj: {
                         $unset: {
                             'Modbus Order': 1
+                        },
+                        $set:{
+                            'Modbus Unit Id': Config.Templates.getTemplate("Remote Unit")["Modbus Unit Id"];
                         }
+                    },
+                    options: {
+                        multi: true
                     }
                 }, function(err, results) {
-                    logger.info('Finished with addDownlinkProtocol');
+                    logger.info('Finished with switchModbusOrder');
                     callback(null, {
-                        fn: 'addDownlinkProtocol',
+                        fn: 'switchModbusOrder',
                         errors: err
                     });
                 });
@@ -1363,7 +1377,7 @@ db.connect(connectionString, function(err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.addDownlinkProtocol];
+    tasks = [scripts.switchModbusOrder];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
@@ -1410,7 +1424,7 @@ db.connect(connectionString, function(err) {
                         }
                     }
                 }, function(err, result) {
-                    process.exit(0);
+                    // process.exit(0);
                 })
             }
         });
