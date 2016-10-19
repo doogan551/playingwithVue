@@ -449,6 +449,12 @@ var reportsViewModel = function () {
         resizeTimer = 400,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
+        ENUMSPROPERTIES,
+        ENUMSPOINTTYPES,
+        initGlobalLists = function () {
+            // ENUMSPROPERTIES = parent.dti.utility.getConfig("Enums.Properties");
+            // ENUMSPOINTTYPES = parent.dti.utility.getConfig("Enums.Point Types");
+        },
         setNewPointReference = function (refPointUPI, property) {
             // console.log("- - - - setNewPointReference() called....   refPointUPI = " + refPointUPI + " property = " + property);
             var refPoint,
@@ -469,14 +475,14 @@ var reportsViewModel = function () {
             if (!!refPoint) {
                 var pointType = refPoint["Point Type"].Value;
                 tempRef = {};
-                tempRef.PropertyEnum = Config.Enums.Properties["Column Point"].enum;
+                tempRef.PropertyEnum = (!!ENUMSPROPERTIES ? ENUMSPROPERTIES[property].enum : "");
                 tempRef.PropertyName = property;
                 tempRef.Value = refPoint._id;
                 tempRef.AppIndex = ++appIndex;
                 tempRef.isDisplayable = true;
                 tempRef.isReadOnly = false;
                 tempRef.PointName = refPoint.Name;
-                tempRef.PointType = Config.Enums["Point Types"][pointType].enum;
+                tempRef.PointType = (!!ENUMSPOINTTYPES ? ENUMSPOINTTYPES[pointType].enum : "");
                 point["Point Refs"].push(tempRef);
             } else {
                 if (!!refPointUPI) {
@@ -763,7 +769,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = Config.Templates.getTemplate(column.pointType).Value.ValueOptions;
+                        valueOptions = dtiUtility.getConfig("Templates.getTemplate", [column.pointType]);
                         result = (valueOptions === undefined);
                         break;
                 }
@@ -790,7 +796,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = Config.Templates.getTemplate(column.pointType).Value.ValueOptions;
+                        valueOptions = dtiUtility.getConfig("Templates.getTemplate", [column.pointType]);
                         result = (valueOptions !== undefined);
                         break;
                 }
@@ -927,6 +933,7 @@ var reportsViewModel = function () {
         },
         openPointSelectorForModalColumn = function () {
             var tempPoint,
+                valueoptions,
                 tempObject = getNewColumnTemplate(),
                 setColumnPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
@@ -961,7 +968,8 @@ var reportsViewModel = function () {
                         if (!!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
-                            tempObject.valueOptions = Config.Templates.getTemplate(tempObject.pointType).Value.ValueOptions;
+                            valueoptions = dtiUtility.getConfig("Templates.getTemplate", [tempObject.pointType]);
+                            tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
                         }
                     }
                     tempObject.canBeCharted = columnCanBeCharted(tempObject);
@@ -991,6 +999,7 @@ var reportsViewModel = function () {
         },
         openPointSelectorForColumn = function (selectObjectIndex) {
             var tempPoint,
+                valueoptions,
                 updatedList = $.extend(true, [], self.listOfColumns()),
                 tempObject = updatedList[selectObjectIndex],
                 setColumnPoint = function (selectedPoint) {
@@ -1026,7 +1035,8 @@ var reportsViewModel = function () {
                         if (!!selectedPoint.Value && !!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
-                            tempObject.valueOptions = Config.Templates.getTemplate(tempObject.pointType).Value.ValueOptions;
+                            valueoptions = dtiUtility.getConfig("Templates.getTemplate", [tempObject.pointType]);
+                            tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
                         }
                     }
                     tempObject.canBeCharted = columnCanBeCharted(tempObject);
@@ -1166,7 +1176,7 @@ var reportsViewModel = function () {
                     localFilter.evalue = -1;
                     break;
                 case "BitString":
-                    localFilter.bitStringEnumsArray = getBitStringEnumsArray(Config.Enums[localFilter.filterName + " Bits"]);
+                    localFilter.bitStringEnumsArray = getBitStringEnumsArray(dtiUtility.getConfig("Enums." + localFilter.filterName + " Bits"));
                     break;
             }
 
@@ -1458,7 +1468,7 @@ var reportsViewModel = function () {
                         case "Property":
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
                             if (currentColumn.valueType === "BitString") {
-                                currentColumn.bitstringEnums = Config.Enums[currentColumn.colName + " Bits"];
+                                currentColumn.bitstringEnums = dtiUtility.getConfig("Enums." + currentColumn.colName + " Bits");
                             }
                             currentColumn.dataColumnName = currentColumn.colName;
                             break;
@@ -1491,7 +1501,7 @@ var reportsViewModel = function () {
         getValueList = function (property, pointType) {
             var result = [],
                 i,
-                options = Config.Utility.pointTypes.getEnums(property, pointType),
+                options = dtiUtility.getConfig("Utility.pointTypes.getEnums", [property, pointType]),
                 len = (options && options.length ? options.length : 0);
 
             for (i = 0; i < len; i++) {
@@ -1523,14 +1533,14 @@ var reportsViewModel = function () {
             return result;
         },
         getProperty = function (key) {
-            return Config.Enums.Properties[key];
+            return dtiUtility.getConfig("Enums.Properties." + key);
         },
         collectEnumProperties = function () {
             getPointPropertiesForFilters();
             getPointPropertiesForColumns();
         },
         getPointPropertiesForFilters = function () {
-            var props = Config.Enums.Properties,
+            var props = dtiUtility.getConfig("Enums.Properties"),
                 listOfKeysToSkip = [],
                 prop,
                 key;
@@ -1634,7 +1644,7 @@ var reportsViewModel = function () {
                         if (filter.valueType === "BitString") {
                             var total = 0,
                                 key,
-                                bitStringEnums = Config.Enums[filter.filterName + " Bits"];
+                                bitStringEnums = dtiUtility.getConfig("Enums." + filter.filterName + " Bits");
 
                             for (key in bitStringEnums) {
                                 if (bitStringEnums.hasOwnProperty(key)) {
@@ -3270,7 +3280,7 @@ var reportsViewModel = function () {
                             sameDataSet = (currentPageData.length === allData.length);
                             calcs = getCalcForColumn(currentPageData, allData, columnConfig);
                             $tdFooter = $(tfoot).find("td[colindex='" + columnIndex + "']");
-                            $tdFooter.popover("destroy");
+                            // TODO to Materialize $tdFooter.popover("destroy");
 
                             for (j = 0; j < columnConfig.calculation.length; j++) {
                                 calc = calcs[j];
@@ -3944,7 +3954,7 @@ var reportsViewModel = function () {
 
     self.activeRequestDataDrawn = ko.observable(true);
 
-    self.pointTypes = ko.observableArray($.extend(true, [], Config.Utility.pointTypes.getAllowedPointTypes()));
+    self.pointTypes = ko.observableArray($.extend(true, [], dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [])));
 
     self.pointName1 = ko.observable("");
 
@@ -4071,6 +4081,7 @@ var reportsViewModel = function () {
 
         exportEventSet = false;
         activeDataRequests = [];
+        initGlobalLists();
         getScreenFields();
         initKnockout();
 
@@ -4363,7 +4374,7 @@ var reportsViewModel = function () {
     self.requestReportData = function () {
         if (!self.durationError()) {
             if (self.currentTab() !== 2) {
-                $(".tableFooter > td").popover("destroy");
+                // TODO to Materialize  $(".tableFooter > td").popover("destroy");
                 var requestObj = buildReportDataRequest();
                 if (!!requestObj) {
                     tabSwitch(2);
@@ -4738,16 +4749,9 @@ var reportsViewModel = function () {
         }, 50);
     };
 
-    self.selectConfigTabSubTab = function (subTabName) {
-        $tabConfiguration.find("ul.nav-tabs").find("li.active").removeClass("active");
-        $tabConfiguration.find("ul.nav-tabs").find("li." + subTabName).addClass("active");
-        $tabConfiguration.find(".tab-content > .active").removeClass("active");
-        $tabConfiguration.find("#" + subTabName).addClass("active");
-    };
-
     self.selectViewReportTabSubTab = function (subTabName) {
-        $tabViewReport.find("ul.nav-tabs").find("li.active").removeClass("active");
-        $tabViewReport.find("ul.nav-tabs").find("li." + subTabName).addClass("active");
+        $tabViewReport.find("ul.tabs").find("li a.active").removeClass("active");
+        $tabViewReport.find("ul.tabs").find("li." + subTabName + " a").addClass("active");
         $tabViewReport.find(".tab-content > .active").removeClass("active");
         $tabViewReport.find("#" + subTabName).addClass("active");
     };

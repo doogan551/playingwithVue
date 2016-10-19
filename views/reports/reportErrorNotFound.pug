@@ -1,5 +1,20 @@
-extends layout
-block content
+doctype html
+html.direports
+    head
+        title #{title}
+        meta(charset="utf-8")
+        link(type='text/css', rel='stylesheet', href='/css/lib/materialize.min.css')
+        link(type='text/css', rel='stylesheet', href="/css/lib/font-awesome-4.3.0/css/font-awesome.min.css")
+        link(type='text/css', rel='stylesheet', href='/css/lib/jquery-ui.min.css')
+        link(type='text/css', rel='stylesheet', href='/css/reports/reporting.css')
+        script(type="text/javascript" src="/js/lib/jquery-2.2.4.js")
+        script(type="text/javascript" src="/js/lib/jquery-ui.js")
+        script(type="text/javascript" src='/js/lib/moment.js')
+        script(type="text/javascript" src='/js/lib/materialize.min.js')
+        script(type="text/javascript" src="/js/v2/dorsettUtility.js")
+        script(type="text/javascript" src="/js/reports/reportsViewModel.js")
+    body.blue-grey.lighten-5
+        block content
     .container-fluid
         .panel.panel-danger
             .panel.panel-heading

@@ -1,9 +1,75 @@
-extends layout
-block content
+doctype html
+html.direports
+    head
+        title #{title}
+        meta(charset="utf-8")
+        //link(type='text/css', rel='stylesheet', href='/css/lib/bootstrap-3.3.6/bootstrap.css')
+        //link(type='text/css', rel='stylesheet', href="/css/lib/bootstrap-datepicker.css")
+        //link(type='text/css', rel='stylesheet', href="/css/lib/jquery-clockpicker.min.css")
+        link(type='text/css', rel='stylesheet', href='/css/lib/materialize.min.css')
+        //link(type='text/css', rel='stylesheet', href="/css/lib/font-awesome-4.3.0/css/font-awesome.min.css")
+        link(type='text/css', rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.material.min.css')
+        //link(type='text/css', rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.bootstrap.min.css')
+        link(type='text/css', rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/ColReorder/css/colReorder.foundation.min.css')
+        link(type='text/css', rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/Buttons/css/buttons.foundation.min.css')
+        //link(type='text/css', rel='stylesheet', href='/css/lib/jquery-ui.min.css')
+        //link(type='text/css', rel='stylesheet', href='/css/lib/daterangepicker.css')
+        link(type='text/css', rel='stylesheet', href='/css/reports/reporting.css')
+        link(type='text/css', rel='stylesheet', href='https://fonts.googleapis.com/icon?family=Material+Icons')
+        script(type="text/javascript" src="/js/lib/jquery-2.2.4.js")
+        script(type="text/javascript" src="/js/lib/jquery-ui.js")
+        script(type="text/javascript" src='/js/lib/moment.js')
+        //script(type="text/javascript" src='/js/lib/bootstrap-3.3.6/bootstrap-3.3.6.js')
+        //script(type="text/javascript" src="/js/lib/bootstrap-datepicker.js")
+        //script(type="text/javascript" src="/js/lib/jquery-clockpicker.min.js")
+        script(type="text/javascript" src='/js/lib/materialize.min.js')
+        script(type="text/javascript" src='/js/lib/lodash.min.js')
+        script(type="text/javascript" src='/js/lib/config.js')
+        script(type="text/javascript" src='/js/lib/knockout-3.4.0.js')
+        script(type="text/javascript" src='/js/lib/ko.validation.js')
+        script(type="text/javascript" src='/js/lib/socket.io.js')
+        script(type="text/javascript" src='/js/lib/store.min.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.12/media/js/jquery.dataTables.min.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.12/media/js/dataTables.material.min.js')
+        //script(type="text/javascript" src='/js/lib/DataTables-1.10.12/media/js/dataTables.bootstrap.min.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/ColReorder/js/dataTables.colReorder.min.js')
+        //script(type="text/javascript" src='/js/lib/DataTables-1.10.10/dataTables.colReorderWithResize.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/dataTables.buttons.min.js')
+        //script(type="text/javascript" src='/js/lib/daterangepicker.js')
+        script(type="text/javascript" src='/js/lib/jszip.min.js')
+        script(type="text/javascript" src='/js/lib/pdfmake.min.js')
+        script(type="text/javascript" src='/js/lib/vfs_fonts.js')
+        script(type="text/javascript" src='/js/lib/highcharts.src.js')
+        script(type="text/javascript" src='/js/trendPlots/trendplot.js')
+        script(type="text/javascript" src='/js/lib/jquery.printarea.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/buttons.html5.min.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/buttons.print.min.js')
+        script(type="text/javascript" src="/js/v2/dorsettUtility.js")
+        script(type="text/javascript" src="/js/reports/reportsViewModel.js")
+    body.blue-grey.lighten-5
+        block content
     #window
         #wrapper(style="display:none")
             #sidebar-wrapper.leftBar
-                include ./tabLinks
+                ul
+                    li.configurationButton
+                        a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Report settings")
+                            //| Configuration
+                            i.material-icons.center settings
+                    li.viewReportButton
+                        a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Run report")
+                            //| Run Report
+                            i.material-icons.center play_arrow
+                div.preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: displayTabSpinner(), hideDiv: !displayTabSpinner()} ", title="Requesting Report Data")
+                    div.spinner-layer
+                        div.circle-clipper.left
+                            div.circle
+                        div.gap-patch
+                            div.circle
+                        div.circle-clipper
+                            div.circle
+                .runReportCheckMark(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
+                    i.material-icons.center thumb_up
             #page-content-wrapper.rightPanel
                 .container-fluid
                     .runReportSpinner(data-bind="css: { displayDiv: displayMainSpinner(), hideDiv: !displayMainSpinner()} ", title="Requesting Report Data")
@@ -27,19 +93,21 @@ block content
                                     div.circle
                         span.spinnertext.teal-text(data-bind="text: chartSpinnerTitle")
                     .tabConfiguration
-                        ul.nav.nav-tabs
-                            li.attribs.active(role="presentation")
-                                a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#reportAttribs", data-toggle="tab") Attributes
-                            li.columns(role="presentation")
-                                a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
-                            li.columns2(role="presentation", style="display: none;")
-                                a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#gridColumnConfig", data-toggle="tab") Grid Config
-                            // ko if: (reportType === 'Property')
-                            li.filterByPoint(role="presentation")
-                                a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
-                            // /ko
-                            li.additionalFilters(role="presentation")
-                                a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
+                        .row
+                            .reportTabs.col.s8
+                                ul.tabs
+                                    li.tab.col.s1.attribs(role="presentation")
+                                        a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text.active(href="#reportAttribs", data-toggle="tab") Attributes
+                                    li.tab.col.s1.columns(role="presentation")
+                                        a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
+                                    li.tab.col.s1.columns2(role="presentation", style="display: none;")
+                                        a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#gridColumnConfig", data-toggle="tab") Grid Config
+                                    // ko if: (reportType === 'Property')
+                                    li.tab.col.s1.filterByPoint(role="presentation")
+                                        a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
+                                    // /ko
+                                    li.tab.col.s1.additionalFilters(role="presentation")
+                                        a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
                         div.configurationContent
                             div
                                 h6.strong.reportTitle(data-bind="text: reportDisplayTitle")
@@ -65,7 +133,7 @@ block content
                                             label(data-bind="updateLabel: $root.pointName3, attr: {for: 'pointName3'}") Report Title
                                     .form-group.clearfix
                                         .numberOfEnteriesPerPage
-                                            h5.col-xs-3.col
+                                            h6.col-xs-3.col
                                                 strong.small.pull-right # of entries per Page
                                             .col-xs-2.entries
                                                 .dropdown.availableEntries(data-bind="css: {disabled: !$root.canEdit()}")
@@ -83,7 +151,7 @@ block content
                                                     // /ko
                                         // ko if: (chartable())
                                         .numberOfEnteriesPerPage
-                                            h5.col-xs-3.col
+                                            h6.col-xs-3.col
                                                 strong.small.pull-right Chart Type
                                             .col-xs-2.chartTypes
                                                 .dropdown.availableChartTypes(data-bind="css: {disabled: !$root.canEdit()}")
@@ -101,7 +169,7 @@ block content
                                                     // /ko
                                         // /ko
                                 div#reportColumns.tab-pane
-                                    h4.strong.panel-title
+                                    h6.strong.panel-title
                                         table.columnsGrid.small.grid.table
                                             thead
                                                 tr.strong(style="height:44px")
@@ -255,7 +323,7 @@ block content
                                                         a.addColumnButton(href="#") Add Column
                                                     // /ko
                                 div#gridColumnConfig.tab-pane
-                                    h4.strong.panel-title
+                                    h6.strong.panel-title
                                         table.gridColumnConfigTable.small.grid.table
                                             thead
                                                 tr.sortablecolums(data-bind="foreach: listOfColumns()")
@@ -354,7 +422,7 @@ block content
                                             // /ko
                                 div#filterByPoint.tab-pane
                                     // ko if: ($root.reportType === 'Property')
-                                    h4.strong.panel-title
+                                    h6.strong.panel-title
                                         .selectorNames
                                             .form-inline.black-text(style="display: inline-flex")
                                                 div.input-field.col
@@ -432,19 +500,19 @@ block content
                                     a.small.addFilterbutton(href="#") Add Filter
                                     // /ko
                                     // ko if: (reportType !== 'Property')
-                                    span.reportDateRangePicker
-                                        div.input-field
-                                            input.input.form-control.filterContainer.durationDateRange#durationDateRange(data-bind="reportDateRangePicker: selectedDuration, enable: $root.canEdit(), css: { durationError: $root.durationError() }", type="text", placeholder="Select...")
-                                            i.fa.fa-calendar.glyphicon.glyphicon-calendar.durationCalendarIcon
-                                            label.reportDateRangeLabel.small(data-bind="attr: {for: 'durationDateRange'}") Duration:&nbsp;
-                                    br
-                                    span.timePickers
-                                        div.input-field
-                                            input.input.form-control.filterContainer.durationDateRangeTime#startTimeOffSet(data-bind="reportTimePicker: durationStartTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="Start Time OffSet", type="text")
-                                            label.timePickerLabel.small(data-bind="attr: {for: 'startTimeOffSet'}") From:&nbsp;
-                                        div.input-field
-                                            input.input.form-control.filterContainer.durationDateRangeTime#endTimeOffSet(data-bind="reportTimePicker: durationEndTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="End Time OffSet", type="text")
-                                            label.timePickerLabel.small(data-bind="attr: {for: 'endTimeOffSet'}") To:&nbsp;
+                                    //span.reportDateRangePicker
+                                    //    div.input-field
+                                    //        input.input.form-control.filterContainer.durationDateRange#durationDateRange(data-bind="reportDateRangePicker: selectedDuration, enable: $root.canEdit(), css: { durationError: $root.durationError() }", type="text", placeholder="Select...")
+                                    //        i.fa.fa-calendar.glyphicon.glyphicon-calendar.durationCalendarIcon
+                                    //        label.reportDateRangeLabel.small(data-bind="attr: {for: 'durationDateRange'}") Duration:&nbsp;
+                                    //br
+                                    //span.timePickers
+                                    //    div.input-field
+                                    //        input.input.form-control.filterContainer.durationDateRangeTime#startTimeOffSet(data-bind="reportTimePicker: durationStartTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="Start Time OffSet", type="text")
+                                    //        label.timePickerLabel.small(data-bind="attr: {for: 'startTimeOffSet'}") From:&nbsp;
+                                    //    div.input-field
+                                    //        input.input.form-control.filterContainer.durationDateRangeTime#endTimeOffSet(data-bind="reportTimePicker: durationEndTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="End Time OffSet", type="text")
+                                    //        label.timePickerLabel.small(data-bind="attr: {for: 'endTimeOffSet'}") To:&nbsp;
                                     br
                                     span.intervalSettings
                                         div.intervalsContainer.input-field

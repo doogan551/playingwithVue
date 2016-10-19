@@ -719,6 +719,7 @@ input.form-control.columnDisplayName:focus {
 }
 input.form-control.inputMultiplier {
     padding-top: 7px;
+    padding-bottom: 4px;
     height: 1rem;
 }
 input.form-control.inputMultiplier:focus {
@@ -727,6 +728,7 @@ input.form-control.inputMultiplier:focus {
 }
 input.form-control.inputPrecision {
     padding-top: 7px;
+    padding-bottom: 4px;
     height: 1rem;
 }
 input.form-control.inputPrecision:focus {
