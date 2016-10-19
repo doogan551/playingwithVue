@@ -1246,7 +1246,7 @@ var scripts = {
             query: {
                 'Point Type.Value': 'Device'
             }
-        }, function processSequence(err, doc, cb) {
+        }, function (err, doc, cb) {
             doc['Downlink Protocol'] = Config.Templates.getTemplate(doc['Point Type'].Value)['Downlink Protocol'];
             if (doc['Downlink Network'].Value !== 0) {
                 doc['Downlink Protocol'].Value = 'IP'
@@ -1259,7 +1259,7 @@ var scripts = {
                     _id: doc._id
                 },
                 updateObj: doc
-            }, function updatedSequenceHandler(err) {
+            }, function (err) {
                 if (err) {
                     logger.debug('Update err:', err);
                 }
@@ -1267,7 +1267,7 @@ var scripts = {
                 cb(null);
             });
 
-        }, function finishUpdatingSequences(err) {
+        }, function (err) {
             logger.info('Finished with addDownlinkProtocol');
             callback(null, {
                 fn: 'addDownlinkProtocol',
@@ -1347,7 +1347,7 @@ var scripts = {
                             'Modbus Order': 1
                         },
                         $set:{
-                            'Modbus Unit Id': Config.Templates.getTemplate("Remote Unit")["Modbus Unit Id"];
+                            'Modbus Unit Id': Config.Templates.getTemplate("Remote Unit")["Modbus Unit Id"]
                         }
                     },
                     options: {
@@ -1377,7 +1377,7 @@ db.connect(connectionString, function(err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.switchModbusOrder];
+    tasks = [scripts.addDownlinkProtocol];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
@@ -1424,7 +1424,7 @@ db.connect(connectionString, function(err) {
                         }
                     }
                 }, function(err, result) {
-                    // process.exit(0);
+                    process.exit(0);
                 })
             }
         });

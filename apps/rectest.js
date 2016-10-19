@@ -1201,4 +1201,46 @@ function countUpis() {
     });
   });
 }
-countUpis();
+// countUpis();
+
+function testCron() {
+  var _ = require('lodash');
+  var prettyCron = require('prettycron');
+  var CronJob = require('../models/cronjob');
+
+  var seconds = new Date().getSeconds();
+  var time = '*/15 * * * * *';
+  var jobs = {};
+  var array = [];
+  for (var a = 0; a < 1; a++) {
+    array.push(a);
+  }
+  // console.log(time, prettyCron.toString(time), prettyCron.getNext(time));
+  async.eachSeries(array, function(item, cb) {
+    jobs[item] = new CronJob(time, function() {
+      logger.info('running', item, new Date());
+    }, function() {
+      logger.info('finished');
+    });
+    cb();
+  }, function(err) {
+    // jobs[2].stop();
+    logger.info('done');
+  });
+}
+// testCron();
+
+function testobjects() {
+  var obj = {
+    utility: {
+      functionOne: function() {
+        console.log('one');
+      },
+      functionTwo: function() {
+        obj.utility.functionOne();
+      }
+    }
+  }
+  obj.utility.functionTwo();
+}
+testobjects();

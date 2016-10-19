@@ -4024,7 +4024,7 @@
                 },
                 "Downlink Protocol": {
                     "isDisplayable": true,
-                    "isReadOnly": true,
+                    "isReadOnly": false,
                     "ValueType": 5,
                     "Value": "None",
                     "eValue": 0
