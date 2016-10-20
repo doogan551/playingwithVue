@@ -711,6 +711,22 @@ var Config = (function(obj) {
             return undefined;
         },
 
+        checkDeviceMS5: function(point) {
+            var devTypes = enumsTemplatesJson.Enums["Device Model Types"],
+                ms5Types = [
+                    devTypes["MicroScan 5 UNV"].enum,
+                    devTypes["MicroScan 5 xTalk"].enum,
+                    devTypes["SCADA Vio"].enum,
+                    devTypes["SCADA IO"].enum,
+                    devTypes["Unknown"].enum
+                ];
+
+            if (ms5Types.indexOf(point._devModel) > -1){
+                return true;
+            }
+            return false;
+        },
+
         checkModbusMS5: function(point) {
             var rmuTypes = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 modbusTypes = [
@@ -722,16 +738,9 @@ var Config = (function(obj) {
                     rmuTypes["Generic Modbus"].enum,
                     rmuTypes["PowerTraks 9000"].enum,
                     rmuTypes["Programmable Modbus"].enum
-                ],
-                devTypes = enumsTemplatesJson.Enums["Device Model Types"],
-                ms5Types = [
-                    devTypes["MicroScan 5 UNV"].enum,
-                    devTypes["MicroScan 5 xTalk"].enum,
-                    devTypes["SCADA Vio"].enum,
-                    devTypes["SCADA IO"].enum
                 ];
 
-            if ((ms5Types.indexOf(point._devModel) > -1) && (modbusTypes.indexOf(point._rmuModel) > -1)) {
+            if (obj.Utility.checkDeviceMS5(point) && (modbusTypes.indexOf(point._rmuModel) > -1)) {
                 return true;
             }
             return false;
@@ -3693,83 +3702,83 @@ var Config = (function(obj) {
             if (!point.hasOwnProperty("Firmware 2 Version"))
                 point["Firmware 2 Version"] = obj.Templates.getTemplate("Device")["Firmware 2 Version"];
 
-            if (point["Uplink Port"].Value !== undefined) {
-
-                if (point["Uplink Port"].Value === "Ethernet") {
-                    point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Ethernet"]["enum"];
-                } else if (point["Uplink Port"].Value === "Port 1") {
-                    point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                } else if (point["Uplink Port"].Value === "Port 2") {
-                    point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"];
-                } else if (point["Uplink Port"].Value === "Port 3") {
-                    point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"];
-                } else if (point["Uplink Port"].Value === "Port 4") {
-                    point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"];
-                }
+            if (point["Uplink Port"].Value === "Ethernet") {
+                point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Ethernet"]["enum"];
+            } else if (point["Uplink Port"].Value === "Port 2") {
+                point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"];
+            } else if (point["Uplink Port"].Value === "Port 3") {
+                point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"];
+            } else if (point["Uplink Port"].Value === "Port 4") {
+                point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"];
+            } else {
+                point["Uplink Port"].Value = "Port 1";
+                point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
             }
 
-            if (point["Ethernet Protocol"].Value !== undefined) {
-                if (point["Ethernet Protocol"].Value === "IP") {
-                    point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].IP["enum"];
-                } else {
-                    point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].None["enum"];
-                }
+            if (point["Ethernet Protocol"].Value === "IP") {
+                point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].IP["enum"];
+            } else {
+                point["Ethernet Protocol"].Value = "None";
+                point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].None["enum"];
             }
 
-            if (point["Port 1 Protocol"].Value !== undefined) {
-                if (point["Port 1 Protocol"].Value === "None") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-                } else if (point["Port 1 Protocol"].Value === "MS/TP") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-                } else if (point["Port 1 Protocol"].Value === "N2") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-                } else if (point["Port 1 Protocol"].Value === "Modbus RTU") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-                } else if (point["Port 1 Protocol"].Value === "MS/RTU") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-                }
+            if (point["Downlink Protocol"].Value === "IP") {
+                point["Downlink Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].IP["enum"];
+            } else {
+                point["Downlink Protocol"].Value = "None";
+                point["Downlink Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].None["enum"];
             }
 
-            if (point["Port 2 Protocol"].Value !== undefined) {
-                if (point["Port 2 Protocol"].Value === "None") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-                } else if (point["Port 2 Protocol"].Value === "MS/TP") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-                } else if (point["Port 2 Protocol"].Value === "N2") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-                } else if (point["Port 2 Protocol"].Value === "Modbus RTU") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-                } else if (point["Port 2 Protocol"].Value === "MS/RTU") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-                }
+            if (point["Port 1 Protocol"].Value === "MS/TP") {
+                point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
+            } else if (point["Port 1 Protocol"].Value === "N2") {
+                point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
+            } else if (point["Port 1 Protocol"].Value === "Modbus RTU") {
+                point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
+            } else if (point["Port 1 Protocol"].Value === "MS/RTU") {
+                point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
+            } else {
+                point["Port 1 Protocol"].Value === "None";
+                point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
             }
 
-            if (point["Port 3 Protocol"].Value !== undefined) {
-                if (point["Port 3 Protocol"].Value === "None") {
-                    point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-                } else if (point["Port 3 Protocol"].Value === "MS/TP") {
-                    point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-                } else if (point["Port 3 Protocol"].Value === "N2") {
-                    point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-                } else if (point["Port 3 Protocol"].Value === "Modbus RTU") {
-                    point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-                } else if (point["Port 3 Protocol"].Value === "MS/RTU") {
-                    point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-                }
+            if (point["Port 2 Protocol"].Value === "MS/TP") {
+                point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
+            } else if (point["Port 2 Protocol"].Value === "N2") {
+                point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
+            } else if (point["Port 2 Protocol"].Value === "Modbus RTU") {
+                point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
+            } else if (point["Port 2 Protocol"].Value === "MS/RTU") {
+                point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
+            } else {
+                point["Port 2 Protocol"].Value === "None";
+                point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
             }
 
-            if (point["Port 4 Protocol"].Value !== undefined) {
-                if (point["Port 4 Protocol"].Value === "None") {
-                    point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-                } else if (point["Port 4 Protocol"].Value === "MS/TP") {
-                    point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-                } else if (point["Port 4 Protocol"].Value === "N2") {
-                    point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-                } else if (point["Port 4 Protocol"].Value === "Modbus RTU") {
-                    point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-                } else if (point["Port 4 Protocol"].Value === "MS/RTU") {
-                    point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-                }
+            if (point["Port 3 Protocol"].Value === "MS/TP") {
+                point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
+            } else if (point["Port 3 Protocol"].Value === "N2") {
+                point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
+            } else if (point["Port 3 Protocol"].Value === "Modbus RTU") {
+                point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
+            } else if (point["Port 3 Protocol"].Value === "MS/RTU") {
+                point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
+            } else {
+                point["Port 3 Protocol"].Value === "None";
+                point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
+            }
+
+            if (point["Port 4 Protocol"].Value === "MS/TP") {
+                point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
+            } else if (point["Port 4 Protocol"].Value === "N2") {
+                point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
+            } else if (point["Port 4 Protocol"].Value === "Modbus RTU") {
+                point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
+            } else if (point["Port 4 Protocol"].Value === "MS/RTU") {
+                point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
+            } else {
+                point["Port 4 Protocol"].Value === "None";
+                point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
             }
             //------ End import data checks -----------------------------------------------------------------
 
@@ -3781,25 +3790,13 @@ var Config = (function(obj) {
                 point["Ethernet Address"].ValueType = enumsTemplatesJson.Enums["Value Types"]["String"]["enum"];
             }
 
-            point["Ethernet Network"].Max = 65534;
-            point["Port 1 Network"].Max = 65534;
-            point["Port 2 Network"].Max = 65534;
-            point["Port 3 Network"].Max = 65534;
-            point["Port 4 Network"].Max = 65534;
-
             point["Time Zone"].isReadOnly = true;
-            // Init Firmware 2 to not displayable - we'll set it displayable when it is needed
             point["Firmware 2 Version"].isDisplayable = false;
 
-            // If unknown (central), MS5-UNV, MS5-xTalk, SCADA Vio, SCADA IO
-            if (point["Model Type"].Value === "MicroScan 5 UNV" || point["Model Type"].Value === "Unknown" || point["Model Type"].Value === "MicroScan 5 xTalk" || point["Model Type"].Value === "SCADA Vio" || point["Model Type"].Value === "SCADA IO") {
-                // Firmware 2 (baseboard fw) is displayable on MS5-UNV, SCADA Vio products, and SCADA IO products
+            if (obj.Utility.checkDeviceMS5(point)) {
+
+                point["Time Zone"].isReadOnly = false;
                 point["Firmware 2 Version"].isDisplayable = !!~["MicroScan 5 UNV", "SCADA Vio", "SCADA IO"].indexOf(point["Model Type"].Value);
-
-                if (point["Model Type"].Value !== "Unknown") {
-                    point["Time Zone"].isReadOnly = false;
-                }
-
                 point["Uplink Port"].isDisplayable = true;
                 point["Uplink Port"].isReadOnly = false;
                 point["Uplink Port"].ValueOptions = {
@@ -3809,158 +3806,13 @@ var Config = (function(obj) {
                     "Port 3": enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"],
                     "Port 4": enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"]
                 };
-                if (point["Uplink Port"].Value === "Port 1") {
-                    point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                } else if (point["Uplink Port"].Value === "Port 2") {
-                    point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"];
-                } else if (point["Uplink Port"].Value === "Port 3") {
-                    point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"];
-                } else if (point["Uplink Port"].Value === "Port 4") {
-                    point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"];
-                } else {
-                    point["Uplink Port"].Value = "Ethernet";
-                    point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Ethernet"]["enum"];
-                }
-
-                point["Downlink Network"].isReadOnly = false;
-                if (point["Downlink Network"].Value < 0 || point["Downlink Network"].Value > 65534) {
-                    point["Downlink Network"].Value = 0;
-                }
 
                 point["Ethernet Protocol"].isDisplayable = true;
-                if (point["Ethernet Protocol"].Value != "IP") { //Should this be TCP/IP
-                    point["Ethernet Protocol"].Value = "None";
-                    point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].None["enum"];
-                } else {
-                    point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].IP["enum"];
-                }
-
-                point["Ethernet Network"].isReadOnly = false;
-                if (point["Ethernet Network"].Value < 0 || point["Ethernet Network"].Value > 65534) {
-                    point["Ethernet Network"].Value = 0;
-                }
-
-                point["Ethernet Address"].isReadOnly = false;
-
                 point["Port 1 Protocol"].isDisplayable = true;
-                point["Port 1 Timeout"].isDisplayable = true;
-                if (point["Port 1 Protocol"].Value === "MS/TP") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-                } else if (point["Port 1 Protocol"].Value === "N2") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-                } else if (point["Port 1 Protocol"].Value === "Modbus RTU") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-                } else if (point["Port 1 Protocol"].Value === "MS/RTU") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-                } else {
-                    point["Port 1 Protocol"].Value = "None";
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-                }
-
                 point["Port 2 Protocol"].isDisplayable = true;
-                point["Port 2 Timeout"].isDisplayable = true;
-                if (point["Port 2 Protocol"].Value === "MS/TP") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-                } else if (point["Port 2 Protocol"].Value === "N2") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-                } else if (point["Port 2 Protocol"].Value === "Modbus RTU") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-                } else if (point["Port 2 Protocol"].Value === "MS/RTU") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-                } else {
-                    point["Port 2 Protocol"].Value = "None";
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-                }
-
                 point["Port 3 Protocol"].isDisplayable = true;
-                point["Port 3 Timeout"].isDisplayable = true;
-                if (point["Port 3 Protocol"].Value === "MS/TP") {
-                    point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-                } else if (point["Port 3 Protocol"].Value === "N2") {
-                    point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-                } else if (point["Port 3 Protocol"].Value === "Modbus RTU") {
-                    point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-                } else if (point["Port 3 Protocol"].Value === "MS/RTU") {
-                    point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-                } else {
-                    point["Port 3 Protocol"].Value = "None";
-                    point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-                }
-
                 point["Port 4 Protocol"].isDisplayable = true;
-                point["Port 4 Timeout"].isDisplayable = true;
-                if (point["Port 4 Protocol"].Value === "MS/TP") {
-                    point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-                } else if (point["Port 4 Protocol"].Value === "N2") {
-                    point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-                } else if (point["Port 4 Protocol"].Value === "Modbus RTU") {
-                    point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-                } else if (point["Port 4 Protocol"].Value === "MS/RTU") {
-                    point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-                } else {
-                    point["Port 4 Protocol"].Value = "None";
-                    point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-                }
 
-                point["Port 1 Network"].isReadOnly = false;
-                if (point["Port 1 Network"].Value < 0 || point["Port 1 Network"].Value > 65534) {
-                    point["Port 1 Network"].Value = 0;
-                }
-
-                point["Port 2 Network"].isReadOnly = false;
-                if (point["Port 2 Network"].Value < 0 || point["Port 2 Network"].Value > 65534) {
-                    point["Port 2 Network"].Value = 0;
-                }
-
-                point["Port 3 Network"].isReadOnly = false;
-                if (point["Port 3 Network"].Value < 0 || point["Port 3 Network"].Value > 65534) {
-                    point["Port 3 Network"].Value = 0;
-                }
-
-                point["Port 4 Network"].isReadOnly = false;
-                if (point["Port 4 Network"].Value < 0 || point["Port 4 Network"].Value > 65534) {
-                    point["Port 4 Network"].Value = 0;
-                }
-
-                point["Port 1 Address"].isReadOnly = false;
-                if (point["Port 1 Address"].Value < 0 || point["Port 1 Address"].Value > 127) {
-                    point["Port 1 Address"].Value = 0;
-                }
-
-                point["Port 2 Address"].isReadOnly = false;
-                if (point["Port 2 Address"].Value < 0 || point["Port 2 Address"].Value > 127) {
-                    point["Port 2 Address"].Value = 0;
-                }
-
-                point["Port 3 Address"].isReadOnly = false;
-                if (point["Port 3 Address"].Value < 0 || point["Port 3 Address"].Value > 127) {
-                    point["Port 3 Address"].Value = 0;
-                }
-
-                point["Port 4 Address"].isReadOnly = false;
-                if (point["Port 4 Address"].Value < 0 || point["Port 4 Address"].Value > 127) {
-                    point["Port 4 Address"].Value = 0;
-                }
-
-                point["Port 1 Maximum Address"].isReadOnly = false;
-                if (point["Port 1 Maximum Address"].Value < 0 || point["Port 1 Maximum Address"].Value > 127) {
-                    point["Port 1 Maximum Address"].Value = 0;
-                }
-
-                point["Port 2 Address"].isReadOnly = false;
-                if (point["Port 2 Maximum Address"].Value < 0 || point["Port 2 Maximum Address"].Value > 127) {
-                    point["Port 2 Maximum Address"].Value = 0;
-                }
-
-                point["Port 3 Address"].isReadOnly = false;
-                if (point["Port 3 Maximum Address"].Value < 0 || point["Port 3 Maximum Address"].Value > 127) {
-                    point["Port 3 Maximum Address"].Value = 0;
-                }
-
-                point["Port 4 Maximum Address"].isReadOnly = false;
-                if (point["Port 4 Maximum Address"].Value < 0 || point["Port 4 Maximum Address"].Value > 127) {
-                    point["Port 4 Maximum Address"].Value = 0;
-                }
             } else if (point["Model Type"].Value === "MicroScan 4 UNV" || point["Model Type"].Value === "MicroScan 4 xTalk" || point["Model Type"].Value === "MicroScan 4 Digital") {
 
                 point["Uplink Port"].isDisplayable = true;
@@ -3970,94 +3822,16 @@ var Config = (function(obj) {
                     "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"]
                 };
 
-                if (point["Uplink Port"].Value != "Port 1") {
-                    point["Uplink Port"].Value = "Ethernet";
-                    point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Ethernet"]["enum"];
-                } else if (point["Uplink Port"].Value === "Port 1") {
+                if ((point["Uplink Port"].Value != "Ethernet") && (point["Uplink Port"].Value != "Port 1")) {
+                    point["Uplink Port"].Value = "Port 1";
                     point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
                 }
 
-                point["Downlink Network"].isDisplayable = false;
-
                 point["Ethernet Protocol"].isDisplayable = true;
-                if (point["Ethernet Protocol"].Value != "IP") {
-                    point["Ethernet Protocol"].Value = "None";
-                    point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].None["enum"];
-                } else {
-                    point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].IP["enum"];
-                }
-
-                point["Ethernet Network"].isReadOnly = false;
-                if (point["Ethernet Network"].Value < 0 || point["Ethernet Network"].Value > 65534) {
-                    point["Ethernet Network"].Value = 0;
-                }
-
-                point["Ethernet Address"].isReadOnly = false;
-
                 point["Port 1 Protocol"].isDisplayable = true;
-                point["Port 1 Timeout"].isDisplayable = true;
-                if (point["Port 1 Protocol"].Value === "MS/TP") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-                } else if (point["Port 1 Protocol"].Value === "N2") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-                } else if (point["Port 1 Protocol"].Value === "Modbus RTU") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-                } else if (point["Port 1 Protocol"].Value === "MS/RTU") {
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-                } else {
-                    point["Port 1 Protocol"].Value = "None";
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-                }
-
                 point["Port 2 Protocol"].isDisplayable = true;
-                point["Port 2 Timeout"].isDisplayable = true;
-                if (point["Port 2 Protocol"].Value === "MS/TP") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-                } else if (point["Port 2 Protocol"].Value === "N2") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-                } else if (point["Port 2 Protocol"].Value === "Modbus RTU") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-                } else if (point["Port 2 Protocol"].Value === "MS/RTU") {
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-                } else {
-                    point["Port 2 Protocol"].Value = "None";
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-                }
-
                 point["Port 3 Protocol"].isDisplayable = false;
                 point["Port 4 Protocol"].isDisplayable = false;
-                point["Port 3 Timeout"].isDisplayable = false;
-                point["Port 4 Timeout"].isDisplayable = false;
-
-                point["Port 1 Network"].isReadOnly = false;
-                if (point["Port 1 Network"].Value < 0 || point["Port 1 Network"].Value > 65534) {
-                    point["Port 1 Network"].Value = 0;
-                }
-
-                point["Port 2 Network"].isReadOnly = false;
-                if (point["Port 2 Network"].Value < 0 || point["Port 2 Network"].Value > 65534) {
-                    point["Port 2 Network"].Value = 0;
-                }
-
-                point["Port 1 Address"].isReadOnly = false;
-                if (point["Port 1 Address"].Value < 0 || point["Port 1 Address"].Value > 127) {
-                    point["Port 1 Address"].Value = 0;
-                }
-
-                point["Port 2 Address"].isReadOnly = false;
-                if (point["Port 2 Address"].Value < 0 || point["Port 2 Address"].Value > 127) {
-                    point["Port 2 Address"].Value = 0;
-                }
-
-                point["Port 1 Maximum Address"].isReadOnly = false;
-                if (point["Port 1 Maximum Address"].Value < 0 || point["Port 1 Maximum Address"].Value > 127) {
-                    point["Port 1 Maximum Address"].Value = 0;
-                }
-
-                point["Port 2 Address"].isReadOnly = false;
-                if (point["Port 2 Maximum Address"].Value < 0 || point["Port 2 Maximum Address"].Value > 127) {
-                    point["Port 2 Maximum Address"].Value = 0;
-                }
 
             } else if (point["Model Type"].Value === "Central Device") {
 
@@ -4138,120 +3912,39 @@ var Config = (function(obj) {
         applyDeviceTypeUplinkPort: function(data) {
             var point = data.point;
 
+            point["Port 1 Protocol"].isReadOnly = false;
+            point["Port 2 Protocol"].isReadOnly = false;
+            point["Port 3 Protocol"].isReadOnly = false;
+            point["Port 4 Protocol"].isReadOnly = false;
+            point["Ethernet Protocol"].isReadOnly = false;
+            point["Downlink Protocol"].isDisplayable = false;
+
             if (point["Uplink Port"].Value === "Ethernet") {
                 point["Ethernet Protocol"].isReadOnly = true;
                 point["Ethernet Protocol"].Value = "IP";
                 point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].IP["enum"];
+                point["Downlink Protocol"].isDisplayable = obj.Utility.checkDeviceMS5(point);
 
-                point["Ethernet Network"].Min = 1;
+            } else if (point["Uplink Port"].Value === "Port 4") {
+                point["Port 4 Protocol"].isReadOnly = true;
+                point["Port 4 Protocol"].Value = "MS/TP";
+                point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
 
-                point["Port 1 Protocol"].isReadOnly = false;
-                point["Port 2 Protocol"].isReadOnly = false;
-                point["Port 3 Protocol"].isReadOnly = false;
-                point["Port 4 Protocol"].isReadOnly = false;
+            } else if (point["Uplink Port"].Value === "Port 2") {
+                point["Port 2 Protocol"].isReadOnly = true;
+                point["Port 2 Protocol"].Value = "MS/TP";
+                point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
 
-                point["Port 1 Network"].Min = 0;
-                point["Port 2 Network"].Min = 0;
-                point["Port 3 Network"].Min = 0;
-                point["Port 4 Network"].Min = 0;
+             } else if (point["Uplink Port"].Value === "Port 3") {
+                point["Port 3 Protocol"].isReadOnly = true;
+                point["Port 3 Protocol"].Value = "MS/TP";
+                point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
 
-                if (point["Model Type"].Value === "MicroScan 5 UNV" || point["Model Type"].Value === "Unknown" || point["Model Type"].Value === "MicroScan 5 xTalk" || point["Model Type"].Value === "SCADA Vio") {
-                    point["Downlink Network"].isDisplayable = true;
-                    point["Downlink IP Port"].isDisplayable = true;
-                    point["Downlink Broadcast Delay"].isDisplayable = true;
-                } else {
-                    point["Downlink Network"].isDisplayable = false;
-                    point["Downlink IP Port"].isDisplayable = false;
-                    point["Downlink Broadcast Delay"].isDisplayable = false;
-                }
-            } else {
-                point["Downlink Network"].isDisplayable = false;
-                point["Downlink IP Port"].isDisplayable = false;
-                point["Downlink Broadcast Delay"].isDisplayable = false;
-
-                point["Ethernet Protocol"].isReadOnly = false;
-
-                point["Ethernet Network"].Min = 0;
-
-                if (point["Uplink Port"].Value === "Port 1") {
-                    point["Port 1 Protocol"].isReadOnly = true;
-                    point["Port 2 Protocol"].isReadOnly = false;
-                    point["Port 3 Protocol"].isReadOnly = false;
-                    point["Port 4 Protocol"].isReadOnly = false;
-
-                    point["Port 1 Protocol"].Value = "MS/TP";
-                    point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-
-                    point["Port 1 Network"].Min = 1;
-                    point["Port 2 Network"].Min = 0;
-                    point["Port 3 Network"].Min = 0;
-                    point["Port 4 Network"].Min = 0;
-
-                    point["Port 1 Maximum Address"].isReadOnly = false;
-                    point["Port 2 Maximum Address"].isReadOnly = false;
-                    point["Port 3 Maximum Address"].isReadOnly = false;
-                    point["Port 4 Maximum Address"].isReadOnly = false;
-
-                } else if (point["Uplink Port"].Value === "Port 2") {
-                    point["Port 1 Protocol"].isReadOnly = false;
-                    point["Port 2 Protocol"].isReadOnly = true;
-                    point["Port 3 Protocol"].isReadOnly = false;
-                    point["Port 4 Protocol"].isReadOnly = false;
-
-                    point["Port 2 Protocol"].Value = "MS/TP";
-                    point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-
-                    point["Port 1 Network"].Min = 0;
-                    point["Port 2 Network"].Min = 1;
-                    point["Port 3 Network"].Min = 0;
-                    point["Port 4 Network"].Min = 0;
-
-                    point["Port 1 Maximum Address"].isReadOnly = false;
-                    point["Port 2 Maximum Address"].isReadOnly = false;
-                    point["Port 3 Maximum Address"].isReadOnly = false;
-                    point["Port 4 Maximum Address"].isReadOnly = false;
-
-                } else if (point["Uplink Port"].Value === "Port 3") {
-                    point["Port 1 Protocol"].isReadOnly = false;
-                    point["Port 2 Protocol"].isReadOnly = false;
-                    point["Port 3 Protocol"].isReadOnly = true;
-                    point["Port 4 Protocol"].isReadOnly = false;
-
-                    point["Port 3 Protocol"].Value = "MS/TP";
-                    point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-
-                    point["Port 1 Network"].Min = 0;
-                    point["Port 2 Network"].Min = 0;
-                    point["Port 3 Network"].Min = 1;
-                    point["Port 4 Network"].Min = 0;
-
-                    point["Port 1 Maximum Address"].isReadOnly = false;
-                    point["Port 2 Maximum Address"].isReadOnly = false;
-                    point["Port 3 Maximum Address"].isReadOnly = false;
-                    point["Port 4 Maximum Address"].isReadOnly = false;
-
-                } else if (point["Uplink Port"].Value === "Port 4") {
-                    point["Port 1 Protocol"].isReadOnly = false;
-                    point["Port 2 Protocol"].isReadOnly = false;
-                    point["Port 3 Protocol"].isReadOnly = false;
-                    point["Port 4 Protocol"].isReadOnly = true;
-
-                    point["Port 4 Protocol"].Value = "MS/TP";
-                    point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-
-                    point["Port 1 Network"].Min = 0;
-                    point["Port 2 Network"].Min = 0;
-                    point["Port 3 Network"].Min = 0;
-                    point["Port 4 Network"].Min = 1;
-
-                    point["Port 1 Maximum Address"].isReadOnly = false;
-                    point["Port 2 Maximum Address"].isReadOnly = false;
-                    point["Port 3 Maximum Address"].isReadOnly = false;
-                    point["Port 4 Maximum Address"].isReadOnly = false;
-                }
-
+             } else {
+                point["Port 1 Protocol"].isReadOnly = true;
+                point["Port 1 Protocol"].Value = "MS/TP";
+                point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
             }
-
             data.point = point;
             data.point = this.applyDeviceTypeEthernetProtocol(data);
             data.point = this.applyDeviceTypeDownlinkProtocol(data);
@@ -4262,7 +3955,7 @@ var Config = (function(obj) {
         applyDeviceTypeDownlinkProtocol: function(data) {
             var point = data.point;
 
-            if (point["Downlink Protocol"].Value === "None") {
+            if ((point["Downlink Protocol"].Value === "None") || (point["Downlink Protocol"].isDisplayable === false)) {
                 point["Downlink Broadcast Delay"].isDisplayable = false;
                 point["Downlink IP Port"].isDisplayable = false;
                 point["Downlink Network"].isDisplayable = false;
@@ -4271,14 +3964,13 @@ var Config = (function(obj) {
                 point["Downlink IP Port"].isDisplayable = true;
                 point["Downlink Network"].isDisplayable = true;
             }
-
             return point;
         },
 
         applyDeviceTypeEthernetProtocol: function(data) {
             var point = data.point;
 
-            if (point["Ethernet Protocol"].Value === "None") {
+            if ((point["Ethernet Protocol"].Value === "None") || (point["Ethernet Protocol"].isDisplayable === false)) {
                 point["Ethernet Address"].isDisplayable = false;
                 point["Ethernet IP Port"].isDisplayable = false;
                 point["Ethernet Network"].isDisplayable = false;
@@ -4287,7 +3979,6 @@ var Config = (function(obj) {
                 point["Ethernet IP Port"].isDisplayable = true;
                 point["Ethernet Network"].isDisplayable = true;
             }
-
             return point;
         },
 
