@@ -15,6 +15,7 @@ html.direports
         link(rel='stylesheet', href='/css/lib/jquery-ui.min.css')
         //link(rel='stylesheet', href='/css/lib/daterangepicker.css')
         link(rel='stylesheet', href='/css/reports/reporting.css')
+        link(rel='stylesheet', href='/css/lib/materialize.icons.css')
         link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
         script(type="text/javascript" src="/js/lib/jquery-2.2.4.js")
         script(type="text/javascript" src="/js/lib/jquery-ui.js")
@@ -554,7 +555,7 @@ html.direports
                         div.tab-content
                             div#gridData.active.tab-pane
                                 .row
-                                    h5.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
+                                    h6.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
                                     table.table.table-striped.table-bordered.table-responsive.dataTablePlaceHolder
                                         tfoot.tableFooter
                                             tr(data-bind="foreach: listOfColumns()")
