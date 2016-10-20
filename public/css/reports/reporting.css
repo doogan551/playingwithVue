@@ -85,15 +85,33 @@ input.input.form-control.durationDateRangeTime {
     cursor: pointer;
     text-decoration: underline;
 }
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    text-rendering: optimizeLegibility;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-feature-settings: 'liga';
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+}
 .viewReportNav {
-    display: inline-flex;
-    margin-right: 5px;
+    width: 175px !important;
+    height: 53px !important;
+    margin-left: 8px !important;
 }
 .viewReportNav li {
     margin-right: 5px;
 }
 .runReportTabSpinner {
-    margin-left: 34px;
+    margin-left: 20px;
 }
 .runReportCheckMark {
     margin-left: 34px;
@@ -231,6 +249,9 @@ input.intervalValue {
     margin-left: 6px;
     margin-top: -8px;
     padding-top: 10px;
+}
+.chartTypeSelection {
+    padding-left: 100px;
 }
 .chartTypes.dropdown-menu {
     width: 65px;
@@ -497,7 +518,7 @@ html, body {
     display: inline-block;
 }
 .hideDiv {
-    display: none;
+    display: none !important;
 }
 .runReportSpinner {
     left: 45%;

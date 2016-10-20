@@ -377,6 +377,25 @@ var initKnockout = function () {
         }
 
     };
+
+    ko.bindingHandlers.materializeDropdown = {
+        init: function (element, valueAccessor) {
+            $(element).dropdown({
+                    inDuration: 300,
+                    outDuration: 225,
+                    constrain_width: false,
+                    hover: false,
+                    gutter: 0,
+                    belowOrigin: true,
+                    alignment: 'left'
+                });
+        },
+        change: function (element, valueAccessor) {
+            console.log("CHANGE    $(element).html() = " + $(element).html());
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
 };
 
 var reportsViewModel = function () {
@@ -3765,7 +3784,7 @@ var reportsViewModel = function () {
                     } else if (!!isScheduled) {
                         answer = 1050;
                     } else {
-                        answer = $reportChartDiv.parent().width();
+                        answer = $reportChartDiv.parent().parent().width();
                     }
 
                     return answer;
@@ -3778,7 +3797,7 @@ var reportsViewModel = function () {
                     } else if (!!isScheduled) {
                         answer = 680;
                     } else {
-                        answer = $reportChartDiv.parent().height();
+                        answer = $reportChartDiv.parent().parent().height();
                     }
 
                     return answer;
@@ -3954,7 +3973,7 @@ var reportsViewModel = function () {
 
     self.activeRequestDataDrawn = ko.observable(true);
 
-    self.pointTypes = ko.observableArray($.extend(true, [], dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [])));
+    self.pointTypes = ko.observableArray([]);
 
     self.pointName1 = ko.observable("");
 
@@ -4102,6 +4121,7 @@ var reportsViewModel = function () {
 
             if (!scheduled) {
                 initSocket();
+                self.pointTypes($.extend(true, [], dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [])));
             }
 
             if (columns) {
@@ -4423,19 +4443,19 @@ var reportsViewModel = function () {
     };
 
     self.focusChartView = function (element) {
-        self.selectViewReportTabSubTab("chartData");
+        // self.selectViewReportTabSubTab("chartData");
         $reportChartDiv.html("");
         $reportChartDiv.parent().css("overflow", "");
-        $viewReportNav.find("chartData a").addClass("active");
-        $viewReportNav.find("gridData a").removeClass("active");
+        // $viewReportNav.find("chartData a").addClass("active");
+        // $viewReportNav.find("gridData a").removeClass("active");
         renderChart(null, scheduled);
     };
 
     self.focusGridView = function (element) {
-        self.selectViewReportTabSubTab("gridData");
-        $viewReportNav.find("gridData a").addClass("active");
-        $viewReportNav.find("chartData a").removeClass("active");
-        adjustViewReportTabHeightWidth();
+        // self.selectViewReportTabSubTab("gridData");
+        // $viewReportNav.find("gridData a").addClass("active");
+        // $viewReportNav.find("chartData a").removeClass("active");
+        //adjustViewReportTabHeightWidth();
     };
 
     self.clearColumnPoint = function (indexOfColumn) {
@@ -4750,8 +4770,8 @@ var reportsViewModel = function () {
     };
 
     self.selectViewReportTabSubTab = function (subTabName) {
-        $tabViewReport.find("ul.tabs").find("li a.active").removeClass("active");
-        $tabViewReport.find("ul.tabs").find("li." + subTabName + " a").addClass("active");
+        $tabViewReport.find("ul.viewReportNav").find("li .active").removeClass("active");
+        $tabViewReport.find("ul.viewReportNav").find("li." + subTabName).addClass("active");
         $tabViewReport.find(".tab-content > .active").removeClass("active");
         $tabViewReport.find("#" + subTabName).addClass("active");
     };

@@ -3,19 +3,19 @@ html.direports
     head
         title #{title}
         meta(charset="utf-8")
-        //link(type='text/css', rel='stylesheet', href='/css/lib/bootstrap-3.3.6/bootstrap.css')
-        //link(type='text/css', rel='stylesheet', href="/css/lib/bootstrap-datepicker.css")
-        //link(type='text/css', rel='stylesheet', href="/css/lib/jquery-clockpicker.min.css")
-        link(type='text/css', rel='stylesheet', href='/css/lib/materialize.min.css')
-        //link(type='text/css', rel='stylesheet', href="/css/lib/font-awesome-4.3.0/css/font-awesome.min.css")
-        link(type='text/css', rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.material.min.css')
-        //link(type='text/css', rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.bootstrap.min.css')
-        link(type='text/css', rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/ColReorder/css/colReorder.foundation.min.css')
-        link(type='text/css', rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/Buttons/css/buttons.foundation.min.css')
-        //link(type='text/css', rel='stylesheet', href='/css/lib/jquery-ui.min.css')
-        //link(type='text/css', rel='stylesheet', href='/css/lib/daterangepicker.css')
-        link(type='text/css', rel='stylesheet', href='/css/reports/reporting.css')
-        link(type='text/css', rel='stylesheet', href='https://fonts.googleapis.com/icon?family=Material+Icons')
+        //link(rel='stylesheet', href='/css/lib/bootstrap-3.3.6/bootstrap.css')
+        //link(rel='stylesheet', href="/css/lib/bootstrap-datepicker.css")
+        //link(rel='stylesheet', href="/css/lib/jquery-clockpicker.min.css")
+        link(rel='stylesheet', href='/css/lib/materialize.min.css')
+        //link(rel='stylesheet', href="/css/lib/font-awesome-4.3.0/css/font-awesome.min.css")
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.material.min.css')
+        //link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.bootstrap.min.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/ColReorder/css/colReorder.foundation.min.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/Buttons/css/buttons.foundation.min.css')
+        link(rel='stylesheet', href='/css/lib/jquery-ui.min.css')
+        //link(rel='stylesheet', href='/css/lib/daterangepicker.css')
+        link(rel='stylesheet', href='/css/reports/reporting.css')
+        link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
         script(type="text/javascript" src="/js/lib/jquery-2.2.4.js")
         script(type="text/javascript" src="/js/lib/jquery-ui.js")
         script(type="text/javascript" src='/js/lib/moment.js')
@@ -51,23 +51,24 @@ html.direports
     #window
         #wrapper(style="display:none")
             #sidebar-wrapper.leftBar
-                ul
-                    li.configurationButton
-                        a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Report settings")
-                            //| Configuration
-                            i.material-icons.center settings
-                    li.viewReportButton
-                        a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Run report")
-                            //| Run Report
-                            i.material-icons.center play_arrow
-                div.preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: displayTabSpinner(), hideDiv: !displayTabSpinner()} ", title="Requesting Report Data")
-                    div.spinner-layer
-                        div.circle-clipper.left
-                            div.circle
-                        div.gap-patch
-                            div.circle
-                        div.circle-clipper
-                            div.circle
+                div
+                    ul
+                        li.configurationButton
+                            a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Report settings")
+                                //| Configuration
+                                i.material-icons.center settings
+                        li.viewReportButton
+                            a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Run report")
+                                //| Run Report
+                                i.material-icons.center play_arrow
+                .preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: displayTabSpinner(), hideDiv: !displayTabSpinner()} ", title="Requesting Report Data")
+                    .spinner-layer
+                        .circle-clipper.left
+                            .circle
+                        .gap-patch
+                            .circle
+                        .circle-clipper
+                            .circle
                 .runReportCheckMark(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
                     i.material-icons.center thumb_up
             #page-content-wrapper.rightPanel
@@ -127,15 +128,14 @@ html.direports
                                         div.input-field.col
                                             input.pointName4.form-control.input-md#pointName4(data-bind="enable: $root.canEdit(), textInput: $root.pointName4", required, type="text")
                                             label(data-bind="updateLabel: $root.pointName4, attr: {for: 'pointName4'}") Name 4
-                                    .form-group.clearfix.direportgroup
+                                    .form-inline.blue-grey-text
                                         div.input-field.col
                                             input.reportTitleInput.form-control.input-md#reportTitleInput(data-bind="enable: $root.canEdit(), textInput: $root.reportDisplayTitle", required, type="text")
                                             label(data-bind="updateLabel: $root.pointName3, attr: {for: 'pointName3'}") Report Title
-                                    .form-group.clearfix
+                                    .form-group.clearfix(style="display: inline-flex")
                                         .numberOfEnteriesPerPage
-                                            h6.col-xs-3.col
-                                                strong.small.pull-right # of entries per Page
-                                            .col-xs-2.entries
+                                            label # of entries per Page
+                                            .col.s1.entries
                                                 .dropdown.availableEntries(data-bind="css: {disabled: !$root.canEdit()}")
                                                     a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="enteriesDropdown")
                                                         span(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
@@ -150,10 +150,9 @@ html.direports
                                                         // /ko
                                                     // /ko
                                         // ko if: (chartable())
-                                        .numberOfEnteriesPerPage
-                                            h6.col-xs-3.col
-                                                strong.small.pull-right Chart Type
-                                            .col-xs-2.chartTypes
+                                        .chartTypeSelection
+                                            label Chart Type
+                                            .col.s1.chartTypes
                                                 .dropdown.availableChartTypes(data-bind="css: {disabled: !$root.canEdit()}")
                                                     a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="chartTypesDropdown")
                                                         span(data-bind="text: selectedChartType()")
@@ -184,13 +183,12 @@ html.direports
                                                             .columnText Calculate
                                                             .globalCalculate.hideDiv
                                                                 .dropdown.availableCalculations.open(data-bind="css: {disabled: !$root.canEdit()}")
-                                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-                                                                        span.text Calcs
+                                                                    a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="globalCalculationsDropdown") Calcs
                                                                         // ko if: ($root.listOfCalculations().length > 1)
                                                                         span.caret.lm10px
                                                                         // /ko
                                                                     // ko if: ($root.listOfCalculations().length > 1)
-                                                                    ul.calculations.dropdown-menu(multiple=true, data-bind="attr: { id: 'globalCalculationsDropdown' }")
+                                                                    ul.calculations.dropdown-content(multiple=true, data-bind="attr: { id: 'globalCalculationsDropdown' }")
                                                                         // ko foreach: $root.listOfCalculations
                                                                         li
                                                                             input.medium.filled-in(data-bind="click: function () { return $root.globalCalculationClick($element, $data)}, attr: { id: 'globalCalc_' + $index()}", type="checkbox")
@@ -223,9 +221,9 @@ html.direports
                                                         // ko if: ($parent.reportType !== 'Property')
                                                         // ko if: ($root.canEdit())
                                                         a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.clearColumnPoint($index()) }, tooltip: { title: 'Clear' }")
-                                                            i.material-icons.tiny.center.blue-grey-text delete
+                                                            i.material-icons.prefix.center.blue-grey-text delete
                                                         a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.selectPointForColumn($data, $index) }, tooltip: { title: 'Edit' }")
-                                                            i.material-icons.tiny.center.blue-grey-text edit
+                                                            i.material-icons.prefix.center.blue-grey-text edit
                                                         // /ko
                                                         // ko if: (!!$data.softDeleted)
                                                         span [Deleted]&nbsp;
@@ -256,13 +254,12 @@ html.direports
                                                         // ko if: ($data.canCalculate)
                                                         .dropdown.availableCalculations(data-bind="css: {disabled: !$root.canEdit()}")
                                                             //click: $root.toggleCalcsDropdown,
-                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-                                                                span.text Calcs
+                                                            a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="css: {disabled: !$root.canEdit()}, attr: { 'data-activates': 'calculationsDropdown'+ $index() }") Calcs
                                                                 // ko if: ($parent.listOfCalculations().length > 1)
                                                                 span.caret.lm10px
                                                                 // /ko
                                                             // ko if: ($parent.listOfCalculations().length > 1)
-                                                            ul.calculations.dropdown-menu(multiple=true, data-bind="attr: { id: 'calculationsDropdown'+ $index() }")
+                                                            ul.calculations.dropdown-content(multiple=true, data-bind="attr: { id: 'calculationsDropdown'+ $index() }")
                                                                 // ko foreach: $parent.listOfCalculations
                                                                 li
                                                                     input.medium.filled-in(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}, attr: { id: 'calc_' + $parentContext.$index() + '_' + $index()}", type="checkbox")
@@ -297,14 +294,14 @@ html.direports
                                                         // /ko
                                                     td.yaxisChartGroup
                                                         // ko if: ($root.canEdit() && $data.canCalculate)
-                                                        .dropdown.availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                                                        .availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                                                            a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="materializeDropdown, css: { disabled: !$root.canEdit() }, attr: { 'data-activates': 'yaxisGroups'+ $index() }")
                                                                 span.text(data-bind="text: yaxisGroup")
                                                                 // ko if: ($root.yaxisGroups.length > 1)
                                                                 span.caret.lm10px
                                                                 // /ko
                                                             // ko if: ($root.yaxisGroups.length > 1)
-                                                            ul.dropdown-menu(data-bind="attr: { id: 'yaxisGroups'+ $index() }")
+                                                            ul.dropdown-content(data-bind="attr: { 'id': 'yaxisGroups'+ $index() }")
                                                                 // ko foreach: $root.yaxisGroups
                                                                 li
                                                                     a(data-bind="click: function(){ $root.selectYaxisGroup($element, $parentContext.$index(), $data) }, text: $data")
@@ -367,7 +364,7 @@ html.direports
                                                         // ko if: $index() > 0
                                                         .deleteColumnLink
                                                             a.btn-mini.tiny.waves-effect.waves-light.removeColumn(data-bind="click: function() { $root.deleteReportColumn($index()) }")
-                                                                i.material-icons.center.blue-grey-text delete
+                                                                i.material-icons.center delete
                                                         // /ko
                                                         .blankspot
                                                             | &nbsp;
@@ -536,24 +533,23 @@ html.direports
                                     // /ko
                                     a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.runReportButton(data-bind="enabled: reportResultViewed()", data-position="top" data-delay="500" data-tooltip="Run report")
                                         //| Run
-                                        i.material-icons.tiny.center play_arrow
+                                        i.material-icons.center play_arrow
                                     .screenMessages
                                         .row.well-sm
                                             .errorMessage.alert-danger
                                             .successMessage.alert-success
                     .tabViewReport.well.tab-pane.workingPane
                         // ko if: (reportType !== 'Property')
-                        ul.viewReportNav
-                            // ko if: (chartable())
-                            li.gridData.active
-                                a.btn.waves-effect.waves-light.active.blue-grey.tooltipped.toggleTab(data-bind="click: function () { $root.focusGridView($element) }", href="#gridData", data-toggle="tab", data-position="bottom" data-delay="500" data-tooltip="Grid view")
-                                    //| Grid View
-                                    i.material-icons.center view_list
-                            li.reportChart
-                                a.btn.waves-effect.waves-light.blue-grey.tooltipped.toggleTab(data-bind="click: function () { $root.focusChartView($element) }", href="#chartData", data-toggle="tab", data-position="bottom" data-delay="500" data-tooltip="Chart view")
-                                    //| Chart View
-                                    i.material-icons.center insert_chart
-                            // /ko
+                        .row
+                            ul.tabs.viewReportNav
+                                // ko if: (chartable())
+                                li.tab.col.s1.gridData(role="presentation")
+                                    a.btn.waves-effect.waves-light.blue-grey.active(data-bind="click: function () { $root.focusGridView($element) }", href="#gridData")
+                                        i.material-icons.center view_list
+                                li.tab.col.s1.reportChart(role="presentation")
+                                    a.btn.waves-effect.waves-light.blue-grey(data-bind="click: function () { $root.focusChartView($element) }", href="#chartData")
+                                        i.material-icons.center insert_chart
+                                // /ko
                         // /ko
                         div.tab-content
                             div#gridData.active.tab-pane
