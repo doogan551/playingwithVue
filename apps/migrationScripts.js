@@ -1246,7 +1246,7 @@ var scripts = {
             query: {
                 'Point Type.Value': 'Device'
             }
-        }, function processSequence(err, doc, cb) {
+        }, function (err, doc, cb) {
             doc['Downlink Protocol'] = Config.Templates.getTemplate(doc['Point Type'].Value)['Downlink Protocol'];
             if (doc['Downlink Network'].Value !== 0) {
                 doc['Downlink Protocol'].Value = 'IP'
@@ -1259,7 +1259,7 @@ var scripts = {
                     _id: doc._id
                 },
                 updateObj: doc
-            }, function updatedSequenceHandler(err) {
+            }, function (err) {
                 if (err) {
                     logger.debug('Update err:', err);
                 }
@@ -1267,7 +1267,7 @@ var scripts = {
                 cb(null);
             });
 
-        }, function finishUpdatingSequences(err) {
+        }, function (err) {
             logger.info('Finished with addDownlinkProtocol');
             callback(null, {
                 fn: 'addDownlinkProtocol',
@@ -1288,7 +1288,9 @@ var scripts = {
         utility.update({
             collection: 'points',
             query: {
-                'Point Type.Value': $in: ['Analog Input', 'Analog Output', 'Accumulator', 'Binary Input', 'Binary Output', 'MultiState Value']
+                'Point Type.Value': {
+                    $in: ['Analog Input', 'Analog Output', 'Accumulator', 'Binary Input', 'Binary Output', 'MultiState Value']
+                }
             },
             updateObj: {
                 $set: {
@@ -1300,6 +1302,9 @@ var scripts = {
                         "eValue": 3
                     }
                 }
+            },
+            options: {
+                multi: true
             }
         }, function(err, results) {
             utility.update({
@@ -1327,6 +1332,9 @@ var scripts = {
                             "eValue": 2
                         }
                     }
+                },
+                options: {
+                    multi: true
                 }
             }, function(err, results) {
                 utility.update({
@@ -1337,12 +1345,18 @@ var scripts = {
                     updateObj: {
                         $unset: {
                             'Modbus Order': 1
+                        },
+                        $set:{
+                            'Modbus Unit Id': Config.Templates.getTemplate("Remote Unit")["Modbus Unit Id"]
                         }
+                    },
+                    options: {
+                        multi: true
                     }
                 }, function(err, results) {
-                    logger.info('Finished with addDownlinkProtocol');
+                    logger.info('Finished with switchModbusOrder');
                     callback(null, {
-                        fn: 'addDownlinkProtocol',
+                        fn: 'switchModbusOrder',
                         errors: err
                     });
                 });

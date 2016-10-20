@@ -389,17 +389,12 @@ var ActivityLogsManager = function (conf) {
         };
 
     self.togglePop = function () {
-        var options = {
-            width: 1250,
-            height: 750
-        };
-
         // If we're a pop-out; pop back in
         if (window.top.location.href === window.location.href) {
             dtiUtility.openWindow(window.location.href, 'Activities', 'activitylog', 'mainWindow', windowUpi);
         } else {
             // Open the window
-            dtiUtility.openWindow(window.location.href, 'Activities', 'activitylog', '', windowUpi, options);
+            dtiUtility.openWindow(window.location.href, 'Activities', 'activitylog', '', windowUpi);
         }
     };
     self.refreshActivityLogsData = function () {
@@ -415,15 +410,11 @@ var ActivityLogsManager = function (conf) {
         var pointTypesUtility = workspaceManager.config.Utility.pointTypes,
             pointType,
             endPoint,
-            originalElementText,
-            options = {
-                width: 1250,
-                height: 750
-            };
+            originalElementText;
         pointType = pointTypesUtility.getPointTypeNameFromEnum(theData.pointType);
         endPoint = pointTypesUtility.getUIEndpoint(pointType, theData.upi);
         if (endPoint) {
-            dtiUtility.openWindow(endPoint.review.url, theData.Name, pointType, endPoint.review.target, theData.upi, options);
+            dtiUtility.openWindow(endPoint.review.url, theData.Name, pointType, endPoint.review.target, theData.upi);
         } else {
             originalElementText = element.text;
             $(element).stop().fadeOut("4000", function () {

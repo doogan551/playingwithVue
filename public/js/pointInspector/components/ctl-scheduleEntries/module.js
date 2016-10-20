@@ -778,10 +778,7 @@ define(['knockout', 'text!./view.html', 'lodash'], function(ko, view, _) {
             });
         }
         item.openPointReview = function () {
-            dtiUtility.openWindow(item.url(), item.scheduleName(), self.pointType, '', indiv._parentUpi(), {
-                width: 1250,
-                height: 750
-            });
+            dtiUtility.openWindow(item.url(), item.scheduleName(), self.pointType, '', indiv._parentUpi());
         };
 
         item.refPoint = null;

@@ -4346,16 +4346,12 @@ var reportsViewModel = function () {
     };
 
     self.showPointReview = function (data) {
-        var upi = parseInt(data.upi, 10),
-            options = {
-                width: 1250,
-                height: 750
-            };
+        var upi = parseInt(data.upi, 10);
         if (upi > 0) {
             if (data.pointType === "Display") {
-                dtiUtility.openWindow("/displays/view/" + upi, "Display", "Display", "newwindow", upi, options);
+                dtiUtility.openWindow("/displays/view/" + upi, "Display", "Display", "newwindow", upi);
             } else {
-                dtiUtility.openWindow("/pointinspector/" + upi, "Point", "Point", "newwindow", upi, options);
+                dtiUtility.openWindow("/pointinspector/" + upi, "Point", "Point", "newwindow", upi);
             }
         }
     };

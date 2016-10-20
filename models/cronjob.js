@@ -7,13 +7,11 @@ var CronJob = require('cron').CronJob;
 // 01 * * * * *
 // will run every minute, 1 second past the minute
 
-var Cron = function(time, fx) {
+var Cron = function(time, fx, onComplete) {
   this.job = new CronJob({
     cronTime: time,
     onTick: fx,
-    onComplete: function(){
-      console.log(time, 'job completed');
-    },
+    onComplete: onComplete,
     start: true,
     runOnInit: false
   });

@@ -770,10 +770,7 @@ var dorsett = (function() {
         viewPointAccess: function(type) {
             var groupid = dorsett.editData._id;
 
-            dtiUtility.openWindow([_pointSelector, '/security/', groupid].join(''), 'Group Permissions', 'groupPermissions', 'groupPermissions', 'groupPermissions', {
-                width: 960,
-                height: 600
-            });
+            dtiUtility.openWindow([_pointSelector, '/security/', groupid].join(''), 'Group Permissions', 'groupPermissions', 'groupPermissions', 'groupPermissions');
             //            var $permissionsDialog = $('.permissionsDialog'),
             //                //open socket connection
             //                socket = null,

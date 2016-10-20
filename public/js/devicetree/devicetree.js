@@ -255,10 +255,7 @@ function TreeViewModel() {
 
     self.openDevice = function(t, e) {
         var endPoint = workspace.config.Utility.pointTypes.getUIEndpoint("Device", t.upi());
-        dtiUtility.openWindow(endPoint.review.url, t.text(), 'Device', '', t.upi(), {
-            width: 1250,
-            height: 750
-        });
+        dtiUtility.openWindow(endPoint.review.url, t.text(), 'Device', '', t.upi());
     };
 
     self.searchNext = function() {

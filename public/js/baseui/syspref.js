@@ -2181,12 +2181,8 @@ var weatherViewModel = function() {
             upi = point._id,
             pointType = point['Point Type'].Value,
             pointTypesUtility = workspaceManager && workspaceManager.config.Utility.pointTypes,
-            endPoint = pointTypesUtility.getUIEndpoint(pointType, upi),
-            options = {
-                width: 850,
-                height: 600
-            };
-        dtiUtility.openWindow(endPoint.review.url, point.Name, pointType, endPoint.review.target, upi, options);
+            endPoint = pointTypesUtility.getUIEndpoint(pointType, upi);
+        dtiUtility.openWindow(endPoint.review.url, point.Name, pointType, endPoint.review.target, upi);
     };
 };
 

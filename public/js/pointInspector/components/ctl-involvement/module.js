@@ -121,31 +121,20 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     };
     ViewModel.prototype.openPointReview = function(data, e) {
         var workspace = window.top.workspaceManager,
-            endPoint, win, width, height, pointType,
+            endPoint, pointType,
             $e = $(e.currentTarget),
             col = $e.data('col');
 
         if (!!col) {
             pointType = col;
             data = data.Device;
-            width = 1000;
-            height = 750;
         } else if (data['Point Type'] !== 'Schedule Entry' && data['Point Type'] !== 'Schedule') {
             pointType = data['Point Type'];
-            width = 1000;
-            height = 750;
         } else {
             pointType = 'Schedule';
-            width = 1000;
-            height = 750;
         }
         endPoint = workspace.config.Utility.pointTypes.getUIEndpoint(pointType, data._id);
-        dtiUtility.openWindow(endPoint.review.url, data.Name, pointType, '', data._id,
-            {
-                width: width,
-                height: height
-            }
-        );
+        dtiUtility.openWindow(endPoint.review.url, data.Name, pointType, '', data._id);
     };
 
     ViewModel.prototype.sortTable = function (property, viewModel, e) {

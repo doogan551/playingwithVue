@@ -10315,14 +10315,10 @@ tou.utilityPages.Electricity = function() {
                 var pointTypesUtility = tou.workspaceManager.config.Utility.pointTypes,
                     pointType = data.pointType,
                     endPoint,
-                    upi = parseInt(data.upi, 10),
-                    options = {
-                        width: 850,
-                        height: 600
-                    };
+                    upi = parseInt(data.upi, 10);
                 endPoint = pointTypesUtility.getUIEndpoint(pointType, upi);
                 if (endPoint) {
-                    tou._openWindow(endPoint.review.url, data.meterPointName, pointType, endPoint.review.target, upi, options);
+                    tou._openWindow(endPoint.review.url, data.meterPointName, pointType, endPoint.review.target, upi);
                 } else {
                     //  handle a bad UPI reference
                 }

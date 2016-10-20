@@ -128,10 +128,7 @@ define(['knockout', 'text!./view.html', 'jquery-ui'], function(ko, view) {
         var workspace = ko.contextFor(event.target).$root.utility.workspace,
             displayId = data.Value(),
             endPoint = workspace.config.Utility.pointTypes.getUIEndpoint('Display', displayId);
-        dtiUtility.openWindow(endPoint.review.url, data.PointName(), 'Display', '', displayId, {
-            width: 1000,
-            height: 800
-        });
+        dtiUtility.openWindow(endPoint.review.url, data.PointName(), 'Display', '', displayId);
     };
 
     ViewModel.prototype.showPreview = function(data, event) {
