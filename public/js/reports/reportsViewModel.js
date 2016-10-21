@@ -468,6 +468,7 @@ var reportsViewModel = function () {
         resizeTimer = 400,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
+        currentUser,
         ENUMSTEMPLATESTEMPLATES,
         ENUMSTEMPLATESENUMS,
         setNewPointReference = function (refPointUPI, property) {
@@ -508,16 +509,14 @@ var reportsViewModel = function () {
         },
         userCanEdit = function (data, requestedAccessLevel) {
             var cumulativePermissions = 0,
-                user,
                 groups,
                 isSystemAdmin;
 
-            if (!!window.workspaceManager) {
-                user = window.workspaceManager.user();
-                groups = user.groups.filter(function (item) {
+            if (!!currentUser) {
+                groups = currentUser.groups.filter(function (item) {
                     return !!~data.Security.indexOf(item._id);
                 });
-                isSystemAdmin = user["System Admin"].Value;
+                isSystemAdmin = currentUser["System Admin"].Value;
 
                 if (isSystemAdmin) { return true; }
 
@@ -4106,26 +4105,29 @@ var reportsViewModel = function () {
     self.init = function (externalConfig) {
         var columns,
             reportConfig,
+            setCurrentUser = function (results) {
+                currentUser = results;
+            },
             initComplete = function () {
                 return (!!ENUMSTEMPLATESTEMPLATES && !!ENUMSTEMPLATESENUMS);
             },
             setGlobalEnumsTemplates = function (results) {
                 ENUMSTEMPLATESTEMPLATES = results;
                 if (initComplete()) {
-                    postInit();
+                    postConfigInit();
                 }
             },
             setGlobalEnums = function (results) {
                 ENUMSTEMPLATESENUMS = results;
                 if (initComplete()) {
-                    postInit();
+                    postConfigInit();
                 }
             },
             initGlobals = function () {
                 dtiUtility.getConfig("Enums", null, setGlobalEnums);
                 dtiUtility.getConfig("PointTemplates.Points", null, setGlobalEnumsTemplates);
             },
-            postInit = function () {
+            postConfigInit = function () {
                 if (!!point) {
                     self.canEdit(userCanEdit(point, permissionLevels.WRITE));
                     originalPoint = JSON.parse(JSON.stringify(point));
@@ -4239,15 +4241,20 @@ var reportsViewModel = function () {
                 }
             };
 
-        exportEventSet = false;
-        activeDataRequests = [];
-        getScreenFields();
-        initKnockout();
-        if (!scheduled) {
-            initGlobals();
-        } else {
-            postInit();
-        }
+        dtiUtility.getUser(setCurrentUser);
+
+        window.setTimeout(function () {
+            exportEventSet = false;
+            activeDataRequests = [];
+            getScreenFields();
+            initKnockout();
+            if (!scheduled) {
+                initGlobals();
+            } else {
+                postConfigInit();
+            }
+        }, 600);
+
     };
 
     self.operators = function (op) {
