@@ -70,7 +70,7 @@ var Scheduler = {
                 return email.Value;
               }).join(',');
 
-              /*mailer.sendEmail({
+              mailer.sendEmail({
                 to: emails,
                 fromAccount: 'infoscan',
                 subject: [reportName, ' for ', date].join(''),
@@ -81,7 +81,7 @@ var Scheduler = {
                 }]
               }, function(err, info) {
                 console.log(err && err.code, info);
-              });*/
+              });
               nextUser();
             }, function(err, count) {});
           });
