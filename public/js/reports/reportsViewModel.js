@@ -470,9 +470,15 @@ var reportsViewModel = function () {
         decimalPadding = "0000000000000000000000000000000000000000",
         ENUMSPROPERTIES,
         ENUMSPOINTTYPES,
-        initGlobalLists = function () {
-            ENUMSPROPERTIES = parent.dti.utility.getConfig("Enums.Properties");
-            ENUMSPOINTTYPES = parent.dti.utility.getConfig("Enums.Point Types");
+        setGlobalEnumsProperty = function (results) {
+            ENUMSPROPERTIES = results;
+        },
+        setGlobalPointtypes = function (results) {
+            ENUMSPOINTTYPES = results;
+        },
+        initGlobals = function () {
+            dtiUtility.getConfig("Enums.Properties", null, setGlobalEnumsProperty);
+            dtiUtility.getConfig("Enums.Point Types", null, setGlobalPointtypes);
         },
         setNewPointReference = function (refPointUPI, property) {
             // console.log("- - - - setNewPointReference() called....   refPointUPI = " + refPointUPI + " property = " + property);
@@ -4100,7 +4106,7 @@ var reportsViewModel = function () {
 
         exportEventSet = false;
         activeDataRequests = [];
-        initGlobalLists();
+        initGlobals();
         getScreenFields();
         initKnockout();
 
