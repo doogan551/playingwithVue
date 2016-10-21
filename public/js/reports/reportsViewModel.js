@@ -468,18 +468,8 @@ var reportsViewModel = function () {
         resizeTimer = 400,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
-        ENUMSPROPERTIES,
-        ENUMSPOINTTYPES,
-        setGlobalEnumsProperty = function (results) {
-            ENUMSPROPERTIES = results;
-        },
-        setGlobalPointtypes = function (results) {
-            ENUMSPOINTTYPES = results;
-        },
-        initGlobals = function () {
-            dtiUtility.getConfig("Enums.Properties", null, setGlobalEnumsProperty);
-            dtiUtility.getConfig("Enums.Point Types", null, setGlobalPointtypes);
-        },
+        ENUMSTEMPLATESTEMPLATES,
+        ENUMSTEMPLATESENUMS,
         setNewPointReference = function (refPointUPI, property) {
             // console.log("- - - - setNewPointReference() called....   refPointUPI = " + refPointUPI + " property = " + property);
             var refPoint,
@@ -500,14 +490,14 @@ var reportsViewModel = function () {
             if (!!refPoint) {
                 var pointType = refPoint["Point Type"].Value;
                 tempRef = {};
-                tempRef.PropertyEnum = (!!ENUMSPROPERTIES ? ENUMSPROPERTIES[property].enum : "");
+                tempRef.PropertyEnum = (!!ENUMSTEMPLATESENUMS.Properties ? ENUMSTEMPLATESENUMS.Properties[property].enum : "");
                 tempRef.PropertyName = property;
                 tempRef.Value = refPoint._id;
                 tempRef.AppIndex = ++appIndex;
                 tempRef.isDisplayable = true;
                 tempRef.isReadOnly = false;
                 tempRef.PointName = refPoint.Name;
-                tempRef.PointType = (!!ENUMSPOINTTYPES ? ENUMSPOINTTYPES[pointType].enum : "");
+                tempRef.PointType = (!!ENUMSTEMPLATESENUMS["Point Types"] ? ENUMSTEMPLATESENUMS["Point Types"][pointType].enum : "");
                 point["Point Refs"].push(tempRef);
             } else {
                 if (!!refPointUPI) {
@@ -794,7 +784,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = (!scheduled ? dtiUtility.getConfig("Templates.getTemplate", [column.pointType]) : undefined);
+                        valueOptions = (!scheduled ? ENUMSTEMPLATESTEMPLATES.Points[column.pointType] : undefined);
                         result = (valueOptions === undefined);
                         break;
                 }
@@ -821,7 +811,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = dtiUtility.getConfig("Templates.getTemplate", [column.pointType]);
+                        valueOptions = ENUMSTEMPLATESTEMPLATES.Points[column.pointType];
                         result = (valueOptions !== undefined);
                         break;
                 }
@@ -993,7 +983,7 @@ var reportsViewModel = function () {
                         if (!!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
-                            valueoptions = dtiUtility.getConfig("Templates.getTemplate", [tempObject.pointType]);
+                            valueoptions = ENUMSTEMPLATESTEMPLATES.Points[tempObject.pointType];
                             tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
                         }
                     }
@@ -1060,7 +1050,7 @@ var reportsViewModel = function () {
                         if (!!selectedPoint.Value && !!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
-                            valueoptions = dtiUtility.getConfig("Templates.getTemplate", [tempObject.pointType]);
+                            valueoptions = ENUMSTEMPLATESTEMPLATES.Points[tempObject.pointType];
                             tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
                         }
                     }
@@ -1172,7 +1162,7 @@ var reportsViewModel = function () {
         },
         initializeNewFilter = function (selectedItem, filter) {
             var localFilter = filter,
-                prop = getProperty(selectedItem.name);
+                prop = ENUMSTEMPLATESENUMS.Properties[selectedItem.name];
 
             localFilter.filterName = selectedItem.name;
             localFilter.condition = "$and";
@@ -1201,7 +1191,7 @@ var reportsViewModel = function () {
                     localFilter.evalue = -1;
                     break;
                 case "BitString":
-                    localFilter.bitStringEnumsArray = getBitStringEnumsArray(dtiUtility.getConfig("Enums." + localFilter.filterName + " Bits"));
+                    localFilter.bitStringEnumsArray = getBitStringEnumsArray(ENUMSTEMPLATESENUMS["Enums." + localFilter.filterName + " Bits"]);
                     break;
             }
 
@@ -1493,7 +1483,7 @@ var reportsViewModel = function () {
                         case "Property":
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
                             if (currentColumn.valueType === "BitString") {
-                                currentColumn.bitstringEnums = dtiUtility.getConfig("Enums." + currentColumn.colName + " Bits");
+                                currentColumn.bitstringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[currentColumn.colName + " Bits"] : "");
                             }
                             currentColumn.dataColumnName = currentColumn.colName;
                             break;
@@ -1526,17 +1516,23 @@ var reportsViewModel = function () {
         getValueList = function (property, pointType) {
             var result = [],
                 i,
-                options = dtiUtility.getConfig("Utility.pointTypes.getEnums", [property, pointType]),
-                len = (options && options.length ? options.length : 0);
+                len,
+                setOptions = function (options) {
+                    len = (options && options.length ? options.length : 0);
 
-            for (i = 0; i < len; i++) {
-                result.push({
-                    value: options[i].name,
-                    evalue: options[i].value
-                });
-            }
+                    for (i = 0; i < len; i++) {
+                        result.push({
+                            value: options[i].name,
+                            evalue: options[i].value
+                        });
+                    }
+                };
 
-            return result;
+            dtiUtility.getConfig("Utility.pointTypes.getEnums", [property, pointType], setOptions);
+
+            window.setTimeout(function () {
+                return result;
+            }, 200);
         },
         getTotalizerValueList = function (pointType) {
             var result = [];
@@ -1557,19 +1553,17 @@ var reportsViewModel = function () {
 
             return result;
         },
-        getProperty = function (key) {
-            return dtiUtility.getConfig("Enums.Properties." + key);
-        },
         collectEnumProperties = function () {
             getPointPropertiesForFilters();
             getPointPropertiesForColumns();
         },
         getPointPropertiesForFilters = function () {
-            var props = dtiUtility.getConfig("Enums.Properties"),
+            var props,
                 listOfKeysToSkip = [],
                 prop,
                 key;
 
+            props = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS.Properties : {});
             for (key in props) {
                 if (props.hasOwnProperty(key)) {
                     if (props[key].reportEnable === true && $.inArray(key, listOfKeysToSkip) === -1) {
@@ -1589,6 +1583,15 @@ var reportsViewModel = function () {
                 return ($.inArray(enumProp.name, listOfKeysToRemove) === -1);
             });
             self.listOfColumnPropertiesLength = columnsPropertyFields.length;
+        },
+        getKeyBasedOnEnum = function (obj, enumValue) {
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    if (obj[key].enum === parseInt(enumValue, 10)) {
+                        return key;
+                    }
+                }
+            }
         },
         getKeyBasedOnValue = function (obj, value) {
             for (var key in obj) {
@@ -1669,7 +1672,7 @@ var reportsViewModel = function () {
                         if (filter.valueType === "BitString") {
                             var total = 0,
                                 key,
-                                bitStringEnums = dtiUtility.getConfig("Enums." + filter.filterName + " Bits");
+                                bitStringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[filter.filterName + " Bits"] : {});
 
                             for (key in bitStringEnums) {
                                 if (bitStringEnums.hasOwnProperty(key)) {
@@ -2935,6 +2938,14 @@ var reportsViewModel = function () {
                 i,
                 columnsArray = $.extend(true, [], self.listOfColumns()),
                 setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
+
+                    if (data[columnConfig.colName] && data[columnConfig.colName].PointInst) {
+                        var pointType = getKeyBasedOnEnum(ENUMSTEMPLATESENUMS["Point Types"], data[columnConfig.colName].PointType);
+                        $(tdField).addClass("pointInstance");
+                        $(tdField).attr("upi", data[columnConfig.colName].PointInst);
+                        $(tdField).attr("pointType", pointType);
+                    }
+
                     switch (self.reportType) {
                         case "History":
                             if (columnIndex === 0 && columnConfig.dataColumnName === "Date") {
@@ -2965,14 +2976,6 @@ var reportsViewModel = function () {
                         default:
                             console.log(" - - - DEFAULT  setTdAttribs()");
                             break;
-                    }
-
-                    if (data[columnConfig.colName] && data[columnConfig.colName].PointInst) {
-                        var pointType;
-                        pointType = Config.Utility.pointTypes.getPointTypeNameFromEnum(data[columnConfig.colName].PointType);
-                        $(tdField).addClass("pointInstance");
-                        $(tdField).attr("upi", data[columnConfig.colName].PointInst);
-                        $(tdField).attr("pointType", pointType);
                     }
                 },
                 setColumnClasses = function (columnConfig, columnIndex) {
@@ -4102,125 +4105,148 @@ var reportsViewModel = function () {
 
     self.init = function (externalConfig) {
         var columns,
-            reportConfig;
+            reportConfig,
+            initComplete = function () {
+                return (!!ENUMSTEMPLATESTEMPLATES && !!ENUMSTEMPLATESENUMS);
+            },
+            setGlobalEnumsTemplates = function (results) {
+                ENUMSTEMPLATESTEMPLATES = results;
+                if (initComplete()) {
+                    postInit();
+                }
+            },
+            setGlobalEnums = function (results) {
+                ENUMSTEMPLATESENUMS = results;
+                if (initComplete()) {
+                    postInit();
+                }
+            },
+            initGlobals = function () {
+                dtiUtility.getConfig("Enums", null, setGlobalEnums);
+                dtiUtility.getConfig("PointTemplates.Points", null, setGlobalEnumsTemplates);
+            },
+            postInit = function () {
+                if (!!point) {
+                    self.canEdit(userCanEdit(point, permissionLevels.WRITE));
+                    originalPoint = JSON.parse(JSON.stringify(point));
+                    windowUpi = point._id; // required or pop-in/pop-out will not work
+                    if (point["Report Config"] === undefined) {
+                        point["Report Config"] = {};
+                    }
+                    self.reportType = point["Report Type"].Value;
+                    reportConfig = (point["Report Config"] ? point["Report Config"] : undefined);
+                    columns = (reportConfig ? reportConfig.columns : undefined);
+                    self.pointName1(point.name1);
+                    self.pointName2(point.name2);
+                    self.pointName3(point.name3);
+                    self.pointName4(point.name4);
+
+                    if (!scheduled) {
+                        initSocket();
+                        dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], self.pointTypes);
+                    }
+
+                    if (columns) {
+                        self.reportDisplayTitle((!!point["Report Config"].reportTitle ? point["Report Config"].reportTitle : point.Name.replace(/_/g, " ")));
+                        self.listOfColumns(initColumns(reportConfig.columns));
+                        self.listOfFilters(initFilters(reportConfig.filters));
+                        if (!!reportConfig.pointFilter) {
+                            self.name1Filter(reportConfig.pointFilter.name1);
+                            self.name2Filter(reportConfig.pointFilter.name2);
+                            self.name3Filter(reportConfig.pointFilter.name3);
+                            self.name4Filter(reportConfig.pointFilter.name4);
+                            self.selectedPointTypesFilter(reportConfig.pointFilter.selectedPointTypes);
+                        }
+                        self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
+                        self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
+                        switch (self.reportType) {
+                            case "History":
+                            case "Totalizer":
+                                if (!!point["Report Config"].duration.duration) { // have to set each manually because of computed relationship
+                                    configureSelectedDuration(point["Report Config"].duration);
+                                }
+                                self.interval(point["Report Config"].interval.text);
+                                self.intervalValue(point["Report Config"].interval.value);
+                                break;
+                            case "Property":
+                                collectEnumProperties();
+                                break;
+                            default:
+                                console.log(" - - - DEFAULT  init()");
+                                break;
+                        }
+                    } else { // Initial config
+                        self.reportDisplayTitle(point.Name.replace(/_/g, " "));
+                        point["Point Refs"] = [];  // new report, clear out initial Report create data
+                        point["Report Config"].columns = [];
+                        point["Report Config"].filters = [];
+                        point["Report Config"].pointFilter = {
+                            "name1" : self.name1Filter(),
+                            "name2" : self.name2Filter(),
+                            "name3" : self.name3Filter(),
+                            "name4" : self.name4Filter(),
+                            "selectedPointTypes" : self.selectedPointTypesFilter()
+                        };
+                        switch (self.reportType) {
+                            case "History":
+                            case "Totalizer":
+                                point["Report Config"].returnLimit = 2000;
+                                self.listOfColumns.push(getNewColumnTemplate());
+                                self.listOfColumns()[0].colName = "Date";
+                                self.listOfColumns()[0].colDisplayName = "Date";
+                                self.listOfColumns()[0].dataColumnName = "Date";
+                                self.listOfColumns()[0].valueType = "DateTime";
+                                self.listOfColumns()[0].AppIndex = -1;
+                                configureSelectedDuration();
+                                break;
+                            case "Property":
+                                // openPointSelectorFilterMode($filterByPoint);
+                                collectEnumProperties();
+                                point["Report Config"].returnLimit = 4000;
+                                self.listOfColumns.push(getNewColumnTemplate());
+                                self.listOfColumns()[0].colName = "Name";
+                                self.listOfColumns()[0].colDisplayName = "Name";
+                                self.listOfColumns()[0].dataColumnName = "Name";
+                                self.listOfColumns()[0].valueType = "String";
+                                self.listOfColumns()[0].AppIndex = -1;
+                                break;
+                            default:
+                                console.log(" - - - DEFAULT  init() null columns");
+                                break;
+                        }
+                    }
+
+                    $direports.find("#wrapper").show();
+                    tabSwitch(1);
+
+                    updateListOfFilters(self.listOfFilters());
+                    setTimeout(function () {
+                        $reportTitleInput.focus();
+                    }, 1500);
+                    setReportEvents();
+                    adjustConfigTabActivePaneHeight();
+                    self.filterPropertiesSearchFilter(""); // computed props jolt
+                    self.columnPropertiesSearchFilter(""); // computed props jolt
+
+                    if (scheduled) {
+                        self.requestReportData();
+                    } else if (!!externalConfig) {
+                        if (self.reportType === "History" || self.reportType === "Totalizer") {
+                            configureSelectedDuration(externalConfig);
+                        }
+                        self.requestReportData();
+                    }
+                }
+            };
 
         exportEventSet = false;
         activeDataRequests = [];
-        initGlobals();
         getScreenFields();
         initKnockout();
-
-        if (!!point) {
-            self.canEdit(userCanEdit(point, permissionLevels.WRITE));
-            originalPoint = JSON.parse(JSON.stringify(point));
-            windowUpi = point._id; // required or pop-in/pop-out will not work
-            if (point["Report Config"] === undefined) {
-                point["Report Config"] = {};
-            }
-            self.reportType = point["Report Type"].Value;
-            reportConfig = (point["Report Config"] ? point["Report Config"] : undefined);
-            columns = (reportConfig ? reportConfig.columns : undefined);
-            self.pointName1(point.name1);
-            self.pointName2(point.name2);
-            self.pointName3(point.name3);
-            self.pointName4(point.name4);
-
-            if (!scheduled) {
-                initSocket();
-                self.pointTypes($.extend(true, [], dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [])));
-            }
-
-            if (columns) {
-                self.reportDisplayTitle((!!point["Report Config"].reportTitle ? point["Report Config"].reportTitle : point.Name.replace(/_/g, " ")));
-                self.listOfColumns(initColumns(reportConfig.columns));
-                self.listOfFilters(initFilters(reportConfig.filters));
-                if (!!reportConfig.pointFilter) {
-                    self.name1Filter(reportConfig.pointFilter.name1);
-                    self.name2Filter(reportConfig.pointFilter.name2);
-                    self.name3Filter(reportConfig.pointFilter.name3);
-                    self.name4Filter(reportConfig.pointFilter.name4);
-                    self.selectedPointTypesFilter(reportConfig.pointFilter.selectedPointTypes);
-                }
-                self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
-                self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
-                switch (self.reportType) {
-                    case "History":
-                    case "Totalizer":
-                        if (!!point["Report Config"].duration.duration) { // have to set each manually because of computed relationship
-                            configureSelectedDuration(point["Report Config"].duration);
-                        }
-                        self.interval(point["Report Config"].interval.text);
-                        self.intervalValue(point["Report Config"].interval.value);
-                        break;
-                    case "Property":
-                        collectEnumProperties();
-                        break;
-                    default:
-                        console.log(" - - - DEFAULT  init()");
-                        break;
-                }
-            } else { // Initial config
-                self.reportDisplayTitle(point.Name.replace(/_/g, " "));
-                point["Point Refs"] = [];  // new report, clear out initial Report create data
-                point["Report Config"].columns = [];
-                point["Report Config"].filters = [];
-                point["Report Config"].pointFilter = {
-                    "name1" : self.name1Filter(),
-                    "name2" : self.name2Filter(),
-                    "name3" : self.name3Filter(),
-                    "name4" : self.name4Filter(),
-                    "selectedPointTypes" : self.selectedPointTypesFilter()
-                };
-                switch (self.reportType) {
-                    case "History":
-                    case "Totalizer":
-                        point["Report Config"].returnLimit = 2000;
-                        self.listOfColumns.push(getNewColumnTemplate());
-                        self.listOfColumns()[0].colName = "Date";
-                        self.listOfColumns()[0].colDisplayName = "Date";
-                        self.listOfColumns()[0].dataColumnName = "Date";
-                        self.listOfColumns()[0].valueType = "DateTime";
-                        self.listOfColumns()[0].AppIndex = -1;
-                        configureSelectedDuration();
-                        break;
-                    case "Property":
-                        // openPointSelectorFilterMode($filterByPoint);
-                        collectEnumProperties();
-                        point["Report Config"].returnLimit = 4000;
-                        self.listOfColumns.push(getNewColumnTemplate());
-                        self.listOfColumns()[0].colName = "Name";
-                        self.listOfColumns()[0].colDisplayName = "Name";
-                        self.listOfColumns()[0].dataColumnName = "Name";
-                        self.listOfColumns()[0].valueType = "String";
-                        self.listOfColumns()[0].AppIndex = -1;
-                        break;
-                    default:
-                        console.log(" - - - DEFAULT  init() null columns");
-                        break;
-                }
-            }
-
-            $direports.find("#wrapper").show();
-            tabSwitch(1);
-
-            updateListOfFilters(self.listOfFilters());
-            setTimeout(function () {
-                $reportTitleInput.focus();
-            }, 1500);
-            setReportEvents();
-            adjustConfigTabActivePaneHeight();
-            // myWindowID = window.frameElement.id;
-            self.filterPropertiesSearchFilter(""); // computed props jolt
-            self.columnPropertiesSearchFilter(""); // computed props jolt
-
-            if (scheduled) {
-                self.requestReportData();
-            } else if (!!externalConfig) {
-                if (self.reportType === "History" || self.reportType === "Totalizer") {
-                    configureSelectedDuration(externalConfig);
-                }
-                self.requestReportData();
-            }
+        if (!scheduled) {
+            initGlobals();
+        } else {
+            postInit();
         }
     };
 
@@ -4659,7 +4685,7 @@ var reportsViewModel = function () {
     self.selectPropertyColumn = function (element, indexOfColumn, selectedItem) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn],
-            prop = getProperty(selectedItem.name);
+            prop = ENUMSTEMPLATESENUMS.Properties[selectedItem.name];
         column.colName = selectedItem.name;
         column.colDisplayName = selectedItem.name;
         column.dataColumnName = column.colName;
@@ -4904,20 +4930,6 @@ var reportsViewModel = function () {
 
         return answer;
     }, self);
-
-    // self.allTypesSelected = ko.computed(function () {
-    //     var i,
-    //         answer = true;
-    //
-    //     for (i = 0; i < self.pointTypes().length; i++) {
-    //         if (self.pointTypes()[i].selected === false) {
-    //             answer = false;
-    //             break;
-    //         }
-    //     }
-    //
-    //     return answer;
-    // }, self);
 };
 
 function applyBindings(extConfig) {
@@ -4928,7 +4940,7 @@ function applyBindings(extConfig) {
             reportsVM = new reportsViewModel();
             reportsVM.init(extConfig);
             ko.applyBindings(reportsVM);
-        }, 2);
+        }, 100);
     }
 }
 

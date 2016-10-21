@@ -427,7 +427,9 @@ var dti = {
             });
         },
         fadeIn: function ($el, cb) {
-            $el[0].style.willChange = 'opacity, display';
+            if (!!$el[0]) {
+                $el[0].style.willChange = 'opacity, display';
+            }
             $el.css('display', 'block');
             dti.animations._fade($el, 1, cb);
         },
