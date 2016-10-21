@@ -3883,17 +3883,28 @@ var dti = {
 
                         ret = dti.utility.getConfig(path, parameters);
 
-                        setTimeout(function doSendGetConfig () {
-                            dti.messaging.sendMessage({
-                                messageID: messageID,
-                                key: winId,
-                                value: {
-                                    _getCfgID: id,
-                                    message: 'getConfig',
-                                    value: ret
-                                }     
-                            });
-                        }, 1000);
+                        dti.messaging.sendMessage({
+                            messageID: messageID,
+                            key: winId,
+                            value: {
+                                _getCfgID: id,
+                                message: 'getConfig',
+                                value: ret
+                            }     
+                        });
+                    },
+                    getUser: function () {
+                        var winId = config._windowId,
+                            user = dti.bindings.user();
+
+                        dti.messaging.sendMessage({
+                            messageID: messageID,
+                            key: winId,
+                            value: {
+                                user: user,
+                                message: 'getUser'
+                            }
+                        });
                     },
                     pointSelected: function () {
 
