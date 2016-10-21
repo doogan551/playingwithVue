@@ -70,6 +70,11 @@ var dtiUtility =  {
 
                     delete dtiUtility.getConfigCallbacks[newValue._getCfgID];
                 },
+                getUser: function () {
+                    if (dtiUtility._getUserCb) {
+                        dtiUtility._getUserCb(newValue.user);
+                    }
+                },
                 pointSelected: function () {
                     if (dtiUtility._pointSelectCb) {
                         dtiUtility._pointSelectCb(newValue);
@@ -154,7 +159,7 @@ var dtiUtility =  {
         //add timestamp to guarantee changes
         data._timestamp = new Date().getTime();
         data._windowId = window.windowId;
-        data.messageID = cfg.messageID || dtiUtility.makeId();
+        data.messageID = data.messageID || dtiUtility.makeId();
         
         store.set(target, data);
     },
@@ -205,6 +210,11 @@ var dtiUtility =  {
             _getCfgID: getCfgID
         });
 
+    },
+    getUser: function (cb) {
+        dtiUtility._getUserCb = cb;
+
+        dtiUtility.sendMessage('getUser');
     }
 };
 
