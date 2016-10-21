@@ -3,12 +3,13 @@ var async = require('async');
 var ObjectID = require('mongodb').ObjectID;
 var _ = require('lodash');
 var moment = require('moment');
-var notifications = require('../models/notifications');
 var config = require('config');
 
 // OTHERS
 var NotifierUtility = require('../models/notifierutility');
 var notifierUtility = new NotifierUtility();
+var notifications = require('../models/notifications');
+var scheduler = require('../helpers/scheduler');
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
@@ -28,7 +29,7 @@ module.exports = function(_common) {
     oplog.on('insert', function(doc) {
 
         var startDate, endDate;
-        if (doc.ns === dbName+'.Alarms' || doc.ns === dbName+'.ActiveAlarms') {
+        if (doc.ns === dbName + '.Alarms' || doc.ns === dbName + '.ActiveAlarms') {
             var userHasAccess = false;
 
             // recent and unack
@@ -65,7 +66,7 @@ module.exports = function(_common) {
                     }
 
                     // unack
-                    if (doc.o.ackStatus === 1 && openAlarms[k].alarmView === "Unacknowledged" && doc.ns === dbName+'.Alarms' && doc.o.msgCat !== Config.Enums['Alarm Categories'].Return.enum) {
+                    if (doc.o.ackStatus === 1 && openAlarms[k].alarmView === "Unacknowledged" && doc.ns === dbName + '.Alarms' && doc.o.msgCat !== Config.Enums['Alarm Categories'].Return.enum) {
                         io.sockets.connected[openAlarms[k].sockId].emit('newUnackAlarm', {
                             newAlarm: doc.o,
                             reqID: openAlarms[k].data.reqID
@@ -75,7 +76,7 @@ module.exports = function(_common) {
                     //recent
                     startDate = (typeof parseInt(openAlarms[k].data.startDate, 10) === "number") ? openAlarms[k].data.startDate : 0;
                     endDate = (parseInt(openAlarms[k].data.endDate, 10) === 0) ? Math.ceil(new Date().getTime() / 1000) + 10000 : openAlarms[k].data.endDate;
-                    if (openAlarms[k].alarmView === "Recent" && doc.ns === dbName+'.Alarms' && doc.o.msgTime >= startDate && doc.o.msgTime <= endDate) {
+                    if (openAlarms[k].alarmView === "Recent" && doc.ns === dbName + '.Alarms' && doc.o.msgTime >= startDate && doc.o.msgTime <= endDate) {
                         io.sockets.connected[openAlarms[k].sockId].emit('newRecentAlarm', {
                             newAlarm: doc.o,
                             reqID: openAlarms[k].data.reqID
@@ -83,7 +84,7 @@ module.exports = function(_common) {
                     }
 
                     // active
-                    if (openAlarms[k].alarmView === "Active" && doc.ns === dbName+'.ActiveAlarms') {
+                    if (openAlarms[k].alarmView === "Active" && doc.ns === dbName + '.ActiveAlarms') {
 
                         io.sockets.connected[openAlarms[k].sockId].emit('addingActiveAlarm', {
                             newAlarm: doc.o,
@@ -93,12 +94,12 @@ module.exports = function(_common) {
                 }
             }
 
-            if (doc.ns === dbName+'.Alarms') {
+            if (doc.ns === dbName + '.Alarms') {
                 common.acknowledgePointAlarms(doc.o);
                 notifications.processIncomingAlarm(doc.o);
             }
 
-        } else if (doc.ns === dbName+'.historydata') {
+        } else if (doc.ns === dbName + '.historydata') {
             // module.exports.updateDashboard(doc.o);
         }
         /* else if (doc.ns === dbName+'.ActiveAlarms') {
@@ -115,7 +116,7 @@ module.exports = function(_common) {
     });
 
     oplog.on('update', function(doc) {
-        if (doc.ns === dbName+".points" && doc.o.$set !== undefined) {
+        if (doc.ns === dbName + ".points" && doc.o.$set !== undefined) {
             var start = new Date();
             var updateArray;
             var updateValueFlag = false,
@@ -231,7 +232,7 @@ module.exports = function(_common) {
                     }
                     return;
                 });
-        } else if (doc.ns === dbName+".Alarms") {
+        } else if (doc.ns === dbName + ".Alarms") {
             if (doc.o.$set !== undefined && doc.o.$set.ackStatus === 2) {
                 for (var k = 0; k < openAlarms.length; k++) {
                     if (openAlarms[k].alarmView === "Unacknowledged") {
@@ -245,7 +246,7 @@ module.exports = function(_common) {
                     }
                 }
             }
-        } else if (doc.ns === dbName+".SystemInfo") {
+        } else if (doc.ns === dbName + ".SystemInfo") {
             var name = '';
             if (doc.o.$set !== undefined && doc.o.$set.Entries !== undefined) {
                 if (doc.o.$set.Entries[0].hasOwnProperty("Priority Level")) {
@@ -262,7 +263,7 @@ module.exports = function(_common) {
                     });
                 }
             }
-        } else if (doc.ns === dbName+'.historydata') {
+        } else if (doc.ns === dbName + '.historydata') {
             Utility.getOne({
                 collection: 'historydata',
                 query: {
@@ -270,6 +271,17 @@ module.exports = function(_common) {
                 }
             }, function(err, historyPoint) {
                 // module.exports.updateDashboard(historyPoint);
+            });
+        } else if (doc.ns === dbName + '.Schedules') {
+            Utility.getOne({
+                collection: 'Schedules',
+                query: {
+                    _id: doc.o2._id
+                }
+            }, function(err, schedule) {
+                scheduler.buildCron(schedule, function(err, result) {
+
+                });
             });
         }
 
@@ -308,7 +320,7 @@ module.exports = function(_common) {
     });
 
     oplog.on('delete', function(doc) {
-        if (doc.ns === dbName+'.ActiveAlarms') {
+        if (doc.ns === dbName + '.ActiveAlarms') {
             for (var n = 0; n < openAlarms.length; n++) {
                 if (openAlarms[n].alarmView === "Active") {
                     io.sockets.connected[openAlarms[n].sockId].emit('removingActiveAlarm', {

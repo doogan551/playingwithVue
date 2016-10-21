@@ -1231,16 +1231,16 @@ function testCron() {
 // testCron();
 
 function testobjects() {
-  var obj = {
-    utility: {
-      functionOne: function() {
-        console.log('one');
-      },
-      functionTwo: function() {
-        obj.utility.functionOne();
-      }
-    }
-  }
-  obj.utility.functionTwo();
+  var mailer = require('../models/mailer');
+
+  var test = (function(cb) {
+    mailer.sendEmail({
+      to: 'rkendall@dorsett-tech.com',
+      subject: 'test',
+      text: 'text'
+    }, function(err, info) {
+      console.log('??', err && err.code, info);
+    });
+  })();
 }
 testobjects();

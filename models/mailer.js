@@ -33,6 +33,7 @@ var transportStatus = CLOSED;
 var smtpTransport;
 var timeoutObj;
 var smtpConfig = {
+  transport: 'SMTP',
   host: "smtp.sparkpostmail.com", // hostname
   secureConnection: false, // connection is started in insecure plain text mode and later upgraded with STARTTLS
   port: 587, // port for secure SMTP
@@ -49,7 +50,7 @@ function getTransport() {
   timeoutObj = setTimeout(closeTransport, TIMEOUT); // Close the connection pool after <timeout> milliseconds of inactivity
 
   if (transportStatus === CLOSED) {
-    smtpTransport = nodemailer.createTransport("SMTP", smtpConfig);
+    smtpTransport = nodemailer.createTransport(smtpConfig);
     transportStatus = OPEN;
   }
 }

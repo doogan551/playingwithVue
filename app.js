@@ -58,7 +58,9 @@ app.use(bodyParser.urlencoded({
   parameterLimit: 4500
 }));
 var storage = multer.memoryStorage();
-var upload = multer({ storage: storage });
+var upload = multer({
+  storage: storage
+});
 
 app.use(upload.array());
 
@@ -99,52 +101,52 @@ app.use('/', require('./helpers/router')(_controllers));
 db.connect(connectionString.join(''), function(err) {
   require('./helpers/processes')(function(err) {
     logger.info('processes', err);
-        require('./helpers/scheduler')(function(err) {
-          logger.info('scheduler', err);
     require('./helpers/globals').setGlobals(function() {
-      if (!!config.get('Infoscan.letsencrypt').enabled) {
+      require('./helpers/scheduler').buildAll(function(err) {
+        logger.info('scheduler', err);
+        if (!!config.get('Infoscan.letsencrypt').enabled) {
 
-        var lex = LEX.create({
-          configDir: config.get('Infoscan.files').driveLetter + ':' + config.get('Infoscan.letsencrypt').directory,
-          approveRegistration: function(hostname, cb) {
-            cb(null, {
-              domains: config.get('Infoscan').domains,
-              email: 'rkendall@dorsett-tech.com', // 'user@example.com'
-              agreeTos: true
+          var lex = LEX.create({
+            configDir: config.get('Infoscan.files').driveLetter + ':' + config.get('Infoscan.letsencrypt').directory,
+            approveRegistration: function(hostname, cb) {
+              cb(null, {
+                domains: config.get('Infoscan').domains,
+                email: 'rkendall@dorsett-tech.com', // 'user@example.com'
+                agreeTos: true
+              });
+            },
+            handleRenewFailure: function(err, hostname, certInfo) {
+              logger.error("ERROR: Failed to renew domain '", hostname, "':");
+              if (err) {
+                logger.error(err.stack || err);
+              }
+              if (certInfo) {
+                logger.error(certInfo);
+              }
+            }
+          });
+
+          http.createServer(LEX.createAcmeResponder(lex, function redirectHttps(req, res) {
+            res.writeHead(301, {
+              "Location": "https://" + req.headers['host'] + req.url
             });
-                },
-                handleRenewFailure: function(err, hostname, certInfo) {
-                  logger.error("ERROR: Failed to renew domain '", hostname, "':");
-                  if (err) {
-                    logger.error(err.stack || err);
-                  }
-                  if (certInfo) {
-                    logger.error(certInfo);
-                  }
-          }
-        });
+            res.end();
+          })).listen(80);
 
-        http.createServer(LEX.createAcmeResponder(lex, function redirectHttps(req, res) {
-          res.writeHead(301, {
-            "Location": "https://" + req.headers['host'] + req.url
+          var httpsServer = https.createServer(lex.httpsOptions, LEX.createAcmeResponder(lex, app));
+          sockets.connect(config, httpsServer, sessionStore, cookieParser, function() {
+            require('./socket/common').socket();
+            httpsServer.listen(443);
           });
-          res.end();
-        })).listen(80);
-
-        var httpsServer = https.createServer(lex.httpsOptions, LEX.createAcmeResponder(lex, app));
-        sockets.connect(config, httpsServer, sessionStore, cookieParser, function() {
-          require('./socket/common').socket();
-          httpsServer.listen(443);
-        });
-      } else {
-        var httpServer = http.createServer(app);
-        sockets.connect(config, httpServer, sessionStore, cookieParser, function() {
-          require('./socket/common').socket();
-          httpServer.listen(80);
-        });
-      }
-
+        } else {
+          var httpServer = http.createServer(app);
+          sockets.connect(config, httpServer, sessionStore, cookieParser, function() {
+            require('./socket/common').socket();
+            httpServer.listen(80);
           });
+        }
+
+      });
     });
   });
 });
