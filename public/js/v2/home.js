@@ -3480,6 +3480,7 @@ var dti = {
         createNavigator: function (isModal) {
             var templateMarkup = dti.utility.getTemplate('#navigatorTemplate'),
                 navigatorMarkup,
+                navigatorModalMarkup,
                 navigator,
                 $container = (isModal === true) ? $('main') : (isModal.$container || isModal);
 
@@ -3824,6 +3825,7 @@ var dti = {
         },
         doProcessMessage: function (e) {
             var config,
+                messageID,
                 ignoredProps = {
                     '__storejs__': true,
                     'sessionId': true,
@@ -3834,6 +3836,7 @@ var dti = {
                         var sourceWindowId = config._windowId,
                             callback = function (data) {
                                 dti.messaging.sendMessage({
+                                    messageID: messageID,
                                     key: sourceWindowId, 
                                     message: 'pointSelected',
                                     value: data
@@ -3848,6 +3851,7 @@ var dti = {
                         var sourceWindowId = config._windowId,
                             callback = function (data) {
                                 dti.messaging.sendMessage({
+                                    messageID: messageID,
                                     key: sourceWindowId, 
                                     message: 'pointCreated',
                                     value: data
@@ -3873,18 +3877,23 @@ var dti = {
                     getConfig: function () {
                         var path = config.path,
                             parameters = config.parameters,
+                            id = config._getCfgID,
                             ret,
                             winId = config._windowId;
 
                         ret = dti.utility.getConfig(path, parameters);
 
-                        dti.messaging.sendMessage({
-                            key: winId,
-                            value: {
-                                message: 'getConfig',
-                                value: ret
-                            }     
-                        });
+                        setTimeout(function doSendGetConfig () {
+                            dti.messaging.sendMessage({
+                                messageID: messageID,
+                                key: winId,
+                                value: {
+                                    _getCfgID: id,
+                                    message: 'getConfig',
+                                    value: ret
+                                }     
+                            });
+                        }, 1000);
                     },
                     pointSelected: function () {
 
@@ -3901,6 +3910,7 @@ var dti = {
                         config = JSON.parse(config);
                     }
                     // store previous call
+                    messageID = config.messageID;
                     dti.navigator._prevMessage = config;
                     callbacks[e.key]();
                 }
@@ -3937,7 +3947,7 @@ var dti = {
                 config.value.message = config.message;
             }
 
-            store.set(config.key, config.value);
+            store.set([config.key, ';', config.messageID].join(''), config.value);
         },
         onMessage: function (cb) {
             dti.messaging._messageCallbacks.push(cb);

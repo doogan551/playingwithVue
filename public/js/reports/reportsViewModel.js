@@ -4924,9 +4924,11 @@ function applyBindings(extConfig) {
     if (window.top === undefined) {
         window.setTimeout(applyBindings, 2);
     } else {
-        reportsVM = new reportsViewModel();
-        reportsVM.init(extConfig);
-        ko.applyBindings(reportsVM);
+        window.setTimeout(function () {
+            reportsVM = new reportsViewModel();
+            reportsVM.init(extConfig);
+            ko.applyBindings(reportsVM);
+        }, 2);
     }
 }
 
