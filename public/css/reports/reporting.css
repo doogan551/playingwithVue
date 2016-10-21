@@ -366,7 +366,7 @@ td.filterName {
 .tabViewReport .chartButtons {
     display: inline-flex;
     padding: 3px;
-    margin-top: -6px;
+    margin-top: -70px;
     float: right;
 }
 .tabViewReport .chartButtons a.btn.btn-default {

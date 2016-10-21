@@ -216,7 +216,7 @@ html.direports
                                                     // /ko
                                                     th.medium.strong
                                             tbody.sortablecolums(data-bind="foreach: listOfColumns()")
-                                                tr.columnRowData(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name'), danger: (colName === 'Choose Point')} ")
+                                                tr.columnRowData(data-bind="css: {hideRow: (colName === 'Date' || colName === 'Name'), 'red lighten-4': (colName === 'Choose Point')} ")
                                                     td.columnNameContainer(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
                                                         .handle
                                                         // ko if: ($parent.reportType !== 'Property')
@@ -296,7 +296,7 @@ html.direports
                                                     td.yaxisChartGroup
                                                         // ko if: ($root.canEdit() && $data.canCalculate)
                                                         .availableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                            a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="materializeDropdown, css: { disabled: !$root.canEdit() }, attr: { 'data-activates': 'yaxisGroups'+ $index() }")
+                                                            a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="click: function () { $parent.materialDropdownClick($element) }, materializeDropdown, css: { disabled: !$root.canEdit() }, attr: { 'data-activates': 'yaxisGroups'+ $index() }")
                                                                 span.text(data-bind="text: yaxisGroup")
                                                                 // ko if: ($root.yaxisGroups.length > 1)
                                                                 span.caret.lm10px
@@ -325,7 +325,7 @@ html.direports
                                         table.gridColumnConfigTable.small.grid.table
                                             thead
                                                 tr.sortablecolums(data-bind="foreach: listOfColumns()")
-                                                    th.displayName(data-bind="css: { fixed: ($index() === 0), danger: (colName === 'Choose Point')}")
+                                                    th.displayName(data-bind="css: { fixed: ($index() === 0), 'red lighten-4': (colName === 'Choose Point')}")
                                                         .cellContent
                                                             // ko if: $index() > 0
                                                             .handle
@@ -382,13 +382,13 @@ html.direports
                                                         // /ko
                                             tbody(style="border-bottom: 1px solid #d0d0d0;")
                                                 tr(data-bind="foreach: listOfColumns()")
-                                                    td(data-bind="css: { danger: (colName === 'Choose Point')}")
+                                                    td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
                                                         div ...
                                                 tr(data-bind="foreach: listOfColumns()")
-                                                    td(data-bind="css: { danger: (colName === 'Choose Point')}")
+                                                    td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
                                                         div ...
                                                 tr(data-bind="foreach: listOfColumns()")
-                                                    td(data-bind="css: { danger: (colName === 'Choose Point')}")
+                                                    td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
                                                         div ...
                                             // ko if: ($root.reportType !== 'Property')
                                             tfoot
@@ -405,7 +405,7 @@ html.direports
                                                     // /ko
                                                     // ko if: $index() > 0
                                                     // ko if: ($root.listOfCalculations().length > 0)
-                                                    td(data-bind="css: { danger: (colName === 'Choose Point')}")
+                                                    td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
                                                         .calculationsCell
                                                             // ko if: ($data.canCalculate)
                                                             ul.calculations

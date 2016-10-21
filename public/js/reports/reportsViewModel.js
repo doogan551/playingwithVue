@@ -471,8 +471,8 @@ var reportsViewModel = function () {
         ENUMSPROPERTIES,
         ENUMSPOINTTYPES,
         initGlobalLists = function () {
-            // ENUMSPROPERTIES = parent.dti.utility.getConfig("Enums.Properties");
-            // ENUMSPOINTTYPES = parent.dti.utility.getConfig("Enums.Point Types");
+            ENUMSPROPERTIES = parent.dti.utility.getConfig("Enums.Properties");
+            ENUMSPOINTTYPES = parent.dti.utility.getConfig("Enums.Point Types");
         },
         setNewPointReference = function (refPointUPI, property) {
             // console.log("- - - - setNewPointReference() called....   refPointUPI = " + refPointUPI + " property = " + property);
@@ -788,7 +788,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = dtiUtility.getConfig("Templates.getTemplate", [column.pointType]);
+                        valueOptions = (!scheduled ? dtiUtility.getConfig("Templates.getTemplate", [column.pointType]) : undefined);
                         result = (valueOptions === undefined);
                         break;
                 }
@@ -4774,6 +4774,11 @@ var reportsViewModel = function () {
         $tabViewReport.find("ul.viewReportNav").find("li." + subTabName).addClass("active");
         $tabViewReport.find(".tab-content > .active").removeClass("active");
         $tabViewReport.find("#" + subTabName).addClass("active");
+    };
+
+    self.materialDropdownClick = function (element) {
+        $(element).dropdown('open');
+        return true;
     };
 
     self.editColumn = function (column, index) {
