@@ -3885,28 +3885,32 @@ var dti = {
 
                         ret = dti.utility.getConfig(path, parameters);
 
-                        dti.messaging.sendMessage({
-                            messageID: messageID,
-                            key: winId,
-                            value: {
-                                _getCfgID: id,
-                                message: 'getConfig',
-                                value: ret
-                            }     
-                        });
+                        setTimeout(function sendConfigInfo () {
+                            dti.messaging.sendMessage({
+                                messageID: messageID,
+                                key: winId,
+                                value: {
+                                    _getCfgID: id,
+                                    message: 'getConfig',
+                                    value: ret
+                                }     
+                            });
+                        }, 1000);
                     },
                     getUser: function () {
                         var winId = config._windowId,
                             user = dti.bindings.user();
 
-                        dti.messaging.sendMessage({
-                            messageID: messageID,
-                            key: winId,
-                            value: {
-                                user: user,
-                                message: 'getUser'
-                            }
-                        });
+                        setTimeout(function sendUserInfo () {
+                            dti.messaging.sendMessage({
+                                messageID: messageID,
+                                key: winId,
+                                value: {
+                                    user: user,
+                                    message: 'getUser'
+                                }
+                            });
+                        }, 1000);
                     },
                     pointSelected: function () {
 
