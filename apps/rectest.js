@@ -1231,16 +1231,21 @@ function testCron() {
 // testCron();
 
 function testobjects() {
-  var obj = {
-    utility: {
-      functionOne: function() {
-        console.log('one');
-      },
-      functionTwo: function() {
-        obj.utility.functionOne();
-      }
-    }
+  var obj = [one, two];
+
+  function one(cb) {
+    console.log(1);
+    return cb();
   }
-  obj.utility.functionTwo();
+
+  function two(text, cb) {
+    console.log(text || 2);
+    return cb('nope');
+  }
+
+  async.waterfall(obj, function(err, results) {
+    console.log('done', err, results);
+  });
+
 }
 testobjects();
