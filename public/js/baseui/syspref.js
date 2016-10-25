@@ -1206,7 +1206,7 @@ var telemetryViewModel = function() {
                 } else {
                     net['IP Network Segment'](fixLeadingZeros(net['IP Network Segment']()));
                     net['IP Port'](fixLeadingZeros(net['IP Port']()));
-                    if (!!net.isDefault) {
+                    if (!!net.isDefault()) {
                         self['IP Network Segment'](net['IP Network Segment']());
                         self['IP Port'](net['IP Port']());
                     }
