@@ -154,7 +154,7 @@ function importUpdate() {
   };
 
 
-  importPoint = function(point, callback) {
+  var importPoint = function(point, callback) {
 
     var functions = [
       updateNameSegments,
@@ -183,18 +183,20 @@ function importUpdate() {
     });
 
     function updatePoint(cb) {
-      collection(pointsCollection).update({
-        _id: point._id
-      }, point, function(err, result) {
-        cb(err);
-      });
+      Utility.update({
+        collection: pointsCollection,
+        query: {
+          _id: point._id
+        },
+        updateObj: point
+      }, cb);
     }
 
     function devModelLogic(cb) {
       logger.info("starting devModelLogic");
       var currentModel = null;
 
-      models = [{
+      var models = [{
         value: "Device",
         model: "Device"
       }, {
@@ -227,9 +229,9 @@ function importUpdate() {
       }];
 
       async.forEachSeries(models, function(model, asyncNext) {
-        count = 0;
+        var count = 0;
         logger.info("working on", model.value);
-        updateModels(model.value, model.model, db, function(err, result) {
+        updateModels(model.value, model.model, function(err, result) {
           if (result)
             asyncNext(err);
         });
@@ -288,22 +290,8 @@ function importUpdate() {
             point['Reset Time'].Value *= 60;
             break;
         }
-
-        /*point.name4 = point.gplNameSegment;
-        point.Name = point.name1 + "_" + point.name2 + "_" + point.name3 + "_" + point.name4;
-        point._name4 = point.name4.toLowerCase();
-        point._Name = point.Name.toLowerCase();
-        delete point.gplNameSegment;*/
-
-        /*db.collection(pointsCollection).update({
-          _id: point._id
-        }, point, function(err, result) {*/
-
-        cb(null);
-        // });
-      } else {
-        cb(null);
       }
+      return cb();
     }
 
     function updateTimeZones(cb) {
@@ -328,7 +316,7 @@ function importUpdate() {
       if (models.indexOf(point["Point Type"].Value) !== -1) {
         modelUtil[point["Point Type"].Value].updateAll({ // change
           point: point
-        }, db, function(err, point) {
+        }, function(err, point) {
           if (err) cb(err);
 
           cb(null);
@@ -375,118 +363,6 @@ function importUpdate() {
       cb(null);
     }
 
-    function updateSensorPoints(cb) {
-
-      if (point["Point Type"].Value === "Sensor") {
-
-        var sensorTemplate = Config.Templates.getTemplate(point["Point Type"].Value),
-          updateProps = function() {
-            for (var prop in sensorTemplate) {
-              if (!point.hasOwnProperty(prop) || prop === "Point Refs") {
-                point[prop] = sensorTemplate[prop];
-              }
-            }
-          };
-
-        point._cfgRequired = false;
-
-        if (!!point.Remarks) {
-          point.name1 = "Sensor";
-          point.name2 = "";
-          point.name3 = "";
-          point.name4 = "";
-
-          for (var i = 0; i < point.Remarks.Value.length; i++) {
-            if (Config.Utility.isPointNameCharacterLegal(point.Remarks.Value[i])) {
-              point.name2 += point.Remarks.Value[i];
-            }
-          }
-          point.Name = point.name1 + "_" + point.name2;
-          delete point.Remarks;
-          updateNameSegments(point, function(err) {
-            db.collection(pointsCollection).find({
-              _name1: point._name1,
-              _name2: point._name2
-            }, {
-              _name1: 1,
-              _name2: 1,
-              _name3: 1,
-              _name4: 1
-            }).toArray(function(err, points) {
-              var nextNum = 1,
-                name3Number;
-              for (var j = 0; j < points.length; j++) {
-                name3Number = parseInt(points[j]._name3, 10);
-                if (nextNum < name3Number)
-                  nextNum = name3Number + 1;
-              }
-              if (nextNum > 1) {
-                point.name3 = nextNum.toString();
-                point.Name += "_" + point.name3;
-              }
-              updateNameSegments(point, function(err) {
-                delete point._Name;
-                updateProps();
-                db.collection(pointsCollection).update({
-                  _id: point._id
-                }, point, function(err, result) {
-
-                  cb(err);
-
-                });
-              });
-            });
-
-          });
-        } else {
-          updateProps();
-          db.collection(pointsCollection).update({
-            _id: point._id
-          }, point, function(err, result) {
-
-            cb(err);
-
-          });
-        }
-
-      } else {
-        cb(null);
-      }
-    }
-
-    function updateProgramPoints(cb) {
-      if (point["Point Type"].Value === "Script") {
-
-        db.collection(pointsCollection).update({
-          "Point Type.Value": "Program",
-          $or: [{
-            "Script Point.Value": point._id
-          }, {
-            "Point Refs": {
-              $elemMatch: {
-                Value: point._id,
-                PropertyEnum: 270
-              }
-            }
-          }]
-        }, {
-          $set: {
-            "Boolean Register Names": point["Boolean Register Names"],
-            "Integer Register Names": point["Integer Register Names"],
-            "Point Register Names": point["Point Register Names"],
-            "Real Register Names": point["Real Register Names"]
-          }
-        }, {
-          multi: true
-        }, function(err, result) {
-
-          cb(err);
-        });
-      } else {
-        cb(null);
-      }
-    }
-
     function addReferencesToSlideShowPointRefs(cb) {
       var referencedSlides = point.Slides,
         upiList = [],
@@ -494,16 +370,17 @@ function importUpdate() {
         pRefAppIndex = 1, // skipping 0 for "Device Point"
         matchUpisToPointRefs = function() {
           var setPointRefIndex = function(slides) {
-            var slide,
-              pRef;
+            var slide;
+            var pRef;
+            var filterPointRefs = function(pointRef) {
+              return pointRef.Value === slide.display && pointRef.PropertyName === "Slide Display";
+            };
 
             if (!!slides) {
               for (c = 0; c < slides.length; c++) {
                 slide = slides[c];
                 if (!!slide.display) {
-                  pRef = point["Point Refs"].filter(function(pointRef) {
-                    return pointRef.Value === slide.display && pointRef.PropertyName === "Slide Display";
-                  });
+                  pRef = point["Point Refs"].filter(filterPointRefs);
 
                   pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
 
@@ -556,11 +433,14 @@ function importUpdate() {
           pushPointObjectsUPIs(referencedSlides);
 
           if (!!upiList && upiList.length > 0) {
-            db.collection(pointsCollection).find({
-              _id: {
-                $in: upiList
+            Utility.get({
+              collection: pointsCollection,
+              query: {
+                _id: {
+                  $in: upiList
+                }
               }
-            }).toArray(function(err, points) {
+            }, function(err, points) {
               var referencedPoint;
               if (!!points) {
                 for (c = 0; c < points.length; c++) {
@@ -628,18 +508,19 @@ function importUpdate() {
         },
         matchUpisToPointRefs = function() {
           var setPointRefIndex = function(screenObjects) {
-            var screenObject,
-              prop,
-              pRef;
+            var screenObject;
+            var prop;
+            var pRef;
+            var filterPointRefs = function(pointRef) {
+              return pointRef.Value === screenObject.upi && pointRef.PropertyName === prop.name;
+            };
 
             if (!!screenObjects) {
               for (c = 0; c < screenObjects.length; c++) {
                 screenObject = screenObjects[c];
                 if (!!screenObject.upi) {
                   prop = getScreenObjectType(screenObject["Screen Object"]);
-                  pRef = point["Point Refs"].filter(function(pointRef) {
-                    return pointRef.Value === screenObject.upi && pointRef.PropertyName === prop.name;
-                  });
+                  pRef = point["Point Refs"].filter(filterPointRefs);
 
                   pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
 
@@ -703,11 +584,14 @@ function importUpdate() {
           pushScreenObjectsUPIs(screenObjectsCollection);
 
           if (!!upiList && upiList.length > 0) {
-            db.collection(pointsCollection).find({
-              _id: {
-                $in: upiList
+            Utility.get({
+              collection: pointsCollection,
+              query: {
+                _id: {
+                  $in: upiList
+                }
               }
-            }).toArray(function(err, points) {
+            }, function(err, points) {
               var referencedPoint,
                 neededRefs,
                 i;
@@ -730,125 +614,6 @@ function importUpdate() {
       setDisplayPointData();
     }
 
-    function addReferencesToSequencePointRefs(cb) {
-      var blocks = point.SequenceData && point.SequenceData.sequence && point.SequenceData.sequence.block,
-        dynamics = point.SequenceData && point.SequenceData.sequence && point.SequenceData.sequence.dynamic,
-        upiList = [],
-        upiCrossRef = [],
-        skipTypes = ['Constant'],
-        c,
-        pRefAppIndex = 1,
-        getCrossRefByUPIandName = function(upi, propertyName) {
-          return upiCrossRef.filter(function(ref) {
-            return ref.upi === upi && ref.PropertyName === propertyName;
-          });
-        },
-        getCrossRefByUPI = function(upi) {
-          return upiCrossRef.filter(function(ref) {
-            return ref.upi === upi;
-          });
-        },
-        matchUpisToPointRefs = function() {
-          var setPointRefIndex = function(gplObjects, propertyName) {
-            var gplObject,
-              pRef;
-
-            if (!!gplObjects) {
-              for (c = 0; c < gplObjects.length; c++) {
-                gplObject = gplObjects[c];
-                if (gplObject.upi && skipTypes.indexOf(gplObject.blockType) === -1) {
-                  if (!!gplObject.upi) {
-                    pRef = point["Point Refs"].filter(function(pointRef) {
-                      return pointRef.Value === gplObject.upi && pointRef.PropertyName === propertyName;
-                    });
-
-                    pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
-
-                    if (!!pRef) {
-                      gplObject.pointRefIndex = pRef.AppIndex;
-                      // delete gplObject.upi; // TODO to clear out duplicate data (point ref contains the UPI)
-                    }
-                  }
-                }
-              }
-            }
-          };
-
-          setPointRefIndex(blocks, "GPLBlock");
-          setPointRefIndex(dynamics, "GPLDynamic");
-          cb();
-        },
-        makePointRef = function(refPoint, propName, propType) {
-          var pointType = refPoint["Point Type"].Value;
-          var baseRef = {
-            "PropertyName": propName,
-            "PropertyEnum": propType,
-            "Value": refPoint._id,
-            "AppIndex": pRefAppIndex++,
-            "isDisplayable": true,
-            "isReadOnly": true,
-            "PointName": refPoint.Name,
-            "PointInst": (refPoint._pStatus !== 2) ? refPoint._id : 0,
-            "DevInst": (Config.Utility.getPropertyObject("Device Point", refPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", refPoint).Value : 0,
-            "PointType": Config.Enums['Point Types'][pointType].enum || 0
-          };
-
-          return baseRef;
-        },
-        setGPLPointData = function() {
-          var pushGPLObjectUPIs = function(gplObjects, propName, propType) {
-            var gplObject;
-            if (!!gplObjects) {
-              for (c = 0; c < gplObjects.length; c++) {
-                gplObject = gplObjects[c];
-                if (gplObject.upi && skipTypes.indexOf(gplObject.blockType) === -1) {
-                  if (upiList.indexOf(gplObject.upi) === -1) {
-                    upiList.push(gplObject.upi);
-                  }
-
-                  if (getCrossRefByUPIandName(gplObject.upi, propName).length === 0) {
-                    upiCrossRef.push({
-                      upi: gplObject.upi,
-                      name: propName,
-                      type: propType
-                    });
-                  }
-                }
-              }
-            }
-          };
-
-          pushGPLObjectUPIs(blocks, "GPLBlock", 439);
-          pushGPLObjectUPIs(dynamics, "GPLDynamic", 440);
-
-          if (!!upiList && upiList.length > 0) {
-            db.collection(pointsCollection).find({
-              _id: {
-                $in: upiList
-              }
-            }).toArray(function(err, points) {
-              var referencedPoint,
-                neededRefs,
-                i;
-              if (!!points) {
-                for (c = 0; c < points.length; c++) {
-                  referencedPoint = points[c];
-                  neededRefs = getCrossRefByUPI(referencedPoint._id); // gets both Blocks and Dynamics refs
-                  for (i = 0; i < neededRefs.length; i++) {
-                    point["Point Refs"].push(makePointRef(referencedPoint, neededRefs[i].name, neededRefs[i].type));
-                  }
-                }
-              }
-              matchUpisToPointRefs();
-            });
-          } else {
-            cb();
-          }
-        };
-
-      setGPLPointData();
-    }
-
     function updateReferences(cb) {
 
       var uniquePID = function(pointRefs) {
@@ -857,8 +622,11 @@ function importUpdate() {
 
         async.eachSeries(pointRefs, function(pointRef, seriesCB) {
           if (pointRef.Value !== 0) {
-            db.collection(pointsCollection).findOne({
-              _id: pointRef.Value
+            Utility.getOne({
+              collection: pointsCollection,
+              query: {
+                _id: pointRef.Value
+              }
             }, function(err, refPoint) {
               if (err)
                 return seriesCB(err);
@@ -990,8 +758,11 @@ function importUpdate() {
               }
 
               async.forEachSeries(point["Point Registers"], function(register, propCb) {
-                db.collection(pointsCollection).findOne({
-                  _id: register
+                Utility.getOne({
+                  collection: pointsCollection,
+                  query: {
+                    _id: register
+                  }
                 }, function(err, registerPoint) {
                   if (err)
                     propCb(err);
@@ -1211,7 +982,8 @@ function importUpdate() {
           return 1;
         }
         return 0;
-      }
+      };
+
       var arr = [];
       var o = {};
       for (var prop in point) {
@@ -1222,24 +994,6 @@ function importUpdate() {
         o[arr[i]] = point[arr[i]];
       }
       point = o;
-      cb(null);
-    }
-
-    function updateNameSegments(cb) {
-      //var updObj = {};
-
-      point._name1 = point.name1.toLowerCase();
-      point._name2 = point.name2.toString().toLowerCase();
-      point._name3 = point.name3.toLowerCase();
-      point._name4 = point.name4.toLowerCase();
-      point._Name = point.Name.toLowerCase();
-      /*db.collection(pointsCollection).update({
-        _id: point._id
-      }, {
-        $set: updObj
-      }, function(err, result) {*/
-
-      // });
       cb(null);
     }
 
@@ -1264,8 +1018,14 @@ function importUpdate() {
 function addDefaultUser(cb) {
   var ctrlrs = importconfig.ctrlrs;
 
-  db.collection(systemInfoCollection).insert(ctrlrs, function(err, result) {
-    db.collection('Users').find({}).toArray(function(err, users) {
+  Utility.insert({
+    collection: systemInfoCollection,
+    insertObj: ctrlrs
+  }, function(err, result) {
+    Utility.get({
+      collection: 'Users',
+      query: {}
+    }, function(err, users) {
       async.eachSeries(users, function(user, callback) {
         updateControllers("add", user.username, function(err) {
           callback(err);
@@ -1278,7 +1038,10 @@ function addDefaultUser(cb) {
     var searchCriteria = {
       Name: "Controllers"
     };
-    db.collection(systemInfoCollection).findOne(searchCriteria, function(err, controllers) {
+    Utility.getOne({
+      collection: systemInfoCollection,
+      query: searchCriteria
+    }, function(err, controllers) {
       if (op === "add") {
         var id = 0,
           ids = [],
@@ -1310,13 +1073,15 @@ function addDefaultUser(cb) {
           "Description": username,
           isUser: true
         });
-        db.collection(systemInfoCollection).update(searchCriteria, {
-          $set: {
-            Entries: controllers.Entries
+        Utility.update({
+          collection: systemInfoCollection,
+          query: searchCriteria,
+          updateObj: {
+            $set: {
+              Entries: controllers.Entries
+            }
           }
-        }, function(err, result) {
-          callback(err);
-        });
+        }, callback);
       } else {
         for (var j = 0; j < controllers.Entries.length; j++) {
           if (controllers.Entries[j]["Controller Name"] === username) {
@@ -1324,14 +1089,15 @@ function addDefaultUser(cb) {
             break;
           }
         }
-
-        db.collection(systemInfoCollection).update(searchCriteria, {
-          $set: {
-            Entries: controllers.Entries
+        Utility.update({
+          collection: systemInfoCollection,
+          query: searchCriteria,
+          updateObj: {
+            $set: {
+              Entries: controllers.Entries
+            }
           }
-        }, function(err, result) {
-          callback(err);
-        });
+        }, callback);
       }
 
     });
@@ -1340,59 +1106,64 @@ function addDefaultUser(cb) {
 
 function setupCurAlmIds(callback) {
   logger.info("setupCurAlmIds");
-  db.collection(pointsCollection).update({
-    "Point Type.Value": {
-      $nin: ["Imux"]
+  Utility.update({
+    collection: pointsCollection,
+    query: {
+      "Point Type.Value": {
+        $nin: ["Imux"]
+      },
+      _curAlmId: {
+        $exists: false
+      }
     },
-    _curAlmId: {
-      $exists: false
+    updateObj: {
+      $set: {
+        _curAlmId: new ObjectID("000000000000000000000000")
+      }
+    },
+    options: {
+      multi: true
     }
-  }, {
-    $set: {
-      _curAlmId: new ObjectID("000000000000000000000000")
-    }
-  }, {
-    multi: true
-  }, function(err, result) {
-    callback(err);
-  });
+  }, callback);
 }
 
 function setupCfgRequired(callback) {
   logger.info("setupCfgRequired");
-  db.collection(pointsCollection).update({
-    $or: [{
-      "Point Type.Value": "Device"
-    }, {
-      "Point Refs.PropertyName": "Device Point"
-    }]
-  }, {
-    $set: {
-      _cfgRequired: true
+  Utility.update({
+    collection: pointsCollection,
+    query: {
+      $or: [{
+        "Point Type.Value": "Device"
+      }, {
+        "Point Refs.PropertyName": "Device Point"
+      }]
+    },
+    updateObj: {
+      $set: {
+        _cfgRequired: true
+      }
+    },
+    options: {
+      multi: true
     }
-  }, {
-    multi: true
-  }, function(err, result) {
-    callback(err);
-  });
+  }, callback);
 }
 
 function createEmptyCollections(callback) {
   var collections = ['Alarms', 'Users', 'User Groups', 'historydata', 'upis', 'versions'];
   async.forEach(collections, function(coll, cb) {
-    db.createCollection(coll, function(err, result) {
-      cb(err);
-    });
-  }, function(err) {
-    callback(err);
-  });
+    Utility.createCollection({
+      collection: coll
+    }, cb);
+  }, callback);
 }
 
-function setupReportsCollections(callback) {
+/*function setupReportsCollections(callback) {
   var canned = importconfig.cannedReports,
     templates = importconfig.reportTemplates;
 
   async.forEachSeries(canned, function(predefined, cb) {
+    Utility.insert({collection: ''})
     db.collection("CannedReports").insert(predefined, function(err, result) {
       cb(err);
     });
@@ -1405,20 +1176,27 @@ function setupReportsCollections(callback) {
       callback(err);
     });
   });
-}
+}*/
 
 function setupSystemInfo(callback) {
   var pjson = require('../package.json');
   var curVersion = pjson.version;
   var timezones = importconfig.timeZones;
 
-  db.collection(systemInfoCollection).insert(timezones, function(err, result) {
-    db.collection(systemInfoCollection).update({
-      Name: 'Preferences'
-    }, {
-      $set: {
-        'Time Zone': localTZ,
-        'InfoscanJS Version': curVersion
+  Utility.insert({
+    collection: systemInfoCollection,
+    insertObj: timezones
+  }, function(err, result) {
+    Utility.update({
+      collection: systemInfoCollection,
+      query: {
+        Name: 'Preferences'
+      },
+      updateObj: {
+        $set: {
+          'Time Zone': localTZ,
+          'InfoscanJS Version': curVersion
+        }
       }
     }, callback);
   });
@@ -1427,19 +1205,24 @@ function setupSystemInfo(callback) {
 function setupPointRefsArray(callback) {
 
   logger.info("setupPointRefsArray");
-  db.collection(pointsCollection).update({
-    "Point Type.Value": {
-      $nin: ["Imux"]
+  Utility.update({
+    collection: pointsCollection,
+    query: {
+      "Point Type.Value": {
+        $nin: ["Imux"]
+      },
+      "Point Refs": {
+        $exists: false
+      }
     },
-    "Point Refs": {
-      $exists: false
+    updateObj: {
+      $set: {
+        "Point Refs": []
+      }
+    },
+    options: {
+      multi: true
     }
-  }, {
-    $set: {
-      "Point Refs": []
-    }
-  }, {
-    multi: true
   }, function(err, result) {
     callback(err);
   });
@@ -1463,7 +1246,7 @@ function fixPowerMeters(callback) {
 
   var splitName = function(meter) {
     return meter.Name.split('_');
-  }
+  };
 
   Utility.iterateCursor({
     collection: 'PowerMeters',
@@ -1558,7 +1341,7 @@ function fixPowerMeters(callback) {
           wfCb();
         }
       });
-    }], cb)
+    }], cb);
   }, function(err, count) {
     callback(err, count);
   });
@@ -1707,80 +1490,60 @@ function fixUpisCollection(baseCollection, callback) {
         _pStatus: 1
       },
       options: {}
-    }],
-    setupUpis = function(fnCB) {
-      var upisCount = 4194302, //4194302
-        upisArray = [];
-      db.collection('upis').count({}, function(err, count) {
-        if (count < upisCount) {
-          db.dropCollection('upis', function(err, result) {
-            if (err)
-              return callback(err);
-            for (var i = 1; i <= upisCount; i++) {
-              upisArray.push(i);
-            }
-            async.forEachSeries(upisArray, function(upi, cb) {
-              db.collection('upis').insert({
-                _id: upi,
-                _pStatus: 1
-              }, function(err, result) {
-                cb(err);
-              });
-            }, function(err) {
-              return fnCB(err);
-            });
-          });
-        } else {
-          return fnCB(null);
-        }
-      });
-    };
-  setupUpis(function(err) {
-    if (err)
-      return callback(err);
+    }];
 
-    async.forEachSeries(indexes, function(index, indexCB) {
-      db.ensureIndex('upis', index.index, index.options, function(err, IndexName) {
+  async.forEachSeries(indexes, function(index, indexCB) {
+    Utility.ensureIndex({
+      collection: 'upis',
+      index: index.index,
+      options: index.options
+    }, function(err, IndexName) {
+      if (!!err) {
         logger.info(IndexName, "err:", err);
-        indexCB(null);
-      });
-    }, function(err) {
-      logger.info("done with indexing");
-      db.collection('upis').update({}, {
+      }
+      indexCB(null);
+    });
+  }, function(err) {
+    logger.info("done with indexing");
+    Utility.update({
+      collections: 'upis',
+      query: {},
+      updateObj: {
         $set: {
           _pStatus: 1
         }
-      }, {
+      },
+      options: {
         multi: true
-      }, function(err, result) {
-        if (err) callback(err);
-        Utility.distinct({
-          collection: 'points',
-          field: '_id'
-        }, function(err, results) {
-          console.log('-----', results.length);
-          var criteria = {
-            collection: 'upis',
-            query: {
-              _id: {
-                $in: results
-              }
-            },
-            updateObj: {
-              $set: {
-                _pStatus: 0
-              }
-            },
-            options: {
-              multi: true
+      }
+    }, function(err, result) {
+      if (err) callback(err);
+      Utility.distinct({
+        collection: 'points',
+        field: '_id'
+      }, function(err, results) {
+        console.log('-----', results.length);
+        var criteria = {
+          collection: 'upis',
+          query: {
+            _id: {
+              $in: results
             }
-          };
+          },
+          updateObj: {
+            $set: {
+              _pStatus: 0
+            }
+          },
+          options: {
+            multi: true
+          }
+        };
 
-          Utility.update(criteria, function(err, result) {
-            if (err) logger.info("fixUpisCollection err", err);
-            logger.info("finished fixUpisCollection");
-            return callback(err);
-          });
+        Utility.update(criteria, function(err, result) {
+          if (err) logger.info("fixUpisCollection err", err);
+          logger.info("finished fixUpisCollection");
+          return callback(err);
         });
       });
     });
@@ -1799,100 +1562,99 @@ function testHistory() {
 
 function convertHistoryReports(callback) {
   console.log('converting history reports');
-  db.collection('OldHistLogs').find({}, function(err, cursor) {
-    function processPoint(err, point) {
-      if (point === null) {
-        callback(err);
-      } else {
+  Utility.iterateCursor({
+    collection: 'OldHistLogs',
+    query: {}
+  }, function(err, point, next) {
 
-        var guide = importconfig.reportGuide,
-          template = Config.Templates.getTemplate("Report"),
-          report = lodash.merge(template, guide);
+    var guide = importconfig.reportGuide,
+      template = Config.Templates.getTemplate("Report"),
+      report = lodash.merge(template, guide);
 
-        report["Report Type"].Value = "History";
-        report["Report Type"].eValue = Config.Enums["Report Types"]["History"].enum;
-        report["Point Refs"] = [];
-        report._pStatus = 0;
-        report._id = point._id;
-        report.Name = point.Name;
-        //report._Name = point.Name.toLowerCase();
-        delete report._Name;
+    report["Report Type"].Value = "History";
+    report["Report Type"].eValue = Config.Enums["Report Types"].History.enum;
+    report["Point Refs"] = [];
+    report._pStatus = 0;
+    report._id = point._id;
+    report.Name = point.Name;
+    //report._Name = point.Name.toLowerCase();
+    delete report._Name;
 
-        var names = report.Name.split('_'),
-          index = 0;
+    var names = report.Name.split('_'),
+      index = 0;
 
-        for (var i = 1; i <= names.length; i++) {
-          report["name" + i] = names[i - 1];
-          report["_name" + i] = names[i - 1].toLowerCase();
-        }
-        report["Report Config"].reportTitle = report.Name;
-
-        report['Report Config'].interval.text = 'Minute';
-        report['Report Config'].interval.value = Math.floor(point.Interval / 60);
-        report['Report Config'].duration.selectedRange = 'Today';
-
-        async.forEachSeries(point.upis, function(upi, cb) {
-          db.collection(pointsCollection).findOne({
-            _id: upi
-          }, {
-            Name: 1,
-            Value: 1,
-            "Point Type": 1,
-            "Point Refs": 1,
-            'Engineering Units': 1
-          }, function(err, ref) {
-            if (!!ref) {
-              report["Report Config"].columns.push({
-                "colName": ref.Name,
-                "colDisplayName": ref.Name,
-                "valueType": "None",
-                "operator": "",
-                "calculation": "Mean",
-                "canCalculate": true,
-                "includeInReport": true,
-                "includeInChart": true,
-                "multiplier": 1,
-                "precision": 5,
-                "upi": ref._id,
-                "pointType": ref['Point Type'].Value,
-                "units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
-                "canBeCharted": true,
-                "yaxisGroup": "A",
-                "AppIndex": index + 1
-              });
-              report["Point Refs"].push({
-                "PropertyName": "Column Point",
-                "PropertyEnum": 131,
-                "AppIndex": index + 1,
-                "isDisplayable": true,
-                "isReadOnly": false,
-                "Value": ref._id,
-                "PointName": "",
-                "PointType": 0,
-                "PointInst": 0,
-                "DevInst": 0
-              });
-              report = Config.EditChanges.applyUniquePIDLogic({
-                point: report,
-                refPoint: ref
-              }, index);
-              report._actvAlmId = ObjectID("000000000000000000000000");
-              report._curAlmId = ObjectID("000000000000000000000000");
-              index++;
-            }
-            cb(null);
-
-          });
-        }, function(err) {
-          db.collection(pointsCollection).insert(report, function(err, result) {
-            cursor.nextObject(processPoint);
-          });
-
-        });
-      }
+    for (var i = 1; i <= names.length; i++) {
+      report["name" + i] = names[i - 1];
+      report["_name" + i] = names[i - 1].toLowerCase();
     }
+    report["Report Config"].reportTitle = report.Name;
 
-    cursor.nextObject(processPoint);
+    report['Report Config'].interval.text = 'Minute';
+    report['Report Config'].interval.value = Math.floor(point.Interval / 60);
+    report['Report Config'].duration.selectedRange = 'Today';
+
+    async.forEachSeries(point.upis, function(upi, cb) {
+      Utility.getOne({
+        collection: pointsCollection,
+        query: {
+          _id: upi
+        },
+        fields: {
+          Name: 1,
+          Value: 1,
+          "Point Type": 1,
+          "Point Refs": 1,
+          'Engineering Units': 1
+        }
+      }, function(err, ref) {
+        if (!!ref) {
+          report["Report Config"].columns.push({
+            "colName": ref.Name,
+            "colDisplayName": ref.Name,
+            "valueType": "None",
+            "operator": "",
+            "calculation": "Mean",
+            "canCalculate": true,
+            "includeInReport": true,
+            "includeInChart": true,
+            "multiplier": 1,
+            "precision": 5,
+            "upi": ref._id,
+            "pointType": ref['Point Type'].Value,
+            "units": !!ref['Engineering Units'] ? ref['Engineering Units'].Value : '',
+            "canBeCharted": true,
+            "yaxisGroup": "A",
+            "AppIndex": index + 1
+          });
+          report["Point Refs"].push({
+            "PropertyName": "Column Point",
+            "PropertyEnum": 131,
+            "AppIndex": index + 1,
+            "isDisplayable": true,
+            "isReadOnly": false,
+            "Value": ref._id,
+            "PointName": "",
+            "PointType": 0,
+            "PointInst": 0,
+            "DevInst": 0
+          });
+          report = Config.EditChanges.applyUniquePIDLogic({
+            point: report,
+            refPoint: ref
+          }, index);
+          report._actvAlmId = ObjectID("000000000000000000000000");
+          report._curAlmId = ObjectID("000000000000000000000000");
+          index++;
+        }
+        cb(null);
+
+      });
+    }, function(err) {
+      Utility.insert({
+        collection: pointsCollection,
+        insertObj: report
+      }, next);
+    });
   });
 }
 
@@ -1910,7 +1672,7 @@ function convertTotalizerReports(callback) {
     var refIds = [];
 
     report["Report Type"].Value = "Totalizer";
-    report["Report Type"].eValue = Config.Enums["Report Types"]["Totalizer"].enum;
+    report["Report Type"].eValue = Config.Enums["Report Types"].Totalizer.enum;
     report["Point Refs"] = [];
     report._pStatus = 0;
     report.Name = doc.Name;
@@ -2064,7 +1826,10 @@ function convertScheduleEntries(callback) {
   scheduleTemplate._pStatus = 0;
   scheduleTemplate._cfgRequired = false;
 
-  db.collection("ScheduleEntries").find({}).toArray(function(err, oldScheduleEntries) {
+  Utility.get({
+    collection: "ScheduleEntries",
+    query: {}
+  }, function(err, oldScheduleEntries) {
     logger.info("results", oldScheduleEntries.length);
     async.forEachSeries(oldScheduleEntries, function(oldScheduleEntry, forEachCallback) {
       var criteria = {
@@ -2110,9 +1875,7 @@ function convertScheduleEntries(callback) {
 
         delete scheduleEntryTemplate._Name;
         if (scheduleEntryTemplate["Control Point"].Value !== scheduleEntryTemplate._parentUpi) {
-          insertScheduleEntry(scheduleEntryTemplate, function(err) {
-            forEachCallback(err);
-          });
+          insertScheduleEntry(scheduleEntryTemplate, forEachCallback);
         } else {
           console.log('not inserting SE', scheduleEntryTemplate._id);
           forEachCallback();
@@ -2126,45 +1889,62 @@ function convertScheduleEntries(callback) {
 }
 
 function insertScheduleEntry(scheduleEntry, callback) {
-
-  db.collection(pointsCollection).insert(scheduleEntry, function(err, result) {
-
-    callback(err);
-  });
+  Utility.insert({
+    collection: pointsCollection,
+    insertObj: scheduleEntry
+  }, callback);
 }
 
 function cleanupDB(callback) {
-  db.dropCollection('points', function() {
-    db.collection("new_points").update({
-      _oldUpi: {
-        $exists: 1
-      }
-    }, {
-      $unset: {
-        _oldUpi: 1
-      }
-    }, {
-      multi: true
-    }, function(err, result) {
-      db.collection("new_points").update({
-        _newUpi: {
+  Utility.dropCollection({
+    collection: pointsCollection
+  }, function() {
+    Utility.update({
+      collection: 'new_points',
+      query: {
+        _oldUpi: {
           $exists: 1
         }
-      }, {
+      },
+      updateObj: {
         $unset: {
-          _newUpi: 1
+          _oldUpi: 1
         }
-      }, {
+      },
+      options: {
         multi: true
-      }, function(err, result) {
+      }
+    }, function(err, result) {
 
-        db.collection('new_points').rename('points', function() {
-          db.dropCollection('ScheduleEntries', function(err) {
-            if (err) {
-              return callback(err);
-            }
-            db.dropCollection('OldHistLogs', function() {
-              db.dropCollection('Totalizers', callback);
+      Utility.update({
+        collection: 'new_points',
+        query: {
+          _newUpi: {
+            $exists: 1
+          }
+        },
+        updateObj: {
+          $unset: {
+            _newUpi: 1
+          }
+        },
+        options: {
+          multi: true
+        }
+      }, function(err, result) {
+        Utility.rename({
+          from: 'new_points',
+          to: 'points'
+        }, function() {
+          Utility.dropCollection({
+            collection: 'ScheduleEntries'
+          }, function() {
+            Utility.dropCollection({
+              collection: 'OldHistLogs'
+            }, function() {
+              Utility.dropCollection({
+                collection: 'Totalizers'
+              }, callback);
             });
           });
         });
@@ -2175,11 +1955,14 @@ function cleanupDB(callback) {
 
 function updateGPLReferences(callback) {
   logger.info("starting updateGPLReferences");
-  db.collection(pointsCollection).find({
-    "gplLabel": {
-      $exists: 1
+  Utility.get({
+    collection: pointsCollection,
+    query: {
+      "gplLabel": {
+        $exists: 1
+      }
     }
-  }).toArray(function(err, gplBlocks) {
+  }, function(err, gplBlocks) {
     logger.info("gplBlocks.length = " + gplBlocks.length);
     async.forEachSeries(gplBlocks, function(gplBlock, cb) {
       gplBlock.name4 = gplBlock.gplLabel;
@@ -2188,29 +1971,39 @@ function updateGPLReferences(callback) {
       gplBlock._name4 = gplBlock.name4.toLowerCase();
       gplBlock._Name = gplBlock.Name.toLowerCase();
       delete gplBlock.gplLabel;
-
-      db.collection(pointsCollection).update({
-        _id: gplBlock._id
-      }, gplBlock, function(err, result) {
+      Utility.update({
+        collection: pointsCollection,
+        query: {
+          _id: gplBlock._id
+        },
+        updateObj: gplBlock
+      }, function(err, result) {
         if (err)
           logger.info('updateGPLReferences1 err', err);
-
-        db.collection(pointsCollection).find({
-          "Point Refs.Value": gplBlock._id
-        }, {
-          "Point Refs": 1
-        }).toArray(function(err, gplRefs) {
+        Utility.get({
+          collection: pointsCollection,
+          query: {
+            "Point Refs.Value": gplBlock._id
+          },
+          fields: {
+            "Point Refs": 1
+          }
+        }, function(err, gplRefs) {
           async.forEachSeries(gplRefs, function(gplRef, cb2) {
             for (var m = 0; m < gplRef["Point Refs"].length; m++) {
               if (gplRef["Point Refs"][m].Value === gplBlock._id) {
                 gplRef["Point Refs"][m].PointName = gplBlock.Name;
               }
             }
-            db.collection(pointsCollection).update({
-              _id: gplRef._id
-            }, {
-              $set: {
-                "Point Refs": gplRef["Point Refs"]
+            Utility.update({
+              collection: pointsCollection,
+              query: {
+                _id: gplBlock._id
+              },
+              updateObj: {
+                $set: {
+                  "Point Refs": gplRef["Point Refs"]
+                }
               }
             }, function(err, result) {
               if (err)
@@ -2230,18 +2023,148 @@ function updateGPLReferences(callback) {
   });
 }
 
+function addReferencesToSequencePointRefs(point, cb) {
+  var blocks = point.SequenceData && point.SequenceData.sequence && point.SequenceData.sequence.block,
+    dynamics = point.SequenceData && point.SequenceData.sequence && point.SequenceData.sequence.dynamic,
+    upiList = [],
+    upiCrossRef = [],
+    skipTypes = ['Constant'],
+    c,
+    pRefAppIndex = 1,
+    getCrossRefByUPIandName = function(upi, propertyName) {
+      return upiCrossRef.filter(function(ref) {
+        return ref.upi === upi && ref.PropertyName === propertyName;
+      });
+    },
+    getCrossRefByUPI = function(upi) {
+      return upiCrossRef.filter(function(ref) {
+        return ref.upi === upi;
+      });
+    },
+    matchUpisToPointRefs = function() {
+      var setPointRefIndex = function(gplObjects, propertyName) {
+        var gplObject;
+        var pRef;
+        var filterPointRefs = function(pointRef) {
+          return pointRef.Value === gplObject.upi && pointRef.PropertyName === propertyName;
+        };
+
+        if (!!gplObjects) {
+          for (c = 0; c < gplObjects.length; c++) {
+            gplObject = gplObjects[c];
+            if (gplObject.upi && skipTypes.indexOf(gplObject.blockType) === -1) {
+              if (!!gplObject.upi) {
+                pRef = point["Point Refs"].filter(filterPointRefs);
+
+                pRef = (!!pRef && pRef.length > 0 ? pRef[0] : null);
+
+                if (!!pRef) {
+                  gplObject.pointRefIndex = pRef.AppIndex;
+                  // delete gplObject.upi; // TODO to clear out duplicate data (point ref contains the UPI)
+                }
+              }
+            }
+          }
+        }
+      };
+
+      setPointRefIndex(blocks, "GPLBlock");
+      setPointRefIndex(dynamics, "GPLDynamic");
+      cb();
+    },
+    makePointRef = function(refPoint, propName, propType) {
+      var pointType = refPoint["Point Type"].Value;
+      var baseRef = {
+        "PropertyName": propName,
+        "PropertyEnum": propType,
+        "Value": refPoint._id,
+        "AppIndex": pRefAppIndex++,
+        "isDisplayable": true,
+        "isReadOnly": true,
+        "PointName": refPoint.Name,
+        "PointInst": (refPoint._pStatus !== 2) ? refPoint._id : 0,
+        "DevInst": (Config.Utility.getPropertyObject("Device Point", refPoint) !== null) ? Config.Utility.getPropertyObject("Device Point", refPoint).Value : 0,
+        "PointType": Config.Enums['Point Types'][pointType].enum || 0
+      };
+
+      return baseRef;
+    },
+    setGPLPointData = function() {
+      var pushGPLObjectUPIs = function(gplObjects, propName, propType) {
+        var gplObject;
+        if (!!gplObjects) {
+          for (c = 0; c < gplObjects.length; c++) {
+            gplObject = gplObjects[c];
+            if (gplObject.upi && skipTypes.indexOf(gplObject.blockType) === -1) {
+              if (upiList.indexOf(gplObject.upi) === -1) {
+                upiList.push(gplObject.upi);
+              }
+
+              if (getCrossRefByUPIandName(gplObject.upi, propName).length === 0) {
+                upiCrossRef.push({
+                  upi: gplObject.upi,
+                  name: propName,
+                  type: propType
+                });
+              }
+            }
+          }
+        }
+      };
+
+      pushGPLObjectUPIs(blocks, "GPLBlock", 439);
+      pushGPLObjectUPIs(dynamics, "GPLDynamic", 440);
+
+      if (!!upiList && upiList.length > 0) {
+        Utility.get({
+          collection: pointsCollection,
+          query: {
+            _id: {
+              $in: upiList
+            }
+          }
+        }, function(err, points) {
+          var referencedPoint,
+            neededRefs,
+            i;
+          if (!!points) {
+            for (c = 0; c < points.length; c++) {
+              referencedPoint = points[c];
+              neededRefs = getCrossRefByUPI(referencedPoint._id); // gets both Blocks and Dynamics refs
+              for (i = 0; i < neededRefs.length; i++) {
+                point["Point Refs"].push(makePointRef(referencedPoint, neededRefs[i].name, neededRefs[i].type));
+              }
+            }
+          }
+          matchUpisToPointRefs();
+        });
+      } else {
+        cb();
+      }
+    };
+
+  setGPLPointData();
+}
+
 function updateGPLRefs(callback) {
-  db.collection(pointsCollection).find({
-    "Point Type.Value": "Sequence",
-    "SequenceData": {
-      $exists: 1
+  Utility.get({
+    collection: pointsCollection,
+    query: {
+      "Point Type.Value": "Sequence",
+      "SequenceData": {
+        $exists: 1
+      }
     }
-  }).toArray(function(err, sequences) {
+  }, function(err, sequences) {
     async.forEachSeries(sequences, function(sequence, cb) {
       addReferencesToSequencePointRefs(sequence, function() {
-        db.collection(pointsCollection).update({
-          _id: sequence._id
-        }, sequence, cb);
+        Utility.update({
+          collection: pointsCollection,
+          query: {
+            _id: sequence._id
+          },
+          updateObj: sequence
+        }, cb);
       });
     }, callback);
   });
@@ -2252,18 +2175,16 @@ function initImport(callback) {
   // remove VAV
   // model type property set isreadonly to false
   createEmptyCollections(function(err) {
-    setupReportsCollections(function(err) {
-      setupSystemInfo(function(err) {
-        setupPointRefsArray(function(err) {
-          addDefaultUser(function(err) {
-            // setupCurAlmIds(function(err) {
-            setupCfgRequired(function(err) {
-              setupProgramPoints(function(err) {
-                callback(null);
-              });
+    setupSystemInfo(function(err) {
+      setupPointRefsArray(function(err) {
+        addDefaultUser(function(err) {
+          // setupCurAlmIds(function(err) {
+          setupCfgRequired(function(err) {
+            setupProgramPoints(function(err) {
+              callback(null);
             });
-            // });
           });
+          // });
         });
       });
     });
@@ -2585,48 +2506,87 @@ function setUpCollections(callback) {
   logger.info("setUpCollections");
   setupAlarms(function(err) {
     setUserGroups(function(err) {
-      // setupUsers(function(err) {
       setupHistoryData(function(err) {
-        setupUpis(function(err) {
-          setupVersions(function(err) {
-            callback();
-          });
+        setupVersions(function(err) {
+          callback();
         });
       });
-      // });
     });
   });
 }
 
 function setupProgramPoints(callback) {
-  db.collection(pointsCollection).update({
-    "Point Type.Value": "Program"
-  }, {
-    $set: {
-      /*"Boolean Register Names": [],
-      "Integer Register Names": [],
-      "Point Register Names": [],
-      "Real Register Names": [],*/
-      "Last Report Time": {
-        "isDisplayable": true,
-        "isReadOnly": true,
-        "ValueType": 11,
-        "Value": 0
+  Utility.update({
+    collection: pointsCollection,
+    query: {
+      "Point Type.Value": "Program"
+    },
+    updateObj: {
+      $set: {
+        /*"Boolean Register Names": [],
+        "Integer Register Names": [],
+        "Point Register Names": [],
+        "Real Register Names": [],*/
+        "Last Report Time": {
+          "isDisplayable": true,
+          "isReadOnly": true,
+          "ValueType": 11,
+          "Value": 0
+        }
       }
+    },
+    options: {
+      multi: true
     }
-  }, {
-    multi: true
   }, function(err, result) {
     callback(err);
   });
 }
 
+
+function updateProgramPoints(point, cb) {
+  if (point["Point Type"].Value === "Script") {
+    Utility.update({
+      collection: pointsCollection,
+      query: {
+        "Point Type.Value": "Program",
+        $or: [{
+          "Script Point.Value": point._id
+        }, {
+          "Point Refs": {
+            $elemMatch: {
+              Value: point._id,
+              PropertyEnum: 270
+            }
+          }
+        }]
+      },
+      updateObj: {
+        $set: {
+          "Boolean Register Names": point["Boolean Register Names"],
+          "Integer Register Names": point["Integer Register Names"],
+          "Point Register Names": point["Point Register Names"],
+          "Real Register Names": point["Real Register Names"]
+        }
+      },
+      options: {
+        multi: true
+      }
+    }, cb);
+  } else {
+    cb(null);
+  }
+}
+
 function updateAllProgramPoints(callback) {
-  db.collection(pointsCollection).find({
-    "Point Type.Value": "Script"
-  }).toArray(function(err, scripts) {
+  Utility.get({
+    collection: pointsCollection,
+    query: {
+      "Point Type.Value": "Script"
+    }
+  }, function(err, scripts) {
     async.forEachSeries(scripts, function(script, cb) {
-      updateProgramPoints(script, db, function(err) {
+      updateProgramPoints(script, function(err) {
         if (err)
           logger.info("updateProgramPoints", err);
         cb(err);
@@ -2638,11 +2598,116 @@ function updateAllProgramPoints(callback) {
   });
 }
 
+
+function updateNameSegments(point, cb) {
+  //var updObj = {};
+
+  point._name1 = point.name1.toLowerCase();
+  point._name2 = point.name2.toString().toLowerCase();
+  point._name3 = point.name3.toLowerCase();
+  point._name4 = point.name4.toLowerCase();
+  point._Name = point.Name.toLowerCase();
+  /*db.collection(pointsCollection).update({
+    _id: point._id
+  }, {
+    $set: updObj
+  }, function(err, result) {*/
+
+  // });
+  cb(null);
+}
+
+function updateSensorPoints(point, cb) {
+
+  if (point["Point Type"].Value === "Sensor") {
+
+    var sensorTemplate = Config.Templates.getTemplate(point["Point Type"].Value),
+      updateProps = function() {
+        for (var prop in sensorTemplate) {
+          if (!point.hasOwnProperty(prop) || prop === "Point Refs") {
+            point[prop] = sensorTemplate[prop];
+          }
+        }
+      };
+
+    point._cfgRequired = false;
+
+    if (!!point.Remarks) {
+      point.name1 = "Sensor";
+      point.name2 = "";
+      point.name3 = "";
+      point.name4 = "";
+
+      for (var i = 0; i < point.Remarks.Value.length; i++) {
+        if (Config.Utility.isPointNameCharacterLegal(point.Remarks.Value[i])) {
+          point.name2 += point.Remarks.Value[i];
+        }
+      }
+      point.Name = point.name1 + "_" + point.name2;
+      delete point.Remarks;
+      updateNameSegments(point, function(err) {
+        Utility.get({
+          collection: pointsCollection,
+          query: {
+            _name1: point._name1,
+            _name2: point._name2
+          },
+          fields: {
+            _name1: 1,
+            _name2: 1,
+            _name3: 1,
+            _name4: 1
+          }
+        }, function(err, points) {
+          var nextNum = 1,
+            name3Number;
+          for (var j = 0; j < points.length; j++) {
+            name3Number = parseInt(points[j]._name3, 10);
+            if (nextNum < name3Number)
+              nextNum = name3Number + 1;
+          }
+          if (nextNum > 1) {
+            point.name3 = nextNum.toString();
+            point.Name += "_" + point.name3;
+          }
+          updateNameSegments(point, function(err) {
+            delete point._Name;
+            updateProps();
+            Utility.update({
+              collection: pointsCollection,
+              query: {
+                _id: point._id
+              },
+              updateObj: point
+            }, cb);
+          });
+        });
+
+      });
+    } else {
+      updateProps();
+      Utility.update({
+        collection: pointsCollection,
+        query: {
+          _id: point._id
+        },
+        updateObj: point
+      }, cb);
+    }
+
+  } else {
+    cb(null);
+  }
+}
+
 function updateAllSensorPoints(callback) {
   logger.info("starting updateAllSensorPoints");
-  db.collection(pointsCollection).find({
-    "Point Type.Value": "Sensor"
-  }).toArray(function(err, sensors) {
+  Utility.get({
+    collection: pointsCollection,
+    query: {
+      "Point Type.Value": "Sensor"
+    }
+  }, function(err, sensors) {
     async.forEachSeries(sensors, function(sensor, cb) {
       updateSensorPoints(sensor, function(err) {
         if (err)
@@ -2657,111 +2722,27 @@ function updateAllSensorPoints(callback) {
 }
 
 function setupAlarms(callback) {
-  db.createCollection('Alarms', function(err, collection) {
-    callback(err);
-  });
+  Utility.createCollection({
+    collection: 'Alarms'
+  }, callback);
 }
 
 function setUserGroups(callback) {
-  db.createCollection('User Groups', function(err, collection) {
-    callback(err);
-  });
-
-}
-
-function setupUsers(callback) {
-  db.createCollection('Users', function(err, collection) {
-    db.collection('Users').insert({
-      "Auto Logout Duration": {
-        "Value": 0
-      },
-      "Contact Info": {
-        "Value": [{
-          "Type": "Home",
-          "Value": "(336) 469-1234"
-        }, {
-          "Type": "Mobile",
-          "Value": "(336) 469-5678"
-        }, {
-          "Type": "Email",
-          "Value": "johndoe@dorsett-tech.com"
-        }, {
-          "Type": "Pager",
-          "Value": "(336) 469-1245"
-        }]
-      },
-      "Description": {
-        "Value": ""
-      },
-      "First Name": {
-        "Value": "John"
-      },
-      "Last Activity Time": {
-        "Value": 0
-      },
-      "Last Login Time": {
-        "Value": 0
-      },
-      "Last Name": {
-        "Value": "Doe"
-      },
-      "Password": {
-        "Value": "$2a$10$kXPCe68hNnuTtMRsHpm2F.wnxoWvyAaiRFLhSqoGgG/Wyu3kP4NEG"
-      },
-      "Password Reset": {
-        "Value": true
-      },
-      "Photo": {
-        "Value": "JohnnyRoberts.jpg"
-      },
-      "System Admin": {
-        "Value": true
-      },
-      "Title": {
-        "Value": "user1's title"
-      },
-      "username": "user1"
-    }, function(err, result) {
-      callback(err);
-    });
-  });
-
+  Utility.createCollection({
+    collection: 'User Groups'
+  }, callback);
 }
 
 function setupHistoryData(callback) {
-  db.createCollection('historydata', function(err, collection) {
-    callback(err);
-  });
-
-}
-
-function setupUpis(callback) {
-  db.createCollection('upis', function(err, collection) {
-    var upis = [];
-    /*for (var i = 1; i <= 4194302; i++) {*/
-    for (var i = 1; i <= 494302; i++) {
-      upis.push({
-        _id: i,
-        _pStatus: 1
-      });
-    }
-    async.forEachSeries(upis, function(upi, cb) {
-      db.collection('upis').insert(upi, function(err, result) {
-        cb(err);
-      });
-    }, function(err) {
-      callback(err);
-    });
-
-  });
-
+  Utility.createCollection({
+    collection: 'historydata'
+  }, callback);
 }
 
 function setupVersions(callback) {
-  db.createCollection('versions', function(err, collection) {
-    callback(err);
-  });
-
+  Utility.createCollection({
+    collection: 'versions'
+  }, callback);
 }
 
 function doGplImport(xmlPath, cb) {
@@ -2870,55 +2851,62 @@ function doGplImport(xmlPath, cb) {
         c,
         upi,
         saveSequence = function() {
-          db.collection(pointsCollection).findOne({
+          Utility.getOne({
+            collection: pointsCollection,
+            query: {
               "Name": name
-            }, {
-              '_id': 1
             },
-            function(err, result) {
-              if (result) {
-                var _id = result._id;
+            fields: {
+              '_id': 1
+            }
+          }, function(err, result) {
+            if (result) {
+              var _id = result._id;
 
-                if (!err) {
-                  db.collection(pointsCollection).update({
+              if (!err) {
+                Utility.update({
+                  collection: pointsCollection,
+                  query: {
                     _id: _id
-                  }, {
+                  },
+                  updateObj: {
                     $set: {
                       'SequenceData': json
                     }
-                  }, function(updateErr, updateRecords) {
-                    /*if (updateErr) {
-                      socket.emit('gplImportMessage', {
-                        type: 'error',
-                        message: updateErr.err,
-                        name: name
-                      });
-                    } else {
-                      socket.emit('gplImportMessage', {
-                        type: 'success',
-                        message: 'success',
-                        name: name
-                      });
-                    }*/
-                    complete(cb);
-                  });
-                } else {
-                  /*socket.emit('gplImportMessage', {
-                    type: 'error',
-                    message: err.err,
-                    name: name
-                  });*/
+                  }
+                }, function(updateErr, updateRecords) {
+                  /*if (updateErr) {
+                    socket.emit('gplImportMessage', {
+                      type: 'error',
+                      message: updateErr.err,
+                      name: name
+                    });
+                  } else {
+                    socket.emit('gplImportMessage', {
+                      type: 'success',
+                      message: 'success',
+                      name: name
+                    });
+                  }*/
                   complete(cb);
-                }
+                });
               } else {
                 /*socket.emit('gplImportMessage', {
-                  type: 'empty',
-                  message: 'empty',
+                  type: 'error',
+                  message: err.err,
                   name: name
                 });*/
                 complete(cb);
               }
-            });
+            } else {
+              /*socket.emit('gplImportMessage', {
+                type: 'empty',
+                message: 'empty',
+                name: name
+              });*/
+              complete(cb);
+            }
+          });
         },
         doNext = function() {
           var upi,
@@ -2938,12 +2926,15 @@ function doGplImport(xmlPath, cb) {
           if (row) {
             upi = row.upi;
             label = row.label;
-
-            db.collection(pointsCollection).update({
-              _id: upi
-            }, {
-              $set: {
-                gplLabel: label
+            Utility.update({
+              collection: pointsCollection,
+              query: {
+                _id: upi
+              },
+              updateObj: {
+                $set: {
+                  gplLabel: label
+                }
               }
             }, function(err, records) {
               /*if (err) {
