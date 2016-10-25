@@ -49,6 +49,18 @@ var cli = commandLineArgs([{
   name: 'inner',
   alias: 'i',
   type: Boolean
+}, {
+  name: 'thumbs',
+  alias: 't',
+  type: Boolean
+}, {
+  name: 'nothumbs',
+  alias: 'n',
+  type: Boolean
+}, {
+  name: 'test',
+  alias: 'x',
+  type: Boolean
 }]);
 
 var options = cli.parse();
@@ -57,6 +69,26 @@ dbModel.connect(connectionString.join(''), function(err) {
 
   if (!!options.default) {
     importProcess.start();
+  } else if (!!options.gpl) {
+    doGplImport(xmlPath);
+  } else if (!!options.updategpl) {
+    updateGPLRefs(function(err) {
+      logger.info('updateGPLRefs', err);
+    });
+  } else if (!!options.history) {
+    updateHistory(function(err) {
+      logger.info('updateHistory', err);
+    });
+  } else if (!!options.inner) {
+    importProcess.innerLoop(false, function(err) {
+      logger.info('innerLoop', err);
+    });
+  } else if (!!options.thumbs) {
+    logger.info('flag not established');
+  } else if (!!options.nothumbs) {
+    logger.info('flag not established');
+  } else if (!!options.test) {
+    logger.info('flag not established');
   } else {
     throw new Error('No valid arguments passed');
   }
@@ -97,7 +129,7 @@ function importUpdate() {
         updateAllSensorPoints(cb);
       },
       function(cb) {
-        self.innerLoop(cb);
+        self.innerLoop(false, cb);
       },
 
       function(cb) {
@@ -126,7 +158,7 @@ function importUpdate() {
     });
   };
 
-  this.innerLoop = function(cb) {
+  this.innerLoop = function(limits, cb) {
     logger.info("innerLoop");
     var count = 0;
     var criteria = {
