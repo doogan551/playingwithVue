@@ -1,33 +1,6 @@
 // scss-lint:disable Comment, PropertySortOrder, VendorPrefix, NameFormat, SelectorFormat, QualifyingElement, NestingDepth, SelectorDepth, ImportantRule, IdSelector, ColorVariable
 @import '../materialize/materialize';
 
-/* FONTS FOR MATERIALIZE */
-@font-face {
-    font-family: 'Material Icons';
-    font-style: normal;
-    font-weight: 400;
-    src: local('Material Icons'), local('MaterialIcons-Regular'), url(../../font/Material-Icons/Material-Icons.woff2) format('woff2'), url(../../font/Material-Icons/Material-Icons.woff) format('woff');
-}
-
-.material-icons {
-    font-family: 'Material Icons';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 24px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    display: inline-block;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    font-feature-settings: 'liga';
-    -webkit-font-feature-settings: 'liga';
-    -webkit-font-smoothing: antialiased;
-}
-/* END FONTS FOR MATERIALIZE */
-
-
 /* overrides */
 
 $navbarHeight: 48px;

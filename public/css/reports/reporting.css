@@ -87,15 +87,33 @@ input.input.form-control.durationDateRangeTime {
     cursor: pointer;
     text-decoration: underline;
 }
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    text-rendering: optimizeLegibility;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-feature-settings: 'liga';
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+}
 .viewReportNav {
-    display: inline-flex;
-    margin-right: 5px;
+    width: 175px !important;
+    height: 53px !important;
+    margin-left: 8px !important;
 }
 .viewReportNav li {
     margin-right: 5px;
 }
 .runReportTabSpinner {
-    margin-left: 34px;
+    margin-left: 20px;
 }
 .runReportCheckMark {
     margin-left: 34px;
@@ -165,7 +183,15 @@ span.timePickerLabel {
     align-items: center;
     color: black;
 }
-
+.reportDatePickers {
+    display: inline-flex;
+}
+.reportDatePickers span.reportEndDatePicker {
+    padding-left: 20px;
+}
+.reportDatePickers .input-field {
+    width: 150px;
+}
 span.reportDateRangeLabel {
     display: flex;
     align-items: center;
@@ -219,9 +245,9 @@ input.intervalValue {
 }
 .calculations {
     list-style-type: none;
-    width: 100px;
+    width: 115px;
     -webkit-appearance: none;
-    padding: 2px 5px 2px 5px;
+    padding: 15px 0px 0px 8px;
 }
 .globalCalculations {
     list-style-type: none;
@@ -233,6 +259,9 @@ input.intervalValue {
     margin-left: 6px;
     margin-top: -8px;
     padding-top: 10px;
+}
+.chartTypeSelection {
+    padding-left: 100px;
 }
 .chartTypes.dropdown-menu {
     width: 65px;
@@ -347,7 +376,7 @@ td.filterName {
 .tabViewReport .chartButtons {
     display: inline-flex;
     padding: 3px;
-    margin-top: -6px;
+    margin-top: -70px;
     float: right;
 }
 .tabViewReport .chartButtons a.btn.btn-default {
@@ -499,7 +528,7 @@ html, body {
     display: inline-block;
 }
 .hideDiv {
-    display: none;
+    display: none !important;
 }
 .runReportSpinner {
     left: 45%;
@@ -971,7 +1000,8 @@ input.filled-in[type=number]:focus:not([readonly]) {
 .availableChartTypes.chartTab > .btn {
     padding: 0px 14px 0px 8px;
     border-radius: 4px 0px 0px 4px;
-    height: 36px;}
+    height: 36px;
+}
 .panel-heading a.panel-anchor:after {
     font-family:'Glyphicons Halflings';
     content:"\e114";
