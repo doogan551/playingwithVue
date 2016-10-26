@@ -82,8 +82,7 @@ var dtiUtility =  {
                 },
                 pointCreated: function () {
                     if (dtiUtility._CreatePointCb) {
-                        delete newValue.message;
-                        dtiUtility._CreatePointCb(newValue);
+                        dtiUtility._CreatePointCb(newValue.point);
                     }
                 },
                 pointFilterSelected: function () {

@@ -3854,7 +3854,9 @@ var dti = {
                                     messageID: messageID,
                                     key: sourceWindowId, 
                                     message: 'pointCreated',
-                                    value: data
+                                    value: {
+                                        point: data
+                                    }
                                 });
                             };
 
