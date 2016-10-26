@@ -1,5 +1,44 @@
 "use strict";
 window.workspaceManager = window.top.workspaceManager;
+
+var dti = {
+    forEach: function (obj, fn) {
+        var keys = Object.keys(obj),
+            c,
+            len = keys.length,
+            errorFree = true;
+
+        for (c = 0; c < len && errorFree; c++) {
+            errorFree = fn(obj[keys[c]], keys[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
+    forEachArray: function (arr, fn) {
+        var c,
+            list = arr || [],
+            len = list.length,
+            errorFree = true;
+
+        for (c = 0; c < len && errorFree; c++) {
+            errorFree = fn(list[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
+    getTemplate: function (id) {
+        var markup = $(id).html();
+
+        return $(markup);
+    },
+};
+
 var reportsVM,
     reportDateRanges = function (selectedRange) {
         var answer,
@@ -780,7 +819,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = (!scheduled ? ENUMSTEMPLATESTEMPLATES.Points[column.pointType] : undefined);
+                        valueOptions = (!scheduled ? ENUMSTEMPLATESTEMPLATES[column.pointType] : undefined);
                         result = (valueOptions === undefined);
                         break;
                 }
@@ -807,7 +846,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = ENUMSTEMPLATESTEMPLATES.Points[column.pointType];
+                        valueOptions = ENUMSTEMPLATESTEMPLATES[column.pointType];
                         result = (valueOptions !== undefined);
                         break;
                 }
@@ -979,7 +1018,7 @@ var reportsViewModel = function () {
                         if (!!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
-                            valueoptions = ENUMSTEMPLATESTEMPLATES.Points[tempObject.pointType];
+                            valueoptions = ENUMSTEMPLATESTEMPLATES[tempObject.pointType];
                             tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
                         }
                     }
@@ -1046,7 +1085,7 @@ var reportsViewModel = function () {
                         if (!!selectedPoint.Value && !!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
-                            valueoptions = ENUMSTEMPLATESTEMPLATES.Points[tempObject.pointType];
+                            valueoptions = ENUMSTEMPLATESTEMPLATES[tempObject.pointType];
                             tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
                         }
                     }
@@ -4107,6 +4146,140 @@ var reportsViewModel = function () {
 
     self.currentColumnEdit = ko.observable(getNewColumnTemplate());
 
+    self.scheduler = {
+        parseCron: function (cron) {
+            var name = ['minute', 'hour', 'date', 'month', 'dow'], // dow = day of week
+                parsed = {
+                    advanced: false,
+                    cron: cron,
+                    interval: null
+                };
+
+            dti.forEachArray(cron.split(' '), function (val, index) {
+                var _val = [];
+
+                if (!!~val.indexOf(',')) {
+                    parsed.advanced = true;
+
+                    dti.forEachArray(val.split(','), function (val, index) {
+                        _val.push(val);
+                    });
+                } else {
+                    _val.push(val);
+                }
+                parsed[name[index]] = _val;
+            });
+
+            if (!parsed.advanced) {
+                if (parsed.dow[0] !== '*') {
+                    parsed.interval = 'Weekly';
+                } else if (parsed.date[0] !== '*') {
+                    parsed.interval = 'Monthly';
+                } else if (parsed.month[0] !== '*') {
+                    parsed.interval = 'Yearly';
+                } else {
+                    parsed.interval = 'Daily';
+                }
+            }
+
+            return parsed;
+        },
+        modal: {
+            open: function (data) {
+                var $modal = dti.getTemplate('#scheduleModalTemplate'),
+                    availableDates = (function buildAvailableDates () {
+                        var arr = [],
+                            j = 0,
+                            suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'],
+                            suffix;
+
+                        while (j++ < 31) {
+                            suffix = (j > 9 && j < 14) ? 'th' : suffixes[j%10];
+                            arr.push({
+                                text: j + suffix,
+                                value: j
+                            });
+                        }
+                        return arr;
+                    })(),
+                    availableMonths = (function buildAvailableMonths () {
+                        var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                            arr = [];
+                        
+                        dti.forEachArray(months, function addMonth (month, index) {
+                            arr.push({
+                                text: month,
+                                value: index + 1
+                            });
+                        });
+                        return arr;
+                    })(),
+                    availableDaysOfWeek = (function buildAvailableDaysOfWeek () {
+                        var dow = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                            arr = [];
+
+                        dti.forEachArray(dow, function addDay (day, index) {
+                            arr.push({
+                                text: day,
+                                value: index
+                            });
+                        });
+                        return arr;
+                    })(),
+                    bindings = {
+                        availableIntervals: ['Daily', 'Weekly', 'Monthly', 'Yearly', 'Advanced'],
+                        availableDaysOfWeek: availableDaysOfWeek,
+                        availableMonths: availableMonths,
+                        availableDates: availableDates,
+                        selectedInterval: ko.observable(),
+                        selectedMonth: ko.observable(),
+                        selectedDate: ko.observable(),
+                        selectedDayOfWeek: ko.observable(),
+                        selectedTime: ko.observable('00:00'),
+                        saveScheduleEntry: function (data) {
+                            self.scheduler.modal.close(data);
+                        },
+                        cancelScheduleEntry: function (data) {
+                            self.scheduler.modal.close(data);
+                        }
+                    };
+
+                if (data === 'new') {
+                    bindings.isNew = true;
+                    bindings.selectedInterval('Daily');
+                } else {
+
+                }
+
+                ko.applyBindings(bindings, $modal[0]);
+
+                $('body').append($modal);
+
+                $modal.find('.dropdown-button').dropdown();
+                $modal.find('select').material_select();
+                $modal.find('#timepicker').pickatime({
+                    autoclose: false,
+                    twelvehour: true // TODO this should come from a system/user preference
+                });
+
+                $modal.openModal({
+                    dismissible: false
+                });
+            },
+            close: function (data) {
+                var $modal = $('#scheduleModal');
+
+                $modal.closeModal({
+                    complete: function () {
+                        ko.cleanNode($modal[0]);
+                        $modal.find('select').material_select('destroy'); // Necessary?
+                        $modal.remove();
+                    }
+                });
+            }
+        }
+    };
+
     self.printChartDiv = function () {
         renderChart(true);
         setTimeout(function () {
@@ -4994,7 +5167,16 @@ function applyBindings(extConfig) {
             reportsVM = new reportsViewModel();
             reportsVM.init(extConfig);
             ko.applyBindings(reportsVM);
-            Materialize.updateTextFields();
+            
+            // Materialize.updateTextFields();
+
+            // window.setTimeout(function () {
+            //     $('#reportColumns').find('.dropdown-button').dropdown();
+            // }, 2000);
+
+            // Programatically selecting the active tab here because adding the 'active' class to 
+            // the default tab wasn't causing it to appear selected on page load
+            // $('ul.tabs').tabs('select_tab', 'reportAttribs');
         }, 100);
     }
 }
