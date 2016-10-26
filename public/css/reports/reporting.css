@@ -12,11 +12,13 @@
 }
 .rightPanel {
     z-index: 0;
-    padding: 0px 0px 5px 88px;
-    position: relative;
-    width: 100%;
-    height: 100vh;
+    position: absolute;
+    left: 86px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
     background-color: #fff;
+    overflow-x: auto;
 }
 .rightPanel > div.container-fluid {
     padding-right: 0px;
@@ -1073,4 +1075,37 @@ button {
 }
 .softDeleted {
     color: red;
+}
+
+#schedule .labelColumn {
+        color: #23527c;
+        font-size: larger;
+        width: 150px;
+        float: left;
+}
+#schedule .contentColumn {
+    float: left;
+}
+#schedule .contentColumn i {
+    color: #607d8b;
+}
+#scheduleModal .input-field {
+    white-space: nowrap;
+    margin-right: 20px;
+}
+#scheduleModal .input-field:last-child {
+    margin-right: 0px;
+}
+#scheduleModal .modal-footer .btn {
+    float: none;
+    margin-left: 18px;
+}
+.flex {
+    display: flex;
+}
+.flex-center {
+    align-items: center;
+}
+.flex-start {
+    justify-content: flex-start;
 }

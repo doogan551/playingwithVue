@@ -7,6 +7,7 @@ html.direports
         //link(type='text/css', rel='stylesheet', href="/css/lib/bootstrap-datepicker.css")
         //link(type='text/css', rel='stylesheet', href="/css/lib/jquery-clockpicker.min.css")
         link(type='text/css', rel='stylesheet', href='/css/lib/materialize.min.css')
+        link(type='text/css', rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
         //link(type='text/css', rel='stylesheet', href="/css/lib/font-awesome-4.3.0/css/font-awesome.min.css")
         link(type='text/css', rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.material.min.css')
         //link(type='text/css', rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.bootstrap.min.css')
@@ -16,6 +17,7 @@ html.direports
         //link(type='text/css', rel='stylesheet', href='/css/lib/daterangepicker.css')
         link(type='text/css', rel='stylesheet', href='/css/reports/reporting.css')
         link(type='text/css', rel='stylesheet', href='https://fonts.googleapis.com/icon?family=Material+Icons')
+        link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
         script(type="text/javascript" src="/js/lib/jquery-2.2.4.js")
         script(type="text/javascript" src="/js/lib/jquery-ui.js")
         script(type="text/javascript" src='/js/lib/moment.js')
@@ -23,6 +25,7 @@ html.direports
         //script(type="text/javascript" src="/js/lib/bootstrap-datepicker.js")
         //script(type="text/javascript" src="/js/lib/jquery-clockpicker.min.js")
         script(type="text/javascript" src='/js/lib/materialize.min.js')
+        script(type="text/javascript" src='/js/lib/materialize.clockpicker.min.js')
         script(type="text/javascript" src='/js/lib/lodash.min.js')
         script(type="text/javascript" src='/js/lib/config.js')
         script(type="text/javascript" src='/js/lib/knockout-3.4.0.js')
@@ -94,20 +97,22 @@ html.direports
                         span.spinnertext.teal-text(data-bind="text: chartSpinnerTitle")
                     .tabConfiguration
                         .row
-                            .reportTabs.col.s8
+                            .reportTabs.col.s12
                                 ul.tabs
-                                    li.tab.col.s1.attribs(role="presentation")
+                                    li.tab.col.attribs(data-bind='css: reportType === "Property" ? "s2":"s3" ')
                                         a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text.active(href="#reportAttribs", data-toggle="tab") Attributes
-                                    li.tab.col.s1.columns(role="presentation")
+                                    li.tab.col.columns(data-bind='css: reportType === "Property" ? "s2":"s3" ')
                                         a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
-                                    li.tab.col.s1.columns2(role="presentation", style="display: none;")
+                                    //- li.tab.col.s1.columns2(role="presentation")
                                         a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#gridColumnConfig", data-toggle="tab") Grid Config
                                     // ko if: (reportType === 'Property')
-                                    li.tab.col.s1.filterByPoint(role="presentation")
+                                    li.tab.col.s4.filterByPoint(role="presentation")
                                         a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
                                     // /ko
-                                    li.tab.col.s1.additionalFilters(role="presentation")
+                                    li.tab.col.additionalFilters(data-bind='css: reportType === "Property" ? "s2":"s3" ')
                                         a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
+                                    li.tab.col(data-bind='css: reportType === "Property" ? "s2":"s3" ')
+                                        a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#schedule") Schedule
                         div.configurationContent
                             div
                                 h6.strong.reportTitle(data-bind="text: reportDisplayTitle")
@@ -322,7 +327,7 @@ html.direports
                                                     td(colspan="4")
                                                         a.addColumnButton(href="#") Add Column
                                                     // /ko
-                                div#gridColumnConfig.tab-pane
+                                //- div#gridColumnConfig.tab-pane
                                     h6.strong.panel-title
                                         table.gridColumnConfigTable.small.grid.table
                                             thead
@@ -419,7 +424,7 @@ html.direports
                                                             // /ko
                                                     // /ko
                                                     // /ko
-                                            // /ko
+                                            //- // /ko
                                 div#filterByPoint.tab-pane
                                     // ko if: ($root.reportType === 'Property')
                                     h6.strong.panel-title
@@ -528,6 +533,17 @@ html.direports
                                                     a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
                                                 // /ko
                                     // /ko
+                                div#schedule.tab-pane
+                                    .row
+                                        .labelColumn Enable
+                                        .contentColumn
+                                            input(type='checkbox' id='enabled')
+                                            label(for='enabled') Enable
+                                    .row
+                                        .labelColumn Schedule Entries
+                                        .contentColumn
+                                            a.tooltipped.waves-effect(data-bind='click: scheduler.modal.open.bind($data, "new")', data-position='bottom', data-tooltip='Add schedule entry', data-delay='10')
+                                                i.mdi.mdi-plus-box.mdi-36px
                                 .reportButtons
                                     // ko if: ($root.canEdit())
                                     a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(style="margin-right: 2px;", data-position="top" data-delay="500" data-tooltip="Save report")
@@ -589,3 +605,38 @@ html.direports
     include modals/dialogViewColumn
     include modals/dialogGlobalFieldsEditColumn
 
+    script#scheduleModalTemplate(type='text/html')
+        #scheduleModal.modal.modal-fixed-footer
+            .modal-content
+                form
+                    .row.flex.flex-center.flex-start
+                        .input-field
+                            select(data-bind='options: availableIntervals, value: selectedInterval')
+                            label Interval
+                        .flex.flex-center.flex-start(data-bind='visible: selectedInterval() !== "Advanced"')
+                            .input-field.center(data-bind='visible: selectedInterval() !== "Daily"')
+                                span On 
+                                span(data-bind='visible: selectedInterval() === "Monthly"') The
+                            .input-field(data-bind='visible: selectedInterval() === "Weekly"')
+                                select(data-bind='options: availableDaysOfWeek, optionsText: "text", value: selectedDayOfWeek')
+                                label Day of Week
+                            .input-field(data-bind='visible: selectedInterval() === "Monthly"')
+                                select(data-bind='options: availableDates, optionsText: "text", value: selectedDate')
+                                label Date
+                            .input-field(data-bind='visible: selectedInterval() === "Yearly"')
+                                select(data-bind='options: availableMonths, optionsText: "text", value: selectedMonth')
+                                label Month
+                            .input-field(data-bind='visible: selectedInterval() === "Yearly"')
+                                select(data-bind='options: availableDates, optionsText: "text", value: selectedDate')
+                                label Date
+                            .input-field.center At
+                            .input-field
+                                label(for='timepicker') Time
+                                input#timepicker.timepicker(type='time')
+                    //- .row.flex.flex-center.flex-start(data-bind='visible: selectedInterval() === "Advanced"')
+                    //-     .input-field
+                    //-         select(data-bind='options: availableMinutes')
+
+            .modal-footer
+                a.btn.waves-effect.blue-grey(data-bind="click: saveScheduleEntry") Save
+                a.btn.waves-effect.grey(data-bind="click: cancelScheduleEntry") Cancel
