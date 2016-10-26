@@ -20,7 +20,7 @@
             .form-group
                 label.control-label.col-sm-3 Group:
                 .col-sm-8
-                    .dropdown.availableGlobalAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                    .availableGlobalAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
                         a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="css: {disabled: !$root.canEdit(), globallyChangedField: ($root.globalColumnYaxisGroup() != $root.globalFieldsColumnEditBefore().yaxisGroup)}", data-toggle="dropdown")
                             span(data-bind="text: $root.globalColumnYaxisGroup")
                             // ko if: ($root.yaxisGroups.length > 1)

@@ -380,33 +380,17 @@ var initKnockout = function () {
 
     ko.bindingHandlers.materializeDropdown = {
         init: function (element, valueAccessor) {
-            var $element = $(element);
-                // forElementId = $element.attr("data-activates"),
-                // $availableAxisGroupsContainer = $element.parent(),
-                // $forElement = $availableAxisGroupsContainer.find("#" + forElementId);
-
-            $element.dropdown();
-
-            // $element.dropdown({
-            //         inDuration: 300,
-            //         outDuration: 225,
-            //         constrain_width: false,
-            //         hover: false,
-            //         gutter: 0,
-            //         belowOrigin: true,
-            //         alignment: 'left'
-            //     });
-
-            // $availableAxisGroupsContainer.on( "focusout", function () {
-            //     $element.removeClass("active");
-            //     $forElement.removeClass("active");
-            //     $forElement.css("display", "none");
-            //     $forElement.css("opacity", 0);
-            // });
-            // console.log("INIT         $(element).attr(data-activates) = " + $(element).attr('data-activates'));
+            $(element).dropdown();
         },
         update: function (element, valueAccessor, allBindings) {
-            console.log("UPDATE    $(element).attr(class) = " + $(element).attr('class'));
+        }
+    };
+
+    ko.bindingHandlers.materializePickadate = {
+        init: function (element, valueAccessor) {
+            $(element).dropdown();
+        },
+        update: function (element, valueAccessor, allBindings) {
         }
     };
 };
@@ -2325,7 +2309,7 @@ var reportsViewModel = function () {
                 $dataTablesScrollBody,
                 $dataTablesScrollFoot,
                 $dataTablesWrapper,
-                $activePane = $tabViewReport.find(".tab-pane.active");
+                $activePane = $tabViewReport.find(".tab-pane:visible");
 
             $tabViewReport.css("width", window.innerWidth - 83);
             $tabViewReport.css("height", window.innerHeight);
@@ -2335,7 +2319,6 @@ var reportsViewModel = function () {
             if ($activePane.attr("id") === "chartData") {
                 $activePane.css("height", (window.innerHeight - 90));
                 $activePane.css("width", (window.innerWidth - 130));
-                $activePane.css("margin-top", "-22px");
             } else if ($activePane.attr("id") === "gridData") {
                 $dataTablesScrollHead = $tabViewReport.find(".dataTables_scrollHead");
                 $dataTablesScrollBody = $tabViewReport.find(".dataTables_scrollBody");
@@ -2353,15 +2336,15 @@ var reportsViewModel = function () {
             }
         },
         adjustConfigTabActivePaneHeight = function () {
-            var $activePane = $tabConfiguration.find(".tab-pane.active");
-            $activePane.css("height", (window.innerHeight - 160));
+            var $configPanes = $tabConfiguration.find(".tab-content div.tab-pane");
+            $configPanes.css("height", (window.innerHeight - 190));
         },
         handleResize = function () {
             lastResize = new Date();
             setTimeout(function () {
                 if (new Date() - lastResize >= resizeTimer) {
                     if (self.currentTab() === 2) {
-                        if ($tabViewReport.find(".tab-pane.active").attr("id") === "chartData") {
+                        if ($tabViewReport.find(".tab-pane:visible").attr("id") === "chartData") {
                             renderChart();
                         } else {
                             adjustViewReportTabHeightWidth();

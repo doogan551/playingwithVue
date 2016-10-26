@@ -118,6 +118,7 @@ input.input.form-control.durationDateRangeTime {
 }
 .reportDisplayTitle {
     margin-top: 2px;
+    text-align: center;
 }
 .direports > body > ul.dt-button-collection.dropdown-menu {
     width: 100px;
@@ -374,7 +375,7 @@ td.filterName {
 .tabViewReport .chartButtons {
     display: inline-flex;
     padding: 3px;
-    margin-top: -70px;
+    margin-top: -45px;
     float: right;
 }
 .tabViewReport .chartButtons a.btn.btn-default {
@@ -580,29 +581,29 @@ div.dataTables_wrapper div.dataTables_length select {
 .availableCalculations {
     display: inline-block;
 }
-.dropdown.availableCalculations a {
-    width: 81px;
+.availableCalculations a {
+    width: 70px;
     padding: 0px;
 }
-.dropdown.availableCalculations a .text {
+.availableCalculations a .text {
 }
-.dropdown.availableTotalizerOperatorsContainer a {
-    width: 88px;
+.availableTotalizerOperatorsContainer a {
+    width: 80px;
     padding: 0px;
 }
-.dropdown.availableTotalizerOperatorsContainer li a {
+.availableTotalizerOperatorsContainer li a {
     width: 78px;
 }
-.dropdown.availableTotalizerOperatorsContainer a .text {
+.availableTotalizerOperatorsContainer a .text {
 }
-.dropdown.availableAxisGroupsContainer a {
+.availableAxisGroupsContainer a {
     width: 31px;
     padding: 0px;
 }
-.dropdown.availableAxisGroupsContainer a .text {
+.availableAxisGroupsContainer a .text {
     margin-left: 2px;
 }
-.dropdown.availableAxisGroupsContainer ul.dropdown-menu {
+.availableAxisGroupsContainer ul.dropdown-menu {
     cursor: pointer;
     width: 30px;
     min-width: 34px;
@@ -610,14 +611,14 @@ div.dataTables_wrapper div.dataTables_length select {
     margin-left: 11px;
     margin-top: -10px;
 }
-.dropdown.globalAvailableAxisGroupsContainer a {
+.globalAvailableAxisGroupsContainer a {
     width: 31px;
     padding: 0px;
 }
-.dropdown.globalAvailableAxisGroupsContainer a .text {
+.globalAvailableAxisGroupsContainer a .text {
     margin-left: 2px;
 }
-.dropdown.globalAvailableAxisGroupsContainer ul.dropdown-menu {
+.globalAvailableAxisGroupsContainer ul.dropdown-menu {
     cursor: pointer;
     width: 30px;
     min-width: 34px;
@@ -625,20 +626,20 @@ div.dataTables_wrapper div.dataTables_length select {
     margin-left: 11px;
     margin-top: -10px;
 }
-.dropdown.availableGlobalAxisGroupsContainer {
+.availableGlobalAxisGroupsContainer {
 }
-.dropdown.availableGlobalAxisGroupsContainer a.dropdown-button {
+.availableGlobalAxisGroupsContainer a.dropdown-button {
     width: 30px;
     padding-left: 10px;
     border-radius: 8px;
 }
-.dropdown.availableGlobalAxisGroupsContainer ul.dropdown-menu {
+.availableGlobalAxisGroupsContainer ul.dropdown-menu {
     width: 33px;
     min-width: 8px;
     margin-left: 7px;
     margin-top: -5px;
 }
-.dropdown.availableGlobalAxisGroupsContainer ul.yaxisGroups li {
+.availableGlobalAxisGroupsContainer ul.yaxisGroups li {
     padding: 0px;
 }
 
@@ -925,6 +926,9 @@ input.filled-in[type=number]:focus:not([readonly]) {
 .gridColumnConfigTable th a.addColumnGridButton {
     background-color: white;
 }
+.columnsGrid th label {
+    font-size: medium;
+}
 .columnsGrid tr.ui-sortable-helper {
     border: 2px solid #33B171 !important;
 }
@@ -962,9 +966,8 @@ input.filled-in[type=number]:focus:not([readonly]) {
     padding: 4px;
     line-height: 34px;
 }
-
 .columnsGrid.table > tbody > tr > td {
-    border-top: 1px solid #CCC;
+    /*border-top: 1px solid #CCC;*/
     padding: 2px;
 }
 .columnsGrid.table > tbody.sortablecolums {
@@ -1041,6 +1044,12 @@ input.filled-in[type=number]:focus:not([readonly]) {
 }
 .hideCell {
     display: none;
+}
+.gridData {
+    margin-top: -10px;
+}
+.chartData {
+    margin-top: -18px;
 }
 td.filterCondition {
     width: 50px;

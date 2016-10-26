@@ -12,7 +12,7 @@ input.input.form-control.filterContainer.filled-in(data-bind="value: value, enab
 // /ko
 // ko if: (valueType === "Enum")
 // ko if: (valueList.length > 0)
-.dropdown.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
+.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
    a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
       span.white-text(data-bind="text: value")
       span.white-text.caret.lm10px
@@ -38,7 +38,7 @@ div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
    .pointRef.filterPointName.container-fluid.filterContainer(data-bind="text: ($data.value !== 0 ? $data.value : '- blank -'), click: function(){ $parent.showPointReview($data) }")
 // /ko
 // ko if: (valueType === "Bool")
-.dropdown.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
+.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
    a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
       span.white-text(data-bind="text: $root.displayBool(value)")
       span.white-text.caret.lm10px
