@@ -6,10 +6,6 @@ html.direports
         //- link(rel='stylesheet', href='/css/lib/bootstrap-3.3.6/bootstrap.css')
         //- link(rel='stylesheet', href="/css/lib/bootstrap-datepicker.css")
         //- link(rel='stylesheet', href="/css/lib/jquery-clockpicker.min.css")
-        link(rel='stylesheet', href='/css/lib/materialize.css')
-        link(rel='stylesheet', href='/css/lib/materialize.icons.css')
-        link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
-        link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
         //- link(rel='stylesheet', href="/css/lib/font-awesome-4.3.0/css/font-awesome.min.css")
         //- link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.bootstrap.min.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/ColReorder/css/colReorder.foundation.css')
@@ -18,6 +14,10 @@ html.direports
         //- link(rel='stylesheet', href='/css/lib/daterangepicker.css')
         link(rel='stylesheet', href='/css/reports/reporting.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.material.css')
+        link(rel='stylesheet', href='/css/lib/materialize.css')
+        link(rel='stylesheet', href='/css/lib/materialize.icons.css')
+        link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
+        link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
         script(type="text/javascript" src="/js/lib/jquery-2.2.4.js")
         script(type="text/javascript" src="/js/lib/jquery-ui.js")
         script(type="text/javascript" src='/js/lib/moment.js')
@@ -272,6 +272,13 @@ html.direports
                                                                 // ko if: ($parent.listOfCalculations().length > 1)
                                                                 span.caret.lm10px
                                                                 // /ko
+
+                                                            // SELECT multiple options
+                                                            //// ko if: ($parent.listOfCalculations().length > 1)
+                                                            //select.multiple.initialized.calculations(data-bind="foreach: $parent.listOfCalculations")
+                                                            //    option(data-bind="selected: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}, value: $data, text: $data")
+                                                            //// /ko
+                                                            //label Calcs
                                                         // /ko
                                                     // ko if: ($parent.reportType() === 'Totalizer' && valueList.length > 0)
                                                     td.totalizerOperator
@@ -490,12 +497,6 @@ html.direports
                                     a.small.addFilterbutton(href="#") Add Filter
                                     // /ko
                                     // ko if: (reportType() !== 'Property')
-                                    //span.reportDateRangePicker
-                                    //    div.input-field
-                                    //        input.input.form-control.filterContainer.durationDateRange#durationDateRange(data-bind="reportDateRangePicker: selectedDuration, enable: $root.canEdit(), css: { durationError: $root.durationError() }", type="text", placeholder="Select...")
-                                    //        i.fa.fa-calendar.glyphicon.glyphicon-calendar.durationCalendarIcon
-                                    //        label.reportDateRangeLabel.small(data-bind="attr: {for: 'durationDateRange'}") Duration:&nbsp;
-                                    //br
                                     //span.timePickers
                                     //    div.input-field
                                     //        input.input.form-control.filterContainer.durationDateRangeTime#startTimeOffSet(data-bind="reportTimePicker: durationStartTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="Start Time OffSet", type="text")
@@ -505,13 +506,23 @@ html.direports
                                     //        label.timePickerLabel.small(data-bind="attr: {for: 'endTimeOffSet'}") To:&nbsp;
                                     .reportDatePickers
                                         span.reportStartDatePicker
-                                            label(for="reportStartDate") Start Date
-                                            div.input-field
+                                            .input-field
+                                                label(for="reportStartDate") Start Date
                                                 input#reportStartDate.datepicker(date-bind="select: $root.startDate, materializePickadate", type="date")
                                         span.reportEndDatePicker
-                                            label(for="reportEndDate") End Date
-                                            div.input-field
+                                            .input-field
+                                                label(for="reportEndDate") End Date
                                                 input#reportEndDate.datepicker(date-bind="select: $root.endDate, materializePickadate", type="date")
+                                    br
+                                    .reportTimePickers
+                                        span.startTimepicker
+                                            .input-field
+                                                label(for='startTimepicker') Time
+                                                input#startTimepicker.timepicker(type='time')
+                                        span.endTimepicker
+                                            .input-field
+                                                label(for='endTimepicker') Time
+                                                input#endTimepicker.timepicker(type='time')
                                     br
                                     span.intervalSettings
                                         div.intervalsContainer.input-field

@@ -187,10 +187,16 @@ span.timePickerLabel {
 .reportDatePickers {
     display: inline-flex;
 }
-.reportDatePickers span.reportEndDatePicker {
+.reportTimePickers {
+    display: inline-flex;
+}
+span.reportEndDatePicker, span.endTimepicker {
     padding-left: 20px;
 }
 .reportDatePickers .input-field {
+    width: 150px;
+}
+.reportTimePickers .input-field {
     width: 150px;
 }
 span.reportDateRangeLabel {

@@ -4428,8 +4428,6 @@ var reportsViewModel = function () {
                     checkForColumnCalculations();
                     checkForIncludeInChart();
                     adjustConfigTabActivePaneHeight();
-                    self.filterPropertiesSearchFilter(""); // computed props jolt
-                    self.columnPropertiesSearchFilter(""); // computed props jolt
 
                     if (scheduled) {
                         self.requestReportData();
@@ -4440,6 +4438,10 @@ var reportsViewModel = function () {
                         self.requestReportData();
                     }
 
+                    self.filterPropertiesSearchFilter(""); // computed props jolt
+                    self.columnPropertiesSearchFilter(""); // computed props jolt
+                    updateListOfColumns(self.listOfColumns());
+                    updateListOfFilters(self.listOfFilters());
                     Materialize.updateTextFields();
                 }
             };
@@ -4769,8 +4771,8 @@ var reportsViewModel = function () {
     self.calculationClick = function (element, calc, indexOfColumn) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn],
-            $dropdownButton = $(element).parent().parent().parent().parent().find("a"),
-            $dropdown = $dropdownButton.parent();
+            $ul = $(element).parent().parent(),
+            $dropdown = $ul.parent().find("a.dropdown-button");
 
         if (element.checked === true) {
             if (column.calculation.indexOf(calc) === -1) {
@@ -4783,8 +4785,8 @@ var reportsViewModel = function () {
         }
 
         // updateListOfColumns(tempArray);
-        $dropdownButton.attr("aria-expanded", true);
-        $dropdown.addClass("open");
+        // $dropdown.addClass("active");
+        // $ul.addClass("active");
         return true;
     };
 
@@ -5167,12 +5169,12 @@ function applyBindings(extConfig) {
             reportsVM = new reportsViewModel();
             reportsVM.init(extConfig);
             ko.applyBindings(reportsVM);
-            
-            // Materialize.updateTextFields();
 
-            // window.setTimeout(function () {
-            //     $('#reportColumns').find('.dropdown-button').dropdown();
-            // }, 2000);
+            // TODO  what's up here?
+            window.setTimeout(function () {
+                $(".datepicker").pickadate();
+                $(".timepicker").pickatime();
+            }, 2000);
 
             // Programatically selecting the active tab here because adding the 'active' class to 
             // the default tab wasn't causing it to appear selected on page load
