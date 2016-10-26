@@ -77,7 +77,7 @@ var dtiUtility =  {
                 },
                 pointSelected: function () {
                     if (dtiUtility._pointSelectCb) {
-                        dtiUtility._pointSelectCb(newValue);
+                        dtiUtility._pointSelectCb(newValue.point);
                     }
                 },
                 pointCreated: function () {
