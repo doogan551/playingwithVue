@@ -6,7 +6,7 @@
         br
         form.form-horizontal(role="form")
             .form-group
-                // ko if: ($root.reportType !== 'Property')
+                // ko if: ($root.reportType() !== 'Property')
                 // ko if: ($root.canEdit())
                 .control-label.col-sm-3(style="padding-top: 0px;")
                     a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $root.clearModalColumnPoint() }, tooltip: { title: 'Clear' }")
@@ -17,7 +17,7 @@
                 .col-sm-8
                     .columnName(data-bind="text: $data.colName, click: function(){ $root.showPointReview($data) }")
                 // /ko
-            // ko if: ($root.reportType !== 'Property')
+            // ko if: ($root.reportType() !== 'Property')
             .form-group
                 label.control-label.col-sm-3 Display Name:
                 .col-sm-8
@@ -28,7 +28,7 @@
                 .col-sm-8
                     input.form-control.inputMultiplier(data-bind="value: multiplier, enable: $root.canEdit()", type="number")
             // /ko
-            // ko if: ($root.reportType === 'Totalizer' && $data.canCalculate)
+            // ko if: ($root.reportType() === 'Totalizer' && $data.canCalculate)
             .form-group
                 label.control-label.col-sm-3 Type:
                 .col-sm-8
@@ -63,19 +63,13 @@
             .form-group
                 label.control-label.col-sm-3 Group:
                 .col-sm-8
-                    .dropdown.globalAvailableAxisGroupsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
+                    .globalAvailableAxisGroupsContainer
+                        a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-activates="theChartGroup")
                             span(data-bind="text: $data.yaxisGroup")
-                            // ko if: ($root.yaxisGroups.length > 1)
                             span.caret.lm10px
-                            // /ko
-                        // ko if: ($root.yaxisGroups.length > 1)
-                        ul.yaxisGroups.dropdown-menu
-                            // ko foreach: $root.yaxisGroups
+                        ul#theChartGroup.dropdown-content(data-bind="foreach: $root.yaxisGroups")
                             li
                                 a(data-bind="click: function(){ $root.setCurrentColumnField('yaxisGroup', $data) }, text: $data")
-                            // /ko
-                        // /ko
             // /ko
             // /ko
         // /ko

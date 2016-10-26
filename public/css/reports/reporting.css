@@ -181,7 +181,15 @@ span.timePickerLabel {
     align-items: center;
     color: black;
 }
-
+.reportDatePickers {
+    display: inline-flex;
+}
+.reportDatePickers span.reportEndDatePicker {
+    padding-left: 20px;
+}
+.reportDatePickers .input-field {
+    width: 150px;
+}
 span.reportDateRangeLabel {
     display: flex;
     align-items: center;
@@ -235,9 +243,9 @@ input.intervalValue {
 }
 .calculations {
     list-style-type: none;
-    width: 100px;
+    width: 115px;
     -webkit-appearance: none;
-    padding: 2px 5px 2px 5px;
+    padding: 15px 0px 0px 8px;
 }
 .globalCalculations {
     list-style-type: none;
@@ -990,7 +998,8 @@ input.filled-in[type=number]:focus:not([readonly]) {
 .availableChartTypes.chartTab > .btn {
     padding: 0px 14px 0px 8px;
     border-radius: 4px 0px 0px 4px;
-    height: 36px;}
+    height: 36px;
+}
 .panel-heading a.panel-anchor:after {
     font-family:'Glyphicons Halflings';
     content:"\e114";
