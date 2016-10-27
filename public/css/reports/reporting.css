@@ -146,19 +146,22 @@ input.input.form-control.durationDateRangeTime {
 .removerow {
     cursor: pointer;
 }
-.availablePropertiesContainer {
+.availablePropertiesContainer .dropdown-content {
     cursor: pointer;
 }
-.availableOperatorsContainer {
+.availableOperatorsContainer .dropdown-content {
     cursor: pointer;
+    padding-left: 10px;
+    width: 68px;
+    min-width: 50px;
 }
-.availableIntervalsContainer {
+.availableIntervalsContainer .dropdown-content {
     cursor: pointer;
     padding-left: 10px;
     margin-right: 7px;
     margin-top: 26px;
 }
-.availableDurationsContainer {
+.availableDurationsContainer .dropdown-content {
     cursor: pointer;
     display: inline-block;
     margin-left: 7px;
@@ -243,7 +246,7 @@ input.intervalValue {
 .totalizerOperator {
     width: 115px;
 }
-.totalizerOperators.dropdown-menu {
+.totalizerOperators.dropdown-content {
     width: 80px;
     min-width: 80px;
     text-indent: 7px;
@@ -259,7 +262,13 @@ input.intervalValue {
 .globalCalculations {
     list-style-type: none;
 }
-.calculations.dropdown-menu {
+.entries.dropdown-content {
+    width: 130px;
+    min-width: 70px;
+    text-indent: 7px;
+    padding-top: 10px;
+}
+.calculations.dropdown-content {
     width: 130px;
     min-width: 70px;
     text-indent: 7px;
@@ -270,21 +279,21 @@ input.intervalValue {
 .chartTypeSelection {
     padding-left: 100px;
 }
-.chartTypes.dropdown-menu {
+.chartTypes.dropdown-content {
     width: 65px;
     min-width: 65px;
     text-indent: -13px;
     margin-left: 24px;
     margin-top: -2px;
 }
-.childCondition > .dropdown > .operators.dropdown-menu {
+.childCondition > .dropdown > .operators.dropdown-content {
     min-width: 45px;
     width: 45px;
     text-indent: -13px;
     margin-left: 22px;
     margin-top: -2px;
 }
-.intervals.dropdown-menu {
+.intervals.dropdown-content {
     min-width: 85px;
     width: 85px;
     text-indent: 0px;
@@ -413,27 +422,27 @@ td.filterName {
 #chartSettings {
     overflow-y: auto;
 }
-ul.filterValues.dropdown-menu {
+ul.filterValues.dropdown-content {
     min-width: 60px;
 }
-ul.enumproperties.dropdown-menu li a:hover {
+ul.enumproperties.dropdown-content li a:hover {
     background-color: #d5e1f2;
 }
-ul.filterValues.dropdown-menu li a:hover {
+ul.filterValues.dropdown-content li a:hover {
     background-color: #d5e1f2;
 }
-ul.operators.dropdown-menu li a:hover {
+ul.operators.dropdown-content li a:hover {
     background-color: #d5e1f2;
 }
-ul.totalizerOperators.dropdown-menu li a:hover {
-    background-color: #d5e1f2;
-    cursor: pointer;
-}
-ul.calculations.dropdown-menu li:hover {
+ul.totalizerOperators.dropdown-content li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
 }
-ul.yaxisGroups.dropdown-menu li a:hover {
+ul.calculations.dropdown-content li:hover {
+    background-color: #d5e1f2;
+    cursor: pointer;
+}
+ul.yaxisGroups.dropdown-content li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
     width: 30px;
@@ -442,10 +451,10 @@ ul.yaxisGroups.dropdown-menu li a:hover {
     background-color: #d5e1f2;
     cursor: pointer;
 }
-ul.intervals.dropdown-menu li a:hover {
+ul.intervals.dropdown-content li a:hover {
     background-color: #d5e1f2;
 }
-ul.durations.dropdown-menu li a:hover {
+ul.durations.dropdown-content li a:hover {
     background-color: #d5e1f2;
 }
 input.input.form-control.filterContainer:enabled {
@@ -611,7 +620,7 @@ div.dataTables_wrapper div.dataTables_length select {
 .availableAxisGroupsContainer a .text {
     margin-left: 2px;
 }
-.availableAxisGroupsContainer ul.dropdown-menu {
+.availableAxisGroupsContainer ul.dropdown-content {
     cursor: pointer;
     width: 30px;
     min-width: 34px;
@@ -626,7 +635,7 @@ div.dataTables_wrapper div.dataTables_length select {
 .globalAvailableAxisGroupsContainer a .text {
     margin-left: 2px;
 }
-.globalAvailableAxisGroupsContainer ul.dropdown-menu {
+.globalAvailableAxisGroupsContainer ul.dropdown-content {
     cursor: pointer;
     width: 30px;
     min-width: 34px;
@@ -641,7 +650,7 @@ div.dataTables_wrapper div.dataTables_length select {
     padding-left: 10px;
     border-radius: 8px;
 }
-.availableGlobalAxisGroupsContainer ul.dropdown-menu {
+.availableGlobalAxisGroupsContainer ul.dropdown-content {
     width: 33px;
     min-width: 8px;
     margin-left: 7px;
@@ -728,7 +737,7 @@ th .includeInChartColumn {
     min-width: 20px;
     text-align: center;
 }
-ul.yaxisGroups.dropdown-menu li a {
+ul.yaxisGroups.dropdown-content li a {
     padding: 3px 1px 3px 1px;
     text-align: -webkit-center;
 }
@@ -816,6 +825,9 @@ input[type=search]:focus:not([readonly]) {
 }
 #pointName4:focus:not([readonly])+label {
     color: #607d8b;
+}
+#reportTitleInput {
+    width: 670px;
 }
 #reportTitleInput:focus {
     border-bottom: 1px solid #607d8b;

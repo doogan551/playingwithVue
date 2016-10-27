@@ -144,11 +144,9 @@ html.direports
                                             .col.s1.entries
                                                 .availableEntries
                                                     // ko if: ($root.listOfEntriesPerPage().length > 1)
-                                                    ul#enteriesDropdown.calculations.dropdown-content
-                                                        // ko foreach: $root.listOfEntriesPerPage()
+                                                    ul#enteriesDropdown.entries.dropdown-content(data-bind="foreach: $root.listOfEntriesPerPage()")
                                                         li
                                                             a(data-bind="click: function(){ $root.selectNumberOfEntries($element, $data.value) }, text: $data.value")
-                                                        // /ko
                                                     // /ko
                                                     a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="materializeDropdown", href="#", data-activates="enteriesDropdown")
                                                         span(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
@@ -241,14 +239,14 @@ html.direports
                                                         // /ko
                                                         // ko if: ($parent.reportType() === 'Property')
                                                         .availablePropertiesContainer
-                                                            ul.enumproperties.dropdown-context(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
+                                                            ul.enumproperties.dropdown-content(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
                                                                 input.form-control.inputSearch.filled-in(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
                                                                 li(role="separator", class="divider")
                                                                 // ko foreach: $parent.columnFilteredProps()
                                                                 li
                                                                     a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
                                                                 // /ko
-                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}", data-toggle="dropdown")
+                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'enumpropertiesDropdown'+ $index() }, materializeDropdown")
                                                                 span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
                                                                 span.caret.lm10px
                                                         // /ko
@@ -452,38 +450,33 @@ html.direports
                                                     .handle
                                                 td(data-bind="css: {filterCondition: ($parent.listOfFilters().length > 1), childCondition: childLogic === true, firstConditionInGroup: beginGroup === true, lastConditionInGroup: endGroup === true} ")
                                                     .availableConditionsContainer(data-bind="css: {hideCell: $index() === 0} ")
-                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-toggle.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}", data-toggle="dropdown")
-                                                            span(data-bind="text: $root.displayCondition(condition)")
-                                                        ul.operators.dropdown-menu
-                                                            // ko foreach: $root.conditions()
+                                                        ul.operators.dropdown-content(data-bind="foreach: $root.conditions(), attr: { 'id': 'availableConditions'+ $index() }")
                                                             li
                                                                 a.condition(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'condition') }, text: text", required)
-                                                            // /ko
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}, attr: { 'data-activates': 'availableConditions'+ $index() }, materializeDropdown")
+                                                            span(data-bind="text: $root.displayCondition(condition)")
                                                 td.filterName
                                                     // ko if: ($parent.reportType() !== 'Property')
                                                     span(data-bind="text: filterName.replace(/_/g, ' ')")
                                                     // /ko
                                                     .availablePropertiesContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-toggle.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
-                                                            span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfFilterPropertiesLength + ')')")
-                                                            span.caret.lm10px
-                                                        ul.enumproperties.dropdown-menu
+                                                        ul.enumproperties.dropdown-content(data-bind="attr: { 'id': 'enumProperties'+ $index() }")
                                                             input.form-control.inputSearch(data-bind="textInput: $root.filterPropertiesSearchFilter", type="text", placeholder="Search...")
                                                             li(role="separator", class="divider")
                                                             // ko foreach: $parent.filterFilteredProps()
                                                             li
                                                                 a(data-bind="click: function(){ $root.selectPropertyFilter($element, $parentContext.$index(), $data) }, text: $data.name")
                                                             // /ko
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}, attr: { 'data-activates': 'enumProperties'+ $index() }, materializeDropdown")
+                                                            span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfFilterPropertiesLength + ')')")
+                                                            span.caret.lm10px
                                                 td.filterOperator
                                                     .availableOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
-                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-toggle.operatorButton(data-bind="css: {disabled: !$root.canEdit()}",data-toggle="dropdown")
-                                                            span(data-bind="text: $root.displayOperator(operator)")
-                                                            //span.caret.lm10px
-                                                        ul.operators.dropdown-menu
-                                                            // ko foreach: $root.operators(valueType)
+                                                        ul.operators.dropdown-content(data-bind="foreach: $root.operators(valueType), attr: { 'id': 'availableOperators'+ $index() }")
                                                             li
                                                                 a.operator(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'operator') }, text: text", required)
-                                                            // /ko
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button.operatorButton(data-bind="attr: { 'data-activates': 'availableOperators'+ $index() }, materializeDropdown")
+                                                            span(data-bind="text: $root.displayOperator(operator)")
                                                 td.emptyColumn
                                                 td.filterValue
                                                     div.col-md-9
