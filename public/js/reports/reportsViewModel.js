@@ -899,6 +899,10 @@ var reportsViewModel = function () {
 
             self.chartable(activateCharting);
             self.allChartCheckboxChecked(allChecked);
+
+            if (!self.chartable()) {
+                self.selectViewReportTabSubTab("gridData");
+            }
         },
         updateListOfFilters = function (newArray) {
             self.listOfFilters([]);
@@ -2864,17 +2868,20 @@ var reportsViewModel = function () {
                 $dataTablePlaceHolder.on("draw.dt", function (e, settings) {
                     // console.log(". . . . . . . . .    draw.dt   . . . . . . . . .");
                     var numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
-                        $tablePagination,
-                        $pagination,
-                        $paginate_buttons;
+                        currentPageNumber = $dataTablePlaceHolder.DataTable().page.info().page + 1,
+                        $tablePagination = $tabViewReport.find(".dataTables_paginate"),
+                        $pagination = $tablePagination.find(".pagination"),
+                        $paginate_buttons = $pagination.find("button");
 
                     if (numberOfPages === 1) {
-                        $tablePagination = $tabViewReport.find(".dataTables_paginate");
-                        $pagination = $tablePagination.find("ul.pagination");
-                        $paginate_buttons = $pagination.find(".paginate_button");
                         $paginate_buttons = $paginate_buttons.not("li.active");
                         $paginate_buttons.hide();
                     }
+
+                    console.log("currentPageNumber = " + currentPageNumber);
+                    $paginate_buttons.removeClass("mdl-button");
+                    $paginate_buttons.addClass("btn blue-grey");
+                    $paginate_buttons.eq(currentPageNumber).addClass("lighten-2");
                 });
 
                 console.log(" .... report events configured .... ");
@@ -4912,9 +4919,7 @@ var reportsViewModel = function () {
     };
 
     self.selectPropertyFilter = function (element, indexOfFilter, selectedItem) {
-        var tempArray = self.listOfFilters(),
-            $elementRow = $(element).parent().parent().parent().parent().parent();
-        //$inputField = $elementRow.find(".filterValue").find("input");  // in case we need to validate input field
+        var tempArray = self.listOfFilters();
         tempArray[indexOfFilter] = initializeNewFilter(selectedItem, tempArray[indexOfFilter]);
         updateListOfFilters(tempArray);
     };
@@ -5013,10 +5018,11 @@ var reportsViewModel = function () {
     };
 
     self.selectViewReportTabSubTab = function (subTabName) {
-        $tabViewReport.find("ul.viewReportNav").find("li .active").removeClass("active");
-        $tabViewReport.find("ul.viewReportNav").find("li." + subTabName).addClass("active");
-        $tabViewReport.find(".tab-content > .active").removeClass("active");
-        $tabViewReport.find("#" + subTabName).addClass("active");
+        $tabViewReport.find('ul.tabs').tabs('select_tab', subTabName);
+        // $tabViewReport.find("ul.viewReportNav").find("li .active").removeClass("active");
+        // $tabViewReport.find("ul.viewReportNav").find("li." + subTabName).addClass("active");
+        // $tabViewReport.find(".tab-content > .active").removeClass("active");
+        // $tabViewReport.find("#" + subTabName).addClass("active");
     };
 
     self.materialDropdownClick = function (element) {
@@ -5174,11 +5180,9 @@ function applyBindings(extConfig) {
             window.setTimeout(function () {
                 $(".datepicker").pickadate();
                 $(".timepicker").pickatime();
-            }, 2000);
-
-            // Programatically selecting the active tab here because adding the 'active' class to 
-            // the default tab wasn't causing it to appear selected on page load
-            // $('ul.tabs').tabs('select_tab', 'reportAttribs');
+                $(".tabConfiguration").find('ul.tabs').tabs();
+                $(".tabViewReport").find('ul.tabs').tabs();
+            }, 1500);
         }, 100);
     }
 }

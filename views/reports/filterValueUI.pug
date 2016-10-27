@@ -1,7 +1,7 @@
 // ko if: ((valueType === "DateTime" || valueType === "Timet"))
-div(style="display:inline-block")
+span
    input.input.form-control.filterContainer.dateTimeDate(data-bind="reportDatePicker: date, enable: $root.canEdit(), css: {startDate: (filterName === 'Start_Date'), endDate: (filterName === 'End_Date') }", type="text", required)
-div(style="display:inline-block")
+span
    input.input.form-control.filterContainer.dateTimeTime(data-bind="reportTimePicker: time, enable: $root.canEdit(), css: {startDateTime: (filterName === 'Start_Date'), endDateTime: (filterName === 'End_Date') }", type="text", required)
 // /ko
 // ko if: (valueType === "Float" || valueType === "Unsigned")

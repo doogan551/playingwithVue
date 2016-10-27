@@ -102,21 +102,21 @@ html.direports
                             .reportTabs.col.s12
                                 ul.tabs
                                     li.tab.col.attribs(data-bind='css: reportType === "Property" ? "s2":"s3" ')
-                                        a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text.active(href="#reportAttribs", data-toggle="tab") Attributes
+                                        a.strong.toggleTab.blue-grey-text.active(href="#reportAttribs", data-toggle="tab") Attributes
                                     li.tab.col.columns(data-bind='css: reportType === "Property" ? "s2":"s3" ')
-                                        a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
+                                        a.strong.toggleTab.blue-grey-text(href="#reportColumns", data-toggle="tab") Columns
                                     //- li.tab.col.s1.columns2(role="presentation")
-                                        a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#gridColumnConfig", data-toggle="tab") Grid Config
+                                        a.strong.toggleTab.blue-grey-text(href="#gridColumnConfig", data-toggle="tab") Grid Config
                                     // ko if: (reportType() === 'Property')
                                     li.tab.col.s4.filterByPoint(role="presentation")
-                                        a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
+                                        a.strong.toggleTab.blue-grey-text(href="#filterByPoint", data-toggle="tab") Filter By Point Types / Points
                                     // /ko
                                     li.tab.col.additionalFilters(data-bind='css: reportType === "Property" ? "s2":"s3" ')
-                                        a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
+                                        a.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
                                     li.tab.col(data-bind='css: reportType === "Property" ? "s2":"s3" ')
-                                        a.blue-grey.lighten-4.strong.toggleTab.blue-grey-text(href="#schedule") Schedule
+                                        a.strong.toggleTab.blue-grey-text(href="#schedule") Schedule
                         div.configurationContent
-                            div
+                            div.hideDiv
                                 h6.strong.reportTitle(data-bind="text: reportDisplayTitle")
                                 .reporttype.tiny.center-align(data-bind="text: reportType")
                             div.tab-content
@@ -557,21 +557,20 @@ html.direports
                                             .successMessage.alert-success
                     .tabViewReport.well.tab-pane
                         // ko if: (reportType() !== 'Property')
-                        .row
-                            ul.tabs.viewReportNav
-                                // ko if: (chartable())
-                                li.tab.col.s1.gridData(role="presentation")
-                                    a.btn.waves-effect.waves-light.blue-grey.active(data-bind="click: function () { $root.focusGridView($element) }", href="#gridData")
-                                        i.material-icons.center view_list
-                                li.tab.col.s1.reportChart(role="presentation")
-                                    a.btn.waves-effect.waves-light.blue-grey(data-bind="click: function () { $root.focusChartView($element) }", href="#chartData")
-                                        i.material-icons.center insert_chart
-                                // /ko
+                        .row(data-bind="css: { hideDiv: (chartable() !== true)}")
+                            .viewReportNav.col.s12
+                                ul.tabs
+                                    li.tab.col.gridData(role="presentation")
+                                        a.strong.toggleTab.blue-grey-text.active(data-bind="click: function () { $root.focusGridView($element) }", href="#gridData", data-toggle="tab") Grid
+                                            //i.material-icons.center view_list
+                                    li.tab.col.reportChart(role="presentation")
+                                        a.strong.toggleTab.blue-grey-text(data-bind="click: function () { $root.focusChartView($element) }", href="#chartData", data-toggle="tab") Chart
+                                            //i.material-icons.center insert_chart
                         // /ko
                         div.tab-content
                             div.gridData#gridData.tab-pane
                                 .row
-                                    h6.text-center.reportDisplayTitle(data-bind="text: reportDisplayTitle")
+                                    h6.text-center.reportDisplayTitle.hideDiv(data-bind="text: reportDisplayTitle")
                                     table.table.striped.table-bordered.table-responsive.dataTablePlaceHolder
                                         tfoot.tableFooter
                                             tr(data-bind="foreach: listOfColumns()")
