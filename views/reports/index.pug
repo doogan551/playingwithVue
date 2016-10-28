@@ -25,8 +25,6 @@ html.direports
         //- script(type="text/javascript" src="/js/lib/bootstrap-datepicker.js")
         //- script(type="text/javascript" src="/js/lib/jquery-clockpicker.min.js")
         //- script(type="text/javascript" src='/js/lib/material.js')
-        script(type="text/javascript" src='/js/lib/materialize.js')
-        script(type="text/javascript" src='/js/lib/materialize.clockpicker.min.js')
         //- script(type="text/javascript" src='/js/lib/lodash.min.js')
         //- script(type="text/javascript" src='/js/lib/config.js')
         script(type="text/javascript" src='/js/lib/knockout-3.4.0.js')
@@ -48,6 +46,8 @@ html.direports
         script(type="text/javascript" src='/js/lib/jquery.printarea.js')
         script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/buttons.html5.min.js')
         script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/buttons.print.min.js')
+        script(type="text/javascript" src='/js/lib/materialize.js')
+        script(type="text/javascript" src='/js/lib/materialize.clockpicker.min.js')
         script(type="text/javascript" src="/js/v2/dorsettUtility.js")
         script(type="text/javascript" src="/js/reports/reportsViewModel.js")
     body.blue-grey.lighten-5
@@ -150,9 +150,6 @@ html.direports
                                                     // /ko
                                                     a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="materializeDropdown", href="#", data-activates="enteriesDropdown")
                                                         span(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
-                                                        // ko if: ($root.listOfEntriesPerPage().length > 1)
-                                                        span.caret.lm10px
-                                                        // /ko
                                         // ko if: (chartable())
                                         .chartTypeSelection
                                             label Chart Type
@@ -167,279 +164,261 @@ html.direports
                                                     // /ko
                                                     a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="materializeDropdown", href="#", data-activates="chartTypesAttribsDropdown")
                                                         span(data-bind="text: selectedChartType()")
-                                                        // ko if: ($root.listOfChartTypes().length > 1)
-                                                        span.caret.lm10px
-                                                        // /ko
                                         // /ko
                                 div.tab-pane#reportColumns
                                     h6.strong.panel-title
-                                        table.columnsGrid.small.grid.table
-                                            thead
-                                                tr.strong(style="height:44px")
-                                                    th.medium.strong
-                                                        label Column Key
-                                                    // ko if: (reportType() !== 'Property')
-                                                    th.medium.strong
-                                                        label Display Name
-                                                    // ko if: (calculatable() === true)
-                                                    th.medium.strong
-                                                        label.multiplierColumn Multiplier
-                                                    th.medium.strong
-                                                        .calculateColumn(tabindex="910")
-                                                            label.columnText Calculate
-                                                            .globalCalculate.availableCalculations.hideDiv
-                                                                // ko if: ($root.listOfCalculations().length > 1)
-                                                                ul#globalCalculationsDropdown.calculations.dropdown-content(multiple=true)
-                                                                    // ko foreach: $root.listOfCalculations
-                                                                    li
-                                                                        input.medium.filled-in(data-bind="click: function () { return $root.globalCalculationClick($element, $data)}, attr: { id: 'globalCalc_' + $index()}", type="checkbox")
-                                                                        label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index()}")
-                                                                    // /ko
-                                                                // /ko
-                                                                a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="globalCalculationsDropdown") Calcs
-                                                                    // ko if: ($root.listOfCalculations().length > 1)
-                                                                    span.caret.lm10px
-                                                                    // /ko
-                                                    // ko if: (reportType() === 'Totalizer')
-                                                    th.medium.strong.typeColumn
-                                                        label Type
-                                                    // /ko
-                                                    th.medium.strong
-                                                        .precisionColumn(tabindex="920")
-                                                            label.columnText Precision
-                                                            .globalPrecision.hideDiv
-                                                                input.form-control.globalPrecisionInput(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
-                                                    th.medium.strong
-                                                        .includeInChartColumn(tabindex="930")
-                                                            label.columnText Chart
-                                                            .globalIncludeInChart.hideDiv
-                                                                input.form-control.filled-in(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit(), attr: {id : 'globalIncludeInChart' }", type="checkbox")
-                                                                label.blue-grey-text.label-tight(data-bind="attr: { for: 'globalIncludeInChart' }")
-                                                    th.medium.strong
-                                                        label.yaxisChartGroupColumn
-                                                    // /ko
-                                                    // /ko
-                                                    th.medium.strong
-                                            tbody.sortablecolums(data-bind="foreach: listOfColumns()")
-                                                // ko if: $index() > 0
-                                                tr.columnRowData(data-bind="css: {'red lighten-4': (colName === 'Choose Point')} ")
-                                                    td.columnNameContainer(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
-                                                        .handle
-                                                        // ko if: ($parent.reportType() !== 'Property')
-                                                        // ko if: ($root.canEdit())
-                                                        a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.clearColumnPoint($index()) }, tooltip: { title: 'Clear' }")
-                                                            i.material-icons.prefix.center.blue-grey-text delete
-                                                        a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.selectPointForColumn($data, $index) }, tooltip: { title: 'Edit' }")
-                                                            i.material-icons.prefix.center.blue-grey-text edit
-                                                        // /ko
-                                                        // ko if: (!!$data.softDeleted)
-                                                        span [Deleted]&nbsp;
-                                                        // /ko
-                                                        .columnName(data-bind="text: colName, click: function(){ $parent.showPointReview($data) }")
-                                                        // /ko
-                                                        // ko if: ($parent.reportType() === 'Property')
-                                                        .availablePropertiesContainer
-                                                            ul.enumproperties.dropdown-content(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
-                                                                input.form-control.inputSearch.filled-in(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
-                                                                li(role="separator", class="divider")
-                                                                // ko foreach: $parent.columnFilteredProps()
-                                                                li
-                                                                    a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
-                                                                // /ko
-                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'enumpropertiesDropdown'+ $index() }, materializeDropdown")
-                                                                span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
-                                                                span.caret.lm10px
-                                                        // /ko
-                                                    // ko if: ($parent.reportType() !== 'Property')
-                                                    td.displayName
-                                                        input.form-control.columnDisplayName(data-bind="value: colDisplayName, enable: $parent.canEdit(), event: { change: function() { $parent.designChanged(true) } }", type="text", required)
-                                                    td.columnMultiplier
-                                                        // ko if: ($data.canCalculate)
-                                                        input.form-control.inputMultiplier(data-bind="value: multiplier, enable: $root.canEdit()", type="number")
-                                                        // /ko
-                                                    td.columnTotals
-                                                        // ko if: ($data.canCalculate)
-                                                        .availableCalculations
-                                                            // ko if: ($parent.listOfCalculations().length > 1)
-                                                            ul.calculations.dropdown-content(multiple=true, data-bind="foreach: $parent.listOfCalculations, attr: { 'id': 'calculationsDropdown' + $index() }")
-                                                                li
-                                                                    input.medium.filled-in(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}, attr: { id: 'calc_' + $parentContext.$index() + '_' + $index()}", type="checkbox")
-                                                                    label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'calc_' + $parentContext.$index() + '_' + $index()}")
-                                                            // /ko
-                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="attr: { 'data-activates': 'calculationsDropdown' + $index() }, materializeDropdown") Calcs
-                                                                // ko if: ($parent.listOfCalculations().length > 1)
-                                                                span.caret.lm10px
-                                                                // /ko
-
-                                                            // SELECT multiple options
-                                                            //// ko if: ($parent.listOfCalculations().length > 1)
-                                                            //select.multiple.initialized.calculations(data-bind="foreach: $parent.listOfCalculations")
-                                                            //    option(data-bind="selected: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}, value: $data, text: $data")
-                                                            //// /ko
-                                                            //label Calcs
-                                                        // /ko
-                                                    // ko if: ($parent.reportType() === 'Totalizer' && valueList.length > 0)
-                                                    td.totalizerOperator
-                                                        .availableTotalizerOperatorsContainer
-                                                            // ko if: (valueList.length > 1)
-                                                            ul.totalizerOperators.dropdown-content(data-bind="attr: { 'id': 'totalizerOperatorsDropdown'+ $index() }")
-                                                                // ko foreach: valueList
-                                                                li
-                                                                    a(data-bind="click: function(){ $root.selectTotalizerOperator($element, $parentContext.$index(), $data.text) }, text: $data.text")
-                                                                // /ko
-                                                            // /ko
-                                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="attr: { 'data-activates': 'totalizerOperatorsDropdown'+ $index() }, materializeDropdown")
-                                                                span.text(data-bind="text: operator")
-                                                                // ko if: (valueList.length > 1)
-                                                                span.caret.lm10px
-                                                                // /ko
-                                                    // /ko
-                                                    td.precision
-                                                        // ko if: ($data.canCalculate)
-                                                        input.form-control.inputPrecision(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")
-                                                        // /ko
-                                                    td.includeInChart
-                                                        // ko if: ($root.canEdit() && $data.canCalculate)
-                                                        input.includeInChartColumn.filled-in(data-bind="checked: includeInChart, enable: ($root.canEdit() && canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()}", type="checkbox")
-                                                        label(data-bind="attr: { for: 'includeInChart' + $index() }")
-                                                        // /ko
-                                                    td.yaxisChartGroup
-                                                        .availableAxisGroupsContainer
-                                                            ul.dropdown-content(data-bind="foreach: $root.yaxisGroups, attr: { 'id': 'yaxisChartGroups'+ $index() }")
-                                                                li
-                                                                    a(data-bind="click: function(){ $root.selectYaxisGroup($element, $parentContext.$index(), $data) }, text: $data")
-                                                            a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="attr: { 'data-activates': 'yaxisChartGroups'+ $index() }, materializeDropdown")
-                                                                span.text(data-bind="text: yaxisGroup")
-                                                                span.caret.lm10px
-                                                    // /ko
-                                                    // ko if: ($root.canEdit())
-                                                    td.removecolumn
-                                                        a.span.removerow.blue-grey-text(data-bind="click: function () { $parent.deleteReportColumn($index()) }") Remove
-                                                    // /ko
-                                                // /ko
-                                            tbody
-                                                tr
-                                                    // ko if: ($root.canEdit())
-                                                    td(colspan="4")
-                                                        a.addColumnButton(href="#") Add Column
-                                                    // /ko
-                                div.tab-pane#gridColumnConfig(style="display: none")
-                                    h6.strong.panel-title
-                                        table.gridColumnConfigTable.small.grid.table
-                                            thead
-                                                tr.sortablecolums(data-bind="foreach: listOfColumns()")
-                                                    th.displayName(data-bind="css: { fixed: ($index() === 0), 'red lighten-4': (colName === 'Choose Point')}")
-                                                        .cellContent
-                                                            // ko if: $index() > 0
-                                                            .handle
-                                                            // /ko
-                                                            .columnItem(data-bind="css: { globalConfigCell: ($index() === 0)}")
-                                                                // ko if: $index() === 0
-                                                                // ko if: ($root.reportType() !== 'Property')
-                                                                div.columnGlobalConfig(data-bind="click: function () { $root.globalEditColumnFields() }")
-                                                                    label.globalConfigColumnItem Global Config
-                                                                // /ko
-                                                                // /ko
-                                                                // ko if: $index() > 0
-                                                                // ko if: ($parent.reportType() !== 'Property')
-                                                                div.columnNames(data-bind="click: function () { $root.editColumn($data, $index()) }, event: { mouseover: function () { $root.showColumnSettings($element, $data) }, mouseout: function() { $root.hideColumnSettings($element) } }")
-                                                                    // ko if: ($parent.reportType() === 'Totalizer')
-                                                                    label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName + ' - ' + operator)", style="margin-right: 2px;")
-                                                                    // /ko
-                                                                    // ko if: ($parent.reportType() === 'History')
-                                                                    label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName)", style="margin-right: 2px;")
-                                                                    // /ko
-                                                                // /ko
-                                                                // ko if: ($parent.reportType() === 'Property')
-                                                                div.columnPropertyNames
-                                                                    .availablePropertiesContainer
-                                                                        ul.enumproperties.dropdown-menu(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
-                                                                            input.form-control.inputSearch.filled-in(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
-                                                                            li(role="separator", class="divider")
-                                                                            // ko foreach: $parent.columnFilteredProps()
-                                                                            li
-                                                                                a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
-                                                                            // /ko
-                                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}", data-toggle="dropdown")
-                                                                            span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
-                                                                            span.caret.lm10px
-                                                                // /ko
-                                                                // /ko
-                                                        // ko if: $index() > 0
-                                                        .deleteColumnLink
-                                                            a.btn-mini.tiny.waves-effect.waves-light.removeColumn(data-bind="click: function() { $root.deleteReportColumn($index()) }")
-                                                                i.material-icons.center delete
-                                                        // /ko
-                                                        .blankspot
-                                                            | &nbsp;
-                                                        .addColumnContainer
-                                                            // ko if: $index() === 0
-                                                            a.addColumnGridButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn($element, 1) }")
-                                                            // /ko
-                                                            // ko if: $index() === ($root.listOfColumns().length - 1)
-                                                            a.addColumnGridButton.rightSideAddButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn($element) }")
-                                                            // /ko
-                                            tbody(style="border-bottom: 1px solid #d0d0d0;")
-                                                tr(data-bind="foreach: listOfColumns()")
-                                                    td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
-                                                        div ...
-                                                tr(data-bind="foreach: listOfColumns()")
-                                                    td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
-                                                        div ...
-                                                tr(data-bind="foreach: listOfColumns()")
-                                                    td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
-                                                        div ...
-                                            // ko if: ($root.reportType() !== 'Property')
-                                            tfoot
-                                                tr.calculationFooter(data-bind="foreach: listOfColumns()")
-                                                    // ko if: $index() === 0
-                                                    td
-                                                        .globalCalculationsCell
-                                                            ul.globalCalculations(data-bind="$root.listOfCalculations")
-                                                                li
-                                                                    input.medium.filled-in(data-bind="checked: $root.globalcalculateColumnSelectedvalue().indexOf($data) !== -1, click: function () { return $root.globalCalculationClick($element, $data) }, attr: { id: 'globalCalc_' + $index()}", type="checkbox")
-                                                                    label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index() ,  title: ($root.globalcalculateColumnSelectedvalue[$data] ? 'Selected' : 'Not Selected') }")
-                                                    // /ko
-                                                    // ko if: $index() > 0
-                                                    // ko if: ($root.listOfCalculations().length > 0)
-                                                    td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
-                                                        .calculationsCell
-                                                            // ko if: ($data.canCalculate)
-                                                            ul.calculations
+                                    table.columnsGrid.small.grid.table
+                                        thead
+                                            tr.strong(style="height:44px")
+                                                th.medium.strong
+                                                    label Column Key
+                                                // ko if: (reportType() !== 'Property')
+                                                th.medium.strong
+                                                    label Display Name
+                                                // ko if: (calculatable() === true)
+                                                th.medium.strong
+                                                    label.multiplierColumn Multiplier
+                                                th.medium.strong
+                                                    .calculateColumn(tabindex="910")
+                                                        label.columnText Calculate
+                                                        .globalCalculate.availableCalculations.hideDiv
+                                                            // ko if: ($root.listOfCalculations().length > 1)
+                                                            ul#globalCalculationsDropdown.calculations.dropdown-content(multiple=true)
                                                                 // ko foreach: $root.listOfCalculations
                                                                 li
-                                                                    input.medium.filled-in(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index()) }, attr: { id: 'columnCalc_' + $parentContext.$index() + $index()}", type="checkbox")
-                                                                    label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'columnCalc_' + $parentContext.$index() + $index() ,  title: ($root.globalcalculateColumnSelectedvalue[$data] ? 'Selected' : 'Not Selected') }")
+                                                                    input.medium.filled-in(data-bind="click: function () { return $root.globalCalculationClick($element, $data)}, attr: { id: 'globalCalc_' + $index()}", type="checkbox")
+                                                                    label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index()}")
                                                                 // /ko
                                                             // /ko
+                                                            a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="css: {disabled: !$root.canEdit()}", data-activates="globalCalculationsDropdown") Calcs
+                                                // ko if: (reportType() === 'Totalizer')
+                                                th.medium.strong.typeColumn
+                                                    label Type
+                                                // /ko
+                                                th.medium.strong
+                                                    .precisionColumn(tabindex="920")
+                                                        label.columnText Precision
+                                                        .globalPrecision.hideDiv
+                                                            input.form-control.globalPrecisionInput(data-bind="reportPrecisionInput: $root.globalPrecisionValue, enable: $root.canEdit()", type="text", min="0", max="20")
+                                                th.medium.strong
+                                                    .includeInChartColumn(tabindex="930")
+                                                        label.columnText Chart
+                                                        .globalIncludeInChart.hideDiv
+                                                            input.form-control.filled-in(data-bind="checked: $root.allChartCheckboxChecked(), enable: $root.canEdit(), attr: {id : 'globalIncludeInChart' }", type="checkbox")
+                                                            label.blue-grey-text.label-tight(data-bind="attr: { for: 'globalIncludeInChart' }")
+                                                th.medium.strong
+                                                    label.yaxisChartGroupColumn
+                                                // /ko
+                                                // /ko
+                                                th.medium.strong
+                                        tbody.sortablecolums(data-bind="foreach: listOfColumns()")
+                                            // ko if: $index() > 0
+                                            tr.columnRowData(data-bind="css: {'red lighten-4': (colName === 'Choose Point')} ")
+                                                td.columnNameContainer(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
+                                                    .handle
+                                                    // ko if: ($parent.reportType() !== 'Property')
+                                                    // ko if: ($root.canEdit())
+                                                    a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.clearColumnPoint($index()) }, tooltip: { title: 'Clear' }")
+                                                        i.material-icons.prefix.center.blue-grey-text delete
+                                                    a.btn-mini.tiny.waves-effect.waves-light(data-bind="click: function(){ $parent.selectPointForColumn($data, $index) }, tooltip: { title: 'Edit' }")
+                                                        i.material-icons.prefix.center.blue-grey-text edit
                                                     // /ko
+                                                    // ko if: (!!$data.softDeleted)
+                                                    span [Deleted]&nbsp;
                                                     // /ko
+                                                    .columnName(data-bind="text: colName, click: function(){ $parent.showPointReview($data) }")
+                                                    // /ko
+                                                    // ko if: ($parent.reportType() === 'Property')
+                                                    .availablePropertiesContainer
+                                                        ul.enumproperties.dropdown-content(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
+                                                            input.form-control.inputSearch.filled-in(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
+                                                            li(role="separator", class="divider")
+                                                            // ko foreach: $parent.columnFilteredProps()
+                                                            li
+                                                                a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
+                                                            // /ko
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'enumpropertiesDropdown'+ $index() }, materializeDropdown")
+                                                            span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
+                                                    // /ko
+                                                // ko if: ($parent.reportType() !== 'Property')
+                                                td.displayName
+                                                    input.form-control.columnDisplayName(data-bind="value: colDisplayName, enable: $parent.canEdit(), event: { change: function() { $parent.designChanged(true) } }", type="text", required)
+                                                td.columnMultiplier
+                                                    // ko if: ($data.canCalculate)
+                                                    input.form-control.inputMultiplier(data-bind="value: multiplier, enable: $root.canEdit()", type="number")
+                                                    // /ko
+                                                td.columnTotals
+                                                    // ko if: ($data.canCalculate)
+                                                    .availableCalculations
+                                                        // ko if: ($parent.listOfCalculations().length > 1)
+                                                        ul.calculations.dropdown-content(multiple=true, data-bind="foreach: $parent.listOfCalculations, attr: { 'id': 'calculationsDropdown' + $index() }")
+                                                            li
+                                                                input.medium.filled-in(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}, attr: { id: 'calc_' + $parentContext.$index() + '_' + $index()}", type="checkbox")
+                                                                label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'calc_' + $parentContext.$index() + '_' + $index()}")
+                                                        // /ko
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="attr: { 'data-activates': 'calculationsDropdown' + $index() }, materializeDropdown") Calcs
+
+                                                        //main-container
+                                                        //    select-container
+                                                        //        select.multiple.calculations(data-bind="options: calculation, materializeSelect")
+                                                        //    options-container
+                                                        //        options(data-bind="foreach: $parent.listOfCalculations")
+                                                        //            input(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}", type="checkbox")
+                                                        //            label(data-bind="text: $data")
+
+                                                    // /ko
+                                                // ko if: ($parent.reportType() === 'Totalizer' && valueList.length > 0)
+                                                td.totalizerOperator
+                                                    .availableTotalizerOperatorsContainer
+                                                        // ko if: (valueList.length > 1)
+                                                        select(data-bind="foreach: valueList, materializeSelect")
+                                                            option(data-bind="click: function(){ $root.selectTotalizerOperator($element, $parentContext.$index(), $data.text) }, value: $data.text, text: $data.text")
+                                                        // /ko
+                                                        // ko if: (valueList.length === 1)
+                                                        span(data-bind="text: operator")
+                                                        // /ko
+                                                // /ko
+                                                td.precision
+                                                    // ko if: ($data.canCalculate)
+                                                    input.form-control.inputPrecision(data-bind="reportPrecisionInput: precision, enable: $root.canEdit()", type="text", min="0", max="20", viewModelField="precision")
+                                                    // /ko
+                                                td.includeInChart
+                                                    // ko if: ($root.canEdit() && $data.canCalculate)
+                                                    input.includeInChartColumn.filled-in(data-bind="checked: includeInChart, enable: ($root.canEdit() && canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()}", type="checkbox")
+                                                    label(data-bind="attr: { for: 'includeInChart' + $index() }")
+                                                    // /ko
+                                                td.yaxisChartGroup
+                                                    .availableAxisGroupsContainer
+                                                        select(data-bind="foreach: $root.yaxisGroups, materializeSelect")
+                                                            option.blue-grey-text.blue-grey(data-bind="click: function(){ $root.selectYaxisGroup($element, $parentContext.$index(), $data) }, text: $data")
+                                                // /ko
+                                                // ko if: ($root.canEdit())
+                                                td.removecolumn
+                                                    a.span.removerow.blue-grey-text(data-bind="click: function () { $parent.deleteReportColumn($index()) }") Remove
+                                                // /ko
                                             // /ko
+                                        tbody
+                                            tr
+                                                // ko if: ($root.canEdit())
+                                                td(colspan="4")
+                                                    a.addColumnButton(href="#") Add Column
+                                                // /ko
+                                div.tab-pane#gridColumnConfig(style="display: none")
+                                    h6.strong.panel-title
+                                    table.gridColumnConfigTable.small.grid.table
+                                        thead
+                                            tr.sortablecolums(data-bind="foreach: listOfColumns()")
+                                                th.displayName(data-bind="css: { fixed: ($index() === 0), 'red lighten-4': (colName === 'Choose Point')}")
+                                                    .cellContent
+                                                        // ko if: $index() > 0
+                                                        .handle
+                                                        // /ko
+                                                        .columnItem(data-bind="css: { globalConfigCell: ($index() === 0)}")
+                                                            // ko if: $index() === 0
+                                                            // ko if: ($root.reportType() !== 'Property')
+                                                            div.columnGlobalConfig(data-bind="click: function () { $root.globalEditColumnFields() }")
+                                                                label.globalConfigColumnItem Global Config
+                                                            // /ko
+                                                            // /ko
+                                                            // ko if: $index() > 0
+                                                            // ko if: ($parent.reportType() !== 'Property')
+                                                            div.columnNames(data-bind="click: function () { $root.editColumn($data, $index()) }, event: { mouseover: function () { $root.showColumnSettings($element, $data) }, mouseout: function() { $root.hideColumnSettings($element) } }")
+                                                                // ko if: ($parent.reportType() === 'Totalizer')
+                                                                label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName + ' - ' + operator)", style="margin-right: 2px;")
+                                                                // /ko
+                                                                // ko if: ($parent.reportType() === 'History')
+                                                                label.gridColumnConfigColumnItem(data-bind="text: (colName === 'Choose Point' ? colName : colDisplayName)", style="margin-right: 2px;")
+                                                                // /ko
+                                                            // /ko
+                                                            // ko if: ($parent.reportType() === 'Property')
+                                                            div.columnPropertyNames
+                                                                .availablePropertiesContainer
+                                                                    ul.enumproperties.dropdown-menu(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
+                                                                        input.form-control.inputSearch.filled-in(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
+                                                                        li(role="separator", class="divider")
+                                                                        // ko foreach: $parent.columnFilteredProps()
+                                                                        li
+                                                                            a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
+                                                                        // /ko
+                                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}", data-toggle="dropdown")
+                                                                        span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
+                                                            // /ko
+                                                            // /ko
+                                                    // ko if: $index() > 0
+                                                    .deleteColumnLink
+                                                        a.btn-mini.tiny.waves-effect.waves-light.removeColumn(data-bind="click: function() { $root.deleteReportColumn($index()) }")
+                                                            i.material-icons.center delete
+                                                    // /ko
+                                                    .blankspot
+                                                        | &nbsp;
+                                                    .addColumnContainer
+                                                        // ko if: $index() === 0
+                                                        a.addColumnGridButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn($element, 1) }")
+                                                        // /ko
+                                                        // ko if: $index() === ($root.listOfColumns().length - 1)
+                                                        a.addColumnGridButton.rightSideAddButton(data-bind="text: 'Add Column', click: function(){ $root.addNewColumn($element) }")
+                                                        // /ko
+                                        tbody(style="border-bottom: 1px solid #d0d0d0;")
+                                            tr(data-bind="foreach: listOfColumns()")
+                                                td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
+                                                    div ...
+                                            tr(data-bind="foreach: listOfColumns()")
+                                                td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
+                                                    div ...
+                                            tr(data-bind="foreach: listOfColumns()")
+                                                td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
+                                                    div ...
+                                        // ko if: ($root.reportType() !== 'Property')
+                                        tfoot
+                                            tr.calculationFooter(data-bind="foreach: listOfColumns()")
+                                                // ko if: $index() === 0
+                                                td
+                                                    .globalCalculationsCell
+                                                        ul.globalCalculations(data-bind="$root.listOfCalculations")
+                                                            li
+                                                                input.medium.filled-in(data-bind="checked: $root.globalcalculateColumnSelectedvalue().indexOf($data) !== -1, click: function () { return $root.globalCalculationClick($element, $data) }, attr: { id: 'globalCalc_' + $index()}", type="checkbox")
+                                                                label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'globalCalc_' + $index() ,  title: ($root.globalcalculateColumnSelectedvalue[$data] ? 'Selected' : 'Not Selected') }")
+                                                // /ko
+                                                // ko if: $index() > 0
+                                                // ko if: ($root.listOfCalculations().length > 0)
+                                                td(data-bind="css: { 'red lighten-4': (colName === 'Choose Point')}")
+                                                    .calculationsCell
+                                                        // ko if: ($data.canCalculate)
+                                                        ul.calculations
+                                                            // ko foreach: $root.listOfCalculations
+                                                            li
+                                                                input.medium.filled-in(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index()) }, attr: { id: 'columnCalc_' + $parentContext.$index() + $index()}", type="checkbox")
+                                                                label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'columnCalc_' + $parentContext.$index() + $index() ,  title: ($root.globalcalculateColumnSelectedvalue[$data] ? 'Selected' : 'Not Selected') }")
+                                                            // /ko
+                                                        // /ko
+                                                // /ko
+                                                // /ko
+                                        // /ko
                                 div.tab-pane#filterByPoint
                                     // ko if: ($root.reportType() === 'Property')
                                     h6.strong.panel-title
-                                        .selectorNames
-                                            .form-inline.black-text(style="display: inline-flex")
-                                                div.input-field.col
-                                                    input.black-text.form-control.input-md.readOnly.name1Filter#name1Filter(data-bind="textInput: $root.name1Filter, attr: {disabled: 'disabled'}", type="text")
-                                                    label.grey-text(data-bind="updateLabel: $root.name1Filter, attr: {for: 'name1Filter'}, css: { active: ($root.name1Filter() !== '') }") Name 1
-                                                div.input-field.col
-                                                    input.black-text.form-control.input-md.readOnly.name2Filter#name2Filter(data-bind="textInput: $root.name2Filter, attr: {disabled: 'disabled'}", type="text")
-                                                    label.grey-text(data-bind="updateLabel: $root.name2Filter, attr: {for: 'name2Filter'}, css: { active: ($root.name2Filter() !== '') }") Name 2
-                                                div.input-field.col
-                                                    input.black-text.form-control.input-md.readOnly.name3Filter#name3Filter(data-bind="textInput: $root.name3Filter, attr: {disabled: 'disabled'}", type="text")
-                                                    label.grey-text(data-bind="updateLabel: $root.name3Filter, attr: {for: 'name3Filter'}, css: { active: ($root.name3Filter() !== '') }") Name 3
-                                                div.input-field.col
-                                                    input.black-text.form-control.input-md.readOnly.name4Filter#name4Filter(data-bind="textInput: $root.name4Filter, attr: {disabled: 'disabled'}", type="text")
-                                                    label.grey-text(data-bind="updateLabel: $root.name4Filter, attr: {for: 'name4Filter'}, css: { active: ($root.name4Filter() !== '') }") Name 4
-                                        div.pointTypesFilter
-                                            span.title Filtered Point Types
-                                            ul
-                                                // ko foreach: $root.selectedPointTypesFilter
-                                                li
-                                                    label.blue-grey-text.label-tight(data-bind="text: $data")
-                                                // /ko
-                                        a.btn.waves-effect.waves-light.blue-grey.right-align.adjustPointTypesFilterButton(data-bind="click: $root.pointSelectorFilter") Point Type Filter
+                                    .selectorNames
+                                        .form-inline.black-text(style="display: inline-flex")
+                                            div.input-field.col
+                                                input.black-text.form-control.input-md.readOnly.name1Filter#name1Filter(data-bind="textInput: $root.name1Filter, attr: {disabled: 'disabled'}", type="text")
+                                                label.grey-text(data-bind="updateLabel: $root.name1Filter, attr: {for: 'name1Filter'}, css: { active: ($root.name1Filter() !== '') }") Name 1
+                                            div.input-field.col
+                                                input.black-text.form-control.input-md.readOnly.name2Filter#name2Filter(data-bind="textInput: $root.name2Filter, attr: {disabled: 'disabled'}", type="text")
+                                                label.grey-text(data-bind="updateLabel: $root.name2Filter, attr: {for: 'name2Filter'}, css: { active: ($root.name2Filter() !== '') }") Name 2
+                                            div.input-field.col
+                                                input.black-text.form-control.input-md.readOnly.name3Filter#name3Filter(data-bind="textInput: $root.name3Filter, attr: {disabled: 'disabled'}", type="text")
+                                                label.grey-text(data-bind="updateLabel: $root.name3Filter, attr: {for: 'name3Filter'}, css: { active: ($root.name3Filter() !== '') }") Name 3
+                                            div.input-field.col
+                                                input.black-text.form-control.input-md.readOnly.name4Filter#name4Filter(data-bind="textInput: $root.name4Filter, attr: {disabled: 'disabled'}", type="text")
+                                                label.grey-text(data-bind="updateLabel: $root.name4Filter, attr: {for: 'name4Filter'}, css: { active: ($root.name4Filter() !== '') }") Name 4
+                                    div.pointTypesFilter
+                                        span.title Filtered Point Types
+                                        ul
+                                            // ko foreach: $root.selectedPointTypesFilter
+                                            li
+                                                label.blue-grey-text.label-tight(data-bind="text: $data")
+                                            // /ko
+                                    a.btn.waves-effect.waves-light.blue-grey.right-align.adjustPointTypesFilterButton(data-bind="click: $root.pointSelectorFilter") Point Type Filter
                                     // /ko
                                 div.tab-pane.additionalFilters#additionalFilters
                                     // ko if: (reportType() === 'Property')
@@ -469,7 +448,6 @@ html.direports
                                                             // /ko
                                                         a.btn.waves-effect.waves-light.blue-grey.dropdown-button.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}, attr: { 'data-activates': 'enumProperties'+ $index() }, materializeDropdown")
                                                             span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfFilterPropertiesLength + ')')")
-                                                            span.caret.lm10px
                                                 td.filterOperator
                                                     .availableOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
                                                         ul.operators.dropdown-content(data-bind="foreach: $root.operators(valueType), attr: { 'id': 'availableOperators'+ $index() }")
@@ -519,17 +497,15 @@ html.direports
                                     br
                                     span.intervalSettings
                                         div.intervalsContainer.input-field
+                                            label(data-bind="attr: {for: 'intervalValue'}") Interval
                                             input.intervalValue.form-control.input-md.filled-in#intervalValue(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
-                                            label(data-bind="attr: {for: 'intervalValue'}") Interval:
                                         .availableIntervalsContainer
                                             ul#intervals.intervals.dropdown-content
                                                 // ko foreach: $root.listOfIntervalsComputed()
                                                 li
                                                     a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
                                                 // /ko
-                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="materializeDropdown, css: { durationError: $root.durationError() }", data-activates="intervals")
-                                                span(data-bind="text: $root.interval")
-                                                span.caret.lm10px
+                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="text: $root.interval, css: { durationError: $root.durationError() }, materializeDropdown", data-activates="intervals")
                                     // /ko
                                 div#schedule.tab-pane
                                     .row
@@ -587,9 +563,6 @@ html.direports
                                         // /ko
                                         a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-activates="chartTypesChartdataDropdown")
                                             span(data-bind="text: selectedChartType()")
-                                            // ko if: ($root.listOfChartTypes().length > 1)
-                                            span.caret.lm10px
-                                            // /ko
                                     a.btn.waves-effect.waves-light.blue-grey(data-bind="click: function() { $root.printChartDiv() }", href="#")
                                         i.material-icons print
                                         span.printButton Print
