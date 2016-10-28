@@ -1,7 +1,7 @@
 // ko if: ((valueType === "DateTime" || valueType === "Timet"))
-div(style="display:inline-block")
+span
    input.input.form-control.filterContainer.dateTimeDate(data-bind="reportDatePicker: date, enable: $root.canEdit(), css: {startDate: (filterName === 'Start_Date'), endDate: (filterName === 'End_Date') }", type="text", required)
-div(style="display:inline-block")
+span
    input.input.form-control.filterContainer.dateTimeTime(data-bind="reportTimePicker: time, enable: $root.canEdit(), css: {startDateTime: (filterName === 'Start_Date'), endDateTime: (filterName === 'End_Date') }", type="text", required)
 // /ko
 // ko if: (valueType === "Float" || valueType === "Unsigned")
@@ -11,16 +11,14 @@ input.input.form-control.filterContainer.filled-in(data-bind="value: value, enab
 input.input.form-control.filterContainer.filled-in(data-bind="value: value, enable: $root.canEdit()", type="text", required)
 // /ko
 // ko if: (valueType === "Enum")
-// ko if: (valueList.length > 0)
-.dropdown.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
-   a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-      span.white-text(data-bind="text: value")
-      span.white-text.caret.lm10px
-   ul.filterValues.dropdown-menu
-      // ko foreach: valueList
-      li
-         a.filterContainer(data-bind="click: function(){ $root.selectedFilterEValue($parentContext.$index(), $data) }, text: $data.value", required)
-      // /ko
+// ko if: (!!valueList && valueList.length > 0)
+.availablefilterValues
+    ul.dropdown-content(data-bind="foreach: valueList, attr: { 'id': 'enumValueList' + $parentContext.$index() + $index() }")
+        li
+            a.filterContainer(data-bind="click: function(){ $root.selectedFilterEValue($parentContext.$index(), $data) }, text: $data.value", required)
+    a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="attr: { 'data-activates': 'enumValueList' + $parentContext.$index() + $index() }, materializeDropdown")
+        span.text(data-bind="text: value")
+        span.caret.lm10px
 // /ko
 // ko if: (valueList.length === 0)
 input.input.form-control.filterContainer.filled-in(data-bind="value: value, enable: $root.canEdit()", type="text", required)
@@ -38,15 +36,15 @@ div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
    .pointRef.filterPointName.container-fluid.filterContainer(data-bind="text: ($data.value !== 0 ? $data.value : '- blank -'), click: function(){ $parent.showPointReview($data) }")
 // /ko
 // ko if: (valueType === "Bool")
-.dropdown.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
-   a.btn-flat.waves-effect.waves-light.blue-grey.dropdown-toggle.filterValueButton(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
-      span.white-text(data-bind="text: $root.displayBool(value)")
-      span.white-text.caret.lm10px
-   ul.filterValues.dropdown-menu
-      li
-         a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'True'}, 'value') }, text: 'On'", required)
-      li
-         a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'False'}, 'value') }, text: 'Off'", required)
+.availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
+    ul.dropdown-content(data-bind="foreach: valueList, attr: { 'id': 'boolValueList'+ $parentContext.$index() + $index() }")
+        li
+            a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'True'}, 'value') }, text: 'On'", required)
+        li
+            a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'False'}, 'value') }, text: 'Off'", required)
+    a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="attr: { 'data-activates': 'boolValueList'+ $parentContext.$index() + $index() }, materializeDropdown")
+        span.text(data-bind="text: $root.displayBool(value)")
+        span.caret.lm10px
 // /ko
 // ko if: ((valueType === "HourMinSec") || (valueType === "HourMin") || (valueType === "MinSec"))
 div.durationCtrl

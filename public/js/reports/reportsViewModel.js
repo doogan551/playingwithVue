@@ -1,5 +1,44 @@
 "use strict";
 window.workspaceManager = window.top.workspaceManager;
+
+var dti = {
+    forEach: function (obj, fn) {
+        var keys = Object.keys(obj),
+            c,
+            len = keys.length,
+            errorFree = true;
+
+        for (c = 0; c < len && errorFree; c++) {
+            errorFree = fn(obj[keys[c]], keys[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
+    forEachArray: function (arr, fn) {
+        var c,
+            list = arr || [],
+            len = list.length,
+            errorFree = true;
+
+        for (c = 0; c < len && errorFree; c++) {
+            errorFree = fn(list[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
+    getTemplate: function (id) {
+        var markup = $(id).html();
+
+        return $(markup);
+    },
+};
+
 var reportsVM,
     reportDateRanges = function (selectedRange) {
         var answer,
@@ -380,18 +419,15 @@ var initKnockout = function () {
 
     ko.bindingHandlers.materializeDropdown = {
         init: function (element, valueAccessor) {
-            $(element).dropdown({
-                    inDuration: 300,
-                    outDuration: 225,
-                    constrain_width: false,
-                    hover: false,
-                    gutter: 0,
-                    belowOrigin: true,
-                    alignment: 'left'
-                });
+            $(element).dropdown();
         },
-        change: function (element, valueAccessor) {
-            console.log("CHANGE    $(element).html() = " + $(element).html());
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
+
+    ko.bindingHandlers.materializePickadate = {
+        init: function (element, valueAccessor) {
+            $(element).dropdown();
         },
         update: function (element, valueAccessor, allBindings) {
         }
@@ -468,18 +504,9 @@ var reportsViewModel = function () {
         resizeTimer = 400,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
-        ENUMSPROPERTIES,
-        ENUMSPOINTTYPES,
-        setGlobalEnumsProperty = function (results) {
-            ENUMSPROPERTIES = results;
-        },
-        setGlobalPointtypes = function (results) {
-            ENUMSPOINTTYPES = results;
-        },
-        initGlobals = function () {
-            dtiUtility.getConfig("Enums.Properties", null, setGlobalEnumsProperty);
-            dtiUtility.getConfig("Enums.Point Types", null, setGlobalPointtypes);
-        },
+        currentUser,
+        ENUMSTEMPLATESTEMPLATES,
+        ENUMSTEMPLATESENUMS,
         setNewPointReference = function (refPointUPI, property) {
             // console.log("- - - - setNewPointReference() called....   refPointUPI = " + refPointUPI + " property = " + property);
             var refPoint,
@@ -500,14 +527,14 @@ var reportsViewModel = function () {
             if (!!refPoint) {
                 var pointType = refPoint["Point Type"].Value;
                 tempRef = {};
-                tempRef.PropertyEnum = (!!ENUMSPROPERTIES ? ENUMSPROPERTIES[property].enum : "");
+                tempRef.PropertyEnum = (!!ENUMSTEMPLATESENUMS.Properties ? ENUMSTEMPLATESENUMS.Properties[property].enum : "");
                 tempRef.PropertyName = property;
                 tempRef.Value = refPoint._id;
                 tempRef.AppIndex = ++appIndex;
                 tempRef.isDisplayable = true;
                 tempRef.isReadOnly = false;
                 tempRef.PointName = refPoint.Name;
-                tempRef.PointType = (!!ENUMSPOINTTYPES ? ENUMSPOINTTYPES[pointType].enum : "");
+                tempRef.PointType = (!!ENUMSTEMPLATESENUMS["Point Types"] ? ENUMSTEMPLATESENUMS["Point Types"][pointType].enum : "");
                 point["Point Refs"].push(tempRef);
             } else {
                 if (!!refPointUPI) {
@@ -518,16 +545,14 @@ var reportsViewModel = function () {
         },
         userCanEdit = function (data, requestedAccessLevel) {
             var cumulativePermissions = 0,
-                user,
                 groups,
                 isSystemAdmin;
 
-            if (!!window.workspaceManager) {
-                user = window.workspaceManager.user();
-                groups = user.groups.filter(function (item) {
+            if (!!currentUser) {
+                groups = currentUser.groups.filter(function (item) {
                     return !!~data.Security.indexOf(item._id);
                 });
-                isSystemAdmin = user["System Admin"].Value;
+                isSystemAdmin = currentUser["System Admin"].Value;
 
                 if (isSystemAdmin) { return true; }
 
@@ -773,7 +798,7 @@ var reportsViewModel = function () {
         columnCanBeCalculated = function (column) {
             var result = false,
                 valueOptions;
-            if (self.reportType === "Totalizer") {
+            if (self.reportType() === "Totalizer") {
                 result = true;
             } else {
                 switch (column.valueType) {
@@ -794,7 +819,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = (!scheduled ? dtiUtility.getConfig("Templates.getTemplate", [column.pointType]) : undefined);
+                        valueOptions = (!scheduled ? ENUMSTEMPLATESTEMPLATES[column.pointType] : undefined);
                         result = (valueOptions === undefined);
                         break;
                 }
@@ -821,7 +846,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = dtiUtility.getConfig("Templates.getTemplate", [column.pointType]);
+                        valueOptions = ENUMSTEMPLATESTEMPLATES[column.pointType];
                         result = (valueOptions !== undefined);
                         break;
                 }
@@ -842,7 +867,7 @@ var reportsViewModel = function () {
                 column,
                 canCalculate = false;
 
-            for (i = 0; i < self.listOfColumns().length; i++) {
+            for (i = 1; i < self.listOfColumns().length; i++) {
                 column = self.listOfColumns()[i];
                 if (columnCanBeCalculated(column)) {
                     canCalculate = true;
@@ -856,7 +881,7 @@ var reportsViewModel = function () {
                 activateCharting = false,
                 allChecked = true;
 
-            for (var i = 0; i < self.listOfColumns().length; i++) {
+            for (var i = 1; i < self.listOfColumns().length; i++) {
                 if (columnCanBeCharted(self.listOfColumns()[i])) {
                     displayChartingHeader = true;
                     if (!activateCharting && self.listOfColumns()[i].includeInChart) {
@@ -874,10 +899,14 @@ var reportsViewModel = function () {
 
             self.chartable(activateCharting);
             self.allChartCheckboxChecked(allChecked);
+
+            if (!self.chartable()) {
+                self.selectViewReportTabSubTab("gridData");
+            }
         },
         updateListOfFilters = function (newArray) {
             self.listOfFilters([]);
-            if (self.reportType === "Property") {
+            if (self.reportType() === "Property") {
                 self.listOfFilters(setFiltersParentChildLogic(newArray));
             } else {
                 self.listOfFilters(newArray);
@@ -982,18 +1011,18 @@ var reportsViewModel = function () {
                     tempObject.calculation = [];
                     tempObject.multiplier = 1;
                     delete tempObject.valueOptions;
-                    if (self.reportType === "Totalizer") {
+                    if (self.reportType() === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
                         tempObject.operator = tempObject.valueList[0].text;
                         tempObject.dataColumnName = tempObject.upi + " - " + tempObject.operator.toLowerCase();
                     } else {
-                        if (self.reportType === "History") {
+                        if (self.reportType() === "History") {
                             tempObject.dataColumnName = tempObject.upi;
                         }
                         if (!!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
-                            valueoptions = dtiUtility.getConfig("Templates.getTemplate", [tempObject.pointType]);
+                            valueoptions = ENUMSTEMPLATESTEMPLATES[tempObject.pointType];
                             tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
                         }
                     }
@@ -1049,18 +1078,18 @@ var reportsViewModel = function () {
                     tempObject.calculation = [];
                     tempObject.multiplier = 1;
                     delete tempObject.valueOptions;
-                    if (self.reportType === "Totalizer") {
+                    if (self.reportType() === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
                         tempObject.operator = tempObject.valueList[0].text;
                         tempObject.dataColumnName = tempObject.upi + " - " + tempObject.operator.toLowerCase();
                     } else {
-                        if (self.reportType === "History") {
+                        if (self.reportType() === "History") {
                             tempObject.dataColumnName = tempObject.upi;
                         }
                         if (!!selectedPoint.Value && !!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
-                            valueoptions = dtiUtility.getConfig("Templates.getTemplate", [tempObject.pointType]);
+                            valueoptions = ENUMSTEMPLATESTEMPLATES[tempObject.pointType];
                             tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
                         }
                     }
@@ -1068,12 +1097,13 @@ var reportsViewModel = function () {
                     tempObject.yaxisGroup = "A";
                     updateColumnFromPointRefs(tempObject);  // sets AppIndex;
                     if (tempObject.AppIndex) {
-                        tempPoint = Config.Update.formatPoint({
-                            point: point,
-                            oldPoint: point,
-                            refPoint: selectedPoint,
-                            property: getPointRefByAppIndex(tempObject.AppIndex)
-                        });
+                        //  TODO
+                        // tempPoint = Config.Update.formatPoint({
+                        //     point: point,
+                        //     oldPoint: point,
+                        //     refPoint: selectedPoint,
+                        //     property: getPointRefByAppIndex(tempObject.AppIndex)
+                        // });
                         updatedList[selectObjectIndex] = tempObject;
                         updateListOfColumns(updatedList);
                     }
@@ -1172,7 +1202,7 @@ var reportsViewModel = function () {
         },
         initializeNewFilter = function (selectedItem, filter) {
             var localFilter = filter,
-                prop = getProperty(selectedItem.name);
+                prop = ENUMSTEMPLATESENUMS.Properties[selectedItem.name];
 
             localFilter.filterName = selectedItem.name;
             localFilter.condition = "$and";
@@ -1201,7 +1231,7 @@ var reportsViewModel = function () {
                     localFilter.evalue = -1;
                     break;
                 case "BitString":
-                    localFilter.bitStringEnumsArray = getBitStringEnumsArray(dtiUtility.getConfig("Enums." + localFilter.filterName + " Bits"));
+                    localFilter.bitStringEnumsArray = getBitStringEnumsArray(ENUMSTEMPLATESENUMS["Enums." + localFilter.filterName + " Bits"]);
                     break;
             }
 
@@ -1275,7 +1305,7 @@ var reportsViewModel = function () {
             } else if (column.colName === "Choose Property") {
                 answer.valid = false;
                 answer.error = "Missing Column property at index " + colIndex;
-            } else if ((self.reportType === "Totalizer") || (self.reportType === "History")) {
+            } else if ((self.reportType() === "Totalizer") || (self.reportType() === "History")) {
                 if (column.colName !== "Date" && !!column.AppIndex) { //  skip first column  "Date"
                     pointRef = getPointRef(column, "Column Point");
                     if (pointRef === undefined) {
@@ -1489,11 +1519,11 @@ var reportsViewModel = function () {
 
                 if (valid) {
                     currentColumn.canCalculate = columnCanBeCalculated(currentColumn);
-                    switch (self.reportType) {
+                    switch (self.reportType()) {
                         case "Property":
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
                             if (currentColumn.valueType === "BitString") {
-                                currentColumn.bitstringEnums = dtiUtility.getConfig("Enums." + currentColumn.colName + " Bits");
+                                currentColumn.bitstringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[currentColumn.colName + " Bits"] : "");
                             }
                             currentColumn.dataColumnName = currentColumn.colName;
                             break;
@@ -1526,17 +1556,23 @@ var reportsViewModel = function () {
         getValueList = function (property, pointType) {
             var result = [],
                 i,
-                options = dtiUtility.getConfig("Utility.pointTypes.getEnums", [property, pointType]),
-                len = (options && options.length ? options.length : 0);
+                len,
+                setOptions = function (options) {
+                    len = (options && options.length ? options.length : 0);
 
-            for (i = 0; i < len; i++) {
-                result.push({
-                    value: options[i].name,
-                    evalue: options[i].value
-                });
-            }
+                    for (i = 0; i < len; i++) {
+                        result.push({
+                            value: options[i].name,
+                            evalue: options[i].value
+                        });
+                    }
+                };
 
-            return result;
+            dtiUtility.getConfig("Utility.pointTypes.getEnums", [property, pointType], setOptions);
+
+            window.setTimeout(function () {
+                return result;
+            }, 200);
         },
         getTotalizerValueList = function (pointType) {
             var result = [];
@@ -1557,19 +1593,17 @@ var reportsViewModel = function () {
 
             return result;
         },
-        getProperty = function (key) {
-            return dtiUtility.getConfig("Enums.Properties." + key);
-        },
         collectEnumProperties = function () {
             getPointPropertiesForFilters();
             getPointPropertiesForColumns();
         },
         getPointPropertiesForFilters = function () {
-            var props = dtiUtility.getConfig("Enums.Properties"),
+            var props,
                 listOfKeysToSkip = [],
                 prop,
                 key;
 
+            props = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS.Properties : {});
             for (key in props) {
                 if (props.hasOwnProperty(key)) {
                     if (props[key].reportEnable === true && $.inArray(key, listOfKeysToSkip) === -1) {
@@ -1589,6 +1623,15 @@ var reportsViewModel = function () {
                 return ($.inArray(enumProp.name, listOfKeysToRemove) === -1);
             });
             self.listOfColumnPropertiesLength = columnsPropertyFields.length;
+        },
+        getKeyBasedOnEnum = function (obj, enumValue) {
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    if (obj[key].enum === parseInt(enumValue, 10)) {
+                        return key;
+                    }
+                }
+            }
         },
         getKeyBasedOnValue = function (obj, value) {
             for (var key in obj) {
@@ -1669,7 +1712,7 @@ var reportsViewModel = function () {
                         if (filter.valueType === "BitString") {
                             var total = 0,
                                 key,
-                                bitStringEnums = dtiUtility.getConfig("Enums." + filter.filterName + " Bits");
+                                bitStringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[filter.filterName + " Bits"] : {});
 
                             for (key in bitStringEnums) {
                                 if (bitStringEnums.hasOwnProperty(key)) {
@@ -1741,7 +1784,7 @@ var reportsViewModel = function () {
                     }
                 }
 
-                if (self.reportType === "Totalizer" || self.reportType === "History") {
+                if (self.reportType() === "Totalizer" || self.reportType() === "History") {
                     configureSelectedDuration();
                 } else {
                     if (filters.length > 0) {
@@ -1750,7 +1793,7 @@ var reportsViewModel = function () {
                 }
 
                 if (!activeError) {
-                    switch (self.reportType) {
+                    switch (self.reportType()) {
                         case "History":
                         case "Totalizer":
                             point["Report Config"].interval = {
@@ -1870,12 +1913,12 @@ var reportsViewModel = function () {
             $reportColumns = $direports.find("#reportColumns");
             $additionalFilters = $direports.find("#additionalFilters");
             $hiddenPlaceholder = $direports.find(".hiddenPlaceholder");
+            $globalCalculateText = $columnsGrid.find("th .calculateColumn .columnText");
+            $globalCalculate = $columnsGrid.find("th .globalCalculate");
             $globalPrecisionText = $columnsGrid.find("th .precisionColumn .columnText");
             $globalPrecision = $columnsGrid.find("th .precisionColumn .globalPrecision");
             $globalIncludeInChartText = $columnsGrid.find("th .includeInChartColumn .columnText");
             $globalIncludeInChart = $columnsGrid.find("th .includeInChartColumn .globalIncludeInChart");
-            $globalCalculateText = $columnsGrid.find("th .calculateColumn .columnText");
-            $globalCalculate = $columnsGrid.find("th .globalCalculate");
             $availableChartTypesChartTab = $direports.find(".availableChartTypes.chartTab");
             $reportChartDiv = $direports.find(".reportChartDiv");
         },
@@ -2243,7 +2286,7 @@ var reportsViewModel = function () {
                         columnDataFound = (data[i][columnName] !== undefined);
                         if (columnDataFound) {
                             fieldValue = parseNumberValue(data[i][columnName].Value, data[i][columnName].rawValue, data[i][columnName].eValue);
-                            switch (self.reportType) {
+                            switch (self.reportType()) {
                                 case "History":
                                 case "Totalizer":
                                     if (self.selectedChartType() === "Pie") {
@@ -2309,7 +2352,7 @@ var reportsViewModel = function () {
                 $dataTablesScrollBody,
                 $dataTablesScrollFoot,
                 $dataTablesWrapper,
-                $activePane = $tabViewReport.find(".tab-pane.active");
+                $activePane = $tabViewReport.find(".tab-pane:visible");
 
             $tabViewReport.css("width", window.innerWidth - 83);
             $tabViewReport.css("height", window.innerHeight);
@@ -2319,7 +2362,6 @@ var reportsViewModel = function () {
             if ($activePane.attr("id") === "chartData") {
                 $activePane.css("height", (window.innerHeight - 90));
                 $activePane.css("width", (window.innerWidth - 130));
-                $activePane.css("margin-top", "-22px");
             } else if ($activePane.attr("id") === "gridData") {
                 $dataTablesScrollHead = $tabViewReport.find(".dataTables_scrollHead");
                 $dataTablesScrollBody = $tabViewReport.find(".dataTables_scrollBody");
@@ -2337,15 +2379,15 @@ var reportsViewModel = function () {
             }
         },
         adjustConfigTabActivePaneHeight = function () {
-            var $activePane = $tabConfiguration.find(".tab-pane.active");
-            $activePane.css("height", (window.innerHeight - 160));
+            var $configPanes = $tabConfiguration.find(".tab-content div.tab-pane");
+            $configPanes.css("height", (window.innerHeight - 190));
         },
         handleResize = function () {
             lastResize = new Date();
             setTimeout(function () {
                 if (new Date() - lastResize >= resizeTimer) {
                     if (self.currentTab() === 2) {
-                        if ($tabViewReport.find(".tab-pane.active").attr("id") === "chartData") {
+                        if ($tabViewReport.find(".tab-pane:visible").attr("id") === "chartData") {
                             renderChart();
                         } else {
                             adjustViewReportTabHeightWidth();
@@ -2369,7 +2411,7 @@ var reportsViewModel = function () {
             point["Report Config"].selectedPageLength = self.selectedPageLength();
             point["Report Config"].selectedChartType = self.selectedChartType();
             point["Report Config"].reportTitle = self.reportDisplayTitle();
-            switch (self.reportType) {
+            switch (self.reportType()) {
                 case "History":
                 case "Totalizer":
                     point["Report Config"].interval = {
@@ -2427,363 +2469,355 @@ var reportsViewModel = function () {
                 handleResize();
             });
 
-            if (!scheduled) {
-                $direports.find(".addColumnButton").on("click", function (e) {
-                    var rowTemplate = getNewColumnTemplate(),
-                        $newRow;
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (self.listOfColumns.indexOf(rowTemplate) === -1) {
-                        self.listOfColumns.push(rowTemplate);
-                        updateListOfColumns(self.listOfColumns());
-                        $newRow = $columnsTbody.find("tr:last");
-                        $newRow.addClass("ui-sortable-handle");
-                        $newRow.addClass("danger");
-                        if (self.reportType !== "Property") {
-                            self.selectPointForColumn(rowTemplate, (self.listOfColumns().length - 1));
+            setTimeout(function () {
+                if (!scheduled) {
+                    $direports.find(".addColumnButton").on("click", function (e) {
+                        var rowTemplate = getNewColumnTemplate(),
+                            $newRow;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (self.listOfColumns.indexOf(rowTemplate) === -1) {
+                            self.listOfColumns.push(rowTemplate);
+                            updateListOfColumns(self.listOfColumns());
+                            $newRow = $columnsTbody.find("tr:last");
+                            $newRow.addClass("ui-sortable-handle");
+                            $newRow.addClass("danger");
+                            if (self.reportType() !== "Property") {
+                                self.selectPointForColumn(rowTemplate, (self.listOfColumns().length - 1));
+                            }
                         }
-                    }
-                    handleResize();
-                    $reportColumns.stop().animate({
-                        scrollTop: $reportColumns.get(0).scrollHeight
-                    }, 700);
-                });
-
-                $direports.find(".addFilterbutton").on("click", function (e) {
-                    var rowTemplate = {
-                        filterName: "",
-                        condition: "$and",
-                        childLogic: false,
-                        beginGroup: false,
-                        endGroup: false,
-                        operator: "EqualTo",
-                        valueType: "String",
-                        value: "",
-                        valueList: ""
-                    };
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (self.listOfFilters.indexOf(rowTemplate) === -1) {
-                        self.listOfFilters.push(rowTemplate);
-                        updateListOfFilters(self.listOfFilters());
-                    }
-                    handleResize();
-                    $additionalFilters.stop().animate({
-                        scrollTop: $additionalFilters.get(0).scrollHeight
-                    }, 700);
-                });
-
-                $saveReportButton.on("click", function () {
-                    var $screenMessages = $tabConfiguration.find(".screenMessages");
-                    blockUI($tabConfiguration, true, " Saving Report...");
-                    $screenMessages.find(".errorMessage").text(""); // clear messages
-                    $screenMessages.find(".successMessage").text(""); // clear messages
-                    saveReportConfig();
-                    $(this).blur();
-                });
-
-                $direports.find(".runReportButton").on("click", function (e) {
-                    $(this).focus();
-                    e.preventDefault();
-                    e.stopPropagation();
-                    self.requestReportData();
-                });
-
-                $dataTablePlaceHolder.on("click", ".pointInstance", function () {
-                    var data = {
-                        upi: $(this).attr("upi"),
-                        pointType: $(this).attr("pointType"),
-                        pointName: $(this).text()
-                    };
-
-                    self.showPointReview(data);
-                });
-
-                $tabConfiguration.find(".toggleTab").on("shown.bs.tab", function () {
-                    adjustConfigTabActivePaneHeight();
-                });
-
-                if (!!reportSocket) {
-                    reportSocket.on("pointUpdated", function (data) {
-                        var $messageHolder = $tabConfiguration.find(".screenMessages").find(".successMessage");
-                        // console.log(" -  -  - reportSocket() 'pointUpdated' returned");
-                        if (data.err === null || data.err === undefined) {
-                            self.unSavedDesignChange(false);
-                            $messageHolder.text("Report Saved");
-                            setTimeout(function () {
-                                $messageHolder.text("");
-                            }, 3000);  // display success message
-                        } else {
-                            self.unSavedDesignChange(true);
-                            originalPoint = _.clone(newPoint, true);
-                            self.reportDisplayTitle(originalPoint.Name.replace("_", " "));
-                            $tabConfiguration.find(".screenMessages").find(".errorMessage").text(data.err);
-                        }
-                        blockUI($tabConfiguration, false);
+                        handleResize();
+                        $reportColumns.stop().animate({
+                            scrollTop: $reportColumns.get(0).scrollHeight
+                        }, 700);
                     });
-                }
 
-                $dataTablePlaceHolder.on("column-reorder.dt", function (event, settings, details) {
-                    var columnsArray = $.extend(true, [], self.listOfColumns()),
-                        swapColumnFrom = $.extend(true, {}, columnsArray[details.iFrom]);  // clone from field
-                    columnsArray.splice(details.iFrom, 1);
-                    columnsArray.splice(details.iTo, 0, swapColumnFrom);
-                    updateListOfColumns(columnsArray);
-                    $dataTablePlaceHolder.DataTable().draw("current");
-                    console.log("moved column '" + details.from + "' to column '" + details.to + "'");
-                    return true;
-                });
-
-                $dataTablePlaceHolder.on("length.dt", function (e, settings, len) {
-                    self.selectedPageLength(len);
-                    setTimeout(function () {
-                        adjustViewReportTabHeightWidth();
-                    }, 10);
-                });
-
-                $dataTablePlaceHolder.on("page.dt", function (e, settings) {
-                    setTimeout(function () {
-                        adjustViewReportTabHeightWidth();
-                    }, 10);
-                });
-
-                $dataTablePlaceHolder.on("search.dt", function (e, settings) {
-                    setTimeout(function () {
-                        adjustViewReportTabHeightWidth();
-                    }, 10);
-                });
-
-                // $dataTablePlaceHolder.on( "buttons-action", function ( e, buttonApi, dataTable, node, config ) {
-                //     console.log( 'Button '+buttonApi.text()+' was activated' );
-                // });
-
-                $columnsGrid.find("th .precisionColumn").on("mousedown", function (e) {
-                    if (self.canEdit()) {
-                        longClickStart = moment();
-                    }
-                });
-
-                $columnsGrid.find("th .precisionColumn").on("click", function (e) {
-                    var $precisionColumnDiv = $(this),
-                        $precisionInputField = $precisionColumnDiv.find("input"),
-                        toggleField = function (displayInput) {
-                        if (displayInput) {
-                            $globalPrecisionText.addClass("hideDiv");
-                            $precisionInputField.focus();
-                            $precisionInputField.removeClass("hideDiv");
-                            $globalPrecision.removeClass("hideDiv");
-                        } else {
-                            $globalPrecisionText.removeClass("hideDiv");
-                            $precisionInputField.addClass("hideDiv");
-                            $globalPrecision.addClass("hideDiv");
+                    $direports.find(".addFilterbutton").on("click", function (e) {
+                        var rowTemplate = {
+                            filterName: "",
+                            condition: "$and",
+                            childLogic: false,
+                            beginGroup: false,
+                            endGroup: false,
+                            operator: "EqualTo",
+                            valueType: "String",
+                            value: "",
+                            valueList: ""
+                        };
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (self.listOfFilters.indexOf(rowTemplate) === -1) {
+                            self.listOfFilters.push(rowTemplate);
+                            updateListOfFilters(self.listOfFilters());
                         }
-                    };
-                    if (self.canEdit()) {
-                        if (moment().diff(longClickStart) > longClickTimer) {
-                            toggleField(true);
+                        handleResize();
+                        $additionalFilters.stop().animate({
+                            scrollTop: $additionalFilters.get(0).scrollHeight
+                        }, 700);
+                    });
 
-                            if (!precisionEventsSet) {
-                                toggleField(true);
-                                precisionEventsSet = true;
-                                $precisionInputField.on( "focusout", function (outEvent) {
-                                    if (!$precisionInputField.is(":focus")) {  // clicked outside of div
-                                        toggleField(false);
-                                        precisionEventsSet = false;
-                                        $(outEvent.target).off("focusout");
-                                    }
-                                });
+                    $saveReportButton.on("click", function () {
+                        var $screenMessages = $tabConfiguration.find(".screenMessages");
+                        blockUI($tabConfiguration, true, " Saving Report...");
+                        $screenMessages.find(".errorMessage").text(""); // clear messages
+                        $screenMessages.find(".successMessage").text(""); // clear messages
+                        saveReportConfig();
+                        $(this).blur();
+                    });
 
-                                $(this).keyup(function (event) {
-                                    if (event.keyCode === 13) {
-                                        var precision;
-                                        if (isNaN($(this).find("input").val()) || $(this).find("input").val() === "") {
-                                            $(this).find("input").val(0);
-                                        }
-                                        precision = $(this).find("input").val();
-                                        self.globalPrecisionValue(parseInt(precision, 10));
-                                        globalSetAllColumnValues("precision", self.globalPrecisionValue());
-                                    }
-                                });
-                            }
-                        }
-                    }
-                });
+                    $direports.find(".runReportButton").on("click", function (e) {
+                        $(this).focus();
+                        e.preventDefault();
+                        e.stopPropagation();
+                        self.requestReportData();
+                    });
 
-                $columnsGrid.find("th .includeInChartColumn").on("mousedown", function (e) {
-                    if (self.canEdit()) {
-                        longClickStart = moment();
-                    }
-                });
+                    $dataTablePlaceHolder.on("click", ".pointInstance", function () {
+                        var data = {
+                            upi: $(this).attr("upi"),
+                            pointType: $(this).attr("pointType"),
+                            pointName: $(this).text()
+                        };
 
-                $columnsGrid.find("th .includeInChartColumn").on("click", function (e) {
-                    var $includeInChartColumnDiv = $(this),
-                        $includeInChartInputField = $includeInChartColumnDiv.find("input"),
-                        toggleField = function (displayInput) {
-                            if (displayInput) {
-                                $globalIncludeInChartText.addClass("hideDiv");
-                                $includeInChartColumnDiv.focus();
-                                $includeInChartInputField.removeClass("hideDiv");
-                                $globalIncludeInChart.removeClass("hideDiv");
+                        self.showPointReview(data);
+                    });
+
+                    $tabConfiguration.find(".toggleTab").on("shown.bs.tab", function () {
+                        adjustConfigTabActivePaneHeight();
+                    });
+
+                    if (!!reportSocket) {
+                        reportSocket.on("pointUpdated", function (data) {
+                            var $messageHolder = $tabConfiguration.find(".screenMessages").find(".successMessage");
+                            // console.log(" -  -  - reportSocket() 'pointUpdated' returned");
+                            if (data.err === null || data.err === undefined) {
+                                self.unSavedDesignChange(false);
+                                $messageHolder.text("Report Saved");
+                                setTimeout(function () {
+                                    $messageHolder.text("");
+                                }, 3000);  // display success message
                             } else {
-                                $globalIncludeInChartText.removeClass("hideDiv");
-                                $includeInChartInputField.addClass("hideDiv");
-                                $globalIncludeInChart.addClass("hideDiv");
+                                self.unSavedDesignChange(true);
+                                originalPoint = _.clone(newPoint, true);
+                                self.reportDisplayTitle(originalPoint.Name.replace("_", " "));
+                                $tabConfiguration.find(".screenMessages").find(".errorMessage").text(data.err);
                             }
-                        };
-                    if (self.canEdit()) {
-                        if (moment().diff(longClickStart) > longClickTimer) {
-                            toggleField(true);
+                            blockUI($tabConfiguration, false);
+                        });
+                    }
 
-                            if (!includeInChartEventsSet) {
-                                includeInChartEventsSet = true;
+                    $dataTablePlaceHolder.on("column-reorder.dt", function (event, settings, details) {
+                        var columnsArray = $.extend(true, [], self.listOfColumns()),
+                            swapColumnFrom = $.extend(true, {}, columnsArray[details.iFrom]);  // clone from field
+                        columnsArray.splice(details.iFrom, 1);
+                        columnsArray.splice(details.iTo, 0, swapColumnFrom);
+                        updateListOfColumns(columnsArray);
+                        $dataTablePlaceHolder.DataTable().draw("current");
+                        console.log("moved column '" + details.from + "' to column '" + details.to + "'");
+                        return true;
+                    });
+
+                    $dataTablePlaceHolder.on("length.dt", function (e, settings, len) {
+                        self.selectedPageLength(len);
+                        setTimeout(function () {
+                            adjustViewReportTabHeightWidth();
+                        }, 10);
+                    });
+
+                    $dataTablePlaceHolder.on("page.dt", function (e, settings) {
+                        setTimeout(function () {
+                            adjustViewReportTabHeightWidth();
+                        }, 10);
+                    });
+
+                    $dataTablePlaceHolder.on("search.dt", function (e, settings) {
+                        setTimeout(function () {
+                            adjustViewReportTabHeightWidth();
+                        }, 10);
+                    });
+
+                    // $dataTablePlaceHolder.on( "buttons-action", function ( e, buttonApi, dataTable, node, config ) {
+                    //     console.log( 'Button '+buttonApi.text()+' was activated' );
+                    // });
+
+                    $columnsGrid.find("th .calculateColumn").on("mousedown", function (e) {
+                        if (self.canEdit()) {
+                            longClickStart = moment();
+                        }
+                    });
+
+                    $columnsGrid.find("th .calculateColumn").on("click", function (parentEvent) {
+                        var $calculateColumnDiv = $(this),
+                            toggleField = function (displayGlobalButton) {
+                                var $globalChangeCalcs = $globalCalculate.find(".availableCalculations"),
+                                    forElementId = $globalChangeCalcs.find("a").attr("data-activates"),
+                                    $forElement = $globalChangeCalcs.find("#" + forElementId);
+                                    // $availableCalcs = $columnsGrid.find("tbody .availableCalculations");
+
+                                // if ($forElement.hasClass("active")) {
+                                //     $element.removeClass("active");
+                                //     $forElement.removeClass("active");
+                                //     $forElement.css("display", "none");
+                                //     $forElement.css("opacity", 0);
+                                //     // $element.dropdown('close');
+                                // } else {
+                                //     $element.addClass("active");
+                                //     $forElement.addClass("active");
+                                //     $forElement.css("display", "block");
+                                //     $forElement.css("opacity", 1);
+                                //     // $element.dropdown('open');
+                                // }
+
+
+                                if (displayGlobalButton) {
+                                    $calculateColumnDiv.focus();
+                                    $globalCalculateText.removeClass("displayDiv");
+                                    $globalCalculateText.addClass("hideDiv");
+                                    $globalCalculate.removeClass("hideDiv");
+                                    $globalCalculate.addClass("displayDiv");
+                                    $globalChangeCalcs.find("a").addClass("active");
+                                    $forElement.addClass("active");
+                                    $forElement.css("display", "block");
+                                    $forElement.css("opacity", 1);
+                                } else if (!displayGlobalButton) {
+                                    $globalCalculateText.addClass("displayDiv");
+                                    $globalCalculateText.removeClass("hideDiv");
+                                    $globalCalculate.addClass("hideDiv");
+                                    $globalCalculate.removeClass("displayDiv");
+                                    $globalChangeCalcs.find("a").removeClass("active");
+                                    $forElement.removeClass("active");
+                                    $forElement.css("display", "none");
+                                    $forElement.css("opacity", 0);
+                                }
+                                // $availableCalcs.removeClass("open");
+                                // $availableCalcs.find("a").removeClass("active");
+                                // $availableCalcs.find("a").attr("aria-expanded", false);
+                            };
+
+                        if (self.canEdit()) {
+                            parentEvent.stopPropagation();
+                            if (moment().diff(longClickStart) > longClickTimer) {
+
+                                if (calculateEventsSet) {
+                                    toggleField($globalCalculate.has($(parentEvent.target)).length > 0);
+                                } else {
+                                    calculateEventsSet = true;
+                                    toggleField(true);
+                                    // $calculateColumnDiv.on( "focusout", function (outEvent) {
+                                    //     if (!$calculateColumnDiv.is(":focus")) {  // clicked outside of div
+                                    //         toggleField(false);
+                                    //         calculateEventsSet = false;
+                                    //         $(outEvent.target).off("focusout");
+                                    //     }
+                                    // });
+                                }
+                            }
+                        }
+                        return true;
+                    });
+
+                    $columnsGrid.find("th .precisionColumn").on("mousedown", function (e) {
+                        if (self.canEdit()) {
+                            longClickStart = moment();
+                        }
+                    });
+
+                    $columnsGrid.find("th .precisionColumn").on("click", function (e) {
+                        var $precisionColumnDiv = $(this),
+                            $precisionInputField = $precisionColumnDiv.find("input"),
+                            toggleField = function (displayInput) {
+                                if (displayInput) {
+                                    $globalPrecisionText.addClass("hideDiv");
+                                    $precisionInputField.focus();
+                                    $precisionInputField.removeClass("hideDiv");
+                                    $globalPrecision.removeClass("hideDiv");
+                                } else {
+                                    $globalPrecisionText.removeClass("hideDiv");
+                                    $precisionInputField.addClass("hideDiv");
+                                    $globalPrecision.addClass("hideDiv");
+                                }
+                            };
+                        if (self.canEdit()) {
+                            if (moment().diff(longClickStart) > longClickTimer) {
                                 toggleField(true);
-                                $includeInChartColumnDiv.on( "focusout", function (outEvent) {
-                                    if (!$includeInChartColumnDiv.is(":focus")) {  // clicked outside of div
-                                        toggleField(false);
-                                        includeInChartEventsSet = false;
-                                        $includeInChartColumnDiv.off("focusout");
-                                    }
-                                });
 
-                                $includeInChartInputField.click(function (event) {
-                                    if (event.target.checked !== undefined) {
-                                        globalSetAllColumnValues("includeInChart", event.target.checked);
-                                        setTimeout(function () {
+                                if (!precisionEventsSet) {
+                                    toggleField(true);
+                                    precisionEventsSet = true;
+                                    $precisionInputField.on( "focusout", function (outEvent) {
+                                        if (!$precisionInputField.is(":focus")) {  // clicked outside of div
                                             toggleField(false);
-                                            $includeInChartColumnDiv.blur();
-                                            $includeInChartColumnDiv.off("focusout");
-                                        }, 800);
-                                        return true;
-                                    }
-                                });
+                                            precisionEventsSet = false;
+                                            $(outEvent.target).off("focusout");
+                                        }
+                                    });
+
+                                    $(this).keyup(function (event) {
+                                        if (event.keyCode === 13) {
+                                            var precision;
+                                            if (isNaN($(this).find("input").val()) || $(this).find("input").val() === "") {
+                                                $(this).find("input").val(0);
+                                            }
+                                            precision = $(this).find("input").val();
+                                            self.globalPrecisionValue(parseInt(precision, 10));
+                                            globalSetAllColumnValues("precision", self.globalPrecisionValue());
+                                        }
+                                    });
+                                }
                             }
                         }
-                    }
-                    return true;
-                });
+                    });
 
-                $columnsGrid.find("th .calculateColumn").on("mousedown", function (e) {
-                    if (self.canEdit()) {
-                        longClickStart = moment();
-                    }
-                });
+                    $columnsGrid.find("th .includeInChartColumn").on("mousedown", function (e) {
+                        if (self.canEdit()) {
+                            longClickStart = moment();
+                        }
+                    });
 
-                $columnsGrid.find("th .calculateColumn").on("click", function (parentEvent) {
-                    var $calculateColumnDiv = $(this),
-                        toggleField = function (displayGlobalButton) {
-                            var $globalChangeCalcs = $globalCalculate.find(".availableCalculations"),
-                                $availableCalcs = $columnsGrid.find("tbody .availableCalculations");
-
-                            if (displayGlobalButton) {
-                                $calculateColumnDiv.focus();
-                                $globalCalculateText.removeClass("displayDiv");
-                                $globalCalculateText.addClass("hideDiv");
-                                $globalCalculate.removeClass("hideDiv");
-                                $globalCalculate.addClass("displayDiv");
-                                $globalChangeCalcs.addClass("open");
-                                $globalChangeCalcs.find("a").addClass("active");
-                                $globalChangeCalcs.find("a").attr("aria-expanded", true);
-                            } else if (!displayGlobalButton) {
-                                $globalCalculateText.addClass("displayDiv");
-                                $globalCalculateText.removeClass("hideDiv");
-                                $globalCalculate.addClass("hideDiv");
-                                $globalCalculate.removeClass("displayDiv");
-                                $globalChangeCalcs.removeClass("open");
-                                $globalChangeCalcs.find("a").removeClass("active");
-                                $globalChangeCalcs.find("a").attr("aria-expanded", false);
-                            }
-                            $availableCalcs.removeClass("open");
-                            $availableCalcs.find("a").removeClass("active");
-                            $availableCalcs.find("a").attr("aria-expanded", false);
-                        };
-
-                    if (self.canEdit()) {
-                        parentEvent.stopPropagation();
-                        if (moment().diff(longClickStart) > longClickTimer) {
-
-                            toggleField($globalCalculate.has($(parentEvent.target)).length > 0);
-
-                            if (!calculateEventsSet) {
-                                calculateEventsSet = true;
+                    $columnsGrid.find("th .includeInChartColumn").on("click", function (e) {
+                        var $includeInChartColumnDiv = $(this),
+                            $includeInChartInputField = $includeInChartColumnDiv.find("input"),
+                            toggleField = function (displayInput) {
+                                if (displayInput) {
+                                    $globalIncludeInChartText.addClass("hideDiv");
+                                    $includeInChartColumnDiv.focus();
+                                    $includeInChartInputField.removeClass("hideDiv");
+                                    $globalIncludeInChart.removeClass("hideDiv");
+                                } else {
+                                    $globalIncludeInChartText.removeClass("hideDiv");
+                                    $includeInChartInputField.addClass("hideDiv");
+                                    $globalIncludeInChart.addClass("hideDiv");
+                                }
+                            };
+                        if (self.canEdit()) {
+                            if (moment().diff(longClickStart) > longClickTimer) {
                                 toggleField(true);
-                                $calculateColumnDiv.on( "focusout", function (outEvent) {
-                                    if (!$calculateColumnDiv.is(":focus")) {  // clicked outside of div
-                                        toggleField(false);
-                                        calculateEventsSet = false;
-                                        $(outEvent.target).off("focusout");
-                                    }
-                                });
+
+                                if (!includeInChartEventsSet) {
+                                    includeInChartEventsSet = true;
+                                    toggleField(true);
+                                    $includeInChartColumnDiv.on( "focusout", function (outEvent) {
+                                        if (!$includeInChartColumnDiv.is(":focus")) {  // clicked outside of div
+                                            toggleField(false);
+                                            includeInChartEventsSet = false;
+                                            $includeInChartColumnDiv.off("focusout");
+                                        }
+                                    });
+
+                                    $includeInChartInputField.click(function (event) {
+                                        if (event.target.checked !== undefined) {
+                                            globalSetAllColumnValues("includeInChart", event.target.checked);
+                                            setTimeout(function () {
+                                                toggleField(false);
+                                                $includeInChartColumnDiv.blur();
+                                                $includeInChartColumnDiv.off("focusout");
+                                            }, 800);
+                                            return true;
+                                        }
+                                    });
+                                }
                             }
                         }
-                    }
-                    return true;
-                });
+                        return true;
+                    });
 
-                $filtersGrid.sortable({
-                    appendTo: $filtersTbody,
-                    disabled: false,
-                    items: "tr",
-                    forceHelperSize: true,
-                    helper: "original",
-                    stop: function (event, ui) {
-                        var tempArray,
-                            item = ko.dataFor(ui.item[0]),
-                            newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
-                        if (newIndex >= self.listOfFilters().length) {
-                            newIndex = self.listOfFilters().length - 1;
-                        }
-                        if (newIndex < 0) {
-                            newIndex = 0;
-                        }
+                    $filtersGrid.sortable({
+                        appendTo: $filtersTbody,
+                        disabled: false,
+                        items: "tr",
+                        forceHelperSize: true,
+                        helper: "original",
+                        stop: function (event, ui) {
+                            var tempArray,
+                                item = ko.dataFor(ui.item[0]),
+                                newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                            if (newIndex >= self.listOfFilters().length) {
+                                newIndex = self.listOfFilters().length - 1;
+                            }
+                            if (newIndex < 0) {
+                                newIndex = 0;
+                            }
 
-                        ui.item.remove();
-                        self.listOfFilters.remove(item);
-                        self.listOfFilters.splice(newIndex, 0, item);
-                        tempArray = self.listOfFilters();
-                        updateListOfFilters(tempArray);
-                    },
-                    scroll: true,
-                    handle: ".handle"
-                });
+                            ui.item.remove();
+                            self.listOfFilters.remove(item);
+                            self.listOfFilters.splice(newIndex, 0, item);
+                            tempArray = self.listOfFilters();
+                            updateListOfFilters(tempArray);
+                        },
+                        scroll: true,
+                        handle: ".handle"
+                    });
 
-                $columnsGrid.sortable({
-                    appendTo: $columnsTbody,
-                    disabled: false,
-                    items: "tr",
-                    forceHelperSize: true,
-                    helper: "original",
-                    stop: function (event, ui) {
-                        var tempArray,
-                            item = ko.dataFor(ui.item[0]),
-                            newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
-                        if (newIndex >= self.listOfColumns().length) {
-                            newIndex = self.listOfColumns().length - 1;
-                        }
-                        if (newIndex < 0) {
-                            newIndex = 0;
-                        }
-
-                        ui.item.remove();
-                        self.listOfColumns.remove(item);
-                        self.listOfColumns.splice(newIndex, 0, item);
-                        tempArray = self.listOfColumns();
-                        updateListOfColumns(tempArray);
-                    },
-                    scroll: true,
-                    handle: ".handle"
-                });
-
-                $gridColumnConfigTable.sortable({
-                    appendTo: $columnsTbody,
-                    disabled: false,
-                    items: "th:not(.fixed)",
-                    forceHelperSize: true,
-                    helper: "original",
-                    stop: function (event, ui) {
-                        var tempArray,
-                            item = ko.dataFor(ui.item[0]),
-                            newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
-                        if (newIndex > 0) {
+                    $columnsGrid.sortable({
+                        appendTo: $columnsTbody,
+                        disabled: false,
+                        items: "tr",
+                        forceHelperSize: true,
+                        helper: "original",
+                        stop: function (event, ui) {
+                            var tempArray,
+                                item = ko.dataFor(ui.item[0]),
+                                newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
                             if (newIndex >= self.listOfColumns().length) {
                                 newIndex = self.listOfColumns().length - 1;
                             }
@@ -2796,28 +2830,62 @@ var reportsViewModel = function () {
                             self.listOfColumns.splice(newIndex, 0, item);
                             tempArray = self.listOfColumns();
                             updateListOfColumns(tempArray);
-                        }
-                    },
-                    scroll: true,
-                    handle: ".handle"
-                });
-            }
+                        },
+                        scroll: true,
+                        handle: ".handle"
+                    });
 
-            $dataTablePlaceHolder.on("draw.dt", function (e, settings) {
-                // console.log(". . . . . . . . .    draw.dt   . . . . . . . . .");
-                var numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
-                    $tablePagination,
-                    $pagination,
-                    $paginate_buttons;
+                    $gridColumnConfigTable.sortable({
+                        appendTo: $columnsTbody,
+                        disabled: false,
+                        items: "th:not(.fixed)",
+                        forceHelperSize: true,
+                        helper: "original",
+                        stop: function (event, ui) {
+                            var tempArray,
+                                item = ko.dataFor(ui.item[0]),
+                                newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                            if (newIndex > 0) {
+                                if (newIndex >= self.listOfColumns().length) {
+                                    newIndex = self.listOfColumns().length - 1;
+                                }
+                                if (newIndex < 0) {
+                                    newIndex = 0;
+                                }
 
-                if (numberOfPages === 1) {
-                    $tablePagination = $tabViewReport.find(".dataTables_paginate");
-                    $pagination = $tablePagination.find("ul.pagination");
-                    $paginate_buttons = $pagination.find(".paginate_button");
-                    $paginate_buttons = $paginate_buttons.not("li.active");
-                    $paginate_buttons.hide();
+                                ui.item.remove();
+                                self.listOfColumns.remove(item);
+                                self.listOfColumns.splice(newIndex, 0, item);
+                                tempArray = self.listOfColumns();
+                                updateListOfColumns(tempArray);
+                            }
+                        },
+                        scroll: true,
+                        handle: ".handle"
+                    });
                 }
-            });
+
+                $dataTablePlaceHolder.on("draw.dt", function (e, settings) {
+                    // console.log(". . . . . . . . .    draw.dt   . . . . . . . . .");
+                    var numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
+                        currentPageNumber = $dataTablePlaceHolder.DataTable().page.info().page + 1,
+                        $tablePagination = $tabViewReport.find(".dataTables_paginate"),
+                        $pagination = $tablePagination.find(".pagination"),
+                        $paginate_buttons = $pagination.find("button");
+
+                    if (numberOfPages === 1) {
+                        $paginate_buttons = $paginate_buttons.not("li.active");
+                        $paginate_buttons.hide();
+                    }
+
+                    console.log("currentPageNumber = " + currentPageNumber);
+                    $paginate_buttons.removeClass("mdl-button");
+                    $paginate_buttons.addClass("btn blue-grey");
+                    $paginate_buttons.eq(currentPageNumber).addClass("lighten-2");
+                });
+
+                console.log(" .... report events configured .... ");
+            }, 500);
 
             intervals = [
                 {
@@ -2864,6 +2932,10 @@ var reportsViewModel = function () {
 
             chartTypes = [
                 {
+                    text: "Area",
+                    value: "area"
+                },
+                {
                     text: "Line",
                     value: "line"
                 }, {
@@ -2880,10 +2952,8 @@ var reportsViewModel = function () {
 
             self.listOfIntervals(intervals);
             self.listOfCalculations(calculations);
-            self.listOfEntriesPerPage = entriesPerPage;
-            self.listOfChartTypes = chartTypes;
-            checkForColumnCalculations();
-            checkForIncludeInChart();
+            self.listOfEntriesPerPage(entriesPerPage);
+            self.listOfChartTypes(chartTypes);
         },
         getVariance = function (columnData) {
             var i,
@@ -2935,7 +3005,15 @@ var reportsViewModel = function () {
                 i,
                 columnsArray = $.extend(true, [], self.listOfColumns()),
                 setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
-                    switch (self.reportType) {
+
+                    if (data[columnConfig.colName] && data[columnConfig.colName].PointInst) {
+                        var pointType = getKeyBasedOnEnum(ENUMSTEMPLATESENUMS["Point Types"], data[columnConfig.colName].PointType);
+                        $(tdField).addClass("pointInstance");
+                        $(tdField).attr("upi", data[columnConfig.colName].PointInst);
+                        $(tdField).attr("pointType", pointType);
+                    }
+
+                    switch (self.reportType()) {
                         case "History":
                             if (columnIndex === 0 && columnConfig.dataColumnName === "Date") {
                                 $(tdField).attr("title", moment.unix(data[columnConfig.dataColumnName].rawValue).format("dddd"));
@@ -2966,19 +3044,11 @@ var reportsViewModel = function () {
                             console.log(" - - - DEFAULT  setTdAttribs()");
                             break;
                     }
-
-                    if (data[columnConfig.colName] && data[columnConfig.colName].PointInst) {
-                        var pointType;
-                        pointType = Config.Utility.pointTypes.getPointTypeNameFromEnum(data[columnConfig.colName].PointType);
-                        $(tdField).addClass("pointInstance");
-                        $(tdField).attr("upi", data[columnConfig.colName].PointInst);
-                        $(tdField).attr("pointType", pointType);
-                    }
                 },
                 setColumnClasses = function (columnConfig, columnIndex) {
                     var result = "";
                     if (columnConfig.colName === "Name") {
-                        switch (self.reportType) {
+                        switch (self.reportType()) {
                             case "History":
                             case "Totalizer":
                                 break;
@@ -3019,7 +3089,7 @@ var reportsViewModel = function () {
                         columnTitle = columnConfig.colDisplayName,
                         sortAbleColumn = true;
 
-                    switch (self.reportType) {
+                    switch (self.reportType()) {
                         case "History":
                             break;
                         case "Totalizer":
@@ -3162,11 +3232,11 @@ var reportsViewModel = function () {
                         {
                             extend: "collection",
                             text: "Export",
-                            className: "blue-grey",
+                            className: "btn blue-grey dropdown-button",
                             buttons: [
                                 {
                                     extend: "copyHtml5",
-                                    text: '<i class="fa fa-files-o"></i> Copy',
+                                    text: '<li><a>Copy</a></li>',
                                     key: {
                                         altKey: true,
                                         key: "1"
@@ -3174,7 +3244,7 @@ var reportsViewModel = function () {
                                 },
                                 {
                                     extend: "csvHtml5",
-                                    text: '<i class="fa fa-file-o"></i> CSV',
+                                    text: '<li><a>CSV</a></li>',
                                     key: {
                                         altKey: true,
                                         key: "2"
@@ -3182,7 +3252,7 @@ var reportsViewModel = function () {
                                 },
                                 {
                                     extend: "excelHtml5",
-                                    text: '<i class="fa fa-file-excel-o"></i> Excel',
+                                    text: '<li><a>Excel</a></li>',
                                     key: {
                                         altKey: true,
                                         key: "3"
@@ -3190,7 +3260,7 @@ var reportsViewModel = function () {
                                 },
                                 {
                                     extend: "pdfHtml5",
-                                    text: '<i class="fa fa-file-pdf-o"></i> PDF',
+                                    text: '<li><a>PDF</a></li>',
                                     footer: true,
                                     orientation: (aoColumns.length > 4 ? "landscape" : "portrait"),
                                     key: {
@@ -3201,12 +3271,16 @@ var reportsViewModel = function () {
                                         // could insert TrendPlots here
                                     }
                                 }
-                            ]
+                            ],
+                            customize: function (doc, thisButton) {
+                                $(thisButton).attr("data-activates", "dtButtonActions");
+                                // could insert TrendPlots here
+                            }
                         },
                         {
                             extend: "print",
                             text: '<i class="fa fa-print"></i> Print',
-                            className: "blue-grey",
+                            className: "btn blue-grey",
                             key: {
                                 altKey: true,
                                 key: "5"
@@ -3246,7 +3320,7 @@ var reportsViewModel = function () {
                             $(thead).find("th").eq(i).removeClass("small");
                         }
 
-                        switch (self.reportType) {
+                        switch (self.reportType()) {
                             case "History":
                             case "Totalizer":
                                 $theads = $(thead).find("th");
@@ -3310,7 +3384,7 @@ var reportsViewModel = function () {
                             for (j = 0; j < columnConfig.calculation.length; j++) {
                                 calc = calcs[j];
 
-                                switch (self.reportType) {
+                                switch (self.reportType()) {
                                     case "History":
                                         if (!sameDataSet) {
                                             pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
@@ -3353,7 +3427,7 @@ var reportsViewModel = function () {
                                 $tdFooter.attr("data-html", "true");
                                 $tdFooter.attr("title", "Entire column");
                                 $tdFooter.attr("data-content", footerTitle);
-                                $tdFooter.popover({placement: "top"});
+                                //TODO  $tdFooter.popover({placement: "top"});
                             }
                         }
 
@@ -3403,7 +3477,7 @@ var reportsViewModel = function () {
         breakReportDataIntoPrintablePages = function () {
             // widthOfA4Portrait300PPI = 2480,
             // heightOfA4Portrait300PPI = 3508,
-            // maxNumberOfCharsPerRow = (self.reportType === "Property" ? 150 : 146),
+            // maxNumberOfCharsPerRow = (self.reportType() === "Property" ? 150 : 146),
             var maxNumberOfCharsPerRow = 146,
                 dataIndex = {
                     columnStartIdx: 0,
@@ -3422,7 +3496,7 @@ var reportsViewModel = function () {
                 maxRowsOnPDFPage = function () {
                     var answer;
 
-                    if (self.reportType === "Property") {
+                    if (self.reportType() === "Property") {
                         answer = 28;
                     } else {  // History & Totalizer
                         answer = 24;
@@ -3667,7 +3741,7 @@ var reportsViewModel = function () {
                 dataIndex.rowStartIdx = 0;
                 dataIndex.rowStopIdx = (reportData.length - 1);
 
-                if (self.reportType === "Property") {
+                if (self.reportType() === "Property") {
                     sortPropertyReportDataForExport();
                 }
 
@@ -3681,7 +3755,7 @@ var reportsViewModel = function () {
         },
         getNewColumnTemplate = function () {
             return {
-                colName: ((self.reportType === "Totalizer") || (self.reportType === "History") ? "Choose Point" : "Choose Property"),
+                colName: ((self.reportType() === "Totalizer") || (self.reportType() === "History") ? "Choose Point" : "Choose Property"),
                 colDisplayName: "",
                 valueType: "String",
                 upi: 0,
@@ -3819,14 +3893,14 @@ var reportsViewModel = function () {
             $reportChartDiv.html("");
             adjustViewReportTabHeightWidth();
 
-            chartType = getValueBasedOnText(self.listOfChartTypes, self.selectedChartType());
+            chartType = getValueBasedOnText(self.listOfChartTypes(), self.selectedChartType());
             chartWidth = getChartWidth();
             chartHeight = getChartHeight();
             reportChartData = getOnlyChartData(reportData);
 
             if (!!reportChartData && !!reportChartData[0]) {
                 if (reportChartData[0].data.length < maxDataRowsForChart) {
-                    switch (self.reportType) {
+                    switch (self.reportType()) {
                         case "History":
                             subTitle = self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm a") + " - " + self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm a");
                             yAxisTitle = "Totals";
@@ -3949,7 +4023,7 @@ var reportsViewModel = function () {
             }
         };
 
-    self.reportType = "";
+    self.reportType = ko.observable("");
 
     self.selectedPageLength = ko.observable("24");
 
@@ -4020,9 +4094,9 @@ var reportsViewModel = function () {
 
     self.numberOfScheduledReportTables = ko.observable(0);
 
-    self.listOfEntriesPerPage = [];
+    self.listOfEntriesPerPage = ko.observableArray([]);
 
-    self.listOfChartTypes = [];
+    self.listOfChartTypes = ko.observableArray([]);
 
     self.listOfFilterPropertiesLength = 0;
 
@@ -4079,6 +4153,140 @@ var reportsViewModel = function () {
 
     self.currentColumnEdit = ko.observable(getNewColumnTemplate());
 
+    self.scheduler = {
+        parseCron: function (cron) {
+            var name = ['minute', 'hour', 'date', 'month', 'dow'], // dow = day of week
+                parsed = {
+                    advanced: false,
+                    cron: cron,
+                    interval: null
+                };
+
+            dti.forEachArray(cron.split(' '), function (val, index) {
+                var _val = [];
+
+                if (!!~val.indexOf(',')) {
+                    parsed.advanced = true;
+
+                    dti.forEachArray(val.split(','), function (val, index) {
+                        _val.push(val);
+                    });
+                } else {
+                    _val.push(val);
+                }
+                parsed[name[index]] = _val;
+            });
+
+            if (!parsed.advanced) {
+                if (parsed.dow[0] !== '*') {
+                    parsed.interval = 'Weekly';
+                } else if (parsed.date[0] !== '*') {
+                    parsed.interval = 'Monthly';
+                } else if (parsed.month[0] !== '*') {
+                    parsed.interval = 'Yearly';
+                } else {
+                    parsed.interval = 'Daily';
+                }
+            }
+
+            return parsed;
+        },
+        modal: {
+            open: function (data) {
+                var $modal = dti.getTemplate('#scheduleModalTemplate'),
+                    availableDates = (function buildAvailableDates () {
+                        var arr = [],
+                            j = 0,
+                            suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'],
+                            suffix;
+
+                        while (j++ < 31) {
+                            suffix = (j > 9 && j < 14) ? 'th' : suffixes[j%10];
+                            arr.push({
+                                text: j + suffix,
+                                value: j
+                            });
+                        }
+                        return arr;
+                    })(),
+                    availableMonths = (function buildAvailableMonths () {
+                        var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                            arr = [];
+                        
+                        dti.forEachArray(months, function addMonth (month, index) {
+                            arr.push({
+                                text: month,
+                                value: index + 1
+                            });
+                        });
+                        return arr;
+                    })(),
+                    availableDaysOfWeek = (function buildAvailableDaysOfWeek () {
+                        var dow = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                            arr = [];
+
+                        dti.forEachArray(dow, function addDay (day, index) {
+                            arr.push({
+                                text: day,
+                                value: index
+                            });
+                        });
+                        return arr;
+                    })(),
+                    bindings = {
+                        availableIntervals: ['Daily', 'Weekly', 'Monthly', 'Yearly', 'Advanced'],
+                        availableDaysOfWeek: availableDaysOfWeek,
+                        availableMonths: availableMonths,
+                        availableDates: availableDates,
+                        selectedInterval: ko.observable(),
+                        selectedMonth: ko.observable(),
+                        selectedDate: ko.observable(),
+                        selectedDayOfWeek: ko.observable(),
+                        selectedTime: ko.observable('00:00'),
+                        saveScheduleEntry: function (data) {
+                            self.scheduler.modal.close(data);
+                        },
+                        cancelScheduleEntry: function (data) {
+                            self.scheduler.modal.close(data);
+                        }
+                    };
+
+                if (data === 'new') {
+                    bindings.isNew = true;
+                    bindings.selectedInterval('Daily');
+                } else {
+
+                }
+
+                ko.applyBindings(bindings, $modal[0]);
+
+                $('body').append($modal);
+
+                $modal.find('.dropdown-button').dropdown();
+                $modal.find('select').material_select();
+                $modal.find('#timepicker').pickatime({
+                    autoclose: false,
+                    twelvehour: true // TODO this should come from a system/user preference
+                });
+
+                $modal.openModal({
+                    dismissible: false
+                });
+            },
+            close: function (data) {
+                var $modal = $('#scheduleModal');
+
+                $modal.closeModal({
+                    complete: function () {
+                        ko.cleanNode($modal[0]);
+                        $modal.find('select').material_select('destroy'); // Necessary?
+                        $modal.remove();
+                    }
+                });
+            }
+        }
+    };
+
     self.printChartDiv = function () {
         renderChart(true);
         setTimeout(function () {
@@ -4102,125 +4310,159 @@ var reportsViewModel = function () {
 
     self.init = function (externalConfig) {
         var columns,
-            reportConfig;
+            reportConfig,
+            setCurrentUser = function (results) {
+                currentUser = results;
+            },
+            initComplete = function () {
+                return (!!ENUMSTEMPLATESTEMPLATES && !!ENUMSTEMPLATESENUMS);
+            },
+            setGlobalEnumsTemplates = function (results) {
+                ENUMSTEMPLATESTEMPLATES = results;
+                if (initComplete()) {
+                    postConfigInit();
+                }
+            },
+            setGlobalEnums = function (results) {
+                ENUMSTEMPLATESENUMS = results;
+                if (initComplete()) {
+                    postConfigInit();
+                }
+            },
+            initGlobals = function () {
+                dtiUtility.getConfig("Enums", null, setGlobalEnums);
+                dtiUtility.getConfig("PointTemplates.Points", null, setGlobalEnumsTemplates);
+            },
+            postConfigInit = function () {
+                if (!!point) {
+                    self.canEdit(userCanEdit(point, permissionLevels.WRITE));
+                    originalPoint = JSON.parse(JSON.stringify(point));
+                    windowUpi = point._id; // required or pop-in/pop-out will not work
+                    if (point["Report Config"] === undefined) {
+                        point["Report Config"] = {};
+                    }
+                    self.reportType(point["Report Type"].Value);
+                    reportConfig = (point["Report Config"] ? point["Report Config"] : undefined);
+                    columns = (reportConfig ? reportConfig.columns : undefined);
+                    self.pointName1(point.name1);
+                    self.pointName2(point.name2);
+                    self.pointName3(point.name3);
+                    self.pointName4(point.name4);
+
+                    if (!scheduled) {
+                        initSocket();
+                        dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], self.pointTypes);
+                    }
+
+                    if (columns) {
+                        self.reportDisplayTitle((!!point["Report Config"].reportTitle ? point["Report Config"].reportTitle : point.Name.replace(/_/g, " ")));
+                        self.listOfColumns(initColumns(reportConfig.columns));
+                        self.listOfFilters(initFilters(reportConfig.filters));
+                        if (!!reportConfig.pointFilter) {
+                            self.name1Filter(reportConfig.pointFilter.name1);
+                            self.name2Filter(reportConfig.pointFilter.name2);
+                            self.name3Filter(reportConfig.pointFilter.name3);
+                            self.name4Filter(reportConfig.pointFilter.name4);
+                            self.selectedPointTypesFilter(reportConfig.pointFilter.selectedPointTypes);
+                        }
+                        self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
+                        self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
+                        switch (self.reportType()) {
+                            case "History":
+                            case "Totalizer":
+                                if (!!point["Report Config"].duration.duration) { // have to set each manually because of computed relationship
+                                    configureSelectedDuration(point["Report Config"].duration);
+                                }
+                                self.interval(point["Report Config"].interval.text);
+                                self.intervalValue(point["Report Config"].interval.value);
+                                break;
+                            case "Property":
+                                collectEnumProperties();
+                                break;
+                            default:
+                                console.log(" - - - DEFAULT  init()");
+                                break;
+                        }
+                    } else { // Initial config
+                        self.reportDisplayTitle(point.Name.replace(/_/g, " "));
+                        point["Point Refs"] = [];  // new report, clear out initial Report create data
+                        point["Report Config"].columns = [];
+                        point["Report Config"].filters = [];
+                        point["Report Config"].pointFilter = {
+                            "name1" : self.name1Filter(),
+                            "name2" : self.name2Filter(),
+                            "name3" : self.name3Filter(),
+                            "name4" : self.name4Filter(),
+                            "selectedPointTypes" : self.selectedPointTypesFilter()
+                        };
+                        switch (self.reportType()) {
+                            case "History":
+                            case "Totalizer":
+                                point["Report Config"].returnLimit = 2000;
+                                self.listOfColumns.push(getNewColumnTemplate());
+                                self.listOfColumns()[0].colName = "Date";
+                                self.listOfColumns()[0].colDisplayName = "Date";
+                                self.listOfColumns()[0].dataColumnName = "Date";
+                                self.listOfColumns()[0].valueType = "DateTime";
+                                self.listOfColumns()[0].AppIndex = -1;
+                                configureSelectedDuration();
+                                break;
+                            case "Property":
+                                // openPointSelectorFilterMode($filterByPoint);
+                                collectEnumProperties();
+                                point["Report Config"].returnLimit = 4000;
+                                self.listOfColumns.push(getNewColumnTemplate());
+                                self.listOfColumns()[0].colName = "Name";
+                                self.listOfColumns()[0].colDisplayName = "Name";
+                                self.listOfColumns()[0].dataColumnName = "Name";
+                                self.listOfColumns()[0].valueType = "String";
+                                self.listOfColumns()[0].AppIndex = -1;
+                                break;
+                            default:
+                                console.log(" - - - DEFAULT  init() null columns");
+                                break;
+                        }
+                    }
+
+                    $direports.find("#wrapper").show();
+                    tabSwitch(1);
+
+                    updateListOfFilters(self.listOfFilters());
+                    setTimeout(function () {
+                        $reportTitleInput.focus();
+                    }, 1500);
+                    setReportEvents();
+                    checkForColumnCalculations();
+                    checkForIncludeInChart();
+                    adjustConfigTabActivePaneHeight();
+
+                    if (scheduled) {
+                        self.requestReportData();
+                    } else if (!!externalConfig) {
+                        if (self.reportType() === "History" || self.reportType() === "Totalizer") {
+                            configureSelectedDuration(externalConfig);
+                        }
+                        self.requestReportData();
+                    }
+
+                    self.filterPropertiesSearchFilter(""); // computed props jolt
+                    self.columnPropertiesSearchFilter(""); // computed props jolt
+                    updateListOfColumns(self.listOfColumns());
+                    updateListOfFilters(self.listOfFilters());
+                    Materialize.updateTextFields();
+                }
+            };
+
+        dtiUtility.getUser(setCurrentUser);
 
         exportEventSet = false;
         activeDataRequests = [];
-        initGlobals();
         getScreenFields();
         initKnockout();
-
-        if (!!point) {
-            self.canEdit(userCanEdit(point, permissionLevels.WRITE));
-            originalPoint = JSON.parse(JSON.stringify(point));
-            windowUpi = point._id; // required or pop-in/pop-out will not work
-            if (point["Report Config"] === undefined) {
-                point["Report Config"] = {};
-            }
-            self.reportType = point["Report Type"].Value;
-            reportConfig = (point["Report Config"] ? point["Report Config"] : undefined);
-            columns = (reportConfig ? reportConfig.columns : undefined);
-            self.pointName1(point.name1);
-            self.pointName2(point.name2);
-            self.pointName3(point.name3);
-            self.pointName4(point.name4);
-
-            if (!scheduled) {
-                initSocket();
-                self.pointTypes($.extend(true, [], dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [])));
-            }
-
-            if (columns) {
-                self.reportDisplayTitle((!!point["Report Config"].reportTitle ? point["Report Config"].reportTitle : point.Name.replace(/_/g, " ")));
-                self.listOfColumns(initColumns(reportConfig.columns));
-                self.listOfFilters(initFilters(reportConfig.filters));
-                if (!!reportConfig.pointFilter) {
-                    self.name1Filter(reportConfig.pointFilter.name1);
-                    self.name2Filter(reportConfig.pointFilter.name2);
-                    self.name3Filter(reportConfig.pointFilter.name3);
-                    self.name4Filter(reportConfig.pointFilter.name4);
-                    self.selectedPointTypesFilter(reportConfig.pointFilter.selectedPointTypes);
-                }
-                self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
-                self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
-                switch (self.reportType) {
-                    case "History":
-                    case "Totalizer":
-                        if (!!point["Report Config"].duration.duration) { // have to set each manually because of computed relationship
-                            configureSelectedDuration(point["Report Config"].duration);
-                        }
-                        self.interval(point["Report Config"].interval.text);
-                        self.intervalValue(point["Report Config"].interval.value);
-                        break;
-                    case "Property":
-                        collectEnumProperties();
-                        break;
-                    default:
-                        console.log(" - - - DEFAULT  init()");
-                        break;
-                }
-            } else { // Initial config
-                self.reportDisplayTitle(point.Name.replace(/_/g, " "));
-                point["Point Refs"] = [];  // new report, clear out initial Report create data
-                point["Report Config"].columns = [];
-                point["Report Config"].filters = [];
-                point["Report Config"].pointFilter = {
-                    "name1" : self.name1Filter(),
-                    "name2" : self.name2Filter(),
-                    "name3" : self.name3Filter(),
-                    "name4" : self.name4Filter(),
-                    "selectedPointTypes" : self.selectedPointTypesFilter()
-                };
-                switch (self.reportType) {
-                    case "History":
-                    case "Totalizer":
-                        point["Report Config"].returnLimit = 2000;
-                        self.listOfColumns.push(getNewColumnTemplate());
-                        self.listOfColumns()[0].colName = "Date";
-                        self.listOfColumns()[0].colDisplayName = "Date";
-                        self.listOfColumns()[0].dataColumnName = "Date";
-                        self.listOfColumns()[0].valueType = "DateTime";
-                        self.listOfColumns()[0].AppIndex = -1;
-                        configureSelectedDuration();
-                        break;
-                    case "Property":
-                        // openPointSelectorFilterMode($filterByPoint);
-                        collectEnumProperties();
-                        point["Report Config"].returnLimit = 4000;
-                        self.listOfColumns.push(getNewColumnTemplate());
-                        self.listOfColumns()[0].colName = "Name";
-                        self.listOfColumns()[0].colDisplayName = "Name";
-                        self.listOfColumns()[0].dataColumnName = "Name";
-                        self.listOfColumns()[0].valueType = "String";
-                        self.listOfColumns()[0].AppIndex = -1;
-                        break;
-                    default:
-                        console.log(" - - - DEFAULT  init() null columns");
-                        break;
-                }
-            }
-
-            $direports.find("#wrapper").show();
-            tabSwitch(1);
-
-            updateListOfFilters(self.listOfFilters());
-            setTimeout(function () {
-                $reportTitleInput.focus();
-            }, 1500);
-            setReportEvents();
-            adjustConfigTabActivePaneHeight();
-            // myWindowID = window.frameElement.id;
-            self.filterPropertiesSearchFilter(""); // computed props jolt
-            self.columnPropertiesSearchFilter(""); // computed props jolt
-
-            if (scheduled) {
-                self.requestReportData();
-            } else if (!!externalConfig) {
-                if (self.reportType === "History" || self.reportType === "Totalizer") {
-                    configureSelectedDuration(externalConfig);
-                }
-                self.requestReportData();
-            }
+        if (!scheduled) {
+            initGlobals();
+        } else {
+            postConfigInit();
         }
     };
 
@@ -4412,7 +4654,7 @@ var reportsViewModel = function () {
                             configureDataTable(true, true);
                         }
                         reportData = undefined;
-                        switch (self.reportType) {
+                        switch (self.reportType()) {
                             case "History":
                                 ajaxCall("POST", requestObj, dataUrl + "/report/historyDataSearch", renderHistoryReport);
                                 //reportSocket.emit("historyDataSearch", {options: requestObj});
@@ -4536,8 +4778,8 @@ var reportsViewModel = function () {
     self.calculationClick = function (element, calc, indexOfColumn) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn],
-            $dropdownButton = $(element).parent().parent().parent().parent().find("a"),
-            $dropdown = $dropdownButton.parent();
+            $ul = $(element).parent().parent(),
+            $dropdown = $ul.parent().find("a.dropdown-button");
 
         if (element.checked === true) {
             if (column.calculation.indexOf(calc) === -1) {
@@ -4550,8 +4792,8 @@ var reportsViewModel = function () {
         }
 
         // updateListOfColumns(tempArray);
-        $dropdownButton.attr("aria-expanded", true);
-        $dropdown.addClass("open");
+        // $dropdown.addClass("active");
+        // $ul.addClass("active");
         return true;
     };
 
@@ -4659,7 +4901,7 @@ var reportsViewModel = function () {
     self.selectPropertyColumn = function (element, indexOfColumn, selectedItem) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn],
-            prop = getProperty(selectedItem.name);
+            prop = ENUMSTEMPLATESENUMS.Properties[selectedItem.name];
         column.colName = selectedItem.name;
         column.colDisplayName = selectedItem.name;
         column.dataColumnName = column.colName;
@@ -4677,9 +4919,7 @@ var reportsViewModel = function () {
     };
 
     self.selectPropertyFilter = function (element, indexOfFilter, selectedItem) {
-        var tempArray = self.listOfFilters(),
-            $elementRow = $(element).parent().parent().parent().parent().parent();
-        //$inputField = $elementRow.find(".filterValue").find("input");  // in case we need to validate input field
+        var tempArray = self.listOfFilters();
         tempArray[indexOfFilter] = initializeNewFilter(selectedItem, tempArray[indexOfFilter]);
         updateListOfFilters(tempArray);
     };
@@ -4708,9 +4948,9 @@ var reportsViewModel = function () {
     };
 
     self.selectNumberOfEntries = function (element, selectedItem) {
-        for (var i = 0; i < self.listOfEntriesPerPage.length; i++) {
-            if (self.listOfEntriesPerPage[i].value === selectedItem) {
-                self.selectedPageLength(self.listOfEntriesPerPage[i].unit);
+        for (var i = 0; i < self.listOfEntriesPerPage().length; i++) {
+            if (self.listOfEntriesPerPage()[i].value === selectedItem) {
+                self.selectedPageLength(self.listOfEntriesPerPage()[i].unit);
                 self.designChanged(true);
                 self.unSavedDesignChange(true);
                 break;
@@ -4719,9 +4959,9 @@ var reportsViewModel = function () {
     };
 
     self.selectChartType = function (element, selectedItem, drawChart) {
-        for (var i = 0; i < self.listOfChartTypes.length; i++) {
-            if (self.listOfChartTypes[i].value === selectedItem) {
-                self.selectedChartType(self.listOfChartTypes[i].text);
+        for (var i = 0; i < self.listOfChartTypes().length; i++) {
+            if (self.listOfChartTypes()[i].value === selectedItem) {
+                self.selectedChartType(self.listOfChartTypes()[i].text);
                 self.designChanged(true);
                 self.unSavedDesignChange(true);
                 break;
@@ -4738,6 +4978,8 @@ var reportsViewModel = function () {
         column.includeInChart = element.checked;
         updateListOfColumns(tempArray);
         return true;
+        // self.listOfColumns()[indexOfColumn].includeInChart = element.checked;
+        // return true;
     };
 
     self.globalColumnIncludeInChartClick = function () {
@@ -4776,14 +5018,33 @@ var reportsViewModel = function () {
     };
 
     self.selectViewReportTabSubTab = function (subTabName) {
-        $tabViewReport.find("ul.viewReportNav").find("li .active").removeClass("active");
-        $tabViewReport.find("ul.viewReportNav").find("li." + subTabName).addClass("active");
-        $tabViewReport.find(".tab-content > .active").removeClass("active");
-        $tabViewReport.find("#" + subTabName).addClass("active");
+        $tabViewReport.find('ul.tabs').tabs('select_tab', subTabName);
+        // $tabViewReport.find("ul.viewReportNav").find("li .active").removeClass("active");
+        // $tabViewReport.find("ul.viewReportNav").find("li." + subTabName).addClass("active");
+        // $tabViewReport.find(".tab-content > .active").removeClass("active");
+        // $tabViewReport.find("#" + subTabName).addClass("active");
     };
 
     self.materialDropdownClick = function (element) {
-        $(element).dropdown('open');
+        var $element = $(element),
+            forElementId = $element.attr("data-activates"),
+            $availableAxisGroupsContainer = $element.parent(),
+            $forElement = $availableAxisGroupsContainer.find("#" + forElementId);
+
+        if ($forElement.hasClass("active")) {
+            $element.removeClass("active");
+            $forElement.removeClass("active");
+            $forElement.css("display", "none");
+            $forElement.css("opacity", 0);
+            // $element.dropdown('close');
+        } else {
+            $element.addClass("active");
+            $forElement.addClass("active");
+            $forElement.css("display", "block");
+            $forElement.css("opacity", 1);
+            // $element.dropdown('open');
+        }
+
         return true;
     };
 
@@ -4904,20 +5165,6 @@ var reportsViewModel = function () {
 
         return answer;
     }, self);
-
-    // self.allTypesSelected = ko.computed(function () {
-    //     var i,
-    //         answer = true;
-    //
-    //     for (i = 0; i < self.pointTypes().length; i++) {
-    //         if (self.pointTypes()[i].selected === false) {
-    //             answer = false;
-    //             break;
-    //         }
-    //     }
-    //
-    //     return answer;
-    // }, self);
 };
 
 function applyBindings(extConfig) {
@@ -4928,7 +5175,15 @@ function applyBindings(extConfig) {
             reportsVM = new reportsViewModel();
             reportsVM.init(extConfig);
             ko.applyBindings(reportsVM);
-        }, 2);
+
+            // TODO  what's up here?
+            window.setTimeout(function () {
+                $(".datepicker").pickadate();
+                $(".timepicker").pickatime();
+                $(".tabConfiguration").find('ul.tabs').tabs();
+                $(".tabViewReport").find('ul.tabs').tabs();
+            }, 1500);
+        }, 100);
     }
 }
 

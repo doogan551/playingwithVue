@@ -427,7 +427,9 @@ var dti = {
             });
         },
         fadeIn: function ($el, cb) {
-            $el[0].style.willChange = 'opacity, display';
+            if (!!$el[0]) {
+                $el[0].style.willChange = 'opacity, display';
+            }
             $el.css('display', 'block');
             dti.animations._fade($el, 1, cb);
         },
@@ -3883,7 +3885,7 @@ var dti = {
 
                         ret = dti.utility.getConfig(path, parameters);
 
-                        setTimeout(function doSendGetConfig () {
+                        setTimeout(function sendConfigInfo () {
                             dti.messaging.sendMessage({
                                 messageID: messageID,
                                 key: winId,
@@ -3892,6 +3894,21 @@ var dti = {
                                     message: 'getConfig',
                                     value: ret
                                 }     
+                            });
+                        }, 1000);
+                    },
+                    getUser: function () {
+                        var winId = config._windowId,
+                            user = dti.bindings.user();
+
+                        setTimeout(function sendUserInfo () {
+                            dti.messaging.sendMessage({
+                                messageID: messageID,
+                                key: winId,
+                                value: {
+                                    user: user,
+                                    message: 'getUser'
+                                }
                             });
                         }, 1000);
                     },

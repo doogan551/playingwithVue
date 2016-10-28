@@ -12,15 +12,15 @@
                         form.form-horizontal(role="form")
                             .form-group
                                 label.control-label.col-sm-4 Column Name:
-                                // ko if: ($root.reportType !== 'Property')
+                                // ko if: ($root.reportType() !== 'Property')
                                 .col-sm-2
                                     .columnName(data-bind="text: $data.colName, click: function(){ $root.showPointReview($data) }")
                                 // /ko
-                                // ko if: ($root.reportType === 'Property')
+                                // ko if: ($root.reportType() === 'Property')
                                 .col-sm-2
                                     span(data-bind="text: ($data.colName !== 'Choose Point' ? $data.colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
                                 // /ko
-                            // ko if: ($root.reportType !== 'Property')
+                            // ko if: ($root.reportType() !== 'Property')
                             .form-group
                                 label.control-label.col-sm-4 Column Display Name:
                                 .col-sm-2
@@ -31,7 +31,7 @@
                                 .col-sm-8
                                     span.inputMultiplier(data-bind="text: multiplier")
                             // /ko
-                            // ko if: ($root.reportType === 'Totalizer')
+                            // ko if: ($root.reportType() === 'Totalizer')
                             .form-group
                                 label.control-label.col-sm-4 Type:
                                 .col-sm-2

@@ -1,14 +1,14 @@
 .panel.panel-info#popoverColumnSettings(data-bind="with: $root.currentColumnSettings", style="display:none;")
     .panel-body.small
         form.form-horizontal(role="form")
-            // ko if: ($root.reportType !== 'Property')
+            // ko if: ($root.reportType() !== 'Property')
             // ko if: ($data.canCalculate)
             .form-group
                 label.control-label.col-sm-6 Multiplier:
                 span.col-sm-6(data-bind="text: multiplier", style="margin-top: 7px;")
             // /ko
             .form-group
-                    // ko if: ($root.reportType === 'Totalizer')
+                    // ko if: ($root.reportType() === 'Totalizer')
                     label.control-label.col-sm-6 Type:
                     span.col-sm-6(data-bind="text: $data.operator", style="margin-top: 7px;")
                     // /ko
