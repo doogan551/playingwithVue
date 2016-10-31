@@ -418,8 +418,19 @@ var initKnockout = function () {
     };
 
     ko.bindingHandlers.materializeDropdown = {
-        init: function (element, valueAccessor) {
-            $(element).dropdown();
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var $element = $(element);
+            $element.dropdown();
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
+
+    ko.bindingHandlers.materializeSelect = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var $element = $(element);
+            $element.material_select('destroy');
+            $element.material_select();
         },
         update: function (element, valueAccessor, allBindings) {
         }
@@ -2873,15 +2884,17 @@ var reportsViewModel = function () {
                         $pagination = $tablePagination.find(".pagination"),
                         $paginate_buttons = $pagination.find("button");
 
+                    // $pagination.hide();
                     if (numberOfPages === 1) {
                         $paginate_buttons = $paginate_buttons.not("li.active");
                         $paginate_buttons.hide();
+                    } else {
+                        console.log("currentPageNumber = " + currentPageNumber);
+                        $paginate_buttons.removeClass("mdl-button");
+                        $paginate_buttons.addClass("btn blue-grey");
+                        $paginate_buttons.eq(currentPageNumber).addClass("lighten-2");
+                        // $pagination.show();
                     }
-
-                    console.log("currentPageNumber = " + currentPageNumber);
-                    $paginate_buttons.removeClass("mdl-button");
-                    $paginate_buttons.addClass("btn blue-grey");
-                    $paginate_buttons.eq(currentPageNumber).addClass("lighten-2");
                 });
 
                 console.log(" .... report events configured .... ");
@@ -4779,7 +4792,7 @@ var reportsViewModel = function () {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn],
             $ul = $(element).parent().parent(),
-            $dropdown = $ul.parent().find("a.dropdown-button");
+            $dropdown = $ul.siblings();
 
         if (element.checked === true) {
             if (column.calculation.indexOf(calc) === -1) {
@@ -5019,10 +5032,6 @@ var reportsViewModel = function () {
 
     self.selectViewReportTabSubTab = function (subTabName) {
         $tabViewReport.find('ul.tabs').tabs('select_tab', subTabName);
-        // $tabViewReport.find("ul.viewReportNav").find("li .active").removeClass("active");
-        // $tabViewReport.find("ul.viewReportNav").find("li." + subTabName).addClass("active");
-        // $tabViewReport.find(".tab-content > .active").removeClass("active");
-        // $tabViewReport.find("#" + subTabName).addClass("active");
     };
 
     self.materialDropdownClick = function (element) {

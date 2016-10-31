@@ -155,10 +155,15 @@ input.input.form-control.durationDateRangeTime {
     width: 68px;
     min-width: 50px;
 }
+.availableIntervalsContainer {
+    padding-left: 15px;
+}
 .availableIntervalsContainer .dropdown-content {
     cursor: pointer;
-    padding-left: 10px;
     margin-right: 7px;
+    margin-top: 26px;
+}
+.availableIntervalsContainer a.dropdown-button {
     margin-top: 26px;
 }
 .availableDurationsContainer .dropdown-content {
@@ -247,11 +252,7 @@ input.intervalValue {
     width: 115px;
 }
 .totalizerOperators.dropdown-content {
-    width: 80px;
-    min-width: 80px;
-    text-indent: 7px;
-    margin-left: 15px;
-    margin-top: -2px;
+    width: 80px !important;
 }
 .calculations {
     list-style-type: none;
@@ -269,12 +270,14 @@ input.intervalValue {
     padding-top: 10px;
 }
 .calculations.dropdown-content {
-    width: 130px;
-    min-width: 70px;
-    text-indent: 7px;
-    margin-left: 6px;
-    margin-top: -8px;
-    padding-top: 10px;
+    width: 110px !important;
+    padding-bottom: 12px;
+}
+.calculations.dropdown-content li {
+    min-height: 10px;
+}
+.availableAxisGroupsContainer .dropdown-content li {
+    min-height: 10px;
 }
 .chartTypeSelection {
     padding-left: 100px;
@@ -300,7 +303,7 @@ input.intervalValue {
     cursor: pointer;
 }
 .dropdown-content li>a, .dropdown-content li>span {
-    color: #607d8b;
+    color: #607d8b !important;
 }
 .operator {
     cursor: pointer;
@@ -599,6 +602,8 @@ div.dataTables_wrapper div.dataTables_length select {
 .availableCalculations a {
     width: 70px;
     padding: 0px;
+    height: 25px;
+    line-height: 26px;
 }
 .availableCalculations a .text {
 }
@@ -614,17 +619,16 @@ div.dataTables_wrapper div.dataTables_length select {
 .availableAxisGroupsContainer a {
     width: 31px;
     padding: 0px;
+    height: 25px;
+    line-height: 26px;
 }
 .availableAxisGroupsContainer a .text {
     margin-left: 2px;
 }
 .availableAxisGroupsContainer ul.dropdown-content {
     cursor: pointer;
-    width: 30px;
-    min-width: 34px;
-    text-indent: 10px;
-    margin-left: 11px;
-    margin-top: -10px;
+    width: 50px !important;
+    min-width: 30px !important;
 }
 .globalAvailableAxisGroupsContainer a {
     width: 31px;
