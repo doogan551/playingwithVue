@@ -48,7 +48,7 @@ var Scheduler = {
       var time = schedule.runTime;
       var date = moment().format('YYYYMMDD');
       if (scheduleContainer.hasOwnProperty(schedule._id)) {
-        scheduleContainer[schedule._id].stop();
+        scheduleContainer[schedule._id].destroy();
       }
       if (!!schedule.enabled) {
         scheduleContainer[schedule._id] = new CronJob(time, function() {
