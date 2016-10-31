@@ -3,15 +3,9 @@ html.direports
     head
         title #{title}
         meta(charset="utf-8")
-        //- link(rel='stylesheet', href='/css/lib/bootstrap-3.3.6/bootstrap.css')
-        //- link(rel='stylesheet', href="/css/lib/bootstrap-datepicker.css")
-        //- link(rel='stylesheet', href="/css/lib/jquery-clockpicker.min.css")
-        //- link(rel='stylesheet', href="/css/lib/font-awesome-4.3.0/css/font-awesome.min.css")
-        //- link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.bootstrap.min.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/ColReorder/css/colReorder.foundation.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/Buttons/css/buttons.foundation.css')
         link(rel='stylesheet', href='/css/lib/jquery-ui.min.css')
-        //- link(rel='stylesheet', href='/css/lib/daterangepicker.css')
         link(rel='stylesheet', href='/css/reports/reporting.css')
         link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.material.css')
         link(rel='stylesheet', href='/css/lib/materialize.css')
@@ -21,23 +15,14 @@ html.direports
         script(type="text/javascript" src="/js/lib/jquery-2.2.4.js")
         script(type="text/javascript" src="/js/lib/jquery-ui.js")
         script(type="text/javascript" src='/js/lib/moment.js')
-        //- script(type="text/javascript" src='/js/lib/bootstrap-3.3.6/bootstrap-3.3.6.js')
-        //- script(type="text/javascript" src="/js/lib/bootstrap-datepicker.js")
-        //- script(type="text/javascript" src="/js/lib/jquery-clockpicker.min.js")
-        //- script(type="text/javascript" src='/js/lib/material.js')
-        //- script(type="text/javascript" src='/js/lib/lodash.min.js')
-        //- script(type="text/javascript" src='/js/lib/config.js')
         script(type="text/javascript" src='/js/lib/knockout-3.4.0.js')
         script(type="text/javascript" src='/js/lib/ko.validation.js')
         script(type="text/javascript" src='/js/lib/socket.io.js')
         script(type="text/javascript" src='/js/lib/store.min.js')
         script(type="text/javascript" src='/js/lib/DataTables-1.10.12/media/js/jquery.dataTables.min.js')
         script(type="text/javascript" src='/js/lib/DataTables-1.10.12/media/js/dataTables.material.min.js')
-        //- script(type="text/javascript" src='/js/lib/DataTables-1.10.12/media/js/dataTables.bootstrap.min.js')
         script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/ColReorder/js/dataTables.colReorder.min.js')
-        //- script(type="text/javascript" src='/js/lib/DataTables-1.10.10/dataTables.colReorderWithResize.js')
         script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/dataTables.buttons.min.js')
-        //- script(type="text/javascript" src='/js/lib/daterangepicker.js')
         script(type="text/javascript" src='/js/lib/jszip.min.js')
         script(type="text/javascript" src='/js/lib/pdfmake.min.js')
         script(type="text/javascript" src='/js/lib/vfs_fonts.js')
@@ -211,9 +196,8 @@ html.direports
                                                 // /ko
                                                 // /ko
                                                 th.medium.strong
-                                        tbody.sortablecolums(data-bind="foreach: listOfColumns()")
-                                            // ko if: $index() > 0
-                                            tr.columnRowData(data-bind="css: {'red lighten-4': (colName === 'Choose Point')} ")
+                                        tbody.sortablecolumns(data-bind="foreach: listOfColumns()")
+                                            tr.columnRowData(data-bind="css: {hideDiv: ($index() === 0), fixed: ($index() === 0), 'red lighten-4': (colName === 'Choose Point')} ")
                                                 td.columnNameContainer(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
                                                     .handle
                                                     // ko if: ($parent.reportType() !== 'Property')
@@ -296,7 +280,6 @@ html.direports
                                                 td.removecolumn
                                                     a.span.removerow.blue-grey-text(data-bind="click: function () { $parent.deleteReportColumn($index()) }") Remove
                                                 // /ko
-                                            // /ko
                                         tbody
                                             tr
                                                 // ko if: ($root.canEdit())
@@ -307,7 +290,7 @@ html.direports
                                     h6.strong.panel-title
                                     table.gridColumnConfigTable.small.grid.table
                                         thead
-                                            tr.sortablecolums(data-bind="foreach: listOfColumns()")
+                                            tr.sortablecolumns(data-bind="foreach: listOfColumns()")
                                                 th.displayName(data-bind="css: { fixed: ($index() === 0), 'red lighten-4': (colName === 'Choose Point')}")
                                                     .cellContent
                                                         // ko if: $index() > 0
@@ -333,14 +316,14 @@ html.direports
                                                             // ko if: ($parent.reportType() === 'Property')
                                                             div.columnPropertyNames
                                                                 .availablePropertiesContainer
-                                                                    ul.enumproperties.dropdown-menu(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
+                                                                    ul.enumproperties.dropdown-content(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
                                                                         input.form-control.inputSearch.filled-in(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
                                                                         li(role="separator", class="divider")
                                                                         // ko foreach: $parent.columnFilteredProps()
                                                                         li
                                                                             a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
                                                                         // /ko
-                                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}", data-toggle="dropdown")
+                                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'enumpropertiesDropdown'+ $index() }, materializeDropdown")
                                                                         span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
                                                             // /ko
                                                             // /ko
@@ -421,9 +404,8 @@ html.direports
                                     a.btn.waves-effect.waves-light.blue-grey.right-align.adjustPointTypesFilterButton(data-bind="click: $root.pointSelectorFilter") Point Type Filter
                                     // /ko
                                 div.tab-pane.additionalFilters#additionalFilters
-                                    // ko if: (reportType() === 'Property')
                                     table.filtersGrid.small.grid.table
-                                        tbody(data-bind="foreach: listOfFilters()")
+                                        tbody.sortableFilters(data-bind="foreach: listOfFilters()")
                                             tr.filterdata
                                                 td.sorthandle
                                                     .handle
@@ -463,7 +445,6 @@ html.direports
                                                 td.removecolumn
                                                     a.span.removerow.blue-grey-text(data-bind="click: $parent.deleteFilterRow, attr: { title: valueType}") Remove
                                                 // /ko
-                                    // /ko
                                     // ko if: ($root.reportType() === 'Property' && $root.canEdit())
                                     a.small.addFilterbutton(href="#") Add Filter
                                     // /ko

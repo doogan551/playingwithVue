@@ -30,6 +30,7 @@
     vertical-align: super;
 }
 .durationCtrl {
+    display: inline-flex;
     background-color: white;
     border: 1px solid #D0D0D0;
     border-radius: 3px;
