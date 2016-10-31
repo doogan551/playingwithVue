@@ -563,7 +563,7 @@
                 "enum": 2
             }
         },
-        "Fan Control Strategy": {
+        "Fan Control Strategies": {
             "Constant": {
                 "enum": 0
             },
@@ -3608,12 +3608,6 @@
                 "valueType": "Float",
                 "reportEnable": true
             },
-            "VAV Channel": {
-                "enum": 66,
-                "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
-            },
             "Velocity Flow": {
                 "enum": 402,
                 "valueType": "Float",
@@ -4045,9 +4039,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 65534,
-                    "Max": 65534,
-                    "Min": 1
+                    "Value": 65534
                 },
                 "Ethernet Protocol": {
                     "isDisplayable": true,
@@ -4494,7 +4486,7 @@
                     "ValueType": 11,
                     "Value": 0
                 },
-                "Modbus Unit Id":{
+                "Modbus Unit Id": {
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
@@ -4981,10 +4973,27 @@
                 "Channel": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 16,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8,
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12,
+                        "13": 13,
+                        "14": 14,
+                        "15": 15,
+                        "16": 16
+                    }
                 },
                 "Conversion Adjustment": {
                     "isDisplayable": true,
@@ -5320,20 +5329,6 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
-                "VAV Channel": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 5,
-                    "Value": "1 - Zone Temperature",
-                    "eValue": 1,
-                    "ValueOptions": {
-                        "1 - Zone Temperature": 1,
-                        "2 - Setpoint Adjust": 2,
-                        "3 - Supply Temperature": 3,
-                        "Auxiliary": 4,
-                        "Air Volume": 5
-                    }
-                },
                 "Warning Adjust Band": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -5439,18 +5434,36 @@
                 "Channel": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 8,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8
+                    }
                 },
                 "Close Channel": {
                     "isDisplayable": false,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 8,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8
+                    }
                 },
                 "Control Array": [],
                 "Control Data Type": {
@@ -5611,10 +5624,19 @@
                 "Open Channel": {
                     "isDisplayable": false,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 2,
-                    "Max": 8,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8
+                    }
                 },
                 "Out of Service": {
                     "isDisplayable": true,
@@ -5802,17 +5824,6 @@
                     "isReadOnly": true,
                     "ValueType": 1,
                     "Value": 0.0
-                },
-                "VAV Channel": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 5,
-                    "Value": "1 - Damper",
-                    "eValue": 1,
-                    "ValueOptions": {
-                        "1 - Damper": 1,
-                        "2 - Reheat": 2
-                    }
                 },
                 "Warning Adjust Band": {
                     "isDisplayable": true,
@@ -6299,10 +6310,27 @@
                 "Channel": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 16,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8,
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12,
+                        "13": 13,
+                        "14": 14,
+                        "15": 15,
+                        "16": 16
+                    }
                 },
                 "COV Enable": {
                     "isDisplayable": true,
@@ -6600,17 +6628,6 @@
                         "Off": 0,
                         "On": 1
                     }
-                },
-                "VAV Channel": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 5,
-                    "Value": "1 - Occupancy Override",
-                    "eValue": 1,
-                    "ValueOptions": {
-                        "1 - Occupancy Override": 1,
-                        "2 - Occupancy Sensor": 2
-                    }
                 }
             },
 
@@ -6717,18 +6734,44 @@
                 "Channel": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 8,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8
+                    }
                 },
                 "Close Channel": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 16,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8,
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12,
+                        "13": 13,
+                        "14": 14,
+                        "15": 15,
+                        "16": 16
+                    }
                 },
                 "Close Polarity": {
                     "isDisplayable": false,
@@ -6778,12 +6821,29 @@
                     "Value": ""
                 },
                 "Feedback Channel": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 16,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8,
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12,
+                        "13": 13,
+                        "14": 14,
+                        "15": 15,
+                        "16": 16
+                    }
                 },
                 "Feedback Polarity": {
                     "isDisplayable": false,
@@ -6879,12 +6939,21 @@
                     "Value": 0
                 },
                 "Off Channel": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 8,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8
+                    }
                 },
                 "Off Control Data Type": {
                     "isDisplayable": false,
@@ -6913,12 +6982,21 @@
                     "Value": 0
                 },
                 "On Channel": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 8,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8
+                    }
                 },
                 "On Control Data Type": {
                     "isDisplayable": false,
@@ -6947,12 +7025,29 @@
                     "Value": 0
                 },
                 "Open Channel": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 16,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8,
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12,
+                        "13": 13,
+                        "14": 14,
+                        "15": 15,
+                        "16": 16
+                    }
                 },
                 "Open Polarity": {
                     "isDisplayable": false,
@@ -7180,20 +7275,6 @@
                     "ValueOptions": {
                         "Off": 0,
                         "On": 1
-                    }
-                },
-                "VAV Channel": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 5,
-                    "Value": "3 - Lights",
-                    "eValue": 3,
-                    "ValueOptions": {
-                        "3 - Lights": 3,
-                        "5 - Fan": 5,
-                        "6 - Digital Heat 1": 6,
-                        "7 - Digital Heat 2": 7,
-                        "8 - Digital Heat 3": 8
                     }
                 },
                 "Verify Delay": {
@@ -7574,10 +7655,27 @@
                 "Channel": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 16,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8,
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12,
+                        "13": 13,
+                        "14": 14,
+                        "15": 15,
+                        "16": 16
+                    }
                 },
                 "COV Enable": {
                     "isDisplayable": true,
