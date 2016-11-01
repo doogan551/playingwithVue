@@ -843,15 +843,18 @@ var Config = (function(obj) {
                                 return eRel;
                         }
                         break;
+
                     case eTyp["Binary Input"]["enum"]:
                         switch (point._devModel) {
                             case eDev["MicroScan 5 xTalk"]["enum"]:
                             case eDev["MicroScan 4 xTalk"]["enum"]:
                                 return eRel;
+
                             default:
                                 break;
                         }
                         break;
+
                     case eTyp["MultiState Value"]["enum"]:
                         switch (point._devModel) {
                             case eDev["MicroScan 5 UNV"]["enum"]:
@@ -867,6 +870,10 @@ var Config = (function(obj) {
                                 return eRel;
                         }
                         break;
+
+                    case eTyp["VAV"]["enum"]:
+                        return eRel;
+
                     default:
                         break;
                 }
@@ -877,6 +884,13 @@ var Config = (function(obj) {
                     return eRel;
                 } else {
                     switch (point["Point Type"].eValue) {
+                        case eTyp["Analog Input"]["enum"]:
+                        case eTyp["Analog Output"]["enum"]:
+                        case eTyp["Binary Input"]["enum"]:
+                        case eTyp["Binary Output"]["enum"]:
+                        case eTyp["Remote Unit"]["enum"]:
+                            break;
+
                         case eTyp["Analog Value"]["enum"]:
                         case eTyp["Binary Value"]["enum"]:
                             switch (rmuModel) {
@@ -892,6 +906,7 @@ var Config = (function(obj) {
                                     return eRel;
                             }
                             break;
+
                         case eTyp["MultiState Value"]["enum"]:
                             switch (rmuModel) {
                                 case "MS3 RT":
@@ -906,17 +921,37 @@ var Config = (function(obj) {
                                     break;
                             }
                             break;
-                        case eTyp["Accumulator"]["enum"]:
-                            switch (rmuModel) {
-                                case "MS 4 VAV":
-                                    return eRel;
 
-                                default:
-                                    break;
+                        case eTyp["Accumulator"]["enum"]:
+                            if (rmuModel === "MS 4 VAV") {
+                                return eRel;
                             }
                             break;
-                        default:
+
+                        case eTyp["Logic"]["enum"]:
+                        case eTyp["Analog Selector"]["enum"]:
+                        case eTyp["Binary Selector"]["enum"]:
+                        case eTyp["Delay"]["enum"]:
+                        case eTyp["Math"]["enum"]:
+                        case eTyp["Setpoint Adjust"]["enum"]:
+                        case eTyp["Proportional"]["enum"]:
+                        case eTyp["Average"]["enum"]:
+                        case eTyp["Select Value"]["enum"]:
+                        case eTyp["Economizer"]["enum"]:
+                        case eTyp["Enthalpy"]["enum"]:
+                            if ((rmuModel !== "MS3 RT") && (rmuModel !== "MS 3 EEPROM") && (rmuModel !== "MS 3 Flash")) {
+                                return eRel;
+                            }
                             break;
+
+                        case eTyp["VAV"]["enum"]:
+                            if (rmuModel !== "MS 4 VAV") {
+                                return eRel;
+                            }
+                            break;
+
+                        default:
+                            return eRel;
                     }
                 }
             }
@@ -2871,92 +2906,54 @@ var Config = (function(obj) {
         },
 
         "Calculation Type": function(data) {
-            var point = data.point, // Shortcut
-                val = point[data.property].Value, // Property value
-                key, // Work var
-                i; // Work var
+            var point = data.point,
+                val = point["Calculation Type"].Value,
+                setDisp = obj.Utility.setPropsDisplayable,
+                setValOpt = obj.Utility.setupPropValueOptions;
 
             if ((point["Point Type"].Value === "Analog Selector") || (point["Point Type"].Value === "Binary Selector")) {
                 if (val === "Single Setpoint") {
                     obj.Utility.getPropertyObject("Setpoint Input", point).isDisplayable = true;
-                    point["Setpoint Value"].isDisplayable = true;
-                    point["High Deadband"].isDisplayable = true;
-                    point["Low Deadband"].isDisplayable = true;
-
-                    point["Input Deadband"].isDisplayable = false;
-                    point["High Setpoint"].isDisplayable = false;
-                    point["Low Setpoint"].isDisplayable = false;
-                    point["Cooling Setpoint"].isDisplayable = false;
-                    point["Heating Setpoint"].isDisplayable = false;
+                    setDisp(point, ["Setpoint Value", "High Deadband", "Low Deadband"], true);
+                    setDisp(point, ["Input Deadband", "High Setpoint", "Low Setpoint", "Cooling Setpoint", "Heating Setpoint"], false);
                 } else if (val === "Dual Setpoint") {
                     obj.Utility.getPropertyObject("Setpoint Input", point).isDisplayable = false;
-                    point["Setpoint Value"].isDisplayable = false;
-                    point["High Deadband"].isDisplayable = false;
-                    point["Low Deadband"].isDisplayable = false;
-
-                    point["Input Deadband"].isDisplayable = true;
-                    point["High Setpoint"].isDisplayable = true;
-                    point["Low Setpoint"].isDisplayable = true;
-                    point["Cooling Setpoint"].isDisplayable = false;
-                    point["Heating Setpoint"].isDisplayable = false;
+                    setDisp(point, ["Setpoint Value", "High Deadband", "Low Deadband", "Cooling Setpoint", "Heating Setpoint"], false);
+                    setDisp(point, ["Input Deadband", "High Setpoint", "Low Setpoint"], true);
                 } else {
                     obj.Utility.getPropertyObject("Setpoint Input", point).isDisplayable = false;
-                    point["Setpoint Value"].isDisplayable = false;
-                    point["High Deadband"].isDisplayable = false;
-                    point["Low Deadband"].isDisplayable = false;
-
-                    point["Input Deadband"].isDisplayable = true;
-                    point["High Setpoint"].isDisplayable = false;
-                    point["Low Setpoint"].isDisplayable = false;
-                    point["Cooling Setpoint"].isDisplayable = true;
-                    point["Heating Setpoint"].isDisplayable = true;
+                    setDisp(point, ["Setpoint Value", "High Deadband", "Low Deadband", "High Setpoint", "Low Setpoint"], false);
+                    setDisp(point, ["Input Deadband", "Cooling Setpoint", "Heating Setpoint"], true);
                 }
-                // Must be a Proportional point type. If Calculation Type is PID
             } else if (val === "PID") {
-                point["Input Range"].isDisplayable = true;
-                point["Input Range"].ValueOptions = {}; // Empty the ValueOptions
-
-                // Set ValueOptions:
-                // ’25 sec’, 0
-                // ’50 sec’, 1
-                // '75 sec', 2
-                //  ...
-                // ’200 sec’, 7
-                for (i = 0; i < 8; i++) {
-                    key = (25 + i * 25) + ' sec';
-                    point["Input Range"].ValueOptions[key] = i;
-                }
-
-                point["Rise Time"].isDisplayable = true;
-                point["Fall Time"].isDisplayable = true;
-
-                point["Proportional Band"].isDisplayable = false;
-                point["Reset Gain"].isDisplayable = false;
+                setValOpt(point["Input Range"], {
+                    "25 Sec": 0,
+                    "50 Sec": 1,
+                    "75 Sec": 2,
+                    "100 Sec": 3,
+                    "125 Sec": 4,
+                    "150 Sec": 5,
+                    "175 Sec": 6,
+                    "200 Sec": 7,
+                });
+                setDisp(point, ["Rise Time", "Fall Time"], true);
+                setDisp(point, ["Proportional Band", "Reset Gain"], false);
             } else if (val === "PI") {
-                point["Input Range"].isDisplayable = true;
-
-                point["Input Range"].ValueOptions = {}; // Empty the ValueOptions
-
-                point["Input Range"].ValueOptions['1'] = 0;
-                point["Input Range"].ValueOptions['10'] = 1;
-                point["Input Range"].ValueOptions['100'] = 2;
-                point["Input Range"].ValueOptions['1000'] = 3;
-                point["Input Range"].ValueOptions['5000'] = 4;
-                point["Input Range"].ValueOptions['10000'] = 5;
-                point["Input Range"].ValueOptions['25000'] = 6;
-                point["Input Range"].ValueOptions['Auto'] = 7;
-
-                point["Rise Time"].isDisplayable = false;
-                point["Fall Time"].isDisplayable = false;
-
-                point["Proportional Band"].isDisplayable = true;
-                point["Reset Gain"].isDisplayable = true;
+                setValOpt(point["Input Range"], {
+                    "1": 0,
+                    "10": 1,
+                    "100": 2,
+                    "1000": 3,
+                    "5000": 4,
+                    "10000": 5,
+                    "25000": 6,
+                    "Auto": 7,
+                });
+                setDisp(point, ["Proportional Band", "Reset Gain"], true);
+                setDisp(point, ["Rise Time", "Fall Time"], false);
             } else {
-                point["Input Range"].isDisplayable = false;
-                point["Rise Time"].isDisplayable = false;
-                point["Fall Time"].isDisplayable = false;
                 point["Proportional Band"].isDisplayable = true;
-                point["Reset Gain"].isDisplayable = false;
+                setDisp(point, ["Rise Time", "Fall Time", "Input Range", "Reset Gain"], false);
             }
             return point;
         },
@@ -5005,8 +5002,7 @@ var Config = (function(obj) {
         },
 
         applyBinaryValueTypeDevModel: function(data) {
-            obj.EditChanges.applyAnalogValueTypeDevModel(data);
-            return data.point;
+            return obj.EditChanges.applyAnalogValueTypeDevModel(data);
         },
 
         applyMultiStateValueTypeDevModel: function(data) {
@@ -5144,6 +5140,161 @@ var Config = (function(obj) {
                         }
                         break;
                 }
+            }
+            return point;
+        },
+
+        applyCpcPointDevModel: function(point) {
+            var disp;
+
+            if ((checkMicroScan5Device(point) || checkMicroScan4Device(point)) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+                disp = true;
+            } else {
+                disp = false;
+            }
+            point["Maximum Change"].isDisplayable = disp;
+        },
+
+        applyEnthalpyDevModel: function(data) {
+            var point = data.point;
+
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            obj.EditChanges.applyCpcPointDevModel(point);
+            return point;
+        },
+
+        applyEconomizerDevModel: function(data) {
+            return obj.EditChanges.applyEnthalpyDevModel(data);
+        },
+
+        applySelectValueDevModel: function(data) {
+            return obj.EditChanges.applyEnthalpyDevModel(data);
+        },
+
+        applyAverageDevModel: function(data) {
+            return obj.EditChanges.applyEnthalpyDevModel(data);
+        },
+
+        applySetpointAdjustDevModel: function(data) {
+            return obj.EditChanges.applyEnthalpyDevModel(data);
+        },
+
+        applyProportionalDevModel: function(data) {
+            var point = data.point,
+                opts,
+                disp;
+
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if ((checkMicroScan5Device(point) || checkMicroScan4Device(point)) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+                opts = {
+                    "P Only": 1,
+                    "PI": 2,
+                    "PID": 3
+                };
+                disp = true;
+            } else {
+                opts = {
+                    "P Only": 1,
+                    "PI": 2
+                };
+                disp = false;
+            }
+            obj.Utility.setupPropValueOptions(point["Calculation Type"], opts);
+            point["Maximum Change"].isDisplayable = disp;
+            return obj.EditChanges["Calculation Type"](data);
+        },
+
+        applyMathDevModel: function(data) {
+            var point = data.point,
+                disp;
+
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+                disp = true;
+            } else {
+                disp = false;
+            }
+            point["Rate"].isDisplayable = disp;
+            return obj.EditChanges.applyEnthalpyDevModel(data);
+        },
+
+        applyMultiplexerDevModel: function(data) {
+            var point = data.point;
+
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            return point;
+        },
+
+        applyRampDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyTotalizerDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyAnalogSelectorDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyBinarySelectorDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyAlarmStatusDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyComparatorDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyDigitalLogicDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyDelayDevModel: function(data) {
+            var point = data.point,
+                opts;
+
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if ((checkMicroScan5Device(point) || checkMicroScan4Device(point)) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+                opts = {
+                    "Delay": 0,
+                    "Pulsed": 1
+                };
+            } else {
+                opts = {
+                    "Delay": 0
+                };
+            }
+            obj.Utility.setupPropValueOptions(point["Calculation Type"], opts);
+            return point;
+        },
+
+        applyLogicDevModel: function(data) {
+            var point = data.point,
+                opts
+                i;
+
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if (checkMicroScan5Device(point) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+                opts = {
+                    "<>": 0,
+                    "=": 1,
+                    ">": 2,
+                    ">=": 3,
+                    "<": 4,
+                    "<=": 5
+                };
+            } else {
+                opts = {
+                    "<>": 0,
+                    "=": 1
+                };
+            }
+            for (i = 0; i <= 5; i++) {
+                obj.Utility.setupPropValueOptions(point["If Compare " + i], opts);
             }
             return point;
         },
