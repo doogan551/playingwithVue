@@ -21,7 +21,7 @@ ModelUtil = (function() {
 
 		applyModelType: function(data, callback) {
 
-			callback(null, Config.EditChanges.applyDeviceModelType(data));
+			callback(null, Config.EditChanges.applyDeviceDevModel(data));
 		},
 
 		applyUplinkPort: function(data, callback) {
@@ -49,7 +49,7 @@ ModelUtil = (function() {
 
 		applyModelType: function(data, callback) {
 
-			callback(null, Config.EditChanges.applyRemoteUnitModelType(data));
+			callback(null, Config.EditChanges.applyRemoteUnitDevModel(data));
 		},
 
 		applyNetworkType: function(data) {

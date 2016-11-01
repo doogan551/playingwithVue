@@ -2405,7 +2405,7 @@ var Config = (function(obj) {
                 data.result = 'Invalid model type.';
             } else {
                 if (point["Point Type"].Value === "Device") {
-                    point = obj.EditChanges.applyDeviceModelType(data);
+                    point = obj.EditChanges.applyDeviceDevModel(data);
                 } else {
                     point = obj.EditChanges.applyRemoteUnitTypeModelType(data);
                 }
@@ -3911,7 +3911,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyDeviceModelType: function(data) {
+        applyDeviceDevModel: function(data) {
             var point = data.point,
                 enums = enumsTemplatesJson.Enums,
                 setDisp = obj.Utility.setPropsDisplayable,
@@ -4001,7 +4001,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyRemoteUnitModelType: function(data) {
+        applyRemoteUnitDevModel: function(data) {
             var point = data.point,
                 enums = enumsTemplatesJson.Enums,
                 modelType,
