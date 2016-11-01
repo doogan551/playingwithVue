@@ -10,6 +10,7 @@ var toHost = dbConfig.host;
 var toDB = dbConfig.dbName;
 var date = moment().format('YYYYMMDDX');
 var folder = config.get('Infoscan.files').driveLetter + ':/mongodump/' + date;
+var dumpFolder = config.get('Infoscan.files').driveLetter + ":/ServerInstall/mongodump/infoscan";
 
 var Service = require('node-windows').Service;
 var commandLineArgs = require('command-line-args');
@@ -52,10 +53,32 @@ if (options.toDB) {
   toDB = options.toDB;
 }
 
-child = process('"' + config.get('Infoscan.files').driveLetter + ':/Program Files/MongoDB/Server/3.2/bin/mongodump.exe" -h ' + fromHost + ' -d ' + fromDB + ' -o ' + folder, function(err, stdout, stderr) {
-  logResults('mongodump out:', err, stdout, stderr);
-  child = process('"' + config.get('Infoscan.files').driveLetter + ':/Program Files/MongoDB/Server/3.2/bin/mongorestore.exe" -h ' + toHost + ' -d ' + toDB + ' ' + folder + '/' + fromDB, function(err, stdout, stderr) {
-    logResults('git reset out:', err, stdout, stderr);
+
+var connectionString = [dbConfig.driver, '://', toHost, ':', dbConfig.port, '/', toDB].join('');
+
+
+dbModel.connect(connectionString, function(err) {
+  Utility.dropDatabase(function(err, result) {
+    console.log(err, result);
+    child = process('"' + config.get('Infoscan.files').driveLetter + ':/Program Files/MongoDB/Server/3.2/bin/mongodump.exe" -h ' + fromHost + ' -d ' + fromDB + ' -o ' + folder, function(err, stdout, stderr) {
+      logResults('mongodump out:', err, stdout, stderr);
+      child = process('"' + config.get('Infoscan.files').driveLetter + ':/Program Files/MongoDB/Server/3.2/bin/mongorestore.exe" -h ' + toHost + ' -d ' + toDB + ' ' + folder + '/' + fromDB, function(err, stdout, stderr) {
+        logResults('mongorestore main out:', err, stdout, stderr);
+        child = process('"' + config.get('Infoscan.files').driveLetter + ':/Program Files/MongoDB/Server/3.2/bin/mongorestore.exe" -h ' + toHost + ' -d ' + toDB + ' ' + dumpFolder + '/upis.bson', function(err, stdout, stderr) {
+          logResults('mongorestore upis out:', err, stdout, stderr);
+          child = process('"' + config.get('Infoscan.files').driveLetter + ':/Program Files/MongoDB/Server/3.2/bin/mongorestore.exe" -h ' + toHost + ' -d ' + toDB + ' ' + dumpFolder + '/Users.bson', function(err, stdout, stderr) {
+            logResults('mongorestore users out:', err, stdout, stderr);
+            child = process('node apps\\importapp.js', function(err, stdout, stderr) {
+              logResults('importapp out:', err, stdout, stderr);
+              child = process('robocopy //' + fromHost + '/InfoScan/displays ' + config.get('Infoscan.files').driveLetter + ':/InfoscanJS1/public/display_assets/assets /S', function(err, stdout, stderr) {
+                logResults('robocopy out:', err, stdout, stderr);
+
+              });
+            });
+          });
+        });
+      });
+    });
   });
 });
 

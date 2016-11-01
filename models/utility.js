@@ -180,6 +180,10 @@ exports.dropCollection = function(criteria, cb) {
   db.get().dropCollection(coll, cb);
 };
 
+exports.dropDatabase = function(cb) {
+  db.get().dropDatabase({}, cb);
+};
+
 exports.ensureIndex = function(criteria, cb) {
   var coll = criteria.collection;
   var index = criteria.index;
