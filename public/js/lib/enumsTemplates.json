@@ -2994,11 +2994,6 @@
                 "reportEnable": true,
                 "enumsSet": "Port Protocols"
             },
-            "Port 1 Timeout": {
-                "enum": 390,
-                "valueType": "Unsigned",
-                "reportEnable": true
-            },
             "Port 2 Address": {
                 "enum": 173,
                 "valueType": "Unsigned",
@@ -3019,11 +3014,6 @@
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": "Port Protocols"
-            },
-            "Port 2 Timeout": {
-                "enum": 391,
-                "valueType": "Unsigned",
-                "reportEnable": true
             },
             "Port 3 Address": {
                 "enum": 176,
@@ -3046,11 +3036,6 @@
                 "reportEnable": true,
                 "enumsSet": "Port Protocols"
             },
-            "Port 3 Timeout": {
-                "enum": 392,
-                "valueType": "Unsigned",
-                "reportEnable": true
-            },
             "Port 4 Address": {
                 "enum": 179,
                 "valueType": "Unsigned",
@@ -3071,11 +3056,6 @@
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": "Port Protocols"
-            },
-            "Port 4 Timeout": {
-                "enum": 393,
-                "valueType": "Unsigned",
-                "reportEnable": true
             },
             "Power Fail Point": {
                 "enum": 414,
@@ -4123,14 +4103,6 @@
                     "Value": "None",
                     "eValue": 0
                 },
-                "Port 1 Timeout": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 0,
-                    "Max": 10,
-                    "Min": 0
-                },
                 "Port 2 Address": {
                     "isDisplayable": false,
                     "isReadOnly": false,
@@ -4155,14 +4127,6 @@
                     "ValueType": 5,
                     "Value": "None",
                     "eValue": 0
-                },
-                "Port 2 Timeout": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 0,
-                    "Max": 10,
-                    "Min": 0
                 },
                 "Port 3 Address": {
                     "isDisplayable": false,
@@ -4189,14 +4153,6 @@
                     "Value": "None",
                     "eValue": 0
                 },
-                "Port 3 Timeout": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 0,
-                    "Max": 10,
-                    "Min": 0
-                },
                 "Port 4 Address": {
                     "isDisplayable": false,
                     "isReadOnly": false,
@@ -4221,14 +4177,6 @@
                     "ValueType": 5,
                     "Value": "None",
                     "eValue": 0
-                },
-                "Port 4 Timeout": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 0,
-                    "Max": 10,
-                    "Min": 0
                 },
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -14832,9 +14780,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 1,
-                    "Min": 1,
-                    "Max": 99
+                    "Value": 1
                 },
                 "Point Refs": [],
                 "Slides": []

@@ -1171,13 +1171,6 @@ var Config = (function(obj) {
             return data;
         },
 
-        validateUsingMaxMinKeys: function(data) {
-            var max = data.propertyObject.Max, // Max property value
-                min = data.propertyObject.Min; // Min property value
-
-            return this.validateUsingTheseLimits(data, min, max);
-        },
-
         validatePortNAddress: function(data) {
             data = this.validateUsingTheseLimits(data, 0, 127);
             return data;
@@ -1246,11 +1239,6 @@ var Config = (function(obj) {
                 type = point["Point Type"].Value; // Point type
 
             data.point = obj.EditChanges.applyDeviceTypePortNProtocol(data);
-            return data;
-        },
-
-        validatePortNTimeout: function(data) {
-            data = this.validateUsingMaxMinKeys(data);
             return data;
         },
 
@@ -2454,22 +2442,6 @@ var Config = (function(obj) {
             return this.validatePortNProtocol(data);
         },
 
-        "Port 1 Timeout": function(data) {
-            return this.validatePortNTimeout(data);
-        },
-
-        "Port 2 Timeout": function(data) {
-            return this.validatePortNTimeout(data);
-        },
-
-        "Port 3 Timeout": function(data) {
-            return this.validatePortNTimeout(data);
-        },
-
-        "Port 4 Timeout": function(data) {
-            return this.validatePortNTimeout(data);
-        },
-
         "Uplink Port": function(data) {
             data.point = obj.EditChanges.applyDeviceTypeUplinkPort(data);
             return data;
@@ -2801,7 +2773,7 @@ var Config = (function(obj) {
         },
 
         "Repeat Count": function(data) {
-            return this.validateUsingMaxMinKeys(data);
+            return this.validateUsingTheseLimits(data, 1, 99);
         }
 
         //------ END POINT-TYPE SPECIFIC PROPERTIES  ----------------------------------------------------------------------------------------------
@@ -3951,8 +3923,10 @@ var Config = (function(obj) {
                 port = ["Port 1", "Port 2", "Port 3", "Port 4"];
 
             if (enums["Device Model Types"][point["Model Type"].Value] === undefined) {
-                point["Model Type"].Value = enums["Device Model Types"]["Unknown"];
+                point["Model Type"].Value = "Unknown";
+                point["Model Type"].eValue = enums["Device Model Types"]["Unknown"]["enum"];
             }
+
             point["Model Type"].isDisplayable = true;
             point["Model Type"].isReadOnly = false;
             point._devModel = point["Model Type"].eValue;
@@ -3963,15 +3937,6 @@ var Config = (function(obj) {
             if (!point.hasOwnProperty("Firmware 2 Version"))
                 point["Firmware 2 Version"] = obj.Templates.getTemplate("Device")["Firmware 2 Version"];
 
-            for (var i = 0; i < 4; i++) {
-                delete point[port[i] + " Protocol"].Min;
-                delete point[port[i] + " Protocol"].Max;
-                delete point[port[i] + " Maximum Address"].Min;
-                delete point[port[i] + " Maximum Address"].Max;
-
-                if (!point.hasOwnProperty(port[i] + " Timeout"))
-                    point[port[i] + " Timeout"] = obj.Templates.getTemplate("Device")[port[i] + " Timeout"];
-            }
             if (typeof point["Ethernet Address"].Value !== "string") {
                 point["Ethernet Address"].Value = "";
                 point["Ethernet Address"].ValueType = enums["Value Types"]["String"]["enum"];
