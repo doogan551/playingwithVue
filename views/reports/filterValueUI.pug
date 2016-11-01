@@ -2,7 +2,7 @@
 span.valuetypeTimepicker
     .input-field
         label(data-bind="attr: { for: 'startTimepicker' + $index()") Time
-        input.timepicker(date-bind="select: value, attr: { id: 'startTimepicker' + $index() }, dtiReportsMaterializePickatime", type='time')
+        input.timepicker(data-bind="select: value, attr: { id: 'startTimepicker' + $index() }, dtiReportsMaterializePickatime", type='time')
 // /ko
 // ko if: (valueType === "Float" || valueType === "Unsigned")
 input.input.form-control.filterContainer.filled-in(data-bind="value: value, enable: $root.canEdit()", type="number", required)

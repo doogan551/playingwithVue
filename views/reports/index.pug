@@ -456,21 +456,21 @@ html.direports
                                         span.reportStartDatePicker
                                             .input-field
                                                 label(data-bind="attr: { for: 'reportStartDate' }") Start Date
-                                                input.datepicker(date-bind="attr: { 'id': 'reportStartDate' }, select: $root.startDate, dtiReportsMaterializePickadate", type="date")
+                                                input.datepicker(data-bind="attr: { 'id': 'reportStartDate' }, select: $root.startDate, dtiReportsMaterializePickadate", type="date")
                                         span.reportEndDatePicker
                                             .input-field
                                                 label(data-bind="attr: { for: 'reportEndDate' }") End Date
-                                                input.datepicker(date-bind="attr: { 'id': 'reportEndDate' }, select: $root.endDate, dtiReportsMaterializePickadate", type="date")
+                                                input.datepicker(data-bind="attr: { 'id': 'reportEndDate' }, select: $root.endDate, dtiReportsMaterializePickadate", type="date")
                                     br
                                     .reportTimePickers
                                         span.startTimepicker
                                             .input-field
                                                 label(data-bind="attr: { for: 'startTimepicker' }") Start Time
-                                                input.timepicker(date-bind="attr: { 'id': 'startTimepicker' }, value: $root.durationStartTimeOffSet, dtiReportsMaterializePickatime", type='time')
+                                                input.timepicker(data-bind="attr: { 'id': 'startTimepicker' }, value: $root.durationStartTimeOffSet, dtiReportsMaterializePickatime", type='time')
                                         span.endTimepicker
                                             .input-field
                                                 label(data-bind="attr: { for: 'endTimepicker' }") End Time
-                                                input.timepicker(date-bind="attr: { 'id': 'endTimepicker' }, value: $root.durationEndTimeOffSet, dtiReportsMaterializePickatime", type='time')
+                                                input.timepicker(data-bind="attr: { 'id': 'endTimepicker' }, value: $root.durationEndTimeOffSet, dtiReportsMaterializePickatime", type='time')
                                     br
                                     span.intervalSettings
                                         div.intervalsContainer.input-field

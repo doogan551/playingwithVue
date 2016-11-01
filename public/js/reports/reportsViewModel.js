@@ -2514,8 +2514,8 @@ var reportsViewModel = function () {
                             self.selectedDuration().endDate = getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
                             self.startDate(self.selectedDuration().startDate.unix());
                             self.endDate(self.selectedDuration().endDate.unix());
-                            // $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
-                            // $additionalFilters.find("#reportEndDate").pickadate('picker').set('select', self.endDate() * 1000);
+                            $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
+                            $additionalFilters.find("#reportEndDate").pickadate('picker').set('select', self.endDate() * 1000);
 
                             // $additionalFilters.find("#startTimepicker").pickatime('picker').set('select', self.durationStartTimeOffSet());
                             // $additionalFilters.find("#endTimepicker").pickatime('picker').set('select', self.durationEndTimeOffSet());
@@ -4330,10 +4330,8 @@ var reportsViewModel = function () {
                 self.startDate.valueHasMutated();
                 if (self.reportType() !== "Property") {
                     $additionalFilters.find(".reportRangePicker select").material_select();
-                    // $additionalFilters.find(".datepicker").pickadate();
-                    // $additionalFilters.find(".timepicker").pickatime();
-                    // $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
-                    // $additionalFilters.find("#reportEndDate").pickadate('picker').set('select', self.endDate() * 1000);
+                    $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
+                    $additionalFilters.find("#reportEndDate").pickadate('picker').set('select', self.endDate() * 1000);
                     // $additionalFilters.find("#startTimepicker").pickatime('picker').set('select', self.durationStartTimeOffSet());
                     // $additionalFilters.find("#endTimepicker").pickatime('picker').set('select', self.durationEndTimeOffSet());
                 }
