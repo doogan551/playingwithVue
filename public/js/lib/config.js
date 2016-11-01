@@ -1503,27 +1503,27 @@ var Config = (function(obj) {
                         break;
 
                     case enumsTemplatesJson.Enums["Point Types"]["Analog Value"]["enum"]:
-                        point = obj.EditChanges.applyAnalogValueTypeDevModel(data);
+                        point = obj.EditChanges.applyAnalogValueDevModel(data);
                         break;
 
                     case enumsTemplatesJson.Enums["Point Types"]["Binary Input"]["enum"]:
-                        point = obj.EditChanges.applyBinaryInputTypeDevModel(data);
+                        point = obj.EditChanges.applyBinaryInputDevModel(data);
                         break;
 
                     case enumsTemplatesJson.Enums["Point Types"]["Binary Output"]["enum"]:
-                        point = obj.EditChanges.applyBinaryOutputTypeDevModel(data);
+                        point = obj.EditChanges.applyBinaryOutputDevModel(data);
                         break;
 
                     case enumsTemplatesJson.Enums["Point Types"]["Binary Value"]["enum"]:
-                        point = obj.EditChanges.applyBinaryValueTypeDevModel(data);
+                        point = obj.EditChanges.applyBinaryValueDevModel(data);
                         break;
 
                     case enumsTemplatesJson.Enums["Point Types"]["MultiState Value"]["enum"]:
-                        point = obj.EditChanges.applyMultiStateValueTypeDevModel(data);
+                        point = obj.EditChanges.applyMultiStateValueDevModel(data);
                         break;
 
                     case enumsTemplatesJson.Enums["Point Types"]["Accumulator"]["enum"]:
-                        point = obj.EditChanges.applyAccumulatorTypeDevModel(data);
+                        point = obj.EditChanges.applyAccumulatorDevModel(data);
                         break;
 
                     default:
@@ -2131,27 +2131,27 @@ var Config = (function(obj) {
                         break;
 
                     case enums["Point Types"]["Analog Value"]["enum"]:
-                        point = obj.EditChanges.applyAnalogValueTypeDevModel(data);
+                        point = obj.EditChanges.applyAnalogValueDevModel(data);
                         break;
 
                     case enums["Point Types"]["Binary Input"]["enum"]:
-                        point = obj.EditChanges.applyBinaryInputTypeDevModel(data);
+                        point = obj.EditChanges.applyBinaryInputDevModel(data);
                         break;
 
                     case enums["Point Types"]["Binary Output"]["enum"]:
-                        point = obj.EditChanges.applyBinaryOutputTypeDevModel(data);
+                        point = obj.EditChanges.applyBinaryOutputDevModel(data);
                         break;
 
                     case enums["Point Types"]["Binary Value"]["enum"]:
-                        point = obj.EditChanges.applyBinaryValueTypeDevModel(data);
+                        point = obj.EditChanges.applyBinaryValueDevModel(data);
                         break;
 
                     case enums["Point Types"]["MultiState Value"]["enum"]:
-                        point = obj.EditChanges.applyMultiStateValueTypeDevModel(data);
+                        point = obj.EditChanges.applyMultiStateValueDevModel(data);
                         break;
 
                     case enums["Point Types"]["Accumulator"]["enum"]:
-                        point = obj.EditChanges.applyAccumulatorTypeDevModel(data);
+                        point = obj.EditChanges.applyAccumulatorDevModel(data);
                         break;
 
                     default:
@@ -2405,7 +2405,7 @@ var Config = (function(obj) {
                 data.result = 'Invalid model type.';
             } else {
                 if (point["Point Type"].Value === "Device") {
-                    point = obj.EditChanges.applyDeviceTypeModelType(data);
+                    point = obj.EditChanges.applyDeviceModelType(data);
                 } else {
                     point = obj.EditChanges.applyRemoteUnitTypeModelType(data);
                 }
@@ -2716,7 +2716,7 @@ var Config = (function(obj) {
 
         "Monitor Point": function(data) {
             if (data.point["Point Type"].Value === "Delay") {
-                data.point = obj.EditChanges.applyDelayPointTypeMointorPoint(data);
+                data.point = obj.EditChanges.applyDelayMointorPoint(data);
             }
             data.point = obj.EditChanges[data.property](data);
             return data;
@@ -2727,7 +2727,7 @@ var Config = (function(obj) {
                 type = point["Point Type"].Value; // Point type
 
             if (type === "Binary Input") {
-                data.point = obj.EditChanges.applyBinaryInputTypeInputType(data);
+                data.point = obj.EditChanges.applyBinaryInputInputType(data);
             }
             return data;
         },
@@ -2739,7 +2739,7 @@ var Config = (function(obj) {
             if (type === "Analog Input") {
                 data.point = obj.EditChanges.applyAnalogInputTypeSensorPoint(data);
             } else if (type === "Analog Output") {
-                data.point = obj.EditChanges.applyAnalogOutputTypeSensorPoint(data);
+                data.point = obj.EditChanges.applyAnalogOutputSensorPoint(data);
             }
             return data;
         },
@@ -2767,9 +2767,9 @@ var Config = (function(obj) {
                 type = point["Point Type"].Value; // Point type
 
             if (type === "Analog Output") {
-                data.point = obj.EditChanges.applyAnalogOutputTypeOutputType(data);
+                data.point = obj.EditChanges.applyAnalogOutputOutputType(data);
             } else if (type === "Binary Output") {
-                data.point = obj.EditChanges.applyBinaryOutputTypeOutputType(data);
+                data.point = obj.EditChanges.applyBinaryOutputOutputType(data);
             }
             return data;
         },
@@ -2779,7 +2779,7 @@ var Config = (function(obj) {
                 type = point["Point Type"].Value; // Point type
 
             if (type === "Binary Input" || type === "Binary Value") {
-                data.point = obj.EditChanges.applyBinaryInputTypeFeedbackPoint(data); // BI and BV have same apply logic
+                data.point = obj.EditChanges.applyBinaryInputFeedbackPoint(data); // BI and BV have same apply logic
             }
             return data;
         },
@@ -3642,7 +3642,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyDelayPointTypeMointorPoint: function(data) {
+        applyDelayMointorPoint: function(data) {
             var point = data.point, // Shortcut
                 refPoint = data.refPoint; // Shortcut
 
@@ -3845,7 +3845,7 @@ var Config = (function(obj) {
             return data.point;
         },
 
-        applyDeviceTypeUplinkPort: function(data) {
+        applyDeviceUplinkPort: function(data) {
             var point = data.point,
                 enums = enumsTemplatesJson.Enums,
                 port = point["Uplink Port"].Value,
@@ -3866,12 +3866,12 @@ var Config = (function(obj) {
                     point[ports[i] + " Protocol"].isReadOnly = false;
                 }
             }
-            obj.EditChanges.applyDeviceTypeEthernetProtocol(data);
-            obj.EditChanges.applyDeviceTypeDownlinkProtocol(data);
-            return obj.EditChanges.applyDeviceTypePortNProtocol(data);
+            obj.EditChanges.applyDeviceEthernetProtocol(data);
+            obj.EditChanges.applyDeviceDownlinkProtocol(data);
+            return obj.EditChanges.applyDevicePortNProtocol(data);
         },
 
-        applyDeviceTypeEthernetProtocol: function(data) {
+        applyDeviceEthernetProtocol: function(data) {
             var point = data.point,
                 disp = ((point["Ethernet Protocol"].Value === "IP") && (point["Ethernet Protocol"].isDisplayable === true)) ? true : false;
 
@@ -3879,7 +3879,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyDeviceTypeDownlinkProtocol: function(data) {
+        applyDeviceDownlinkProtocol: function(data) {
             var point = data.point,
                 disp = ((point["Downlink Protocol"].Value === "IP") && (point["Downlink Protocol"].isDisplayable === true)) ? true : false;
 
@@ -3887,7 +3887,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyDeviceTypePortNProtocol: function(data) {
+        applyDevicePortNProtocol: function(data) {
             var point = data.point,
                 port = ["Port 1", "Port 2", "Port 3", "Port 4"];
 
@@ -3911,7 +3911,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyDeviceTypeModelType: function(data) {
+        applyDeviceModelType: function(data) {
             var point = data.point,
                 enums = enumsTemplatesJson.Enums,
                 setDisp = obj.Utility.setPropsDisplayable,
@@ -3977,10 +3977,10 @@ var Config = (function(obj) {
                 point["Port 1 Protocol"].isDisplayable = true;
                 setDisp(point, ["Ethernet Protocol", "Port 2 Protocol", "Port 3 Protocol", "Port 4 Protocol"], false);
             }
-            return obj.EditChanges.applyDeviceTypeUplinkPort(data);
+            return obj.EditChanges.applyDeviceUplinkPort(data);
         },
 
-        applyRemoteUnitTypeNetworkType: function(point) {
+        applyRemoteUnitNetworkType: function(point) {
             var nt = point["Network Type"].Value;
 
             if (nt === "Unknown") {
@@ -4001,7 +4001,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyRemoteUnitTypeModelType: function(data) {
+        applyRemoteUnitModelType: function(data) {
             var point = data.point,
                 enums = enumsTemplatesJson.Enums,
                 modelType,
@@ -4112,7 +4112,7 @@ var Config = (function(obj) {
                             point["Network Type"].Value = "Unknown";
                             point["Network Type"].eValue = enums["Network Type"]["Unknown"]["enum"];
                         }
-                        this.applyRemoteUnitTypeNetworkType(point);
+                        this.applyRemoteUnitNetworkType(point);
                     }
                 }
             }
@@ -4146,7 +4146,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyAnalogInputTypeSensorPoint: function(data) {
+        applyAnalogInputSensorPoint: function(data) {
             var point = data.point,
                 refPoint = data.refPoint,
                 prop = "Conversion Coefficient ";
@@ -4165,7 +4165,7 @@ var Config = (function(obj) {
             return obj.EditChanges.applyConversionTypeProperty(data);
         },
 
-        applyAnalogInputTypeDevModel: function(data) {
+        applyAnalogInputDevModel: function(data) {
             var point = data.point,
                 eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 eDev = enumsTemplatesJson.Enums["Device Model Types"],
@@ -4318,7 +4318,7 @@ var Config = (function(obj) {
             return obj.EditChanges.applyConversionTypeProperty(data);
         },
 
-        applyBinaryInputTypeFeedbackPoint: function(data) {
+        applyBinaryInputFeedbackPoint: function(data) {
             var point = data.point;
 
             if (data.propertyObject.PointInst !== 0) {
@@ -4333,7 +4333,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyBinaryInputTypeInputType: function(data) {
+        applyBinaryInputInputType: function(data) {
             var point = data.point,
                 type = point["Input Type"];
 
@@ -4341,7 +4341,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyBinaryInputTypeDevModel: function(data) {
+        applyBinaryInputDevModel: function(data) {
             var point = data.point,
                 eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 eDev = enumsTemplatesJson.Enums["Device Model Types"],
@@ -4468,10 +4468,10 @@ var Config = (function(obj) {
                 point["Feedback Polarity"].isDisplayable = false;
                 point["Alarm Value"].isDisplayable = true;
             }
-            return obj.EditChanges.applyBinaryInputTypeInputType(data);
+            return obj.EditChanges.applyBinaryInputInputType(data);
         },
 
-        applyAnalogOutputTypeSensorPoint: function(data) {
+        applyAnalogOutputSensorPoint: function(data) {
             var point = data.point,
                 refPoint = data.refPoint;
 
@@ -4488,7 +4488,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyAnalogOutputTypeOutputType: function(data) {
+        applyAnalogOutputOutputType: function(data) {
             var point = data.point,
                 eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 eDev = enumsTemplatesJson.Enums["Device Model Types"],
@@ -4598,7 +4598,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyAnalogOutputTypeDevModel: function(data) {
+        applyAnalogOutputDevModel: function(data) {
             var point = data.point,
                 eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 eDev = enumsTemplatesJson.Enums["Device Model Types"],
@@ -4712,7 +4712,7 @@ var Config = (function(obj) {
                         point["Conversion Coefficient 2"].isReadOnly = false;
                     }
                     if (outType.isDisplayable) {
-                        obj.EditChanges.applyAnalogOutputTypeOutputType(data);
+                        obj.EditChanges.applyAnalogOutputOutputType(data);
                     }
                 }
             }
@@ -4750,7 +4750,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyBinaryOutputTypeOutputType: function(data) {
+        applyBinaryOutputOutputType: function(data) {
             var point = data.point,
                 disp;
 
@@ -4768,7 +4768,7 @@ var Config = (function(obj) {
         // TODO Coordinate with Rob to remove this routine
         //applyBinaryOutputTypeFeedbackPoint: function(data) {},
 
-        applyBinaryOutputTypeDevModel: function(data) {
+        applyBinaryOutputDevModel: function(data) {
             var point = data.point,
                 eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 eDev = enumsTemplatesJson.Enums["Device Model Types"],
@@ -4957,7 +4957,7 @@ var Config = (function(obj) {
                         setCh(point["On Channel"], chMin, chMax);
                         setCh(point["Off Channel"], chMin, chMax);
                     }
-                    obj.EditChanges.applyBinaryOutputTypeOutputType(data);
+                    obj.EditChanges.applyBinaryOutputOutputType(data);
                 }
                 if (fbType.isDisplayable) {
                     if (fbMax >= 0) {
@@ -4971,7 +4971,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyAnalogValueTypeDevModel: function(data) {
+        applyAnalogValueDevModel: function(data) {
             var point = data.point,
                 enums = enumsTemplatesJson.Enums,
                 mp = false;
@@ -5001,11 +5001,11 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyBinaryValueTypeDevModel: function(data) {
-            return obj.EditChanges.applyAnalogValueTypeDevModel(data);
+        applyBinaryValueDevModel: function(data) {
+            return obj.EditChanges.applyAnalogValueDevModel(data);
         },
 
-        applyMultiStateValueTypeDevModel: function(data) {
+        applyMultiStateValueDevModel: function(data) {
             var point = data.point,
                 eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 setDisp = obj.Utility.setPropsDisplayable;
@@ -5051,7 +5051,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyAccumulatorTypeDevModel: function(data) {
+        applyAccumulatorDevModel: function(data) {
             var point = data.point,
                 eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 eDev = enumsTemplatesJson.Enums["Device Model Types"],
@@ -5147,7 +5147,7 @@ var Config = (function(obj) {
         applyCpcPointDevModel: function(point) {
             var disp;
 
-            if ((checkMicroScan5Device(point) || checkMicroScan4Device(point)) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+            if ((obj.Utility.checkMicroScan5Device(point) || obj.Utility.checkMicroScan4Device(point)) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
                 disp = true;
             } else {
                 disp = false;
@@ -5185,7 +5185,7 @@ var Config = (function(obj) {
                 disp;
 
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
-            if ((checkMicroScan5Device(point) || checkMicroScan4Device(point)) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+            if ((obj.Utility.checkMicroScan5Device(point) || obj.Utility.checkMicroScan4Device(point)) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
                 opts = {
                     "P Only": 1,
                     "PI": 2,
@@ -5209,7 +5209,7 @@ var Config = (function(obj) {
                 disp;
 
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
-            if (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+            if (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"]) {
                 disp = true;
             } else {
                 disp = false;
@@ -5258,7 +5258,7 @@ var Config = (function(obj) {
                 opts;
 
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
-            if ((checkMicroScan5Device(point) || checkMicroScan4Device(point)) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+            if ((obj.Utility.checkMicroScan5Device(point) || obj.Utility.checkMicroScan4Device(point)) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
                 opts = {
                     "Delay": 0,
                     "Pulsed": 1
@@ -5274,11 +5274,11 @@ var Config = (function(obj) {
 
         applyLogicDevModel: function(data) {
             var point = data.point,
-                opts
+                opts,
                 i;
 
             point._relPoint = obj.Utility.checkPointDeviceRMU(point);
-            if (checkMicroScan5Device(point) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+            if (obj.Utility.checkMicroScan5Device(point) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
                 opts = {
                     "<>": 0,
                     "=": 1,
