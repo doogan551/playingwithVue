@@ -32,7 +32,7 @@ html.direports
         script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/buttons.html5.min.js')
         script(type="text/javascript" src='/js/lib/DataTables-1.10.12/extensions/Buttons/js/buttons.print.min.js')
         script(type="text/javascript" src='/js/lib/materialize.js')
-        script(type="text/javascript" src='/js/lib/materialize.clockpicker.min.js')
+        script(type="text/javascript" src='/js/lib/materialize.clockpicker.js')
         script(type="text/javascript" src="/js/v2/dorsettUtility.js")
         script(type="text/javascript" src="/js/reports/reportsViewModel.js")
     body.blue-grey.lighten-5
@@ -133,7 +133,7 @@ html.direports
                                                         li
                                                             a(data-bind="click: function(){ $root.selectNumberOfEntries($element, $data.value) }, text: $data.value")
                                                     // /ko
-                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="materializeDropdown", href="#", data-activates="enteriesDropdown")
+                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="enteriesDropdown")
                                                         span(data-bind="text: (selectedPageLength() === -1 ? 'All' : selectedPageLength)")
                                         // ko if: (chartable())
                                         .chartTypeSelection
@@ -147,7 +147,7 @@ html.direports
                                                             a(data-bind="click: function(){ $root.selectChartType($element, $data.value) }, text: $data.text")
                                                         // /ko
                                                     // /ko
-                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="materializeDropdown", href="#", data-activates="chartTypesAttribsDropdown")
+                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="chartTypesAttribsDropdown")
                                                         span(data-bind="text: selectedChartType()")
                                         // /ko
                                 div.tab-pane#reportColumns
@@ -221,7 +221,7 @@ html.direports
                                                             li
                                                                 a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
                                                             // /ko
-                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'enumpropertiesDropdown'+ $index() }, materializeDropdown")
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'enumpropertiesDropdown'+ $index() }, dtiReportsMaterializeDropdown")
                                                             span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
                                                     // /ko
                                                 // ko if: ($parent.reportType() !== 'Property')
@@ -240,11 +240,11 @@ html.direports
                                                                 input.medium.filled-in(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}, attr: { id: 'calc_' + $parentContext.$index() + '_' + $index()}", type="checkbox")
                                                                 label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'calc_' + $parentContext.$index() + '_' + $index()}")
                                                         // /ko
-                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="attr: { 'data-activates': 'calculationsDropdown' + $index() }, materializeDropdown") Calcs
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="attr: { 'data-activates': 'calculationsDropdown' + $index() }, dtiReportsMaterializeDropdown") Calcs
 
                                                         //main-container
                                                         //    select-container
-                                                        //        select.multiple.calculations(data-bind="options: calculation, materializeSelect")
+                                                        //        select.multiple.calculations(data-bind="options: calculation, dtiReportsMaterializeSelect")
                                                         //    options-container
                                                         //        options(data-bind="foreach: $parent.listOfCalculations")
                                                         //            input(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}", type="checkbox")
@@ -255,8 +255,8 @@ html.direports
                                                 td.totalizerOperator
                                                     .availableTotalizerOperatorsContainer
                                                         // ko if: (valueList.length > 1)
-                                                        select(data-bind="foreach: valueList, materializeSelect")
-                                                            option(data-bind="click: function(){ $root.selectTotalizerOperator($element, $parentContext.$index(), $data.text) }, value: $data.text, text: $data.text")
+                                                        select(data-bind="foreach: valueList, dtiReportsMaterializeSelect")
+                                                            option(data-bind="attr: { selected: ($parent.operator === $data.text) }, click: function() { $root.selectTotalizerOperator($element, $parentContext.$index(), $data.text) }, value: $data.text, text: $data.text")
                                                         // /ko
                                                         // ko if: (valueList.length === 1)
                                                         span(data-bind="text: operator")
@@ -268,13 +268,13 @@ html.direports
                                                     // /ko
                                                 td.includeInChart
                                                     // ko if: ($root.canEdit() && $data.canCalculate)
-                                                    input.includeInChartColumn.filled-in(data-bind="checked: includeInChart, enable: ($root.canEdit() && canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()}", type="checkbox")
-                                                    label(data-bind="attr: { for: 'includeInChart' + $index() }")
+                                                    input.includeInChartColumn.tooltipped.filled-in(data-bind="checked: includeInChart, enable: ($root.canEdit() && canBeCharted), click: function() { $parent.includeInChartChanged($element, $index()) }, attr: { id: 'includeInChart' + $index()}", data-position='bottom', data-tooltip='Include in chart', data-delay='50', type="checkbox")
+                                                    label(data-bind="attr: { for: 'includeInChart' + $index()}")
                                                     // /ko
                                                 td.yaxisChartGroup
                                                     .availableAxisGroupsContainer
-                                                        select(data-bind="foreach: $root.yaxisGroups, materializeSelect")
-                                                            option.blue-grey-text.blue-grey(data-bind="click: function(){ $root.selectYaxisGroup($element, $parentContext.$index(), $data) }, text: $data")
+                                                        select(data-bind="foreach: $root.yaxisGroups, dtiReportsMaterializeSelect")
+                                                            option.blue-grey-text.blue-grey(data-bind="attr: { selected: ($parent.yaxisGroup === $data) }, click: function() { $root.selectYaxisGroup($element, $parentContext.$index(), $data) }, text: $data")
                                                 // /ko
                                                 // ko if: ($root.canEdit())
                                                 td.removecolumn
@@ -323,7 +323,7 @@ html.direports
                                                                         li
                                                                             a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
                                                                         // /ko
-                                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'enumpropertiesDropdown'+ $index() }, materializeDropdown")
+                                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'enumpropertiesDropdown'+ $index() }, dtiReportsMaterializeDropdown")
                                                                         span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
                                                             // /ko
                                                             // /ko
@@ -414,7 +414,7 @@ html.direports
                                                         ul.operators.dropdown-content(data-bind="foreach: $root.conditions(), attr: { 'id': 'availableConditions'+ $index() }")
                                                             li
                                                                 a.condition(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'condition') }, text: text", required)
-                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}, attr: { 'data-activates': 'availableConditions'+ $index() }, materializeDropdown")
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button.conditionButton(data-bind="css: { orCondition: (condition === '$or'), andCondition: (condition === '$and')}, attr: { 'data-activates': 'availableConditions'+ $index() }, dtiReportsMaterializeDropdown")
                                                             span(data-bind="text: $root.displayCondition(condition)")
                                                 td.filterName
                                                     // ko if: ($parent.reportType() !== 'Property')
@@ -428,14 +428,14 @@ html.direports
                                                             li
                                                                 a(data-bind="click: function(){ $root.selectPropertyFilter($element, $parentContext.$index(), $data) }, text: $data.name")
                                                             // /ko
-                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}, attr: { 'data-activates': 'enumProperties'+ $index() }, materializeDropdown")
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}, attr: { 'data-activates': 'enumProperties'+ $index() }, dtiReportsMaterializeDropdown")
                                                             span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfFilterPropertiesLength + ')')")
                                                 td.filterOperator
                                                     .availableOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
                                                         ul.operators.dropdown-content(data-bind="foreach: $root.operators(valueType), attr: { 'id': 'availableOperators'+ $index() }")
                                                             li
                                                                 a.operator(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'operator') }, text: text", required)
-                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button.operatorButton(data-bind="attr: { 'data-activates': 'availableOperators'+ $index() }, materializeDropdown")
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button.operatorButton(data-bind="attr: { 'data-activates': 'availableOperators'+ $index() }, dtiReportsMaterializeDropdown")
                                                             span(data-bind="text: $root.displayOperator(operator)")
                                                 td.emptyColumn
                                                 td.filterValue
@@ -449,32 +449,28 @@ html.direports
                                     a.small.addFilterbutton(href="#") Add Filter
                                     // /ko
                                     // ko if: (reportType() !== 'Property')
-                                    //span.timePickers
-                                    //    div.input-field
-                                    //        input.input.form-control.filterContainer.durationDateRangeTime#startTimeOffSet(data-bind="reportTimePicker: durationStartTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="Start Time OffSet", type="text")
-                                    //        label.timePickerLabel.small(data-bind="attr: {for: 'startTimeOffSet'}") From:&nbsp;
-                                    //    div.input-field
-                                    //        input.input.form-control.filterContainer.durationDateRangeTime#endTimeOffSet(data-bind="reportTimePicker: durationEndTimeOffSet, enable: $root.canEdit(), css: { durationError: $root.durationError() }", title="End Time OffSet", type="text")
-                                    //        label.timePickerLabel.small(data-bind="attr: {for: 'endTimeOffSet'}") To:&nbsp;
+                                    .reportRangePicker
+                                        label(data-bind="attr: { for: 'reportRangePicker'}") Date Range
+                                        select(data-bind="attr: { 'id': 'reportRangePicker'}, options: $root.reportDateRangeCollection(), optionsText: $data, value: $root.selectedDuration().selectedRange")
                                     .reportDatePickers
                                         span.reportStartDatePicker
                                             .input-field
-                                                label(for="reportStartDate") Start Date
-                                                input#reportStartDate.datepicker(date-bind="select: $root.startDate, materializePickadate", type="date")
+                                                label(data-bind="attr: { for: 'reportStartDate' }") Start Date
+                                                input.datepicker(date-bind="attr: { 'id': 'reportStartDate' }, select: $root.startDate, dtiReportsMaterializePickadate", type="date")
                                         span.reportEndDatePicker
                                             .input-field
-                                                label(for="reportEndDate") End Date
-                                                input#reportEndDate.datepicker(date-bind="select: $root.endDate, materializePickadate", type="date")
+                                                label(data-bind="attr: { for: 'reportEndDate' }") End Date
+                                                input.datepicker(date-bind="attr: { 'id': 'reportEndDate' }, select: $root.endDate, dtiReportsMaterializePickadate", type="date")
                                     br
                                     .reportTimePickers
                                         span.startTimepicker
                                             .input-field
-                                                label(for='startTimepicker') Time
-                                                input#startTimepicker.timepicker(type='time')
+                                                label(data-bind="attr: { for: 'startTimepicker' }") Start Time
+                                                input.timepicker(date-bind="attr: { 'id': 'startTimepicker' }, value: $root.durationStartTimeOffSet, dtiReportsMaterializePickatime", type='time')
                                         span.endTimepicker
                                             .input-field
-                                                label(for='endTimepicker') Time
-                                                input#endTimepicker.timepicker(type='time')
+                                                label(data-bind="attr: { for: 'endTimepicker' }") End Time
+                                                input.timepicker(date-bind="attr: { 'id': 'endTimepicker' }, value: $root.durationEndTimeOffSet, dtiReportsMaterializePickatime", type='time')
                                     br
                                     span.intervalSettings
                                         div.intervalsContainer.input-field
@@ -486,7 +482,7 @@ html.direports
                                                 li
                                                     a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
                                                 // /ko
-                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="text: $root.interval, css: { durationError: $root.durationError() }, materializeDropdown", data-activates="intervals")
+                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="text: $root.interval, css: { durationError: $root.durationError() }, dtiReportsMaterializeDropdown", data-activates="intervals")
                                     // /ko
                                 div#schedule.tab-pane
                                     .row

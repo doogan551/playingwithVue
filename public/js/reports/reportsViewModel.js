@@ -150,51 +150,6 @@ var initKnockout = function () {
             }
         };
 
-    ko.bindingHandlers.reportDateRangePicker = {
-        init: function (element, valueAccessor) {
-            var $element = $(element),
-                dateFormat = "MM/DD/YYYY",
-                durationInfo = valueAccessor(),
-                getPickerData = function (element, picker) {
-                    var pickerInfo = {};
-                    pickerInfo.startDate = picker.startDate;
-                    pickerInfo.endDate = picker.endDate;
-                    pickerInfo.duration = picker.endDate.diff(picker.startDate);
-                    pickerInfo.selectedRange = picker.chosenLabel;
-                    if (ko.isObservable(durationInfo)) {
-                        durationInfo(pickerInfo);
-                    } else {
-                        durationInfo = pickerInfo;
-                    }
-                    element.val(pickerInfo.startDate.format(dateFormat) + " - " + pickerInfo.endDate.format(dateFormat));
-                    element.attr("title", pickerInfo.selectedRange);
-                };
-            $element.attr("title", (durationInfo().selectedRange !== "" ? durationInfo().selectedRange : "Start & End Dates"));
-            $element.val(durationInfo().startDate.format(dateFormat) + " - " + durationInfo().endDate.format(dateFormat));
-
-            $element.daterangepicker({
-                startDate: durationInfo().startDate,
-                endDate: durationInfo().endDate,
-                //maxDate: moment().add(1, "day"),
-                chosenLabel: durationInfo().selectedRange,
-                alwaysShowCalendars: true,
-                autoApply: false,
-                autoUpdateInput: false,
-                timePicker: false,
-                //timePicker24Hour: true,
-                ranges: reportDateRanges()
-            });
-
-            $element.on("apply.daterangepicker", function (ev, picker) {
-                getPickerData($(this), picker);
-            });
-
-            $element.on("hide.daterangepicker", function (ev, picker) {
-                getPickerData($(this), picker);
-            });
-        }
-    };
-
     ko.bindingHandlers.reportDatePicker = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var $element = $(element),
@@ -417,7 +372,7 @@ var initKnockout = function () {
 
     };
 
-    ko.bindingHandlers.materializeDropdown = {
+    ko.bindingHandlers.dtiReportsMaterializeDropdown = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var $element = $(element);
             $element.dropdown();
@@ -426,19 +381,44 @@ var initKnockout = function () {
         }
     };
 
-    ko.bindingHandlers.materializeSelect = {
+    ko.bindingHandlers.dtiReportsMaterializeSelect = {
+        suspend: false,
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            var $element = $(element);
-            $element.material_select('destroy');
+            var suspend = false,
+                $element = $(element);
+
+            // $element.material_select('destroy');
             $element.material_select();
+            $element.on('change', function() {
+                console.log("material_select change() fired....");
+                if (!suspend) {
+                    suspend = true;
+                    var event = new CustomEvent('change', {
+                        detail: 'change',
+                        bubbles: true
+                    });
+                    $(this).get(0).dispatchEvent(event);
+                } else {
+                    suspend = false;
+                }
+            });
+        },
+        update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            // $(element).material_select();
+        }
+    };
+
+    ko.bindingHandlers.dtiReportsMaterializePickadate = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            $(element).pickadate();
         },
         update: function (element, valueAccessor, allBindings) {
         }
     };
 
-    ko.bindingHandlers.materializePickadate = {
-        init: function (element, valueAccessor) {
-            $(element).dropdown();
+    ko.bindingHandlers.dtiReportsMaterializePickatime = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            $(element).pickatime();
         },
         update: function (element, valueAccessor, allBindings) {
         }
@@ -1682,14 +1662,14 @@ var reportsViewModel = function () {
                 self.selectedDuration().endTimeOffSet = self.durationEndTimeOffSet();
 
                 if (self.selectedDuration().selectedRange === "Custom Range") {
-                    self.startDate = getAdjustedDatetimeUnix(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet());
-                    self.endDate = getAdjustedDatetimeUnix(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet());
+                    self.startDate(getAdjustedDatetimeUnix(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet()));
+                    self.endDate(getAdjustedDatetimeUnix(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet()));
                 } else {
                     var dateRange = reportDateRanges(self.selectedDuration().selectedRange);
                     self.selectedDuration().startDate = getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
                     self.selectedDuration().endDate = getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
-                    self.startDate = self.selectedDuration().startDate.unix();
-                    self.endDate = self.selectedDuration().endDate.unix();
+                    self.startDate(self.selectedDuration().startDate.unix());
+                    self.endDate(self.selectedDuration().endDate.unix());
                 }
                 self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
             }
@@ -1840,8 +1820,8 @@ var reportsViewModel = function () {
                         requestID: uuid,
                         upis: upis,
                         range: {
-                            start: self.startDate,
-                            end: self.endDate
+                            start: self.startDate(),
+                            end: self.endDate()
                         },
                         reportConfig: cleanUpReportConfig(point["Report Config"]),
                         reportType: point["Report Type"].Value,
@@ -2522,6 +2502,27 @@ var reportsViewModel = function () {
                         $additionalFilters.stop().animate({
                             scrollTop: $additionalFilters.get(0).scrollHeight
                         }, 700);
+                    });
+
+                    $additionalFilters.find('.reportRangePicker select').on('change', function(e) {
+                        var selectedRange = self.reportDateRangeCollection()[e.target.selectedIndex],
+                            dateRange;
+                        self.selectedDuration().selectedRange = selectedRange;
+                        if (self.selectedDuration().selectedRange !== "Custom Range") {
+                            dateRange = reportDateRanges(self.selectedDuration().selectedRange);
+                            self.selectedDuration().startDate = getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
+                            self.selectedDuration().endDate = getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
+                            self.startDate(self.selectedDuration().startDate.unix());
+                            self.endDate(self.selectedDuration().endDate.unix());
+                            // $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
+                            // $additionalFilters.find("#reportEndDate").pickadate('picker').set('select', self.endDate() * 1000);
+
+                            // $additionalFilters.find("#startTimepicker").pickatime('picker').set('select', self.durationStartTimeOffSet());
+                            // $additionalFilters.find("#endTimepicker").pickatime('picker').set('select', self.durationEndTimeOffSet());
+                            self.selectedDuration.valueHasMutated();
+                        }
+                        // this.material_select();
+                        //alert('Select Changed to ' + selectedRange);
                     });
 
                     $saveReportButton.on("click", function () {
@@ -4041,9 +4042,9 @@ var reportsViewModel = function () {
 
     self.currentTimeStamp = "";
 
-    self.startDate = "";
+    self.startDate = ko.observable("");
 
-    self.endDate = "";
+    self.endDate = ko.observable("");
 
     self.yaxisGroups = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 
@@ -4082,6 +4083,8 @@ var reportsViewModel = function () {
     self.name4Filter = ko.observable("");
 
     self.selectedPointTypesFilter = ko.observableArray([]);
+
+    self.reportDateRangeCollection = ko.observableArray([]);
 
     self.selectedDuration = ko.observable({
         startDate: moment(),
@@ -4321,6 +4324,22 @@ var reportsViewModel = function () {
     self.init = function (externalConfig) {
         var columns,
             reportConfig,
+            initializeForMaterialize = function () {
+                updateListOfColumns(self.listOfColumns());
+                updateListOfFilters(self.listOfFilters());
+                self.startDate.valueHasMutated();
+                if (self.reportType() !== "Property") {
+                    $additionalFilters.find(".reportRangePicker select").material_select();
+                    // $additionalFilters.find(".datepicker").pickadate();
+                    // $additionalFilters.find(".timepicker").pickatime();
+                    // $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
+                    // $additionalFilters.find("#reportEndDate").pickadate('picker').set('select', self.endDate() * 1000);
+                    // $additionalFilters.find("#startTimepicker").pickatime('picker').set('select', self.durationStartTimeOffSet());
+                    // $additionalFilters.find("#endTimepicker").pickatime('picker').set('select', self.durationEndTimeOffSet());
+                }
+                Materialize.updateTextFields();
+                // too late  initKnockout();
+            },
             setCurrentUser = function (results) {
                 currentUser = results;
             },
@@ -4340,6 +4359,20 @@ var reportsViewModel = function () {
                 }
             },
             initGlobals = function () {
+                var dateRanges = reportDateRanges(),
+                    dateRangeCollection = [],
+                    key;
+
+                for (key in dateRanges) {
+                    if (dateRanges.hasOwnProperty(key)) {
+                        dateRangeCollection.push(key);
+                    }
+                }
+                if (dateRangeCollection.length > 0) {
+                    dateRangeCollection.push("Custom Range");
+                }
+
+                self.reportDateRangeCollection(dateRangeCollection);
                 dtiUtility.getConfig("Enums", null, setGlobalEnums);
                 dtiUtility.getConfig("PointTemplates.Points", null, setGlobalEnumsTemplates);
             },
@@ -4418,7 +4451,6 @@ var reportsViewModel = function () {
                                 configureSelectedDuration();
                                 break;
                             case "Property":
-                                // openPointSelectorFilterMode($filterByPoint);
                                 collectEnumProperties();
                                 point["Report Config"].returnLimit = 4000;
                                 self.listOfColumns.push(getNewColumnTemplate());
@@ -4457,18 +4489,22 @@ var reportsViewModel = function () {
 
                     self.filterPropertiesSearchFilter(""); // computed props jolt
                     self.columnPropertiesSearchFilter(""); // computed props jolt
-                    updateListOfColumns(self.listOfColumns());
-                    updateListOfFilters(self.listOfFilters());
-                    Materialize.updateTextFields();
+                    initializeForMaterialize();
                 }
+
+                window.setTimeout(function () {
+                    $tabConfiguration.find('ul.tabs').tabs();
+                    $tabViewReport.find('ul.tabs').tabs();
+                }, 200);
             };
 
+        initKnockout();
         dtiUtility.getUser(setCurrentUser);
 
         exportEventSet = false;
         activeDataRequests = [];
         getScreenFields();
-        initKnockout();
+        // initKnockout();
         if (!scheduled) {
             initGlobals();
         } else {
@@ -5010,6 +5046,10 @@ var reportsViewModel = function () {
         }
     };
 
+    self.setDateRange = function (element, selectedItem) {
+        console.log("selectedItem = " + selectedItem);
+    };
+
     self.selectedFilterEValue = function (indexOfValue, selectedItem) {
         var tempArray = self.listOfFilters(),
             filter = tempArray[indexOfValue];
@@ -5180,15 +5220,9 @@ function applyBindings(extConfig) {
         window.setTimeout(function () {
             reportsVM = new reportsViewModel();
             reportsVM.init(extConfig);
-            ko.applyBindings(reportsVM);
-
-            // TODO  what's up here?
             window.setTimeout(function () {
-                $(".datepicker").pickadate();
-                $(".timepicker").pickatime();
-                $(".tabConfiguration").find('ul.tabs').tabs();
-                $(".tabViewReport").find('ul.tabs').tabs();
-            }, 1500);
+                ko.applyBindings(reportsVM);
+            }, 0);
         }, 100);
     }
 }

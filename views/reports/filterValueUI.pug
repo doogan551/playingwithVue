@@ -1,8 +1,8 @@
-// ko if: ((valueType === "DateTime" || valueType === "Timet"))
-span
-    input.input.form-control.filterContainer.dateTimeDate(data-bind="reportDatePicker: date, enable: $root.canEdit(), css: {startDate: (filterName === 'Start_Date'), endDate: (filterName === 'End_Date') }", type="text", required)
-span
-    input.input.form-control.filterContainer.dateTimeTime(data-bind="reportTimePicker: time, enable: $root.canEdit(), css: {startDateTime: (filterName === 'Start_Date'), endDateTime: (filterName === 'End_Date') }", type="text", required)
+// ko if: (valueType === "Timet")
+span.valuetypeTimepicker
+    .input-field
+        label(data-bind="attr: { for: 'startTimepicker' + $index()") Time
+        input.timepicker(date-bind="select: value, attr: { id: 'startTimepicker' + $index() }, dtiReportsMaterializePickatime", type='time')
 // /ko
 // ko if: (valueType === "Float" || valueType === "Unsigned")
 input.input.form-control.filterContainer.filled-in(data-bind="value: value, enable: $root.canEdit()", type="number", required)
@@ -15,7 +15,7 @@ input.input.form-control.filterContainer.filled-in(data-bind="value: value, enab
     ul.dropdown-content(data-bind="foreach: valueList, attr: { 'id': 'enumValueList' + $index() }")
         li
             a.filterContainer(data-bind="click: function(){ $root.selectedFilterEValue($parentContext.$index(), $data) }, text: $data.value", required)
-    a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="attr: { 'data-activates': 'enumValueList' + $index() }, materializeDropdown")
+    a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="attr: { 'data-activates': 'enumValueList' + $index() }, dtiReportsMaterializeDropdown")
         span.text(data-bind="text: value")
 // /ko
 // ko if: (valueType === "UniquePID")
@@ -36,7 +36,7 @@ div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
             a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'True'}, 'value') }, text: 'On'", required)
         li
             a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'False'}, 'value') }, text: 'Off'", required)
-    a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="attr: { 'data-activates': 'boolValueList' + $index() }, materializeDropdown")
+    a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="attr: { 'data-activates': 'boolValueList' + $index() }, dtiReportsMaterializeDropdown")
         span.text(data-bind="text: $root.displayBool(value)")
 // /ko
 // ko if: ((valueType === "HourMinSec") || (valueType === "HourMin") || (valueType === "MinSec"))
