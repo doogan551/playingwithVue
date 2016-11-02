@@ -2,6 +2,20 @@
 window.workspaceManager = window.top.workspaceManager;
 
 var dti = {
+    settings: {
+        webEndpoint: window.location.origin,
+        socketEndPoint: window.location.origin,
+        apiEndpoint: window.location.origin + '/api/',
+        idxPrefix: 'reports_'
+    },
+    itemIdx: 0,
+    makeId: function () {
+        dti.itemIdx++;
+        return dti.settings.idxPrefix + dti.itemIdx;
+    },
+    getLastId: function () {
+        return dti.settings.idxPrefix + dti.itemIdx;
+    },
     forEach: function (obj, fn) {
         var keys = Object.keys(obj),
             c,
@@ -37,6 +51,22 @@ var dti = {
 
         return $(markup);
     },
+    pickatime: function ($inputEl, config) {
+        var defaults = {
+                default: '',           // default time, 'now' or '13:14' e.g.
+                fromnow: 0,            // set default time to * milliseconds from now
+                donetext: 'Done',      // done button text
+                autoclose: true,       // auto close when minute is selected
+                ampmclickable: false,  // set am/pm button on itself
+                darktheme: false,      // set to dark theme
+                twelvehour: false,     // 12 hour AM/PM clock or 24 hour; TODO - this should come from a system setting
+                vibrate: true,         // vibrate the device when dragging clock hand
+                container: ''          // default will append clock next to input
+            },
+            options = $.extend(defaults, config);
+
+        $inputEl.pickatime(options);
+    }
 };
 
 var reportsVM,
@@ -4164,136 +4194,430 @@ var reportsViewModel = function () {
     self.currentColumnEdit = ko.observable(getNewColumnTemplate());
 
     self.scheduler = {
-        parseCron: function (cron) {
-            var name = ['minute', 'hour', 'date', 'month', 'dow'], // dow = day of week
-                parsed = {
-                    advanced: false,
-                    cron: cron,
-                    interval: null
-                };
+        availableIntervals: ['Daily', 'Weekly', 'Monthly', 'Yearly', 'Advanced'],
+        availableDates: (function buildAvailableDates () {
+            var arr = [],
+                j = 0,
+                suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'],
+                suffix;
 
-            dti.forEachArray(cron.split(' '), function (val, index) {
-                var _val = [];
-
-                if (!!~val.indexOf(',')) {
-                    parsed.advanced = true;
-
-                    dti.forEachArray(val.split(','), function (val, index) {
-                        _val.push(val);
-                    });
-                } else {
-                    _val.push(val);
-                }
-                parsed[name[index]] = _val;
-            });
-
-            if (!parsed.advanced) {
-                if (parsed.dow[0] !== '*') {
-                    parsed.interval = 'Weekly';
-                } else if (parsed.date[0] !== '*') {
-                    parsed.interval = 'Monthly';
-                } else if (parsed.month[0] !== '*') {
-                    parsed.interval = 'Yearly';
-                } else {
-                    parsed.interval = 'Daily';
-                }
+            while (j++ < 31) {
+                suffix = (j > 9 && j < 14) ? 'th' : suffixes[j%10];
+                arr.push({
+                    text: j + suffix,
+                    value: j
+                });
             }
+            return arr;
+        })(),
+        availableMonths: (function buildAvailableMonths () {
+            var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                arr = [];
+            
+            dti.forEachArray(months, function addMonth (month, index) {
+                arr.push({
+                    text: month,
+                    value: index + 1
+                });
+            });
+            return arr;
+        })(),
+        availableDaysOfWeek: (function buildAvailableDaysOfWeek () {
+            var dow = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                arr = [];
 
-            return parsed;
+            dti.forEachArray(dow, function addDay (day, index) {
+                arr.push({
+                    text: day,
+                    value: index
+                });
+            });
+            return arr;
+        })(),
+        scheduleEntries: ko.observableArray([]),
+        cron: {
+            parse: function (cron) {
+                var name = ['minute', 'hour', 'dates', 'months', 'daysOfWeek'],
+                    parsed = {},
+                    advanced = false,
+                    interval;
+
+                dti.forEachArray(cron.split(' '), function (val, index) {
+                    var _val;
+
+                    if (index < 2) { // If hour or minute
+                        _val = val;
+                    } else {
+                        _val = ko.observableArray([]);
+
+                        if (!!~val.indexOf(',')) {
+                            advanced = true;
+
+                            dti.forEachArray(val.split(','), function (val, index) {
+                                _val.push(val);
+                            });
+                        } else {
+                            _val.push(val);
+                        }
+                    }
+                    parsed[name[index]] = _val;
+                });
+
+                if (advanced) {
+                    interval = 'Advanced';
+                } else if (parsed.daysOfWeek()[0] !== '*') {
+                    interval = 'Weekly';
+                } else if (parsed.dates()[0] !== '*') {
+                    interval = 'Monthly';
+                } else if (parsed.months()[0] !== '*') {
+                    interval = 'Yearly';
+                } else {
+                    interval = 'Daily';
+                }
+                parsed.interval = ko.observable(interval);
+                parsed.time = ko.observable(parsed.hour + ':' + parsed.minute);
+                parsed.plainEnglish = ko.observable(self.scheduler.cron.explain(parsed));
+
+                // parsed = { // all keys are ko observable or observableArray
+                //     advanced: observable(bool),
+                //     interval: observable(string),
+                //     plainEnglish: observable(string),
+                //     time: observable(string),
+                //     minute: observable(string),
+                //     hour: observable(string),
+                //     date: observableArray(array),
+                //     month: observableArray(array),
+                //     dayOfWeek: observableArray(array)
+                // }
+                return parsed;
+            },
+            build: function (parsed) {
+                var time = parsed.time.split(':').reverse().join(' '),
+                    dates = parsed.dates.join(','),
+                    months = parsed.months.join(','),
+                    daysOfWeek = parsed.daysOfWeek.join(',');
+
+                parsed.cron = [time, dates, months, daysOfWeek].join(' ');
+                return parsed.cron;
+            },
+            explain: function (cfg) {
+                var str = '',
+                    allDaysOfWeek = false,
+                    allDates = false,
+                    allMonths = false,
+                    monthsText = [], // Starts as array, ends as string
+                    daysOfWeekText = [], // Starts as array, ends as string
+                    datesText = [], // Starts as array, ends as string
+                    joinString,
+                    months, 
+                    daysOfWeek,
+                    dates,
+                    interval,
+                    time,
+                    len;
+
+                if (typeof cfg === 'object') {
+                    interval = ko.unwrap(cfg.interval);
+                    time = ko.unwrap(cfg.time);
+                    daysOfWeek = ko.unwrap(cfg.daysOfWeek);
+                    dates = ko.unwrap(cfg.dates);
+                    months = ko.unwrap(cfg.months);
+
+                    if (interval === 'Daily') {
+                        str = ['Daily at', time].join(' ');
+                    } else if (interval === 'Weekly') {
+                        str = ['Weekly on', self.scheduler.availableDaysOfWeek[daysOfWeek[0]].text, 'at', time].join(' ');
+                    } else if (interval === 'Monthly') {
+                        str = ['Monthly on the', self.scheduler.availableDates[dates[0] - 1].text, 'at', time].join(' ');
+                    } else if (interval === 'Yearly') {
+                        str = ['Yearly on', self.scheduler.availableMonths[months[0] - 1].text, self.scheduler.availableDates[dates[0] - 1].text, 'at', time].join(' ');
+                    } else { // Advanced
+                        len = months.length;
+                        if (len === 0 || len === 12) {
+                            allMonths = true;
+                        } else {
+                            dti.forEachArray(months, function (val, index) {
+                                monthsText.push(self.scheduler.availableMonths[val - 1].text);
+                            });
+
+                            if (len > 1) {
+                                monthsText[len - 1] = 'and ' + monthsText[len - 1];
+                            }
+
+                            if (len > 2) {
+                                joinString = ', ';
+                            } else {
+                                joinString = ' ';
+                            }
+
+                            monthsText = monthsText.join(joinString);
+                        }
+
+                        len = daysOfWeek.length;
+                        if (len === 0 || len === 7) {
+                            allDaysOfWeek = true;
+                        } else {
+                            dti.forEachArray(daysOfWeek, function (val) {
+                                daysOfWeekText.push(self.scheduler.availableDaysOfWeek[val].text);
+                            });
+
+                            if (len > 1) {
+                                daysOfWeekText[len - 1] = 'and ' + daysOfWeekText[len - 1];
+                            }
+
+                            if (len > 2) {
+                                joinString = ', ';
+                            } else {
+                                joinString = ' ';
+                            }
+
+                            daysOfWeekText = daysOfWeekText.join(joinString);
+                        }
+
+                        len = dates.length;
+                        if (len === 0 || len === 31) {
+                            allDates = true;
+                        } else {
+                            dti.forEachArray(dates, function (val) {
+                                datesText.push(self.scheduler.availableDates[val - 1].text);
+                            });
+
+                            if (len > 1) {
+                                datesText[len - 1] = 'and ' + datesText[len - 1];
+                            }
+
+                            if (len > 2) {
+                                joinString = ', ';
+                            } else {
+                                joinString = ' ';
+                            }
+
+                            datesText = datesText.join(joinString);
+                        }
+
+                        if (allDates && allDaysOfWeek) {
+                            if (allMonths) {
+                                str = 'Everyday at ' + time;
+                            } else {
+                                str = ['Everyday in', monthsText, 'at', time].join(' ');
+                            }
+                        } else if (allDaysOfWeek) {
+                            if (allMonths) {
+                                str = ['Every month on the', datesText, 'at', time].join(' ');
+                            } else {
+                                str = ['Every', datesText, 'day of', monthsText, 'at', time].join(' ');
+                            }
+                        } else if (allDates) {
+                            if (allMonths) {
+                                str = ['Every', daysOfWeekText, 'at', time].join(' ');
+                            } else {
+                                str = ['Every', daysOfWeekText, 'in', monthsText].join(' ');
+                            }
+                        } else { // allDates -> false, allDaysOfWeek -> false
+                            if (allMonths) {
+                                str = ['Every week on', daysOfWeekText + ',', 'and on the', datesText, 'of every month'].join(' ');
+                            } else {
+                                str = ['In the month(s) of', monthsText + ',', 'every', daysOfWeekText, 'and on the', datesText].join(' ');
+                            }
+                        }
+                    }
+                } else { // cfg is cron string
+                    // design space
+                }
+                return str;
+            }
         },
         modal: {
             open: function (data) {
                 var $modal = dti.getTemplate('#scheduleModalTemplate'),
-                    availableDates = (function buildAvailableDates () {
-                        var arr = [],
-                            j = 0,
-                            suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'],
-                            suffix;
-
-                        while (j++ < 31) {
-                            suffix = (j > 9 && j < 14) ? 'th' : suffixes[j%10];
-                            arr.push({
-                                text: j + suffix,
-                                value: j
-                            });
-                        }
-                        return arr;
-                    })(),
-                    availableMonths = (function buildAvailableMonths () {
-                        var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-                            arr = [];
-                        
-                        dti.forEachArray(months, function addMonth (month, index) {
-                            arr.push({
-                                text: month,
-                                value: index + 1
-                            });
-                        });
-                        return arr;
-                    })(),
-                    availableDaysOfWeek = (function buildAvailableDaysOfWeek () {
-                        var dow = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-                            arr = [];
-
-                        dti.forEachArray(dow, function addDay (day, index) {
-                            arr.push({
-                                text: day,
-                                value: index
-                            });
-                        });
-                        return arr;
-                    })(),
+                    timepickerOpts = {
+                        container: $('body')
+                    },
                     bindings = {
-                        availableIntervals: ['Daily', 'Weekly', 'Monthly', 'Yearly', 'Advanced'],
-                        availableDaysOfWeek: availableDaysOfWeek,
-                        availableMonths: availableMonths,
-                        availableDates: availableDates,
+                        availableIntervals: self.scheduler.availableIntervals,
+                        availableDaysOfWeek: self.scheduler.availableDaysOfWeek,
+                        availableMonths: self.scheduler.availableMonths,
+                        availableDates: self.scheduler.availableDates,
                         selectedInterval: ko.observable(),
-                        selectedMonth: ko.observable(),
-                        selectedDate: ko.observable(),
-                        selectedDayOfWeek: ko.observable(),
                         selectedTime: ko.observable('00:00'),
-                        saveScheduleEntry: function (data) {
-                            self.scheduler.modal.close(data);
+                        selectedMonth: ko.observable(),
+                        selectedMonths: ko.observableArray([]),
+                        selectedDate: ko.observable(),
+                        selectedDates: ko.observableArray([]),
+                        selectedDayOfWeek: ko.observable(),
+                        selectedDaysOfWeek: ko.observableArray([]),
+                        recepientUsers: ko.observableArray([]),
+                        recepientEmails: ko.observableArray([]),
+                        save: function () {
+                            var parsed;
+
+                            if (data === 'new') {
+                                parsed = {
+                                    interval: ko.observable(bindings.selectedInterval()),
+                                    time: ko.observable(bindings.selectedTime())
+                                };
+
+                                if (parsed.interval() === 'Advanced') {
+                                    parsed.months = ko.observableArray(bindings.selectedMonths());
+                                    parsed.dates = ko.observableArray(bindings.selectedDates());
+                                    parsed.daysOfWeek = ko.observableArray(bindings.selectedDaysOfWeek());
+                                } else {
+                                    parsed.months = ko.observable([bindings.selectedMonth()]);
+                                    parsed.dates = ko.observableArray([bindings.selectedDate()]);
+                                    parsed.daysOfWeek = ko.observableArray([bindings.selectedDayOfWeek()]);
+                                }
+
+                                parsed.plainEnglish = ko.observable(self.scheduler.cron.explain(parsed));
+
+                                self.scheduler.scheduleEntries.push({
+                                    enable: ko.observable(true),
+                                    parsed: parsed
+                                });
+                            } else {
+                                data.parsed.interval(bindings.selectedInterval());
+                                data.parsed.time(bindings.selectedTime());
+
+                                if (bindings.selectedInterval() === 'Advanced') {
+                                    if (bindings.selectedMonths().length === 0) {
+                                        data.parsed.months(getAllAvailable(bindings.availableMonths));
+                                    } else {
+                                        data.parsed.months(bindings.selectedMonths());
+                                    }
+
+                                    if (bindings.selectedDates().length === 0) {
+                                        data.parsed.dates(getAllAvailable(bindings.availableDates));
+                                    } else {
+                                        data.parsed.dates(bindings.selectedDates());
+                                    }
+
+                                    if (bindings.selectedDaysOfWeek().length === 0) {
+                                        data.parsed.daysOfWeek(getAllAvailable(bindings.availableDaysOfWeek));
+                                    } else {
+                                        data.parsed.daysOfWeek(bindings.selectedDaysOfWeek());
+                                    }
+                                } else {
+                                    data.parsed.months([bindings.selectedMonth()]);
+                                    data.parsed.dates([bindings.selectedDate()]);
+                                    data.parsed.daysOfWeek([bindings.selectedDayOfWeek()]);
+                                }
+
+                                data.parsed.plainEnglish(self.scheduler.cron.explain(data.parsed));
+                            }
+                            self.scheduler.modal.close();
                         },
-                        cancelScheduleEntry: function (data) {
-                            self.scheduler.modal.close(data);
+                        cancel: function () {
+                            self.scheduler.modal.close();
+                        },
+                        deleteMe: function () {
+                            self.scheduler.scheduleEntries.remove(data);
+                            self.scheduler.modal.close();
                         }
+                    },
+                    getAllAvailable = function (available) {
+                        // available = [{
+                        //  text: string,
+                        //  value: int
+                        // }...]
+                        var arr = [];
+                        dti.forEachArray(available, function (item) {
+                            arr.push(item.value);
+                        });
+                        return arr;
                     };
+
+                window.jdr = bindings; // TODO debug
 
                 if (data === 'new') {
                     bindings.isNew = true;
                     bindings.selectedInterval('Daily');
                 } else {
+                    // 'Interval' and 'time' are immutable (strings) so we don't have to worry about them changing
+                    bindings.selectedInterval(data.parsed.interval());
+                    bindings.selectedTime(data.parsed.time());
 
+                    if (bindings.selectedInterval() === 'Advanced') {
+                        if (data.parsed.months().length < 12) {
+                            bindings.selectedMonths($.extend([], data.parsed.months()));
+                        }
+                        if (data.parsed.dates().length < 31) {
+                            bindings.selectedDates($.extend([], data.parsed.dates()));
+                        }
+                        if (data.parsed.daysOfWeek().length < 7) {
+                            bindings.selectedDaysOfWeek($.extend([], data.parsed.daysOfWeek()));
+                        }
+                    } else {
+                        // Extend the source array so we don't manipulate the original in case the user cancels changes
+                        bindings.selectedMonth(data.parsed.months()[0]);
+                        bindings.selectedDate(data.parsed.dates()[0]);
+                        bindings.selectedDayOfWeek(data.parsed.daysOfWeek()[0]);
+                    }
                 }
 
+                // Apply bindings and add our markup
                 ko.applyBindings(bindings, $modal[0]);
-
                 $('body').append($modal);
 
+                // Init our materialize form elements
                 $modal.find('.dropdown-button').dropdown();
                 $modal.find('select').material_select();
-                $modal.find('#timepicker').pickatime({
-                    autoclose: false,
-                    twelvehour: true // TODO this should come from a system/user preference
-                });
 
+                // Init our timepicker
+                timepickerOpts.default = bindings.selectedTime();
+                dti.pickatime($modal.find('.timepicker'), timepickerOpts);
+
+                // Launch the miss-aisles!
                 $modal.openModal({
                     dismissible: false
                 });
             },
-            close: function (data) {
+            close: function () {
                 var $modal = $('#scheduleModal');
 
                 $modal.closeModal({
                     complete: function () {
                         ko.cleanNode($modal[0]);
-                        $modal.find('select').material_select('destroy'); // Necessary?
+                        $modal.find('select').material_select('destroy'); // TODO - Necessary?
                         $modal.remove();
                     }
                 });
             }
+        },
+        buildRecipients: function (data) {
+            return 'Dan, Johnny, and rtc@timers.com';
+        },
+        init: function () {
+            // Async call to db to get distinct values
+            self.scheduler.scheduleEntries.push({
+                enable: ko.observable(false),
+                parsed: self.scheduler.cron.parse('30 10 * * *')
+            });
+            self.scheduler.scheduleEntries.push({
+                enable: ko.observable(true),
+                parsed: self.scheduler.cron.parse('00 08 1 * *')
+            });
+            return;
+
+            $.ajax({
+                type: 'post',
+                url: dti.settings.apiEndpoint + 'schedules/getEntries',
+                data: JSON.stringify({
+                    // _id: reportId //
+                }),
+                contentType: 'application/json'
+            }).done(
+                function handleData (data) {
+                    if (data.err) {
+                        return dti.log('schedules/getEntries failed', data.err);
+                    }
+                }
+            ).fail(
+                function handleFail (jqXHR, textStatus, errorThrown) {
+                    dti.log('schedules/getEntries failed', jqXHR, textStatus, errorThrown);
+                }
+            ).always (
+                function finished () {
+                }
+            );
         }
     };
 
@@ -5174,6 +5498,11 @@ var reportsViewModel = function () {
 
         return answer;
     }, self);
+
+    self.scheduler.init();
+
+    self.makeId = dti.makeId;
+    self.getLastId = dti.getLastId;
 };
 
 function applyBindings(extConfig) {

@@ -1107,28 +1107,19 @@ button {
     color: red;
 }
 
-#schedule .labelColumn {
-        color: #23527c;
-        font-size: larger;
-        width: 150px;
-        float: left;
-}
-#schedule .contentColumn {
-    float: left;
-}
-#schedule .contentColumn i {
+#schedule i {
     color: #607d8b;
+    cursor: pointer;
 }
-#scheduleModal .input-field {
+#scheduleModal .standardInterval .input-field {
     white-space: nowrap;
     margin-right: 20px;
 }
 #scheduleModal .input-field:last-child {
     margin-right: 0px;
 }
-#scheduleModal .modal-footer .btn {
-    float: none;
-    margin-left: 18px;
+#scheduleModal .modal-footer .btn:not(:last-child) {
+    margin-left: 10px;
 }
 .flex {
     display: flex;
@@ -1138,4 +1129,7 @@ button {
 }
 .flex-start {
     justify-content: flex-start;
+}
+.padleft-20 {
+    padding-left: 20px;
 }
