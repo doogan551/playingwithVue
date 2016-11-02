@@ -4328,7 +4328,7 @@ var reportsViewModel = function () {
                 updateListOfColumns(self.listOfColumns());
                 updateListOfFilters(self.listOfFilters());
                 self.startDate.valueHasMutated();
-                if (self.reportType() !== "Property") {
+                if (self.reportType() !== "Property" && !scheduled) {
                     $additionalFilters.find(".reportRangePicker select").material_select();
                     $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
                     $additionalFilters.find("#reportEndDate").pickadate('picker').set('select', self.endDate() * 1000);
