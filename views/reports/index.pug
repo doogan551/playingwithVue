@@ -214,14 +214,12 @@ html.direports
                                                     // /ko
                                                     // ko if: ($parent.reportType() === 'Property')
                                                     .availablePropertiesContainer
-                                                        ul.enumproperties.dropdown-content(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
+                                                        ul.enumproperties.dropdown-content(data-bind="attr: { id: 'columnspropertiesDropdown'+ $index() }")
                                                             input.form-control.inputSearch.filled-in(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
                                                             li(role="separator", class="divider")
-                                                            // ko foreach: $parent.columnFilteredProps()
-                                                            li
+                                                            li(data-bind="foreach: $parent.columnFilteredProps()")
                                                                 a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
-                                                            // /ko
-                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'enumpropertiesDropdown'+ $index() }, dtiReportsMaterializeDropdown")
+                                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'columnspropertiesDropdown'+ $index() }, dtiReportsMaterializeDropdown")
                                                             span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
                                                     // /ko
                                                 // ko if: ($parent.reportType() !== 'Property')
@@ -241,15 +239,13 @@ html.direports
                                                                 label.calcLabel(data-bind="text: ' ' + $data, attr: { for: 'calc_' + $parentContext.$index() + '_' + $index()}")
                                                         // /ko
                                                         a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="attr: { 'data-activates': 'calculationsDropdown' + $index() }, dtiReportsMaterializeDropdown") Calcs
-
-                                                        //main-container
-                                                        //    select-container
-                                                        //        select.multiple.calculations(data-bind="options: calculation, dtiReportsMaterializeSelect")
-                                                        //    options-container
-                                                        //        options(data-bind="foreach: $parent.listOfCalculations")
-                                                        //            input(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}", type="checkbox")
-                                                        //            label(data-bind="text: $data")
-
+                                                        //-main-container
+                                                        //-    select-container
+                                                        //-        select.multiple.calculations(data-bind="options: calculation, dtiReportsMaterializeSelect")
+                                                        //-    options-container
+                                                        //-        options(data-bind="foreach: $parent.listOfCalculations")
+                                                        //-            input(data-bind="checked: $parent.calculation.indexOf($data) !== -1, click: function () { return $root.calculationClick($element, $data, $parentContext.$index())}", type="checkbox")
+                                                        //-            label(data-bind="text: $data")
                                                     // /ko
                                                 // ko if: ($parent.reportType() === 'Totalizer' && valueList.length > 0)
                                                 td.totalizerOperator
@@ -316,14 +312,12 @@ html.direports
                                                             // ko if: ($parent.reportType() === 'Property')
                                                             div.columnPropertyNames
                                                                 .availablePropertiesContainer
-                                                                    ul.enumproperties.dropdown-content(data-bind="attr: { id: 'enumpropertiesDropdown'+ $index() }")
+                                                                    ul.enumproperties.dropdown-content(data-bind="attr: { id: 'gridColumnsPropertiesDropdown'+ $index() }")
                                                                         input.form-control.inputSearch.filled-in(data-bind="textInput: $root.columnPropertiesSearchFilter", type="text", placeholder="Search...")
                                                                         li(role="separator", class="divider")
-                                                                        // ko foreach: $parent.columnFilteredProps()
-                                                                        li
+                                                                        li(data-bind="foreach: $parent.columnFilteredProps()")
                                                                             a(data-bind="click: function(){ $root.selectPropertyColumn($element, $parentContext.$index(), $data) }, text: $data.name")
-                                                                        // /ko
-                                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'enumpropertiesDropdown'+ $index() }, dtiReportsMaterializeDropdown")
+                                                                    a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="click: function(){$root.propertySelectClick($element)}, attr: { 'data-activates': 'gridColumnsPropertiesDropdown'+ $index() }, dtiReportsMaterializeDropdown")
                                                                         span(data-bind="text: (colName !== 'Choose Point' ? colName : 'Properties (' + $root.listOfColumnPropertiesLength + ')')")
                                                             // /ko
                                                             // /ko
@@ -424,10 +418,8 @@ html.direports
                                                         ul.enumproperties.dropdown-content(data-bind="attr: { 'id': 'enumProperties'+ $index() }")
                                                             input.form-control.inputSearch(data-bind="textInput: $root.filterPropertiesSearchFilter", type="text", placeholder="Search...")
                                                             li(role="separator", class="divider")
-                                                            // ko foreach: $parent.filterFilteredProps()
-                                                            li
+                                                            li(data-bind="foreach: $parent.filterFilteredProps()")
                                                                 a(data-bind="click: function(){ $root.selectPropertyFilter($element, $parentContext.$index(), $data) }, text: $data.name")
-                                                            // /ko
                                                         a.btn.waves-effect.waves-light.blue-grey.dropdown-button.propertySelect(data-bind="click: function(){$root.propertySelectClick($element)}, css: {disabled: !$root.canEdit()}, attr: { 'data-activates': 'enumProperties'+ $index() }, dtiReportsMaterializeDropdown")
                                                             span(data-bind="text: (filterName !== '- - -' ? filterName : 'Properties (' + $root.listOfFilterPropertiesLength + ')')")
                                                 td.filterOperator
@@ -477,11 +469,9 @@ html.direports
                                             label(data-bind="attr: {for: 'intervalValue'}") Interval
                                             input.intervalValue.form-control.input-md.filled-in#intervalValue(data-bind="value: $root.intervalValue, enable: ($root.canEdit() && !$root.durationError()), css: { durationError: $root.durationError() }", type="number", min="1", max="9999")
                                         .availableIntervalsContainer
-                                            ul#intervals.intervals.dropdown-content
-                                                // ko foreach: $root.listOfIntervalsComputed()
+                                            ul#intervals.intervals.dropdown-content(data-bind="foreach: $root.listOfIntervalsComputed()")
                                                 li
                                                     a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
-                                                // /ko
                                             a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="text: $root.interval, css: { durationError: $root.durationError() }, dtiReportsMaterializeDropdown", data-activates="intervals")
                                     // /ko
                                 div#schedule.tab-pane
@@ -506,8 +496,8 @@ html.direports
                                         i.material-icons.center play_arrow
                                     .screenMessages
                                         .row.well-sm
-                                            .errorMessage.alert-danger
-                                            .successMessage.alert-success
+                                            .errorMessage.red.lighten-4
+                                            .successMessage.green.lighten-4
                     .tabViewReport.well.tab-pane
                         // ko if: (reportType() !== 'Property')
                         .row(data-bind="css: { hideDiv: (chartable() !== true)}")
@@ -531,14 +521,10 @@ html.direports
                             div.chartData#chartData.tab-pane
                                 .chartButtons
                                     .availableChartTypes.chartTab(tabindex="990")
-                                        // ko if: ($root.listOfChartTypes().length > 1)
-                                        ul#chartTypesChartdataDropdown.chartTypes.dropdown-content
-                                            // ko foreach: $root.listOfChartTypes()
+                                        ul#chartTypesChartdataDropdown.chartTypes.dropdown-content(data-bind="foreach: $root.listOfChartTypes()")
                                             li
                                                 a(data-bind="click: function(){ $root.selectChartType($element, $data.value, true) }, text: $data.text")
-                                            // /ko
-                                        // /ko
-                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-activates="chartTypesChartdataDropdown")
+                                        a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="dtiReportsMaterializeDropdown", data-activates="chartTypesChartdataDropdown")
                                             span(data-bind="text: selectedChartType()")
                                     a.btn.waves-effect.waves-light.blue-grey(data-bind="click: function() { $root.printChartDiv() }", href="#")
                                         i.material-icons print

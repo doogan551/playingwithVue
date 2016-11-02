@@ -29,37 +29,32 @@
     margin-right: 21px;
     vertical-align: super;
 }
-.durationCtrl {
-    display: inline-flex;
-    background-color: white;
-    border: 1px solid #D0D0D0;
-    border-radius: 3px;
-    padding: 2px 8px 2px 2px;
-    width: 150px;
-    /*width: 100%;*/
-    text-align: right;
+td .durationCtrl {
+    /*display: inline-flex;*/
+    /*padding: 2px 8px 2px 2px;*/
+    /*width: 150px;*/
+    /*text-align: right;*/
 }
-.durationCtrl > input {
+td .durationCtrl > input {
     width: 25px;
     text-align: right;
     padding: 3px;
     border: none;
     outline: none;
 }
-.durationCtrl > .timeSeg {
+td .durationCtrl > .timeSeg {
     font-size: x-small;
 }
-.durationCtrl.durationDisplay {
+td .durationCtrl.durationDisplay {
     text-align: right;
     padding: 3px 10px 3px 3px;
-    /*border: none;*/
     outline: none;
 }
-.durationCtrl.durationDisplay > .timeSeg {
+td .durationCtrl.durationDisplay > .timeSeg {
     padding-right: 4px;
 }
-.durationCtrl > input::-webkit-inner-spin-button,
-.durationCtrl > input::-webkit-outer-spin-button {
+td .durationCtrl > input::-webkit-inner-spin-button,
+td .durationCtrl > input::-webkit-outer-spin-button {
     -webkit-appearance: none;
     -moz-appearance: textfield;
 }

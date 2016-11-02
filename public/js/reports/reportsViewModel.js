@@ -1755,13 +1755,13 @@ var reportsViewModel = function () {
                     if (!!columns[i].error) {
                         displayError(columns[i].error);
                         activeError = true;
-                        $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("danger");
-                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("danger");
-                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").addClass("danger");
+                        $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
                     } else {
-                        $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("danger");
-                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("danger");
-                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("danger");
+                        $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
                         if (columns[i].upi > 0) {
                             upis.push({
                                 upi: parseInt(columns[i].upi, 10),
@@ -2469,7 +2469,7 @@ var reportsViewModel = function () {
                             updateListOfColumns(self.listOfColumns());
                             $newRow = $columnsTbody.find("tr:last");
                             $newRow.addClass("ui-sortable-handle");
-                            $newRow.addClass("danger");
+                            $newRow.addClass("red lighten-4");
                             if (self.reportType() !== "Property") {
                                 self.selectPointForColumn(rowTemplate, (self.listOfColumns().length - 1));
                             }
@@ -4328,6 +4328,7 @@ var reportsViewModel = function () {
                 updateListOfColumns(self.listOfColumns());
                 updateListOfFilters(self.listOfFilters());
                 self.startDate.valueHasMutated();
+                self.endDate.valueHasMutated();
                 if (self.reportType() !== "Property" && !scheduled) {
                     $additionalFilters.find(".reportRangePicker select").material_select();
                     $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
@@ -4487,6 +4488,8 @@ var reportsViewModel = function () {
 
                     self.filterPropertiesSearchFilter(""); // computed props jolt
                     self.columnPropertiesSearchFilter(""); // computed props jolt
+                    self.filterPropertiesSearchFilter.valueHasMutated();
+                    self.columnPropertiesSearchFilter.valueHasMutated();
                     initializeForMaterialize();
                 }
 
@@ -5218,10 +5221,8 @@ function applyBindings(extConfig) {
         window.setTimeout(function () {
             reportsVM = new reportsViewModel();
             reportsVM.init(extConfig);
-            window.setTimeout(function () {
-                ko.applyBindings(reportsVM);
-            }, 0);
-        }, 100);
+            ko.applyBindings(reportsVM);
+        }, 150);
     }
 }
 

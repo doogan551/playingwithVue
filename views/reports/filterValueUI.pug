@@ -42,14 +42,14 @@ div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
 // ko if: ((valueType === "HourMinSec") || (valueType === "HourMin") || (valueType === "MinSec"))
 div.durationCtrl
     // ko if: ((valueType === "HourMinSec") || (valueType === "HourMin"))
-    input.hr.filled-in(data-bind="value: hours, enable: $root.canEdit()", type="number", min="0", max="23")
-    span.timeSeg hr
+    input.hr.filled-in(data-bind="attr: { 'id': 'hourtimeSeg' + $index() }, value: hours, enable: $root.canEdit()", type="number", min="0", max="23")
+    label(data-bind="attr: { for: 'hourtimeSeg' + $index()") hr
     // /ko
-    input.min.filled-in(data-bind="value: minutes, enable: $root.canEdit()", type="number", min="0", max="59")
-    span.timeSeg min
+    input.min.filled-in(data-bind="attr: { 'id': 'minutetimeSeg' + $index() }, value: minutes, enable: $root.canEdit()", type="number", min="0", max="59")
+    label(data-bind="attr: { for: 'minutetimeSeg' + $index()") min
     // ko if: ((valueType === "HourMinSec") || (valueType === "MinSec"))
-    input.sec.filled-in(data-bind="value: seconds, enable: $root.canEdit()", type="number", min="0", max="59")
-    span.timeSeg sec
+    input.sec.filled-in(data-bind="attr: { 'id': 'secondtimeSeg' + $index() }, value: seconds, enable: $root.canEdit()", type="number", min="0", max="59")
+    label(data-bind="attr: { for: 'secondtimeSeg' + $index()") sec
     // /ko
 // /ko
 // ko if: (valueType === "BitString")
