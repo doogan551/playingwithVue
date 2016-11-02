@@ -31,6 +31,7 @@ var Scheduler = {
   },
   buildCron: function(schedule, cb) {
     var upi = schedule.referencePointUpi;
+    var emails = [];
     Utility.getOne({
       collection: 'points',
       query: {
@@ -48,14 +49,15 @@ var Scheduler = {
       var time = schedule.runTime;
       var date = moment().format('YYYYMMDD');
       if (scheduleContainer.hasOwnProperty(schedule._id)) {
-        scheduleContainer[schedule._id].destroy();
+        scheduleContainer[schedule._id].stop();
       }
       if (!!schedule.enabled) {
         scheduleContainer[schedule._id] = new CronJob(time, function() {
           var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
           pageRender.renderPage(domain + '/scheduleloader/report/scheduled/' + upi, path, function(err) {
-
+            console.log(err, path);
             fs.readFile(path, function(err, data) {
+              console.log(err, data.length);
               Utility.iterateCursor({
                 collection: 'Users',
                 query: {
@@ -65,12 +67,17 @@ var Scheduler = {
                 }
               }, function(err, user, nextUser) {
                 // figure out date/time
-                var emails = user['Contact Info'].Value.filter(function(info) {
+                emails = emails.concat(user['Contact Info'].Value.filter(function(info) {
                   return info.Type === 'Email';
                 }).map(function(email) {
                   return email.Value;
-                }).concat(schedule.emails).join(',');
+                }));
+                console.log(emails);
 
+                nextUser();
+              }, function(err, count) {
+                emails = emails.concat(schedule.emails).join(',');
+                console.log(emails);
                 mailer.sendEmail({
                   to: emails,
                   fromAccount: 'infoscan',
@@ -83,8 +90,7 @@ var Scheduler = {
                 }, function(err, info) {
                   console.log(err && err.code, info);
                 });
-                nextUser();
-              }, function(err, count) {});
+              });
             });
           });
         });
@@ -94,5 +100,4 @@ var Scheduler = {
     });
   }
 };
-
 module.exports = Scheduler;

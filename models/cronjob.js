@@ -23,8 +23,4 @@ Cron.prototype.stop = function() {
   this.job.stop();
 };
 
-Cron.prototype.destroy = function() {
-  this.job.destroy();
-};
-
 module.exports = Cron;
