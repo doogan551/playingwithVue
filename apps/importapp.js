@@ -2726,9 +2726,6 @@ function updateDevices(point, callback) {
 			point[prop] = Config.Templates.getTemplate('Device')[prop];
 		}
 
-		delete point["Device Address"].Min;
-		delete point["Device Address"].Max;
-
 		point["Device Status"].Value = "Stop Scan";
 		point["Device Status"].eValue = 66;
 
