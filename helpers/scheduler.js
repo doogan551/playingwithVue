@@ -55,9 +55,7 @@ var Scheduler = {
         scheduleContainer[schedule._id] = new CronJob(time, function() {
           var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
           pageRender.renderPage(domain + '/scheduleloader/report/scheduled/' + upi, path, function(err) {
-            console.log(err, path);
             fs.readFile(path, function(err, data) {
-              console.log(err, data.length);
               Utility.iterateCursor({
                 collection: 'Users',
                 query: {
@@ -72,12 +70,10 @@ var Scheduler = {
                 }).map(function(email) {
                   return email.Value;
                 }));
-                console.log(emails);
 
                 nextUser();
               }, function(err, count) {
                 emails = emails.concat(schedule.emails).join(',');
-                console.log(emails);
                 mailer.sendEmail({
                   to: emails,
                   fromAccount: 'infoscan',
