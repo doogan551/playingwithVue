@@ -8,6 +8,7 @@ var fromHost = "";
 var fromDB = "";
 var toHost = dbConfig.host;
 var toDB = dbConfig.dbName;
+var toDisplayFolder = config.get('Infoscan.files').driveLetter + ':/InfoscanJS/public/display_assets/assets';
 var date = moment().format('YYYYMMDDX');
 var folder = config.get('Infoscan.files').driveLetter + ':/mongodump/' + date;
 var dumpFolder = config.get('Infoscan.files').driveLetter + ":/ServerInstall/mongodump/infoscan";
@@ -70,9 +71,12 @@ dbModel.connect(connectionString, function(err) {
             logResults('mongorestore users out:', err, stdout, stderr);
             child = process('node apps\\importapp.js', function(err, stdout, stderr) {
               logResults('importapp out:', err, stdout, stderr);
-              child = process('robocopy //' + fromHost + '/InfoScan/displays ' + config.get('Infoscan.files').driveLetter + ':/InfoscanJS/public/display_assets/assets /S', function(err, stdout, stderr) {
-                logResults('robocopy out:', err, stdout, stderr);
+              child = process('rmdir /S /Q '+ toDisplayFolder , function(err, stdout, stderr) {
+                logResults('rmdir out:', err, stdout, stderr);
+                child = process('robocopy //' + fromHost + '/InfoAdmin/DisplayImport ' + toDisplayFolder + ' /S', function(err, stdout, stderr) {
+                  logResults('robocopy out:', err, stdout, stderr);
 
+                });
               });
             });
           });

@@ -299,16 +299,13 @@ function updatePoint(db, point, cb) {
 }
 
 function addDefaultUser(db, cb) {
-	var ctrlrs = importconfig.ctrlrs;
 
-	db.collection(systemInfoCollection).insert(ctrlrs, function(err, result) {
-		db.collection('Users').find({}).toArray(function(err, users) {
-			async.eachSeries(users, function(user, callback) {
-				updateControllers(db, "add", user.username, function(err) {
-					callback(err);
-				});
-			}, cb);
-		});
+	db.collection('Users').find({}).toArray(function(err, users) {
+		async.eachSeries(users, function(user, callback) {
+			updateControllers(db, "add", user.username, function(err) {
+				callback(err);
+			});
+		}, cb);
 	});
 
 	function updateControllers(db, op, username, callback) {
@@ -1294,19 +1291,19 @@ function initImport(db, callback) {
 	// model type property set isreadonly to false
 	createEmptyCollections(db, function(err) {
 		// setupReportsCollections(db, function(err) {
-			setupSystemInfo(db, function(err) {
-				setupPointRefsArray(db, function(err) {
-					addDefaultUser(db, function(err) {
-						// setupCurAlmIds(db, function(err) {
-						setupCfgRequired(db, function(err) {
-							setupProgramPoints(db, function(err) {
-								callback(null);
-							});
+		setupSystemInfo(db, function(err) {
+			setupPointRefsArray(db, function(err) {
+				addDefaultUser(db, function(err) {
+					// setupCurAlmIds(db, function(err) {
+					setupCfgRequired(db, function(err) {
+						setupProgramPoints(db, function(err) {
+							callback(null);
 						});
-						// });
 					});
+					// });
 				});
 			});
+		});
 		// });
 	});
 
