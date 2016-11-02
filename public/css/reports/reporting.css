@@ -18,7 +18,7 @@
     top: 0px;
     bottom: 0px;
     background-color: #fff;
-    overflow-x: auto;
+    /*overflow-x: auto;*/
 }
 .rightPanel > div.container-fluid {
     padding-right: 0px;
@@ -342,6 +342,8 @@ td.filterName {
     background: none;
 }
 .tabConfiguration{
+    width: 100%;
+    height: 95%;
     padding-top: 0px;
     min-width: 850px;
 }
@@ -361,6 +363,8 @@ td.filterName {
     padding-right: 20px;
 }
 .tabViewReport {
+    width: 100%;
+    height: 100%;
     padding-top: 0px;
     min-width: 850px;
 }
@@ -375,16 +379,23 @@ td.filterName {
     border-radius: 4px 4px 4px 4px;
 }
 .tabViewReport .tab-content {
+    width: 100%;
+    height: 100%;
     background-color: #F5F5F5;
     border-radius: 0px 0px 7px 7px;
     margin-top: 0px;
     margin-left: 0px;
     margin-right: 0px;
-    padding-right: 20px;
+    padding-left: 5px;
+    padding-right: 10px;
 }
 .tabViewReport div.dataTables_filter {
-    margin-left: 243px;
-    display: inline-block;
+    float: right;
+    margin-top: -50px;
+    height: 65px;
+}
+.tabViewReport div.dataTables_paginate {
+    margin-top: -21px;
 }
 .tabViewReport .chartButtons {
     display: inline-flex;
@@ -565,8 +576,8 @@ i.iconLink:hover {
     cursor: pointer;
 }
 .dataTables_length {
-    display: inline-block;
-    margin-left: 50px;
+    margin-left: 260px;
+    margin-top: -30px;
 }
 div.dataTables_wrapper div.dataTables_length select {
     width: 55px;
@@ -1116,7 +1127,7 @@ button {
 .reportButtons {
     margin: -1px auto 46px auto;
     width: 325px;
-    padding: 5px 1px 1px 1px;
+    padding: 10px 1px 1px 1px;
 }
 .reportButtons .btn.btn-primary {
     margin: 1px;

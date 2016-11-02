@@ -2334,18 +2334,14 @@ var reportsViewModel = function () {
             return setYaxisValues(result);
         },
         adjustViewReportTabHeightWidth = function () {
-            var infoscanHeader = 95,
+            var bottomPadding = 10,
                 adjustHeight,
+                currentWindowHeight = window.innerHeight,
                 $dataTablesScrollHead,
                 $dataTablesScrollBody,
                 $dataTablesScrollFoot,
                 $dataTablesWrapper,
                 $activePane = $tabViewReport.find(".tab-pane:visible");
-
-            $tabViewReport.css("width", window.innerWidth - 83);
-            $tabViewReport.css("height", window.innerHeight);
-            $tabViewReport.find(".tab-content").css("width", $tabViewReport.width());
-            $tabViewReport.find(".tab-content").css("height", $tabViewReport.height() - 45);
 
             if ($activePane.attr("id") === "chartData") {
                 $activePane.css("height", (window.innerHeight - 90));
@@ -2356,11 +2352,11 @@ var reportsViewModel = function () {
                 $dataTablesScrollFoot = $tabViewReport.find(".dataTables_scrollFoot");
                 $dataTablesWrapper = $tabViewReport.find(".dataTables_wrapper");
 
-                setInfoBarDateTime();
-                adjustHeight = $dataTablesScrollBody.height() - (($dataTablesWrapper.height() + infoscanHeader) - window.innerHeight);
+                setDatatableInfoBar();
+                adjustHeight = $dataTablesScrollBody.height() - (($tabViewReport.height() + bottomPadding) - currentWindowHeight);
                 $dataTablesScrollHead.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
                 $dataTablesScrollBody.css("height", adjustHeight);
-                $dataTablesScrollBody.css("width", $dataTablesWrapper.width());
+                $dataTablesScrollBody.css("width", $dataTablesWrapper.width() - 17);
                 $dataTablesScrollFoot.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
                 $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;  // original way
                 //$dataTablePlaceHolder.DataTable().columns.adjust();
@@ -2368,7 +2364,7 @@ var reportsViewModel = function () {
         },
         adjustConfigTabActivePaneHeight = function () {
             var $configPanes = $tabConfiguration.find(".tab-content div.tab-pane");
-            $configPanes.css("height", (window.innerHeight - 190));
+            $configPanes.css("height", (window.innerHeight - 130));
         },
         handleResize = function () {
             lastResize = new Date();
@@ -2874,27 +2870,6 @@ var reportsViewModel = function () {
                     });
                 }
 
-                $dataTablePlaceHolder.on("draw.dt", function (e, settings) {
-                    // console.log(". . . . . . . . .    draw.dt   . . . . . . . . .");
-                    var numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
-                        currentPageNumber = $dataTablePlaceHolder.DataTable().page.info().page + 1,
-                        $tablePagination = $tabViewReport.find(".dataTables_paginate"),
-                        $pagination = $tablePagination.find(".pagination"),
-                        $paginate_buttons = $pagination.find("button");
-
-                    // $pagination.hide();
-                    if (numberOfPages === 1) {
-                        $paginate_buttons = $paginate_buttons.not("li.active");
-                        $paginate_buttons.hide();
-                    } else {
-                        console.log("currentPageNumber = " + currentPageNumber);
-                        $paginate_buttons.removeClass("mdl-button");
-                        $paginate_buttons.addClass("btn blue-grey");
-                        $paginate_buttons.eq(currentPageNumber).addClass("lighten-2");
-                        // $pagination.show();
-                    }
-                });
-
                 console.log(" .... report events configured .... ");
             }, 200);
 
@@ -3316,7 +3291,7 @@ var reportsViewModel = function () {
                         }
                     ] : undefined),
                     drawCallback: function (settings) {
-                        setInfoBarDateTime();
+                        setDatatableInfoBar();
                     },
                     headerCallback: function (thead, data, start, end, display) {
                         var reportColumns = $.extend(true, [], self.listOfColumns()),
@@ -3474,9 +3449,26 @@ var reportsViewModel = function () {
 
             self.designChanged(false);
         },
-        setInfoBarDateTime = function () {
-            var $tablePagination = $tabViewReport.find(".dataTables_paginate"),
-                $currentDateTimeDiv = $tablePagination.find(".reportDisplayFooter");
+        setDatatableInfoBar = function () {
+            var numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
+                currentPageNumber = $dataTablePlaceHolder.DataTable().page.info().page + 1,
+                $tablePagination = $tabViewReport.find(".dataTables_paginate"),
+                $currentDateTimeDiv = $tablePagination.find(".reportDisplayFooter"),
+                $pagination = $tablePagination.find(".pagination"),
+                $paginate_buttons = $pagination.find("button"),
+                $datatablesLength = $tabViewReport.find(".dataTables_length"),
+                $datatablesLengthSelect = $datatablesLength.find("select");
+
+            // $pagination.hide();
+            if (numberOfPages <= 1) {
+                $paginate_buttons = $paginate_buttons.not("li.active");
+                $paginate_buttons.hide();
+            } else {
+                $paginate_buttons.removeClass("mdl-button");
+                $paginate_buttons.addClass("btn blue-grey");
+                $paginate_buttons.eq(currentPageNumber).addClass("lighten-2");
+                // $pagination.show();
+            }
 
             if ($currentDateTimeDiv.length > 0) {
                 $currentDateTimeDiv.text(self.currentTimeStamp);
@@ -3484,6 +3476,8 @@ var reportsViewModel = function () {
                 $currentDateTimeDiv = $("<div class='small reportDisplayFooter'>" + self.currentTimeStamp + "</div>");
                 $currentDateTimeDiv.prependTo($tablePagination);
             }
+
+            $datatablesLengthSelect.show();
         },
         breakReportDataIntoPrintablePages = function () {
             // widthOfA4Portrait300PPI = 2480,

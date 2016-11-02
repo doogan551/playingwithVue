@@ -3,15 +3,15 @@ html.direports
     head
         title #{title}
         meta(charset="utf-8")
-        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/ColReorder/css/colReorder.foundation.css')
-        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/Buttons/css/buttons.foundation.css')
         link(rel='stylesheet', href='/css/lib/jquery-ui.min.css')
         link(rel='stylesheet', href='/css/reports/reporting.css')
-        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.material.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/ColReorder/css/colReorder.semanticui.min.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/extensions/Buttons/css/buttons.semanticui.min.css')
         link(rel='stylesheet', href='/css/lib/materialize.css')
         link(rel='stylesheet', href='/css/lib/materialize.icons.css')
         link(rel='stylesheet', href='/css/lib/materialdesignicons.css')
         link(rel='stylesheet', href='/css/lib/materialize.clockpicker.min.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.material.css')
         script(type="text/javascript" src="/js/lib/jquery-2.2.4.js")
         script(type="text/javascript" src="/js/lib/jquery-ui.js")
         script(type="text/javascript" src='/js/lib/moment.js')
@@ -100,12 +100,12 @@ html.direports
                                         a.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
                                     li.tab.col(data-bind='css: reportType === "Property" ? "s2":"s3" ')
                                         a.strong.toggleTab.blue-grey-text(href="#schedule") Schedule
-                        div.configurationContent
-                            div.hideDiv
+                        .configurationContent
+                            .hideDiv
                                 h6.strong.reportTitle(data-bind="text: reportDisplayTitle")
                                 .reporttype.tiny.center-align(data-bind="text: reportType")
-                            div.tab-content
-                                div.tab-pane.reportAttribs#reportAttribs
+                            .tab-content
+                                .tab-pane.reportAttribs#reportAttribs
                                     .form-inline.blue-grey-text(style="display: inline-flex")
                                         div.input-field.col
                                             input.pointName1.form-control.input-md#pointName1(data-bind="enable: $root.canEdit(), textInput: $root.pointName1", required, type="text")
@@ -150,7 +150,7 @@ html.direports
                                                     a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="dtiReportsMaterializeDropdown", href="#", data-activates="chartTypesAttribsDropdown")
                                                         span(data-bind="text: selectedChartType()")
                                         // /ko
-                                div.tab-pane#reportColumns
+                                .tab-pane#reportColumns
                                     h6.strong.panel-title
                                     table.columnsGrid.small.grid.table
                                         thead
@@ -274,7 +274,7 @@ html.direports
                                                 // /ko
                                                 // ko if: ($root.canEdit())
                                                 td.removecolumn
-                                                    a.span.removerow.blue-grey-text(data-bind="click: function () { $parent.deleteReportColumn($index()) }") Remove
+                                                    i.removerow.blue-grey-text.material-icons.center(data-bind="click: function () { $parent.deleteReportColumn($index()) }") clear
                                                 // /ko
                                         tbody
                                             tr
@@ -512,12 +512,11 @@ html.direports
                         // /ko
                         div.tab-content
                             div.gridData#gridData.tab-pane
-                                .row
-                                    h6.text-center.reportDisplayTitle.hideDiv(data-bind="text: reportDisplayTitle")
-                                    table.table.striped.table-bordered.table-responsive.dataTablePlaceHolder
-                                        tfoot.tableFooter
-                                            tr(data-bind="foreach: listOfColumns()")
-                                                td.strong(data-bind="attr: { colindex:  $index() }")
+                                h6.text-center.reportDisplayTitle.hideDiv(data-bind="text: reportDisplayTitle")
+                                table.table.striped.table-bordered.table-responsive.dataTablePlaceHolder
+                                    tfoot.tableFooter
+                                        tr(data-bind="foreach: listOfColumns()")
+                                            td.strong(data-bind="attr: { colindex:  $index() }")
                             div.chartData#chartData.tab-pane
                                 .chartButtons
                                     .availableChartTypes.chartTab(tabindex="990")
