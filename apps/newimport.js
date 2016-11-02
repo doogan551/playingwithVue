@@ -1043,22 +1043,15 @@ function importUpdate() {
 
 
 function addDefaultUser(cb) {
-  var ctrlrs = importconfig.ctrlrs;
-
-  Utility.insert({
-    collection: systemInfoCollection,
-    insertObj: ctrlrs
-  }, function(err, result) {
-    Utility.get({
-      collection: 'Users',
-      query: {}
-    }, function(err, users) {
-      async.eachSeries(users, function(user, callback) {
-        updateControllers("add", user.username, function(err) {
-          callback(err);
-        });
-      }, cb);
-    });
+  Utility.get({
+    collection: 'Users',
+    query: {}
+  }, function(err, users) {
+    async.eachSeries(users, function(user, callback) {
+      updateControllers("add", user.username, function(err) {
+        callback(err);
+      });
+    }, cb);
   });
 
   function updateControllers(op, username, callback) {
