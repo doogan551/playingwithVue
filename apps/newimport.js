@@ -919,11 +919,6 @@ function importUpdate() {
         point["Network Segment"].Value = point[propertyNetwork].Value;
         point["Device Address"].Value = point[propertyAddress].Value.toString();
 
-        for (var i = 1, prop = ""; i <= 4; i++) {
-          prop = "Port " + i + " Timeout";
-          point[prop] = Config.Templates.getTemplate('Device')[prop];
-        }
-
         delete point["Device Address"].Min;
         delete point["Device Address"].Max;
 
