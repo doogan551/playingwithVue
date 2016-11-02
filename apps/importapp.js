@@ -1293,7 +1293,7 @@ function initImport(db, callback) {
 	// remove VAV
 	// model type property set isreadonly to false
 	createEmptyCollections(db, function(err) {
-		setupReportsCollections(db, function(err) {
+		// setupReportsCollections(db, function(err) {
 			setupSystemInfo(db, function(err) {
 				setupPointRefsArray(db, function(err) {
 					addDefaultUser(db, function(err) {
@@ -1307,7 +1307,7 @@ function initImport(db, callback) {
 					});
 				});
 			});
-		});
+		// });
 	});
 
 }

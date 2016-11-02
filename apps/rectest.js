@@ -1243,4 +1243,15 @@ function testobjects() {
   }
   obj.utility.functionTwo();
 }
-testobjects();
+// testobjects();
+
+function testConfg() {
+  var types = Object.keys(Config.Enums['Point Types']);
+  types.forEach(function(type) {
+    var fx = ["apply", type.split(' ').join(''), 'DevModel'].join('');
+    if (!Config.EditChanges.hasOwnProperty(fx)) {
+      console.log(type);
+    }
+  });
+}
+testConfg()
