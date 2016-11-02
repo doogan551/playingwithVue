@@ -71,9 +71,9 @@ dbModel.connect(connectionString, function(err) {
             logResults('mongorestore users out:', err, stdout, stderr);
             child = process('node apps\\importapp.js', function(err, stdout, stderr) {
               logResults('importapp out:', err, stdout, stderr);
-              child = process('rmdir /S /Q '+ toDisplayFolder , function(err, stdout, stderr) {
+              child = process('rmdir "'+ toDisplayFolder +'" /S /Q', function(err, stdout, stderr) {
                 logResults('rmdir out:', err, stdout, stderr);
-                child = process('robocopy //' + fromHost + '/InfoAdmin/DisplayImport ' + toDisplayFolder + ' /S', function(err, stdout, stderr) {
+                child = process('robocopy S:/InfoAdmin/DisplayImport ' + toDisplayFolder + ' /S', function(err, stdout, stderr) {
                   logResults('robocopy out:', err, stdout, stderr);
 
                 });
