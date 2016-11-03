@@ -69,7 +69,7 @@ dbModel.connect(connectionString, function(err) {
           logResults('mongorestore upis out:', err, stdout, stderr);
           child = process('"' + config.get('Infoscan.files').driveLetter + ':/Program Files/MongoDB/Server/3.2/bin/mongorestore.exe" -h ' + toHost + ' -d ' + toDB + ' ' + dumpFolder + '/Users.bson', function(err, stdout, stderr) {
             logResults('mongorestore users out:', err, stdout, stderr);
-            child = process('node apps\\newimport.js', function(err, stdout, stderr) {
+            child = process('node apps\\importapp.js', function(err, stdout, stderr) {
               logResults('importapp out:', err, stdout, stderr);
               child = process('rmdir "'+ toDisplayFolder +'" /S /Q', function(err, stdout, stderr) {
                 logResults('rmdir out:', err, stdout, stderr);
