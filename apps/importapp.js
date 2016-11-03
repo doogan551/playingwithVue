@@ -153,7 +153,6 @@ function importUpdate() {
 						}
 						logger.info("done", err, new Date());
 						process.exit(0);
-
 						// });
 					});
 					// });
