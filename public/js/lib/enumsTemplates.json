@@ -3966,7 +3966,7 @@
                     "Value": ""
                 },
                 "Device Address": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 2,
                     "Value": "0"
@@ -4060,7 +4060,7 @@
                     "eValue": 0
                 },
                 "Network Segment": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 4,
                     "Value": 0
