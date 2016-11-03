@@ -443,6 +443,9 @@
             },
             "Point": {
                 "enum": 3
+            },
+            "Remote": {
+                "enum": 4
             }
         },
         "Device Model Types": {
@@ -540,7 +543,7 @@
             "Stop Scan": {
                 "enum": 66
             },
-            "Failure Pending": {
+            "Memory Full": {
                 "enum": 67
             }
         },
