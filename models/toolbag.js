@@ -53,8 +53,7 @@ module.exports = {
 				prepend: "vt",
 				keyMap: {
 					"UniquePID": "UPI",
-					"Timet": "TimeT",
-
+					"Timet": "TimeT"
 				},
 				extraKeys: {}
 			},
@@ -67,12 +66,8 @@ module.exports = {
 			"Internal Properties": {
 				name: "InternalProperty",
 				prepend: "",
-				keyMap: {
-					"_parentUpi": "_gplSeq"
-				},
-				extraKeys: {
-					_pAccess: 2
-				}
+				keyMap: {},
+				extraKeys: {}
 			},
 			"Point Statuses": {
 				name: "PointStatus",
@@ -97,9 +92,7 @@ module.exports = {
 			"Device Statuses": {
 				name: "DeviceStatus",
 				prepend: "ds",
-				keyMap: {
-					"Failure Pending": "MemoryFull"
-				},
+				keyMap: {},
 				extraKeys: {}
 			},
 			"Alarm States": {
@@ -142,9 +135,7 @@ module.exports = {
 				name: "FeedbackType",
 				prepend: "fbt",
 				keyMap: {},
-				extraKeys: {
-					Remote: 4
-				}
+				extraKeys: {}
 			},
 			"Network Types": {
 				name: "NetworkType",
@@ -186,11 +177,7 @@ module.exports = {
 					"Point Register Access Violation": "POINT_REGISTER_ACCVIO",
 					"Unknown Point": "UNKNOWN_POINT"
 				},
-				extraKeys: {
-					"REPORT_REGISTER_ACCVIO": 112,
-					"UNKNOWN_REPORT": 114,
-					"REPORT_GEN": 115
-				}
+				extraKeys: {}
 			},
 			"Program Change Requests": {
 				name: "ProgramRequest",
@@ -199,12 +186,7 @@ module.exports = {
 					"None": "Ready",
 					"Pause": "Halt"
 				},
-				extraKeys: {
-					Load: 1,
-					Delete: 100,
-					MarkObsolete: 101,
-					ChangePriority: 102
-				}
+				extraKeys: {}
 			},
 			"Program States": {
 				name: "ProgramStates",
@@ -212,12 +194,7 @@ module.exports = {
 				keyMap: {
 					"Paused": "Waiting"
 				},
-				extraKeys: {
-					Loading: 1,
-					Unloading: 5,
-					Obsolete: 100,
-					Hibernating: 101
-				}
+				extraKeys: {}
 			},
 			"Reset Intervals": {
 				name: "ResetInterval",
@@ -315,9 +292,22 @@ module.exports = {
 					DEVICE_MEMORY_FULL: 54,
 					POINT_COV_FROM_INCORRECT_DEVICE: 55
 				}
+			},
+			"Time Zones": {
+				name: "TZENUM",
+				prepend: "tz",
+				keyMap: {
+					"Eastern Time Zone": "EST",
+					"Central Time Zone": "CST",
+					"Mountain Time Zone": "MST",
+					"Pacific Time Zone": "PST",
+					"Alaska Time Zone": "AKST",
+					"Arizona Time Zone, No DST": "AZ",
+					"Hawaii Time Zone, No DST": "HI"
+				},
+				extraKeys: {}
 			}
 		};
-		// LoadFirmwareCode, enum, AlarmCategory, TZENUM
 		var forEach = function (obj, fn) {
 			var keys = Object.keys(obj),
 				len = keys.length,
@@ -348,13 +338,13 @@ module.exports = {
 			//	prepend: string
 			//	maxChars: int
 			// }
-			var i,
+			var arr = [],
 				str = obj.key,
 				len = obj.maxChars - str.length;
 
 			if (len) {
-				for (i = 0; i < len; i++)
-					str += " ";
+				arr[len] = '';
+				str += arr.join(' ');
 			}
 			return str;
 		};
