@@ -374,8 +374,43 @@ var initKnockout = function () {
 
     ko.bindingHandlers.dtiReportsMaterializeDropdown = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
-            var $element = $(element);
+            var $element = $(element),
+                $ul = $(element).siblings(),
+                $parentDiv = $element.parent(),
+                focusoutEventsSet = false;
+
             $element.dropdown();
+
+            // if ($parentDiv.hasClass("availableCalculations")) {
+            //     $element.on("click", function (clickEvent) {
+            //         if (!focusoutEventsSet) {
+            //             focusoutEventsSet = true;
+            //             $parentDiv.on("focusout", function (outEvent) {
+            //                 outEvent.preventDefault();
+            //                 outEvent.stopPropagation();
+            //                 if ($parentDiv.has($(outEvent.target)).length > 0) {
+            //                     console.log("still in focus " + $(outEvent.target).attr("class"));
+            //
+            //                     $element.dropdown('open');
+            //                     // $element.addClass("active");
+            //                     // $ul.addClass("active");
+            //                     // $ul.css("display", "block");
+            //                     // $ul.css("opacity", 1);
+            //                 } else {
+            //                     console.log("lost focus to " + $(outEvent.target).attr("class"));
+            //                     focusoutEventsSet = false;
+            //                     $parentDiv.off("focusout");
+            //
+            //                     $element.dropdown('close');
+            //                     // $element.removeClass("active");
+            //                     // $ul.removeClass("active");
+            //                     // $ul.css("display", "none");
+            //                     // $ul.css("opacity", 0);
+            //                 }
+            //             });
+            //         }
+            //     });
+            // }
         },
         update: function (element, valueAccessor, allBindings) {
         }
@@ -1901,12 +1936,6 @@ var reportsViewModel = function () {
             $reportColumns = $direports.find("#reportColumns");
             $additionalFilters = $direports.find("#additionalFilters");
             $hiddenPlaceholder = $direports.find(".hiddenPlaceholder");
-            $globalCalculateText = $columnsGrid.find("th .calculateColumn .columnText");
-            $globalCalculate = $columnsGrid.find("th .globalCalculate");
-            $globalPrecisionText = $columnsGrid.find("th .precisionColumn .columnText");
-            $globalPrecision = $columnsGrid.find("th .precisionColumn .globalPrecision");
-            $globalIncludeInChartText = $columnsGrid.find("th .includeInChartColumn .columnText");
-            $globalIncludeInChart = $columnsGrid.find("th .includeInChartColumn .globalIncludeInChart");
             $availableChartTypesChartTab = $direports.find(".availableChartTypes.chartTab");
             $reportChartDiv = $direports.find(".reportChartDiv");
         },
@@ -2364,7 +2393,7 @@ var reportsViewModel = function () {
         },
         adjustConfigTabActivePaneHeight = function () {
             var $configPanes = $tabConfiguration.find(".tab-content div.tab-pane");
-            $configPanes.css("height", (window.innerHeight - 130));
+            $configPanes.css("height", (window.innerHeight - 150));
         },
         handleResize = function () {
             lastResize = new Date();
@@ -2614,42 +2643,25 @@ var reportsViewModel = function () {
                     $columnsGrid.find("th .calculateColumn").on("click", function (parentEvent) {
                         var $calculateColumnDiv = $(this),
                             toggleField = function (displayGlobalButton) {
-                                var $globalChangeCalcs = $globalCalculate.find(".availableCalculations"),
-                                    forElementId = $globalChangeCalcs.find("a").attr("data-activates"),
-                                    $forElement = $globalChangeCalcs.find("#" + forElementId);
-                                    // $availableCalcs = $columnsGrid.find("tbody .availableCalculations");
-
-                                // if ($forElement.hasClass("active")) {
-                                //     $element.removeClass("active");
-                                //     $forElement.removeClass("active");
-                                //     $forElement.css("display", "none");
-                                //     $forElement.css("opacity", 0);
-                                //     // $element.dropdown('close');
-                                // } else {
-                                //     $element.addClass("active");
-                                //     $forElement.addClass("active");
-                                //     $forElement.css("display", "block");
-                                //     $forElement.css("opacity", 1);
-                                //     // $element.dropdown('open');
-                                // }
-
+                                var forElementId = $globalCalculate.find("a").attr("data-activates"),
+                                    $forElement = $globalCalculate.find("#" + forElementId);
 
                                 if (displayGlobalButton) {
-                                    $calculateColumnDiv.focus();
                                     $globalCalculateText.removeClass("displayDiv");
                                     $globalCalculateText.addClass("hideDiv");
                                     $globalCalculate.removeClass("hideDiv");
                                     $globalCalculate.addClass("displayDiv");
-                                    $globalChangeCalcs.find("a").addClass("active");
+                                    $globalCalculate.find("a").addClass("active");
                                     $forElement.addClass("active");
                                     $forElement.css("display", "block");
                                     $forElement.css("opacity", 1);
+                                    $calculateColumnDiv.focus();
                                 } else if (!displayGlobalButton) {
                                     $globalCalculateText.addClass("displayDiv");
                                     $globalCalculateText.removeClass("hideDiv");
                                     $globalCalculate.addClass("hideDiv");
                                     $globalCalculate.removeClass("displayDiv");
-                                    $globalChangeCalcs.find("a").removeClass("active");
+                                    $globalCalculate.find("a").removeClass("active");
                                     $forElement.removeClass("active");
                                     $forElement.css("display", "none");
                                     $forElement.css("opacity", 0);
@@ -2662,19 +2674,21 @@ var reportsViewModel = function () {
                         if (self.canEdit()) {
                             parentEvent.stopPropagation();
                             if (moment().diff(longClickStart) > longClickTimer) {
+                                $globalCalculateText = $columnsGrid.find("th .calculateColumn .columnText");
+                                $globalCalculate = $columnsGrid.find("th .globalCalculate");
 
                                 if (calculateEventsSet) {
                                     toggleField($globalCalculate.has($(parentEvent.target)).length > 0);
                                 } else {
                                     calculateEventsSet = true;
                                     toggleField(true);
-                                    // $calculateColumnDiv.on( "focusout", function (outEvent) {
-                                    //     if (!$calculateColumnDiv.is(":focus")) {  // clicked outside of div
-                                    //         toggleField(false);
-                                    //         calculateEventsSet = false;
-                                    //         $(outEvent.target).off("focusout");
-                                    //     }
-                                    // });
+                                    $calculateColumnDiv.on( "focusout", function (outEvent) {
+                                        if (!$calculateColumnDiv.is(":focus")) {  // clicked outside of div
+                                            toggleField(false);
+                                            calculateEventsSet = false;
+                                            $(outEvent.target).off("focusout");
+                                        }
+                                    });
                                 }
                             }
                         }
@@ -2704,6 +2718,9 @@ var reportsViewModel = function () {
                             };
                         if (self.canEdit()) {
                             if (moment().diff(longClickStart) > longClickTimer) {
+                                $globalPrecisionText = $columnsGrid.find("th .precisionColumn .columnText");
+                                $globalPrecision = $columnsGrid.find("th .precisionColumn .globalPrecision");
+
                                 toggleField(true);
 
                                 if (!precisionEventsSet) {
@@ -2756,6 +2773,9 @@ var reportsViewModel = function () {
                             };
                         if (self.canEdit()) {
                             if (moment().diff(longClickStart) > longClickTimer) {
+                                $globalIncludeInChartText = $columnsGrid.find("th .includeInChartColumn .columnText");
+                                $globalIncludeInChart = $columnsGrid.find("th .includeInChartColumn .globalIncludeInChart");
+
                                 toggleField(true);
 
                                 if (!includeInChartEventsSet) {
@@ -2868,9 +2888,9 @@ var reportsViewModel = function () {
                         scroll: true,
                         handle: ".handle"
                     });
-                }
 
-                console.log(" .... report events configured .... ");
+                    console.log(" .... report events configured .... ");
+                }
             }, 200);
 
             intervals = [
@@ -3222,7 +3242,8 @@ var reportsViewModel = function () {
                             buttons: [
                                 {
                                     extend: "copyHtml5",
-                                    text: '<li><a>Copy</a></li>',
+                                    className: "white blue-grey-text center",
+                                    text: '<div>Copy</div>',
                                     key: {
                                         altKey: true,
                                         key: "1"
@@ -3230,7 +3251,8 @@ var reportsViewModel = function () {
                                 },
                                 {
                                     extend: "csvHtml5",
-                                    text: '<li><a>CSV</a></li>',
+                                    className: "white blue-grey-text center",
+                                    text: '<div>CSV</div>',
                                     key: {
                                         altKey: true,
                                         key: "2"
@@ -3238,7 +3260,8 @@ var reportsViewModel = function () {
                                 },
                                 {
                                     extend: "excelHtml5",
-                                    text: '<li><a>Excel</a></li>',
+                                    className: "white blue-grey-text center",
+                                    text: '<div>Excel</div>',
                                     key: {
                                         altKey: true,
                                         key: "3"
@@ -3246,7 +3269,8 @@ var reportsViewModel = function () {
                                 },
                                 {
                                     extend: "pdfHtml5",
-                                    text: '<li><a>PDF</a></li>',
+                                    className: "white blue-grey-text center",
+                                    text: '<div>PDF</div>',
                                     footer: true,
                                     orientation: (aoColumns.length > 4 ? "landscape" : "portrait"),
                                     key: {
@@ -3477,6 +3501,9 @@ var reportsViewModel = function () {
                 $currentDateTimeDiv.prependTo($tablePagination);
             }
 
+            if (!$datatablesLengthSelect.hasClass("blue-grey-text")) {
+                $datatablesLengthSelect.addClass("blue-grey-text");
+            }
             $datatablesLengthSelect.show();
         },
         breakReportDataIntoPrintablePages = function () {
@@ -4493,12 +4520,12 @@ var reportsViewModel = function () {
                 }, 200);
             };
 
+        getScreenFields();
         initKnockout();
         dtiUtility.getUser(setCurrentUser);
 
         exportEventSet = false;
         activeDataRequests = [];
-        getScreenFields();
         // initKnockout();
         if (!scheduled) {
             initGlobals();
@@ -4835,8 +4862,6 @@ var reportsViewModel = function () {
         }
 
         // updateListOfColumns(tempArray);
-        // $dropdown.addClass("active");
-        // $ul.addClass("active");
         return true;
     };
 

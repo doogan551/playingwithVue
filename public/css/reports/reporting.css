@@ -472,17 +472,17 @@ input.input.form-control.filterContainer:enabled {
     color: #333;
     margin-top: 10px;
 }
-.btn-flat.dropdown-toggle.operatorButton {
+.btn.dropdown-button.operatorButton {
     border: none;
 }
-.btn-flat.dropdown-toggle.conditionButton {
+.btn.dropdown-button.conditionButton {
     border: none;
     padding-left: 3px;
     padding-right: 3px;
     border-radius: 0px 18px 18px 0px;
     margin-left: 4px;
 }
-.btn-flat.dropdown-toggle.conditionButton.orCondition {
+.btn.dropdown-button.conditionButton.orCondition {
     border-radius: 0px 9px 9px 0px;
 }
 span.caret.lm10px {
@@ -575,9 +575,16 @@ i.iconLink:hover {
     cursor: hand;
     cursor: pointer;
 }
-.dataTables_length {
+div.dt-button-collection {
+    width: 117px !important;
+}
+div.dt-button-collection a div:hover {
+    background-color: #d5e1f2 !important;
+}
+.tabViewReport .dataTables_length {
     margin-left: 260px;
     margin-top: -30px;
+    font-weight: bold;
 }
 div.dataTables_wrapper div.dataTables_length select {
     width: 55px;
@@ -685,7 +692,7 @@ div.dataTables_wrapper div.dataTables_length select {
 .availablePropertiesContainer {
     display: inline-block;
 }
-.availableAxisGroupsContainer button.btn.btn-default.dropdown-toggle {
+.availableAxisGroupsContainer button.btn.btn-default.dropdown-button {
     width: 35px;
     padding: 6px 2px;
 }
@@ -712,17 +719,26 @@ input.form-control.inputPrecision {
 .precisionColumn {
     width: 70px;
 }
+th .precisionColumn:focus {
+    outline: none;
+}
 .includeInChart {
     width: 40px;
 }
 th .calculateColumn:hover {
     cursor: pointer;
 }
+th .calculateColumn:focus {
+    outline: none;
+}
 .includeInChartColumn {
     width: 30px;
 }
 .includeInChartColumn:hover {
     cursor: pointer;
+}
+th .includeInChartColumn:hover {
+    outline: none;
 }
 .includeInChartColumn.hideCheckbox {
     width: 40px;
@@ -1087,9 +1103,7 @@ td.filterCondition {
     border-bottom: none !important;
 }
 td.filterCondition.childCondition {
-    text-indent: 15px;
-    padding-left: 12px;
-    padding-right: 10px;
+    padding-left: 25px !important;
 }
 td.filterCondition.firstConditionInGroup {
     -webkit-border-top-left-radius: 22px;
