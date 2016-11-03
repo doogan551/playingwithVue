@@ -151,10 +151,8 @@ function importUpdate() {
 						if (err) {
 							logger.info("updateGPLReferences err:", err);
 						}
-						logger.info("!!Check Port 1-4 Timeouts on devices!!");
 						logger.info("done", err, new Date());
 						process.exit(0);
-
 						// });
 					});
 					// });
@@ -2720,11 +2718,6 @@ function updateDevices(point, callback) {
 			propertyAddress = point["Uplink Port"].Value + " Address";
 		point["Network Segment"].Value = point[propertyNetwork].Value;
 		point["Device Address"].Value = point[propertyAddress].Value.toString();
-
-		for (var i = 1, prop = ""; i <= 4; i++) {
-			prop = "Port " + i + " Timeout";
-			point[prop] = Config.Templates.getTemplate('Device')[prop];
-		}
 
 		point["Device Status"].Value = "Stop Scan";
 		point["Device Status"].eValue = 66;
