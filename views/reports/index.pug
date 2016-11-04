@@ -659,7 +659,17 @@ html.direports
                                 option(data-bind='value: $data.value, text: $data.text, attr: { selected: !!~$parent.selectedMonths.indexOf($data.value) }')
                                 // /ko
                             label Months
+                .chips
             .modal-footer
                 a.btn.waves-effect.blue-grey(data-bind="click: save") Save
                 a.btn.waves-effect.grey(data-bind="click: cancel") Cancel
-                a.btn.wafes-effect.red.darken-4.left(data-bind="click: deleteMe") Delete
+                a.btn.wafes-effect.red.darken-4.left(data-bind="click: deleteScheduleEntry") Delete
+
+    script#autosuggestTemplate(type='text/html')
+        //- autosuggestMOD (the data-bind in .autosuggestContainer)
+        .autosuggestContainer.z-depth-2(data-bind='visible: isShown')
+            // ko foreach: sources
+            .autosuggestHeader(data-bind='visibile: nameShown, text: name')
+            .autosuggestContent(data-bind='foreach: { data: matches, as: "match" } ')
+                .autosuggestMatch(data-bind='html: match.html, click: $root.selectMatch')
+            // /ko
