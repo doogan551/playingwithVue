@@ -1231,19 +1231,19 @@ function testCron() {
 // testCron();
 
 function testobjects() {
-  var obj = {
-    utility: {
-      functionOne: function() {
-        console.log('one');
-      },
-      functionTwo: function() {
-        obj.utility.functionOne();
-      }
-    }
+  function one(b) {
+    b(1);
   }
-  obj.utility.functionTwo();
+
+  function two(a, b) {
+    console.log(a, 2);
+    b();
+  }
+  async.waterfall([one, two], function(err) {
+    console.log(err);
+  });
 }
-// testobjects();
+testobjects();
 
 function testConfg() {
   var types = Object.keys(Config.Enums['Point Types']);
@@ -1254,4 +1254,4 @@ function testConfg() {
     }
   });
 }
-testConfg()
+// testConfg()

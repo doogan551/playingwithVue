@@ -1,4 +1,5 @@
 var mongo = require('mongodb');
+var Utility = require('../../models/utility');
 var pointsCollection = "points";
 var Config = require('./lib/config.js');
 var async = require('async');
@@ -10,7 +11,7 @@ ModelUtil = (function() {
 
 	// DeviceUtilures properties for a device
 	obj.Device = {
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 
 			this.applyModelType(data, function(err, device) {
 
@@ -41,7 +42,7 @@ ModelUtil = (function() {
 	};
 
 	obj["Remote Unit"] = {
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			this.applyModelType(data, function(err, rmu) {
 				callback(null, rmu);
 			});
@@ -59,10 +60,10 @@ ModelUtil = (function() {
 
 	obj["Analog Input"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			obj["Analog Input"].applyDevModel(data, function(err, aiPoint) {
 				data.point = aiPoint;
-				obj["Analog Input"].applySensorPoint(data, db, function(err, aiPoint) {
+				obj["Analog Input"].applySensorPoint(data, function(err, aiPoint) {
 					callback(null, aiPoint);
 				});
 			});
@@ -77,12 +78,14 @@ ModelUtil = (function() {
 		//       Notes:
 		// Rev.  1.00	08/12/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
-		applySensorPoint: function(data, db, callback) {
+		applySensorPoint: function(data, callback) {
 			//console.log("applySensorPoint");
 			aiPoint = data.point;
-
-			db.collection("points").findOne({
-				_id: Config.Utility.getPropertyObject("Sensor Point", aiPoint).Value
+			Utility.getOne({
+				collection: 'points',
+				query: {
+					_id: Config.Utility.getPropertyObject("Sensor Point", aiPoint).Value
+				}
 			}, function(err, refPoint) {
 
 				data = {
@@ -134,14 +137,14 @@ ModelUtil = (function() {
 
 	obj["Analog Output"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			/*for (var m in obj.AOPoint) {
 				console.log(typeof obj.AOPoint[m], " %%%%%", m);
 			}*/
 
 			obj["Analog Output"].applyDevModel(data, function(err, aoPoint) {
 				data.point = aoPoint;
-				obj["Analog Output"].applySensorPoint(data, db, function(err, aoPoint) {
+				obj["Analog Output"].applySensorPoint(data, function(err, aoPoint) {
 
 					callback(null, aoPoint);
 				});
@@ -158,10 +161,13 @@ ModelUtil = (function() {
 		//       Notes:
 		// Rev.  1.00	08/14/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
-		applySensorPoint: function(data, db, callback) {
+		applySensorPoint: function(data, callback) {
 			aoPoint = data.point;
-			db.collection("points").findOne({
-				_id: Config.Utility.getPropertyObject("Sensor Point", aoPoint).Value
+			Utility.getOne({
+				collection: 'points',
+				query: {
+					_id: Config.Utility.getPropertyObject("Sensor Point", aoPoint).Value
+				}
 			}, function(err, refPoint) {
 
 				data = {
@@ -233,7 +239,7 @@ ModelUtil = (function() {
 
 	obj["Analog Value"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			obj["Analog Value"].applyDevModel(data, function(err, avPoint) {
 				callback(null, avPoint);
 			});
@@ -279,10 +285,10 @@ ModelUtil = (function() {
 
 	obj["Binary Value"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			obj["Binary Value"].applyDevModel(data, function(err, bvPoint) {
 				data.point = bvPoint;
-				obj["Binary Value"].applyFeedback(data, db, function(err, bvPoint) {
+				obj["Binary Value"].applyFeedback(data, function(err, bvPoint) {
 
 					callback(null, bvPoint);
 				});
@@ -332,12 +338,15 @@ ModelUtil = (function() {
 		//       Notes:
 		// Rev.  1.00	08/15/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
-		applyFeedback: function(data, db, callback) {
+		applyFeedback: function(data, callback) {
 
 				bvPoint = data.point;
-				db.collection("points").findOne({
+			Utility.getOne({
+				collection: 'points',
+				query: {
 					_id: Config.Utility.getPropertyObject("Feedback Point", bvPoint).Value
-				}, function(err, refPoint) {
+				}
+			}, function(err, refPoint) {
 
 					data = {
 						point: bvPoint,
@@ -356,10 +365,10 @@ ModelUtil = (function() {
 
 	obj["Binary Input"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			obj["Binary Input"].applyDevModel(data, function(err, biPoint) {
 				data.point = biPoint;
-				obj["Binary Input"].applyFeedback(data, db, function(err, biPoint) {
+				obj["Binary Input"].applyFeedback(data, function(err, biPoint) {
 
 					callback(null, biPoint);
 				});
@@ -375,11 +384,14 @@ ModelUtil = (function() {
 		//       Notes:
 		// Rev.  1.00	08/15/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
-		applyFeedback: function(data, db, callback) {
+		applyFeedback: function(data, callback) {
 
 			biPoint = data.point;
-			db.collection("points").findOne({
-				_id: Config.Utility.getPropertyObject("Feedback Point", biPoint).Value
+			Utility.getOne({
+				collection: 'points',
+				query: {
+					_id: Config.Utility.getPropertyObject("Feedback Point", biPoint).Value
+				}
 			}, function(err, refPoint) {
 
 				data = {
@@ -427,7 +439,7 @@ ModelUtil = (function() {
 
 	obj["Binary Output"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			this.applyDevModel(data, function(err, boPoint) {
 				callback(null, boPoint);
 			});
@@ -502,7 +514,7 @@ ModelUtil = (function() {
 
 	obj["MultiState Value"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			this.applyDevModel(data, function(err, msvPoint) {
 				callback(null, msvPoint);
 			});
@@ -540,7 +552,7 @@ ModelUtil = (function() {
 
 	obj["Accumulator"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			this.applyDevModel(data, function(err, accPoint) {
 				callback(null, accPoint);
 			});

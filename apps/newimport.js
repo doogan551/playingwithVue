@@ -32,7 +32,8 @@ var cli = commandLineArgs([{
   name: 'default',
   alias: 'd',
   type: Boolean,
-  defaultOption: true
+  defaultOption: true,
+  defaultValue: true
 }, {
   name: 'gpl',
   alias: 'g',
@@ -68,9 +69,12 @@ var options = cli.parse();
 dbModel.connect(connectionString.join(''), function(err) {
 
   if (!!options.default) {
+    console.log('default');
     importProcess.start();
   } else if (!!options.gpl) {
-    doGplImport(xmlPath);
+    doGplImport(function() {
+      console.log('done with doGplImport');
+    });
   } else if (!!options.updategpl) {
     updateGPLRefs(function(err) {
       logger.info('updateGPLRefs', err);
@@ -188,30 +192,63 @@ function importUpdate() {
 
   var importPoint = function(point, callback) {
 
-    var functions = [
-      updateNameSegments,
-      updateSequences,
-      updateTaglist,
-      updateCfgRequired,
-      updateOOSValue,
-      addTrendProperties,
-      updateScriptPoint,
-      // updateProgramPoints,
-      updateMultiplexer,
-      updateGPLBlocks,
-      // updateSensorPoints,
-      updateReferences,
-      updateTimeZones,
-      updateModels,
-      updateDevices,
-      updateAlarmMessages,
-      addBroadcastPeriod,
-      updateTrend,
-      rearrangeProperties
-    ];
 
-    async.series(functions, function(err, result) {
-      updatePoint(callback);
+    updateNameSegments(point, function(err) {
+
+      updateSequences(function(err) {
+
+        updateTaglist(function(err) {
+
+          updateCfgRequired(function(err) {
+
+            updateOOSValue(function(err) {
+
+              addTrendProperties(function(err) {
+
+                updateScriptPoint(function(err) {
+
+                  // updateProgramPoints(function(err){
+
+                  updateMultiplexer(function(err) {
+
+                    updateGPLBlocks(function(err) {
+
+                      // updateSensorPoints(function(err){
+
+                      updateReferences(function(err) {
+
+                        updateTimeZones(function(err) {
+
+                          updateModels(function(err) {
+
+                            updateDevices(function(err) {
+
+                              updateAlarmMessages(function(err) {
+
+                                addBroadcastPeriod(function(err) {
+
+                                  updateTrend(function(err) {
+
+                                    rearrangeProperties(function(err) {
+                                      updatePoint(callback);
+                                    });
+                                  });
+                                });
+                              });
+                            });
+                          });
+                        });
+                        // });
+                      });
+                    });
+                    // });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
     });
 
     function updatePoint(cb) {
@@ -1503,7 +1540,7 @@ function fixUpisCollection(baseCollection, callback) {
   }, function(err) {
     logger.info("done with indexing");
     Utility.update({
-      collections: 'upis',
+      collection: 'upis',
       query: {},
       updateObj: {
         $set: {
@@ -1519,7 +1556,6 @@ function fixUpisCollection(baseCollection, callback) {
         collection: 'points',
         field: '_id'
       }, function(err, results) {
-        console.log('-----', results.length);
         var criteria = {
           collection: 'upis',
           query: {
@@ -1652,7 +1688,7 @@ function convertHistoryReports(callback) {
         insertObj: report
       }, next);
     });
-  });
+  }, callback);
 }
 
 function convertTotalizerReports(callback) {
@@ -2168,9 +2204,7 @@ function updateGPLRefs(callback) {
 }
 
 function initImport(callback) {
-  // remove name
-  // remove VAV
-  // model type property set isreadonly to false
+  console.log('init import');
   createEmptyCollections(function(err) {
     setupSystemInfo(function(err) {
       setupPointRefsArray(function(err) {
@@ -2742,7 +2776,8 @@ function setupVersions(callback) {
   }, callback);
 }
 
-function doGplImport(xmlPath, cb) {
+function doGplImport(cb) {
+  console.log(xmlPath);
   var fs = require('fs'),
     upiMap = {},
     count = 0,

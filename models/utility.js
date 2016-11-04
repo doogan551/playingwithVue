@@ -174,6 +174,12 @@ exports.distinct = function(criteria, cb) {
   collection.distinct(field, query, options, cb);
 };
 
+exports.createCollection = function(criteria, cb) {
+  var coll = criteria.collection;
+
+  db.get().createCollection(coll, cb);
+};
+
 exports.dropCollection = function(criteria, cb) {
   var coll = criteria.collection;
 
