@@ -31,6 +31,7 @@ var Scheduler = {
   },
   buildCron: function(schedule, cb) {
     var upi = schedule.referencePointUpi;
+    var emails = [];
     Utility.getOne({
       collection: 'points',
       query: {
@@ -47,50 +48,52 @@ var Scheduler = {
       });
       var time = schedule.runTime;
       var date = moment().format('YYYYMMDD');
-      if(scheduleContainer.hasOwnProperty(schedule._id)){
+      if (scheduleContainer.hasOwnProperty(schedule._id)) {
         scheduleContainer[schedule._id].stop();
       }
-      scheduleContainer[schedule._id] = new CronJob(time, function() {
-        var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
-        pageRender.renderPage(domain + '/scheduleloader/report/scheduled/' + upi, path, function(err) {
-
-          fs.readFile(path, function(err, data) {
-            Utility.iterateCursor({
-              collection: 'Users',
-              query: {
-                _id: {
-                  $in: users
+      if (!!schedule.enabled) {
+        scheduleContainer[schedule._id] = new CronJob(time, function() {
+          var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
+          pageRender.renderPage(domain + '/scheduleloader/report/scheduled/' + upi, path, function(err) {
+            fs.readFile(path, function(err, data) {
+              Utility.iterateCursor({
+                collection: 'Users',
+                query: {
+                  _id: {
+                    $in: users
+                  }
                 }
-              }
-            }, function(err, user, nextUser) {
-              // figure out date/time
-              var emails = user['Contact Info'].Value.filter(function(info) {
-                return info.Type === 'Email';
-              }).map(function(email) {
-                return email.Value;
-              }).join(',');
+              }, function(err, user, nextUser) {
+                // figure out date/time
+                emails = emails.concat(user['Contact Info'].Value.filter(function(info) {
+                  return info.Type === 'Email';
+                }).map(function(email) {
+                  return email.Value;
+                }));
 
-              mailer.sendEmail({
-                to: emails,
-                fromAccount: 'infoscan',
-                subject: [reportName, ' for ', date].join(''),
-                attachments: [{
-                  path: path,
-                  contentType: 'application/pdf',
-                  content: data
-                }]
-              }, function(err, info) {
-                console.log(err && err.code, info);
+                nextUser();
+              }, function(err, count) {
+                emails = emails.concat(schedule.emails).join(',');
+                mailer.sendEmail({
+                  to: emails,
+                  fromAccount: 'infoscan',
+                  subject: [reportName, ' for ', date].join(''),
+                  attachments: [{
+                    path: path,
+                    contentType: 'application/pdf',
+                    content: data
+                  }]
+                }, function(err, info) {
+                  console.log(err && err.code, info);
+                });
               });
-              nextUser();
-            }, function(err, count) {});
+            });
           });
         });
-      });
+      }
 
       cb();
     });
   }
 };
-
 module.exports = Scheduler;

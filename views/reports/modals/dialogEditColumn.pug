@@ -32,7 +32,7 @@
             .form-group
                 label.control-label.col-sm-3 Type:
                 .col-sm-8
-                    .dropdown.availableTotalizerOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
+                    .availableTotalizerOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
                         a.btn.waves-effect.waves-light.blue-grey.dropdown-button(data-bind="css: {disabled: !$root.canEdit()}", data-toggle="dropdown")
                             span(data-bind="text: $data.operator")
                             // ko if: (!!$data.valueList && $data.valueList.length > 1)
