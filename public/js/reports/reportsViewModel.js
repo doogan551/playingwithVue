@@ -416,16 +416,86 @@ var initKnockout = function () {
         }
     };
 
+    ko.bindingHandlers.dtiReportsMaterializeSelect2 = {
+        init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+            var $element = $(element),
+                $select = $element.children('select'),
+                config = valueAccessor(),
+                list = config.options(),
+                notifier = config.notifier,
+                hideEvent = config.hideEvent,
+                $liList;
+
+            $select.addClass('select-processed');
+
+            dti.forEachArray(list, function addItemToSelect(item) {
+                $select.append($('<option>', {
+                        value: item.key(),
+                        selected: true
+                    })
+                        .text(item.key())
+                );
+            });
+            // Initial initialization:
+            $select.material_select({
+                belowOrigin: true,
+                showCount: true,
+                countSuffix: 'Types'
+            });
+
+            $liList = $element.find('li');
+
+            dti.forEachArray(list, function syncDropdownStatus (item, idx) {
+                if (item.selected() && item.visible()) {
+                    $($liList[idx]).addClass('active');
+                    $($liList[idx]).find('input').prop('checked', true);
+                }
+            });
+
+            // Find the "options" sub-binding:
+            var boundValue = valueAccessor();
+
+            // Register a callback for when "options" changes:
+            // boundValue.options.subscribe(function () {
+            //     $select.material_select();
+            // });
+
+            $select.on('change', function handleMaterialSelectChange (event, target) {
+                var $target = $(target),
+                    index = $target.index(),
+                    selected = $target.hasClass('active');
+
+                if (!target.skipNofity) {
+                    notifier();
+
+                    list[index].selected(selected);
+                }
+            });
+
+            $select.siblings('input.select-dropdown').on('close', function doHide () {
+                hideEvent();
+            });
+
+        }
+    };
+
     ko.bindingHandlers.dtiReportsMaterializeSelect = {
         suspend: false,
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
             var suspend = false,
+                boundField = valueAccessor(),
                 $element = $(element);
 
             // $element.material_select('destroy');
             $element.material_select();
             $element.on('change', function() {
                 console.log("material_select change() fired....");
+                if (ko.isObservable(boundField)) {
+                    boundField(this.selectedOptions[0].value);
+                } else {
+                    boundField = this.selectedOptions[0].value;
+                }
+
                 if (!suspend) {
                     suspend = true;
                     var event = new CustomEvent('change', {
