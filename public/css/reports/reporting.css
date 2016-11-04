@@ -1164,28 +1164,19 @@ button {
     color: red;
 }
 
-#schedule .labelColumn {
-        color: #23527c;
-        font-size: larger;
-        width: 150px;
-        float: left;
-}
-#schedule .contentColumn {
-    float: left;
-}
-#schedule .contentColumn i {
+#schedule i {
     color: #607d8b;
+    cursor: pointer;
 }
-#scheduleModal .input-field {
+#scheduleModal .standardInterval .input-field {
     white-space: nowrap;
     margin-right: 20px;
 }
 #scheduleModal .input-field:last-child {
     margin-right: 0px;
 }
-#scheduleModal .modal-footer .btn {
-    float: none;
-    margin-left: 18px;
+#scheduleModal .modal-footer .btn:not(:last-child) {
+    margin-left: 10px;
 }
 .flex {
     display: flex;
@@ -1195,4 +1186,60 @@ button {
 }
 .flex-start {
     justify-content: flex-start;
+}
+.padleft-20 {
+    padding-left: 20px;
+}
+
+.autosuggestContainer {
+    position: absolute;
+    top: 100px; /* todo this won't work */
+    left: 0;
+    z-index: 2;
+    max-height: 400px;
+    min-width: 200px;
+    overflow: auto;
+    margin-top: 10px;
+    background-color: #FFF;
+}
+.autosuggestContainer .autosuggestHeader {
+    /*background-color: $blue-grey-lighten-5;*/
+    background-color: #eceff1;
+    padding: 5px;
+    font-weight: bold;
+    font-size: smaller;
+}
+
+.autosuggestContainer .autosuggestContent .autosuggestMatch {
+    padding-left: 5px;
+    padding-right: 10px;
+}
+        
+.autosuggestContainer .autosuggestContent .autosuggestSelected {
+    /*background-color: $blue-grey-lighten-1;*/
+    background-color: #78909c;
+    color: #FFF;
+}
+
+.autosuggestContainer .autosuggestContent .autosuggestMatch:hover {
+    /*@extend .autosuggestSelected;*/
+    background-color: #78909c;
+    color: #FFF;
+
+    cursor: pointer;
+}
+
+.autosuggestContainer .autosuggestContent .autosuggestHighlight {
+    font-weight: bold;
+}
+
+/* Materialize overrides */
+.chips input {
+    margin: 0;
+}
+.chips.focus {
+    /*border-bottom: 1px solid $blue-grey-lighten-2;*/
+    border-bottom: 1px solid #90a4ae;
+    /*box-shadow: 0 1px 0 0 $blue-grey-lighten-2;*/
+    box-shadow: 0 1px 0 0 #90a4ae;
 }

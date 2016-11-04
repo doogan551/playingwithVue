@@ -46,10 +46,15 @@ html.direports
                             a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: reportConfiguration.bind()", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Report settings")
                                 //| Configuration
                                 i.material-icons.center settings
+                        li(data-bind='if: $root.canEdit()')
+                            a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Save report")
+                                i.mdi.mdi-content-save.center
                         li.viewReportButton
                             a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Run report")
                                 //| Run Report
                                 i.material-icons.center play_arrow
+
+
                 .preloader-wrapper.small.active.runReportTabSpinner(data-bind="css: {displayDiv: displayTabSpinner(), hideDiv: !displayTabSpinner()} ", title="Requesting Report Data")
                     .spinner-layer
                         .circle-clipper.left
@@ -99,7 +104,7 @@ html.direports
                                     li.tab.col.additionalFilters(data-bind='css: reportType === "Property" ? "s2":"s3" ')
                                         a.strong.toggleTab.blue-grey-text(href="#additionalFilters", data-toggle="tab") Additional Filters
                                     li.tab.col(data-bind='css: reportType === "Property" ? "s2":"s3" ')
-                                        a.strong.toggleTab.blue-grey-text(href="#schedule") Schedule
+                                        a.strong.toggleTab.blue-grey-text(href="#schedule") Scheduled Actions
                         .configurationContent
                             .hideDiv
                                 h6.strong.reportTitle(data-bind="text: reportDisplayTitle")
@@ -479,22 +484,25 @@ html.direports
                                     // /ko
                                 div#schedule.tab-pane
                                     .row
-                                        .labelColumn Enable
-                                        .contentColumn
-                                            input(type='checkbox' id='enabled')
-                                            label(for='enabled') Enable
-                                    .row
-                                        .labelColumn Schedule Entries
-                                        .contentColumn
-                                            a.tooltipped.waves-effect(data-bind='click: scheduler.modal.open.bind($data, "new")', data-position='bottom', data-tooltip='Add schedule entry', data-delay='10')
-                                                i.mdi.mdi-plus-box.mdi-36px
+                                        h5 Scheduled Actions
+                                    // ko foreach: scheduler.scheduleEntries
+                                    .row.flex.flex-center
+                                        input.filled-in(type='checkbox', data-bind='checked: enable, attr: { "id": $root.makeId() }')
+                                        label(data-bind='attr: { "for": $root.getLastId() }') Enable
+                                        .padleft-20
+                                            span(data-bind='html: parsed.plainEnglish')
+                                            span , email this report to&nbsp;
+                                            span(data-bind='text: $root.scheduler.buildRecipients()')
+                                        i.padleft-20.material-icons(data-bind='click: $root.scheduler.modal.open') settings
+                                    // /ko
+                                    a.btn.waves-effect.blue-grey(data-bind='click: scheduler.modal.open.bind($data, "new")') Add Scheduled Action
                                 .reportButtons
                                     // ko if: ($root.canEdit())
-                                    a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(style="margin-right: 2px;", data-position="top" data-delay="500" data-tooltip="Save report")
+                                    //- a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(style="margin-right: 2px;", data-position="top" data-delay="500" data-tooltip="Save report")
                                         //| Save
                                         i.material-icons.tiny.center done
                                     // /ko
-                                    a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.runReportButton(data-bind="enabled: reportResultViewed()", data-position="top" data-delay="500" data-tooltip="Run report")
+                                    //- a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.runReportButton(data-bind="enabled: reportResultViewed()", data-position="top" data-delay="500" data-tooltip="Run report")
                                         //| Run
                                         i.material-icons.center play_arrow
                                     .screenMessages
@@ -543,34 +551,68 @@ html.direports
         #scheduleModal.modal.modal-fixed-footer
             .modal-content
                 form
-                    .row.flex.flex-center.flex-start
+                    .row.flex.flex-center.flex-start.standardInterval
                         .input-field
                             select(data-bind='options: availableIntervals, value: selectedInterval')
                             label Interval
+                        .input-field(data-bind='visible: selectedInterval() === "Advanced"')
+                            //- The active class on our label resolves the conflict of label overlapping initial value
+                            label.active(for='timepicker') Time
+                            input#timepicker2.timepicker(type='time', data-bind='value: selectedTime')
                         .flex.flex-center.flex-start(data-bind='visible: selectedInterval() !== "Advanced"')
                             .input-field.center(data-bind='visible: selectedInterval() !== "Daily"')
                                 span On 
                                 span(data-bind='visible: selectedInterval() === "Monthly"') The
                             .input-field(data-bind='visible: selectedInterval() === "Weekly"')
-                                select(data-bind='options: availableDaysOfWeek, optionsText: "text", value: selectedDayOfWeek')
+                                select(data-bind='options: availableDaysOfWeek, optionsText: "text", optionsValue: "value", value: selectedDayOfWeek')
                                 label Day of Week
                             .input-field(data-bind='visible: selectedInterval() === "Monthly"')
-                                select(data-bind='options: availableDates, optionsText: "text", value: selectedDate')
+                                select(data-bind='options: availableDates, optionsText: "text", optionsValue: "value", value: selectedDate')
                                 label Date
                             .input-field(data-bind='visible: selectedInterval() === "Yearly"')
-                                select(data-bind='options: availableMonths, optionsText: "text", value: selectedMonth')
+                                select(data-bind='options: availableMonths, optionsText: "text", optionsValue: "value", value: selectedMonth')
                                 label Month
                             .input-field(data-bind='visible: selectedInterval() === "Yearly"')
-                                select(data-bind='options: availableDates, optionsText: "text", value: selectedDate')
+                                select(data-bind='options: availableDates, optionsText: "text", optionsValue: "value", value: selectedDate')
                                 label Date
                             .input-field.center At
                             .input-field
-                                label(for='timepicker') Time
-                                input#timepicker.timepicker(type='time')
-                    //- .row.flex.flex-center.flex-start(data-bind='visible: selectedInterval() === "Advanced"')
-                    //-     .input-field
-                    //-         select(data-bind='options: availableMinutes')
-
+                                //- The active class on our label resolves the conflict of label overlapping initial value
+                                label.active(for='timepicker') Time
+                                input#timepicker.timepicker(type='time', data-bind='value: selectedTime')
+                    .row(data-bind='visible: selectedInterval() === "Advanced"')
+                        .row.input-field
+                            select(data-bind='selectedOptions: selectedDaysOfWeek', multiple)
+                                option(disabled, selected) Every day of the week
+                                // ko foreach: availableDaysOfWeek
+                                option(data-bind='value: $data.value, text: $data.text, attr: { selected: !!~$parent.selectedDaysOfWeek.indexOf($data.value) }')
+                                // /ko
+                            label Days of Week
+                        .row.input-field
+                            select(data-bind='selectedOptions: selectedDates', multiple)
+                                option(disabled) Every day of the month
+                                // ko foreach: availableDates
+                                option(data-bind='value: $data.value, text: $data.text, attr: { selected: !!~$parent.selectedDates.indexOf($data.value) }')
+                                // /ko
+                            label Dates
+                        .row.input-field
+                            select(data-bind='selectedOptions: selectedMonths', multiple)
+                                option(disabled) Every month of the  year
+                                // ko foreach: availableMonths
+                                option(data-bind='value: $data.value, text: $data.text, attr: { selected: !!~$parent.selectedMonths.indexOf($data.value) }')
+                                // /ko
+                            label Months
+                .chips
             .modal-footer
-                a.btn.waves-effect.blue-grey(data-bind="click: saveScheduleEntry") Save
-                a.btn.waves-effect.grey(data-bind="click: cancelScheduleEntry") Cancel
+                a.btn.waves-effect.blue-grey(data-bind="click: save") Save
+                a.btn.waves-effect.grey(data-bind="click: cancel") Cancel
+                a.btn.wafes-effect.red.darken-4.left(data-bind="click: deleteScheduleEntry") Delete
+
+    script#autosuggestTemplate(type='text/html')
+        //- autosuggestMOD (the data-bind in .autosuggestContainer)
+        .autosuggestContainer.z-depth-2(data-bind='visible: isShown')
+            // ko foreach: sources
+            .autosuggestHeader(data-bind='visibile: nameShown, text: name')
+            .autosuggestContent(data-bind='foreach: { data: matches, as: "match" } ')
+                .autosuggestMatch(data-bind='html: match.html, click: $root.selectMatch')
+            // /ko

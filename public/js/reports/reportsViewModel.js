@@ -2,6 +2,83 @@
 window.workspaceManager = window.top.workspaceManager;
 
 var dti = {
+    settings: {
+        logLinePrefix: true,
+        webEndpoint: window.location.origin,
+        socketEndPoint: window.location.origin,
+        apiEndpoint: window.location.origin + '/api/',
+        idxPrefix: 'reports_'
+    },
+    utility: {
+        getTemplate: function (id) {
+            var markup = $(id).html();
+
+            return $(markup);
+        }
+    },
+    itemIdx: 0,
+    formatDate: function (date, addSuffix) {
+        var functions = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'],
+            lengths = [2, 2, 2, 3],
+            separators = [':', ':', ':', ''],
+            suffix = ' --',
+            fn,
+            out = '';
+
+        if (addSuffix) {
+            separators.push(suffix);
+        }
+
+        if (typeof date === 'number') {
+            date = new Date(date);
+        }
+
+        for (fn in functions) {
+            if (functions.hasOwnProperty(fn)) {
+                out += ('000' + date['get' + functions[fn]]()).slice(-1 * lengths[fn]) + separators[fn];
+            }
+        }
+
+        return out;
+    },
+    log: function () {
+        var stack,
+            steps,
+            lineNumber,
+            err,
+            now = new Date(),
+            args = [].splice.call(arguments, 0),
+            pad = function (num) {
+                return ('    ' + num).slice(-4);
+            },
+            formattedtime = dti.formatDate(new Date(), true);
+
+        if (dti.settings.logLinePrefix === true) {
+            err = new Error();
+            if (Error.captureStackTrace) {
+                Error.captureStackTrace(err);
+
+                stack = err.stack.split('\n')[2];
+
+                steps = stack.split(':');
+
+                lineNumber = steps[2];
+
+                args.unshift('line:' + pad(lineNumber), formattedtime);
+            }
+        }
+        // args.unshift(formattedtime);
+        if (!dti.noLog) {
+            console.log.apply(console, args);
+        }
+    },
+    makeId: function () {
+        dti.itemIdx++;
+        return dti.settings.idxPrefix + dti.itemIdx;
+    },
+    getLastId: function () {
+        return dti.settings.idxPrefix + dti.itemIdx;
+    },
     forEach: function (obj, fn) {
         var keys = Object.keys(obj),
             c,
@@ -32,10 +109,637 @@ var dti = {
 
         return errorFree;
     },
-    getTemplate: function (id) {
-        var markup = $(id).html();
+    pickatime: function ($inputEl, config) {
+        var defaults = {
+                default: '',           // default time, 'now' or '13:14' e.g.
+                fromnow: 0,            // set default time to * milliseconds from now
+                donetext: 'Done',      // done button text
+                autoclose: true,       // auto close when minute is selected
+                ampmclickable: false,  // set am/pm button on itself
+                darktheme: false,      // set to dark theme
+                twelvehour: false,     // 12 hour AM/PM clock or 24 hour; TODO - this should come from a system setting
+                vibrate: true,         // vibrate the device when dragging clock hand
+                container: ''          // default will append clock next to input
+            },
+            options = $.extend(defaults, config);
 
-        return $(markup);
+        $inputEl.pickatime(options);
+    },
+    autosuggest: {
+        init: function () {
+
+        },
+        Autosuggest: function (config) {
+            // config:
+            // {
+            //     $inputElement: $element,
+            //     $resultsContainer: $element,
+            //     $chips: $element, // Materialize chips $ element - ONLY if the autosuggest is on an input with materialize chips installed
+            //     sources: [{
+            //         data: [array of suggestion strings],
+            //         name: 'name of data source',
+            //         nameShown: bool (show name header before suggestion results)
+            //         * async data sources will require additional info TBD
+            //     }, {...}],
+            //     see 'defaults' object below for additional options
+            // }
+            var self = this,
+                defaults = {
+                    highlight: true, // If true, when suggestions are rendered, pattern matches for the current query in text nodes will be wrapped in a strong element with its class set to {{classNames.highlight}}
+                    minLength: 0, // The minimum character length needed before suggestions start getting rendered
+                    classNames: {
+                        highlight: 'autosuggestHighlight',  // Added to the element that wraps highlighted text
+                        match: 'autosuggestMatch',          // Added to suggestion elements in the suggestion container
+                        selected: 'autosuggestSelected',    // Added to selected suggestion elements
+                        header: 'autosuggestHeader',        // Added to suggestion source header (if shown)
+                        container: 'autosuggestContainer'   // Added to suggestion container
+                    },
+                    autoselect: false, // If nothing selected, autoselect the first suggestion when autosuggest renders or the suggestions change
+                    showOnFocus: false, // Show suggestions when input is focused
+                    chainCharacter: '.' // Delimiter character used to separate links in an object chain
+                },
+                cfg = $.extend(defaults, config),
+                selectors = (function () {
+                    var obj = {};
+
+                    dti.forEach(cfg.classNames, function (cssClass, name) {
+                        obj[name] = '.' + cssClass;
+                    });
+                    
+                    return obj;
+                })(),
+                operatorsRegex = new RegExp('[<>]=|!=|<>|>|<|=|:'),
+                $markup,
+                $container,
+                scrollTo = function ($target) {
+                    if (!$target || !$target.length) {
+                        return $target;
+                    }
+
+                    var topOffset = $target.position().top,
+                        doScroll = false;
+
+                    if (topOffset < 0) {
+                        doScroll = true;
+                    } else {
+                        topOffset = (topOffset + $target.height()) - $container.height();
+                        
+                        if (topOffset > 0) {
+                            doScroll = true;
+                        }
+                    }
+
+                    if (doScroll) {
+                        $container.scrollTop($container.scrollTop() + topOffset);
+                    }
+
+                    return $target;
+                },
+                sortArray = function (arr) {
+                    arr.sort(function (a,b) {
+                        return a.text.toLowerCase() > b.text.toLowerCase() ? 1:-1;
+                    });
+                },
+                getOperator = function (str) {
+                    var operator = str.match(operatorsRegex);
+
+                    return operator && operator[0];
+                },
+                parse = function (str) {
+                    var beginningWhitespaceRegex = /^\s*/,
+                        parsed = {
+                            expression: str,
+                            isEquation: false,
+                            isInvalid: false,
+                            operator: getOperator(str),
+                            value: null,
+                        },
+                        equationParts,
+                        i;
+
+                    if (parsed.operator) {
+                        parsed.isEquation = true;
+                        equationParts = str.split(parsed.operator);
+                        parsed.expression = equationParts[0].trim();
+                        parsed.value = equationParts[1].replace(beginningWhitespaceRegex, '');
+                        
+                        if (parsed.expression.length === 0) {
+                            parsed.isEquation = false;
+                            parsed.value = null;
+                            parsed.operator = null;
+                            parsed.expression = str;
+                        } else if (equationParts.length > 2) {
+                            parsed.isInvalid = true;
+                            // Our 'value' term is incomplete - finish it out
+                            i = 2;
+                            do {
+                                parsed.value += equationParts[i++];
+                            } while (i < parsed.expression.length);
+                        } else if (parsed.expression.match(operatorsRegex) || parsed.value.match(operatorsRegex)) {
+                            parsed.isInvalid = true;
+                        }
+                    }
+
+                    return parsed;
+                },
+                getMatches = function (inputValue) {
+                    var regex = new RegExp(inputValue, 'ig'),
+                        totalMatches = 0,
+                        parsed,
+                        matches,
+                        data,
+                        chain,
+                        stopIndex;
+
+                    dti.forEachArray(self.bindings.sources(), function (source) {
+                        matches = [];
+                        data = source.data;
+
+                        if (Array.isArray(data)) {
+                            dti.forEachArray(data, function (item) {
+                                if (regex.test(item.text)) {
+                                    if (cfg.highlight) {
+                                        item.html(item.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
+                                    }
+                                    matches.push(item);
+                                }
+                            });
+                        } else { // Must be an object
+                            parsed = parse(inputValue);
+
+                            // If our search includes a chain character
+                            if (!!~parsed.expression.indexOf(cfg.chainCharacter)) {
+                                chain = parsed.expression.split(cfg.chainCharacter);
+
+                                if (parsed.operator) {
+                                    stopIndex = chain.length - 1;
+                                } else {
+                                    stopIndex = chain.length - 2;
+                                    // Ex: Part1.Sub2.stillWorkingOnThisOne
+                                    // We want to stop on 'Sub2' so we get all of Sub2's available keys and match against string 'stillWorkingOnThisOne'
+                                }
+
+                                dti.forEachArray(chain, function (link, ndx) {
+                                    if (data.hasOwnProperty(link)) {
+                                        data = data[link];
+                                    } else {
+                                        data = null;
+                                        return false;
+                                    }
+
+                                    if (ndx === stopIndex) {
+                                        if (parsed.operator) {
+                                            data = data._private.values;
+                                        } else {
+                                            // Update our regex; continuing the example above, we want to test against 'stillWorkingOnThisOne' instead of 'Part1.Sub2.stillWorkingOnThisOne'
+                                            regex = new RegExp(chain[chain.length-1], 'ig');
+                                        }
+                                        return false;
+                                    }
+                                });
+                            } else if (parsed.operator) {
+                                data = data[parsed.expression] && data[parsed.expression]._private.values;
+                            }
+
+                            if (data) {
+                                if (parsed.operator) {
+                                    regex = new RegExp(parsed.value, 'ig');
+
+                                    dti.forEachArray(data, function (item, index) {
+                                        if (regex.test(item.text)) {
+                                            if (cfg.highlight) {
+                                                item.html(item.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
+                                            }
+                                            matches.push(item);
+                                        }
+                                    });
+                                } else {
+                                    dti.forEach(data, function (item, key) {
+                                        if (key === '_private') {
+                                            return;
+                                        }
+
+                                        if (regex.test(item._private.text)) {
+                                            if (cfg.highlight) {
+                                                item._private.html(item._private.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
+                                            }
+                                            matches.push(item._private);
+                                        }
+                                    });
+                                }
+                            }
+                        }
+
+                        sortArray(matches);
+                        source.matches(matches);
+                        totalMatches += matches.length;
+                    });
+
+                    if (totalMatches <= 1) {
+                        self.hide();
+                    }
+                    self.numberOfMatches = totalMatches;
+                },
+                handleKeyup = function (e) {
+                    var inputValue = cfg.$inputElement.val(),
+                        key = e.which,
+                        catchKeys = [27, 40, 38, 10, 13]; // escape, down, up, return, return
+
+                    if (!!~catchKeys.indexOf(key)) {
+                        if (key === 27) { // escape
+                            self.hide();
+                        }
+                        return;
+                    }
+
+                    getMatches(inputValue);
+
+                    if (self.bindings.isShown() === false) {
+                        if (inputValue.length > cfg.minLength) {
+                            self.show();
+                        }
+                    } else if (!self.getSelected().length) {
+                        if (cfg.autoselect) {
+                            self.selectFirst();
+                        }
+                    } else {
+                        scrollTo(self.getSelected());   // Scroll to the selected item (JIC it's not in view)
+                    }
+                },
+                handleKeydown = function (e) {
+                    var key = e.which,
+                        koData,
+                        $selected;
+
+                    if (key === 10 || key === 13) { // return
+                        $selected = self.getSelected();
+                        if (self.bindings.isShown() && $selected.length) {
+                            // autosuggestMOD
+                            koData = ko.dataFor($selected[0]);
+
+                            self.bindings.selectMatch(koData);
+
+                            // If materialize chips is installed on this input and the selected item has children or values to choose from
+                            if (cfg.$chips && (koData.hasChildren || koData.hasValues)) {
+                                // Stop propagation so we don't create a chip
+                                e.stopImmediatePropagation();
+                            } else {
+                                getMatches('');
+                            }
+                        } else {
+                            getMatches('');
+                            self.hide();
+                        }
+                    } else if (key === 40) { // down
+                        if (self.bindings.isShown() === false) {
+                            self.show();
+                        } else {
+                            self.selectNext();
+                        }
+                    } else if (key === 38) { // up
+                        if (self.bindings.isShown()) {
+                            self.selectPrevious();
+                        }
+                    }
+                };
+
+            if (!cfg.$inputElement || !cfg.$inputElement.length) {
+                return dti.log('Invalid $inputElement', config.$inputElement);
+            }
+            if (!cfg.$resultsContainer || !cfg.$resultsContainer.length) {
+                return dti.log('Invalid $resultsContainer', config.$resultsContainer);
+            }
+            if (cfg.$chips && !cfg.$chips.length) {
+                return dti.log('Invalid $chips', config.$chips);
+            }
+
+            self.getSource = function (name) {
+                var sources = self.bindings.sources(),
+                    source;
+
+                dti.forEachArray(sources, function (src) {
+                    if (src.name() === name) {
+                        source = src;
+                        return false;
+                    }
+                });
+
+                return source;
+            };
+
+            self.addSource = function (src) {
+                var source = {
+                        name: ko.observable(src.name || dti.makeId()),
+                        nameShown: ko.observable(src.nameShown),
+                        data: Array.isArray(src.data) ? []:{},
+                        matches: ko.observableArray([])
+                    };
+
+                self.bindings.sources.push(source);
+
+                self.addData(source.name(), src.data);
+
+                getMatches(cfg.$inputElement.val());
+            };
+
+            self.addData = function (sourceName, data) {
+                // data: array of suggestion strings or an object
+                var source = self.getSource(sourceName),
+                    addValues = function (from, toArray, additionalProperties) {
+                        var item,
+                            fromArray;
+
+                        // autosuggestMOD - support from as array or string
+                        if (Array.isArray(from)) {
+                            fromArray = from;
+                        } else {
+                            fromArray = [from];
+                        }
+                        additionalProperties = additionalProperties || {};
+
+                        dti.forEachArray(fromArray, function (value) {
+                            value = value.toString();
+                            item = $.extend({
+                                text: value,
+                                html: ko.observable(value)
+                            }, additionalProperties);
+
+                            toArray.push(item);
+                        });
+                    },
+                    addValuesAndSort = function (fromArray, toArray, additionalProperties) {
+                        addValues(fromArray, toArray, additionalProperties);
+                        sortArray(toArray);
+                    },
+                    // autosuggestMOD
+                    // addObj = function (parent, srcItem, text) {
+                    addObj = function (param) {
+                        // param = {
+                        //     root: root object
+                        //     parent: parent object (null if top level object)
+                        //     srcItem: source object or array
+                        //     text: object key
+                        // }
+                        var item = {
+                                // autosuggestMOD - use param._____
+                                _private: {
+                                    parent: param.parent,
+                                    text: param.text,
+                                    html: ko.observable(param.text),
+                                    values: [],
+                                    // autosuggestMOD
+                                    // isTopLevel: !!!parent._private
+                                    hasChildren: false,
+                                    hasValues: false
+                                }
+                            };
+
+                        // autosuggestMOD
+                        if (!param.parent) { //  If we don't have a parent
+                            param.root[param.text] = item; // Install this item on the root
+                        } else if (param.parent[param.text]) { // Else if this item already exists
+                            item = param.parent[param.text]; // Point to the existing item
+                        } else {
+                            param.parent[param.text] = item; // Install new item on the parent
+                        }
+
+                        // autosuggestMOD - use param._____
+                        if (!!param.srcItem) {
+                            if (typeof param.srcItem === 'string') {
+                                item._private.hasValues = true;
+                                addValues(param.srcItem, item._private.values);
+                            } else if (Array.isArray(param.srcItem)) {
+                                item._private.hasValues = true;
+                                addValuesAndSort(param.srcItem, item._private.values);
+                            } else {
+                                item._private.hasChildren = true; // autosuggestMOD - set hasChildren flag
+
+                                dti.forEach(param.srcItem, function (subSource, subText) {
+                                    // Look for special keys and handle accordingly
+                                    if (subText === '_values') {
+                                        item._private.hasValues = true;
+                                        return addValuesAndSort(subSource, item._private.values);
+                                    }
+                                    if (subText === '_valuesNoSort') {
+                                        item._private.hasValues = true;
+                                        return addValues(subSource, item._private.values);
+                                    }
+
+                                    // autosuggestMOD
+                                    // addObj(item, subSource, subText);
+                                    addObj({
+                                        root: source.data,
+                                        parent: item,
+                                        srcItem: subSource,
+                                        text: subText
+                                    });
+                                });
+                            }
+                        }
+                    };
+
+                if (!source) {
+                    return dti.log('Source not found');
+                }
+
+                // If the new data is not the same type as our source
+                if (Array.isArray(data) !== Array.isArray(source.data)) {
+                    return dti.log('Invalid data');
+                }
+
+                if (Array.isArray(data)) {
+                    addValuesAndSort(data, source.data, {
+                        // autosuggestMOD
+                        // isTopLevel: true
+                        parent: null,
+                        hasChildren: false,
+                        hasValues: false
+                    });
+                } else { // data must be an object
+                    dti.forEach(data, function (item, text) {
+                        // autosuggestMOD
+                        // addObj(source.data, item, text);
+                        addObj({
+                            root: source.data,
+                            srcItem: item,
+                            text: text
+                        });
+                    });
+                }
+
+                getMatches(cfg.$inputElement.val());
+            };
+
+            self.deleteData = function (sourceName) {
+                var source = self.getSource(sourceName);
+
+                if (!source) {
+                    return dti.log('Source not found');
+                }
+
+                if (Array.isArray(source.data)) {
+                    source.data = [];
+                } else {
+                    source.data = {};
+                }
+
+                getMatches(cfg.$inputElement.val());
+            };
+
+            self.show = function () {
+                if (!self.bindings.isShown() && (self.numberOfMatches > 0)) {
+                    if (cfg.autoselect) {
+                        self.selectFirst();
+                    }
+                    self.bindings.isShown(true);
+                    self.reposition();
+                }
+            };
+
+            self.hide = function (clearInputValue) {
+                self.bindings.isShown(false);
+                self.selectNone();
+                if (clearInputValue) {
+                    cfg.$inputElement.val('');
+                }
+            };
+
+            self.reposition = function () {
+                // autosuggestMOD
+                $markup.position({
+                    my: 'left top',
+                    at: 'left bottom',
+                    of: cfg.$inputElement,
+                });
+            };
+
+            self.selectFirst = function () {
+                return $container.find(selectors.match).first().addClass(cfg.classNames.selected);
+            };
+
+            self.selectLast = function () {
+                return $container.find(selectors.match).last().addClass(cfg.classNames.selected);
+            };
+
+            self.selectNext = function () {
+                var $selected = self.getSelected(),
+                    $next = $selected.next(),
+                    topOffset;
+
+                if ($selected.length) {
+                    self.selectNone($selected);
+                    $next.addClass(cfg.classNames.selected);
+                } else {
+                    $next = self.selectFirst();
+                }
+                scrollTo($next);
+
+                return $next;
+            };
+
+            self.selectPrevious = function () {
+                var $selected = self.getSelected(),
+                    $previous = $selected.prev();
+
+                if ($selected.length) {
+                    self.selectNone($selected);
+                    $previous.addClass(cfg.classNames.selected);
+                } else {
+                    $previous = self.selectLast();
+                }
+                scrollTo($previous);
+
+                return $previous;
+            };
+
+            self.selectNone = function ($selected) {
+                if (!$selected) {
+                    $selected = self.getSelected();
+                }
+                return $selected.removeClass(cfg.classNames.selected);
+            };
+
+            self.getSelected = function () {
+                return $container.find(selectors.selected);
+            };
+
+            self.parse = function (str) {
+                return parse(str);
+            };
+
+            self.numberOfMatches = 0;
+
+            self.bindings = {
+                isShown: ko.observable(false),
+                sources: ko.observableArray([]),
+                selectMatch: function (data, e) {
+                    var inputValue = cfg.$inputElement.val(),
+                        operator = getOperator(inputValue);
+
+                    if (data.text) {
+                        if (operator) {
+                            inputValue = inputValue.replace(new RegExp(operator + '.*'), operator + ' ' + data.text);
+                        } else {
+                            if (!data.parent) {
+                                inputValue = data.text;
+                            } else {
+                                inputValue = inputValue.slice(0, inputValue.lastIndexOf(cfg.chainCharacter)+1) + data.text;
+                            }
+                        }
+
+                        cfg.$inputElement.val(inputValue);
+                        cfg.$inputElement.focus();
+                        self.hide();
+                    }
+                }
+            };
+
+            // Add autosuggest sources
+            dti.forEachArray(cfg.sources, self.addSource);
+
+            // Get autosuggest DOM template
+            $markup = dti.utility.getTemplate('#autosuggestTemplate');
+
+            // Change default class names if needed
+            dti.forEach(defaults.classNames, function changeDefaultClassName (defaultClassName, key) {
+                var defaultSelector = '.' + defaultClassName,
+                    requestedClassName = cfg.classNames[key];
+
+                if (requestedClassName !== defaultClassName) {
+                    $markup.find(defaultSelector).removeClass(defaultClassName).addClass(requestedClassName);
+                }
+            });
+
+            // Add autosuggest DOM to the document & apply bindings
+            cfg.$resultsContainer.append($markup);
+            ko.applyBindings(self.bindings, $markup[0]);
+
+            // Cache the container
+            $container = cfg.$resultsContainer.find(selectors.container);
+
+            // Add event handlers
+            cfg.$inputElement.keyup(handleKeyup);
+
+            cfg.$inputElement.keydown(handleKeydown);
+
+            if (cfg.showOnFocus) {
+                cfg.$inputElement.focus(self.show);
+            }
+
+            cfg.$resultsContainer.click(function handleClick (e) {
+                var $target = $(e.target);
+
+                if (($target.is(cfg.$inputElement) === false) && ($target.parents(selectors.container).length) === 0) {
+                    self.hide();
+                }
+            });
+
+            if (cfg.$chips) {
+                cfg.$chips.on('chip.delete', function (e, chip) {
+                    self.reposition();
+                });
+            }
+        }
     },
 };
 
@@ -4258,100 +4962,343 @@ var reportsViewModel = function () {
     self.currentColumnEdit = ko.observable(getNewColumnTemplate());
 
     self.scheduler = {
-        parseCron: function (cron) {
-            var name = ['minute', 'hour', 'date', 'month', 'dow'], // dow = day of week
-                parsed = {
-                    advanced: false,
-                    cron: cron,
-                    interval: null
-                };
+        availableIntervals: ['Daily', 'Weekly', 'Monthly', 'Yearly', 'Advanced'],
+        availableDates: (function buildAvailableDates () {
+            var arr = [],
+                j = 0,
+                suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'],
+                suffix;
 
-            dti.forEachArray(cron.split(' '), function (val, index) {
-                var _val = [];
-
-                if (!!~val.indexOf(',')) {
-                    parsed.advanced = true;
-
-                    dti.forEachArray(val.split(','), function (val, index) {
-                        _val.push(val);
-                    });
-                } else {
-                    _val.push(val);
-                }
-                parsed[name[index]] = _val;
-            });
-
-            if (!parsed.advanced) {
-                if (parsed.dow[0] !== '*') {
-                    parsed.interval = 'Weekly';
-                } else if (parsed.date[0] !== '*') {
-                    parsed.interval = 'Monthly';
-                } else if (parsed.month[0] !== '*') {
-                    parsed.interval = 'Yearly';
-                } else {
-                    parsed.interval = 'Daily';
-                }
+            while (j++ < 31) {
+                suffix = (j > 9 && j < 14) ? 'th' : suffixes[j%10];
+                arr.push({
+                    text: j + suffix,
+                    value: j
+                });
             }
+            return arr;
+        })(),
+        availableMonths: (function buildAvailableMonths () {
+            var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                arr = [];
+            
+            dti.forEachArray(months, function addMonth (month, index) {
+                arr.push({
+                    text: month,
+                    value: index + 1
+                });
+            });
+            return arr;
+        })(),
+        availableDaysOfWeek: (function buildAvailableDaysOfWeek () {
+            var dow = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                arr = [];
 
-            return parsed;
+            dti.forEachArray(dow, function addDay (day, index) {
+                arr.push({
+                    text: day,
+                    value: index
+                });
+            });
+            return arr;
+        })(),
+        scheduleEntries: ko.observableArray([]),
+        cron: {
+            parse: function (cron) {
+                var name = ['minute', 'hour', 'dates', 'months', 'daysOfWeek'],
+                    parsed = {},
+                    advanced = false,
+                    interval;
+
+                dti.forEachArray(cron.split(' '), function (val, index) {
+                    var _val;
+
+                    if (index < 2) { // If hour or minute
+                        _val = val;
+                    } else {
+                        _val = ko.observableArray([]);
+
+                        if (!!~val.indexOf(',')) {
+                            advanced = true;
+
+                            dti.forEachArray(val.split(','), function (val, index) {
+                                _val.push(val);
+                            });
+                        } else {
+                            _val.push(val);
+                        }
+                    }
+                    parsed[name[index]] = _val;
+                });
+
+                if (advanced) {
+                    interval = 'Advanced';
+                } else if (parsed.daysOfWeek()[0] !== '*') {
+                    interval = 'Weekly';
+                } else if (parsed.dates()[0] !== '*') {
+                    interval = 'Monthly';
+                } else if (parsed.months()[0] !== '*') {
+                    interval = 'Yearly';
+                } else {
+                    interval = 'Daily';
+                }
+                parsed.interval = ko.observable(interval);
+                parsed.time = ko.observable(parsed.hour + ':' + parsed.minute);
+                parsed.plainEnglish = ko.observable(self.scheduler.cron.explain(parsed));
+
+                delete parsed.minute;
+                delete parsed.hour;
+
+                // parsed = { // all keys are ko observable or observableArray
+                //     interval: observable(string),
+                //     plainEnglish: observable(string),
+                //     time: observable(string),
+                //     dates: observableArray(array),
+                //     months: observableArray(array),
+                //     daysOfWeek: observableArray(array)
+                // }
+                return parsed;
+            },
+            build: function (parsed) {
+                var _parsed = ko.toJS(parsed),
+                    interval = _parsed.interval,
+                    time = _parsed.time.split(':').reverse().join(' '),
+                    dates = _parsed.dates.join(','),
+                    months = _parsed.months.join(','),
+                    daysOfWeek = _parsed.daysOfWeek.join(',');
+
+                if (interval === 'Daily') {
+                    daysOfWeek = '*';
+                    dates = '*';
+                    months = '*';
+                }
+                if (interval === 'Weekly') {
+                    dates = '*';
+                    months = '*';
+                } else if (interval === 'Monthly') {
+                    daysOfWeek = '*';
+                    months = '*';
+                } else if (interval === 'Yearly') {
+                    daysOfWeek = '*';
+                }
+
+                return [time, dates, months, daysOfWeek].join(' ');
+            },
+            explain: function (cfg) {
+                var str = '',
+                    allDaysOfWeek = false,
+                    allDates = false,
+                    allMonths = false,
+                    monthsText = [], // Starts as array, ends as string
+                    daysOfWeekText = [], // Starts as array, ends as string
+                    datesText = [], // Starts as array, ends as string
+                    joinString,
+                    months, 
+                    daysOfWeek,
+                    dates,
+                    interval,
+                    time,
+                    len;
+
+                if (typeof cfg === 'object') {
+                    interval = ko.unwrap(cfg.interval);
+                    time = ko.unwrap(cfg.time);
+                    daysOfWeek = ko.unwrap(cfg.daysOfWeek);
+                    dates = ko.unwrap(cfg.dates);
+                    months = ko.unwrap(cfg.months);
+
+                    if (interval === 'Daily') {
+                        str = ['Daily at', time].join(' ');
+                    } else if (interval === 'Weekly') {
+                        str = ['Weekly on', self.scheduler.availableDaysOfWeek[daysOfWeek[0]].text, 'at', time].join(' ');
+                    } else if (interval === 'Monthly') {
+                        str = ['Monthly on the', self.scheduler.availableDates[dates[0] - 1].text, 'at', time].join(' ');
+                    } else if (interval === 'Yearly') {
+                        str = ['Yearly on', self.scheduler.availableMonths[months[0] - 1].text, self.scheduler.availableDates[dates[0] - 1].text, 'at', time].join(' ');
+                    } else { // Advanced
+                        len = months.length;
+                        if (months[0] === '*') {
+                            allMonths = true;
+                        } else {
+                            dti.forEachArray(months, function (val, index) {
+                                monthsText.push(self.scheduler.availableMonths[val - 1].text);
+                            });
+
+                            if (len > 1) {
+                                monthsText[len - 1] = 'and ' + monthsText[len - 1];
+                            }
+
+                            if (len > 2) {
+                                joinString = ', ';
+                            } else {
+                                joinString = ' ';
+                            }
+
+                            monthsText = monthsText.join(joinString);
+                        }
+
+                        if (daysOfWeek[0] === '*') {
+                            allDaysOfWeek = true;
+                        } else {
+                            dti.forEachArray(daysOfWeek, function (val) {
+                                daysOfWeekText.push(self.scheduler.availableDaysOfWeek[val].text);
+                            });
+
+                            len = daysOfWeek.length;
+                            if (len > 1) {
+                                daysOfWeekText[len - 1] = 'and ' + daysOfWeekText[len - 1];
+                            }
+                            if (len > 2) {
+                                joinString = ', ';
+                            } else {
+                                joinString = ' ';
+                            }
+
+                            daysOfWeekText = daysOfWeekText.join(joinString);
+                        }
+
+                        if (dates[0] === '*') {
+                            allDates = true;
+                        } else {
+                            dti.forEachArray(dates, function (val) {
+                                datesText.push(self.scheduler.availableDates[val - 1].text);
+                            });
+
+                            len = dates.length;
+                            if (len > 1) {
+                                datesText[len - 1] = 'and ' + datesText[len - 1];
+                            }
+                            if (len > 2) {
+                                joinString = ', ';
+                            } else {
+                                joinString = ' ';
+                            }
+
+                            datesText = datesText.join(joinString);
+                        }
+
+                        if (allDates && allDaysOfWeek) {
+                            if (allMonths) {
+                                str = 'Everyday at ' + time;
+                            } else {
+                                str = ['Everyday in', monthsText, 'at', time].join(' ');
+                            }
+                        } else if (allDaysOfWeek) {
+                            if (allMonths) {
+                                str = ['Every month on the', datesText, 'at', time].join(' ');
+                            } else {
+                                str = ['Every', datesText, 'day of', monthsText, 'at', time].join(' ');
+                            }
+                        } else if (allDates) {
+                            if (allMonths) {
+                                str = ['Every', daysOfWeekText, 'at', time].join(' ');
+                            } else {
+                                str = ['Every', daysOfWeekText, 'in', monthsText].join(' ');
+                            }
+                        } else { // allDates -> false, allDaysOfWeek -> false
+                            if (allMonths) {
+                                str = ['Every week on', daysOfWeekText + ',', 'and on the', datesText, 'of every month'].join(' ');
+                            } else {
+                                str = ['In the month(s) of', monthsText + ',', 'every', daysOfWeekText, 'and on the', datesText].join(' ');
+                            }
+                        }
+                    }
+                } else { // cfg is cron string
+                    // design space
+                }
+                return str;
+            }
         },
         modal: {
+            init: function () {
+
+            },
             open: function (data) {
-                var $modal = dti.getTemplate('#scheduleModalTemplate'),
-                    availableDates = (function buildAvailableDates () {
-                        var arr = [],
-                            j = 0,
-                            suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'],
-                            suffix;
-
-                        while (j++ < 31) {
-                            suffix = (j > 9 && j < 14) ? 'th' : suffixes[j%10];
-                            arr.push({
-                                text: j + suffix,
-                                value: j
-                            });
-                        }
-                        return arr;
-                    })(),
-                    availableMonths = (function buildAvailableMonths () {
-                        var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-                            arr = [];
-                        
-                        dti.forEachArray(months, function addMonth (month, index) {
-                            arr.push({
-                                text: month,
-                                value: index + 1
-                            });
-                        });
-                        return arr;
-                    })(),
-                    availableDaysOfWeek = (function buildAvailableDaysOfWeek () {
-                        var dow = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-                            arr = [];
-
-                        dti.forEachArray(dow, function addDay (day, index) {
-                            arr.push({
-                                text: day,
-                                value: index
-                            });
-                        });
-                        return arr;
-                    })(),
+                var _parsed,
+                    autosuggest,
+                    $modal = dti.utility.getTemplate('#scheduleModalTemplate'),
+                    $chips = $modal.find('.chips'),
+                    timepickerOpts = {
+                        container: $('body')
+                    },
                     bindings = {
-                        availableIntervals: ['Daily', 'Weekly', 'Monthly', 'Yearly', 'Advanced'],
-                        availableDaysOfWeek: availableDaysOfWeek,
-                        availableMonths: availableMonths,
-                        availableDates: availableDates,
+                        availableIntervals: self.scheduler.availableIntervals,
+                        availableDaysOfWeek: self.scheduler.availableDaysOfWeek,
+                        availableMonths: self.scheduler.availableMonths,
+                        availableDates: self.scheduler.availableDates,
                         selectedInterval: ko.observable(),
-                        selectedMonth: ko.observable(),
-                        selectedDate: ko.observable(),
-                        selectedDayOfWeek: ko.observable(),
                         selectedTime: ko.observable('00:00'),
-                        saveScheduleEntry: function (data) {
-                            self.scheduler.modal.close(data);
+                        selectedMonth: ko.observable(),
+                        selectedMonths: ko.observableArray([]),
+                        selectedDate: ko.observable(),
+                        selectedDates: ko.observableArray([]),
+                        selectedDayOfWeek: ko.observable(),
+                        selectedDaysOfWeek: ko.observableArray([]),
+                        recepientUsers: ko.observableArray([]),
+                        recepientEmails: ko.observableArray([]),
+                        save: function () {
+                            var parsed,
+                                len;
+
+                            if (data === 'new') {
+                                parsed = { // Create parsed object
+                                    interval: ko.observable(),
+                                    time: ko.observable(),
+                                    months: ko.observableArray(),
+                                    dates: ko.observableArray(),
+                                    daysOfWeek: ko.observableArray(),
+                                    plainEnglish: ko.observable()
+                                };
+
+                                self.scheduler.scheduleEntries.push({
+                                    enable: ko.observable(true),
+                                    parsed: parsed
+                                });
+                            } else {
+                                parsed = data.parsed; // Point to our source data
+                            }
+
+                            parsed.interval(bindings.selectedInterval());
+                            parsed.time(bindings.selectedTime());
+
+                            if (bindings.selectedInterval() === 'Advanced') {
+                                len = bindings.selectedMonths().length;
+                                if (len === 0 || len === 12) {
+                                    parsed.months(['*']);
+                                } else {
+                                    parsed.months(bindings.selectedMonths());
+                                }
+
+                                len = bindings.selectedDates().length;
+                                if (len === 0 || len === 31) {
+                                    parsed.dates(['*']);
+                                } else {
+                                    parsed.dates(bindings.selectedDates());
+                                }
+
+                                len = bindings.selectedDaysOfWeek().length;
+                                if (len === 0 || len === 7) {
+                                    parsed.daysOfWeek(['*']);
+                                } else {
+                                    parsed.daysOfWeek(bindings.selectedDaysOfWeek());
+                                }
+                            } else {
+                                parsed.months([bindings.selectedMonth()]);
+                                parsed.dates([bindings.selectedDate()]);
+                                parsed.daysOfWeek([bindings.selectedDayOfWeek()]);
+                            }
+
+                            parsed.plainEnglish(self.scheduler.cron.explain(parsed));
+                            data.cron = self.scheduler.cron.build(parsed);
+
+                            self.scheduler.modal.close();
                         },
-                        cancelScheduleEntry: function (data) {
-                            self.scheduler.modal.close(data);
+                        cancel: function () {
+                            self.scheduler.modal.close();
+                        },
+                        deleteScheduleEntry: function () {
+                            self.scheduler.scheduleEntries.remove(data);
+                            self.scheduler.modal.close();
                         }
                     };
 
@@ -4359,35 +5306,119 @@ var reportsViewModel = function () {
                     bindings.isNew = true;
                     bindings.selectedInterval('Daily');
                 } else {
+                    _parsed = ko.toJS(data.parsed);
 
+                    // 'Interval' and 'time' are immutable (strings) so we don't have to worry about them changing
+                    bindings.selectedInterval(_parsed.interval);
+                    bindings.selectedTime(_parsed.time);
+
+                    if (bindings.selectedInterval() === 'Advanced') {
+                        // Our view indicates all months/dates/daysOfWeek if the array is empty
+                        // Extend the source arrays so we don't manipulate the original in case the user cancels changes
+                        if (_parsed.months[0] !== '*') {
+                            bindings.selectedMonths($.extend([], _parsed.months));
+                        }
+                        if (_parsed.dates[0] !== '*') {
+                            bindings.selectedDates($.extend([], _parsed.dates));
+                        }
+                        if (_parsed.daysOfWeek[0] !== '*') {
+                            bindings.selectedDaysOfWeek($.extend([], _parsed.daysOfWeek));
+                        }
+                    } else {
+                        bindings.selectedMonth(_parsed.months[0]);
+                        bindings.selectedDate(_parsed.dates[0]);
+                        bindings.selectedDayOfWeek(_parsed.daysOfWeek[0]);
+                    }
                 }
 
+                // Apply bindings and add our markup
                 ko.applyBindings(bindings, $modal[0]);
-
                 $('body').append($modal);
 
+                // Init our materialize form elements
                 $modal.find('.dropdown-button').dropdown();
                 $modal.find('select').material_select();
-                $modal.find('#timepicker').pickatime({
-                    autoclose: false,
-                    twelvehour: true // TODO this should come from a system/user preference
+
+                // Init our timepicker
+                timepickerOpts.default = bindings.selectedTime();
+                dti.pickatime($modal.find('.timepicker'), timepickerOpts);
+
+                // Init our chips element
+                $chips.material_chip({
+                    placeholder: '+Recepient',
+                    secondaryPlaceholder: 'Email Recepients'
                 });
 
+                window.autosuggest = new dti.autosuggest.Autosuggest({
+                    // $inputElement: $chips.find('input'),
+                    $inputElement: $('#scheduleModal .chips input'),
+                    $resultsContainer: $modal,
+                    $chips: $chips,
+                    sources: [{
+                        name: 'All users',
+                        nameShown: true,
+                        data: ['Dan Hill', 'Todd Smith', 'Johnny Roberts', 'Rob']
+                    }],
+                    autoselect: true,
+                    showOnFocus: true
+                });
+
+                // Launch the miss-aisles!
                 $modal.openModal({
                     dismissible: false
                 });
             },
-            close: function (data) {
+            close: function () {
                 var $modal = $('#scheduleModal');
 
                 $modal.closeModal({
                     complete: function () {
                         ko.cleanNode($modal[0]);
-                        $modal.find('select').material_select('destroy'); // Necessary?
+                        $modal.find('select').material_select('destroy'); // TODO - Necessary?
                         $modal.remove();
                     }
                 });
             }
+        },
+        buildRecipients: function (data) {
+            return 'Dan, Johnny, and rtc@timers.com';
+        },
+        init: function () {
+            // Async call to db to get distinct values
+            var cron = ['30 10 * * *', '00 08 1 * *'];
+            self.scheduler.scheduleEntries.push({
+                cron: cron[0],
+                enable: ko.observable(false),
+                parsed: self.scheduler.cron.parse(cron[0])
+            });
+            self.scheduler.scheduleEntries.push({
+                cron: cron[1],
+                enable: ko.observable(true),
+                parsed: self.scheduler.cron.parse(cron[1])
+            });
+            return;
+
+            $.ajax({
+                type: 'post',
+                url: dti.settings.apiEndpoint + 'schedules/getEntries',
+                data: JSON.stringify({
+                    // _id: reportId //
+                }),
+                contentType: 'application/json'
+            }).done(
+                function handleData (data) {
+                    if (data.err) {
+                        return dti.log('schedules/getEntries failed', data.err);
+                    }
+                }
+            ).fail(
+                function handleFail (jqXHR, textStatus, errorThrown) {
+                    dti.log('schedules/getEntries failed', jqXHR, textStatus, errorThrown);
+                }
+            ).always (
+                function finished () {
+                }
+            );
         }
     };
 
@@ -5301,6 +6332,11 @@ var reportsViewModel = function () {
 
         return answer;
     }, self);
+
+    self.scheduler.init();
+
+    self.makeId = dti.makeId;
+    self.getLastId = dti.getLastId;
 };
 
 function applyBindings(extConfig) {
