@@ -1115,7 +1115,7 @@ var reportsViewModel = function () {
                     delete tempObject.valueOptions;
                     if (self.reportType() === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
-                        tempObject.operator = tempObject.valueList[0].text;
+                        tempObject.operator = tempObject.valueList[0];
                         tempObject.dataColumnName = tempObject.upi + " - " + tempObject.operator.toLowerCase();
                     } else {
                         if (self.reportType() === "History") {
@@ -1174,7 +1174,7 @@ var reportsViewModel = function () {
                     delete tempObject.valueOptions;
                     if (self.reportType() === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
-                        tempObject.operator = tempObject.valueList[0].text;
+                        tempObject.operator = tempObject.valueList[0];
                         tempObject.dataColumnName = tempObject.upi + " - " + tempObject.operator.toLowerCase();
                     } else {
                         if (self.reportType() === "History") {
@@ -1674,11 +1674,11 @@ var reportsViewModel = function () {
                     case "Binary Input":
                     case "Binary Output":
                     case "Binary Value":
-                        result.push({text: "Starts"});
-                        result.push({text: "Runtime"});
+                        result.push("Starts");
+                        result.push("Runtime");
                         break;
                     default:
-                        result.push({text: "Total"});
+                        result.push("Total");
                         break;
                 }
             }

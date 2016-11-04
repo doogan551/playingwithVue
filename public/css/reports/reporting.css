@@ -245,7 +245,7 @@ input.intervalValue {
     margin-top: -2px;
 }
 .totalizerOperator {
-    width: 115px;
+    width: 95px;
 }
 .totalizerOperators.dropdown-content {
     width: 80px !important;
@@ -599,6 +599,7 @@ div.dataTables_wrapper div.dataTables_length select {
 .columnName {
     display: inline-block;
     padding-left: 5px;
+    padding-bottom: 22px;
 }
 .columnNameContainer {
     min-width: 310px;
@@ -612,6 +613,7 @@ div.dataTables_wrapper div.dataTables_length select {
 }
 .availableCalculations {
     display: inline-block;
+    padding-bottom: 15px;
 }
 .availableCalculations a {
     width: 70px;
@@ -1017,6 +1019,12 @@ input.filled-in[type=number]:focus:not([readonly]) {
 }
 .columnsGrid.table > tbody.sortablecolums {
     border-bottom: 2px solid #CCC;
+}
+tbody.sortablecolumns .select-wrapper input.select-dropdown {
+    height: 15px;
+}
+tbody.sortablecolumns .select-wrapper span.caret {
+    top: 0px;
 }
 .filtersGrid.table > thead > tr > th {
     border-bottom: 2px solid #CCC;

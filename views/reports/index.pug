@@ -195,7 +195,7 @@ html.direports
                                                 // /ko
                                                 th.medium.strong
                                         tbody.sortablecolumns(data-bind="foreach: listOfColumns()")
-                                            tr.columnRowData(data-bind="css: {hideDiv: ($index() === 0), fixed: ($index() === 0), 'red lighten-4': (colName === 'Choose Point')} ")
+                                            tr.columnRowData(data-bind="css: {hideDiv: ($index() === 0), fixed: ($index() === 0), 'red lighten-4': (colName === 'Choose Point')}")
                                                 td.columnNameContainer(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
                                                     .handle
                                                     // ko if: ($parent.reportType() !== 'Property')
@@ -249,8 +249,10 @@ html.direports
                                                 td.totalizerOperator
                                                     .availableTotalizerOperatorsContainer
                                                         // ko if: (valueList.length > 1)
-                                                        select(data-bind="foreach: valueList, dtiReportsMaterializeSelect")
-                                                            option(data-bind="attr: { selected: ($parent.operator === $data.text) }, click: function() { $root.selectTotalizerOperator($element, $parentContext.$index(), $data.text) }, value: $data.text, text: $data.text")
+                                                        select(data-bind="options: valueList, optionsText: $data, value: operator, dtiReportsMaterializeSelect")
+                                                        label
+                                                        //select(data-bind="foreach: valueList, dtiReportsMaterializeSelect")
+                                                        //    option(data-bind="attr: { selected: ($parent.operator === $data) }, click: function() { $root.selectTotalizerOperator($element, $parentContext.$index(), $data.text) }, value: $data, text: $data")
                                                         // /ko
                                                         // ko if: (valueList.length === 1)
                                                         span(data-bind="text: operator")
@@ -267,8 +269,11 @@ html.direports
                                                     // /ko
                                                 td.yaxisChartGroup
                                                     .availableAxisGroupsContainer
-                                                        select(data-bind="foreach: $root.yaxisGroups, dtiReportsMaterializeSelect")
-                                                            option.blue-grey-text.blue-grey(data-bind="attr: { selected: ($parent.yaxisGroup === $data) }, click: function() { $root.selectYaxisGroup($element, $parentContext.$index(), $data) }, text: $data")
+                                                        .input-field(data-bind='visible: $data.canCalculate')
+                                                            select(data-bind="options: $root.yaxisGroups, optionsText: $data, value: yaxisGroup, dtiReportsMaterializeSelect")
+                                                            label
+                                                            //select(data-bind="foreach: $root.yaxisGroups, dtiReportsMaterializeSelect")
+                                                            //    option.blue-grey-text.blue-grey(data-bind="attr: { selected: ($parent.yaxisGroup === $data) }, click: function() { $root.selectYaxisGroup($element, $parentContext.$index(), $data) }, text: $data")
                                                 // /ko
                                                 // ko if: ($root.canEdit())
                                                 td.removecolumn
