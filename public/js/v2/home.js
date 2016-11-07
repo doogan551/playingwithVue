@@ -3794,6 +3794,8 @@ var dti = {
                 dti.messaging.processMessage(e);
             });
 
+            store.clear();
+
             store.set('sessionId', dti.settings.sessionId);
 
             $('#testLink').on('click', function clickTestLink (event) {
@@ -3827,7 +3829,8 @@ var dti = {
             var config,
                 messageID,
                 ignoredProps = {
-                    '__storejs__': true,
+                    '__storejs__': true,//store.js
+                    '_safariPrivate_': true,//store2.js
                     'sessionId': true,
                     'debug': true
                 },
@@ -3949,6 +3952,8 @@ var dti = {
 
             dti.messaging.doProcessMessage(message);
 
+            store.remove(e.key);//memory cleanup
+
             // dti.forEachArray(dti.messaging._messageCallbacks, function (cb) {
             //     cb(message);
             // });
@@ -4027,7 +4032,7 @@ var dti = {
                 len = target().length;
 
                 if (len > max) {
-                    remove(target()[max]);
+                    dti.system.eventLog.remove(target()[max]);
                 }
             },
             remove: function (log) {
