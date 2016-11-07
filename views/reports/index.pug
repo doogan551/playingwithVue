@@ -250,12 +250,12 @@ html.direports
                                                     label(data-bind="attr: { for: 'includeInChart' + $index()}")
                                                     // /ko
                                                 td.yaxisChartGroup
+                                                    // ko if: ($data.canCalculate && !!$data.yaxisGroup)
                                                     .availableAxisGroupsContainer
-                                                        .input-field(data-bind='visible: $data.canCalculate')
+                                                        .input-field
                                                             select(data-bind="options: $root.yaxisGroups, optionsText: $data, value: yaxisGroup, dtiReportsMaterializeSelect")
                                                             label
-                                                            //select(data-bind="foreach: $root.yaxisGroups, dtiReportsMaterializeSelect")
-                                                            //    option.blue-grey-text.blue-grey(data-bind="attr: { selected: ($parent.yaxisGroup === $data) }, click: function() { $root.selectYaxisGroup($element, $parentContext.$index(), $data) }, text: $data")
+                                                    // /ko
                                                 // /ko
                                                 // ko if: ($root.canEdit())
                                                 td.removecolumn
