@@ -3794,8 +3794,6 @@ var dti = {
                 dti.messaging.processMessage(e);
             });
 
-            store.clear();
-
             store.set('sessionId', dti.settings.sessionId);
 
             $('#testLink').on('click', function clickTestLink (event) {
