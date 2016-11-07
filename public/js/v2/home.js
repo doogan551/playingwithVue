@@ -95,6 +95,7 @@ var dti = {
                 iconClass: 'material-icons',
                 group: 'Point',
                 singleton: false,
+                mainMenu: false,
                 options: {
                     retainNames: false
                 }
@@ -1201,7 +1202,15 @@ var dti = {
     taskbar: {
         pinnedItems: ['Navigator', 'Display'],
         init: function () {
-            dti.bindings.startMenuItems(ko.viewmodel.fromModel(dti.config.itemGroups));
+            var menuItems = {};
+
+            dti.forEach(dti.config.itemGroups, function checkItemGroup (group, key) {
+                if (group.mainMenu !== false) {
+                    menuItems[key] = group;
+                }
+            });
+
+            dti.bindings.startMenuItems(ko.viewmodel.fromModel(menuItems));
             //load user preferences 
             dti.forEachArray(dti.taskbar.pinnedItems, function processPinnedItem (item) {
                 dti.bindings.openWindows[item] = ko.observableArray([]);
@@ -2831,7 +2840,9 @@ var dti = {
             dti.navigator.$commonNavigatorModal.openModal(config);
         },
         hideNavigator: function () {
-            dti.navigator.$commonNavigatorModal.closeModal();
+            if (dti.navigator.$commonNavigatorModal) {
+                dti.navigator.$commonNavigatorModal.closeModal();
+            }
         },
         //config contains container
         Navigator: function (config) {
@@ -3480,8 +3491,8 @@ var dti = {
         createNavigator: function (isModal) {
             var templateMarkup = dti.utility.getTemplate('#navigatorTemplate'),
                 navigatorMarkup,
-                navigatorModalMarkup,
                 navigator,
+                navigatorModalMarkup,
                 $container = (isModal === true) ? $('main') : (isModal.$container || isModal);
 
             if (isModal === true) {

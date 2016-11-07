@@ -511,7 +511,8 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
     height: $navbarHeight;
 }
 
-$startmenuWidth: 550px;
+// $startmenuWidth: 550px; with recent
+$startmenuWidth: 310px; //3 columns no recent
 $startmenuGutter: 15px;
 
 #startmenu {
@@ -531,7 +532,7 @@ $startmenuGutter: 15px;
     flex-wrap: wrap;
 
     .tileList {
-        width: calc(#{$startmenuWidth} * .6);
+        // width: calc(#{$startmenuWidth} * .6);
         // margin-right: $startmenuGutter;
     }
 
