@@ -40,11 +40,11 @@ html.direports
                             .circle
                         .circle-clipper
                             .circle
-                .runReportCheckMark(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
+                .runReportCheckMark.blue-grey-text(data-bind="css: {displayDiv: displayTabCheckmark(), hideDiv: !displayTabCheckmark()} ", title="Report is ready")
                     i.material-icons.center thumb_up
             #page-content-wrapper.rightPanel
                 .container-fluid
-                    .runReportSpinner(data-bind="css: { displayDiv: displayMainSpinner(), hideDiv: !displayMainSpinner()} ", title="Requesting Report Data")
+                    .runReportSpinner.blue-grey-text(data-bind="css: { displayDiv: displayMainSpinner(), hideDiv: !displayMainSpinner()} ", title="Requesting Report Data")
                         div.preloader-wrapper.small.active
                             div.spinner-layer
                                 div.circle-clipper.left
@@ -53,9 +53,9 @@ html.direports
                                     div.circle
                                 div.circle-clipper
                                     div.circle
-                        span.spinnertext.teal-text Getting Data
-                    .runReportChartSpinner(data-bind="css: { displayDiv: displayChartSpinner(), hideDiv: !displayChartSpinner()}", title="Requesting Report Data for Chart")
-                        div.preloader-wrapper.small.active
+                        span.spinnertext.blue-grey-text Getting Data
+                    .runReportChartSpinner.blue-grey-text(data-bind="css: { displayDiv: displayChartSpinner(), hideDiv: !displayChartSpinner()}", title="Requesting Report Data for Chart")
+                        div.preloader-wrapper.small.blue-grey-text.active
                             div.spinner-layer
                                 div.circle-clipper.left
                                     div.circle
@@ -63,7 +63,7 @@ html.direports
                                     div.circle
                                 div.circle-clipper
                                     div.circle
-                        span.spinnertext.teal-text(data-bind="text: chartSpinnerTitle")
+                        span.spinnertext.blue-grey-text(data-bind="text: chartSpinnerTitle")
                     .tabConfiguration
                         .row
                             .reportTabs.col.s12
@@ -89,22 +89,26 @@ html.direports
                             .tab-content
                                 .tab-pane.reportAttribs#reportAttribs
                                     .form-inline.blue-grey-text(style="display: inline-flex")
-                                        div.input-field.col
+                                        .input-field.col
                                             input.pointName1.form-control.input-md#pointName1(data-bind="enable: $root.canEdit(), textInput: $root.pointName1", required, type="text")
                                             label(data-bind="updateLabel: $root.pointName1, attr: {for: 'pointName1'}") Name 1
-                                        div.input-field.col
+                                        .input-field.col
                                             input.pointName2.form-control.input-md#pointName2(data-bind="enable: $root.canEdit(), textInput: $root.pointName2", required, type="text")
                                             label(data-bind="updateLabel: $root.pointName2, attr: {for: 'pointName2'}") Name 2
-                                        div.input-field.col
+                                        .input-field.col
                                             input.pointName3.form-control.input-md#pointName3(data-bind="enable: $root.canEdit(), textInput: $root.pointName3", required, type="text")
                                             label(data-bind="updateLabel: $root.pointName3, attr: {for: 'pointName3'}") Name 3
-                                        div.input-field.col
+                                        .input-field.col
                                             input.pointName4.form-control.input-md#pointName4(data-bind="enable: $root.canEdit(), textInput: $root.pointName4", required, type="text")
                                             label(data-bind="updateLabel: $root.pointName4, attr: {for: 'pointName4'}") Name 4
                                     .form-inline.blue-grey-text
-                                        div.input-field.col
+                                        .input-field.col
                                             input.reportTitleInput.form-control.input-md#reportTitleInput(data-bind="enable: $root.canEdit(), textInput: $root.reportDisplayTitle", required, type="text")
                                             label(data-bind="updateLabel: $root.pointName3, attr: {for: 'pointName3'}") Report Title
+                                    .form-inline.blue-grey-text
+                                        .input-field.col.reporttype
+                                            label.tiny Report Type
+                                            span.reporttype(data-bind="text: reportType")
                                     .form-group.clearfix(style="display: inline-flex")
                                         .numberOfEnteriesPerPage
                                             label # of entries per Page
@@ -411,7 +415,7 @@ html.direports
                                                     .availableOperatorsContainer(data-bind="css: {disabled: !$root.canEdit()}")
                                                         ul.operators.dropdown-content(data-bind="foreach: $root.operators(valueType), attr: { 'id': 'availableOperators'+ $index() }")
                                                             li
-                                                                a.operator(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'operator') }, text: text", required)
+                                                                a.operator.center-text(data-bind="click: function(){ $root.setFilterConfig($parentContext.$index(), $data, 'operator') }, text: text", required)
                                                         a.btn.waves-effect.waves-light.blue-grey.dropdown-button.operatorButton(data-bind="attr: { 'data-activates': 'availableOperators'+ $index() }, dtiReportsMaterializeDropdown")
                                                             span(data-bind="text: $root.displayOperator(operator)")
                                                 td.emptyColumn

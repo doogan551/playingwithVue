@@ -1079,9 +1079,11 @@ tbody.sortablecolumns .select-wrapper span.caret {
     cursor: pointer;
 }
 .reporttype {
-    margin-top: -14px;
-    background-color: #fff;
-    font-style: italic;
+    margin-top: 23px;
+    padding-bottom: 20px;
+}
+.reporttype label {
+    margin-top: -35px;
     font-size: 12px;
 }
 .reportTitle {

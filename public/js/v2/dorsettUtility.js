@@ -110,7 +110,7 @@ var dtiUtility =  {
             dtiUtility.processMessage(config);
         }
 
-        // store.remove(e.key) to clear
+        // store.remove(e.key);   // to clear
 
         // console.log({
         //     'Storage Key': e.key,

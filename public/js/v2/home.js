@@ -3951,6 +3951,7 @@ var dti = {
 
             dti.messaging.doProcessMessage(message);
 
+            store.remove(e.key);
             // dti.forEachArray(dti.messaging._messageCallbacks, function (cb) {
             //     cb(message);
             // });
