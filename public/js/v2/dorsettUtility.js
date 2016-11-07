@@ -106,7 +106,9 @@ var dtiUtility =  {
             if (typeof config === 'string') {
                 config = JSON.parse(config);
             }
-            dtiUtility.processMessage(config);
+            if (config) {
+                dtiUtility.processMessage(config);
+            }
         }
 
         store.remove(e.key); // memory cleanup
