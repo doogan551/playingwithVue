@@ -1243,3 +1243,11 @@ button {
     /*box-shadow: 0 1px 0 0 $blue-grey-lighten-2;*/
     box-shadow: 0 1px 0 0 #90a4ae;
 }
+.chips .chip.selected {
+    /*background-color: $blue-grey-lighten-1;*/
+    background-color: #78909c;
+}
+.chips .chip.err {
+    /*background-color: $red-lighten-3;*/
+    background-color: #ef9a9a;
+}

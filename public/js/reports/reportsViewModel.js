@@ -156,6 +156,8 @@ var dti = {
                     },
                     autoselect: false, // If nothing selected, autoselect the first suggestion when autosuggest renders or the suggestions change
                     showOnFocus: false, // Show suggestions when input is focused
+                    persistAfterSelect: false,
+                    hideSelectedSuggestions: false,
                     chainCharacter: '.' // Delimiter character used to separate links in an object chain
                 },
                 cfg = $.extend(defaults, config),
@@ -169,6 +171,7 @@ var dti = {
                     return obj;
                 })(),
                 operatorsRegex = new RegExp('[<>]=|!=|<>|>|<|=|:'),
+                selectedMatches = {},
                 $markup,
                 $container,
                 scrollTo = function ($target) {
@@ -257,6 +260,10 @@ var dti = {
 
                         if (Array.isArray(data)) {
                             dti.forEachArray(data, function (item) {
+                                if (cfg.hideSelectedSuggestions && selectedMatches.hasOwnProperty(item.text)) {
+                                    return;
+                                }
+
                                 if (regex.test(item.text)) {
                                     if (cfg.highlight) {
                                         item.html(item.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
@@ -305,12 +312,12 @@ var dti = {
                                 if (parsed.operator) {
                                     regex = new RegExp(parsed.value, 'ig');
 
-                                    dti.forEachArray(data, function (item, index) {
-                                        if (regex.test(item.text)) {
+                                    dti.forEachArray(data, function (_private, index) {
+                                        if (regex.test(_private.text)) {
                                             if (cfg.highlight) {
-                                                item.html(item.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
+                                                _private.html(_private.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
                                             }
-                                            matches.push(item);
+                                            matches.push(_private);
                                         }
                                     });
                                 } else {
@@ -335,10 +342,55 @@ var dti = {
                         totalMatches += matches.length;
                     });
 
-                    if (totalMatches <= 1) {
+                    if (totalMatches === 0) {
                         self.hide();
+                    } else if (!self.getSelected().length) {
+                        if (cfg.autoselect) {
+                            self.selectFirst();
+                        }
+                    } else {
+                        scrollTo(self.getSelected());   // Call scroll in case the selected item is not in view
                     }
+
                     self.numberOfMatches = totalMatches;
+                },
+                selectMatch = function (data, e) {
+                    var inputValue = cfg.$inputElement.val(),
+                        operator = getOperator(inputValue),
+                        isEnterKeyPress = (e.which === 10) || (e.which === 13);
+
+                    if (cfg.hideSelectedSuggestions && !data.parent && cfg.$chips) {
+                        selectedMatches[data.text] = true;
+                    }
+
+                    if (operator) {
+                        inputValue = inputValue.replace(new RegExp(operator + '.*'), operator + ' ' + data.text);
+                    } else {
+                        if (!data.parent) {
+                            inputValue = data.text;
+                        } else {
+                            inputValue = inputValue.slice(0, inputValue.lastIndexOf(cfg.chainCharacter)+1) + data.text;
+                        }
+                    }
+
+                    // If materialize chips is installed on this input and the selected item has children or values to choose from
+                    if (cfg.$chips) {
+                        if (data.hasChildren || data.hasValues) {
+                            if (isEnterKeyPress) { // If we arrived her by way of the enter key
+                                e.stopImmediatePropagation(); // Stop propagation so we don't create a chip
+                            }
+                        } else {
+                            getMatches('');
+
+                            if (!isEnterKeyPress) { // If we arrived here by way of mouse click one of our suggestions
+                                cfg.$chips.addChip(cfg.$chips.data('index'), {tag: inputValue}, cfg.$chips); // Manually add the chip
+                                inputValue = '';
+                            }
+                        }
+                    }
+
+                    cfg.$inputElement.val(inputValue);
+                    cfg.$inputElement.focus();
                 },
                 handleKeyup = function (e) {
                     var inputValue = cfg.$inputElement.val(),
@@ -358,12 +410,6 @@ var dti = {
                         if (inputValue.length > cfg.minLength) {
                             self.show();
                         }
-                    } else if (!self.getSelected().length) {
-                        if (cfg.autoselect) {
-                            self.selectFirst();
-                        }
-                    } else {
-                        scrollTo(self.getSelected());   // Scroll to the selected item (JIC it's not in view)
                     }
                 },
                 handleKeydown = function (e) {
@@ -373,19 +419,9 @@ var dti = {
 
                     if (key === 10 || key === 13) { // return
                         $selected = self.getSelected();
+
                         if (self.bindings.isShown() && $selected.length) {
-                            // autosuggestMOD
-                            koData = ko.dataFor($selected[0]);
-
-                            self.bindings.selectMatch(koData);
-
-                            // If materialize chips is installed on this input and the selected item has children or values to choose from
-                            if (cfg.$chips && (koData.hasChildren || koData.hasValues)) {
-                                // Stop propagation so we don't create a chip
-                                e.stopImmediatePropagation();
-                            } else {
-                                getMatches('');
-                            }
+                            selectMatch(ko.dataFor($selected[0]), e);
                         } else {
                             getMatches('');
                             self.hide();
@@ -438,8 +474,6 @@ var dti = {
                 self.bindings.sources.push(source);
 
                 self.addData(source.name(), src.data);
-
-                getMatches(cfg.$inputElement.val());
             };
 
             self.addData = function (sourceName, data) {
@@ -588,6 +622,7 @@ var dti = {
 
             self.show = function () {
                 if (!self.bindings.isShown() && (self.numberOfMatches > 0)) {
+                    self.selectNone();
                     if (cfg.autoselect) {
                         self.selectFirst();
                     }
@@ -598,7 +633,6 @@ var dti = {
 
             self.hide = function (clearInputValue) {
                 self.bindings.isShown(false);
-                self.selectNone();
                 if (clearInputValue) {
                     cfg.$inputElement.val('');
                 }
@@ -673,29 +707,9 @@ var dti = {
                 isShown: ko.observable(false),
                 sources: ko.observableArray([]),
                 selectMatch: function (data, e) {
-                    var inputValue = cfg.$inputElement.val(),
-                        operator = getOperator(inputValue);
-
-                    if (data.text) {
-                        if (operator) {
-                            inputValue = inputValue.replace(new RegExp(operator + '.*'), operator + ' ' + data.text);
-                        } else {
-                            if (!data.parent) {
-                                inputValue = data.text;
-                            } else {
-                                inputValue = inputValue.slice(0, inputValue.lastIndexOf(cfg.chainCharacter)+1) + data.text;
-                            }
-                        }
-
-                        cfg.$inputElement.val(inputValue);
-                        cfg.$inputElement.focus();
-                        self.hide();
-                    }
+                    selectMatch(data, e);
                 }
             };
-
-            // Add autosuggest sources
-            dti.forEachArray(cfg.sources, self.addSource);
 
             // Get autosuggest DOM template
             $markup = dti.utility.getTemplate('#autosuggestTemplate');
@@ -723,13 +737,19 @@ var dti = {
             cfg.$inputElement.keydown(handleKeydown);
 
             if (cfg.showOnFocus) {
-                cfg.$inputElement.focus(self.show);
+                cfg.$inputElement.focus(function () {
+                    self.show();
+                });
             }
 
             cfg.$resultsContainer.click(function handleClick (e) {
-                var $target = $(e.target);
+                var $target = $(e.target),
+                    $parents = $target.parents();
 
-                if (($target.is(cfg.$inputElement) === false) && ($target.parents(selectors.container).length) === 0) {
+                // This should only hide if we're clicking outside the autosuggest container.
+                // If the option hideSelectedSuggestions is used, the clicked autosuggestion is removed before this function
+                // runs, which would trigger the self.hide() if we didn't first check for $parents.length. 
+                if (($target.is(cfg.$inputElement) === false) && $parents.length && ($parents.filter(selectors.container).length === 0)) {
                     self.hide();
                 }
             });
@@ -737,8 +757,24 @@ var dti = {
             if (cfg.$chips) {
                 cfg.$chips.on('chip.delete', function (e, chip) {
                     self.reposition();
+                    
+                    if (cfg.hideSelectedSuggestions) {
+                        delete selectedMatches[chip.tag];
+                        getMatches(cfg.$inputElement.val());
+                    }
+                });
+
+                cfg.$chips.on('chip.add', function (e, chip) {
+                    if (cfg.persistAfterSelect) {
+                        self.reposition();
+                    } else {
+                        self.hide();
+                    }
                 });
             }
+
+            // Add autosuggest sources
+            dti.forEachArray(cfg.sources, self.addSource);
         }
     },
 };
@@ -5289,7 +5325,7 @@ var reportsViewModel = function () {
                             }
 
                             parsed.plainEnglish(self.scheduler.cron.explain(parsed));
-                            data.cron = self.scheduler.cron.build(parsed);
+                            parsed.cron = self.scheduler.cron.build(parsed);
 
                             self.scheduler.modal.close();
                         },
@@ -5350,8 +5386,7 @@ var reportsViewModel = function () {
                 });
 
                 window.autosuggest = new dti.autosuggest.Autosuggest({
-                    // $inputElement: $chips.find('input'),
-                    $inputElement: $('#scheduleModal .chips input'),
+                    $inputElement: $chips.find('input'),
                     $resultsContainer: $modal,
                     $chips: $chips,
                     sources: [{
@@ -5360,7 +5395,9 @@ var reportsViewModel = function () {
                         data: ['Dan Hill', 'Todd Smith', 'Johnny Roberts', 'Rob']
                     }],
                     autoselect: true,
-                    showOnFocus: true
+                    showOnFocus: true,
+                    persistAfterSelect: true,
+                    hideSelectedSuggestions: true
                 });
 
                 // Launch the miss-aisles!
