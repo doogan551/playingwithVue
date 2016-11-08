@@ -9,6 +9,8 @@
         "store": true,
         "Materialize": true,
         "io": true,
-        "dtiUtility": true
+        "dtiUtility": true,
+        "fabric": true,
+        "CustomColorsPicker": true
     }
 }

@@ -1553,7 +1553,12 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         for (c = 0; c < this._shapes.length; c++) {
             shape = this._shapes[c];
             shape.left = left + (shape._shapeOffsetLeft); //left + shape.offsetLeft * gpl.scaleValue;// - this.width/2;
+            shape._originalLeft = shape.left;
             shape.top = top + (shape._shapeOffsetTop); //top + shape.offsetTop * gpl.scaleValue;// - this.height/2;
+            shape._originalTop = shape.top;
+            if (shape.setCoords) {
+                shape.setCoords();
+            }
             // gpl.log(shape.gplType, left, top, shape.offsetLeft, shape.offsetTop);
         }
     },
@@ -4805,7 +4810,7 @@ gpl.ConnectionLine = function (coords, canvas, isNew) {
                     }
                 };
 
-            if (isNew && gpl.rendered) {
+            if (isNew && gpl.rendered && clSelf.coords.length > 2) {
                 centerInAnchor(clSelf.startAnchor, 0, 1);
                 centerInAnchor(clSelf.endAnchor, len - 1, len - 2);
             }
