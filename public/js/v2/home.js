@@ -3114,10 +3114,17 @@ var dti = {
                         // var uniqueName = bindings.points().length === 0,
                         var uniqueName = true,
                             disabled = bindings.disableCreatePoint(),
+                            points = ko.toJS(bindings.points()),
                             c,
                             tmpName,
                             noGaps = true,
-                            hasValue = 0;
+                            hasValue = 0,
+                            newName = [bindings['name1'](), bindings['name2'](), bindings['name3'](), bindings['name4']()].join(';;'),
+                            isSameName = function (p1) {
+                                if (newName === [p1['name1'], p1['name2'], p1['name3'], p1['name4']].join(';;')) {
+                                    uniqueName = false;
+                                }
+                            };
 
                         for (c = 4; c; c--) {
                             tmpName = bindings['name' + c]() || '';
@@ -3131,6 +3138,10 @@ var dti = {
                                 }
                             }
                         }
+
+                        dti.forEachArray(points, function checkPointName (point) {
+                            isSameName(point);
+                        });
 
                         return uniqueName && hasValue && noGaps && !disabled;
                     });
