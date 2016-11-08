@@ -25,7 +25,16 @@ dtiMessaging.openWindow(arguments);
 */
 
 var dtiUtility =  {
+    itemIdx: 0,
+    settings: {
+        idxPrefix: 'dti_'
+    },
+    makeId: function () {
+        dtiUtility.itemIdx++;
+        return dtiUtility.settings.idxPrefix + dtiUtility.itemIdx;
+    },
     store: window.store,
+    getConfigCallbacks: {},
     initEventListener: function () {
         window.addEventListener('storage', dtiUtility.handleMessage);
     },
@@ -53,20 +62,27 @@ var dtiUtility =  {
         var action = newValue.message,
             callbacks = {
                 getConfig: function () {
-                    if (dtiUtility._configCb) {
-                        dtiUtility._configCb(newValue.value);
+                    var cb = dtiUtility.getConfigCallbacks[newValue._getCfgID];
+
+                    if (cb) {
+                        cb(newValue.value);
                     }
 
-                    dtiUtility._configCb = null;
+                    delete dtiUtility.getConfigCallbacks[newValue._getCfgID];
+                },
+                getUser: function () {
+                    if (dtiUtility._getUserCb) {
+                        dtiUtility._getUserCb(newValue.user);
+                    }
                 },
                 pointSelected: function () {
                     if (dtiUtility._pointSelectCb) {
-                        dtiUtility._pointSelectCb(newValue);
+                        dtiUtility._pointSelectCb(newValue.point);
                     }
                 },
                 pointCreated: function () {
                     if (dtiUtility._CreatePointCb) {
-                        dtiUtility._CreatePointCb(newValue);
+                        dtiUtility._CreatePointCb(newValue.point);
                     }
                 },
                 pointFilterSelected: function () {
@@ -85,7 +101,7 @@ var dtiUtility =  {
 
     handleMessage: function (e) {
         var config;
-        if (e.key === window.windowId) {
+        if (e.key.split(';')[0] === window.windowId) {
             config = e.newValue;
             if (typeof config === 'string') {
                 config = JSON.parse(config);
@@ -143,6 +159,7 @@ var dtiUtility =  {
         //add timestamp to guarantee changes
         data._timestamp = new Date().getTime();
         data._windowId = window.windowId;
+        data.messageID = data.messageID || dtiUtility.makeId();
         
         store.set(target, data);
     },
@@ -182,13 +199,22 @@ var dtiUtility =  {
     },
 
     getConfig: function (path, parameters, cb) {
-        dtiUtility._configCb = cb;
+        var getCfgID = dtiUtility.makeId();
+
+        dtiUtility.getConfigCallbacks[getCfgID] = cb;
 
         dtiUtility.sendMessage('getConfig', {
+            messageID: getCfgID,
             path: path,
-            parameters: parameters
+            parameters: parameters,
+            _getCfgID: getCfgID
         });
 
+    },
+    getUser: function (cb) {
+        dtiUtility._getUserCb = cb;
+
+        dtiUtility.sendMessage('getUser');
     }
 };
 
