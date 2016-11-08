@@ -3119,9 +3119,9 @@ var dti = {
                             tmpName,
                             noGaps = true,
                             hasValue = 0,
-                            newName = [bindings['name1'](), bindings['name2'](), bindings['name3'](), bindings['name4']()].join(';;'),
+                            newName = [bindings.name1(), bindings.name2(), bindings.name3(), bindings.name4()].join(';;'),
                             isSameName = function (p1) {
-                                if (newName === [p1['name1'], p1['name2'], p1['name3'], p1['name4']].join(';;')) {
+                                if (newName === [p1.name1, p1.name2, p1.name3, p1.name4].join(';;')) {
                                     uniqueName = false;
                                 }
                             };
