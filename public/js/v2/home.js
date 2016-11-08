@@ -2990,10 +2990,12 @@ var dti = {
                     };
 
                     bindings.pointTypeInvert = function (type) {
-                        self._pauseRequest = true;
-                        self.applyPointTypes(type);
-                        self._pauseRequest = false;
-                        bindings.pointTypeChanged();
+                        if (self.bindings.restrictPointTypes() === false) {
+                            self._pauseRequest = true;
+                            self.applyPointTypes(type);
+                            self._pauseRequest = false;
+                            bindings.pointTypeChanged();
+                        }
                     };
 
                     bindings.togglePointType = function (indexOfPointType) {
