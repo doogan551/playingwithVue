@@ -8352,7 +8352,6 @@ gpl.Manager = function () {
             gpl.isCancel = true;
             managerSelf.bindings.hasEdits(false);
             gpl.blockManager.handleUnload();
-            // gpl.lineManager.prepSaveData(gpl.json);
 
             delete gpl.json.editVersion;
 
