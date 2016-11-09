@@ -2861,6 +2861,7 @@ var dti = {
                             name4: '',
                             showInactive: false,
                             showDeleted: false,
+                            dropdownColumnCount: 5,
                             dropdownOpen: false,
                             restrictCreate: false,
                             fetchingPoints: false,
@@ -2990,12 +2991,10 @@ var dti = {
                     };
 
                     bindings.pointTypeInvert = function (type) {
-                        if (self.bindings.restrictPointTypes() === false) {
-                            self._pauseRequest = true;
-                            self.applyPointTypes(type);
-                            self._pauseRequest = false;
-                            bindings.pointTypeChanged();
-                        }
+                        self._pauseRequest = true;
+                        self.selectSinglePointType(type);
+                        self._pauseRequest = false;
+                        bindings.pointTypeChanged();
                     };
 
                     bindings.togglePointType = function (indexOfPointType) {
@@ -3236,10 +3235,28 @@ var dti = {
 
             self.bindings = getBindings();
 
+            self.selectSinglePointType = function (selectedType) {
+                dti.forEachArray(self.bindings.pointTypes(), function isSelectedType (type) {
+                    var isTargetType = type.key() === selectedType;
+
+                    if (isTargetType) {
+                        type.selected(true);
+                    } else {
+                        type.selected(false);
+                    }
+                });
+            };
+
             self.applyPointTypes = function (types, exclusive) {
                 self._pauseRequest = true;
                 if (types) {
                     if (types.length > 0) {
+                        if (exclusive && types.length < 5) {
+                            self.bindings.dropdownColumnCount(types.length);
+                        } else {
+                            self.bindings.dropdownColumnCount(5);
+                        }
+                        
                         dti.forEachArray(self.bindings.pointTypes(), function isPointTypeChecked (type) {
                             var isFound = types.indexOf(type.key()) > -1;
 
@@ -4425,7 +4442,7 @@ var dti = {
 
                     $element.contextmenu(function handleRightClick (event) {
                         var $target = $(event.target),
-                            $li = $target.is('li') ? $target : $target.parents('li'),
+                            $li = $target.is('span') ? $target : $target.parents('span'),
                             $select = $li.parent().siblings('select'),
                             text = $li.text();
 

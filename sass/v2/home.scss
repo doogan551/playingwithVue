@@ -1616,13 +1616,18 @@ $loaderSpeedScale: 1 / .75;
         }
 
         .grid-dropdown {
-            width: 70vw !important;
+            max-width: 70vw !important;
             right: 20px;
 
-            li {
+            > span {
                 clear: none;
-                width: 20%;
                 float: left;
+                padding: 5px 0;
+                width: 14vw;
+
+                label {
+                    top: 0;
+                }
             }
         }
     }
