@@ -6302,6 +6302,7 @@ gpl.BlockManager = function (manager) {
                     movingBlock = data.block;
 
                 if (event.e.movementX !== 0 || event.e.movementY !== 0) {
+                    gpl.manager.bindings.hasEdits(true);
                     bmSelf.movingBlock = true;
 
                     if (movingBlock && movingBlock.syncObjects && target.gplType !== 'anchor') {
@@ -8351,7 +8352,7 @@ gpl.Manager = function () {
             gpl.isCancel = true;
             managerSelf.bindings.hasEdits(false);
             gpl.blockManager.handleUnload();
-            gpl.lineManager.prepSaveData(gpl.json);
+            // gpl.lineManager.prepSaveData(gpl.json);
 
             delete gpl.json.editVersion;
 
