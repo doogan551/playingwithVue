@@ -5753,7 +5753,7 @@ gpl.BlockManager = function (manager) {
             };
         },
 
-        getSaveObject: function () {
+        getSaveObject: function (isCancel) {
             var saveObj = {
                     adds: [],
                     updates: [],
@@ -5764,27 +5764,33 @@ gpl.BlockManager = function (manager) {
                 var data;
                 if (!block.isNonPoint) {
                     data = block.getPointData();
-                    saveObj.adds.push(data);
+                    if (isCancel) {
+                        saveObj.deletes.push(data);
+                    } else {
+                        saveObj.adds.push(data);
+                    }
                 }
             });
 
-            gpl.forEach(bmSelf.editedBlocks, function (block) {
-                var data;
+            if (!isCancel) {
+                gpl.forEach(bmSelf.editedBlocks, function (block) {
+                    var data;
 
-                if (!block.isNonPoint) {
-                    data = {
-                        oldPoint: block._origPointData,
-                        newPoint: block.getPointData()
-                    };
-                    saveObj.updates.push(data);
-                }
-            });
+                    if (!block.isNonPoint) {
+                        data = {
+                            oldPoint: block._origPointData,
+                            newPoint: block.getPointData()
+                        };
+                        saveObj.updates.push(data);
+                    }
+                });
 
-            gpl.forEach(bmSelf.deletedBlocks, function (block) {
-                if (!block.isNonPoint) {
-                    saveObj.deletes.push(block.upi);
-                }
-            });
+                gpl.forEach(bmSelf.deletedBlocks, function (block) {
+                    if (!block.isNonPoint) {
+                        saveObj.deletes.push(block.upi);
+                    }
+                });
+            }
 
             return saveObj;
         },
@@ -6294,7 +6300,9 @@ gpl.BlockManager = function (manager) {
                     movingBlock = data.block;
 
                 if (event.e.movementX !== 0 || event.e.movementY !== 0) {
-                    gpl.manager.bindings.hasEdits(true);
+                    if (gpl.isEdit) {
+                        gpl.manager.bindings.hasEdits(true);
+                    }
                     bmSelf.movingBlock = true;
 
                     if (movingBlock && movingBlock.syncObjects && target.gplType !== 'anchor') {
@@ -7683,17 +7691,47 @@ gpl.Manager = function () {
     };
 
     managerSelf.renderAll = function () {
-        var now = new Date().getTime();
-
-        managerSelf.lastRender = now;
+        var renderTime = new Date().getTime(),
+            doRender = function() {
+                managerSelf.queuingRender = false;
+                managerSelf.lastRender = new Date().getTime();
+                gpl.renderCount = gpl.renderCount || 0;
+                gpl.renderCount++;
+                gpl.log('Rendering', gpl.renderCount);
+                managerSelf.canvas.renderAll();
+                if (gpl.isEdit) {
+                    gpl.canvases.toolbar.renderAll();
+                }
+            };
 
         if (!managerSelf.haltRender) {
-            // log('Rendering');
-            managerSelf.canvas.renderAll();
-            if (gpl.isEdit) {
-                gpl.canvases.toolbar.renderAll();
+            // gpl.log(renderTime - managerSelf.lastRender);
+            if (renderTime - managerSelf.lastRender >= managerSelf.renderStep) {
+                // gpl.log('render immediate');
+                doRender();
+            } else {
+                if (!managerSelf.queuingRender) {
+                    // gpl.log('queueing render');
+                    managerSelf.queuingRender = true;
+                    setTimeout(function() {
+                        doRender();
+                    }, managerSelf.renderStep);
+                // } else {
+                //     gpl.log('render already queued');
+                }
             }
         }
+        // var now = new Date().getTime();
+
+        // managerSelf.lastRender = now;
+
+        // if (!managerSelf.haltRender) {
+        //     // log('Rendering');
+        //     managerSelf.canvas.renderAll();
+        //     if (gpl.isEdit) {
+        //         gpl.canvases.toolbar.renderAll();
+        //     }
+        // }
     };
 
     managerSelf.pauseRender = function () {
@@ -7914,6 +7952,7 @@ gpl.Manager = function () {
             len = (gpl.destroyFns || []).length;
 
         if (window.destroyed !== true) {
+            managerSelf.haltRender = true;
             window.destroyed = true;
             if (managerSelf.toolbar) {
                 gpl.destroyObject(managerSelf.toolbar);
@@ -8347,6 +8386,9 @@ gpl.Manager = function () {
         });
 
         managerSelf.$cancelButton.click(function () {
+            var saveObj = gpl.blockManager.getSaveObject(true);
+            managerSelf.socket.emit('updateSequencePoints', saveObj);
+
             gpl.isCancel = true;
             managerSelf.bindings.hasEdits(false);
             gpl.blockManager.handleUnload();
@@ -8552,6 +8594,9 @@ gpl.Manager = function () {
 
         fabric.Canvas.prototype.renderAll = function () {
             if (!managerSelf.haltRender) {
+                gpl.renderCount = gpl.renderCount || 0;
+                gpl.renderCount++;
+                // gpl.log('Rendering', gpl.renderCount);
                 this._renderAll();
             }
         };

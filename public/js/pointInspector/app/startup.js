@@ -334,8 +334,11 @@ define([
                 method: 'hard'
             },
             emitString = 'deletePoint';
-        if (newPointData._pStatus === 1)
+
+        //if new and from external (gpl), don't delete it on close
+        if (newPointData._pStatus === 1 && !pointInspector.isExternal) {
             pointInspector.socket.emit(emitString, emitData);
+        }
             
         dtiUtility.closeWindow();
         // window.close();
@@ -852,7 +855,7 @@ define([
             var sanitizeProps = ['Channel'],
                 doSanitize = {
                     'Channel': function (dataProp) {
-                        valueTypeEnums = pointInspector.utility.config.Enums["Value Types"];
+                        var valueTypeEnums = pointInspector.utility.config.Enums["Value Types"];
 
                         if (dataProp.ValueType === valueTypeEnums.Enum.enum) {
                             delete dataProp.Min;
@@ -966,7 +969,8 @@ define([
             pointInspector.socket.once('pointUpdated', function(rxData) {
                 var hideAfter = 3000,
                     bgColor,
-                    dismissText;
+                    dismissText,
+                    msg;
 
                 if (rxData.message && rxData.message === 'success') {
                     msg = 'Point was successfully saved.';
@@ -1042,6 +1046,10 @@ define([
             pointInspector.initDOM();
             return;
         }
+        //if new and external, open directly in edit mode
+        // if (data._pStatus === 1 && pointInspector.isExternal) {
+        //     pointInspector.isInEditMode(true);
+        // }
         pointInspector.point = new Point(data);
         pointInspector.socket = io.connect(window.location.origin);
         $('.wrapper').show(400, function() {
@@ -1066,6 +1074,8 @@ define([
     }
 
     if (!!window.attach && !!window.attach.point) {
+        //flag for external/parameter points (mainly gpl)
+        pointInspector.isExternal = true;
         initialize(JSON.parse(window.attach.point));
     } else {
         getData(pointInspector.id).done(function (data) {
