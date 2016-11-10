@@ -6001,7 +6001,7 @@ gpl.BlockManager = function (manager) {
             gpl.log('type change', arguments);
         },
 
-        prepSaveData: function (saveObject) {
+        prepSaveData: function (saveObject, isForLater) {
             var ret = [],
                 lines = [];
 
@@ -6222,7 +6222,7 @@ gpl.BlockManager = function (manager) {
             gpl.json.editVersion = {};
         }
 
-        bmSelf.prepSaveData(gpl.json.editVersion);
+        bmSelf.prepSaveData(gpl.json.editVersion, true);
 
         gpl.json.editVersion.pointChanges = bmSelf.getSaveObject();
     });
@@ -8210,7 +8210,8 @@ gpl.Manager = function () {
             deviceUpdateIntervalMinutes: ko.observable(Math.floor(+gpl.point['Update Interval'].Value / 60)),
 
             updateSequenceProperties: function () {
-                var props = ko.toJS(managerSelf.bindings);
+                var props = ko.toJS(managerSelf.bindings),
+                    dataPoint;
 
                 gpl.point['Update Interval'].Value = (+props.deviceUpdateIntervalMinutes || 0) * 60 + (+props.deviceUpdateIntervalSeconds || 0);
                 gpl.point['Show Label'].Value = props.deviceShowLabel;
@@ -8224,18 +8225,23 @@ gpl.Manager = function () {
                     gpl.devicePoint = gpl._newDevicePoint;
                     gpl.deviceId = gpl._newDevicePoint._id;
 
-                    gpl.blockManager.forEachBlock(function (block) {
-                        gpl.log('processing block', block.gplId);
-                        if (block.isNonPoint !== true) {
-                            block.formatPointFromData(null, null, 'Device Point', gpl.devicePoint);
-                        }
-                        gpl.fire('editedblock', block);
-                    });
                     gpl.point['Point Refs'][0].Value = gpl.deviceId;
                     gpl.point['Point Refs'][0].PointInst = gpl.deviceId;
                     gpl.point['Point Refs'][0].DevInst = gpl.deviceId;
                     gpl.point['Point Refs'][0].PointName = gpl.devicePoint.Name;
                     gpl.point['Point Refs'][0].PointType = gpl.devicePoint['Point Type'].eValue;
+
+                    gpl.blockManager.forEachBlock(function (block) {
+                        gpl.log('processing block', block.gplId);
+                        if (block.isNonPoint !== true) {
+                            dataPoint = block.getPointData();
+                            if (!!dataPoint && dataPoint["Point Refs"][0].Value === 0) {
+                                dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
+                            }
+                            block.formatPointFromData(null, null, 'Device Point', gpl.devicePoint);
+                        }
+                        gpl.fire('editedblock', block);
+                    });
                 }
 
                 delete gpl._newDevicePoint;
