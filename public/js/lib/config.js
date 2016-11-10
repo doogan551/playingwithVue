@@ -3919,6 +3919,7 @@ var Config = (function(obj) {
                 upPort = point["Uplink Port"],
                 port = ["Port 1", "Port 2", "Port 3", "Port 4"];
 
+            // ROB - is it possible to enter this block?
             if (enums["Device Model Types"][point["Model Type"].Value] === undefined) {
                 point["Model Type"].Value = "Unknown";
                 point["Model Type"].eValue = enums["Device Model Types"]["Unknown"]["enum"];
@@ -3926,13 +3927,17 @@ var Config = (function(obj) {
 
             point["Model Type"].isDisplayable = true;
             point["Model Type"].isReadOnly = false;
+            // ROB- do we need to make sure Model Type.Value is set?
             point._devModel = point["Model Type"].eValue;
             point._relPoint = enums.Reliabilities["No Fault"]["enum"];
 
             //------ Begin import data checks ---------------------------------------------------------------
+            // ROB- do we need to delete protocol still?
             delete point.Protocol;
-            if (!point.hasOwnProperty("Firmware 2 Version"))
+            // ROB - is it possible to enter this block?
+            if (!point.hasOwnProperty("Firmware 2 Version")) {
                 point["Firmware 2 Version"] = obj.Templates.getTemplate("Device")["Firmware 2 Version"];
+            }
 
             if (typeof point["Ethernet Address"].Value !== "string") {
                 point["Ethernet Address"].Value = "";
@@ -3971,6 +3976,7 @@ var Config = (function(obj) {
                 point["Ethernet Network"].isReadOnly = true;
                 point["Ethernet IP Port"].isReadOnly = true;
             } else {
+                // ROB- create a function that can do setValOpts and control isDisp based on VO
                 setValOpt(upPort, {
                     "Port 1": enums["Device Ports"]["Port 1"]["enum"]
                 });
@@ -4135,7 +4141,7 @@ var Config = (function(obj) {
                 point[prop + i].isDisplayable = disp;
                 point[prop + i].isReadOnly = ro;
             }
-            if (disp) {
+            if (!!disp) {
                 if (propertyObject.Value === "Linear") {
                     point[prop + 3].isDisplayable = false;
                     point[prop + 4].isDisplayable = false;
@@ -4307,7 +4313,8 @@ var Config = (function(obj) {
                         break;
                 }
             }
-            if (point.Instance.isDisplayable) {
+
+            if (!!point.Instance.isDisplayable) {
                 sensorPoint.isDisplayable = false;
                 point["Conversion Type"].isDisplayable = false;
             } else {

@@ -12,6 +12,8 @@
         "io": true,
         "dtiUtility": true,
         "_": true,
-        "expect": true
+        "expect": true,
+        "comparePoints": true,
+        "checkValues": true
     }
 }
