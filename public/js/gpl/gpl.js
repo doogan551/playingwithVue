@@ -177,9 +177,8 @@ var gpl = {
         gpl.log('Unblocking UI');
         $.unblockUI();
     },
-    openPointSelector: function (callback, newUrl, pointType, property, nameFilter) {
-        var url = newUrl || '/pointLookup',
-            parameters = nameFilter ? {} : {
+    openPointSelector: function (callback, pointType, nameFilter) {
+        var parameters = nameFilter ? {} : {
                 name1: gpl.point.name1,
                 name2: gpl.point.name2,
                 name3: gpl.point.name3,
@@ -187,12 +186,15 @@ var gpl = {
             },
             pointSelectedCallback = function (pointInfo) {
                 if (!!pointInfo) {
-                    callback(pointInfo._id, pointInfo.name, pointInfo.pointType);
+                    $.ajax({
+                        url: '/api/points/' + pointInfo._id
+                    }).done(function (selectedPoint) {
+                        callback(selectedPoint);
+                    });
                 }
             };
 
         if (pointType) {
-            url += '/' + pointType + '/' + property;
             if (parameters.pointTypes === undefined) {
                 parameters.pointTypes = [];
             }
@@ -457,9 +459,14 @@ var gpl = {
             if (block.pointRefIndex !== pRef.AppIndex) {
                 block.pointRefIndex = pRef.AppIndex;
             }
-            if (block.type !== 'MonitorBlock') {
+
+            console.log("--setBlockPointRef()  block.type = " + block.type);
+            if (block.type === 'MonitorBlock') {
+                // pRef.DevInst = refs[this._pointRefs['Device Point']].DevInst;
+            } else {
                 pRef.DevInst = gpl.deviceId;  // just in case the "Device Point" changed
             }
+
             // if (!!block.upi && !isNaN(block.upi)) {  // TODO to clear out duplicate data (point ref contains the UPI)
             //     delete block.upi;
             // }
@@ -1839,6 +1846,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 ref = refs[idx];
                 ref.Value = ref.PointInst = upi;
 
+                console.log("--setPointRef()  this.type = " + this.type);
                 if (this.type === 'MonitorBlock') {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
                 } else {
@@ -5591,31 +5599,11 @@ gpl.BlockManager = function (manager) {
                 bmSelf.closePrecisionEditor();
             },
             editPointReference: function () {
-                var url = '/pointLookup/',
-                    editBlock = bmSelf.editBlock,
+                var editBlock = bmSelf.editBlock,
                     isControl = editBlock.type === 'ControlBlock',
-                    block,
-                    deviceId = isControl ? gpl.deviceId : null,
-                    pointType,
                     property = isControl ? 'Control Point' : 'Monitor Point';
 
-                if (isControl) {
-                    block = editBlock.inputAnchors[0].getConnectedBlock();
-                } else {
-                    block = editBlock.outputAnchor.getConnectedBlock();
-                }
-
-                if (block) {
-                    pointType = block.pointType;
-
-                    url += pointType + '/' + property;
-
-                    if (deviceId) {
-                        url += '/' + deviceId;
-                    }
-                }
-
-                bmSelf.doOpenPointSelector(url, property);
+                bmSelf.doOpenPointSelector(property);
             },
             updatePoint: function () {
                 var label = bmSelf.bindings.editPointLabel(),
@@ -5853,14 +5841,20 @@ gpl.BlockManager = function (manager) {
             bmSelf.deletedBlocks = {};
         },
 
-        doOpenPointSelector: function (url, property) {
-            gpl.openPointSelector(function (upi, name, pointType) {
+        doOpenPointSelector: function (property) {
+            gpl.openPointSelector(function (selectedPoint) {
+                var pRef,
+                    upi = selectedPoint._id,
+                    name = selectedPoint.Name,
+                    pointType = selectedPoint["Point Type"].Value,
+                    devinst = (property === "Monitor Point" ? selectedPoint["Point Refs"][0].Value : gpl.deviceId);
+
                 bmSelf.bindings.editPointName(name);
                 bmSelf.editBlockUpi = upi;
                 bmSelf.editBlockPointType = pointType;
-                gpl.makePointRef({upi: upi, name: name, pointType: pointType}, gpl.deviceId, "GPLBlock", 439);
+                pRef = gpl.makePointRef({upi: upi, name: name, pointType: pointType}, devinst, "GPLBlock", 439);
                 gpl.log(upi, name);
-            }, url, null, property);
+            }, null);
         },
 
         openPrecisionEditor: function (block) {
@@ -8152,7 +8146,7 @@ gpl.Manager = function () {
                     managerSelf.bindings.actionButtonUpi(upi);
                     managerSelf.bindings.actionButtonPointType(pointType);
                     gpl.makePointRef({upi: upi, name: name, pointType: pointType}, gpl.deviceId, "GPLDynamic", 440);
-                }, null, null, null, true);
+                }, null, true);
             },
 
             showBackgroundColorModal: function () {
@@ -8255,8 +8249,11 @@ gpl.Manager = function () {
                 }
             },
             selectDevicePoint: function () {
-                gpl.openPointSelector(function (upi, name) {
-                    var tmpData = $.extend(true, {}, gpl.point);
+                gpl.openPointSelector(function (selectedPoint) {
+                    var upi = selectedPoint._id,
+                        name = selectedPoint.Name,
+                        tmpData = $.extend(true, {}, gpl.point);
+
                     tmpData['Point Refs'][0].Value = upi;
                     tmpData = gpl.formatPoint({
                         oldPoint: gpl.point,
@@ -8272,15 +8269,9 @@ gpl.Manager = function () {
                         managerSelf.bindings.deviceUpi(upi);
 
                         gpl.log('Set device point Successfully');
-
-                        $.ajax({
-                            url: '/api/points/' + upi
-                        }).done(function (data) {
-                            gpl._newDevicePoint = data;
-                        });
+                        gpl._newDevicePoint = selectedPoint;
                     }
-
-                }, null, 'Device', 'Device Point', {});
+                }, 'Device', {});
             },
 
             addNewButton: function () {
