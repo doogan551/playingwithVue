@@ -330,6 +330,17 @@ $modalHeaderHeight: 42px;
         }
     }
 
+    [type="radio"]:not(:checked) + label::before,
+    [type="radio"]:not(:checked) + label::after {
+        border-color: $blue-grey !important;
+    }
+
+    [type="radio"]:checked + label::before,
+    [type="radio"]:checked + label::after {
+        border-color: $blue-grey !important;
+        background-color: $blue-grey !important;
+    }
+
     [type="checkbox"].filled-in:not(:checked) + label::after {
         border-color: $blue-grey !important;
     }
@@ -1616,13 +1627,18 @@ $loaderSpeedScale: 1 / .75;
         }
 
         .grid-dropdown {
-            width: 70vw !important;
+            max-width: 70vw !important;
             right: 20px;
 
-            li {
+            > span {
                 clear: none;
-                width: 20%;
                 float: left;
+                padding: 5px 0;
+                width: 14vw;
+
+                label {
+                    top: 0;
+                }
             }
         }
     }

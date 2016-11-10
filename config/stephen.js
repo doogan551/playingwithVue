@@ -2,7 +2,7 @@ var stephen = {
     'Infoscan': {
         'dbConfig': {
             'host': 'localhost',
-            'dbName': 'yadkinville'
+            'dbName': 'infoscan'
         },
         'files': {
             'driveLetter': 'C'
