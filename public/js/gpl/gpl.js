@@ -460,7 +460,6 @@ var gpl = {
                 block.pointRefIndex = pRef.AppIndex;
             }
 
-            console.log("--setBlockPointRef()  block.type = " + block.type);
             if (block.type === 'MonitorBlock') {
                 // pRef.DevInst = refs[this._pointRefs['Device Point']].DevInst;
             } else {
@@ -1846,7 +1845,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 ref = refs[idx];
                 ref.Value = ref.PointInst = upi;
 
-                console.log("--setPointRef()  this.type = " + this.type);
                 if (this.type === 'MonitorBlock') {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
                 } else {
@@ -8233,11 +8231,14 @@ gpl.Manager = function () {
 
                     gpl.blockManager.forEachBlock(function (block) {
                         gpl.log('processing block', block.gplId);
-                        if (block.isNonPoint !== true) {
-                            dataPoint = block.getPointData();
+                        dataPoint = block.getPointData();
+                        if (!!dataPoint) {
                             if (!!dataPoint && dataPoint["Point Refs"][0].Value === 0) {
                                 dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
                             }
+                        }
+
+                        if (block.isNonPoint !== true) {
                             block.formatPointFromData(null, null, 'Device Point', gpl.devicePoint);
                         }
                         gpl.fire('editedblock', block);
