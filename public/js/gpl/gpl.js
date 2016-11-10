@@ -8271,10 +8271,8 @@ gpl.Manager = function () {
                     gpl.blockManager.forEachBlock(function (block) {
                         gpl.log('processing block', block.gplId);
                         dataPoint = block.getPointData();
-                        if (!!dataPoint) {
-                            if (!!dataPoint && dataPoint["Point Refs"][0].Value === 0) {
-                                dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
-                            }
+                        if (!!dataPoint && dataPoint["Point Refs"][0].Value === 0) {
+                            dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
                         }
 
                         if (block.isNonPoint !== true) {
