@@ -3256,7 +3256,7 @@ var dti = {
                         } else {
                             self.bindings.dropdownColumnCount(5);
                         }
-                        
+
                         dti.forEachArray(self.bindings.pointTypes(), function isPointTypeChecked (type) {
                             var isFound = types.indexOf(type.key()) > -1;
 
@@ -3311,6 +3311,7 @@ var dti = {
 
                 if (cfg.pointType && !cfg.pointTypes && cfg.pointType !== 'Point') {
                     config.pointTypes = [cfg.pointType];
+                    cfg.newPointType = cfg.pointType;
                 }
 
                 if (cfg.mode === 'create' && cfg.pointType) {

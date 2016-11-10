@@ -330,6 +330,17 @@ $modalHeaderHeight: 42px;
         }
     }
 
+    [type="radio"]:not(:checked) + label::before,
+    [type="radio"]:not(:checked) + label::after {
+        border-color: $blue-grey !important;
+    }
+
+    [type="radio"]:checked + label::before,
+    [type="radio"]:checked + label::after {
+        border-color: $blue-grey !important;
+        background-color: $blue-grey !important;
+    }
+
     [type="checkbox"].filled-in:not(:checked) + label::after {
         border-color: $blue-grey !important;
     }
