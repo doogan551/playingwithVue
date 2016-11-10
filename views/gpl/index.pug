@@ -43,13 +43,6 @@ html
                     i.fa.fa-search
                 input.prettyInput(type="number", min="25", max="400", data-bind="value: currentZoom")
                 | &nbsp;%
-            .pull-left.pop
-                a(href="", data-bind="click: popInOut")
-                    .fa(style="display:none", data-bind="css: popInOutClass(), visible: loaded")
-                    // ko text: popInOutText()
-                    // /ko
-
-            //- button.btn.btn-primary.btn-sm.pull-left(type="button", style="display:none", data-bind="text: popInOutText(), click: popInOut, visible: loaded")
 
         #gplSequenceProperties.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
             .modal-dialog

@@ -194,10 +194,11 @@ var gpl = {
                 }
             };
 
+        if (parameters.pointTypes === undefined) {
+            parameters.pointTypes = [];
+        }
+
         if (pointType) {
-            if (parameters.pointTypes === undefined) {
-                parameters.pointTypes = [];
-            }
             if (parameters.pointTypes.indexOf(pointType) === -1) {
                 parameters.pointTypes.push(pointType);
             }
@@ -3957,20 +3958,22 @@ gpl.ActionButton = function (config) {
             _local.parameter = value;
             _sendCommand();
         },
-        openWindow = function (queryString, cb) {
+        openWindow = function (queryString, cb) {  // TODO openwindow() URL needs addressing  (openReport calls)
             var pointType = _local.pointType,
                 endPoint,
                 url;
 
-            endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, _local.upi);
+            // endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, _local.upi);
+            //
+            // url = endPoint.review.url;
+            //
+            // if (queryString) {
+            //     url += queryString;
+            // }
 
-            url = endPoint.review.url;
-
-            if (queryString) {
-                url += queryString;
-            }
-
-            gpl.openWindow(url, _local.pointData.Name, pointType, '', _local.upi, {
+            gpl.openWindow({
+                pointType: _local.pointType,
+                upi: _local.upi,
                 callback: cb
             });
         },
@@ -3987,7 +3990,7 @@ gpl.ActionButton = function (config) {
                 }
             }
         },
-        openReport = function (config) {
+        openReport = function (config) {  // TODO openwindow() URL needs addressing
             var reportType = config.reportType,
                 duration = config.duration,
                 fromDate = config.fromDate,
@@ -6422,10 +6425,6 @@ gpl.BlockManager = function (manager) {
 
     bmSelf.openPointEditor = function (block, override) { //for view mode clicks to edit
         var upi,
-            pointData = block && block.getPointData && block.getPointData(),
-            endPoint,
-            url,
-            pointName,
             pointType,
             saveCallback = function (point) {
                 var pt = point;
@@ -6436,7 +6435,9 @@ gpl.BlockManager = function (manager) {
                 gpl.fire('editedblock', block);
             },
             doOpenWindow = function () {
-                gpl.openWindow(url, pointName, pointType, '', upi, {
+                gpl.openWindow({
+                    pointType: pointType,
+                    upi: upi,
                     callback: (gpl.isEdit ? saveCallback : gpl.emptyFn)
                 });
             };
@@ -6446,9 +6447,6 @@ gpl.BlockManager = function (manager) {
                 if (override || (!block.isNonPoint || (block.isNonPoint && !gpl.isEdit))) {
                     bmSelf.deselect();
                     upi = block.upi;
-                    endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint(block.pointType, upi);
-                    url = endPoint.review.url;
-                    pointName = block.pointName;
                     pointType = block.pointType;
                     doOpenWindow();
                 } else {
@@ -6459,10 +6457,7 @@ gpl.BlockManager = function (manager) {
                 }
             } else { //open device point
                 upi = gpl.devicePoint._id;
-                pointName = gpl.devicePoint.Name;
                 pointType = 'Device';
-                endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint(pointType, upi);
-                url = endPoint.review.url;
                 doOpenWindow();
             }
         }
@@ -7527,50 +7522,28 @@ gpl.Manager = function () {
         });
     };
 
-    managerSelf.doEdit = function () {
+    managerSelf.doEdit = function () {  // TODO how do we handle 'edit' urls??
         var endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Sequence', gpl.upi),
             url = endPoint.edit.url;
 
-        gpl.openWindow(url, gpl.point.Name, 'Sequence', '', gpl.upi, {
-            sameWindow: true
+        gpl.openWindow({
+            url: url,
+            pointType: 'Sequence',
+            upi: gpl.upi,
+            options: {
+                sameWindow: true
+            }
         });
     };
 
     managerSelf.doCancel = function () {
-        var endPoint = gpl.workspaceManager.config.Utility.pointTypes.getUIEndpoint('Sequence', gpl.upi),
-            url = endPoint.review.url;
-
-        gpl.openWindow(url, gpl.point.Name, 'Sequence', '', gpl.upi, {
-            sameWindow: true
+        gpl.openWindow({
+            pointType: 'Sequence',
+            upi: gpl.upi,
+            options: {
+                sameWindow: true
+            }
         });
-    };
-
-    managerSelf.popInOut = function () {
-        var _target = 'mainWindow';
-
-        if (gpl.poppedIn) {
-            _target = '';
-        }
-
-        gpl._openWindow(window.location.href, gpl.point.Name, 'Sequence', _target, gpl.upi);
-
-        gpl.poppedIn = !gpl.poppedIn;
-
-        return false;
-    };
-
-    managerSelf.popInOutText = function () {
-        if (gpl.poppedIn) {
-            return 'Pop Out';
-        }
-        return 'Pop In';
-    };
-
-    managerSelf.popInOutClass = function () {
-        if (gpl.poppedIn) {
-            return 'fa-arrow-circle-up';
-        }
-        return 'fa-arrow-circle-down';
     };
 
     managerSelf.sequenceLoaded = ko.observable(false);
@@ -8094,10 +8067,6 @@ gpl.Manager = function () {
             backgroundColor: ko.observable(managerSelf.backgroundColor),
             deviceBackgroundColor: ko.observable(managerSelf.backgroundColor),
 
-            popInOut: managerSelf.popInOut,
-            popInOutText: managerSelf.popInOutText,
-            popInOutClass: managerSelf.popInOutClass,
-
             controllers: gpl.controllers,
 
             currentZoom: ko.observable(Math.round(100 * gpl.scaleValue)),
@@ -8248,7 +8217,12 @@ gpl.Manager = function () {
 
             updateSequenceProperties: function () {
                 var props = ko.toJS(managerSelf.bindings),
-                    dataPoint;
+                    setBlocksDevicePointRef = function (block) {
+                        var dataPoint = block.getPointData();
+                        if (!!dataPoint && dataPoint["Point Refs"][0].Value === 0) {
+                            dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
+                        }
+                    };
 
                 gpl.point['Update Interval'].Value = (+props.deviceUpdateIntervalMinutes || 0) * 60 + (+props.deviceUpdateIntervalSeconds || 0);
                 gpl.point['Show Label'].Value = props.deviceShowLabel;
@@ -8270,11 +8244,7 @@ gpl.Manager = function () {
 
                     gpl.blockManager.forEachBlock(function (block) {
                         gpl.log('processing block', block.gplId);
-                        dataPoint = block.getPointData();
-                        if (!!dataPoint && dataPoint["Point Refs"][0].Value === 0) {
-                            dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
-                        }
-
+                        setBlocksDevicePointRef(block);
                         if (block.isNonPoint !== true) {
                             block.formatPointFromData(null, null, 'Device Point', gpl.devicePoint);
                         }
