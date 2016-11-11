@@ -464,12 +464,12 @@ html.direports
                                         h5 Scheduled Actions
                                     // ko foreach: scheduler.scheduleEntries
                                     .row.flex.flex-center
-                                        input.filled-in(type='checkbox', data-bind='checked: enable, attr: { "id": $root.makeId() }')
+                                        input.filled-in(type='checkbox', data-bind='checked: enable, click: $root.scheduler.setDirty, attr: { "id": $root.makeId() }')
                                         label(data-bind='attr: { "for": $root.getLastId() }') Enable
                                         .padleft-20
                                             span(data-bind='html: parsed.plainEnglish')
                                             span , email this report to&nbsp;
-                                            span(data-bind='text: $root.scheduler.buildRecipients()')
+                                            span(data-bind='text: $root.scheduler.buildRecipients($data)')
                                         i.padleft-20.material-icons(data-bind='click: $root.scheduler.modal.open') settings
                                     // /ko
                                     a.btn.waves-effect.blue-grey(data-bind='click: scheduler.modal.open.bind($data, "new")') Add Scheduled Action
@@ -528,10 +528,10 @@ html.direports
         #scheduleModal.modal.modal-fixed-footer
             .modal-content
                 form
-                    .row.flex.flex-center.flex-start.standardInterval
+                    .row.flex.flex-center.flex-start.inlineInputs
                         .input-field
                             select(data-bind='options: availableIntervals, value: selectedInterval')
-                            label Interval
+                            label Action Interval
                         .input-field(data-bind='visible: selectedInterval() === "Advanced"')
                             //- The active class on our label resolves the conflict of label overlapping initial value
                             label.active(for='timepicker') Time
@@ -579,11 +579,18 @@ html.direports
                                 option(data-bind='value: $data.value, text: $data.text, attr: { selected: !!~$parent.selectedMonths.indexOf($data.value) }')
                                 // /ko
                             label Months
+                    .row.flex.flex-center.flex-start.inlineInputs
+                        .input-field
+                            select(data-bind='options: availableReportDurations, optionsText: "text", value: selectedReportDuration, event: { "change": handleDurationChange }')
+                            label Report Duration
+                        .input-field
+                            select#selectInterval(data-bind='options: selectedReportDuration().intervals, value: selectedReportInterval')
+                            label Report Interval
                 .chips
             .modal-footer
                 a.btn.waves-effect.blue-grey(data-bind="click: save") Save
                 a.btn.waves-effect.grey(data-bind="click: cancel") Cancel
-                a.btn.wafes-effect.red.darken-4.left(data-bind="click: deleteScheduleEntry") Delete
+                a.btn.wafes-effect.red.darken-4.left(data-bind="visible: !isNew, click: deleteScheduleEntry") Delete
 
     script#autosuggestTemplate(type='text/html')
         //- autosuggestMOD (the data-bind in .autosuggestContainer)

@@ -157,7 +157,6 @@ var dti = {
                     autoselect: false, // If nothing selected, autoselect the first suggestion when autosuggest renders or the suggestions change
                     showOnFocus: false, // Show suggestions when input is focused
                     persistAfterSelect: false,
-                    hideSelectedSuggestions: false,
                     chainCharacter: '.' // Delimiter character used to separate links in an object chain
                 },
                 cfg = $.extend(defaults, config),
@@ -260,10 +259,6 @@ var dti = {
 
                         if (Array.isArray(data)) {
                             dti.forEachArray(data, function (item) {
-                                if (cfg.hideSelectedSuggestions && selectedMatches.hasOwnProperty(item.text)) {
-                                    return;
-                                }
-
                                 if (regex.test(item.text)) {
                                     if (cfg.highlight) {
                                         item.html(item.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
@@ -358,10 +353,6 @@ var dti = {
                     var inputValue = cfg.$inputElement.val(),
                         operator = getOperator(inputValue),
                         isEnterKeyPress = (e.which === 10) || (e.which === 13);
-
-                    if (cfg.hideSelectedSuggestions && !data.parent && cfg.$chips) {
-                        selectedMatches[data.text] = true;
-                    }
 
                     if (operator) {
                         inputValue = inputValue.replace(new RegExp(operator + '.*'), operator + ' ' + data.text);
@@ -604,7 +595,7 @@ var dti = {
                 getMatches(cfg.$inputElement.val());
             };
 
-            self.deleteData = function (sourceName) {
+            self.removeAllData = function (sourceName) {
                 var source = self.getSource(sourceName);
 
                 if (!source) {
@@ -616,6 +607,41 @@ var dti = {
                 } else {
                     source.data = {};
                 }
+
+                getMatches(cfg.$inputElement.val());
+            };
+
+            self.removeData = function (sourceName, dataToRemove) {
+                // sourceName = string
+                var source = self.getSource(sourceName);
+
+                if (!source) {
+                    return dti.log('Source not found');
+                }
+
+                if (!Array.isArray(source.data)) {
+                    return dti.log('This source\'s data cannot be removed because it is not an array');
+                }
+
+                if (!Array.isArray(dataToRemove)) {
+                    dataToRemove = [dataToRemove];
+                }
+
+                dti.forEachArray(dataToRemove, function (text) {
+                    dti.forEachArray(source.data, function (sourceItem, ndx) {
+                        // sourceItem = {
+                        //     hasChildren : false,
+                        //     hasValues : false,
+                        //     html : observable,
+                        //     parent : null
+                        //     text : "Jeff Shore"
+                        // }
+                        if (sourceItem.text === text) {
+                            source.data.splice(ndx, 1);
+                            return false; // Stop iterrating the forEach array
+                        }
+                    });
+                });
 
                 getMatches(cfg.$inputElement.val());
             };
@@ -701,6 +727,23 @@ var dti = {
                 return parse(str);
             };
 
+            self.destroy = function () {
+                // Remove all event listeners
+                if (cfg.$chips) {
+                    cfg.$chips.off();
+                }
+                cfg.$resultsContainer.off();
+                cfg.$inputElement.off();
+
+                // Remove all cached DOM elements
+                delete cfg.$chips;
+                delete cfg.$inputElement;
+                delete cfg.$resultsContainer;
+
+                $markup = null;
+                $container = null;
+            };
+
             self.numberOfMatches = 0;
 
             self.bindings = {
@@ -746,9 +789,6 @@ var dti = {
                 var $target = $(e.target),
                     $parents = $target.parents();
 
-                // This should only hide if we're clicking outside the autosuggest container.
-                // If the option hideSelectedSuggestions is used, the clicked autosuggestion is removed before this function
-                // runs, which would trigger the self.hide() if we didn't first check for $parents.length. 
                 if (($target.is(cfg.$inputElement) === false) && $parents.length && ($parents.filter(selectors.container).length === 0)) {
                     self.hide();
                 }
@@ -757,11 +797,6 @@ var dti = {
             if (cfg.$chips) {
                 cfg.$chips.on('chip.delete', function (e, chip) {
                     self.reposition();
-                    
-                    if (cfg.hideSelectedSuggestions) {
-                        delete selectedMatches[chip.tag];
-                        getMatches(cfg.$inputElement.val());
-                    }
                 });
 
                 cfg.$chips.on('chip.add', function (e, chip) {
@@ -4998,6 +5033,59 @@ var reportsViewModel = function () {
     self.currentColumnEdit = ko.observable(getNewColumnTemplate());
 
     self.scheduler = {
+        reportDurations: (function buildReportDateRanges () {
+            var intervals = ['Minute', 'Hour', 'Day', 'Week', 'Month'],
+                dayInterval = intervals.slice(0, 2),
+                weekInterval = intervals.slice(0, 3),
+                monthInterval = intervals.slice(0, 4),
+                arr = [{
+                    value: 'Today',
+                    text: 'Current Day',
+                    intervals: dayInterval
+                }, {
+                    value: 'Yesterday',
+                    text: 'Previous Day',
+                    intervals: dayInterval
+                }, {
+                    value: 'Last 7 Days',
+                    text: 'Previous 7 Days',
+                    intervals: weekInterval
+                }, {
+                    value: 'Last Week',
+                    text: 'Previous Week',
+                    intervals: weekInterval
+                }, {
+                    value: 'Last 4 Weeks',
+                    text: 'Previous 4 Weeks',
+                    intervals: monthInterval
+                }, {
+                    value: 'This Month',
+                    text: 'Current Month',
+                    intervals: monthInterval
+                }, {
+                    value: 'Last Month',
+                    text: 'Previous Month',
+                    intervals: monthInterval
+                }, {
+                    value: 'This Year',
+                    text: 'Current Year',
+                    intervals: intervals
+                }, {
+                    value: 'Last Year',
+                    text: 'Previous Year',
+                    intervals: intervals
+                }],
+                obj = {};
+
+            dti.forEachArray(arr, function (durationObj) {
+                obj[durationObj.value] = durationObj;
+            });
+
+            return {
+                asObject: obj,
+                asArray: arr
+            };
+        })(),
         availableIntervals: ['Daily', 'Weekly', 'Monthly', 'Yearly', 'Advanced'],
         availableDates: (function buildAvailableDates () {
             var arr = [],
@@ -5038,6 +5126,8 @@ var reportsViewModel = function () {
             });
             return arr;
         })(),
+        availableUsersObj: {}, // initialized in self.scheduler.init
+        availableUsersLookup: {},
         scheduleEntries: ko.observableArray([]),
         cron: {
             parse: function (cron) {
@@ -5252,47 +5342,83 @@ var reportsViewModel = function () {
             open: function (data) {
                 var _parsed,
                     autosuggest,
+                    isValidEmailRegex = /^[-a-z0-9~!$%^&*_=+}{\'?]+(\.[-a-z0-9~!$%^&*_=+}{\'?]+)*@([a-z0-9_][-a-z0-9_]*(\.[-a-z0-9_]+)*\.(aero|arpa|biz|com|coop|edu|gov|info|int|mil|museum|name|net|org|pro|travel|mobi|[a-z][a-z])|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?$/i,
                     $modal = dti.utility.getTemplate('#scheduleModalTemplate'),
                     $chips = $modal.find('.chips'),
+                    $input = null,
+                    $selectInterval = null,
                     timepickerOpts = {
                         container: $('body')
                     },
+                    recipientUsers = (function () {
+                        var arr = [];
+
+                        if (data !== 'new') {
+                            dti.forEachArray(data.users(), function (userId) {
+                                var user = self.scheduler.availableUsersLookup[userId];
+
+                                if (user) {
+                                    user = user['First Name'].Value + ' ' + user['Last Name'].Value;
+                                }
+                                arr.push(user || userId);
+                            });
+                        }
+                        return arr;
+                    })(),
+                    recipientEmails = (function () {
+                        var arr = [];
+
+                        if (data !== 'new') {
+                            $.extend(arr, data.emails());
+                        }
+                        return arr;
+                    })(),
                     bindings = {
+                        isNew: false,
+                        availableReportDurations: self.scheduler.reportDurations.asArray,
                         availableIntervals: self.scheduler.availableIntervals,
                         availableDaysOfWeek: self.scheduler.availableDaysOfWeek,
                         availableMonths: self.scheduler.availableMonths,
                         availableDates: self.scheduler.availableDates,
                         selectedInterval: ko.observable(),
-                        selectedTime: ko.observable('00:00'),
+                        selectedTime: ko.observable('08:00'),
                         selectedMonth: ko.observable(),
                         selectedMonths: ko.observableArray([]),
                         selectedDate: ko.observable(),
                         selectedDates: ko.observableArray([]),
                         selectedDayOfWeek: ko.observable(),
                         selectedDaysOfWeek: ko.observableArray([]),
-                        recepientUsers: ko.observableArray([]),
-                        recepientEmails: ko.observableArray([]),
+                        selectedReportDuration: ko.observable(),
+                        selectedReportInterval: ko.observable(),
                         save: function () {
                             var parsed,
                                 len;
 
                             if (data === 'new') {
-                                parsed = { // Create parsed object
-                                    interval: ko.observable(),
-                                    time: ko.observable(),
-                                    months: ko.observableArray(),
-                                    dates: ko.observableArray(),
-                                    daysOfWeek: ko.observableArray(),
-                                    plainEnglish: ko.observable()
+                                data = {
+                                    isDirty: true,
+                                    enable: ko.observable(true),
+                                    users: ko.observableArray([]),
+                                    emails: ko.observableArray([]),
+                                    parsed: self.scheduler.cron.parse('00 08 * * *'),
+                                    optionalParameters: {
+                                        duration: ko.observable(),
+                                        interval: ko.observable()
+                                    }
                                 };
 
-                                self.scheduler.scheduleEntries.push({
-                                    enable: ko.observable(true),
-                                    parsed: parsed
-                                });
-                            } else {
-                                parsed = data.parsed; // Point to our source data
+                                self.scheduler.scheduleEntries.push(data);
                             }
+                            
+                            data.users(recipientUsers.map(function (name) {
+                                return self.scheduler.availableUsersObj[name]._id;
+                            }));
+                            data.emails(recipientEmails);
+
+                            data.optionalParameters.duration(bindings.selectedReportDuration().value);
+                            data.optionalParameters.interval(bindings.selectedReportInterval());
+
+                            parsed = data.parsed; // Shortcut
 
                             parsed.interval(bindings.selectedInterval());
                             parsed.time(bindings.selectedTime());
@@ -5327,15 +5453,31 @@ var reportsViewModel = function () {
                             parsed.plainEnglish(self.scheduler.cron.explain(parsed));
                             parsed.cron = self.scheduler.cron.build(parsed);
 
-                            self.scheduler.modal.close();
+                            self.scheduler.setDirty(data);
+
+                            done();
                         },
                         cancel: function () {
-                            self.scheduler.modal.close();
+                            done();
                         },
                         deleteScheduleEntry: function () {
                             self.scheduler.scheduleEntries.remove(data);
                             self.scheduler.modal.close();
+                        },
+                        handleDurationChange: function () {
+                            // Re-run material_select on our interval select element because our options have changed
+                            $selectInterval.material_select();
                         }
+                    },
+                    done = function () {
+                        autosuggest.destroy();
+                        autosuggest = null;
+                        $modal = null;
+                        $chips = null;
+                        $input = null;
+                        $selectInterval = null;
+
+                        self.scheduler.modal.close();
                     };
 
                 if (data === 'new') {
@@ -5365,6 +5507,9 @@ var reportsViewModel = function () {
                         bindings.selectedDate(_parsed.dates[0]);
                         bindings.selectedDayOfWeek(_parsed.daysOfWeek[0]);
                     }
+
+                    bindings.selectedReportDuration(self.scheduler.reportDurations.asObject[data.optionalParameters.duration()]);
+                    bindings.selectedReportInterval(data.optionalParameters.interval());
                 }
 
                 // Apply bindings and add our markup
@@ -5382,22 +5527,68 @@ var reportsViewModel = function () {
                 // Init our chips element
                 $chips.material_chip({
                     placeholder: '+Recepient',
-                    secondaryPlaceholder: 'Email Recepients'
+                    secondaryPlaceholder: 'Email Recepients',
+                    data: recipientUsers.concat(recipientEmails).map(function (text) {
+                        return {
+                            tag: text
+                        };
+                    })
                 });
 
-                window.autosuggest = new dti.autosuggest.Autosuggest({
-                    $inputElement: $chips.find('input'),
+                $input = $chips.find('input');
+                $selectInterval = $modal.find('#selectInterval');
+
+                $chips.addClass('tooltipped');
+                $chips.tooltip({
+                    delay: 500,
+                    tooltip: 'Select a user and/or enter an email address manually',
+                    position: 'top'
+                });
+
+                $chips.on('chip.add', function (e, chip) {
+                    if (self.scheduler.availableUsersObj[chip.tag]) {
+                        recipientUsers.push(chip.tag);
+                        
+                        // This event is fired before the input element's value is cleared. We need to manually clear the input
+                        // value before calling autosuggest.remove because it re-filters the list based on the input value
+                        $input.val('');
+                        autosuggest.removeData('All users', chip.tag);
+                    } else if (isValidEmailRegex.test(chip.tag)) {
+                        recipientEmails.push(chip.tag);
+                    } else {
+                        $chips.find('.chip').last().addClass('err');
+                    }
+                });
+
+                $chips.on('chip.delete', function (e, chip) {
+                    var ndx;
+
+                    if (self.scheduler.availableUsersObj[chip.tag]) {
+                        recipientUsers.splice(recipientUsers.indexOf(chip.tag), 1);
+                        autosuggest.addData('All users', [chip.tag]);
+                    } else {
+                        // Search for this in recipientEmails because it may not exist (i.e. if the email was invalid)
+                        ndx = recipientEmails.indexOf(chip.tag);
+                        if (ndx > -1) {
+                            recipientEmails.splice(ndx, 1);
+                        }
+                    }
+                });
+
+                autosuggest = new dti.autosuggest.Autosuggest({
+                    $inputElement: $input,
                     $resultsContainer: $modal,
                     $chips: $chips,
                     sources: [{
                         name: 'All users',
                         nameShown: true,
-                        data: ['Dan Hill', 'Todd Smith', 'Johnny Roberts', 'Rob']
+                        data: Object.keys(self.scheduler.availableUsersObj).filter(function (name) {
+                            return recipientUsers.indexOf(name) > -1 ? false:true;
+                        })
                     }],
                     autoselect: true,
                     showOnFocus: true,
-                    persistAfterSelect: true,
-                    hideSelectedSuggestions: true
+                    persistAfterSelect: true
                 });
 
                 // Launch the miss-aisles!
@@ -5412,27 +5603,95 @@ var reportsViewModel = function () {
                     complete: function () {
                         ko.cleanNode($modal[0]);
                         $modal.find('select').material_select('destroy'); // TODO - Necessary?
+                        $modal.find('.tooltipped').tooltip('remove');
+                        $modal.find('.chips').off(); // Detach event listeners
                         $modal.remove();
                     }
                 });
             }
         },
         buildRecipients: function (data) {
-            return 'Dan, Johnny, and rtc@timers.com';
+            var arr = [],
+                str,
+                i;
+
+            dti.forEachArray(data.users(), function (userId) {
+                var user = self.scheduler.availableUsersLookup[userId];
+
+                if (user) {
+                    user = user['First Name'].Value + ' ' + user['Last Name'].Value;
+                }
+                arr.push(user || userId);
+            });
+            arr = arr.concat(data.emails());
+
+            if (!arr.length) {
+                str = 'no one';
+            } else if (arr.length <= 2) {
+                str = arr.join(' and ');
+            } else {
+                str = arr.join(', ');
+                i = str.lastIndexOf(',') + 1;
+                str = str.substring(0, i) + ' and ' + str.slice(i);
+            }
+            return str;
+        },
+        setDirty: function (data) {
+            data.isDirty = true;
+            return true;
         },
         init: function () {
             // Async call to db to get distinct values
-            var cron = ['30 10 * * *', '00 08 1 * *'];
+            var runTime = ['30 10 * * *', '00 08 1 * *'];
             self.scheduler.scheduleEntries.push({
-                cron: cron[0],
+                isDirty: false,
+                runTime: runTime[0],
                 enable: ko.observable(false),
-                parsed: self.scheduler.cron.parse(cron[0])
+                parsed: self.scheduler.cron.parse(runTime[0]),
+                users: ko.observableArray([]),
+                emails: ko.observableArray([]),
+                optionalParameters: {
+                    duration: ko.observable('Last 7 Days'),
+                    interval: ko.observable('1 Hour')
+                }
             });
             self.scheduler.scheduleEntries.push({
-                cron: cron[1],
+                isDirty: false,
+                runTime: runTime[1],
                 enable: ko.observable(true),
-                parsed: self.scheduler.cron.parse(cron[1])
+                parsed: self.scheduler.cron.parse(runTime[1]),
+                users: ko.observableArray([]),
+                emails: ko.observableArray([]),
+                optionalParameters: {
+                    duration: ko.observable('Last 7 Days'),
+                    interval: ko.observable('1 Hour')
+                }
             });
+
+            $.ajax({
+                type: 'post',
+                url: dti.settings.apiEndpoint + 'security/users/getallusers',
+                contentType: 'application/json'
+            }).done(
+                function handleData (data) {
+                    dti.log(data);
+                    if (data.err) {
+                        return dti.log('security/users/getallusers failed', data.err);
+                    }
+
+                    dti.forEachArray(data.Users, function (user) {
+                        self.scheduler.availableUsersObj[user['First Name'].Value + ' ' + user['Last Name'].Value] = user;
+                        self.scheduler.availableUsersLookup[user._id] = user;
+                    });
+                }
+            ).fail(
+                function handleFail (jqXHR, textStatus, errorThrown) {
+                    dti.log('security/users/getallusers', jqXHR, textStatus, errorThrown);
+                }
+            ).always (
+                function finished () {
+                }
+            );
             return;
 
             $.ajax({

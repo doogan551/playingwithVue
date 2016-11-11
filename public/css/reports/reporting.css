@@ -1168,7 +1168,7 @@ button {
     color: #607d8b;
     cursor: pointer;
 }
-#scheduleModal .standardInterval .input-field {
+#scheduleModal .inlineInputs .input-field {
     white-space: nowrap;
     margin-right: 20px;
 }
