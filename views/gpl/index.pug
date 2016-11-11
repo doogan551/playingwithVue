@@ -356,10 +356,10 @@ html
                                 .input-row
                                     .checkbox.dataField
                                         label Show Label
-                                            input(type="checkbox")
+                                            input(type="checkbox", data-bind="checked: editPointShowLabel")
                                     .checkbox.dataField
                                         label Show Present Value
-                                            input(type="checkbox")
+                                            input(type="checkbox", data-bind="checked: editPointShowValue")
 
                     .modal-footer
                         button.btn.btn-default.btn-sm(data-dismiss="modal") Close

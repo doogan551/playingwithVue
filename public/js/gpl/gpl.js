@@ -5705,7 +5705,7 @@ gpl.BlockManager = function (manager) {
                 // }
 
                 editBlock.precision = parseFloat(bmSelf.bindings.editPointCharacters() + '.' + bmSelf.bindings.editPointDecimals());
-
+                editBlock.setPlaceholderText();
                 editBlock.setShowLabel(showLabel);
                 editBlock.setShowValue(showValue);
 
