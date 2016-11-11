@@ -1,3 +1,7 @@
+// ko if: (!!valueType)
+// ko if: (valueType === "None")
+input.input.form-control.filterContainer.filled-in(data-bind="value: value, enable: $root.canEdit()", type="text", required)
+// /ko
 // ko if: (valueType === "Timet")
 span.valuetypeTimepicker
     .input-field
@@ -10,7 +14,7 @@ input.input.form-control.filterContainer.filled-in(data-bind="value: value, enab
 // ko if: (valueType === "String")
 input.input.form-control.filterContainer.filled-in(data-bind="value: value, enable: $root.canEdit()", type="text", required)
 // /ko
-// ko if: (valueType === "Enum" && !!valueList && valueList.length > 0)
+// ko if: (!!valueList && valueType === "Enum")
 .availablefilterValues
     ul.dropdown-content(data-bind="foreach: valueList, attr: { 'id': 'enumValueList' + $index() }")
         li
@@ -60,6 +64,4 @@ div.bitStringCtrl
     br
     // /ko
 // /ko
-
-
-
+// /ko

@@ -683,15 +683,14 @@ module.exports = Rpt = {
             for (var k = 0; k < properties.length; k++) {
                 var p = properties[k].colName;
                 if (Config.Utility.getUniquePIDprops().indexOf(p) !== -1) {
-                    fields["Point Refs"] = 1;
+                    fields["Point Refs"] = true;
                     uniquePIDs.push(p);
                     getPointRefs = true;
-
                 } else {
-                    fields[propertyCheckForValue(p)] = 1;
+                    fields[propertyCheckForValue(p)] = true;
                 }
             }
-            fields["Point Type.Value"] = 1;
+            fields["Point Type.Value"] = true;
         }
 
         if (selectedPointTypes && selectedPointTypes.length > 0) {
@@ -725,9 +724,8 @@ module.exports = Rpt = {
         if (searchCriteria["$and"].length === 0) {
             searchCriteria = {};
         }
-        //logger.info(JSON.stringify(searchCriteria));
-        //logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
 
+        // logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
         var criteria = {
             query: searchCriteria,
             collection: 'points',
@@ -735,6 +733,7 @@ module.exports = Rpt = {
             fields: fields
         };
 
+        // logger.info("--- Report criteria = " + JSON.stringify(criteria));
         Utility.get(criteria, function(err, docs) {
 
             if (err) {
@@ -837,7 +836,7 @@ module.exports = Rpt = {
                         "Point Refs": {
                             $elemMatch: {
                                 "PropertyName": key,
-                                "Value": utils.converters.convertType(filter.upi, filter.valueType)
+                                "Value": utils.converters.convertType(filter.upi, filterValueType)
                             }
                         }
                     };
@@ -845,14 +844,14 @@ module.exports = Rpt = {
                     break;
                 case "NotEqualTo":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $ne: utils.converters.convertType(filter.upi, filter.valueType)
+                        $ne: utils.converters.convertType(filter.upi, filterValueType)
                     };
                     searchQuery = {
                         "Point Refs": {
                             $elemMatch: {
                                 "PropertyName": key,
                                 "Value": {
-                                    $ne: utils.converters.convertType(filter.upi, filter.valueType)
+                                    $ne: utils.converters.convertType(filter.upi, filterValueType)
                                 }
                             }
                         }
@@ -873,13 +872,19 @@ module.exports = Rpt = {
                     };
                     break;
                 case "EqualTo":
-                    if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
+                    if (filterValueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
                         searchQuery[key + ".eValue"] = filter.evalue;
                     } else {
-                        if (filter.value === "False") {
-                            searchQuery[propertyCheckForValue(key)] = false;
-                        } else if (filter.value === "True") {
-                            searchQuery[propertyCheckForValue(key)] = true;
+                        if (filterValueType === "Bool") {
+                            if (utils.converters.isNumber(filter.value)) {
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $in: [utils.converters.convertType(filter.value, filterValueType), (filter.value === 1)]
+                                };
+                            } else {
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $eq: filter.value
+                                };
+                            }
                         } else if (utils.converters.isNumber(filter.value)) {
                             searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filterValueType);
                         } else if (filter.value.indexOf(",") > -1) {
@@ -911,12 +916,22 @@ module.exports = Rpt = {
                     //searchQuery[key] = {
                     //    $exists: true
                     //};
-                    if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
+                    if (filterValueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
                         searchQuery[key + ".eValue"] = {
                             $ne: filter.evalue
                         };
                     } else {
-                        if (utils.converters.isNumber(filter.value)) {
+                        if (filterValueType === "Bool") {
+                            if (utils.converters.isNumber(filter.value)) {
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $nin: [utils.converters.convertType(filter.value, filterValueType), (filter.value === 1)]
+                                };
+                            } else {
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $ne: filter.value
+                                };
+                            }
+                        } else if (utils.converters.isNumber(filter.value)) {
                             searchQuery[propertyCheckForValue(key)] = {
                                 $ne: utils.converters.convertType(filter.value, filterValueType)
                             };

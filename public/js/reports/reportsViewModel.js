@@ -1264,7 +1264,7 @@ var initKnockout = function () {
             // $element.material_select('destroy');
             $element.material_select();
             $element.on('change', function() {
-                console.log("material_select change() fired....");
+                // console.log("material_select change() fired....");
                 if (ko.isObservable(boundField)) {
                     boundField(this.selectedOptions[0].value);
                 } else {
@@ -1672,7 +1672,7 @@ var reportsViewModel = function () {
                 return "";
             }
         },
-        columnCanBeCalculated = function (column) {
+        columnCanBeCalculated = function (column) { // TODO needs investigation
             var result = false,
                 valueOptions;
             if (self.reportType() === "Totalizer") {
@@ -2069,6 +2069,7 @@ var reportsViewModel = function () {
             filter.upi = 0;
             delete filter.AppIndex;
             filter.value = setDefaultFilterValue(filter.valueType);
+            filter.valueList = [];
             setValueList(selectedItem.name, selectedItem.name, indexOfFilter);
             switch (filter.valueType) {
                 case "Timet":
@@ -2196,14 +2197,15 @@ var reportsViewModel = function () {
                 localArray[i].error = col.error;
                 results.push(localArray[i]);
 
-                if (cleanup && col.valid && results.length > 0) {
-                    delete results[results.length - 1].valueList;  // valuelist is only used in UI
-                    delete results[results.length - 1].dataColumnName; // dataColumnName is only used in UI
-                    delete results[results.length - 1].rawValue; // rawValue is only used in UI
-                    delete results[results.length - 1].error; // error is only used in UI
-                    delete results[results.length - 1].softDeleted; // error is only used in UI
-                    delete results[results.length - 1].bitstringEnums; // error is only used in UI
-                    delete results[results.length - 1].upi; // error is only used in UI
+                if (cleanup && col.valid && results.length > 0) { // these fields are only used in UI
+                    delete results[results.length - 1].valueList;
+                    delete results[results.length - 1].valueType;
+                    delete results[results.length - 1].dataColumnName;
+                    delete results[results.length - 1].rawValue;
+                    delete results[results.length - 1].error;
+                    delete results[results.length - 1].softDeleted;
+                    delete results[results.length - 1].bitstringEnums;
+                    delete results[results.length - 1].upi;
                 }
             }
 
@@ -2305,9 +2307,10 @@ var reportsViewModel = function () {
 
                     if (cleanup && valid && results.length > 0) {  // clean fields only used during UI
                         delete results[results.length - 1].valueList;
+                        delete results[results.length - 1].valueType;
                         delete results[results.length - 1].error;
                         delete results[results.length - 1].softDeleted;
-                        delete results[results.length - 1].upi; // error is only used in UI
+                        delete results[results.length - 1].upi;
                     }
                 }
             }
@@ -2342,6 +2345,8 @@ var reportsViewModel = function () {
                 }
 
                 if (validFilter) {
+                    currentFilter.valueType = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS.Properties[currentFilter.filterName].valueType : "");
+                    currentFilter.valueList = [];
                     setValueList(currentFilter.filterName, currentFilter.filterName, result.length);
                     result.push(currentFilter);
                 }
@@ -2378,6 +2383,7 @@ var reportsViewModel = function () {
                     switch (self.reportType()) {
                         case "Property":
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
+                            currentColumn.valueType = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS.Properties[currentColumn.colName].valueType : "");
                             if (currentColumn.valueType === "BitString") {
                                 currentColumn.bitstringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[currentColumn.colName + " Bits"] : "");
                             }
@@ -2424,19 +2430,19 @@ var reportsViewModel = function () {
         setValueList = function (property, pointType, index) {
             var result = [],
                 i,
-                len,
                 setOptions = function (options) {
-                    len = (options && options.length ? options.length : 0);
-
-                    for (i = 0; i < len; i++) {
-                        result.push({
-                            value: options[i].name,
-                            evalue: options[i].value
-                        });
+                    if (!!options && Array.isArray(options)) {
+                        for (i = 0; i < options.length; i++) {
+                            result.push({
+                                value: options[i].name,
+                                evalue: options[i].value
+                            });
+                        }
                     }
-                    self.listOfFilters()[index].valueList = result;
-                    // self.listOfFilters.valueHasMutated();
-                    updateListOfFilters(self.listOfFilters());
+                    if (!!self.listOfFilters()[index]) {
+                        self.listOfFilters()[index].valueList = result;
+                        updateListOfFilters(self.listOfFilters());
+                    }
                 };
 
             dtiUtility.getConfig("Utility.pointTypes.getEnums", [property, pointType], setOptions);

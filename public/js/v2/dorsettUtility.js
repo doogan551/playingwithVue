@@ -41,7 +41,7 @@ var dtiUtility =  {
 
     init: function () {
         if (dtiUtility.store === undefined) {
-            $.getScript('/js/lib/store.min.js', function handleGetStore () {
+            $.getScript('/js/lib/store2.min.js', function handleGetStore () {
                 var storeInterval = setInterval(function testStore () {
                     if (window.store) {
                         dtiUtility.store = window.store;
@@ -77,13 +77,12 @@ var dtiUtility =  {
                 },
                 pointSelected: function () {
                     if (dtiUtility._pointSelectCb) {
-                        dtiUtility._pointSelectCb(newValue);
+                        dtiUtility._pointSelectCb(newValue.point);
                     }
                 },
                 pointCreated: function () {
                     if (dtiUtility._CreatePointCb) {
-                        delete newValue.message;
-                        dtiUtility._CreatePointCb(newValue);
+                        dtiUtility._CreatePointCb(newValue.point);
                     }
                 },
                 pointFilterSelected: function () {
@@ -107,11 +106,12 @@ var dtiUtility =  {
             if (typeof config === 'string') {
                 config = JSON.parse(config);
             }
-            dtiUtility.processMessage(config);
+            if (config) {
+                dtiUtility.processMessage(config);
+            }
         }
 
-        // store.remove(e.key) to clear
-
+        store.remove(e.key); // memory cleanup
         // console.log({
         //     'Storage Key': e.key,
         //     'Old Value': e.oldValue,
