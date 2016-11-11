@@ -346,12 +346,14 @@ html
                                             label(for="constantlabel") Label
                                             input#constantlabel.form-control.input-sm(type="text", data-bind="value: editPointLabel")
                             .subtitle.col-md-5.editSection Numeric Format
-                                .col-md-12  # of Characters
-                                    input.pull-right.form-control.input-sm(type="number", min="1", max="10", data-bind="value: editPointCharacters")
-
-                                .col-md-12 # of Decimals
-                                    input.pull-right.form-control.input-sm(type="number", min="1", max="10", data-bind="value: editPointDecimals")
-
+                                .col-md-6
+                                    .input-row.dataField
+                                        label(for="configPointCharacters") # of Characters
+                                        input#configPointCharacters.form-control.input-sm(type="number", min="1", max="10", data-bind="value: editPointCharacters")
+                                .col-md-6
+                                    .input-row.dataField
+                                        label(for="configPointDecimals") # of Decimals
+                                        input#configPointDecimals.form-control.input-sm(type="number", min="1", max="10", data-bind="value: editPointDecimals")
                             .subtitle.col-md-5.pull-right.editSection Label Format
                                 .input-row
                                     .checkbox.dataField
