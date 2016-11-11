@@ -2050,7 +2050,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
     getPlaceholderText: function () {
         var precision = this.precision,
             ints = Math.floor(precision),
-            decs = precision % 1,
+            decs = parseInt(String(precision).split('.')[1], 10),
             c,
             ret = '';
 
