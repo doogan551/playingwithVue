@@ -1335,8 +1335,6 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         var self = this,
             otherAnchor = line.getOtherAnchor(anchor),
             otherBlock = gpl.blockManager.getBlock(otherAnchor.gplId),
-            otherPointData,
-            otherPointTypeEvalue,
             name,
             upi,
             idx;
@@ -1362,13 +1360,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 }
 
                 if (name && gpl.rendered) {
-                    otherPointData = otherBlock.getPointData();
-                    if (!!otherPointData) {
-                        otherPointTypeEvalue = otherPointData["Point Type"].eValue;
-                    }
-
-                    // otherBlock.pointType;
-                    self.setPointRef(anchor.anchorType, otherBlock.upi, name, otherPointTypeEvalue);
+                    self.setPointRef(anchor.anchorType, otherBlock.upi, name, otherBlock.pointType);
                     gpl.fire('editedblock', self);
                 }
             }
@@ -1841,7 +1833,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         this._pointRefs = obj;
     },
 
-    setPointRef: function (prop, upi, name, pointTypeEvalue) {
+    setPointRef: function (prop, upi, name, refPointType) {
         var data = this._pointData,
             refs,
             ref,
@@ -1860,8 +1852,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     ref.DevInst = gpl.deviceId;
                 }
 
-                if (pointTypeEvalue > 0) {
-                    ref.PointType = pointTypeEvalue;
+                if (!!refPointType && !!gpl.pointTypes[refPointType]) {
+                    ref.PointType = gpl.pointTypes[refPointType].enum;
                 }
 
                 refs[idx].PointName = name;
@@ -5633,7 +5625,6 @@ gpl.BlockManager = function (manager) {
                     currReferences = bmSelf.upis[editBlock.upi] || [],
                     newReferences = bmSelf.upis[bmSelf.editBlockUpi] || [],
                     otherBlock,
-                    editBlockPointData,
                     anchor,
                     pointName,
                     prop;
@@ -5673,12 +5664,13 @@ gpl.BlockManager = function (manager) {
 
                         otherBlock = anchor.getConnectedBlock();
                         if (otherBlock) {
-                            editBlockPointData = editBlock.getPointData();
-                            otherBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName, (!!editBlockPointData ? editBlockPointData["Point Type"].eValue : null));
+                            otherBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName, editBlock.pointType);
+                            editBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName, otherBlock.pointType);
                             gpl.fire('editedblock', otherBlock);
+                        } else {
+                            editBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName);
                         }
 
-                        editBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName);
                         editBlock.pointName = pointName;
                         editBlock.upi = bmSelf.editBlockUpi;
                         editBlock.getReferencePoint(); //isNew
