@@ -1335,6 +1335,8 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         var self = this,
             otherAnchor = line.getOtherAnchor(anchor),
             otherBlock = gpl.blockManager.getBlock(otherAnchor.gplId),
+            otherPointData,
+            otherPointTypeEvalue,
             name,
             upi,
             idx;
@@ -1360,7 +1362,13 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 }
 
                 if (name && gpl.rendered) {
-                    self.setPointRef(anchor.anchorType, otherBlock.upi, name);
+                    otherPointData = otherBlock.getPointData();
+                    if (!!otherPointData) {
+                        otherPointTypeEvalue = otherPointData["Point Type"].eValue;
+                    }
+
+                    // otherBlock.pointType;
+                    self.setPointRef(anchor.anchorType, otherBlock.upi, name, otherPointTypeEvalue);
                     gpl.fire('editedblock', self);
                 }
             }
@@ -1833,7 +1841,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
         this._pointRefs = obj;
     },
 
-    setPointRef: function (prop, upi, name) {
+    setPointRef: function (prop, upi, name, pointTypeEvalue) {
         var data = this._pointData,
             refs,
             ref,
@@ -1850,6 +1858,10 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                     ref.DevInst = refs[this._pointRefs['Device Point']].DevInst;
                 } else {
                     ref.DevInst = gpl.deviceId;
+                }
+
+                if (pointTypeEvalue > 0) {
+                    ref.PointType = pointTypeEvalue;
                 }
 
                 refs[idx].PointName = name;
@@ -5621,6 +5633,7 @@ gpl.BlockManager = function (manager) {
                     currReferences = bmSelf.upis[editBlock.upi] || [],
                     newReferences = bmSelf.upis[bmSelf.editBlockUpi] || [],
                     otherBlock,
+                    editBlockPointData,
                     anchor,
                     pointName,
                     prop;
@@ -5660,7 +5673,8 @@ gpl.BlockManager = function (manager) {
 
                         otherBlock = anchor.getConnectedBlock();
                         if (otherBlock) {
-                            otherBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName);
+                            editBlockPointData = editBlock.getPointData();
+                            otherBlock.setPointRef(prop, bmSelf.editBlockUpi, pointName, (!!editBlockPointData ? editBlockPointData["Point Type"].eValue : null));
                             gpl.fire('editedblock', otherBlock);
                         }
 
@@ -8217,7 +8231,7 @@ gpl.Manager = function () {
 
             updateSequenceProperties: function () {
                 var props = ko.toJS(managerSelf.bindings),
-                    setBlocksDevicePointRef = function (block) {
+                    setBlockDevicePointRef = function (block) {
                         var dataPoint = block.getPointData();
                         if (!!dataPoint && dataPoint["Point Refs"][0].Value === 0) {
                             dataPoint["Point Refs"][0] = gpl.point['Point Refs'][0];
@@ -8244,7 +8258,7 @@ gpl.Manager = function () {
 
                     gpl.blockManager.forEachBlock(function (block) {
                         gpl.log('processing block', block.gplId);
-                        setBlocksDevicePointRef(block);
+                        setBlockDevicePointRef(block);
                         if (block.isNonPoint !== true) {
                             block.formatPointFromData(null, null, 'Device Point', gpl.devicePoint);
                         }
