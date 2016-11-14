@@ -2673,14 +2673,14 @@ gpl.blocks.ConstantBlock = fabric.util.createClass(gpl.Block, {
         this.callSuper('postInit');
     },
 
-    setValue: function (val) {
+    setValue: function (val) { // for constant block
         var lines,
             anchor,
             block,
             c,
             len;
 
-        if (this.value !== val) {
+        if (!isNaN(val) && this.value !== val) {
             this.value = val;
             this.valueText.setText(gpl.formatValue(this, val));
 

@@ -365,7 +365,7 @@ html
 
                     .modal-footer
                         button.btn.btn-default.btn-sm(data-dismiss="modal") Close
-                        button.btn.btn-primary.btn-sm(data-bind="click: updatePoint") Save
+                        button.btn.btn-primary.btn-sm(data-bind="click: updatePoint, css: {disabled: ($.isNumeric(editPointValue()) === false && editPointName() === undefined)}") Save
 
         #jqxMenu.contextMenu.hideLoading
             ul.editSection
