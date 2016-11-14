@@ -6461,6 +6461,8 @@ gpl.BlockManager = function (manager) {
     bmSelf.openPointEditor = function (block, override) { //for view mode clicks to edit
         var upi,
             pointType,
+            pointName,
+            pointData,
             saveCallback = function (point) {
                 var pt = point;
                 if (typeof pt === 'string') {
@@ -6473,17 +6475,18 @@ gpl.BlockManager = function (manager) {
                 gpl.openWindow({
                     pointName: pointName,
                     pointType: pointType,
+                    upi: upi,
                     options: {
                         callback: (gpl.isEdit ? saveCallback : gpl.emptyFn),
-                        pointData: pointData
+                        pointData: pointData || null
                     }
-                    upi: upi, 
                 });
             };
 
         if (block) {
             if (block instanceof gpl.Block) {
                 if (override || (!block.isNonPoint || (block.isNonPoint && !gpl.isEdit))) {
+                    pointData = block.getPointData();
                     bmSelf.deselect();
                     upi = block.upi;
                     pointType = block.pointType;
