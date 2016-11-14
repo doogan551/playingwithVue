@@ -288,7 +288,7 @@ var Config = (function(obj) {
                             return filterPointTypes('register');
                         case 'Occupied Point':
                         case 'Control Point':
-                            if (typeof pointType === 'undefined' || pointType === 'Report') {
+                            if (typeof pointType === 'undefined') {
                                 return filterPointTypes('control');
                             } else {
                                 switch (pointType) {
@@ -316,6 +316,9 @@ var Config = (function(obj) {
                                         return filterPointTypes('floatControl');
                                     case 'Schedule Entry':
                                         return filterPointTypes('schedEntry');
+                                    case 'Sequence':
+                                    case 'Report':
+                                        return filterPointTypes('control');
                                     default:
                                         return {
                                             error: 'Point Type not recognized for ' + property + ' property. Received "' + pointType + '".'
@@ -324,7 +327,7 @@ var Config = (function(obj) {
                             }
                             break;
                         case 'Monitor Point':
-                            if (typeof pointType === 'undefined' || pointType === 'Report') {
+                            if (typeof pointType === 'undefined') {
                                 return filterPointTypes('value');
                             } else {
                                 switch (pointType) {
@@ -342,6 +345,10 @@ var Config = (function(obj) {
                                     case 'Setpoint Adjust':
                                     case 'Totalizer':
                                         return filterPointTypes('float');
+                                    case 'Sequence':
+                                        return filterPointTypes('gpl');
+                                    case 'Report':
+                                        return filterPointTypes('value');
                                     default:
                                         return {
                                             error: 'Point Type not recognized for Monitor Point property. Received "' + pointType + '".'

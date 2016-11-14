@@ -177,12 +177,14 @@ var gpl = {
         gpl.log('Unblocking UI');
         $.unblockUI();
     },
-    openPointSelector: function (callback, pointType, nameFilter) {
+    openPointSelector: function (callback, pointType, property, nameFilter) {
         var parameters = nameFilter ? {} : {
                 name1: gpl.point.name1,
                 name2: gpl.point.name2,
                 name3: gpl.point.name3,
-                name4: gpl.point.name4
+                name4: gpl.point.name4,
+                pointType: pointType,
+                property: property
             },
             pointSelectedCallback = function (pointInfo) {
                 if (!!pointInfo) {
@@ -5894,7 +5896,7 @@ gpl.BlockManager = function (manager) {
                 pRef = gpl.makePointRef({upi: upi, name: name, pointType: pointType}, devinst, "GPLBlock", 439);
                 bmSelf.editBlock.pointRefIndex = pRef.AppIndex;
                 gpl.log(upi, name);
-            }, null);
+            }, "Sequence", property);
         },
 
         openPrecisionEditor: function (block) {
@@ -8202,7 +8204,7 @@ gpl.Manager = function () {
                     managerSelf.bindings.actionButtonUpi(upi);
                     managerSelf.bindings.actionButtonPointType(pointType);
                     gpl.makePointRef({upi: upi, name: name, pointType: pointType}, gpl.deviceId, "GPLDynamic", 440);
-                }, null, true);
+                }, null, null, true);
             },
 
             showBackgroundColorModal: function () {
@@ -8335,7 +8337,7 @@ gpl.Manager = function () {
                         gpl.log('Set device point Successfully');
                         gpl._newDevicePoint = selectedPoint;
                     }
-                }, 'Device', {});
+                }, 'Device', 'Device Point', {});
             },
 
             addNewButton: function () {
