@@ -1,4 +1,5 @@
 /*jslint white: true*/
+
 //register ko components and binding handlers
 require(['knockout'], function (ko) {
     //manually set the global ko property
@@ -95,6 +96,23 @@ define([
         workspace = window.top.workspaceManager,
         uniqueIdRegister = [],
         formatPointErrorTimestamp = 0;
+
+    //for workspace 'give me point data' function
+    (function checkParameters() {
+        if (window.getWindowParameters) {
+            var cfg = window.getWindowParameters();
+
+            window.attach = {};
+
+            if (cfg.pointData) {
+                window.attach.point = $.extend(true, {}, cfg.pointData);
+            }
+
+            if (cfg.callback) {
+                window.attach.saveCallback = cfg.callback;
+            }
+        }
+    })();
 
     //adjust default calendar config to show time
     moment.locale('en', {
@@ -1076,7 +1094,7 @@ define([
     if (!!window.attach && !!window.attach.point) {
         //flag for external/parameter points (mainly gpl)
         pointInspector.isExternal = true;
-        initialize(JSON.parse(window.attach.point));
+        initialize(window.attach.point);
     } else {
         getData(pointInspector.id).done(function (data) {
             initialize(data);

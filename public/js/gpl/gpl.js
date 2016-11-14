@@ -6444,8 +6444,14 @@ gpl.BlockManager = function (manager) {
                 gpl.fire('editedblock', block);
             },
             doOpenWindow = function () {
-                gpl.openWindow(url, pointName, pointType, '', upi, {
-                    callback: (gpl.isEdit ? saveCallback : gpl.emptyFn)
+                gpl.openWindow({
+                    pointName: pointName,
+                    pointType: pointType,
+                    upi: upi, 
+                    options: {
+                        callback: (gpl.isEdit ? saveCallback : gpl.emptyFn),
+                        pointData: pointData
+                    }
                 });
             };
 
@@ -7361,6 +7367,13 @@ gpl.Manager = function () {
             name3 = names[2],
             name4 = names[3] || '',
             handler = function (obj) {
+                if (obj === false) {
+                    log('New Point canceled, deleting block');
+                    gpl.fire('deleteblock', block, true);
+                    gpl.labelCounters[block.type]--;
+                    return;
+                }
+
                 var oldPoint = $.extend(true, {}, obj);
 
                 // gpl.unblockUI();

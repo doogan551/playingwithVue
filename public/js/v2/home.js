@@ -855,6 +855,10 @@ var dti = {
                         }
                     }
 
+                    this.contentWindow.getWindowParameters = function () {
+                        return $.extend(true, {}, config);
+                    };
+
                     $(this.contentDocument).on('mousedown', handleIframeClick);
 
                     this.contentWindow.windowId = self.bindings.windowId();
@@ -2828,6 +2832,10 @@ var dti = {
                     dti.navigator.temporaryCallback = null;
                 }
 
+                if (config.mode === 'create') {
+                    config.fullCreate = true;
+                }
+
                 if (config.pointType && config.property) {
                     config.pointTypes = dti.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes(config.property, config.pointType);
                 }
@@ -2836,6 +2844,7 @@ var dti = {
             dti.navigator.commonNavigator.applyConfig(config);
 
             config.ready = dti.navigator.commonNavigator.bindings.handleModalOpen;
+            config.complete = dti.navigator.commonNavigator.bindings.handleModalClose;
 
             dti.navigator.$commonNavigatorModal.openModal(config);
         },
@@ -2923,8 +2932,23 @@ var dti = {
                         }, 100);
                     };
 
+                    bindings.handleModalClose = function () {
+                        if (self.fullCreate) {
+                            if (dti.navigator.temporaryCallback) {
+                                dti.navigator.temporaryCallback(false);
+                            }
+                            dti.navigator.hideNavigator();
+                        }
+                    };
+
                     bindings.cancelCreatePoint = function () {
                         self.bindings.mode(self.modes.DEFAULT);
+                        if (self.fullCreate) {
+                            if (dti.navigator.temporaryCallback) {
+                                dti.navigator.temporaryCallback(false);
+                            }
+                            dti.navigator.hideNavigator();
+                        }
                     };
 
                     bindings.createPoint = function () {
@@ -3327,6 +3351,8 @@ var dti = {
                     self.bindings.newPointType(cfg.newPointType);
                 }
 
+                self.fullCreate = cfg.fullCreate || false;
+
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
 
                 self.applyPointTypes(config.pointTypes, config.restrictPointTypes);
@@ -3356,6 +3382,7 @@ var dti = {
                 self.bindings.disableCreatePoint(false);
                 if (data.err) {
                     dti.log(data.err);
+                    self.bindings.loading(false);
                 } else {
 
                     var params = self._createPointParameters,

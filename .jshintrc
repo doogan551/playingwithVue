@@ -11,6 +11,7 @@
         "io": true,
         "dtiUtility": true,
         "fabric": true,
+        "define": true,
         "CustomColorsPicker": true
     }
 }
