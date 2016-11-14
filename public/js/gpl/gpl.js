@@ -416,6 +416,32 @@ var gpl = {
         gpl.itemIdx++;
         return gpl.idxPrefix + gpl.itemIdx;
     },
+    cleanPointRefArray: function (gplObjects) {
+        var i,
+            pointRef,
+            pointRefUsed = function (pRef, refType) {
+                var answer = false;
+
+                if (pRef.PropertyName === refType) {
+                    gpl.forEach(gplObjects, function (block) {
+                        if (pRef.AppIndex === block.pointRefIndex) {
+                            answer = true;
+                        }
+                    });
+                }
+
+                return answer;
+            };
+        for (i = 1; i < gpl.point["Point Refs"].length; i++) {
+            pointRef = gpl.point["Point Refs"][i];
+            if (!!pointRef) {
+                if (!pointRefUsed(pointRef, "GPLBlock")) {
+                    console.log("remove item at index = " + i + "  pointRef.PointName = " + pointRef.PointName);
+                    gpl.point["Point Refs"].splice(i--, 1);
+                }
+            }
+        }
+    },
     getPointRefByAppindex: function (pointRefIndex, referenceType) {
         var answer;
         if (pointRefIndex > -1) {
@@ -5866,6 +5892,7 @@ gpl.BlockManager = function (manager) {
                 bmSelf.editBlockUpi = upi;
                 bmSelf.editBlockPointType = pointType;
                 pRef = gpl.makePointRef({upi: upi, name: name, pointType: pointType}, devinst, "GPLBlock", 439);
+                bmSelf.editBlock.pointRefIndex = pRef.AppIndex;
                 gpl.log(upi, name);
             }, null);
         },
@@ -6140,6 +6167,8 @@ gpl.BlockManager = function (manager) {
         if (valid) {
             gpl.forEach(bmSelf.newBlocks, checkValid);
         }
+
+        gpl.cleanPointRefArray(bmSelf.blocks);
 
         gpl.log('Validate All result:', valid);
 
