@@ -7946,7 +7946,7 @@ gpl.Manager = function () {
             gplObj;
 
         if (managerSelf.state !== 'DrawingLine' && !managerSelf.modalOpen && !managerSelf.hasPanned) {
-            managerSelf.$contextMenuList.removeClass('block line default nonPoint');
+            managerSelf.$contextMenuList.removeClass('block line default nonPoint text');
 
             if (obj) {
                 getter = getters[obj.gplType];
