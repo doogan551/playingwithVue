@@ -4096,7 +4096,7 @@ var Config = (function(obj) {
                 }
                 point["Device Address"].isDisplayable = true;
 
-                if (obj.Utility.checkMicroScanRMU(point)) {
+                if (obj.Utility.checkMicroScanRMU(point) || (modelType === "IFC Remote Unit")) {
                     point["Configure Device"].isDisplayable = true;
                 } else {
                     point["Configure Device"].isDisplayable = false;
