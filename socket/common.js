@@ -146,6 +146,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
   var generateActivityLog = false,
     updateReferences = false,
     updateModelType = false,
+    updateCfgReq = false,
     downloadPoint = false,
     updateDownlinkNetwk = false,
     configRequired,
@@ -685,6 +686,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                       case "Device Point":
                         updateReferences = true;
                         configRequired = true;
+                        updateCfgReq = true;
                         break;
 
                       case "Remote Unit Point":
@@ -933,28 +935,34 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                     return callback({
                       err: err
                     }, result);
-                  update_Model(updateModelType, oldPoint, newPoint, function(err) {
+                  update_Model(updateModelType, newPoint, function(err) {
                     if (err)
                       return callback({
                         err: err
                       }, result);
-                    updateRefs(updateReferences, newPoint, flags, user, function(err) {
+                    updateCfgReq(updateCfgReq, oldPoint, newPoint, function(err) {
                       if (err)
                         return callback({
                           err: err
                         }, result);
-                      else if (error)
-                        return callback({
-                          err: error
-                        }, result);
-                      else {
-                        msg = (msg !== undefined && msg !== null) ? msg : "success";
-                        return callback({
-                          message: msg
-                        }, result);
-                      }
-                    });
+                      updateRefs(updateReferences, newPoint, flags, user, function(err) {
+                        if (err)
+                          return callback({
+                            err: err
+                          }, result);
+                        else if (error)
+                          return callback({
+                            err: error
+                          }, result);
+                        else {
+                          msg = (msg !== undefined && msg !== null) ? msg : "success";
+                          return callback({
+                            message: msg
+                          }, result);
+                        }
+                      });
 
+                    });
                   });
                 });
               });
@@ -1118,7 +1126,47 @@ function doActivityLogs(generateActivityLog, logs, callback) {
   }
 }
 //newupdate
-function update_Model(updateModelType, oldPoint, newPoint, callback) {
+function updateCfgReq(updateCfgReq, oldPoint, newPoint, callback) {
+
+  var oldDevPoint = Config.Utility.getPropertyObject('Device Point', oldPoint).Value;
+  var newDevPoint = Config.Utility.getPropertyObject('Device Point', newPoint).Value;
+  // 0 > 0 - no change
+  // N > 0 - cfg old
+  // 0 > N - cfg new
+  // N > M - cfg both
+  var areBothZero = oldDevPoint === 0 && newDevPoint === 0;
+  var isNowOffDevice = oldDevPoint !== 0 && newDevPoint === 0;
+  var isNowOnDevice = oldDevPoint === 0 && newDevPoint !== 0;
+  var didChangeDevice = oldDevPoint !== 0 && newDevPoint !== 0 && oldDevPoint !== newDevPoint;
+
+  if (!!updateCfgReq && !areBothZero && (!!isNowOffDevice || !!isNowOnDevice || !!didChangeDevice)) {
+    var upis = [];
+    if(isNowOffDevice || didChangeDevice){
+      upis.push(oldDevPoint);
+    }
+    if(isNowOnDevice || didChangeDevice){
+      upis.push(newDevPoint);
+    }
+
+    Utility.update({
+      collection: 'points',
+      query: {
+        _id: {
+          $in: upis
+        }
+      },
+      updateObj: {
+        $set: {
+          _cfgRequired: true
+        }
+      }
+    }, callback);
+  } else {
+    callback();
+  }
+}
+//newupdate
+function update_Model(updateModelType, newPoint, callback) {
   if (!!updateModelType) {
     var criteria = {
       collection: 'points',
@@ -1142,21 +1190,7 @@ function update_Model(updateModelType, oldPoint, newPoint, callback) {
         },
         updateObj: doc
       }, next);
-    }, function(err, count) {
-      Utility.update({
-        collection: 'points',
-        query: {
-          _id: {
-            $in: [oldPoint._id, newPoint._id]
-          }
-        },
-        updateObj: {
-          $set: {
-            _cfgRequired: true
-          }
-        }
-      }, callback);
-    });
+    }, callback);
   } else {
     callback();
   }
