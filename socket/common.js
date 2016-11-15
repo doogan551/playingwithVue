@@ -4,6 +4,7 @@ var fs = require('fs');
 // NPM MODULES
 var async = require('async');
 var ObjectID = require('mongodb').ObjectID;
+var rimraf = require('rimraf');
 
 // OTHERS
 var Utility = require('../models/utility');
@@ -144,6 +145,7 @@ module.exports = {
 function newUpdate(oldPoint, newPoint, flags, user, callback) {
   var generateActivityLog = false,
     updateReferences = false,
+    updateModelType = false,
     downloadPoint = false,
     updateDownlinkNetwk = false,
     configRequired,
@@ -361,6 +363,11 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                 break;
 
               case "Model Type":
+                updateReferences = true;
+                configRequired = true;
+                updateModelType = true;
+                break;
+
               case "Firmware Version":
                 updateReferences = true;
                 configRequired = true;
@@ -915,13 +922,18 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
               return callback({
                 err: err
               }, result);
-              updPoint(downloadPoint, newPoint, function(err, msg) {
+            updPoint(downloadPoint, newPoint, function(err, msg) {
+              if (err)
+                error = err;
+              signalExecTOD(executeTOD, function(err) {
                 if (err)
-                  error = err;
-                signalExecTOD(executeTOD, function(err) {
+                  error = error;
+                doActivityLogs(generateActivityLog, activityLogObjects, function(err) {
                   if (err)
-                    error = error;
-                  doActivityLogs(generateActivityLog, activityLogObjects, function(err) {
+                    return callback({
+                      err: err
+                    }, result);
+                  update_Model(updateModelType, oldPoint, newPoint, function(err) {
                     if (err)
                       return callback({
                         err: err
@@ -944,6 +956,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                     });
 
                   });
+                });
               });
             });
           });
@@ -995,7 +1008,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
 function commitScript(data, callback) {
   var upi, fileName, path, csv, updateObj, markObsolete;
 
-  script = data.point;
+  var script = data.point;
   fileName = script._id;
   path = data.path;
   markObsolete = false;
@@ -1104,6 +1117,51 @@ function doActivityLogs(generateActivityLog, logs, callback) {
     return callback(null);
   }
 }
+//newupdate
+function update_Model(updateModelType, oldPoint, newPoint, callback) {
+  if (!!updateModelType) {
+    var criteria = {
+      collection: 'points',
+      query: {
+        'Point Refs.Value': newPoint._id
+      }
+    };
+    Utility.iterateCursor(criteria, function(err, doc, next) {
+      if (newPoint['Point Type'].Value === 'Device') {
+        doc._devModel = newPoint['Model Type'].eValue;
+      } else if (newPoint['Point Type'].Value === 'Remote Unit') {
+        doc._rmuModel = newPoint['Model Type'].eValue;
+      }
+      Config.Utility.updDevModel({
+        point: doc
+      });
+      Utility.update({
+        collection: 'points',
+        query: {
+          _id: doc._id
+        },
+        updateObj: doc
+      }, next);
+    }, function(err, count) {
+      Utility.update({
+        collection: 'points',
+        query: {
+          _id: {
+            $in: [oldPoint._id, newPoint._id]
+          }
+        },
+        updateObj: {
+          $set: {
+            _cfgRequired: true
+          }
+        }
+      }, callback);
+    });
+  } else {
+    callback();
+  }
+}
+
 // newupdate
 function updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
   if (updateDownlinkNetwk) {
@@ -1116,11 +1174,13 @@ function updDownlinkNetwk(updateDownlinkNetwk, newPoint, oldPoint, callback) {
           "Downlink Network.Value": {
             $ne: 0
           }
-        }, {$or: [{
-          'Downlink Network.Value': newPoint["Ethernet Network"].Value
         }, {
-          'Downlink Network.Value': oldPoint["Ethernet Network"].Value
-        }]}]
+          $or: [{
+            'Downlink Network.Value': newPoint["Ethernet Network"].Value
+          }, {
+            'Downlink Network.Value': oldPoint["Ethernet Network"].Value
+          }]
+        }]
       },
       updateObj: {
         $set: {
@@ -1247,7 +1307,7 @@ function updateDependencies(refPoint, flags, user, callback) {
         }
       }, function(err, dependency) {
         // TODO Check for errors
-        console.log('waterfall', dependency.Name, dependency["Point Type"].Value, flags.method)
+        console.log('waterfall', dependency.Name, dependency["Point Type"].Value, flags.method);
         async.waterfall([
           function(cb1) {
             if (dependency["Point Type"].Value === "Schedule Entry" && flags.method === "hard") {
@@ -1411,7 +1471,7 @@ function restorePoint(upi, user, callback) {
           return callback({
             message: "success"
           });
-        })
+        });
       } else {
         restoreScheduleEntries(point, user, function() {
           common.updateDependencies(point, {
@@ -2216,7 +2276,7 @@ function acknowledgePointAlarms(alarm) {
         $set: {
           ackUser: "System",
           ackTime: now,
-          ackStatus: Config.Enums['Acknowledge Statuses']['Acknowledged'].enum
+          ackStatus: Config.Enums['Acknowledge Statuses'].Acknowledged.enum
         }
       },
       options: {

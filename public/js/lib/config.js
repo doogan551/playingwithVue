@@ -1040,6 +1040,15 @@ var Config = (function(obj) {
                         "Unknown": eRmu["Unknown"]["enum"]
                     };
             }
+        },
+
+        updDevModel: function(data) {
+            //applyAnalogInputDevModel
+            var fxName = "apply" + data.point["Point Type"].Value.split(' ').join('') + "DevModel";
+            if (!!obj.EditChanges.hasOwnProperty(fxName)) {
+                data.point._cfgRequired = true;
+                obj.EditChanges[fxName](data);
+            }
         }
     };
 
@@ -1491,46 +1500,9 @@ var Config = (function(obj) {
             }
 
             if (point._devModel !== data.oldPoint._devModel) {
-                switch (point["Point Type"].eValue) {
-                    case enumsTemplatesJson.Enums["Point Types"]["Analog Input"]["enum"]:
-                        point = obj.EditChanges.applyAnalogInputTypeDevModel(data);
-                        updateIsDisplayable = true;
-                        break;
+                obj.Utility.updDevModel(data);
 
-                    case enumsTemplatesJson.Enums["Point Types"]["Analog Output"]["enum"]:
-                        point = obj.EditChanges.applyAnalogOutputTypeDevModel(data);
-                        updateIsDisplayable = true;
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Analog Value"]["enum"]:
-                        point = obj.EditChanges.applyAnalogValueDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Binary Input"]["enum"]:
-                        point = obj.EditChanges.applyBinaryInputDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Binary Output"]["enum"]:
-                        point = obj.EditChanges.applyBinaryOutputDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Binary Value"]["enum"]:
-                        point = obj.EditChanges.applyBinaryValueDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["MultiState Value"]["enum"]:
-                        point = obj.EditChanges.applyMultiStateValueDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Accumulator"]["enum"]:
-                        point = obj.EditChanges.applyAccumulatorDevModel(data);
-                        break;
-
-                    default:
-                        break;
-                }
-
-                if (updateIsDisplayable === true) {
+                if (!!~['Analog Input', 'Analog Output'].indexOf(point['Point Type'].Value)) {
                     // Update Conversion Type and Conversion Coefficient isDisplayable flags based on Sensor Point property's isDisplayable flag
                     obj.EditChanges.updateConversionIsDisplayable(point, obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable);
                 }
@@ -2119,46 +2091,9 @@ var Config = (function(obj) {
             }
 
             if (point._rmuModel !== data.oldPoint._rmuModel) {
-                switch (point["Point Type"].eValue) {
-                    case enums["Point Types"]["Analog Input"]["enum"]:
-                        point = obj.EditChanges.applyAnalogInputTypeDevModel(data);
-                        updateIsDisplayable = true;
-                        break;
+                obj.Utility.updDevModel(data);
 
-                    case enums["Point Types"]["Analog Output"]["enum"]:
-                        point = obj.EditChanges.applyAnalogOutputTypeDevModel(data);
-                        updateIsDisplayable = true;
-                        break;
-
-                    case enums["Point Types"]["Analog Value"]["enum"]:
-                        point = obj.EditChanges.applyAnalogValueDevModel(data);
-                        break;
-
-                    case enums["Point Types"]["Binary Input"]["enum"]:
-                        point = obj.EditChanges.applyBinaryInputDevModel(data);
-                        break;
-
-                    case enums["Point Types"]["Binary Output"]["enum"]:
-                        point = obj.EditChanges.applyBinaryOutputDevModel(data);
-                        break;
-
-                    case enums["Point Types"]["Binary Value"]["enum"]:
-                        point = obj.EditChanges.applyBinaryValueDevModel(data);
-                        break;
-
-                    case enums["Point Types"]["MultiState Value"]["enum"]:
-                        point = obj.EditChanges.applyMultiStateValueDevModel(data);
-                        break;
-
-                    case enums["Point Types"]["Accumulator"]["enum"]:
-                        point = obj.EditChanges.applyAccumulatorDevModel(data);
-                        break;
-
-                    default:
-                        break;
-                }
-
-                if (updateIsDisplayable === true) {
+                if (!!~['Analog Input', 'Analog Output'].indexOf(point['Point Type'].Value)) {
                     // Update Conversion Type and Conversion Coefficient isDisplayable flags based on Sensor Point property's isDisplayable flag
                     obj.EditChanges.updateConversionIsDisplayable(point, obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable);
                 }
