@@ -5,6 +5,7 @@ var fs = require('fs');
 var async = require('async');
 var ObjectID = require('mongodb').ObjectID;
 var rimraf = require('rimraf');
+var _ = require('lodash');
 
 // OTHERS
 var Utility = require('../models/utility');
@@ -940,7 +941,7 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                       return callback({
                         err: err
                       }, result);
-                    updateCfgReq(updateCfgReq, oldPoint, newPoint, function(err) {
+                    fixCfgRequired(updateCfgReq, oldPoint, newPoint, function(err) {
                       if (err)
                         return callback({
                           err: err
@@ -1126,7 +1127,7 @@ function doActivityLogs(generateActivityLog, logs, callback) {
   }
 }
 //newupdate
-function updateCfgReq(updateCfgReq, oldPoint, newPoint, callback) {
+function fixCfgRequired(updateCfgReq, oldPoint, newPoint, callback) {
 
   var oldDevPoint = Config.Utility.getPropertyObject('Device Point', oldPoint).Value;
   var newDevPoint = Config.Utility.getPropertyObject('Device Point', newPoint).Value;

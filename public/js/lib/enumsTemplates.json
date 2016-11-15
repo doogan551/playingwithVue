@@ -2073,7 +2073,7 @@
                 "enum": 389,
                 "valueType": "Enum",
                 "reportEnable": true,
-                "enumsSet": "Fan Control Strategy"
+                "enumsSet": "Fan Control Strategies"
             },
             "Fan Off CFM Setpoint": {
                 "enum": 305,

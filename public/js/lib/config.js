@@ -20,7 +20,7 @@ var Config = (function(obj) {
             });
         }
     }
-    if (lodash) var _ = lodash;
+    if (lodash) _ = lodash;
     obj.Enums = enumsTemplatesJson.Enums;
     obj.revEnums = (function(enums) {
         var topKey,
