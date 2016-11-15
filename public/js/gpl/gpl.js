@@ -7441,7 +7441,7 @@ gpl.Manager = function () {
                 obj = block.getPointData();
 
                 if (obj['Calculation Type']) {
-                    obj['Calculation Type'].Value = block.iconType;
+                    obj['Calculation Type'].Value = block.getIconKey();
                     obj['Calculation Type'].eValue = obj['Calculation Type'].ValueOptions[block.getIconKey()];
                     // block.formatPointFromData(obj, obj, 'Calculation Type');
                 }
