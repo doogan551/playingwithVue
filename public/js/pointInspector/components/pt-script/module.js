@@ -192,22 +192,6 @@ define(['knockout', 'CM', 'text!./view.html', 'bannerJS', 'CMLang', 'CMBrackets'
             }
         });
 
-        this.buildStatusSubscription = this.buildStatus.subscribe(function (status) {
-            // If the 'Save and Activate' action menu option hasn't been created, then create it
-            if (!$saveAndActivate) {
-                var $el = $("<li class='saveAndActivate' style='display: none;'><a href='javascript:void(0)'><i class='glyphicon glyphicon-floppy-open'></i> Save and Activate</a></li>");
-                $el.insertAfter('.actions li:first');
-                $el.click(function (e) { self.saveAndActivate(); });
-                $saveAndActivate = $('.saveAndActivate');
-            }
-
-            if (status === 'compiled') {
-                $saveAndActivate.show();
-            } else {
-                $saveAndActivate.hide();
-            }
-        });
-
         this.saveStatusSubscription = this.point.status.subscribe(function (saveStatus) {
             console.log('saveStatus: ', saveStatus);
             if (self.buildStatus() !== 'activating' || saveStatus === 'saving') {
