@@ -84,6 +84,7 @@
 
         <!-- ko if: isInEditMode() && selectedScript().name == 'development' -->
         <div id="buildActions">
+            <button class="btn btn-default btn-xs btnCompile" data-bind="click: saveAndActivate, visible: buildStatus() == 'compiled'"><i class="fa fa-check"></i> Apply</button>
             <button class="btn btn-default btn-xs btnCompile" data-bind="click: compile"><i class="fa fa-refresh"></i> Compile</button>
         </div>
         <!-- /ko -->

@@ -2937,6 +2937,7 @@ var dti = {
                             if (dti.navigator.temporaryCallback) {
                                 dti.navigator.temporaryCallback(false);
                             }
+                            dti.navigator.temporaryCallback = null;
                             dti.navigator.hideNavigator();
                         }
                     };
@@ -3382,9 +3383,9 @@ var dti = {
                 self.bindings.disableCreatePoint(false);
                 if (data.err) {
                     dti.log(data.err);
+                    dti.toast('Point Creation Error: ' + data.err, 3000);
                     self.bindings.loading(false);
                 } else {
-
                     var params = self._createPointParameters,
                         endPoint = dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(params.pointType, data._id),
                         handoffMode = endPoint.edit || endPoint.review;
