@@ -1909,7 +1909,7 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                         if (calcType) {//} && self.iconType !== calcType) {
                             self.config.iconType = calcType;
 
-                            if (self.iconPrefix) {
+                            if (self.iconPrefix && calcType.indexOf("DigLogic") === -1) {
                                 self.config.iconType = self.iconPrefix + calcType;
                             }
 
@@ -2473,6 +2473,23 @@ gpl.Block = fabric.util.createClass(fabric.Rect, {
                 self.icon = matrixEntry + self.iconExtension;
             }
         }
+    },
+
+    getIconKey: function () {
+        var self = this,
+            currIconName = self.icon.split('.')[0],
+            key,
+            answer = "";
+
+        if (self.iconMatrix) {
+            for (key in self.iconMatrix) {
+                if (self.iconMatrix[key] === currIconName) {
+                    answer = key;
+                }
+            }
+        }
+
+        return answer;
     },
 
     setIcon: function (icon) {
@@ -7425,7 +7442,7 @@ gpl.Manager = function () {
 
                 if (obj['Calculation Type']) {
                     obj['Calculation Type'].Value = block.iconType;
-                    obj['Calculation Type'].eValue = obj['Calculation Type'].ValueOptions[block.iconType];
+                    obj['Calculation Type'].eValue = obj['Calculation Type'].ValueOptions[block.getIconKey()];
                     // block.formatPointFromData(obj, obj, 'Calculation Type');
                 }
 

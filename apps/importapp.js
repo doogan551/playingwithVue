@@ -151,10 +151,8 @@ function importUpdate() {
 						if (err) {
 							logger.info("updateGPLReferences err:", err);
 						}
-						logger.info("!!Check Port 1-4 Timeouts on devices!!");
 						logger.info("done", err, new Date());
 						process.exit(0);
-
 						// });
 					});
 					// });
@@ -299,16 +297,13 @@ function updatePoint(db, point, cb) {
 }
 
 function addDefaultUser(db, cb) {
-	var ctrlrs = importconfig.ctrlrs;
 
-	db.collection(systemInfoCollection).insert(ctrlrs, function(err, result) {
-		db.collection('Users').find({}).toArray(function(err, users) {
-			async.eachSeries(users, function(user, callback) {
-				updateControllers(db, "add", user.username, function(err) {
-					callback(err);
-				});
-			}, cb);
-		});
+	db.collection('Users').find({}).toArray(function(err, users) {
+		async.eachSeries(users, function(user, callback) {
+			updateControllers(db, "add", user.username, function(err) {
+				callback(err);
+			});
+		}, cb);
 	});
 
 	function updateControllers(db, op, username, callback) {
@@ -1293,21 +1288,21 @@ function initImport(db, callback) {
 	// remove VAV
 	// model type property set isreadonly to false
 	createEmptyCollections(db, function(err) {
-		setupReportsCollections(db, function(err) {
-			setupSystemInfo(db, function(err) {
-				setupPointRefsArray(db, function(err) {
-					addDefaultUser(db, function(err) {
-						// setupCurAlmIds(db, function(err) {
-						setupCfgRequired(db, function(err) {
-							setupProgramPoints(db, function(err) {
-								callback(null);
-							});
+		// setupReportsCollections(db, function(err) {
+		setupSystemInfo(db, function(err) {
+			setupPointRefsArray(db, function(err) {
+				addDefaultUser(db, function(err) {
+					// setupCurAlmIds(db, function(err) {
+					setupCfgRequired(db, function(err) {
+						setupProgramPoints(db, function(err) {
+							callback(null);
 						});
-						// });
 					});
+					// });
 				});
 			});
 		});
+		// });
 	});
 
 }
@@ -2723,14 +2718,6 @@ function updateDevices(point, callback) {
 			propertyAddress = point["Uplink Port"].Value + " Address";
 		point["Network Segment"].Value = point[propertyNetwork].Value;
 		point["Device Address"].Value = point[propertyAddress].Value.toString();
-
-		for (var i = 1, prop = ""; i <= 4; i++) {
-			prop = "Port " + i + " Timeout";
-			point[prop] = Config.Templates.getTemplate('Device')[prop];
-		}
-
-		delete point["Device Address"].Min;
-		delete point["Device Address"].Max;
 
 		point["Device Status"].Value = "Stop Scan";
 		point["Device Status"].eValue = 66;

@@ -718,7 +718,46 @@ var Config = (function(obj) {
             return undefined;
         },
 
-        checkDeviceMS5: function(point) {
+        setPropsDisplayable: function(point, props, val) {
+            var len = props.length;
+
+            for (var i = 0; i < len; i++) {
+                point[props[i]].isDisplayable = val;
+            }
+        },
+
+        checkValueOptions: function(prop) {
+            var opts = prop.ValueOptions,
+                key = Object.keys(opts)[0],
+                eVal = prop.eValue;
+
+            for (var val in opts) {
+                if (opts[val] === eVal) {
+                    prop.Value = val;
+                    return;
+                }
+            }
+            prop.Value = key; // unknown eValue
+            prop.eValue = opts[key];
+        },
+
+        setupPropValueOptions: function(prop, opts) {
+            prop.isDisplayable = true;
+            prop.ValueOptions = opts;
+            obj.Utility.checkValueOptions(prop);
+        },
+
+        setChannelOptions: function(prop, min, max) {
+            var i,
+                opts = {};
+
+            for (i = min; i <= max; i++) {
+                opts[i.toString()] = i;
+            }
+            obj.Utility.setupPropValueOptions(prop, opts);
+        },
+
+        checkMicroScan5Device: function(point) {
             var devTypes = enumsTemplatesJson.Enums["Device Model Types"],
                 ms5Types = [
                     devTypes["MicroScan 5 UNV"].enum,
@@ -728,13 +767,42 @@ var Config = (function(obj) {
                     devTypes["Unknown"].enum
                 ];
 
-            if (ms5Types.indexOf(point._devModel) > -1){
+            if (ms5Types.indexOf(point._devModel) > -1) {
                 return true;
             }
             return false;
         },
 
-        checkModbusMS5: function(point) {
+        checkMicroScan4Device: function(point) {
+            var devTypes = enumsTemplatesJson.Enums["Device Model Types"],
+                ms4Types = [
+                    devTypes["MicroScan 4 UNV"].enum,
+                    devTypes["MicroScan 4 xTalk"].enum,
+                    devTypes["MicroScan 4 Digital"].enum
+                ];
+
+            if (ms4Types.indexOf(point._devModel) > -1) {
+                return true;
+            }
+            return false;
+        },
+
+        checkMicroScanRMU: function(point) {
+            var rmuTypes = enumsTemplatesJson.Enums["Remote Unit Model Types"],
+                msTypes = [
+                    rmuTypes["MS3 RT"].enum,
+                    rmuTypes["MS 3 EEPROM"].enum,
+                    rmuTypes["MS 3 Flash"].enum,
+                    rmuTypes["MS 4 VAV"].enum
+                ];
+
+            if (msTypes.indexOf(point._rmuModel) > -1) {
+                return true;
+            }
+            return false;
+        },
+
+        checkModbusRMU: function(point) {
             var rmuTypes = enumsTemplatesJson.Enums["Remote Unit Model Types"],
                 modbusTypes = [
                     rmuTypes["Liebert"].enum,
@@ -747,10 +815,247 @@ var Config = (function(obj) {
                     rmuTypes["Programmable Modbus"].enum
                 ];
 
-            if (obj.Utility.checkDeviceMS5(point) && (modbusTypes.indexOf(point._rmuModel) > -1)) {
+            if (modbusTypes.indexOf(point._rmuModel) > -1) {
                 return true;
             }
             return false;
+        },
+
+        checkPointDeviceRMU: function(point) {
+            var rmuOpt,
+                eTyp = enumsTemplatesJson.Enums["Point Types"],
+                eDev = enumsTemplatesJson.Enums["Device Model Types"],
+                eRel = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"],
+                rmuModel = obj.revEnums["Remote Unit Model Types"][point._rmuModel];
+
+            if ((obj.revEnums["Device Model Types"][point._devModel] === undefined) || (point._devModel === eDev["Central Device"]["enum"]) || (point._devModel === eDev["Unknown"]["enum"])) {
+                return enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
+            } else if (rmuModel === undefined) {
+                return eRel;
+            } else if (rmuModel === "Unknown") {
+                switch (point["Point Type"].eValue) {
+                    case eTyp["Analog Input"]["enum"]:
+                    case eTyp["Analog Output"]["enum"]:
+                    case eTyp["Binary Output"]["enum"]:
+                    case eTyp["Accumulator"]["enum"]:
+                        switch (point._devModel) {
+                            case eDev["MicroScan 5 UNV"]["enum"]:
+                            case eDev["SCADA Vio"]["enum"]:
+                            case eDev["SCADA IO"]["enum"]:
+                            case eDev["MicroScan 4 UNV"]["enum"]:
+                            case eDev["MicroScan 4 Digital"]["enum"]:
+                                break;
+
+                            default:
+                                return eRel;
+                        }
+                        break;
+
+                    case eTyp["Binary Input"]["enum"]:
+                        switch (point._devModel) {
+                            case eDev["MicroScan 5 xTalk"]["enum"]:
+                            case eDev["MicroScan 4 xTalk"]["enum"]:
+                                return eRel;
+
+                            default:
+                                break;
+                        }
+                        break;
+
+                    case eTyp["MultiState Value"]["enum"]:
+                        switch (point._devModel) {
+                            case eDev["MicroScan 5 UNV"]["enum"]:
+                            case eDev["MicroScan 5 xTalk"]["enum"]:
+                            case eDev["SCADA Vio"]["enum"]:
+                            case eDev["SCADA IO"]["enum"]:
+                            case eDev["MicroScan 4 UNV"]["enum"]:
+                            case eDev["MicroScan 4 Digital"]["enum"]:
+                            case eDev["MicroScan 4 xTalk"]["enum"]:
+                                break;
+
+                            default:
+                                return eRel;
+                        }
+                        break;
+
+                    case eTyp["VAV"]["enum"]:
+                        return eRel;
+
+                    default:
+                        break;
+                }
+            } else {
+                rmuOpt = obj.Utility.getRmuValueOptions(point._devModel);
+
+                if (rmuOpt[rmuModel] === undefined) {
+                    return eRel;
+                } else {
+                    switch (point["Point Type"].eValue) {
+                        case eTyp["Analog Input"]["enum"]:
+                        case eTyp["Analog Output"]["enum"]:
+                        case eTyp["Binary Input"]["enum"]:
+                        case eTyp["Binary Output"]["enum"]:
+                        case eTyp["Remote Unit"]["enum"]:
+                            break;
+
+                        case eTyp["Analog Value"]["enum"]:
+                        case eTyp["Binary Value"]["enum"]:
+                            switch (rmuModel) {
+                                case "MS3 RT":
+                                case "MS 3 EEPROM":
+                                case "MS 3 Flash":
+                                case "MS 4 VAV":
+                                case "BACnet":
+                                case "N2 Device":
+                                    break;
+
+                                default:
+                                    return eRel;
+                            }
+                            break;
+
+                        case eTyp["MultiState Value"]["enum"]:
+                            switch (rmuModel) {
+                                case "MS3 RT":
+                                case "MS 3 EEPROM":
+                                case "MS 3 Flash":
+                                case "MS 4 VAV":
+                                case "N2 Device":
+                                case "IFC Remote Unit":
+                                    return eRel;
+
+                                default:
+                                    break;
+                            }
+                            break;
+
+                        case eTyp["Accumulator"]["enum"]:
+                            if (rmuModel === "MS 4 VAV") {
+                                return eRel;
+                            }
+                            break;
+
+                        case eTyp["Logic"]["enum"]:
+                        case eTyp["Analog Selector"]["enum"]:
+                        case eTyp["Binary Selector"]["enum"]:
+                        case eTyp["Delay"]["enum"]:
+                        case eTyp["Math"]["enum"]:
+                        case eTyp["Setpoint Adjust"]["enum"]:
+                        case eTyp["Proportional"]["enum"]:
+                        case eTyp["Average"]["enum"]:
+                        case eTyp["Select Value"]["enum"]:
+                        case eTyp["Economizer"]["enum"]:
+                        case eTyp["Enthalpy"]["enum"]:
+                            if ((rmuModel !== "MS3 RT") && (rmuModel !== "MS 3 EEPROM") && (rmuModel !== "MS 3 Flash")) {
+                                return eRel;
+                            }
+                            break;
+
+                        case eTyp["VAV"]["enum"]:
+                            if (rmuModel !== "MS 4 VAV") {
+                                return eRel;
+                            }
+                            break;
+
+                        default:
+                            return eRel;
+                    }
+                }
+            }
+            return enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"];
+        },
+
+        getRmuValueOptions: function(devModel) {
+            var eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
+                eDev = enumsTemplatesJson.Enums["Device Model Types"];
+
+            switch (devModel) {
+
+                case eDev["MicroScan 5 UNV"]["enum"]:
+                case eDev["MicroScan 5 xTalk"]["enum"]:
+                case eDev["SCADA Vio"]["enum"]:
+                case eDev["SCADA IO"]["enum"]:
+                case eDev["MicroScan 4 Digital"]["enum"]:
+                case eDev["MicroScan 4 xTalk"]["enum"]:
+                case eDev["MicroScan 4 UNV"]["enum"]:
+                    return {
+                        "MS3 RT": eRmu["MS3 RT"]["enum"],
+                        "MS 3 EEPROM": eRmu["MS 3 EEPROM"]["enum"],
+                        "MS 3 Flash": eRmu["MS 3 Flash"]["enum"],
+                        "MS 4 VAV": eRmu["MS 4 VAV"]["enum"],
+                        "BACnet": eRmu["BACnet"]["enum"],
+                        "Programmable Modbus": eRmu["Programmable Modbus"]["enum"],
+                        "N2 Device": eRmu["N2 Device"]["enum"],
+                        "Liebert": eRmu["Liebert"]["enum"],
+                        "Sierra Steam Meter": eRmu["Sierra Steam Meter"]["enum"],
+                        "Siemens Power Meter": eRmu["Siemens Power Meter"]["enum"],
+                        "Ingersol Rand Intellysis": eRmu["Ingersol Rand Intellysis"]["enum"],
+                        "PowerLogic 3000 Meter": eRmu["PowerLogic 3000 Meter"]["enum"],
+                        "Generic Modbus": eRmu["Generic Modbus"]["enum"],
+                        "PowerTraks 9000": eRmu["PowerTraks 9000"]["enum"]
+                    };
+
+                case eDev["MicroScan Interface Device"]["enum"]:
+                    return {
+                        "MS3 RT": eRmu["MS3 RT"]["enum"],
+                        "MS 3 EEPROM": eRmu["MS 3 EEPROM"]["enum"],
+                        "MS 3 Flash": eRmu["MS 3 Flash"]["enum"]
+                    };
+
+                case eDev["Field Interface Device"]["enum"]:
+                    return {
+                        "IFC Remote Unit": eRmu["IFC Remote Unit"]["enum"]
+                    };
+
+                case eDev["Staefa Interface Device"]["enum"]:
+                    return {
+                        "Smart II Remote Unit": eRmu["Smart II Remote Unit"]["enum"]
+                    };
+
+                case eDev["N2 Interface Device"]["enum"]:
+                    return {
+                        "N2 Device": eRmu["N2 Device"]["enum"]
+                    };
+
+                case eDev["Sierra Steam Meter Device"]["enum"]:
+                    return {
+                        "Sierra Steam Meter": eRmu["Sierra Steam Meter"]["enum"]
+                    };
+
+                case eDev["Armstrong SteamEye Device"]["enum"]:
+                    return {
+                        "ASE Remote Unit": eRmu["ASE Remote Unit"]["enum"]
+                    };
+
+                case eDev["Siemens Power Meter Device"]["enum"]:
+                    return {
+                        "Siemens Power Meter": eRmu["Siemens Power Meter"]["enum"]
+                    };
+
+                case eDev["Ingersol Rand Intellysis Device"]["enum"]:
+                    return {
+                        "Ingersol Rand Intellysis": eRmu["Ingersol Rand Intellysis"]["enum"]
+                    };
+
+                case eDev["BACnet Interface Device"]["enum"]:
+                    return {
+                        "BACnet": eRmu["BACnet"]["enum"]
+                    };
+
+                default:
+                    return {
+                        "Unknown": eRmu["Unknown"]["enum"]
+                    };
+            }
+        },
+
+        updDevModel: function(data) {
+            //applyAnalogInputDevModel
+            var fxName = "apply" + data.point["Point Type"].Value.split(' ').join('') + "DevModel";
+            if (!!obj.EditChanges.hasOwnProperty(fxName)) {
+                data.point._cfgRequired = true;
+                obj.EditChanges[fxName](data);
+            }
         }
     };
 
@@ -785,7 +1090,7 @@ var Config = (function(obj) {
 
             data.ok = false; // Add 'ok' key and preset for validation fail
 
-            if (!(data.propertyObject = obj.Utility.getPropertyObject(data.property, data.point))) {
+            if ((data.propertyObject = obj.Utility.getPropertyObject(data.property, data.point)) === null) {
                 data.result = "Bad property name";
                 return {
                     "err": data.result
@@ -917,13 +1222,6 @@ var Config = (function(obj) {
             return data;
         },
 
-        validateUsingMaxMinKeys: function(data) {
-            var max = data.propertyObject.Max, // Max property value
-                min = data.propertyObject.Min; // Min property value
-
-            return this.validateUsingTheseLimits(data, min, max);
-        },
-
         validatePortNAddress: function(data) {
             data = this.validateUsingTheseLimits(data, 0, 127);
             return data;
@@ -995,33 +1293,12 @@ var Config = (function(obj) {
             return data;
         },
 
-        validatePortNTimeout: function(data) {
-            data = this.validateUsingMaxMinKeys(data);
-            return data;
-        },
+        validateChannelUniqueness: function(data, prop) {
+            var point = data.point;
 
-        validateChannelUniqueness: function(data) {
-            var point = data.point,
-                val = data.propertyObject.Value,
-                props = ["Channel", "Feedback Channel", "On Channel", "Off Channel", "Open Channel", "Close Channel"],
-                len = props.length,
-                prop,
-                i;
-
-            // This is called from properties: Channel, Feedback Channel, On Channel, Off Channel, Open Channel, & Close Channel
-            // This routine ensures that the specified channel number isn't used by another channel proeprty. All points do not have
-            // all channel properties; for example, AO doesn't have the On or Off Channel property. Therefore we must check that
-            // the property exists on the point before comparing equality.
-
-            for (i = 0; i < len; i++) {
-                prop = props[i];
-                if ((prop !== data.property) && point.hasOwnProperty(prop) && (point[prop].isDisplayable === true) && (point[prop].isReadOnly === false)) {
-                    if (val === point[prop].Value) {
-                        data.ok = false;
-                        data.result = data.property + " number cannot be the same as the " + prop + " number.";
-                        break;
-                    }
-                }
+            if (data.propertyObject.Value === point[prop].Value) {
+                data.ok = false;
+                data.result = data.property + " number cannot be the same as the " + prop + " number.";
             }
             return data;
         },
@@ -1152,19 +1429,8 @@ var Config = (function(obj) {
             return data;
         },
 
-        "Channel": function(data) {
-            data = this.validateUsingMaxMinKeys(data);
-            if (data.ok === true) {
-                data = this.validateChannelUniqueness(data);
-            }
-            return data;
-        },
-
         "Close Channel": function(data) {
-            data = this.validateUsingMaxMinKeys(data);
-            if (data.ok === true) {
-                data = this.validateChannelUniqueness(data);
-            }
+            this.validateChannelUniqueness(data, "Open Channel");
             return data;
         },
 
@@ -1241,46 +1507,9 @@ var Config = (function(obj) {
             }
 
             if (point._devModel !== data.oldPoint._devModel) {
-                switch (point["Point Type"].eValue) {
-                    case enumsTemplatesJson.Enums["Point Types"]["Analog Input"]["enum"]:
-                        point = obj.EditChanges.applyAnalogInputTypeDevModel(data);
-                        updateIsDisplayable = true;
-                        break;
+                obj.Utility.updDevModel(data);
 
-                    case enumsTemplatesJson.Enums["Point Types"]["Analog Output"]["enum"]:
-                        point = obj.EditChanges.applyAnalogOutputTypeDevModel(data);
-                        updateIsDisplayable = true;
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Analog Value"]["enum"]:
-                        point = obj.EditChanges.applyAnalogValueTypeDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Binary Input"]["enum"]:
-                        point = obj.EditChanges.applyBinaryInputTypeDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Binary Output"]["enum"]:
-                        point = obj.EditChanges.applyBinaryOutputTypeDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Binary Value"]["enum"]:
-                        point = obj.EditChanges.applyBinaryValueTypeDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["MultiState Value"]["enum"]:
-                        point = obj.EditChanges.applyMultiStateValueTypeDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Accumulator"]["enum"]:
-                        point = obj.EditChanges.applyAccumulatorTypeDevModel(data);
-                        break;
-
-                    default:
-                        break;
-                }
-
-                if (updateIsDisplayable === true) {
+                if (!!~['Analog Input', 'Analog Output'].indexOf(point['Point Type'].Value)) {
                     // Update Conversion Type and Conversion Coefficient isDisplayable flags based on Sensor Point property's isDisplayable flag
                     obj.EditChanges.updateConversionIsDisplayable(point, obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable);
                 }
@@ -1380,14 +1609,6 @@ var Config = (function(obj) {
 
         "Fan Off CFM Setpoint": function(data) {
             data.point = obj.EditChanges[data.property](data);
-            return data;
-        },
-
-        "Feedback Channel": function(data) {
-            data = this.validateUsingMaxMinKeys(data);
-            if (data.ok === true) {
-                data = this.validateChannelUniqueness(data);
-            }
             return data;
         },
 
@@ -1697,10 +1918,7 @@ var Config = (function(obj) {
         },
 
         "Off Channel": function(data) {
-            data = this.validateUsingMaxMinKeys(data);
-            if (data.ok === true) {
-                data = this.validateChannelUniqueness(data);
-            }
+            this.validateChannelUniqueness(data, "On Channel");
             return data;
         },
 
@@ -1714,10 +1932,7 @@ var Config = (function(obj) {
         },
 
         "On Channel": function(data) {
-            data = this.validateUsingMaxMinKeys(data);
-            if (data.ok === true) {
-                data = this.validateChannelUniqueness(data);
-            }
+            this.validateChannelUniqueness(data, "Off Channel");
             return data;
         },
 
@@ -1731,10 +1946,7 @@ var Config = (function(obj) {
         },
 
         "Open Channel": function(data) {
-            data = this.validateUsingMaxMinKeys(data);
-            if (data.ok === true) {
-                data = this.validateChannelUniqueness(data);
-            }
+            this.validateChannelUniqueness(data, "Close Channel");
             return data;
         },
 
@@ -1867,6 +2079,7 @@ var Config = (function(obj) {
 
         "Remote Unit Point": function(data) {
             var point = data.point,
+                enums = enumsTemplatesJson.Enums,
                 propertyObject = data.propertyObject,
                 updateIsDisplayable = false;
 
@@ -1878,53 +2091,16 @@ var Config = (function(obj) {
                     point._rmuModel = data.refPoint._rmuModel; // should be fine *ref
                 }
             } else {
-                point._rmuModel = enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"];
+                point._rmuModel = enums["Remote Unit Model Types"]["Unknown"]["enum"];
 
                 // We also need to touch _relRMU because server processes will not (because there is no RMU point)
-                point._relRMU = enumsTemplatesJson.Enums["Reliabilities"]["No Fault"]["enum"];
+                point._relRMU = enums["Reliabilities"]["No Fault"]["enum"];
             }
 
             if (point._rmuModel !== data.oldPoint._rmuModel) {
-                switch (point["Point Type"].eValue) {
-                    case enumsTemplatesJson.Enums["Point Types"]["Analog Input"]["enum"]:
-                        point = obj.EditChanges.applyAnalogInputTypeDevModel(data);
-                        updateIsDisplayable = true;
-                        break;
+                obj.Utility.updDevModel(data);
 
-                    case enumsTemplatesJson.Enums["Point Types"]["Analog Output"]["enum"]:
-                        point = obj.EditChanges.applyAnalogOutputTypeDevModel(data);
-                        updateIsDisplayable = true;
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Analog Value"]["enum"]:
-                        point = obj.EditChanges.applyAnalogValueTypeDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Binary Input"]["enum"]:
-                        point = obj.EditChanges.applyBinaryInputTypeDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Binary Output"]["enum"]:
-                        point = obj.EditChanges.applyBinaryOutputTypeDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Binary Value"]["enum"]:
-                        point = obj.EditChanges.applyBinaryValueTypeDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["MultiState Value"]["enum"]:
-                        point = obj.EditChanges.applyMultiStateValueTypeDevModel(data);
-                        break;
-
-                    case enumsTemplatesJson.Enums["Point Types"]["Accumulator"]["enum"]:
-                        point = obj.EditChanges.applyAccumulatorTypeDevModel(data);
-                        break;
-
-                    default:
-                        break;
-                }
-
-                if (updateIsDisplayable === true) {
+                if (!!~['Analog Input', 'Analog Output'].indexOf(point['Point Type'].Value)) {
                     // Update Conversion Type and Conversion Coefficient isDisplayable flags based on Sensor Point property's isDisplayable flag
                     obj.EditChanges.updateConversionIsDisplayable(point, obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable);
                 }
@@ -2018,7 +2194,8 @@ var Config = (function(obj) {
         },
 
         "Startup Delay": function(data) {
-            var rmuType = enumsTemplatesJson.Enums["Remote Unit Model Types"];
+            var point = data.point,
+                rmuType = enumsTemplatesJson.Enums["Remote Unit Model Types"];
             if (point._rmuModel !== rmuType["MS3 RT"].enum && point._rmuModel !== rmuType["MS 3 EEPROM"].enum && point._rmuModel !== rmuType["MS 3 Flash"].enum) {
                 data.ok = false;
                 data.result = data.property + " must be implemented on MS3 Remote Unit.";
@@ -2144,7 +2321,7 @@ var Config = (function(obj) {
         },
 
         "Ethernet Network": function(data) {
-            data = this.validateUsingTheseLimits(data, 0, 65534);
+            data = this.validateUsingTheseLimits(data, 1, 65534);
 
             if (data.ok === true) {
                 data = this.validateNetworkNumber(data);
@@ -2163,15 +2340,14 @@ var Config = (function(obj) {
 
         "Model Type": function(data) {
             var point = data.point,
-                propertyObject = data.propertyObject,
-                devModelTypes = enumsTemplatesJson.Enums["Device Model Types"];
+                propertyObject = data.propertyObject;
 
             if ((propertyObject.Value === "Unknown") || (propertyObject.Value === "Central Device")) {
                 data.ok = false;
                 data.result = 'Invalid model type.';
             } else {
                 if (point["Point Type"].Value === "Device") {
-                    point = obj.EditChanges.applyDeviceTypeModelType(data);
+                    point = obj.EditChanges.applyDeviceDevModel(data);
                 } else {
                     point = obj.EditChanges.applyRemoteUnitTypeModelType(data);
                 }
@@ -2243,43 +2419,38 @@ var Config = (function(obj) {
             return this.validatePortNProtocol(data);
         },
 
-        "Port 1 Timeout": function(data) {
-            return this.validatePortNTimeout(data);
-        },
-
-        "Port 2 Timeout": function(data) {
-            return this.validatePortNTimeout(data);
-        },
-
-        "Port 3 Timeout": function(data) {
-            return this.validatePortNTimeout(data);
-        },
-
-        "Port 4 Timeout": function(data) {
-            return this.validatePortNTimeout(data);
-        },
-
         "Uplink Port": function(data) {
             data.point = obj.EditChanges.applyDeviceTypeUplinkPort(data);
             return data;
         },
 
         "Network Segment": function(data) {
-            data = this.validateUsingTheseLimits(data, 0, 65534);
-            if (data.ok === true) {
-                data.point = obj.EditChanges.applyNetworkNumber(data);
+            var point = data.point,
+                min;
+
+            if (point["Point Type"].Value === "Remote Unit") {
+                min = (point["Gateway"].isDisplayable && point["Gateway"].Value) ? 0 : 1;
+                this.validateUsingTheseLimits(data, min, 65534);
+                if (data.ok === true) {
+                    data.point = obj.EditChanges.applyNetworkNumber(data);
+                }
             }
             return data;
         },
 
+        "Gateway": function(data) {
+            obj.EditChanges.applyRemoteUnitTypeNetworkType(data.point);
+            return data;
+        },
+
         "Network Type": function(data) {
-            data.point = obj.EditChanges.applyRemoteUnitTypeNetworkType(data);
+            obj.EditChanges.applyRemoteUnitTypeNetworkType(data.point);
             return data;
         },
 
         "Calculation Type": function(data) {
-            var point = data.point, // Shortcut
-                type = point["Point Type"].Value; // Point type
+            var point = data.point,
+                type = point["Point Type"].Value;
 
             switch (type) {
                 case "Analog Selector":
@@ -2487,7 +2658,7 @@ var Config = (function(obj) {
 
         "Monitor Point": function(data) {
             if (data.point["Point Type"].Value === "Delay") {
-                data.point = obj.EditChanges.applyDelayPointTypeMointorPoint(data);
+                data.point = obj.EditChanges.applyDelayMointorPoint(data);
             }
             data.point = obj.EditChanges[data.property](data);
             return data;
@@ -2498,11 +2669,8 @@ var Config = (function(obj) {
                 type = point["Point Type"].Value; // Point type
 
             if (type === "Binary Input") {
-                data.point = obj.EditChanges.applyBinaryInputTypeInputType(data);
-            } else if (type === "Analog Input") {
-                data.point = obj.EditChanges.applyAnalogInputTypeInputType(data);
+                data.point = obj.EditChanges.applyBinaryInputInputType(data);
             }
-
             return data;
         },
 
@@ -2513,15 +2681,15 @@ var Config = (function(obj) {
             if (type === "Analog Input") {
                 data.point = obj.EditChanges.applyAnalogInputTypeSensorPoint(data);
             } else if (type === "Analog Output") {
-                data.point = obj.EditChanges.applyAnalogOutputTypeSensorPoint(data);
+                data.point = obj.EditChanges.applyAnalogOutputSensorPoint(data);
             }
             return data;
         },
 
         "Default Value": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value; // Property value
-            type = point["Point Type"].Value; // Point type
+            var point = data.point; // Shortcut
+            var val = data.propertyObject.Value; // Property value
+            var type = point["Point Type"].Value; // Point type
 
             if ((type === "Analog Output") || (type === "Analog Value")) {
                 if (val < point["Minimum Value"].Value) {
@@ -2541,9 +2709,9 @@ var Config = (function(obj) {
                 type = point["Point Type"].Value; // Point type
 
             if (type === "Analog Output") {
-                data.point = obj.EditChanges.applyAnalogOutputTypeOutputType(data);
+                data.point = obj.EditChanges.applyAnalogOutputOutputType(data);
             } else if (type === "Binary Output") {
-                data.point = obj.EditChanges.applyBinaryOutputTypeOutputType(data);
+                data.point = obj.EditChanges.applyBinaryOutputOutputType(data);
             }
             return data;
         },
@@ -2553,7 +2721,7 @@ var Config = (function(obj) {
                 type = point["Point Type"].Value; // Point type
 
             if (type === "Binary Input" || type === "Binary Value") {
-                data.point = obj.EditChanges.applyBinaryInputTypeFeedbackPoint(data); // BI and BV have same apply logic
+                data.point = obj.EditChanges.applyBinaryInputFeedbackPoint(data); // BI and BV have same apply logic
             }
             return data;
         },
@@ -2582,10 +2750,10 @@ var Config = (function(obj) {
         },
 
         "Repeat Count": function(data) {
-                data = validateUsingMaxMinKeys(data);
-                return data;
-            }
-            //------ END POINT-TYPE SPECIFIC PROPERTIES  ----------------------------------------------------------------------------------------------
+            return this.validateUsingTheseLimits(data, 1, 99);
+        }
+
+        //------ END POINT-TYPE SPECIFIC PROPERTIES  ----------------------------------------------------------------------------------------------
     };
 
     obj.EditChanges = {
@@ -2603,8 +2771,9 @@ var Config = (function(obj) {
         },
 
         updateFanStrategy: function(point) {
-            var fanStrategy = point["Fan Control Strategy"],
-                fanOffSetPt = point["Fan Off CFM Setpoint"].Value;
+            var fanStrategy = point["Fan Control Strategy"];
+            var fanOffSetPt = point["Fan Off CFM Setpoint"].Value;
+            var strategy = "Constant";
 
             if (obj.Utility.getPropertyObject("Fan Control Point", point).Value !== 0) {
                 fanStrategy.isDisplayable = true;
@@ -2649,7 +2818,8 @@ var Config = (function(obj) {
         updateName: function(data) {
             var point = data.point,
                 i = data.property.slice(-1),
-                Name = point.name1;
+                Name = point.name1,
+                prop = '';
 
             point["_name" + i] = data.propertyObject.toLowerCase();
 
@@ -2678,92 +2848,54 @@ var Config = (function(obj) {
         },
 
         "Calculation Type": function(data) {
-            var point = data.point, // Shortcut
-                val = point[data.property].Value, // Property value
-                key, // Work var
-                i; // Work var
+            var point = data.point,
+                val = point["Calculation Type"].Value,
+                setDisp = obj.Utility.setPropsDisplayable,
+                setValOpt = obj.Utility.setupPropValueOptions;
 
             if ((point["Point Type"].Value === "Analog Selector") || (point["Point Type"].Value === "Binary Selector")) {
                 if (val === "Single Setpoint") {
                     obj.Utility.getPropertyObject("Setpoint Input", point).isDisplayable = true;
-                    point["Setpoint Value"].isDisplayable = true;
-                    point["High Deadband"].isDisplayable = true;
-                    point["Low Deadband"].isDisplayable = true;
-
-                    point["Input Deadband"].isDisplayable = false;
-                    point["High Setpoint"].isDisplayable = false;
-                    point["Low Setpoint"].isDisplayable = false;
-                    point["Cooling Setpoint"].isDisplayable = false;
-                    point["Heating Setpoint"].isDisplayable = false;
+                    setDisp(point, ["Setpoint Value", "High Deadband", "Low Deadband"], true);
+                    setDisp(point, ["Input Deadband", "High Setpoint", "Low Setpoint", "Cooling Setpoint", "Heating Setpoint"], false);
                 } else if (val === "Dual Setpoint") {
                     obj.Utility.getPropertyObject("Setpoint Input", point).isDisplayable = false;
-                    point["Setpoint Value"].isDisplayable = false;
-                    point["High Deadband"].isDisplayable = false;
-                    point["Low Deadband"].isDisplayable = false;
-
-                    point["Input Deadband"].isDisplayable = true;
-                    point["High Setpoint"].isDisplayable = true;
-                    point["Low Setpoint"].isDisplayable = true;
-                    point["Cooling Setpoint"].isDisplayable = false;
-                    point["Heating Setpoint"].isDisplayable = false;
+                    setDisp(point, ["Setpoint Value", "High Deadband", "Low Deadband", "Cooling Setpoint", "Heating Setpoint"], false);
+                    setDisp(point, ["Input Deadband", "High Setpoint", "Low Setpoint"], true);
                 } else {
                     obj.Utility.getPropertyObject("Setpoint Input", point).isDisplayable = false;
-                    point["Setpoint Value"].isDisplayable = false;
-                    point["High Deadband"].isDisplayable = false;
-                    point["Low Deadband"].isDisplayable = false;
-
-                    point["Input Deadband"].isDisplayable = true;
-                    point["High Setpoint"].isDisplayable = false;
-                    point["Low Setpoint"].isDisplayable = false;
-                    point["Cooling Setpoint"].isDisplayable = true;
-                    point["Heating Setpoint"].isDisplayable = true;
+                    setDisp(point, ["Setpoint Value", "High Deadband", "Low Deadband", "High Setpoint", "Low Setpoint"], false);
+                    setDisp(point, ["Input Deadband", "Cooling Setpoint", "Heating Setpoint"], true);
                 }
-                // Must be a Proportional point type. If Calculation Type is PID
             } else if (val === "PID") {
-                point["Input Range"].isDisplayable = true;
-                point["Input Range"].ValueOptions = {}; // Empty the ValueOptions
-
-                // Set ValueOptions:
-                // ’25 sec’, 0
-                // ’50 sec’, 1
-                // '75 sec', 2
-                //  ...
-                // ’200 sec’, 7
-                for (i = 0; i < 8; i++) {
-                    key = (25 + i * 25) + ' sec';
-                    point["Input Range"].ValueOptions[key] = i;
-                }
-
-                point["Rise Time"].isDisplayable = true;
-                point["Fall Time"].isDisplayable = true;
-
-                point["Proportional Band"].isDisplayable = false;
-                point["Reset Gain"].isDisplayable = false;
+                setValOpt(point["Input Range"], {
+                    "25 Sec": 0,
+                    "50 Sec": 1,
+                    "75 Sec": 2,
+                    "100 Sec": 3,
+                    "125 Sec": 4,
+                    "150 Sec": 5,
+                    "175 Sec": 6,
+                    "200 Sec": 7,
+                });
+                setDisp(point, ["Rise Time", "Fall Time"], true);
+                setDisp(point, ["Proportional Band", "Reset Gain"], false);
             } else if (val === "PI") {
-                point["Input Range"].isDisplayable = true;
-
-                point["Input Range"].ValueOptions = {}; // Empty the ValueOptions
-
-                point["Input Range"].ValueOptions['1'] = 0;
-                point["Input Range"].ValueOptions['10'] = 1;
-                point["Input Range"].ValueOptions['100'] = 2;
-                point["Input Range"].ValueOptions['1000'] = 3;
-                point["Input Range"].ValueOptions['5000'] = 4;
-                point["Input Range"].ValueOptions['10000'] = 5;
-                point["Input Range"].ValueOptions['25000'] = 6;
-                point["Input Range"].ValueOptions['Auto'] = 7;
-
-                point["Rise Time"].isDisplayable = false;
-                point["Fall Time"].isDisplayable = false;
-
-                point["Proportional Band"].isDisplayable = true;
-                point["Reset Gain"].isDisplayable = true;
+                setValOpt(point["Input Range"], {
+                    "1": 0,
+                    "10": 1,
+                    "100": 2,
+                    "1000": 3,
+                    "5000": 4,
+                    "10000": 5,
+                    "25000": 6,
+                    "Auto": 7,
+                });
+                setDisp(point, ["Proportional Band", "Reset Gain"], true);
+                setDisp(point, ["Rise Time", "Fall Time"], false);
             } else {
-                point["Input Range"].isDisplayable = false;
-                point["Rise Time"].isDisplayable = false;
-                point["Fall Time"].isDisplayable = false;
                 point["Proportional Band"].isDisplayable = true;
-                point["Reset Gain"].isDisplayable = false;
+                setDisp(point, ["Rise Time", "Fall Time", "Input Range", "Reset Gain"], false);
             }
             return point;
         },
@@ -2809,19 +2941,20 @@ var Config = (function(obj) {
 
         "Device Port": function(data) {
             data.propertyObject = (!!data.propertyObject) ? data.propertyObject : obj.Utility.getPropertyObject("Device Port", data.point);
-            var point = data.point,
-                val = data.propertyObject.Value; // Property value
-            
-            if (obj.Utility.checkModbusMS5(point) && (val === "Ethernet")) {
+            var point = data.point;
+
+            if ((point["Device Port"].isDisplayable) && (point["Device Port"].Value === "Ethernet")) {
+                point["Ethernet IP Port"].isDisplayable = true;
                 point["Modbus Unit Id"].isDisplayable = true;
             } else {
+                point["Ethernet IP Port"].isDisplayable = false;
                 point["Modbus Unit Id"].isDisplayable = false;
             }
             return point;
         },
 
         "Fan Control Point": function(data) {
-            updateFanStrategy(data.point);
+            this.updateFanStrategy(data.point);
             return data.point;
         },
 
@@ -3103,7 +3236,7 @@ var Config = (function(obj) {
 
         "Fan On CFM Setpoint": function(data) {
             data.point = this.updateFanStrategy(data.point);
-            return point;
+            return data.point;
         },
 
         "Fan Off CFM Setpoint": function(data) {
@@ -3176,19 +3309,19 @@ var Config = (function(obj) {
         },
 
         "Occupied Cool Setpoint": function(data) {
-            return applyOccUnoccSetpoint(data, "Occupied Cool Setpoint Value");
+            return this.applyOccUnoccSetpoint(data, "Occupied Cool Setpoint Value");
         },
 
         "Occupied Heat Setpoint": function(data) {
-            return applyOccUnoccSetpoint(data, "Occupied Heat Setpoint Value");
+            return this.applyOccUnoccSetpoint(data, "Occupied Heat Setpoint Value");
         },
 
         "Unoccupied Cool Setpoint": function(data) {
-            return applyOccUnoccSetpoint(data, "Unoccupied Cool Setpoint Value");
+            return this.applyOccUnoccSetpoint(data, "Unoccupied Cool Setpoint Value");
         },
 
         "Unoccupied Heat Setpoint": function(data) {
-            return applyOccUnoccSetpoint(data, "Unoccupied Heat Setpoint Value");
+            return this.applyOccUnoccSetpoint(data, "Unoccupied Heat Setpoint Value");
         },
 
         applyReliability: function(data) {
@@ -3218,8 +3351,9 @@ var Config = (function(obj) {
         },
 
         applyNetworkNumber: function(data) {
+            var point = data.point;
             var networks = data.networkConfig;
-            var networkValue = data.point[data.property].Value;
+            var networkValue = point[data.property].Value;
             var findNetwork = function(segment) {
                 var port = 0;
                 for (var n = 0; n < networks.length; n++) {
@@ -3231,25 +3365,28 @@ var Config = (function(obj) {
             };
             switch (data.property) {
                 case 'Ethernet Network':
-                    data.point['Ethernet IP Port'].isReadOnly = (data.propertyObject.Value === 0) ? false : true;
-                    if (networkValue !== 0) {
-                        data.point['Ethernet IP Port'].Value = findNetwork(networkValue);
-                    }
+                    point['Ethernet IP Port'].Value = findNetwork(networkValue);
                     break;
                 case 'Downlink Network':
-                    data.point['Downlink IP Port'].isReadOnly = (data.propertyObject.Value === 0) ? false : true;
                     if (networkValue !== 0) {
-                        data.point['Downlink IP Port'].Value = findNetwork(networkValue);
+                        point['Downlink IP Port'].Value = findNetwork(networkValue);
+                        point['Downlink IP Port'].isReadOnly = true;
+                    } else {
+                        point['Downlink IP Port'].isReadOnly = false;
                     }
                     break;
                 case 'Network Segment':
-                    data.point['Ethernet IP Port'].isReadOnly = (data.propertyObject.Value === 0) ? false : true;
-                    if (networkValue !== 0) {
-                        data.point['Ethernet IP Port'].Value = findNetwork(networkValue);
+                    if (point["Gateway"].isDisplayable && point["Gateway"].Value) {
+                        this.applyRemoteUnitTypeNetworkType(point);
+                    } else if (networkValue !== 0) {
+                        point['Ethernet IP Port'].Value = findNetwork(networkValue);
+                        point['Ethernet IP Port'].isReadOnly = true;
+                    } else {
+                        point['Ethernet IP Port'].isReadOnly = false;
                     }
                     break;
             }
-            return data.point;
+            return point;
         },
 
         applyEthernetNetworkNumber: function(data) {
@@ -3447,7 +3584,7 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyDelayPointTypeMointorPoint: function(data) {
+        applyDelayMointorPoint: function(data) {
             var point = data.point, // Shortcut
                 refPoint = data.refPoint; // Shortcut
 
@@ -3641,272 +3778,6 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyConversionTypeProperty: function(data) {
-            var point = data.point,
-                propertyObject = data.propertyObject;
-
-            if (data.property !== "Conversion Type") {
-                propertyObject = obj.Utility.getPropertyObject("Conversion Type", data.point);
-            }
-
-            // Assume all conversion coefficients are displayable
-            point["Conversion Coefficient 1"].isDisplayable = true;
-            point["Conversion Coefficient 2"].isDisplayable = true;
-            point["Conversion Coefficient 3"].isDisplayable = true;
-            point["Conversion Coefficient 4"].isDisplayable = true;
-
-            // Nothing to do for cubic conversion
-            // If quad or flow conversion type
-            if (propertyObject.Value === "Quadratic" || propertyObject.Value === "Flow") {
-                point["Conversion Coefficient 4"].isDisplayable = false;
-            } else if (propertyObject.Value === "Linear") {
-                point["Conversion Coefficient 3"].isDisplayable = false;
-                point["Conversion Coefficient 4"].isDisplayable = false;
-            }
-            return point;
-        },
-
-        applyDeviceTypeModelType: function(data) {
-            var point = data.point;
-
-            if (point["Model Type"].isDisplayable === false) {
-                return point;
-            }
-
-            //------ Begin import data checks ---------------------------------------------------------------
-            delete point.Protocol;
-            delete point["Port 1 Protocol"].Min;
-            delete point["Port 1 Protocol"].Max;
-            delete point["Port 2 Protocol"].Min;
-            delete point["Port 2 Protocol"].Max;
-            delete point["Port 3 Protocol"].Min;
-            delete point["Port 3 Protocol"].Max;
-            delete point["Port 4 Protocol"].Min;
-            delete point["Port 4 Protocol"].Max;
-            delete point["Port 1 Maximum Address"].Min;
-            delete point["Port 1 Maximum Address"].Max;
-            delete point["Port 2 Maximum Address"].Min;
-            delete point["Port 2 Maximum Address"].Max;
-            delete point["Port 3 Maximum Address"].Min;
-            delete point["Port 3 Maximum Address"].Max;
-            delete point["Port 4 Maximum Address"].Min;
-            delete point["Port 4 Maximum Address"].Max;
-
-            if (!point.hasOwnProperty("Port 1 Timeout"))
-                point["Port 1 Timeout"] = obj.Templates.getTemplate("Device")["Port 1 Timeout"];
-            if (!point.hasOwnProperty("Port 2 Timeout"))
-                point["Port 2 Timeout"] = obj.Templates.getTemplate("Device")["Port 2 Timeout"];
-            if (!point.hasOwnProperty("Port 3 Timeout"))
-                point["Port 3 Timeout"] = obj.Templates.getTemplate("Device")["Port 3 Timeout"];
-            if (!point.hasOwnProperty("Port 4 Timeout"))
-                point["Port 4 Timeout"] = obj.Templates.getTemplate("Device")["Port 4 Timeout"];
-            if (!point.hasOwnProperty("Ethernet IP Port"))
-                point["Ethernet IP Port"] = obj.Templates.getTemplate("Device")["Ethernet IP Port"];
-            if (!point.hasOwnProperty("Downlink IP Port"))
-                point["Downlink IP Port"] = obj.Templates.getTemplate("Device")["Downlink IP Port"];
-            if (!point.hasOwnProperty("Downlink Broadcast Delay"))
-                point["Downlink Broadcast Delay"] = obj.Templates.getTemplate("Device")["Downlink Broadcast Delay"];
-            if (!point.hasOwnProperty("Firmware 2 Version"))
-                point["Firmware 2 Version"] = obj.Templates.getTemplate("Device")["Firmware 2 Version"];
-
-            if (point["Uplink Port"].Value === "Ethernet") {
-                point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Ethernet"]["enum"];
-            } else if (point["Uplink Port"].Value === "Port 2") {
-                point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"];
-            } else if (point["Uplink Port"].Value === "Port 3") {
-                point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"];
-            } else if (point["Uplink Port"].Value === "Port 4") {
-                point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"];
-            } else {
-                point["Uplink Port"].Value = "Port 1";
-                point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-            }
-
-            if (point["Ethernet Protocol"].Value === "IP") {
-                point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].IP["enum"];
-            } else {
-                point["Ethernet Protocol"].Value = "None";
-                point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].None["enum"];
-            }
-
-            if (point["Downlink Protocol"].Value === "IP") {
-                point["Downlink Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].IP["enum"];
-            } else {
-                point["Downlink Protocol"].Value = "None";
-                point["Downlink Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].None["enum"];
-            }
-
-            if (point["Port 1 Protocol"].Value === "MS/TP") {
-                point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-            } else if (point["Port 1 Protocol"].Value === "N2") {
-                point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-            } else if (point["Port 1 Protocol"].Value === "Modbus RTU") {
-                point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-            } else if (point["Port 1 Protocol"].Value === "MS/RTU") {
-                point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-            } else {
-                point["Port 1 Protocol"].Value === "None";
-                point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-            }
-
-            if (point["Port 2 Protocol"].Value === "MS/TP") {
-                point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-            } else if (point["Port 2 Protocol"].Value === "N2") {
-                point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-            } else if (point["Port 2 Protocol"].Value === "Modbus RTU") {
-                point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-            } else if (point["Port 2 Protocol"].Value === "MS/RTU") {
-                point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-            } else {
-                point["Port 2 Protocol"].Value === "None";
-                point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-            }
-
-            if (point["Port 3 Protocol"].Value === "MS/TP") {
-                point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-            } else if (point["Port 3 Protocol"].Value === "N2") {
-                point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-            } else if (point["Port 3 Protocol"].Value === "Modbus RTU") {
-                point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-            } else if (point["Port 3 Protocol"].Value === "MS/RTU") {
-                point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-            } else {
-                point["Port 3 Protocol"].Value === "None";
-                point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-            }
-
-            if (point["Port 4 Protocol"].Value === "MS/TP") {
-                point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-            } else if (point["Port 4 Protocol"].Value === "N2") {
-                point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["N2"]["enum"];
-            } else if (point["Port 4 Protocol"].Value === "Modbus RTU") {
-                point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["Modbus RTU"]["enum"];
-            } else if (point["Port 4 Protocol"].Value === "MS/RTU") {
-                point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/RTU"]["enum"];
-            } else {
-                point["Port 4 Protocol"].Value === "None";
-                point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
-            }
-            //------ End import data checks -----------------------------------------------------------------
-
-            point._devModel = point["Model Type"].eValue;
-            point._relPoint = enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"];
-
-            if (typeof point["Ethernet Address"].Value !== "string") {
-                point["Ethernet Address"].Value = "";
-                point["Ethernet Address"].ValueType = enumsTemplatesJson.Enums["Value Types"]["String"]["enum"];
-            }
-
-            point["Time Zone"].isReadOnly = true;
-            point["Firmware 2 Version"].isDisplayable = false;
-
-            if (obj.Utility.checkDeviceMS5(point)) {
-
-                point["Time Zone"].isReadOnly = false;
-                point["Firmware 2 Version"].isDisplayable = !!~["MicroScan 5 UNV", "SCADA Vio", "SCADA IO"].indexOf(point["Model Type"].Value);
-                point["Uplink Port"].isDisplayable = true;
-                point["Uplink Port"].isReadOnly = false;
-                point["Uplink Port"].ValueOptions = {
-                    "Ethernet": enumsTemplatesJson.Enums["Device Ports"]["Ethernet"]["enum"],
-                    "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"],
-                    "Port 2": enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"],
-                    "Port 3": enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"],
-                    "Port 4": enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"]
-                };
-
-                point["Ethernet Protocol"].isDisplayable = true;
-                point["Port 1 Protocol"].isDisplayable = true;
-                point["Port 2 Protocol"].isDisplayable = true;
-                point["Port 3 Protocol"].isDisplayable = true;
-                point["Port 4 Protocol"].isDisplayable = true;
-
-            } else if (point["Model Type"].Value === "MicroScan 4 UNV" || point["Model Type"].Value === "MicroScan 4 xTalk" || point["Model Type"].Value === "MicroScan 4 Digital") {
-
-                point["Uplink Port"].isDisplayable = true;
-                point["Uplink Port"].isReadOnly = false;
-                point["Uplink Port"].ValueOptions = {
-                    "Ethernet": enumsTemplatesJson.Enums["Device Ports"]["Ethernet"]["enum"],
-                    "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"]
-                };
-
-                if ((point["Uplink Port"].Value != "Ethernet") && (point["Uplink Port"].Value != "Port 1")) {
-                    point["Uplink Port"].Value = "Port 1";
-                    point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                }
-
-                point["Ethernet Protocol"].isDisplayable = true;
-                point["Port 1 Protocol"].isDisplayable = true;
-                point["Port 2 Protocol"].isDisplayable = true;
-                point["Port 3 Protocol"].isDisplayable = false;
-                point["Port 4 Protocol"].isDisplayable = false;
-
-            } else if (point["Model Type"].Value === "Central Device") {
-
-                point["Model Type"].isDisplayable = false;
-
-                point["Uplink Port"].isDisplayable = false;
-                point["Uplink Port"].Value = "Ethernet";
-                point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"].Ethernet["enum"];
-                point["Uplink Port"].ValueOptions = {
-                    "Ethernet": enumsTemplatesJson.Enums["Device Ports"].Ethernet["enum"]
-                };
-
-                point["Downlink Network"].isDisplayable = false;
-
-                point["Ethernet Protocol"].isDisplayable = false;
-
-                if (point["Ethernet Network"].Value < 0 || point["Ethernet Network"].Value > 65534) {
-                    point["Ethernet Network"].Value = 0;
-                }
-
-                point["Ethernet Address"].isReadOnly = true;
-                point["Ethernet Network"].isReadOnly = true;
-
-                point["Port 1 Protocol"].isDisplayable = false;
-                point["Port 2 Protocol"].isDisplayable = false;
-                point["Port 3 Protocol"].isDisplayable = false;
-                point["Port 4 Protocol"].isDisplayable = false;
-                point["Port 1 Timeout"].isDisplayable = false;
-                point["Port 2 Timeout"].isDisplayable = false;
-                point["Port 3 Timeout"].isDisplayable = false;
-                point["Port 4 Timeout"].isDisplayable = false;
-
-            } else if (point["Model Type"].Value === "Field Interface Device" || point["Model Type"].Value === "MicroScan Interface Device" || point["Model Type"].Value === "Staefa Interface Device" || point["Model Type"].Value === "N2 Interface Device" || point["Model Type"].Value === "Sierra Steam Meter Device" || point["Model Type"].Value === "Armstrong SteamEye Device" || point["Model Type"].Value === "Siemens Power Meter Device" || point["Model Type"].Value === "Ingersol Rand Intellysis Device" || point["Model Type"].Value === "BACnet Interface Device") {
-
-                point["Uplink Port"].isDisplayable = false;
-                point["Uplink Port"].Value = "Port 1";
-                point["Uplink Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                point["Uplink Port"].ValueOptions = {
-                    "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"]
-                };
-
-                point["Ethernet Protocol"].isDisplayable = false;
-                point["Ethernet Protocol"].Value = "None";
-                point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].None["enum"];
-
-                point["Port 1 Protocol"].isDisplayable = true;
-                point["Port 2 Protocol"].isDisplayable = false;
-                point["Port 3 Protocol"].isDisplayable = false;
-                point["Port 4 Protocol"].isDisplayable = false;
-                point["Port 1 Timeout"].isDisplayable = true;
-                point["Port 2 Timeout"].isDisplayable = false;
-                point["Port 3 Timeout"].isDisplayable = false;
-                point["Port 4 Timeout"].isDisplayable = false;
-
-                point["Port 1 Network"].isReadOnly = false;
-                if (point["Port 1 Network"].Value < 0 || point["Port 1 Network"].Value > 65534) {
-                    point["Port 1 Network"].Value = 0;
-                }
-
-            } else {
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
-                console.log("Bad Model Type:", point["Model Type"]);
-            }
-            data.point = point;
-            data.point = this.applyDeviceTypeUplinkPort(data);
-            return data.point;
-        },
-
         applyAlarmRepeatEnable: function(data) {
             if (data.point["Alarm Repeat Enable"].Value === false)
                 data.point["Alarm Repeat Time"].isDisplayable = false;
@@ -3916,1181 +3787,640 @@ var Config = (function(obj) {
             return data.point;
         },
 
-        applyDeviceTypeUplinkPort: function(data) {
-            var point = data.point;
+        applyDeviceUplinkPort: function(data) {
+            var point = data.point,
+                enums = enumsTemplatesJson.Enums,
+                port = point["Uplink Port"].Value,
+                ports = ["Ethernet", "Port 1", "Port 2", "Port 3", "Port 4"];
 
-            point["Port 1 Protocol"].isReadOnly = false;
-            point["Port 2 Protocol"].isReadOnly = false;
-            point["Port 3 Protocol"].isReadOnly = false;
-            point["Port 4 Protocol"].isReadOnly = false;
-            point["Ethernet Protocol"].isReadOnly = false;
-            point["Downlink Protocol"].isDisplayable = false;
-
-            if (point["Uplink Port"].Value === "Ethernet") {
-                point["Ethernet Protocol"].isReadOnly = true;
-                point["Ethernet Protocol"].Value = "IP";
-                point["Ethernet Protocol"].eValue = enumsTemplatesJson.Enums["Ethernet Protocols"].IP["enum"];
-                point["Downlink Protocol"].isDisplayable = obj.Utility.checkDeviceMS5(point);
-
-            } else if (point["Uplink Port"].Value === "Port 4") {
-                point["Port 4 Protocol"].isReadOnly = true;
-                point["Port 4 Protocol"].Value = "MS/TP";
-                point["Port 4 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-
-            } else if (point["Uplink Port"].Value === "Port 2") {
-                point["Port 2 Protocol"].isReadOnly = true;
-                point["Port 2 Protocol"].Value = "MS/TP";
-                point["Port 2 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-
-             } else if (point["Uplink Port"].Value === "Port 3") {
-                point["Port 3 Protocol"].isReadOnly = true;
-                point["Port 3 Protocol"].Value = "MS/TP";
-                point["Port 3 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
-
-             } else {
-                point["Port 1 Protocol"].isReadOnly = true;
-                point["Port 1 Protocol"].Value = "MS/TP";
-                point["Port 1 Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["MS/TP"]["enum"];
+            for (var i = 0; i < 5; i++) {
+                if (port === ports[i]) {
+                    point[ports[i] + " Protocol"].isReadOnly = true;
+                    if (port === "Ethernet") {
+                        point["Ethernet Protocol"].Value = "IP";
+                        point["Ethernet Protocol"].eValue = enums["Ethernet Protocols"]["IP"]["enum"];
+                        point["Downlink Protocol"].isDisplayable = obj.Utility.checkMicroScan5Device(point);
+                    } else {
+                        point[ports[i] + " Protocol"].Value = "MS/TP";
+                        point[ports[i] + " Protocol"].eValue = enums["Port Protocols"]["MS/TP"]["enum"];
+                    }
+                } else {
+                    point[ports[i] + " Protocol"].isReadOnly = false;
+                }
             }
-            data.point = point;
-            data.point = this.applyDeviceTypeEthernetProtocol(data);
-            data.point = this.applyDeviceTypeDownlinkProtocol(data);
-            data.point = this.applyDeviceTypePortNProtocol(data);
-            return data.point;
+            obj.EditChanges.applyDeviceEthernetProtocol(data);
+            obj.EditChanges.applyDeviceDownlinkProtocol(data);
+            return obj.EditChanges.applyDevicePortNProtocol(data);
         },
 
-        applyDeviceTypeDownlinkProtocol: function(data) {
-            var point = data.point;
+        applyDeviceEthernetProtocol: function(data) {
+            var point = data.point,
+                disp = ((point["Ethernet Protocol"].Value === "IP") && (point["Ethernet Protocol"].isDisplayable === true)) ? true : false;
 
-            if ((point["Downlink Protocol"].Value === "None") || (point["Downlink Protocol"].isDisplayable === false)) {
-                point["Downlink Broadcast Delay"].isDisplayable = false;
-                point["Downlink IP Port"].isDisplayable = false;
-                point["Downlink Network"].isDisplayable = false;
-            } else {
-                point["Downlink Broadcast Delay"].isDisplayable = true;
-                point["Downlink IP Port"].isDisplayable = true;
-                point["Downlink Network"].isDisplayable = true;
+            obj.Utility.setPropsDisplayable(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Network"], disp);
+            return point;
+        },
+
+        applyDeviceDownlinkProtocol: function(data) {
+            var point = data.point,
+                disp = ((point["Downlink Protocol"].Value === "IP") && (point["Downlink Protocol"].isDisplayable === true)) ? true : false;
+
+            obj.Utility.setPropsDisplayable(point, ["Downlink Broadcast Delay", "Downlink IP Port", "Downlink Network"], disp);
+            return point;
+        },
+
+        applyDevicePortNProtocol: function(data) {
+            var point = data.point,
+                port = ["Port 1", "Port 2", "Port 3", "Port 4"];
+
+            for (var i = 0; i < 4; i++) {
+                if (point[port[i] + " Protocol"].isDisplayable === false) {
+                    point[port[i] + " Protocol"].Value = "None";
+                    point[port[i] + " Protocol"].eValue = enumsTemplatesJson.Enums["Port Protocols"]["None"]["enum"];
+                    point[port[i] + " Address"].isDisplayable = false;
+                    point[port[i] + " Maximum Address"].isDisplayable = false;
+                    point[port[i] + " Network"].isDisplayable = false;
+                } else if ((point[port[i] + " Protocol"].Value === "MS/TP") || (point[port[i] + " Protocol"].Value === "MS/RTU")) {
+                    point[port[i] + " Address"].isDisplayable = true;
+                    point[port[i] + " Network"].isDisplayable = true;
+                    point[port[i] + " Maximum Address"].isDisplayable = true;
+                } else {
+                    point[port[i] + " Address"].isDisplayable = false;
+                    point[port[i] + " Maximum Address"].isDisplayable = false;
+                    point[port[i] + " Network"].isDisplayable = false;
+                }
             }
             return point;
         },
 
-        applyDeviceTypeEthernetProtocol: function(data) {
-            var point = data.point;
+        applyDeviceDevModel: function(data) {
+            var point = data.point,
+                enums = enumsTemplatesJson.Enums,
+                setDisp = obj.Utility.setPropsDisplayable,
+                setValOpt = obj.Utility.setupPropValueOptions,
+                upPort = point["Uplink Port"],
+                port = ["Port 1", "Port 2", "Port 3", "Port 4"];
 
-            if ((point["Ethernet Protocol"].Value === "None") || (point["Ethernet Protocol"].isDisplayable === false)) {
-                point["Ethernet Address"].isDisplayable = false;
-                point["Ethernet IP Port"].isDisplayable = false;
-                point["Ethernet Network"].isDisplayable = false;
+            // ROB - is it possible to enter this block?
+            if (enums["Device Model Types"][point["Model Type"].Value] === undefined) {
+                point["Model Type"].Value = "Unknown";
+                point["Model Type"].eValue = enums["Device Model Types"]["Unknown"]["enum"];
+            }
+
+            point["Model Type"].isDisplayable = true;
+            point["Model Type"].isReadOnly = false;
+            // ROB- do we need to make sure Model Type.Value is set?
+            point._devModel = point["Model Type"].eValue;
+            point._relPoint = enums.Reliabilities["No Fault"]["enum"];
+
+            //------ Begin import data checks ---------------------------------------------------------------
+            // ROB- do we need to delete protocol still?
+            delete point.Protocol;
+            // ROB - is it possible to enter this block?
+            if (!point.hasOwnProperty("Firmware 2 Version")) {
+                point["Firmware 2 Version"] = obj.Templates.getTemplate("Device")["Firmware 2 Version"];
+            }
+
+            if (typeof point["Ethernet Address"].Value !== "string") {
+                point["Ethernet Address"].Value = "";
+                point["Ethernet Address"].ValueType = enums["Value Types"]["String"]["enum"];
+            }
+            //------ End import data checks -----------------------------------------------------------------
+            point["Time Zone"].isReadOnly = true;
+            point["Firmware 2 Version"].isDisplayable = false;
+
+            if (obj.Utility.checkMicroScan5Device(point)) {
+                point["Time Zone"].isReadOnly = false;
+                point["Firmware 2 Version"].isDisplayable = !!~["MicroScan 5 UNV", "SCADA Vio", "SCADA IO"].indexOf(point["Model Type"].Value);
+                setValOpt(upPort, {
+                    "Ethernet": enums["Device Ports"]["Ethernet"]["enum"],
+                    "Port 1": enums["Device Ports"]["Port 1"]["enum"],
+                    "Port 2": enums["Device Ports"]["Port 2"]["enum"],
+                    "Port 3": enums["Device Ports"]["Port 3"]["enum"],
+                    "Port 4": enums["Device Ports"]["Port 4"]["enum"]
+                });
+                setDisp(point, ["Ethernet Protocol", "Port 1 Protocol", "Port 2 Protocol", "Port 3 Protocol", "Port 4 Protocol"], true);
+
+            } else if (obj.Utility.checkMicroScan4Device(point)) {
+                setValOpt(upPort, {
+                    "Ethernet": enums["Device Ports"]["Ethernet"]["enum"],
+                    "Port 1": enums["Device Ports"]["Port 1"]["enum"]
+                });
+                setDisp(point, ["Ethernet Protocol", "Port 1 Protocol", "Port 2 Protocol"], true);
+                setDisp(point, ["Port 3 Protocol", "Port 4 Protocol"], false);
+            } else if (point["Model Type"].Value === "Central Device") {
+                setValOpt(upPort, {
+                    "Ethernet": enums["Device Ports"]["Ethernet"]["enum"]
+                });
+                point["Ethernet Protocol"].isDisplayable = true;
+                setDisp(point, ["Port 1 Protocol", "Port 2 Protocol", "Port 3 Protocol", "Port 4 Protocol"], false);
+                point["Ethernet Address"].isReadOnly = true;
+                point["Ethernet Network"].isReadOnly = true;
+                point["Ethernet IP Port"].isReadOnly = true;
             } else {
-                point["Ethernet Address"].isDisplayable = true;
-                point["Ethernet IP Port"].isDisplayable = true;
-                point["Ethernet Network"].isDisplayable = true;
+                // ROB- create a function that can do setValOpts and control isDisp based on VO
+                setValOpt(upPort, {
+                    "Port 1": enums["Device Ports"]["Port 1"]["enum"]
+                });
+                point["Port 1 Protocol"].isDisplayable = true;
+                setDisp(point, ["Ethernet Protocol", "Port 2 Protocol", "Port 3 Protocol", "Port 4 Protocol"], false);
+            }
+            return obj.EditChanges.applyDeviceUplinkPort(data);
+        },
+
+        applyRemoteUnitNetworkType: function(point) {
+            var nt = point["Network Type"].Value;
+
+            if (nt === "Unknown") {
+                obj.Utility.setPropsDisplayable(point, ["Device Address", "Network Segment", "Ethernet IP Port", "Router Address"], false);
+            } else {
+                point["Device Address"].isDisplayable = true;
+                point["Network Segment"].isDisplayable = true;
+                point["Ethernet IP Port"].isDisplayable = (nt === "IP") ? true : false;
+
+                if (point["Gateway"].isDisplayable && point["Gateway"].Value) {
+                    point["Ethernet IP Port"].isReadOnly = false;
+                    point["Router Address"].isDisplayable = (point["Network Segment"].Value !== 0) ? true : false;
+                } else {
+                    point["Ethernet IP Port"].isReadOnly = true;
+                    point["Router Address"].isDisplayable = false;
+                }
             }
             return point;
         },
 
-        applyDeviceTypePortNProtocol: function(data) {
-            var point = data.point;
+        applyRemoteUnitDevModel: function(data) {
+            var point = data.point,
+                enums = enumsTemplatesJson.Enums,
+                modelType,
+                temp,
+                ms5Dev,
+                rmuOpt,
+                valOpt5 = {
+                    "Ethernet": enums["Device Ports"]["Ethernet"]["enum"],
+                    "Port 1": enums["Device Ports"]["Port 1"]["enum"],
+                    "Port 2": enums["Device Ports"]["Port 2"]["enum"],
+                    "Port 3": enums["Device Ports"]["Port 3"]["enum"],
+                    "Port 4": enums["Device Ports"]["Port 4"]["enum"]
+                },
+                valOpt4 = {
+                    "Port 1": enums["Device Ports"]["Port 1"]["enum"],
+                    "Port 2": enums["Device Ports"]["Port 2"]["enum"],
+                    "Port 3": enums["Device Ports"]["Port 3"]["enum"],
+                    "Port 4": enums["Device Ports"]["Port 4"]["enum"]
+                },
+                valOpt3 = {
+                    "Ethernet": enums["Device Ports"]["Ethernet"]["enum"],
+                    "Port 1": enums["Device Ports"]["Port 1"]["enum"],
+                    "Port 2": enums["Device Ports"]["Port 2"]["enum"]
+                },
+                valOpt2 = {
+                    "Port 1": enums["Device Ports"]["Port 1"]["enum"],
+                    "Port 2": enums["Device Ports"]["Port 2"]["enum"]
+                };
 
-            if (point["Port 1 Protocol"].isDisplayable === false) {
-                point["Port 1 Address"].isDisplayable = false;
-                point["Port 1 Maximum Address"].isDisplayable = false;
-                point["Port 1 Network"].isDisplayable = false;
-            } else if (point["Port 1 Protocol"].Value === "MS/TP") {
-                point["Port 1 Network"].isDisplayable = true;
-                point["Port 1 Address"].isDisplayable = true;
-                point["Port 1 Maximum Address"].isDisplayable = true;
-            } else if (point["Port 1 Protocol"].Value === "MS/RTU") {
-                point["Port 1 Network"].isDisplayable = true;
-                point["Port 1 Address"].isDisplayable = false;
-                point["Port 1 Maximum Address"].isDisplayable = true;
-                point["Port 1 Maximum Address"].isReadOnly = false;
-            } else {
-                point["Port 1 Address"].isDisplayable = false;
-                point["Port 1 Maximum Address"].isDisplayable = false;
-                point["Port 1 Network"].isDisplayable = false;
+            if (obj.revEnums["Device Model Types"][point._devModel] === undefined) {
+                point._devModel = enums["Device Model Types"]["Unknown"]["enum"];
             }
-
-            if (point["Port 2 Protocol"].isDisplayable === false) {
-                point["Port 2 Address"].isDisplayable = false;
-                point["Port 2 Maximum Address"].isDisplayable = false;
-                point["Port 2 Network"].isDisplayable = false;
-            } else if (point["Port 2 Protocol"].Value === "MS/TP") {
-                point["Port 2 Network"].isDisplayable = true;
-                point["Port 2 Address"].isDisplayable = true;
-                point["Port 2 Maximum Address"].isDisplayable = true;
-            } else if (point["Port 2 Protocol"].Value === "MS/RTU") {
-                point["Port 2 Network"].isDisplayable = true;
-                point["Port 2 Address"].isDisplayable = false;
-                point["Port 2 Maximum Address"].isDisplayable = true;
-                point["Port 2 Maximum Address"].isReadOnly = false;
-            } else {
-                point["Port 2 Address"].isDisplayable = false;
-                point["Port 2 Maximum Address"].isDisplayable = false;
-                point["Port 2 Network"].isDisplayable = false;
+            if (enums["Remote Unit Model Types"][point["Model Type"].Value] === undefined) {
+                point["Model Type"].Value = "Unknown";
             }
-
-            if (point["Port 3 Protocol"].isDisplayable === false) {
-                point["Port 3 Address"].isDisplayable = false;
-                point["Port 3 Maximum Address"].isDisplayable = false;
-                point["Port 3 Network"].isDisplayable = false;
-            } else if (point["Port 3 Protocol"].Value === "MS/TP") {
-                point["Port 3 Network"].isDisplayable = true;
-                point["Port 3 Address"].isDisplayable = true;
-                point["Port 3 Maximum Address"].isDisplayable = true;
-            } else if (point["Port 3 Protocol"].Value === "MS/RTU") {
-                point["Port 3 Network"].isDisplayable = true;
-                point["Port 3 Address"].isDisplayable = false;
-                point["Port 3 Maximum Address"].isDisplayable = true;
-                point["Port 3 Maximum Address"].isReadOnly = false;
-            } else {
-                point["Port 3 Address"].isDisplayable = false;
-                point["Port 3 Maximum Address"].isDisplayable = false;
-                point["Port 3 Network"].isDisplayable = false;
-            }
-
-            if (point["Port 4 Protocol"].isDisplayable === false) {
-                point["Port 4 Address"].isDisplayable = false;
-                point["Port 4 Maximum Address"].isDisplayable = false;
-                point["Port 4 Network"].isDisplayable = false;
-            } else if (point["Port 4 Protocol"].Value === "MS/TP") {
-                point["Port 4 Network"].isDisplayable = true;
-                point["Port 4 Address"].isDisplayable = true;
-                point["Port 4 Maximum Address"].isDisplayable = true;
-            } else if (point["Port 4 Protocol"].Value === "MS/RTU") {
-                point["Port 4 Network"].isDisplayable = true;
-                point["Port 4 Address"].isDisplayable = false;
-                point["Port 4 Maximum Address"].isDisplayable = true;
-                point["Port 4 Maximum Address"].isReadOnly = false;
-            } else {
-                point["Port 4 Address"].isDisplayable = false;
-                point["Port 4 Maximum Address"].isDisplayable = false;
-                point["Port 4 Network"].isDisplayable = false;
-            }
-
-            return point;
-        },
-
-        applyRemoteUnitTypeModelType: function(data) {
-            var point = data.point;
-
-            point._relPoint = enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"];
-
+            modelType = point["Model Type"].Value;
+            point["Model Type"].isDisplayable = true;
+            point["Model Type"].isReadOnly = false;
+            point["Model Type"].eValue = enums["Remote Unit Model Types"][modelType]["enum"];
             point._rmuModel = point["Model Type"].eValue;
 
-            point["Device Address"].isDisplayable = true;
-            point["Device Address"].Min = 0;
-            point["Device Address"].Max = 127;
-
-            point["Device Port"].isDisplayable = false;
-            point["Device Port"].ValueOptions = {
-                "Ethernet": enumsTemplatesJson.Enums["Device Ports"]["Ethernet"]["enum"],
-                "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"],
-                "Port 2": enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"],
-                "Port 3": enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"],
-                "Port 4": enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"]
-            };
-
-            point["Poll Function"].isDisplayable = false;
-            point["Poll Register"].isDisplayable = false;
-            point["Modbus Unit Id"].isDisplayable = false;
-            point["Instance"].isDisplayable = false;
-            point["Gateway"].isDisplayable = false;
-            point["Router Address"].isDisplayable = false;
-
-            point["Network Type"].isDisplayable = false;
-            point["Network Type"].ValueOptions = {
-                "Unknown": enumsTemplatesJson.Enums["Network Types"]["Unknown"]["enum"],
-                "MS/TP": enumsTemplatesJson.Enums["Network Types"]["MS/TP"]["enum"],
-                "IP": enumsTemplatesJson.Enums["Network Types"]["IP"]["enum"]
-            };
-
-            point["Network Segment"].isDisplayable = false;
-
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"])) {
-
-                if (point["Model Type"].Value === "BACnet") {
-
-                    point["Gateway"].isDisplayable = true;
-                    point["Device Port"].isDisplayable = true;
-                    if (point["Device Port"].Value === "Ethernet") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Ethernet"]["enum"];
-                    } else if (point["Device Port"].Value === "Port 2") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"];
-                    } else if (point["Device Port"].Value === "Port 3") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"];
-                    } else if (point["Device Port"].Value === "Port 4") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"];
-                    } else {
-                        point["Device Port"].Value = "Port 1";
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                    }
-                    point["Instance"].isDisplayable = true;
-                    point["Network Type"].isDisplayable = true;
-
-                    if (point["Network Type"].eValue === enumsTemplatesJson.Enums["Network Types"]["MS/TP"]["enum"])
-                        point["Network Type"].Value = "MS/TP";
-                    else if (point["Network Type"].eValue === enumsTemplatesJson.Enums["Network Types"]["IP"]["enum"])
-                        point["Network Type"].Value = "IP";
-                    else {
-                        point["Network Type"].eValue = enumsTemplatesJson.Enums["Network Types"]["Unknown"]["enum"];
-                        point["Network Type"].Value = "Unknown";
-                    }
-                    data.point = point;
-                    point = this.applyRemoteUnitTypeNetworkType(data);
-
-                } else if (point["Model Type"].Value === "Liebert" || point["Model Type"].Value === "Sierra Steam Meter" || point["Model Type"].Value === "Siemens Power Meter" || point["Model Type"].Value === "Ingersol Rand Intellysis" || point["Model Type"].Value === "PowerLogic 3000 Meter" || point["Model Type"].Value === "Generic Modbus" || point["Model Type"].Value === "PowerTraks 9000" || point["Model Type"].Value === "Programmable Modbus") {
-
-                    point["Device Port"].isDisplayable = true;
-                    if (point["Device Port"].Value === "Ethernet") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Ethernet"]["enum"];
-                        point["Modbus Unit Id"].isDisplayable = true;
-                    } else if (point["Device Port"].Value === "Port 2") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"];
-                    } else if (point["Device Port"].Value === "Port 3") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"];
-                    } else if (point["Device Port"].Value === "Port 4") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"];
-                    } else {
-                        point["Device Port"].Value = "Port 1";
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                    }
-
-                    point["Device Address"].isDisplayable = true;
-                    point["Device Address"].Max = 254;
-
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-
-                } else if (point["Model Type"].Value === "MS3 RT" || point["Model Type"].Value === "MS 3 EEPROM" || point["Model Type"].Value === "MS 3 Flash" || point["Model Type"].Value === "MS 4 VAV") {
-
-                    point["Device Port"].isDisplayable = true;
-                    point["Device Port"].ValueOptions = {
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"],
-                        "Port 2": enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"],
-                        "Port 3": enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"],
-                        "Port 4": enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"]
-                    };
-                    if (point["Device Port"].Value === "Port 2") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"];
-                    } else if (point["Device Port"].Value === "Port 3") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"];
-                    } else if (point["Device Port"].Value === "Port 4") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"];
-                    } else {
-                        point["Device Port"].Value = "Port 1";
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                    }
-
-                    point["Device Address"].isDisplayable = true;
-                    point["Device Address"].Max = 127;
-
-                } else if (point["Model Type"].Value === "N2 Device") {
-
-                    point["Device Port"].isDisplayable = true;
-                    point["Device Port"].ValueOptions = {
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"],
-                        "Port 2": enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"],
-                        "Port 3": enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"],
-                        "Port 4": enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"]
-                    };
-                    if (point["Device Port"].Value === "Port 2") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"];
-                    } else if (point["Device Port"].Value === "Port 3") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 3"]["enum"];
-                    } else if (point["Device Port"].Value === "Port 4") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 4"]["enum"];
-                    } else {
-                        point["Device Port"].Value = "Port 1";
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                    }
-
-                    point["Device Address"].isDisplayable = true; // not stated anymore
-                    point["Device Address"].Max = 254;
-
-                } else {
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-
-                    // TODO is this production or debug code?:
-                    console.log("Bad RMU Model Type:", point["Model Type"].Value, ", _id:", point._id, ", _devModel:", point._devModel);
-                }
-
-                // If MicroScan 4 UNV, MicroScan 4 xTalk, or MicroScan 4 Digital
-            } else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"])) {
-
-                if (point["Model Type"].Value === "BACnet") {
-
-                    point["Device Port"].isDisplayable = true;
-                    point["Device Port"].ValueOptions = {
-                        "Ethernet": enumsTemplatesJson.Enums["Device Ports"]["Ethernet"]["enum"],
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"],
-                        "Port 2": enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"]
-                    };
-                    if (point["Device Port"].Value === "Ethernet") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Ethernet"]["enum"];
-                    } else if (point["Device Port"].Value === "Port 2") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"];
-                    } else {
-                        point["Device Port"].Value = "Port 1";
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                    }
-                    point["Instance"].isDisplayable = true;
-                    point["Network Type"].isDisplayable = true;
-
-                    if (point["Network Type"].Value === "MS/TP") {
-                        point["Network Type"].eValue = enumsTemplatesJson.Enums["Network Types"]["MS/TP"]["enum"];
-                    } else if (point["Network Type"].Value === "IP") {
-                        point["Network Type"].eValue = enumsTemplatesJson.Enums["Network Types"]["IP"]["enum"];
-                    } else {
-                        point["Network Type"].Value = "Unknown";
-                        point["Network Type"].eValue = enumsTemplatesJson.Enums["Network Types"]["Unknown"]["enum"];
-                    }
-
-                    data.point = point;
-                    point = this.applyRemoteUnitTypeNetworkType(data);
-
-                } else if (point["Model Type"].Value === "Liebert" || point["Model Type"].Value === "Sierra Steam Meter" || point["Model Type"].Value === "Siemens Power Meter" || point["Model Type"].Value === "Ingersol Rand Intellysis" || point["Model Type"].Value === "PowerLogic 3000 Meter" || point["Model Type"].Value === "Generic Modbus" || point["Model Type"].Value === "PowerTraks 9000" || point["Model Type"].Value === "Programmable Modbus") {
-
-                    point["Device Port"].isDisplayable = true;
-                    point["Device Port"].ValueOptions = {
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"],
-                        "Port 2": enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"]
-                    };
-                    if (point["Device Port"].Value === "Port 2") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"];
-                    } else {
-                        point["Device Port"].Value = "Port 1";
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                    }
-
-                    point["Device Address"].Max = 254;
-
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-
-                } else if (point["Model Type"].Value === "MS3 RT" || point["Model Type"].Value === "MS 3 EEPROM" || point["Model Type"].Value === "MS 3 Flash" || point["Model Type"].Value === "MS 4 VAV") {
-
-                    point["Device Port"].isDisplayable = true;
-                    point["Device Port"].ValueOptions = {
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"],
-                        "Port 2": enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"]
-                    };
-                    if (point["Device Port"].Value === "Port 2") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"];
-                    } else {
-                        point["Device Port"].Value = "Port 1";
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                    }
-
-                } else if (point["Model Type"].Value === "N2 Device") {
-
-                    point["Device Port"].isDisplayable = true;
-                    point["Device Port"].ValueOptions = {
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"],
-                        "Port 2": enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"]
-                    };
-                    if (point["Device Port"].Value === "Port 2") {
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 2"]["enum"];
-                    } else {
-                        point["Device Port"].Value = "Port 1";
-                        point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                    }
-
-                    point["Device Address"].Max = 254;
-
-                } else {
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-
-                    // TODO Debug or production code?:
-                    console.log("Bad RMU Model Type:", point["Model Type"].Value, ", _id:", point._id, ", _devModel:", point._devModel);
-                }
-            } else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["BACnet Interface Device"]["enum"]) {
-
-                if (point["Model Type"].Value === "BACnet") {
-
-                    point["Device Port"].ValueOptions = {
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"]
-                    };
-                    point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-                    point["Device Port"].Value = "Port 1";
-
-                    point["Instance"].isDisplayable = true;
-
-                    point["Network Type"].isDisplayable = true;
-                    point["Network Type"].ValueOptions = {
-                        "Unknown": enumsTemplatesJson.Enums["Network Types"]["Unknown"]["enum"],
-                        "MS/TP": enumsTemplatesJson.Enums["Network Types"]["MS/TP"]["enum"]
-                    };
-                    if (point["Network Type"].Value === "MS/TP") {
-                        point["Network Type"].eValue = enumsTemplatesJson.Enums["Network Types"]["MS/TP"]["enum"];
-                    } else {
-                        point["Network Type"].Value = "Unknown";
-                        point["Network Type"].eValue = enumsTemplatesJson.Enums["Network Types"]["Unknown"]["enum"];
-                    }
-
-                    data.point = point;
-                    point = this.applyRemoteUnitTypeNetworkType(data);
-
-                } else {
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-
-                    // TODO Debug or production code?:
-                    console.log("Bad RMU Model Type:", point["Model Type"].Value, ", _id:", point._id, ", _devModel:", point._devModel);
-                }
-            }
-            // If Sierra steam meter, Siemens Power Meter, or Ingersol Rand device
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Sierra Steam Meter Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Siemens Power Meter Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Ingersol Rand Intellysis Device"]["enum"])) {
-
-                if (point["Model Type"].Value === "Sierra Steam Meter" || point["Model Type"].Value === "Siemens Power Meter" || point["Model Type"].Value === "Ingersol Rand Intellysis") {
-
-                    point["Device Port"].ValueOptions = {
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"]
-                    };
-                    point["Device Port"].Value = "Port 1";
-                    point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-
-                    point["Device Address"].Max = 254;
-
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-
-                } else {
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-
-                    // TODO Debug or production code?:
-                    console.log("Bad RMU Model Type:", point["Model Type"].Value, ", _id:", point._id, ", _devModel:", point._devModel);
-                }
-            }
-            // If MicroScan Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan Interface Device"]["enum"]) {
-                if (point["Model Type"].Value === "MS3 RT" || point["Model Type"].Value === "MS 3 EEPROM" || point["Model Type"].Value === "MS 3 Flash") {
-
-                    point["Device Port"].ValueOptions = {
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"]
-                    };
-                    point["Device Port"].Value = "Port 1";
-                    point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-
-                } else {
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-
-                    // TODO Debug or production code?:
-                    console.log("Bad RMU Model Type:", point["Model Type"].Value, ", _id:", point._id, ", _devModel:", point._devModel);
-                }
-            }
-            // If N2 Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["N2 Interface Device"]["enum"]) {
-                if (point["Model Type"].Value === "N2 Device") {
-
-                    point["Device Port"].ValueOptions = {
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"]
-                    };
-                    point["Device Port"].Value = "Port 1";
-                    point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-
-                    point["Device Address"].Max = 254;
-
-                } else {
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-
-                    // TODO Debug or production code?:
-                    console.log("Bad RMU Model Type:", point["Model Type"].Value, ", _id:", point._id, ", _devModel:", point._devModel);
-                }
-            }
-            // If Field Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Field Interface Device"]["enum"]) {
-                if (point["Model Type"].Value === "IFC Remote Unit") {
-
-                    point["Device Port"].ValueOptions = {
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"]
-                    };
-                    point["Device Port"].Value = "Port 1";
-                    point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-
-                    point["Device Address"].Max = 254;
-
-                } else {
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-
-                    // TODO Debug or production code?:
-                    console.log("Bad RMU Model Type:", point["Model Type"].Value, ", _id:", point._id, ", _devModel:", point._devModel);
-                }
-            }
-            // If Armstrong SteamEye Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Armstrong SteamEye Device"]["enum"]) {
-                if (point["Model Type"].Value === "ASE Remote Unit") {
-                    point["COV Period"].ValueType = 12;
-
-                    point["Device Port"].ValueOptions = {
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"]
-                    };
-                    point["Device Port"].Value = "Port 1";
-                    point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-
-                    point["Device Address"].Max = 65535;
-
-                } else {
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-
-                    // TODO Debug or production code?:
-                    console.log("Bad RMU Model Type:", point["Model Type"].Value, ", _id:", point._id, ", _devModel:", point._devModel);
-                }
-            }
-            // If Staefa Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Staefa Interface Device"]["enum"]) {
-                if (point["Model Type"].Value === "Smart II Remote Unit") {
-                    point["Device Port"].ValueOptions = {
-                        "Port 1": enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"]
-                    };
-                    point["Device Port"].Value = "Port 1";
-                    point["Device Port"].eValue = enumsTemplatesJson.Enums["Device Ports"]["Port 1"]["enum"];
-
-                    point["Device Address"].Max = 254;
-
-                } else {
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-
-                    // TODO Debug or production code?:
-                    console.log("Bad RMU Model Type:", point["Model Type"].Value, ", _id:", point._id, ", _devModel:", point._devModel);
-                }
+            obj.Utility.setPropsDisplayable(point, ["Device Port", "Poll Function", "Poll Register", "Device Address", "Ethernet IP Port", "Instance", "Network Segment", "Network Type", "Gateway", "Router Address"], false);
+            rmuOpt = obj.Utility.getRmuValueOptions(point._devModel);
+
+            if ((point._devModel === enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enums["Device Model Types"]["Unknown"]["enum"])) {
+                point._relPoint = enums.Reliabilities["Invalid Device Model Type"]["enum"];
+            } else if ((modelType === "Unknown") || (rmuOpt[modelType] === undefined)) {
+                point._relPoint = enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
             } else {
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
+                point._relPoint = enums.Reliabilities["No Fault"]["enum"];
 
-                // TODO Debug or production code?:
-                console.log("Bad Device Model Type:", point["Model Type"].Value, ", _id:", point._id, ", _devModel:", point._devModel);
+                ms5Dev = obj.Utility.checkMicroScan5Device(point);
+                if (ms5Dev) {
+                    point["Device Port"].isDisplayable = true;
+                    if (modelType === "BACnet") {
+                        point["Device Port"].ValueOptions = valOpt5;
+                    } else if (obj.Utility.checkModbusRMU(point)) {
+                        point["Device Port"].ValueOptions = valOpt5;
+                    } else if (obj.Utility.checkMicroScanRMU(point)) {
+                        point["Device Port"].ValueOptions = valOpt4;
+                    } else {
+                        point["Device Port"].ValueOptions = valOpt4;
+                    }
+                } else if (obj.Utility.checkMicroScan4Device(point)) {
+                    point["Device Port"].isDisplayable = true;
+                    if (modelType === "BACnet") {
+                        point["Device Port"].ValueOptions = valOpt3;
+                    } else if (obj.Utility.checkModbusRMU(point)) {
+                        point["Device Port"].ValueOptions = valOpt2;
+                    } else if (obj.Utility.checkMicroScanRMU(point)) {
+                        point["Device Port"].ValueOptions = valOpt2;
+                    } else {
+                        point["Device Port"].ValueOptions = valOpt2;
+                    }
+                } else {
+                    point["Device Port"].ValueOptions = {
+                        "Port 2": enums["Device Ports"]["Port 2"]["enum"]
+                    };
+                }
+                temp = point["Device Port"].ValueOptions[point["Device Port"].Value];
+                if (temp !== undefined) {
+                    point["Device Port"].eValue = temp;
+                } else {
+                    point["Device Port"].Value = "Port 2";
+                    point["Device Port"].eValue = enums["Device Ports"]["Port 2"]["enum"];
+                }
+                point["Device Address"].isDisplayable = true;
+
+                if (obj.Utility.checkMicroScanRMU(point) || (modelType === "IFC Remote Unit")) {
+                    point["Configure Device"].isDisplayable = true;
+                } else {
+                    point["Configure Device"].isDisplayable = false;
+                    point["Configure Device"].Value = false;
+
+                    if (obj.Utility.checkModbusRMU(point)) {
+                        if (modelType === "Programmable Modbus") {
+                            point["Poll Function"].isDisplayable = true;
+                            point["Poll Register"].isDisplayable = true;
+                        }
+                    } else if (modelType === "BACnet") {
+                        point.Instance.isDisplayable = true;
+                        point.Gateway.isDisplayable = ms5Dev;
+                        point["Network Type"].isDisplayable = true;
+                        temp = point["Network Type"].ValueOptions[point["Network Type"].Value];
+                        if (temp !== undefined) {
+                            point["Network Type"].eValue = temp;
+                        } else {
+                            point["Network Type"].Value = "Unknown";
+                            point["Network Type"].eValue = enums["Network Type"]["Unknown"]["enum"];
+                        }
+                        this.applyRemoteUnitNetworkType(point);
+                    }
+                }
             }
-            point = obj.EditChanges["Device Port"](data);
-            return point;
+            return obj.EditChanges["Device Port"](data);
         },
 
-        applyRemoteUnitTypeNetworkType: function(data) {
-            var point = data.point;
-
-            if (point["Network Type"].Value === "Unknown") {
-                point["Device Address"].isDisplayable = false;
-                point["Network Segment"].isDisplayable = false;
-                point["Ethernet IP Port"].isDisplayable = false;
-            } else if (point["Network Type"].Value === "MS/TP") {
-                point["Device Address"].isDisplayable = true;
-                point["Device Address"].Max = 127;
-                point["Network Segment"].isDisplayable = true;
-                point["Ethernet IP Port"].isDisplayable = false;
-            } else {
-                point["Device Address"].isDisplayable = true;
-                point["Device Address"].Max = -1;
-                point["Network Segment"].isDisplayable = true;
-                point["Ethernet IP Port"].isDisplayable = true;
-            }
-            return point;
-        },
-
-        applyAnalogInputTypeInputType: function(data) {
+        applyConversionTypeProperty: function(data) {
             var point = data.point,
-                ch = point["Channel"],
-                enums = enumsTemplatesJson.Enums,
-                valueTypes = enums["Value Types"];
+                disp,
+                ro,
+                prop = "Conversion Coefficient ",
+                propertyObject = data.propertyObject;
 
-            // If this is a SCADA IO device (if an RMU is defined it's not a SCADA IO)
-            if ((point._devModel === enums["Device Model Types"]["SCADA IO"]["enum"]) && (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0)) {
-                // If internal input is selected
-                if (point["Input Type"].Value === "Internal Input") {
-                    // Our channel property should be an enum; if it's not, then
-                    if (ch.ValueType !== valueTypes["Enum"]["enum"]) {
-                        ch.ValueType = valueTypes["Enum"]["enum"];
-                        ch.ValueOptions = {
-                            "9 - Battery Voltage": 9,
-                            "10 - Temperature (F)": 10,
-                            "11 - Power Input Voltage": 11,
-                            "12 - Power Input Current": 12,
-                            "13 - Power Consumption": 13
-                        };
-                        ch.eValue = 9;
-                        ch.Value = "9 - Battery Voltage";
-
-                        delete ch.Min;
-                        delete ch.Max;
-                    }
-                }
-                // Internal input is NOT selected; our channel property should be an unsigned; if it's not, then
-                else if (ch.ValueType !== valueTypes["Unsigned"]["enum"]) {
-                    ch.ValueType = valueTypes["Unsigned"]["enum"];
-                    ch.Min = 1;
-                    ch.Max = 8;
-                    ch.Value = 1;
-
-                    delete ch.ValueOptions;
-                    delete ch.eValue;
+            if (data.property !== "Conversion Type") {
+                propertyObject = obj.Utility.getPropertyObject("Conversion Type", data.point);
+            }
+            disp = propertyObject.isDisplayable;
+            ro = propertyObject.isReadOnly;
+            for (var i = 1; i < 5; i++) {
+                point[prop + i].isDisplayable = disp;
+                point[prop + i].isReadOnly = ro;
+            }
+            if (!!disp) {
+                if (propertyObject.Value === "Linear") {
+                    point[prop + 3].isDisplayable = false;
+                    point[prop + 4].isDisplayable = false;
+                } else if (propertyObject.Value !== "Cubic") {
+                    point[prop + 4].isDisplayable = false;
                 }
             }
             return point;
         },
 
-        applyAnalogInputTypeSensorPoint: function(data) {
+        applyAnalogInputSensorPoint: function(data) {
             var point = data.point,
                 refPoint = data.refPoint,
-                i,
-                prop;
+                prop = "Conversion Coefficient ";
 
             if (data.propertyObject.PointInst !== 0) {
                 point["Conversion Type"].isReadOnly = true;
                 point["Conversion Type"].eValue = refPoint["Conversion Type"].eValue;
                 point["Conversion Type"].Value = refPoint["Conversion Type"].Value;
 
-                for (i = 1; i < 5; i++) {
-                    prop = "Conversion Coefficient " + i;
-                    point[prop].isReadOnly = true;
-                    point[prop].Value = refPoint[prop].Value;
+                for (var i = 1; i < 5; i++) {
+                    point[prop + i].Value = refPoint[prop + i].Value;
                 }
             } else {
                 point["Conversion Type"].isReadOnly = false;
-
-                for (i = 1; i < 5; i++) {
-                    prop = "Conversion Coefficient " + i;
-                    point[prop].isReadOnly = false;
-                }
             }
-            point = this.applyConversionTypeProperty(data);
-            return point;
+            return obj.EditChanges.applyConversionTypeProperty(data);
         },
 
-        applyAnalogInputTypeDevModel: function(data) {
+        applyAnalogInputDevModel: function(data) {
             var point = data.point,
-                unsignedValueType = enumsTemplatesJson.Enums["Value Types"].Unsigned.enum,
-                enumValueType = enumsTemplatesJson.Enums["Value Types"].Enum.enum,
-                setupChannel = function(opts) {
-                    // opts is expected to be an object of the form:
-                    // {
-                    //     Min: <val>,
-                    //     Max: <val>
-                    // }
-                    var ch = point.Channel;
+                eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
+                eDev = enumsTemplatesJson.Enums["Device Model Types"],
+                setValOpt = obj.Utility.setupPropValueOptions,
+                setCh = obj.Utility.setChannelOptions,
+                inType = point["Input Type"],
+                ch = point.Channel,
+                sensorPoint = obj.Utility.getPropertyObject("Sensor Point", point);
 
-                    // Almost always the channel property is an unsigned value type, but at the time of this writing,
-                    // it can be an enum type if the device model type was SCADA IO and the input type property was 
-                    // set to an internal input.
+            obj.Utility.setPropsDisplayable(point, ["Input Type", "Channel", "Instance", "Read Only", "Modbus Order", "Poll Register", "Poll Data Type", "Poll Function"], false);
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
+                switch (point._rmuModel) {
+                    case eRmu["Programmable Modbus"]["enum"]:
+                        point["Poll Function"].isDisplayable = true;
+                        point["Poll Register"].isDisplayable = true;
+                        point["Modbus Order"].isDisplayable = true;
+                        point["Poll Data Type"].isDisplayable = true;
+                        break;
 
-                    ch.isDisplayable = true;
-                    ch.Min = opts.Min;
-                    ch.Max = opts.Max;
+                    case eRmu["Liebert"]["enum"]:
+                    case eRmu["Sierra Steam Meter"]["enum"]:
+                    case eRmu["Siemens Power Meter"]["enum"]:
+                    case eRmu["Ingersol Rand Intellysis"]["enum"]:
+                    case eRmu["PowerLogic 3000 Meter"]["enum"]:
+                    case eRmu["Generic Modbus"]["enum"]:
+                    case eRmu["PowerTraks 9000"]["enum"]:
+                        point["Modbus Order"].isDisplayable = true;
+                        point["Poll Data Type"].isDisplayable = true;
+                        break;
 
-                    // If the channel was setup as something other than unsigned type
-                    if (ch.ValueType !== unsignedValueType) {
-                        delete ch.ValueOptions;
-                        delete ch.eValue;
-                        ch.Value = ch.Min;
-                    }
-
-                    // Limit check the channel value
-                    if (ch.Value < ch.Min)
-                        ch.Value = ch.Min;
-                    else if (ch.Value > ch.Max)
-                        ch.Value = ch.Max;
-
-                    ch.ValueType = unsignedValueType;
-                },
-                setupInputType = function(ValueOptions) {
-                    var inputType = point["Input Type"],
-                        key = Object.keys(ValueOptions)[0],
-                        eValue = inputType.eValue;
-
-                    inputType.isDisplayable = true;
-                    inputType.ValueOptions = ValueOptions;
-
-                    for(var prop in ValueOptions){
-                        if(ValueOptions[prop] === eValue){
-                            inputType.Value = prop;
-                            return;
+                    case eRmu["BACnet"]["enum"]:
+                        point.Instance.isDisplayable = true;
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Read Only"].isDisplayable = true;
                         }
-                    }
-                    // unknown eValue
-                    inputType.Value = key;
-                    inputType.eValue = ValueOptions[key];
-                };
+                        break;
 
-            // If unknown or central device model type 
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"])) {
+                    case eRmu["MS 4 VAV"]["enum"]:
+                        setValOpt(inType, {
+                            "Normal": 0,
+                            "Inverted": 2,
+                            "Velocity": 3
+                        });
+                        setValOpt(ch, {
+                            "1 - Zone Temperature": 1,
+                            "2 - Setpoint Adjust": 2,
+                            "3 - Supply Temperature": 3,
+                            "Auxiliary": 4,
+                            "Air Volume": 5
+                        });
+                        break;
 
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"]; // Set reliability to 'invalid device model type'
+                    case eRmu["MS3 RT"]["enum"]:
+                    case eRmu["MS 3 EEPROM"]["enum"]:
+                    case eRmu["MS 3 Flash"]["enum"]:
+                        setValOpt(inType, {
+                            "Normal": 0,
+                            "Inverted": 2,
+                            "Velocity": 3
+                        });
+                        setCh(ch, 0, 7);
+                        break;
+
+                    case eRmu["N2 Device"]["enum"]:
+                        point.Instance.isDisplayable = true;
+                        break;
+
+                    case eRmu["IFC Remote Unit"]["enum"]:
+                        setValOpt(inType, {
+                            "High Resistance": 0,
+                            "High Voltage": 1,
+                            "Low Resistance": 2,
+                            "Low Voltage": 3
+                        });
+                        setCh(ch, 0, 15);
+                        break;
+
+                    case eRmu["Smart II Remote Unit"]["enum"]:
+                        setCh(ch, 0, 7);
+                        break;
+
+                    default: // Unknown, no RMU
+                        switch (point._devModel) {
+                            case eDev["MicroScan 5 UNV"]["enum"]:
+                                setValOpt(inType, {
+                                    "Resistance": 0,
+                                    "5 Volt": 1,
+                                    "10 Volt": 2,
+                                    "20 mA SP": 3,
+                                    "20 mA LP": 4,
+                                    "Rate Input": 5
+                                });
+                                setCh(ch, 1, 16);
+                                break;
+                            case eDev["SCADA Vio"]["enum"]:
+                                setValOpt(inType, {
+                                    "20 mA SP": 3,
+                                    "Rate Input": 5
+                                });
+                                setCh(ch, 1, 2);
+                                break;
+                            case eDev["SCADA IO"]["enum"]:
+                                setValOpt(inType, {
+                                    "10 Volts": 2,
+                                    "20 mA": 3,
+                                    "Rate Input": 5
+                                });
+                                setValOpt(ch, {
+                                    "I/O 1": 1,
+                                    "I/O 2": 2,
+                                    "I/O 3": 3,
+                                    "I/O 4": 4,
+                                    "I/O 5": 5,
+                                    "I/O 6": 6,
+                                    "I/O 7": 7,
+                                    "I/O 8": 8,
+                                    "Battery Voltage": 9,
+                                    "Temperature": 10,
+                                    "Power Voltage": 11,
+                                    "Power Current": 12,
+                                    "Power Consumption": 13
+                                });
+                                break;
+                            case eDev["MicroScan 4 UNV"]["enum"]:
+                                setValOpt(inType, {
+                                    "Normal": 0,
+                                    "Rate Input": 1
+                                });
+                                setCh(ch, 1, 16);
+                                break;
+                            default: // MicroScan 4 Digital
+                                setValOpt(inType, {
+                                    "Rate Input": 1
+                                });
+                                setCh(ch, 1, 32);
+                                break;
+                        }
+                        break;
+                }
+            }
+
+            if (!!point.Instance.isDisplayable) {
+                sensorPoint.isDisplayable = false;
+                point["Conversion Type"].isDisplayable = false;
+            } else {
+                sensorPoint.isDisplayable = true;
+                point["Conversion Type"].isDisplayable = true;
+                point["Conversion Type"].isReadOnly = (sensorPoint.PointInst !== 0) ? true : false;
+            }
+            return obj.EditChanges.applyConversionTypeProperty(data);
+        },
+
+        applyBinaryInputFeedbackPoint: function(data) {
+            var point = data.point;
+
+            if (data.propertyObject.PointInst !== 0) {
+
+                point["Feedback Polarity"].isDisplayable = true;
+                point["Alarm Value"].isDisplayable = false;
             } else {
 
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]; // Set reliability to 'no fault'                  
-            }
-
-            point.Instance.isDisplayable = false;
-            point.Channel.isDisplayable = false;
-
-            point["VAV Channel"].isDisplayable = false;
-            point["VAV Channel"].ValueOptions = {
-                "1 - Zone Temperature": 1,
-                "2 - Setpoint Adjust": 2,
-                "3 - Supply Temperature": 3,
-                "4 - Auxiliary": 4,
-                "5 - Air Volume": 5
-            };
-
-            point["Input Type"].isDisplayable = false;
-            point["Poll Data Type"].isDisplayable = false;
-            point["Poll Function"].isDisplayable = false;
-            point["Poll Register"].isDisplayable = false;
-            point["Modbus Order"].isDisplayable = false;
-            obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = false;
-            point["Conversion Type"].isDisplayable = false;
-            point["Conversion Coefficient 1"].isDisplayable = false;
-            point["Conversion Coefficient 2"].isDisplayable = false;
-            point["Conversion Coefficient 3"].isDisplayable = false;
-            point["Conversion Coefficient 4"].isDisplayable = false;
-
-            // If Device type uknown, Central device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, or SCADA IO
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
-
-                // If no RMU defined for this point
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    // If MicroScan 5 xTalk
-                    if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) {
-
-                        point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                    }
-                    // Else if SCADA Vio
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) {
-
-                        setupChannel({
-                            Min: 1,
-                            Max: 2
-                        });
-
-                        setupInputType({
-                            "20 mA SP": 3,
-                            "Rate Input": 5
-                        });
-
-                        obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                        point["Conversion Type"].isDisplayable = true;
-
-                        // Applying Sensor Logic
-                        data.point = point;
-                        return data.point;
-                    }
-                    // Else if SCADA IO
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"]) {
-                        setupChannel({
-                            Min: 1,
-                            Max: 8
-                        });
-
-                        setupInputType({
-                            "10 Volts": 2,
-                            "20 mA": 3,
-                            "Rate Input": 5,
-                            "Internal Input": 6
-                        });
-
-                        obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                        point["Conversion Type"].isDisplayable = true;
-
-                        // Applying Sensor Logic
-                        data.point = point;
-                        return data.point;
-
-                    }
-                    // Must be MS5-UNV or central (no device assigned)
-                    else {
-
-                        setupChannel({
-                            Min: 1,
-                            Max: 16
-                        });
-
-                        setupInputType({
-                            "Resistance": 0,
-                            "5 Volt": 1,
-                            "10 Volt": 2,
-                            "20 mA SP": 3,
-                            "20 mA LP": 4,
-                            "Rate Input": 5
-                        });
-
-                        obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                        point["Conversion Type"].isDisplayable = true;
-
-                        // Applying Sensor Logic
-                        data.point = point;
-                        return data.point;
-                    }
-                }
-                // An RMU is defined for this point.  If BACnet or N2,
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // If RMU is Liebert, Sierra Steam Meter, Siemens Power Meter, Ingersol Rand Intellysis, PowerLogics 3000, Generic Modbus, PowerTraks 9000, Programmable Modbus
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Liebert"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerLogic 3000 Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Generic Modbus"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerTraks 9000"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"])) {
-
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                    point["Modbus Order"].isDisplayable = true;
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Type"].isDisplayable = true;
-
-                    // Applying Sensor Logic
-                    data.point = point;
-                    return data.point;
-                }
-                // If MS3 RT, MS3 EEPROM, MS3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point["Channel"].isDisplayable = true;
-                    point["Channel"].Max = 7;
-                    point["Channel"].Min = 0;
-
-                    setupInputType({
-                        "Normal": 0,
-                        "Inverted": 2,
-                        "Velocity": 3
-                    });
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Type"].isDisplayable = true;
-
-                    // Applying Sensor Logic
-                    data.point = point;
-                    return data.point;
-                }
-                // MS4-VAV
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) {
-
-                    point["VAV Channel"].isDisplayable = true;
-
-                    setupInputType({
-                        "Normal": 0,
-                        "Inverted": 2,
-                        "Velocity": 3
-                    });
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Type"].isDisplayable = true;
-
-                    // Applying Sensor Logic
-                    data.point = point;
-                    return data.point;
-                }
-                // Invalid RMU type
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"]; // Set reliability to 'Invalid Remote Unit Model Type'
-                }
-            }
-            // If MicroScan 4 UNV, MicroScan 4 xTalk, or MicroScan 4 Digital device
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"])) {
-
-                // If no RMU defined for this point
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    // If MicroScan 4 xTalk
-                    if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) {
-
-                        point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                    }
-                    // Else if MicroScan 4 Digital
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"]) {
-
-                        setupChannel({
-                            Min: 1,
-                            Max: 32
-                        });
-
-                        setupInputType({
-                            "Rate Input": 1
-                        });
-
-                        obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                        point["Conversion Type"].isDisplayable = true;
-
-                        // Applying Sensor Logic
-                        data.point = point;
-                        return data.point;
-                    }
-                    // Must be MS4-UNV
-                    else {
-
-                        setupChannel({
-                            Min: 1,
-                            Max: 16
-                        });
-
-                        setupInputType({
-                            "Normal": 0,
-                            "Rate Input": 1
-                        });
-
-                        obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                        point["Conversion Type"].isDisplayable = true;
-
-                        // Applying Sensor Logic
-                        data.point = point;
-                        return data.point;
-                    }
-                }
-                // An RMU is defined for this point.  If BACnet or N2,
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // If Liebert, Sierra Steam Meter, Siemens Power Meter, Ingersol Rand Intellysis, PowerLogics 3000, Generic Modbus, PowerTraks 9000, Programmable Modbus
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Liebert"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerLogic 3000 Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Generic Modbus"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerTraks 9000"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"])) {
-
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Type"].isDisplayable = true;
-
-                    // Applying Sensor Logic
-                    data.point = point;
-                    return data.point;
-                }
-                // If MS3 RT, MS3 EEPROM, MS3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    setupChannel({
-                        Min: 0,
-                        Max: 7
-                    });
-
-                    setupInputType({
-                        "Normal": 0,
-                        "Inverted": 2,
-                        "Velocity": 3
-                    });
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Type"].isDisplayable = true;
-
-                    // Applying Sensor Logic
-                    data.point = point;
-                    return data.point;
-                }
-                // MS4-VAV
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) {
-
-                    point["VAV Channel"].isDisplayable = true;
-
-                    setupInputType({
-                        "Normal": 0,
-                        "Inverted": 2,
-                        "Velocity": 3
-                    });
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Type"].isDisplayable = true;
-
-                    // Applying Sensor Logic
-                    data.point = point;
-                    return data.point;
-                }
-                // Invalid RMU type
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If BACnet Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["BACnet Interface Device"]["enum"]) {
-
-                // If no Remote Unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"]; // Set reliability to 'Invalid Remote Unit Model Type'
-                }
-                // RMU defined.  If BACnet RMU
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // Invalid RMU
-                else
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-            }
-            // If Sierra Steam Meter Device, Siemens Power Meter Device, or Ingersol Rand Intellysis Device
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Sierra Steam Meter Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Siemens Power Meter Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Ingersol Rand Intellysis Device"]["enum"])) {
-
-                // If no remote unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // RMU defined.  If Sierra Steam Meter, Siemens Power Meter, or Ingersol Rand RMU
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"])) {
-
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Type"].isDisplayable = true;
-
-                    // Applying Sensor Logic
-                    data.point = point;
-                    return data.point;
-                }
-                // Invalid RMU
-                else
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-            }
-            // MicroScan Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan Interface Device"]["enum"]) {
-
-                // If no remote unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // If MS3 RT, MS3 EEPROM, MS3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    setupChannel({
-                        Min: 0,
-                        Max: 7
-                    });
-
-                    setupInputType({
-                        "Normal": 0,
-                        "Inverted": 2,
-                        "Velocity": 3
-                    });
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Type"].isDisplayable = true;
-
-                    // Applying Sensor Logic
-                    data.point = point;
-                    return data.point;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // N2 Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["N2 Interface Device"]["enum"]) {
-
-                // If no remote unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // If N2 Device type
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // Field Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Field Interface Device"]["enum"]) {
-
-                // If no remote unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // If IFC Remote Unit type
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["IFC Remote Unit"]["enum"]) {
-
-                    setupChannel({
-                        Min: 0,
-                        Max: 15
-                    });
-
-                    setupInputType({
-                        "High Resistance": 0,
-                        "High Voltage": 1,
-                        "Low Resistance": 2,
-                        "Low Voltage": 3
-                    });
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Type"].isDisplayable = true;
-
-                    // Applying Sensor Logic
-                    data.point = point;
-                    return data.point;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // Armstrong SteamEye Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Armstrong SteamEye Device"]["enum"]) {
-
-                // If no remote unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // If ASE RMU
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["ASE Remote Unit"]["enum"]) {
-
-                    setupChannel({
-                        Min: 0,
-                        Max: 255
-                    });
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Type"].isDisplayable = true;
-
-                    // Applying Sensor Logic
-                    data.point = point;
-                    return data.point;
-                }
-                // Invalid RMU
-                else {
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // Staefa Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Staefa Interface Device"]["enum"]) {
-
-                // If no remote unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // If Smart II Remote Unit
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Smart II Remote Unit"]["enum"]) {
-
-                    setupChannel({
-                        Min: 0,
-                        Max: 7
-                    });
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Type"].isDisplayable = true;
-
-                    // Applying Sensor Logic
-                    data.point = point;
-                    return data.point;
-                }
-                // Invalid RMU
-                else {
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // Invalid device type
-            else {
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
+                point["Feedback Polarity"].isDisplayable = false;
+                point["Alarm Value"].isDisplayable = true;
             }
             return point;
         },
 
-        applyAnalogOutputTypeSensorPoint: function(data) {
+        applyBinaryInputInputType: function(data) {
+            var point = data.point,
+                type = point["Input Type"];
+
+            point["Momentary Delay"].isDisplayable = (type.isDisplayable && (type.Value === "Momentary")) ? true : false;
+            return point;
+        },
+
+        applyBinaryInputDevModel: function(data) {
+            var point = data.point,
+                eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
+                eDev = enumsTemplatesJson.Enums["Device Model Types"],
+                setValOpt = obj.Utility.setupPropValueOptions,
+                setCh = obj.Utility.setChannelOptions,
+                ch = point.Channel,
+                type = point["Input Type"];
+
+            obj.Utility.setPropsDisplayable(point, ["Input Type", "Channel", "Instance", "Read Only", "Modbus Order", "Poll Register", "Poll Data Type", "Poll Function", "Supervised Input"], false);
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
+                switch (point._rmuModel) {
+                    case eRmu["Programmable Modbus"]["enum"]:
+                        point["Poll Function"].isDisplayable = true;
+                        point["Poll Register"].isDisplayable = true;
+                        point["Modbus Order"].isDisplayable = true;
+                        point["Poll Data Type"].isDisplayable = true;
+                        break;
+
+                    case eRmu["Liebert"]["enum"]:
+                    case eRmu["Sierra Steam Meter"]["enum"]:
+                    case eRmu["Siemens Power Meter"]["enum"]:
+                    case eRmu["Ingersol Rand Intellysis"]["enum"]:
+                    case eRmu["PowerLogic 3000 Meter"]["enum"]:
+                    case eRmu["Generic Modbus"]["enum"]:
+                    case eRmu["PowerTraks 9000"]["enum"]:
+                        point["Modbus Order"].isDisplayable = true;
+                        point["Poll Data Type"].isDisplayable = true;
+                        break;
+
+                    case eRmu["BACnet"]["enum"]:
+                        point.Instance.isDisplayable = true;
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Read Only"].isDisplayable = true;
+                        }
+                        break;
+
+                    case eRmu["MS 4 VAV"]["enum"]:
+                        setValOpt(ch, {
+                            "1 - Occupancy Override": 1,
+                            "2 - Occupancy Sensor": 2
+                        });
+                        break;
+
+                    case eRmu["MS3 RT"]["enum"]:
+                    case eRmu["MS 3 EEPROM"]["enum"]:
+                    case eRmu["MS 3 Flash"]["enum"]:
+                        point["Supervised Input"].isDisplayable = true;
+                        setCh(ch, 0, 7);
+                        break;
+
+                    case eRmu["N2 Device"]["enum"]:
+                        point.Instance.isDisplayable = true;
+                        break;
+
+                    case eRmu["IFC Remote Unit"]["enum"]:
+                        point["Supervised Input"].isDisplayable = true;
+                        setCh(ch, 0, 15);
+                        break;
+
+                    case eRmu["Smart II Remote Unit"]["enum"]:
+                        setCh(ch, 0, 7);
+                        break;
+
+                    default: // Unknown, no RMU
+                        switch (point._devModel) {
+                            case eDev["MicroScan 5 UNV"]["enum"]:
+                                setValOpt(type, {
+                                    "Latch": 0,
+                                    "Momentary": 1,
+                                    "Pulse": 2
+                                });
+                                setCh(ch, 1, 16);
+                                break;
+                            case eDev["SCADA Vio"]["enum"]:
+                                setValOpt(type, {
+                                    "Latch": 0,
+                                    "Momentary": 1,
+                                    "Pulse": 2
+                                });
+                                setCh(ch, 1, 9);
+                                break;
+                            case eDev["SCADA IO"]["enum"]:
+                                setValOpt(type, {
+                                    "Latch": 0,
+                                    "Momentary": 1,
+                                    "Pulse": 2
+                                });
+                                setValOpt(ch, {
+                                    "I/O 1": 1,
+                                    "I/O 2": 2,
+                                    "I/O 3": 3,
+                                    "I/O 4": 4,
+                                    "I/O 5": 5,
+                                    "I/O 6": 6,
+                                    "I/O 7": 7,
+                                    "I/O 8": 8
+                                });
+                                break;
+                            case eDev["MicroScan 4 UNV"]["enum"]:
+                                setValOpt(type, {
+                                    "Latch": 0,
+                                    "Momentary": 1
+                                });
+                                setCh(ch, 1, 16);
+                                break;
+                            default: // MicroScan 4 Digital
+                                setValOpt(type, {
+                                    "Latch": 0,
+                                    "Momentary": 1
+                                });
+                                setCh(ch, 1, 32);
+                                break;
+                        }
+                        break;
+                }
+            }
+            if (obj.Utility.getPropertyObject("Feedback Point", point).PointInst !== 0) {
+
+                point["Feedback Polarity"].isDisplayable = true;
+                point["Alarm Value"].isDisplayable = false;
+            } else {
+
+                point["Feedback Polarity"].isDisplayable = false;
+                point["Alarm Value"].isDisplayable = true;
+            }
+            return obj.EditChanges.applyBinaryInputInputType(data);
+        },
+
+        applyAnalogOutputSensorPoint: function(data) {
             var point = data.point,
                 refPoint = data.refPoint;
 
@@ -5107,2308 +4437,816 @@ var Config = (function(obj) {
             return point;
         },
 
-        applyAnalogOutputTypeOutputType: function(data) {
-            var point = data.point;
+        applyAnalogOutputOutputType: function(data) {
+            var point = data.point,
+                eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
+                eDev = enumsTemplatesJson.Enums["Device Model Types"],
+                min,
+                max,
+                setCh = obj.Utility.setChannelOptions,
+                setValOpt = obj.Utility.setupPropValueOptions,
+                val = point["Output Type"].isDisplayable,
+                ch = point["Channel"],
+                och = point["Open Channel"],
+                cch = point["Close Channel"];
 
-            point["Close Channel"].isDisplayable = false;
-            point["Open Channel"].isDisplayable = false;
-            point["VAV Channel"].isDisplayable = false;
-            point.Channel.isDisplayable = false;
-            point.Polarity.isDisplayable = false;
+            obj.Utility.setPropsDisplayable(point, ["Open Channel", "Channel", "Close Channel", "Polarity"], false);
 
-            if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) {
-                point["VAV Channel"].isDisplayable = true;
-            }
-            // If this is an AO using DO channels
-            else if ((point["Output Type"].Value === "Pulsed") || (point["Output Type"].Value === "Pulse Width")) {
-                point.Polarity.isDisplayable = true; // Polarity is always visible in Pulsed and Pulse Width modes
-                point.Polarity.isReadOnly = false; // Ensure user can edit the polarity
-
-                if (point["Output Type"].Value === "Pulsed") { // Pulsed uses the open and close channels
-                    point.Channel.isDisplayable = false; // Pulsed uses 2 channels; hide this one
-
-                    point["Close Channel"].isDisplayable = true;
-                    point["Open Channel"].isDisplayable = true;
-                } else { // Pulse width mode
-                    point.Channel.isDisplayable = true; // Pulsed mode uses one channel
+            if (val) {
+                val = point["Output Type"].Value;
+                if ((val === "Pulsed") || (val === "Pulse Width")) {
+                    point.Polarity.isDisplayable = true;
                 }
-            }
-            // This is a non-VAV AO using AO channels
-            else {
-                point.Channel.isDisplayable = true;
+                switch (point._rmuModel) {
+                    case eRmu["MS 4 VAV"]["enum"]:
+                        setValOpt(ch, {
+                            "1 - Damper": 1,
+                            "2 - Reheat": 2
+                        });
+                        max = -1;
+                        break;
+
+                    case eRmu["MS3 RT"]["enum"]:
+                    case eRmu["MS 3 EEPROM"]["enum"]:
+                    case eRmu["MS 3 Flash"]["enum"]:
+                        min = 0;
+                        max = (val === "Analog") ? 3 : 7;
+                        break;
+
+                    case eRmu["Smart II Remote Unit"]["enum"]:
+                        min = 0;
+                        max = 7;
+                        break;
+
+                    case eRmu["IFC Remote Unit"]["enum"]:
+                        min = 0;
+                        max = (val === "Analog") ? 3 : 15;
+                        break;
+
+                    default: // Unknown, no RMU
+                        min = 1;
+                        switch (point._devModel) {
+                            case eDev["SCADA IO"]["enum"]:
+                                if (val === "Pulsed") {
+                                    setValOpt(och, {
+                                        "I/O 1": 1,
+                                        "I/O 2": 2,
+                                        "I/O 3": 3,
+                                        "I/O 4": 4,
+                                        "I/O 5": 5,
+                                        "I/O 6": 6,
+                                        "I/O 7": 7,
+                                        "I/O 8": 8
+                                    });
+                                    setValOpt(cch, {
+                                        "I/O 1": 1,
+                                        "I/O 2": 2,
+                                        "I/O 3": 3,
+                                        "I/O 4": 4,
+                                        "I/O 5": 5,
+                                        "I/O 6": 6,
+                                        "I/O 7": 7,
+                                        "I/O 8": 8
+                                    });
+                                } else {
+                                    setValOpt(ch, {
+                                        "I/O 1": 1,
+                                        "I/O 2": 2,
+                                        "I/O 3": 3,
+                                        "I/O 4": 4,
+                                        "I/O 5": 5,
+                                        "I/O 6": 6,
+                                        "I/O 7": 7,
+                                        "I/O 8": 8
+                                    });
+                                }
+                                max = -1;
+                                break;
+                            case eDev["MicroScan 5 UNV"]["enum"]:
+                            case eDev["MicroScan 4 UNV"]["enum"]:
+                                max = 8;
+                                break;
+                            case eDev["SCADA Vio"]["enum"]:
+                                max = 5;
+                                break;
+                            default: // MicroScan 4 Digital
+                                max = 32;
+                                break;
+                        }
+                        break;
+                }
+                if (max >= 0) {
+                    if (val === "Pulsed") {
+                        setCh(och, min, max);
+                        setCh(cch, min, max);
+                    } else {
+                        setCh(ch, min, max);
+                    }
+                }
             }
             return point;
         },
 
-        applyAnalogOutputTypeDevModel: function(data) {
-            var point = data.point;
+        applyAnalogOutputDevModel: function(data) {
+            var point = data.point,
+                eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
+                eDev = enumsTemplatesJson.Enums["Device Model Types"],
+                setValOpt = obj.Utility.setupPropValueOptions,
+                opts = {
+                    "Analog": 0,
+                    "Pulse Width": 1,
+                    "Pulsed": 2
+                },
+                outType = point["Output Type"],
+                sensorPoint = obj.Utility.getPropertyObject("Sensor Point", point);
 
-            // If unknown or central device model type
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"])) {
+            obj.Utility.setPropsDisplayable(point, ["Instance", "Read Only", "Output Type", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "Control Data Type", "Control Function", "Control Register", "Open Channel", "Channel", "Close Channel", "Polarity"], false);
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
+                switch (point._rmuModel) {
+                    case eRmu["Programmable Modbus"]["enum"]:
+                        obj.Utility.setPropsDisplayable(point, ["Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "Control Data Type", "Control Function", "Control Register"], true);
+                        break;
 
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
-            } else {
+                    case eRmu["Liebert"]["enum"]:
+                    case eRmu["Sierra Steam Meter"]["enum"]:
+                    case eRmu["Siemens Power Meter"]["enum"]:
+                    case eRmu["Ingersol Rand Intellysis"]["enum"]:
+                    case eRmu["PowerLogic 3000 Meter"]["enum"]:
+                    case eRmu["Generic Modbus"]["enum"]:
+                    case eRmu["PowerTraks 9000"]["enum"]:
+                        point["Modbus Order"].isDisplayable = true;
+                        point["Poll Data Type"].isDisplayable = true;
+                        break;
 
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"];
-            }
+                    case eRmu["BACnet"]["enum"]:
+                        point.Instance.isDisplayable = true;
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Read Only"].isDisplayable = true;
+                        }
+                        break;
 
-            obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = false;
-            point["Conversion Coefficient 1"].isDisplayable = false;
-            point["Conversion Coefficient 2"].isDisplayable = false;
-            point.Instance.isDisplayable = false;
-            point["Modbus Order"].isDisplayable = false;
-            point["Poll Data Type"].isDisplayable = false;
-            point["Poll Function"].isDisplayable = false;
-            point["Poll Register"].isDisplayable = false;
-            point["Control Data Type"].isDisplayable = false;
-            point["Control Function"].isDisplayable = false;
-            point["Control Register"].isDisplayable = false;
-            point["Output Type"].isDisplayable = false;
-            point["Open Channel"].isDisplayable = false;
-            point["Close Channel"].isDisplayable = false;
-            point.Channel.isDisplayable = false;
-            point.Polarity.isDisplayable = false;
-            point["VAV Channel"].isDisplayable = false;
-            point["VAV Channel"].ValueOptions = {
-                "1 - Damper": 1,
-                "2 - Reheat": 2
-            };
+                    case eRmu["N2 Device"]["enum"]:
+                        point.Instance.isDisplayable = true;
+                        break;
 
-            // If Device type uknown, Central device, MicroScan 5 xTalk, MicroScan 5 UNV, or SCADA Vio or SCADA IO
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
+                    case eRmu["MS 4 VAV"]["enum"]:
+                    case eRmu["MS3 RT"]["enum"]:
+                    case eRmu["MS 3 EEPROM"]["enum"]:
+                    case eRmu["MS 3 Flash"]["enum"]:
+                    case eRmu["IFC Remote Unit"]["enum"]:
+                        setValOpt(outType, opts);
+                        break;
 
-                // If this point is not on an RMU
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
+                    case eRmu["Smart II Remote Unit"]["enum"]:
+                        setValOpt(outType, {
+                            "Analog": 0
+                        });
+                        break;
 
-                    // If MicroScan 5 xTalk
-                    if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) {
+                    default: // Unknown, no RMU
+                        switch (point._devModel) {
+                            case eDev["MicroScan 5 UNV"]["enum"]:
+                                setValOpt(outType, {
+                                    "0 to 5 Volt": 0,
+                                    "0 to 10 Volt": 3,
+                                    "0 to 20 mA": 4,
+                                    "Pulse Width": 1,
+                                    "Pulsed": 2
+                                });
+                                break;
 
-                        point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
+                            case eDev["SCADA Vio"]["enum"]:
+                                setValOpt(outType, {
+                                    "Pulse Width": 1,
+                                    "Pulsed": 2
+                                });
+                                break;
+
+                            case eDev["SCADA IO"]["enum"]:
+                                setValOpt(outType, {
+                                    "0 to 10 Volt": 3,
+                                    "0 to 20 mA": 4,
+                                    "Pulse Width": 1,
+                                    "Pulsed": 2
+                                });
+                                break;
+
+                            case eDev["MicroScan 4 UNV"]["enum"]:
+                                setValOpt(outType, opts);
+                                break;
+
+                            default: // MicroScan 4 Digital
+                                setValOpt(outType, {
+                                    "Pulse Width": 1,
+                                    "Pulsed": 2
+                                });
+                                break;
+                        }
+                        break;
+                }
+                if (point.Instance.isDisplayable) {
+                    sensorPoint.isDisplayable = false;
+                    point["Conversion Coefficient 1"].isDisplayable = false;
+                    point["Conversion Coefficient 2"].isDisplayable = false;
+                } else {
+                    sensorPoint.isDisplayable = true;
+                    point["Conversion Coefficient 1"].isDisplayable = true;
+                    point["Conversion Coefficient 2"].isDisplayable = true;
+                    if (sensorPoint.PointInst !== 0) {
+                        point["Conversion Coefficient 1"].isReadOnly = true;
+                        point["Conversion Coefficient 2"].isReadOnly = true;
+                    } else {
+                        point["Conversion Coefficient 1"].isReadOnly = false;
+                        point["Conversion Coefficient 2"].isReadOnly = false;
                     }
-                    // Else if SCADA Vio
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) {
-
-                        obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-
-                        point["Conversion Coefficient 1"].isDisplayable = true;
-                        point["Conversion Coefficient 2"].isDisplayable = true;
-
-                        point["Output Type"].isDisplayable = true;
-                        point["Output Type"].ValueOptions = {
-                            "Pulse Width": 1,
-                            "Pulsed": 2
-                        };
-
-                        point["Open Channel"].Max = 5;
-                        point["Open Channel"].Min = 1;
-
-                        point["Close Channel"].Max = 5;
-                        point["Close Channel"].Min = 1;
-
-                        data.point = point;
-                        data.point = this.applyAnalogOutputTypeOutputType(data);
-                        return data.point;
-                    }
-                    // Else if SCADA IO
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"]) {
-                        obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-
-                        point["Conversion Coefficient 1"].isDisplayable = true;
-                        point["Conversion Coefficient 2"].isDisplayable = true;
-
-                        point["Output Type"].isDisplayable = true;
-                        point["Output Type"].ValueOptions = {
-                            "0 to 10 Volt": 3,
-                            "0 to 20 mA": 4,
-                            "Pulse Width": 1,
-                            "Pulsed": 2
-                        };
-
-                        point["Open Channel"].Max = 5;
-                        point["Open Channel"].Min = 1;
-
-                        point["Close Channel"].Max = 5;
-                        point["Close Channel"].Min = 1;
-
-                        data.point = point;
-                        data.point = this.applyAnalogOutputTypeOutputType(data);
-                        return data.point;
-                    }
-                    // Must be a MicroScan 5 UNV
-                    else {
-
-                        obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-
-                        point["Conversion Coefficient 1"].isDisplayable = true;
-                        point["Conversion Coefficient 2"].isDisplayable = true;
-
-                        point["Output Type"].isDisplayable = true;
-                        point["Output Type"].ValueOptions = {
-                            // "0 to 5 Volt": 0,
-                            // "Pulse Width": 1,
-                            // "Pulsed": 2,
-                            // "0 to 10 Volt": 3,
-                            // "0 to 20 mA": 4
-                            // JDR - 2.21.2013 - reordering the list for UI purposes
-                            "0 to 5 Volt": 0,
-                            "0 to 10 Volt": 3,
-                            "0 to 20 mA": 4,
-                            "Pulse Width": 1,
-                            "Pulsed": 2
-                        };
-
-                        point["Open Channel"].Max = 8;
-                        point["Open Channel"].Min = 1;
-
-                        point["Close Channel"].Max = 8;
-                        point["Close Channel"].Min = 1;
-
-
-                        data.point = point;
-                        data.point = this.applyAnalogOutputTypeOutputType(data);
-                        return data.point;
+                    if (outType.isDisplayable) {
+                        obj.EditChanges.applyAnalogOutputOutputType(data);
                     }
                 }
-                // An RMU is defined for this point.  If BACnet or N2,
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // If Liebert, Sierra Steam Meter, Siemens Power Meter, Ingersol Rand Intellysis, PowerLogics 3000, Generic Modbus, PowerTraks 9000, Programmable Modbus
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Liebert"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerLogic 3000 Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Generic Modbus"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerTraks 9000"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"])) {
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Coefficient 1"].isDisplayable = true;
-                    point["Conversion Coefficient 2"].isDisplayable = true;
-
-                    point["Modbus Order"].isDisplayable = true;
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                    point["Control Data Type"].isDisplayable = true;
-                    point["Control Function"].isDisplayable = true;
-                    point["Control Register"].isDisplayable = true;
-
-                    data.point = point;
-                    data.point = this.applyAnalogOutputTypeOutputType(data);
-                    return data.point;
-                }
-                // If MS 4 VAV, MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Coefficient 1"].isDisplayable = true;
-                    point["Conversion Coefficient 2"].isDisplayable = true;
-
-                    point["Output Type"].isDisplayable = true;
-                    point["Output Type"].ValueOptions = {
-                        "Analog": 0,
-                        "Pulse Width": 1,
-                        "Pulsed": 2
-                    };
-
-                    point["Channel"].Max = 7;
-                    point["Channel"].Min = 0;
-
-                    point["Open Channel"].Max = 7;
-                    point["Open Channel"].Min = 0;
-
-                    point["Close Channel"].Max = 7;
-                    point["Close Channel"].Min = 0;
-
-
-                    data.point = point;
-                    data.point = this.applyAnalogOutputTypeOutputType(data);
-                    return data.point;
-                }
-                // Invalid RMU type
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If MicroScan 4 UNV, MicroScan 4 xTalk, or MicroScan 4 Digital
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"])) {
-
-                // If remote unit not defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    // If MicroScan 4 xTalk
-                    if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) {
-
-                        point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                    }
-                    // If MicroScan 4 Digital
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"]) {
-
-                        obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-
-                        point["Conversion Coefficient 1"].isDisplayable = true;
-                        point["Conversion Coefficient 2"].isDisplayable = true;
-
-                        point["Output Type"].isDisplayable = true;
-                        point["Output Type"].ValueOptions = {
-                            "Pulse Width": 1,
-                            "Pulsed": 2
-                        };
-
-                        point["Open Channel"].Max = 32;
-                        point["Open Channel"].Min = 1;
-
-                        point["Close Channel"].Max = 32;
-                        point["Close Channel"].Min = 1;
-
-
-                        data.point = point;
-                        data.point = this.applyAnalogOutputTypeOutputType(data);
-                        return data.point;
-                    }
-                    // Must be MicroScan 4 UNV
-                    else {
-
-                        obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                        point["Conversion Coefficient 1"].isDisplayable = true;
-                        point["Conversion Coefficient 2"].isDisplayable = true;
-
-                        point["Output Type"].isDisplayable = true;
-                        point["Output Type"].ValueOptions = {
-                            "Analog": 0,
-                            "Pulse Width": 1,
-                            "Pulsed": 2
-                        };
-
-                        point["Channel"].isDisplayable = true;
-                        point["Channel"].Max = 8;
-                        point["Channel"].Min = 1;
-
-                        point["Open Channel"].Max = 8;
-                        point["Open Channel"].Min = 1;
-
-                        point["Close Channel"].Max = 8;
-                        point["Close Channel"].Min = 1;
-
-
-                        data.point = point;
-                        data.point = this.applyAnalogOutputTypeOutputType(data);
-                        return data.point;
-                    }
-                }
-                // RMU defined. If BACnet or N2,
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // If Liebert, Sierra Steam Meter, Siemens Power Meter, Ingersol Rand Intellysis, PowerLogics 3000, Generic Modbus, PowerTraks 9000, Programmable Modbus
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Liebert"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerLogic 3000 Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Generic Modbus"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerTraks 9000"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"])) {
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Coefficient 1"].isDisplayable = true;
-                    point["Conversion Coefficient 2"].isDisplayable = true;
-
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-
-                    point["Control Data Type"].isDisplayable = true;
-                    point["Control Function"].isDisplayable = true;
-                    point["Control Register"].isDisplayable = true;
-
-                    data.point = point;
-                    data.point = this.applyAnalogOutputTypeOutputType(data);
-                    return data.point;
-                }
-                // If MS 4 VAV, MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Coefficient 1"].isDisplayable = true;
-                    point["Conversion Coefficient 2"].isDisplayable = true;
-
-                    point["Output Type"].isDisplayable = true;
-                    point["Output Type"].ValueOptions = {
-                        "Analog": 0,
-                        "Pulse Width": 1,
-                        "Pulsed": 2
-                    };
-
-                    point["Channel"].Max = 7;
-                    point["Channel"].Min = 0;
-
-                    point["Open Channel"].Max = 7;
-                    point["Open Channel"].Min = 0;
-
-                    point["Close Channel"].Max = 7;
-                    point["Close Channel"].Min = 0;
-
-
-                    data.point = point;
-                    data.point = this.applyAnalogOutputTypeOutputType(data);
-                    return data.point;
-                }
-                // Invalid RMU type
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If BACnet Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["BACnet Interface Device"]["enum"]) {
-
-                // If not Remote Unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // RMU defined.  If BACnet RMU
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Ingersol Rand Intellysis Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Ingersol Rand Intellysis Device"]["enum"]) {
-
-                // If not Remote Unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // RMU defined.  If Ingersol Rand Intellysis
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) {
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Coefficient 1"].isDisplayable = true;
-                    point["Conversion Coefficient 2"].isDisplayable = true;
-
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-
-                    point["Control Data Type"].isDisplayable = true;
-                    point["Control Function"].isDisplayable = true;
-                    point["Control Register"].isDisplayable = true;
-
-                    data.point = point;
-                    data.point = this.applyAnalogOutputTypeOutputType(data);
-                    return data.point;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If MicroScan Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan Interface Device"]["enum"]) {
-
-                // If not Remote Unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // RMU defined. If MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Coefficient 1"].isDisplayable = true;
-                    point["Conversion Coefficient 2"].isDisplayable = true;
-
-                    point["Output Type"].isDisplayable = true;
-                    point["Output Type"].ValueOptions = {
-                        "Analog": 0,
-                        "Pulse Width": 1,
-                        "Pulsed": 2
-                    };
-
-                    point["Channel"].Max = 7;
-                    point["Channel"].Min = 0;
-
-                    point["Open Channel"].Max = 7;
-                    point["Open Channel"].Min = 0;
-
-                    point["Close Channel"].Max = 7;
-                    point["Close Channel"].Min = 0;
-
-
-                    data.point = point;
-                    data.point = this.applyAnalogOutputTypeOutputType(data);
-                    return data.point;
-                }
-                // Invalid RMU type
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If N2 Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["N2 Interface Device"]["enum"]) {
-
-                // If no Remote Unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // RMU defined. If N2
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // Invalid RMU type
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Field Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Field Interface Device"]["enum"]) {
-
-                // If no Remote Unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // RMU defined. If IFC RMU
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["IFC Remote Unit"]["enum"]) {
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Coefficient 1"].isDisplayable = true;
-                    point["Conversion Coefficient 2"].isDisplayable = true;
-
-                    point["Output Type"].isDisplayable = true;
-                    point["Output Type"].ValueOptions = {
-                        "Analog": 0,
-                        "Pulse Width": 1,
-                        "Pulsed": 2
-                    };
-
-                    point["Channel"].Max = 3;
-                    point["Channel"].Min = 0;
-
-                    point["Open Channel"].Max = 15;
-                    point["Open Channel"].Min = 0;
-
-                    point["Close Channel"].Max = 15;
-                    point["Close Channel"].Min = 0;
-
-
-                    data.point = point;
-                    data.point = this.applyAnalogOutputTypeOutputType(data);
-                    return data.point;
-                }
-                // Invalid RMU type
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Staefa Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Staefa Interface Device"]["enum"]) {
-
-                // If no Remote Unit defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // RMU defined. If Smart II RMU
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Smart II Remote Unit"]["enum"]) {
-
-                    obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable = true;
-                    point["Conversion Coefficient 1"].isDisplayable = true;
-                    point["Conversion Coefficient 2"].isDisplayable = true;
-
-                    point["Output Type"].isDisplayable = true;
-                    point["Output Type"].ValueOptions = {
-                        "Analog": 0,
-                        "Pulse Width": 1,
-                        "Pulsed": 2
-                    };
-
-                    point["Channel"].Max = 7;
-                    point["Channel"].Min = 0;
-
-                    point["Open Channel"].Max = 7;
-                    point["Open Channel"].Min = 0;
-
-                    point["Close Channel"].Max = 7;
-                    point["Close Channel"].Min = 0;
-
-
-                    data.point = point;
-                    data.point = this.applyAnalogOutputTypeOutputType(data);
-                    return data.point;
-                }
-                // Invalid RMU type
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // Invalid device type
-            else {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
-            }
-
-            return point;
-        },
-
-        applyAnalogValueTypeDevModel: function(data) {
-            var point = data.point;
-
-            // If Unknown or Central Device
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"])) {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
-            } else {
-
-                point._relPoint = 0; // Set reliability to 'No Fault'
-            }
-
-            point.Instance.isDisplayable = false;
-            obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = true;
-            point["Demand Interval"].isDisplayable = true;
-            point["Demand Enable"].isDisplayable = true;
-            point["Fail Action"].isDisplayable = true;
-
-            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, SCADA IO
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
-
-                // If BACnet or N2 RMU
-                if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
-
-                    point.Instance.isDisplayable = true;
-                    obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = false;
-                    point["Demand Interval"].isDisplayable = false;
-                    point["Demand Enable"].isDisplayable = false;
-                    point["Fail Action"].isDisplayable = false;
-                }
-                // If remote unit defined ***AND*** is not MS 4 VAV, MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If MicroScan 4 UNV, MicroScan 4 xTalk, or MicroScan 4 Digital
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"])) {
-
-                // If BACnet or N2 RMU
-                if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
-
-                    point.Instance.isDisplayable = true;
-                    obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = false;
-                    point["Demand Interval"].isDisplayable = false;
-                    point["Demand Enable"].isDisplayable = false;
-                    point["Fail Action"].isDisplayable = false;
-                }
-                // If remote unit defined ***AND*** is not MS 4 VAV, MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If BACnet Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["BACnet Interface Device"]["enum"]) {
-
-                // If BACnet RMU
-                if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                    obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = false;
-                    point["Demand Interval"].isDisplayable = false;
-                    point["Demand Enable"].isDisplayable = false;
-                    point["Fail Action"].isDisplayable = false;
-                }
-                // For all other RMU's
-                else if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Sierra Steam Meter Device, Siemens Power Meter Device, Ingersol Rand Intellysis Device
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Sierra Steam Meter Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Siemens Power Meter Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Ingersol Rand Intellysis Device"]["enum"])) {
-
-                // If remote unit not defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If MicroScan Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan Interface Device"]["enum"]) {
-
-                // If remote unit defined ***AND*** is not MS3 RT, MS 3 EEPROM, MS 3 Flash
-                if ((obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If N2 Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["N2 Interface Device"]["enum"]) {
-
-                // If N2 RMU
-                if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                    obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = false;
-                    point["Demand Interval"].isDisplayable = false;
-                    point["Demand Enable"].isDisplayable = false;
-                    point["Fail Action"].isDisplayable = false;
-                }
-                // For all other RMU's
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Field Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Field Interface Device"]["enum"]) {
-
-                // If remote unit not defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Armstrong SteamEye Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Armstrong SteamEye Device"]["enum"]) {
-
-                // If remote unit not defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Staefa Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Staefa Interface Device"]["enum"]) {
-
-                // If remote unit not defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // Invalid device
-            else {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
-            }
-
-            return point;
-        },
-
-        applyBinaryValueTypeDevModel: function(data) {
-            var point = data.point;
-
-            // If Unknown or Central Device
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"])) {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
-            } else {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"];
-            }
-
-            point.Instance.isDisplayable = false;
-            obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = true;
-            point["Demand Interval"].isDisplayable = true;
-            point["Demand Enable"].isDisplayable = true;
-            point["Fail Action"].isDisplayable = true;
-
-            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, SCADA IO
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
-
-                // If BACnet or N2 RMU
-                if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
-
-                    point.Instance.isDisplayable = true;
-                    obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = false;
-                    point["Demand Interval"].isDisplayable = false;
-                    point["Demand Enable"].isDisplayable = false;
-                    point["Fail Action"].isDisplayable = false;
-                }
-                // If remote unit defined ***AND*** is not MS 4 VAV, MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"])) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If MicroScan 4 UNV, MicroScan 4 xTalk, or MicroScan 4 Digital
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"])) {
-
-                // If BACnet or N2 RMU
-                if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
-
-                    point.Instance.isDisplayable = true;
-                    obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = false;
-                    point["Demand Interval"].isDisplayable = false;
-                    point["Demand Enable"].isDisplayable = false;
-                    point["Fail Action"].isDisplayable = false;
-                }
-                // If remote unit defined ***AND*** is not MS 4 VAV, MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"])) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If BACnet Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["BACnet Interface Device"]["enum"]) {
-
-                // If BACnet RMU
-                if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                    obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = false;
-                    point["Demand Interval"].isDisplayable = false;
-                    point["Demand Enable"].isDisplayable = false;
-                    point["Fail Action"].isDisplayable = false;
-                }
-                // For all other RMU's
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Sierra Steam Meter Device, Siemens Power Meter Device, Ingersol Rand Intellysis Device
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Sierra Steam Meter Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Siemens Power Meter Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Ingersol Rand Intellysis Device"]["enum"])) {
-
-                // If remote unit not defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If MicroScan Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan Interface Device"]["enum"]) {
-
-                // If remote unit defined ***AND*** RMU is MS3 RT, MS3 EEPROM, or MS3 Flash
-                if ((obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) && (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If N2 Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["N2 Interface Device"]["enum"]) {
-
-                // If N2 RMU
-                if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                    obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = false;
-                    point["Demand Interval"].isDisplayable = false;
-                    point["Demand Enable"].isDisplayable = false;
-                    point["Fail Action"].isDisplayable = false;
-                }
-                // If RMU defined
-                else if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Field Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Field Interface Device"]["enum"]) {
-
-                // If remote unit not defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Armstrong SteamEye Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Armstrong SteamEye Device"]["enum"]) {
-
-                // If remote unit not defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Staefa Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Staefa Interface Device"]["enum"]) {
-
-                // If remote unit not defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // Invalid device
-            else {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
             }
             return point;
         },
 
-        applyBinaryInputTypeFeedbackPoint: function(data) {
-            var point = data.point;
-
-            // If feedback point is used
-            if (data.propertyObject.PointInst !== 0) {
-
-                point["Feedback Polarity"].isDisplayable = true;
-                point["Alarm Value"].isDisplayable = false;
-            } else {
-
-                point["Feedback Polarity"].isDisplayable = false;
-                point["Alarm Value"].isDisplayable = true;
-            }
-            return point;
-        },
-
-        applyBinaryInputTypeInputType: function(data) {
-            var point = data.point;
-
-            // If momentary input type
-            // TODO fix hard coded enum value
-            if (point["Input Type"].eValue === 1) {
-
-                point["Momentary Delay"].isDisplayable = true;
-            } else {
-
-                point["Momentary Delay"].isDisplayable = false;
-            }
-
-            return point;
-        },
-
-        applyBinaryInputTypeDevModel: function(data) {
-            var point = data.point;
-
-            // If Unknown or Central Device
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"])) {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
-            } else {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"];
-            }
-
-            point.Instance.isDisplayable = false;
-            point.Channel.isDisplayable = false;
-
-            point["VAV Channel"].isDisplayable = false;
-            point["VAV Channel"].ValueOptions = {
-                "1 - Occupancy Override": 1,
-                "2 - Occupancy Sensor": 2
-            };
-
-            point["Input Type"].isDisplayable = false;
-            point["Momentary Delay"].isDisplayable = false;
-            point["Modbus Order"].isDisplayable = false;
-            point["Poll Data Type"].isDisplayable = false;
-            point["Poll Function"].isDisplayable = false;
-            point["Poll Register"].isDisplayable = false;
-            point["Supervised Input"].isDisplayable = false;
-
-            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, SCADA IO
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
-
-                // If no RMU
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    // If MicroScan 5 xTalk
-                    if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) {
-
-                        point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                    }
-                    // If SCADA Vio
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) {
-
-                        point.Channel.isDisplayable = true;
-                        point.Channel.Max = 9;
-                        point.Channel.Min = 1;
-
-                        point["Input Type"].isDisplayable = true;
-                        point["Input Type"].ValueOptions = {
-                            "Latch": 0,
-                            "Momentary": 1,
-                            "Pulse": 2
-                        };
-
-                        data.point = point;
-                        point = this.applyBinaryInputTypeInputType(data); // Apply input type logic
-                    }
-                    // If SCADA IO
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"]) {
-
-                        point.Channel.isDisplayable = true;
-                        point.Channel.Max = 8;
-                        point.Channel.Min = 1;
-
-                        point["Input Type"].isDisplayable = true;
-                        point["Input Type"].ValueOptions = {
-                            "Latch": 0,
-                            "Momentary": 1,
-                            "Pulse": 2
-                        };
-
-                        data.point = point;
-                        point = this.applyBinaryInputTypeInputType(data); // Apply input type logic
-                    }
-                    // Must be MicroScan 5 UNV
-                    else {
-
-                        point.Channel.isDisplayable = true;
-                        point.Channel.Max = 16;
-                        point.Channel.Min = 1;
-
-                        point["Input Type"].isDisplayable = true;
-                        point["Input Type"].ValueOptions = {
-                            "Latch": 0,
-                            "Momentary": 1,
-                            "Pulse": 2
-                        };
-
-                        data.point = point;
-                        point = this.applyBinaryInputTypeInputType(data); // Apply input type logic
-                    }
-                }
-                // RMU defined. If BACnet or N2,
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // If Liebert, Sierra Steam Meter, Siemens Power Meter, Ingersol Rand Intellysis, PowerLogics 3000, Generic Modbus, PowerTraks 9000, Programmable Modbus
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Liebert"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerLogic 3000 Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Generic Modbus"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerTraks 9000"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"])) {
-
-                    point["Modbus Order"].isDisplayable = true;
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                }
-                // If MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point.Channel.isDisplayable = true;
-                    point.Channel.Max = 7;
-                    point.Channel.Min = 0;
-
-                    // point["Latch Value"].isDisplayable = true;
-                    point["Supervised Input"].isDisplayable = true;
-                }
-                // If MS 4 VAV
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) {
-
-                    point["VAV Channel"].isDisplayable = true;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If MicroScan 4 UNV, MicroScan 4 xTalk, or MicroScan 4 Digital
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"])) {
-
-                // If no RMU
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    // If MicroScan 4 xTalk
-                    if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) {
-
-                        point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                    }
-                    // If MicroScan 4 Digital
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"]) {
-
-                        point.Channel.isDisplayable = true;
-                        point.Channel.Max = 32;
-                        point.Channel.Min = 1;
-
-                        point["Input Type"].isDisplayable = true;
-                        point["Input Type"].ValueOptions = {
-                            "Latch": 0,
-                            "Momentary": 1
-                        };
-
-                        data.point = point;
-                        point = this.applyBinaryInputTypeInputType(data); // Apply input type logic
-                    }
-                    // Must be MicroScan 4 UNV
-                    else {
-
-                        point.Channel.isDisplayable = true;
-                        point.Channel.Max = 16;
-                        point.Channel.Min = 1;
-
-                        point["Input Type"].isDisplayable = true;
-                        point["Input Type"].ValueOptions = {
-                            "Latch": 0,
-                            "Momentary": 1
-                        };
-
-                        data.point = point;
-                        point = this.applyBinaryInputTypeInputType(data); // Apply input type logic
-                    }
-                }
-                // RMU defined. If BACnet or N2,
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // If Liebert, Sierra Steam Meter, Siemens Power Meter, Ingersol Rand Intellysis, PowerLogics 3000, Generic Modbus, PowerTraks 9000, Programmable Modbus
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Liebert"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerLogic 3000 Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Generic Modbus"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerTraks 9000"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"])) {
-
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                }
-                // If MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point.Channel.isDisplayable = true;
-                    point.Channel.Max = 7;
-                    point.Channel.Min = 0;
-
-                    //point["Latch Value"].isDisplayable = true;
-                    point["Supervised Input"].isDisplayable = true;
-                }
-                // If MS 4 VAV
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) {
-
-                    point["VAV Channel"].isDisplayable = true;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If BACnet Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["BACnet Interface Device"]["enum"]) {
-
-                // If no RMU
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point.Channel.Value = 0; // Only one channel available (ch 0), do not show user the channel field
-
-                    point["Supervised Input"].isDisplayable = true;
-                }
-                // RMU defined.  If BACnet
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Sierra Steam Meter Device or Ingersol Rand Intellysis Device
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Sierra Steam Meter Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Ingersol Rand Intellysis Device"]["enum"])) {
-
-                // If no RMU
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point.Channel.Value = 0; // Only one channel available (ch 0), do not show user the channel field
-                }
-                // If Sierra Steam Meter or Ingersol Rand Intellysis RMU
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"])) {
-
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If MicroScan Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan Interface Device"]["enum"]) {
-
-                // If no RMU
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point.Channel.Value = 0; // Only one channel available (ch 0), do not show user the channel field
-                }
-                // RMU defined. If MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point.Channel.isDisplayable = true;
-                    point.Channel.Max = 7;
-                    point.Channel.Min = 0;
-
-                    //point["Latch Value"].isDisplayable = true;
-                    point["Supervised Input"].isDisplayable = true;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If N2 Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["N2 Interface Device"]["enum"]) {
-
-                // If no RMU
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point.Channel.Value = 0; // Only one channel available (ch 0), do not show user the channel field
-                }
-                // RMU defined. If N2
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Field Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Field Interface Device"]["enum"]) {
-
-                // If no RMU
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point.Channel.Value = 0; // Only one channel available (ch 0), do not show user the channel field
-                }
-                // RMU defined. If IFC RMU
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["IFC Remote Unit"]["enum"]) {
-
-                    point.Channel.isDisplayable = true;
-                    point.Channel.Max = 15;
-                    point.Channel.Min = 0;
-
-                    point["Supervised Input"].isDisplayable = true;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Armstrong SteamEye Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Armstrong SteamEye Device"]["enum"]) {
-
-                // If no RMU
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point.Channel.Value = 0; // Only one channel available (ch 0), do not show user the channel field
-                }
-                // RMU defined. If ASE RMU
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["ASE Remote Unit"]["enum"]) {
-
-                    point.Channel.isDisplayable = true;
-                    point.Channel.Max = 255;
-                    point.Channel.Min = 0;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Staefa Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Staefa Interface Device"]["enum"]) {
-
-                // If no RMU
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point.Channel.Value = 0; // Only one channel available (ch 0), do not show user the channel field
-                }
-                // RMU defined. If Smart II RMU
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Smart II Remote Unit"]["enum"]) {
-
-                    point.Channel.isDisplayable = true;
-                    point.Channel.Max = 7;
-                    point.Channel.Min = 0;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // Invalid device
-            else {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
-            }
-            return point;
-        },
-
-        // TODO remove hard coded enum values
         applyBinaryOutputTypeFeedbackType: function(data) {
-            var point = data.point;
+            var point = data.point,
+                fbPoint = obj.Utility.getPropertyObject("Feedback Point", point);
 
-            point["Close Channel"].isDisplayable = false;
-            point["Open Channel"].isDisplayable = false;
-            point["Close Polarity"].isDisplayable = false;
-            point["Open Polarity"].isDisplayable = false;
-            point["Feedback Channel"].isDisplayable = false;
-            point["Feedback Polarity"].isDisplayable = false;
-            obj.Utility.getPropertyObject("Feedback Point", point).isDisplayable = false;
-            point["Verify Delay"].isDisplayable = false;
+            fbPoint.isDisplayable = false;
+            obj.Utility.setPropsDisplayable(point, ["Feedback Channel", "Feedback Polarity", "Open Channel", "Open Polarity", "Close Channel", "Close Polarity"], false);
 
-            // If a feedback point is defined
-            if (obj.Utility.getPropertyObject("Feedback Point", point).Value !== 0) {
+            switch (point["Feedback Type"].Value) {
+                case "Single":
+                    obj.Utility.setPropsDisplayable(point, ["Feedback Channel", "Feedback Polarity"], true);
+                    break;
 
-                // Since a feedback point is defined, we must force the feedback type to feedback point
-                // (as opposed to feedback single/dual channel).  There is not a 'feedback type' parameter
-                // downloaded to the field controllers. If the field controller sees a feedback point
-                // feedback channels are ignored. So we force the UI to feedback point if one is used.
-                // To use feedback channel the feedback point must first be removed.
-                point["Feedback Type"].eValue = 3;
-                point["Feedback Type"].Value = "Point";
-                point["Verify Delay"].isDisplayable = true;
+                case "Dual":
+                    obj.Utility.setPropsDisplayable(point, ["Open Channel", "Open Polarity", "Close Channel", "Close Polarity"], true);
+                    break;
+
+                case "Point":
+                    point["Feedback Polarity"].isDisplayable = true;
+                    fbPoint.isDisplayable = true;
+                    break;
+
+                case "Remote":
+                    fbPoint.isDisplayable = true;
+                    break;
+
+                default: // None or Remote
+                    break;
             }
-
-            // If single channel feedback
-            if (point["Feedback Type"].eValue === 1) {
-
-                point["Feedback Channel"].isDisplayable = true;
-                point["Feedback Polarity"].isDisplayable = true;
-                point["Verify Delay"].isDisplayable = true;
-            }
-            // If dual channel feedback
-            else if (point["Feedback Type"].eValue === 2) {
-
-                point["Close Channel"].isDisplayable = true;
-                point["Open Channel"].isDisplayable = true;
-
-                point["Close Polarity"].isDisplayable = true;
-                point["Open Polarity"].isDisplayable = true;
-                point["Verify Delay"].isDisplayable = true;
-            }
-            // If data point feedback
-            else if (point["Feedback Type"].eValue === 3) {
-
-                obj.Utility.getPropertyObject("Feedback Point", point).isDisplayable = true;
-                point["Feedback Polarity"].isDisplayable = true;
-                point["Verify Delay"].isDisplayable = true;
-            }
-
             return point;
         },
 
-        applyBinaryOutputTypeOutputType: function(data) {
-            var point = data.point;
+        applyBinaryOutputOutputType: function(data) {
+            var point = data.point,
+                disp;
 
-            // If latch output type
-            if (point["Output Type"].eValue === 0) {
-                point["Channel"].isDisplayable = true;
-                point["On Channel"].isDisplayable = false;
-                point["Off Channel"].isDisplayable = false;
-                point["Momentary Delay"].isDisplayable = false;
-                // Momentary output
+            if ((point["Output Type"].Value === "Latch") || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"])) {
+                point.Channel.isDisplayable = true;
+                disp = false;
             } else {
-                point["Channel"].isDisplayable = false;
-                point["On Channel"].isDisplayable = true;
-                point["Off Channel"].isDisplayable = true;
-                point["Momentary Delay"].isDisplayable = true;
+                point.Channel.isDisplayable = false;
+                disp = true;
             }
+            obj.Utility.setPropsDisplayable(point, ["On Channel", "Off Channel", "Momentary Delay"], disp);
             return point;
         },
 
         // TODO Coordinate with Rob to remove this routine
-        applyBinaryOutputTypeFeedbackPoint: function(data) {},
+        //applyBinaryOutputTypeFeedbackPoint: function(data) {},
 
-        applyBinaryOutputTypeDevModel: function(data) {
-            var point = data.point;
+        applyBinaryOutputDevModel: function(data) {
+            var point = data.point,
+                eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
+                eDev = enumsTemplatesJson.Enums["Device Model Types"],
+                setValOpt = obj.Utility.setupPropValueOptions,
+                setCh = obj.Utility.setChannelOptions,
+                setDisp = obj.Utility.setPropsDisplayable,
+                ioOpts = {
+                    "I/O 1": 1,
+                    "I/O 2": 2,
+                    "I/O 3": 3,
+                    "I/O 4": 4,
+                    "I/O 5": 5,
+                    "I/O 6": 6,
+                    "I/O 7": 7,
+                    "I/O 8": 8
+                },
+                fbMin = 1,
+                fbMax = -1,
+                fbType = point["Feedback Type"],
+                chMin = 1,
+                chMax = -1,
+                outType = point["Output Type"];
 
-            // If Unknown or Central Device
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"])) {
+            setDisp(point, ["Output Type", "Momentary Delay", "Feedback Type", "Instance", "Read Only", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "On Control Data Type", "On Control Function", "On Control Register", "On Control Value", "Off Control Data Type", "Off Control Function", "Off Control Register", "Off Control Value", "Channel", "On Channel", "Off Channel", "Feedback Channel", "Open Channel", "Close Channel", "Polarity", "Feedback Polarity", "Open Polarity", "Close Polarity", "Same State Test", "Supervised Input"], false);
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
+                switch (point._rmuModel) {
+                    case eRmu["Programmable Modbus"]["enum"]:
+                        setDisp(point, ["Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "On Control Data Type", "On Control Function", "On Control Register", "On Control Value", "Off Control Data Type", "Off Control Function", "Off Control Register", "Off Control Value"], true);
+                        setValOpt(fbType, {
+                            "None": 0,
+                            "Point": 3
+                        });
+                        break;
 
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
-            } else {
+                    case eRmu["Liebert"]["enum"]:
+                    case eRmu["Sierra Steam Meter"]["enum"]:
+                    case eRmu["Siemens Power Meter"]["enum"]:
+                    case eRmu["Ingersol Rand Intellysis"]["enum"]:
+                    case eRmu["PowerLogic 3000 Meter"]["enum"]:
+                    case eRmu["Generic Modbus"]["enum"]:
+                    case eRmu["PowerTraks 9000"]["enum"]:
+                        setDisp(point, ["Modbus Order", "Poll Data Type"], true);
+                        setValOpt(fbType, {
+                            "None": 0,
+                            "Point": 3
+                        });
+                        break;
 
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"];
-            }
+                    case eRmu["BACnet"]["enum"]:
+                        point.Instance.isDisplayable = true;
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Read Only"].isDisplayable = true;
+                        }
+                        setValOpt(fbType, {
+                            "None": 0,
+                            "Point": 3,
+                            "Remote": 4
+                        });
+                        break;
 
-            point["Same State Test"].isDisplayable = false;
+                    case eRmu["N2 Device"]["enum"]:
+                        point.Instance.isDisplayable = true;
+                        setValOpt(fbType, {
+                            "None": 0,
+                            "Single": 1,
+                            "Point": 3
+                        });
+                        fbMax = 255;
+                        break;
 
-            point["VAV Channel"].isDisplayable = false;
-            point["VAV Channel"].ValueOptions = {
-                "3 - Lights": 3,
-                "5 - Fan": 5,
-                "6 - Digital Heat 1": 6,
-                "7 - Digital Heat 2": 7,
-                "8 - Digital Heat 3": 8
-            };
-
-            point["Supervised Input"].isDisplayable = false;
-            point.Polarity.isDisplayable = false;
-            point["Output Type"].isDisplayable = false;
-            point.Channel.isDisplayable = false;
-            point["On Channel"].isDisplayable = false;
-            point["Off Channel"].isDisplayable = false;
-            point["Momentary Delay"].isDisplayable = false;
-
-            point["Feedback Type"].isDisplayable = true;
-            point["Feedback Type"].ValueOptions = {
-                "None": 0,
-                "Single": 1,
-                "Dual": 2,
-                "Point": 3
-            };
-
-            point.Instance.isDisplayable = false;
-            point["Modbus Order"].isDisplayable = false;
-            point["Poll Data Type"].isDisplayable = false;
-            point["Poll Function"].isDisplayable = false;
-            point["Poll Register"].isDisplayable = false;
-
-            point["On Control Data Type"].isDisplayable = false;
-            point["On Control Function"].isDisplayable = false;
-            // point["On Control Register"].isDisplayable = false;
-            point["On Control Value"].isDisplayable = false;
-
-            point["Off Control Data Type"].isDisplayable = false;
-            point["Off Control Function"].isDisplayable = false;
-            point["Off Control Register"].isDisplayable = false;
-            point["Off Control Value"].isDisplayable = false;
-
-            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, SCADA IO
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
-
-                // If no RMU
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    // If MicroScan 5 xTalk
-                    if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) {
-
-                        point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                    }
-                    // If SCADA Vio
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) {
-
-                        point["Same State Test"].isDisplayable = true;
-                        point.Polarity.isDisplayable = true;
-
-                        point["Output Type"].isDisplayable = true;
-                        point["Output Type"].ValueOptions = {
+                    case eRmu["MS 4 VAV"]["enum"]:
+                        setValOpt(fbType, {
+                            "None": 0
+                        });
+                        fbType.isDisplayable = false;
+                        setValOpt(outType, {
                             "Latch": 0,
                             "Momentary": 1
-                        };
+                        });
+                        setValOpt(point.Channel, {
+                            "3 - Lights": 3,
+                            "5 - Fan": 5,
+                            "6 - Digital Heat 1": 6,
+                            "7 - Digital Heat 2": 7,
+                            "8 - Digital Heat 3": 8
+                        });
+                        break;
 
-                        point.Channel.Max = 5;
-                        point.Channel.Min = 1;
-
-                        point["On Channel"].Max = 5;
-                        point["On Channel"].Min = 1;
-
-                        point["Off Channel"].Max = 5;
-                        point["Off Channel"].Min = 1;
-
-                        point["Feedback Channel"].Max = 9;
-                        point["Feedback Channel"].Min = 1;
-
-                        point["Open Channel"].Max = 9;
-                        point["Open Channel"].Min = 1;
-
-                        point["Close Channel"].Max = 9;
-                        point["Close Channel"].Min = 1;
-
-                        data.point = point;
-                        point = this.applyBinaryOutputTypeOutputType(data); // Apply output type logic
-                    }
-                    // If SCADA IO
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"]) {
-
-                        point["Same State Test"].isDisplayable = true;
-                        point.Polarity.isDisplayable = true;
-
-                        point["Output Type"].isDisplayable = true;
-                        point["Output Type"].ValueOptions = {
+                    case eRmu["MS3 RT"]["enum"]:
+                    case eRmu["MS 3 EEPROM"]["enum"]:
+                    case eRmu["MS 3 Flash"]["enum"]:
+                        setDisp(point, ["Supervised Input", "Same State Test"], true);
+                        setValOpt(fbType, {
+                            "None": 0,
+                            "Single": 1,
+                            "Point": 3
+                        });
+                        fbMin = 0;
+                        fbMax = 7;
+                        setValOpt(outType, {
                             "Latch": 0,
                             "Momentary": 1
-                        };
+                        });
+                        chMin = 0;
+                        chMax = 7;
+                        break;
 
-                        point.Channel.Max = 8;
-                        point.Channel.Min = 1;
-
-                        point["On Channel"].Max = 8;
-                        point["On Channel"].Min = 1;
-
-                        point["Off Channel"].Max = 8;
-                        point["Off Channel"].Min = 1;
-
-                        point["Feedback Channel"].Max = 8;
-                        point["Feedback Channel"].Min = 1;
-
-                        point["Open Channel"].Max = 8;
-                        point["Open Channel"].Min = 1;
-
-                        point["Close Channel"].Max = 8;
-                        point["Close Channel"].Min = 1;
-
-                        data.point = point;
-                        point = this.applyBinaryOutputTypeOutputType(data); // Apply output type logic
-
-                    }
-                    // Must be MicroScan 5 UNV, unkown, or central
-                    else {
-
-                        point["Same State Test"].isDisplayable = true;
-                        point.Polarity.isDisplayable = true;
-
-                        point["Output Type"].isDisplayable = true;
-                        point["Output Type"].ValueOptions = {
+                    case eRmu["IFC Remote Unit"]["enum"]:
+                        setDisp(point, ["Supervised Input", "Same State Test"], true);
+                        setValOpt(fbType, {
+                            "None": 0,
+                            "Single": 1,
+                            "Point": 3
+                        });
+                        fbMin = 0;
+                        fbMax = 15;
+                        setValOpt(outType, {
                             "Latch": 0,
                             "Momentary": 1
-                        };
+                        });
+                        chMin = 0;
+                        chMax = 15;
+                        break;
 
-                        point.Channel.Max = 8;
-                        point.Channel.Min = 1;
-
-                        point["On Channel"].Max = 8;
-                        point["On Channel"].Min = 1;
-
-                        point["Off Channel"].Max = 8;
-                        point["Off Channel"].Min = 1;
-
-                        point["Feedback Channel"].Max = 16;
-                        point["Feedback Channel"].Min = 1;
-
-                        point["Open Channel"].Max = 16;
-                        point["Open Channel"].Min = 1;
-
-                        point["Close Channel"].Max = 16;
-                        point["Close Channel"].Min = 1;
-
-                        data.point = point;
-                        point = this.applyBinaryOutputTypeOutputType(data); // Apply output type logic
-                    }
-                }
-                // RMU defined.  If BACnet
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) {
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Point": 3,
-                        "Remote": 4
-                    };
-
-                    point.Instance.isDisplayable = true;
-                }
-                // If N2
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"]) {
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Single": 1,
-                        "Point": 3
-                    };
-
-                    point["Feedback Channel"].Max = 255;
-                    point["Feedback Channel"].Min = 0;
-
-                    point.Instance.isDisplayable = true;
-                }
-                // If Liebert, Sierra Steam Meter, Siemens Power Meter, Ingersol Rand Intellysis, PowerLogics 3000, Generic Modbus, PowerTraks 9000, Programmable Modbus
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Liebert"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerLogic 3000 Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Generic Modbus"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerTraks 9000"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"])) {
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Point": 3
-                    };
-
-                    point["Modbus Order"].isDisplayable = true;
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                    point["On Control Data Type"].isDisplayable = true;
-                    point["On Control Function"].isDisplayable = true;
-                    point["On Control Register"].isDisplayable = true;
-                    point["On Control Value"].isDisplayable = true;
-                    point["Off Control Data Type"].isDisplayable = true;
-                    point["Off Control Function"].isDisplayable = true;
-                    point["Off Control Register"].isDisplayable = true;
-                    point["Off Control Value"].isDisplayable = true;
-                }
-                // If MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point["Same State Test"].isDisplayable = true;
-                    point.Polarity.isDisplayable = true;
-
-                    point["Output Type"].isDisplayable = true;
-                    point["Output Type"].ValueOptions = {
-                        "Latch": 0,
-                        "Momentary": 1
-                    };
-
-                    point.Channel.Max = 7;
-                    point.Channel.Min = 0;
-
-                    point["On Channel"].Max = 7;
-                    point["On Channel"].Min = 0;
-
-                    point["Off Channel"].Max = 7;
-                    point["Off Channel"].Min = 0;
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Single": 1,
-                        "Point": 3
-                    };
-
-                    point["Feedback Channel"].Max = 7;
-                    point["Feedback Channel"].Min = 0;
-
-                    data.point = point;
-                    point = this.applyBinaryOutputTypeOutputType(data); // Apply output type logic
-                }
-                // If MS 4 VAV
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) {
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0
-                    };
-
-                    point["VAV Channel"].isDisplayable = true;
-                    point.Polarity.isDisplayable = true;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If MicroScan 4 UNV, MicroScan 4 xTalk, or MicroScan 4 Digital
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"])) {
-
-                // If no RMU
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    // If MicroScan 4 xTalk
-                    if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) {
-
-                        point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                    }
-                    // If MicroScan 4 Digital
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"]) {
-
+                    case eRmu["Smart II Remote Unit"]["enum"]:
                         point["Same State Test"].isDisplayable = true;
-                        point.Polarity.isDisplayable = true;
-
-                        point["Output Type"].isDisplayable = true;
-                        point["Output Type"].ValueOptions = {
+                        setValOpt(fbType, {
+                            "None": 0,
+                            "Single": 1,
+                            "Point": 3
+                        });
+                        fbMin = 0;
+                        fbMax = 7;
+                        setValOpt(outType, {
                             "Latch": 0,
                             "Momentary": 1
-                        };
+                        });
+                        chMin = 0;
+                        chMax = 7;
+                        break;
 
-                        point.Channel.Max = 32;
-                        point.Channel.Min = 1;
-
-                        point["On Channel"].Max = 32;
-                        point["On Channel"].Min = 1;
-
-                        point["Off Channel"].Max = 32;
-                        point["Off Channel"].Min = 1;
-
-                        point["Feedback Channel"].Max = 32;
-                        point["Feedback Channel"].Min = 1;
-
-                        point["Open Channel"].Max = 32;
-                        point["Open Channel"].Min = 1;
-
-                        point["Close Channel"].Max = 32;
-                        point["Close Channel"].Min = 1;
-
-                        data.point = point;
-                        point = this.applyBinaryOutputTypeOutputType(data); // Apply output type logic
-                    }
-                    // Must be MicroScan 4 UNV
-                    else {
-
+                    default: // Unknown, no RMU
                         point["Same State Test"].isDisplayable = true;
-                        point.Polarity.isDisplayable = true;
-
-                        point["Output Type"].isDisplayable = true;
-                        point["Output Type"].ValueOptions = {
+                        setValOpt(fbType, {
+                            "None": 0,
+                            "Single": 1,
+                            "Dual": 2,
+                            "Point": 3
+                        });
+                        setValOpt(outType, {
                             "Latch": 0,
                             "Momentary": 1
-                        };
+                        });
+                        switch (point._devModel) {
+                            case eDev["MicroScan 5 UNV"]["enum"]:
+                            case eDev["MicroScan 4 UNV"]["enum"]:
+                                fbMax = 16;
+                                chMax = 8;
+                                break;
 
-                        point.Channel.Max = 8;
-                        point.Channel.Min = 1;
+                            case eDev["SCADA Vio"]["enum"]:
+                                fbMax = 9;
+                                chMax = 5;
+                                break;
 
-                        point["On Channel"].Max = 8;
-                        point["On Channel"].Min = 1;
+                            case eDev["SCADA IO"]["enum"]:
+                                setValOpt(point.Channel, ioOpts);
+                                setValOpt(point["On Channel"], ioOpts);
+                                setValOpt(point["Off Channel"], ioOpts);
+                                setValOpt(point["Feedback Channel"], ioOpts);
+                                setValOpt(point["Open Channel"], ioOpts);
+                                setValOpt(point["Close Channel"], ioOpts);
+                                break;
 
-                        point["Off Channel"].Max = 8;
-                        point["Off Channel"].Min = 1;
-
-                        point["Feedback Channel"].Max = 16;
-                        point["Feedback Channel"].Min = 1;
-
-                        point["Open Channel"].Max = 16;
-                        point["Open Channel"].Min = 1;
-
-                        point["Close Channel"].Max = 16;
-                        point["Close Channel"].Min = 1;
-
-                        data.point = point;
-                        point = this.applyBinaryOutputTypeOutputType(data); // Apply output type logic
+                            default: // MicroScan 4 Digital
+                                fbMax = 32;
+                                chMax = 32;
+                                break;
+                        }
+                        break;
+                }
+                if (outType.isDisplayable) {
+                    if (chMax >= 0) {
+                        setCh(point.Channel, chMin, chMax);
+                        setCh(point["On Channel"], chMin, chMax);
+                        setCh(point["Off Channel"], chMin, chMax);
                     }
+                    obj.EditChanges.applyBinaryOutputOutputType(data);
                 }
-                // RMU defined.  If BACnet
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) {
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Point": 3,
-                        "Remote": 4
-                    };
-
-                    point.Instance.isDisplayable = true;
+                if (fbType.isDisplayable) {
+                    if (fbMax >= 0) {
+                        setCh(point["Feedback Channel"], fbMin, fbMax);
+                        setCh(point["Open Channel"], fbMin, fbMax);
+                        setCh(point["Close Channel"], fbMin, fbMax);
+                    }
+                    obj.EditChanges.applyBinaryOutputTypeFeedbackType(data);
                 }
-                // If N2 RMU
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"]) {
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Single": 1,
-                        "Point": 3
-                    };
-
-                    point["Feedback Channel"].Max = 255;
-                    point["Feedback Channel"].Min = 0;
-
-                    point.Instance.isDisplayable = true;
-                }
-                // If Liebert, Sierra Steam Meter, Siemens Power Meter, Ingersol Rand Intellysis, PowerLogics 3000, Generic Modbus, PowerTraks 9000, Programmable Modbus
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Liebert"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerLogic 3000 Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Generic Modbus"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerTraks 9000"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"])) {
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Point": 3
-                    };
-
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-
-                    point["On Control Data Type"].isDisplayable = true;
-                    point["On Control Function"].isDisplayable = true;
-                    point["On Control Register"].isDisplayable = true;
-                    point["On Control Value"].isDisplayable = true;
-
-                    point["Off Control Data Type"].isDisplayable = true;
-                    point["Off Control Function"].isDisplayable = true;
-                    point["Off Control Register"].isDisplayable = true;
-                    point["Off Control Value"].isDisplayable = true;
-                }
-                // If MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point["Same State Test"].isDisplayable = true;
-                    point.Polarity.isDisplayable = true;
-
-                    point["Output Type"].isDisplayable = true;
-                    point["Output Type"].ValueOptions = {
-                        "Latch": 0,
-                        "Momentary": 1
-                    };
-
-                    point.Channel.Max = 7;
-                    point.Channel.Min = 0;
-
-                    point["On Channel"].Max = 7;
-                    point["On Channel"].Min = 0;
-
-                    point["Off Channel"].Max = 7;
-                    point["Off Channel"].Min = 0;
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Single": 1,
-                        "Point": 3
-                    };
-
-                    point["Feedback Channel"].Max = 7;
-                    point["Feedback Channel"].Min = 0;
-
-                    data.point = point;
-                    point = this.applyBinaryOutputTypeOutputType(data); // Apply output type logic
-                }
-                // If MS 4 VAV
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 4 VAV"]["enum"]) {
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0
-                    };
-
-                    point["VAV Channel"].isDisplayable = true;
-                    point.Polarity.isDisplayable = true;
-                }
-                // Invalid RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If BACnet Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["BACnet Interface Device"]["enum"]) {
-
-                // If not a BACnet RMU, or no RMU defined
-                if ((point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0)) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // Valid RMU
-                else {
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Point": 3
-                    };
-                    point.Instance.isDisplayable = true;
-                }
-            }
-            // If Ingersol Rand Intellysis Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Ingersol Rand Intellysis Device"]["enum"]) {
-
-                // If not an Intersol Rand Intellysis RMU, or no RMU defined
-                if ((point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]) || (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0)) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // Valid RMU
-                else {
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Point": 3
-                    };
-
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-
-                    point["On Control Data Type"].isDisplayable = true;
-                    point["On Control Function"].isDisplayable = true;
-                    point["On Control Register"].isDisplayable = true;
-                    point["On Control Value"].isDisplayable = true;
-
-                    point["Off Control Data Type"].isDisplayable = true;
-                    point["Off Control Function"].isDisplayable = true;
-                    point["Off Control Register"].isDisplayable = true;
-                    point["Off Control Value"].isDisplayable = true;
-                }
-            }
-            // If MicroScan Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan Interface Device"]["enum"]) {
-
-                // If not an MS3 RT, MS3 EEPROM, MS3 Flash, or no RMU defined
-                if (((point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) || (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0)) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // Valid RMU
-                else {
-
-                    point["Same State Test"].isDisplayable = true;
-                    point.Polarity.isDisplayable = true;
-
-                    point["Output Type"].isDisplayable = true;
-                    point["Output Type"].ValueOptions = {
-                        "Latch": 0,
-                        "Momentary": 1
-                    };
-
-                    point.Channel.Max = 7;
-                    point.Channel.Min = 0;
-
-                    point["On Channel"].Max = 7;
-                    point["On Channel"].Min = 0;
-
-                    point["Off Channel"].Max = 7;
-                    point["Off Channel"].Min = 0;
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Single": 1,
-                        "Point": 3
-                    };
-
-                    point["Feedback Channel"].Max = 7;
-                    point["Feedback Channel"].Min = 0;
-
-                    data.point = point;
-                    point = this.applyBinaryOutputTypeOutputType(data); // Apply output type logic
-                }
-            }
-            // If N2 Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["N2 Interface Device"]["enum"]) {
-
-                // If not an N2 RMU or no RMU defined
-                if ((point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"]) || (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0)) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // Valid RMU
-                else {
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Single": 1,
-                        "Point": 3
-                    };
-
-                    point["Feedback Channel"].Max = 255;
-                    point["Feedback Channel"].Min = 0;
-
-                    point.Instance.isDisplayable = true;
-                }
-            }
-            // If Field Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Field Interface Device"]["enum"]) {
-
-                // If not an IFC RMU or no RMU defined
-                if ((point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["IFC Remote Unit"]["enum"]) || (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0)) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // Valid RMU
-                else {
-
-                    point["Same State Test"].isDisplayable = true;
-                    point["Supervised Input"].isDisplayable = true;
-                    point.Polarity.isDisplayable = true;
-
-                    point["Output Type"].isDisplayable = true;
-                    point["Output Type"].ValueOptions = {
-                        "Latch": 0,
-                        "Momentary": 1
-                    };
-
-                    point.Channel.Max = 15;
-                    point.Channel.Min = 0;
-
-                    point["On Channel"].Max = 15;
-                    point["On Channel"].Min = 0;
-
-                    point["Off Channel"].Max = 15;
-                    point["Off Channel"].Min = 0;
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Single": 1,
-                        "Point": 3
-                    };
-
-                    point["Feedback Channel"].Max = 15;
-                    point["Feedback Channel"].Min = 0;
-
-                    data.point = point;
-                    point = this.applyBinaryOutputTypeOutputType(data); // Apply output type logic
-                }
-            }
-            // If Staefa Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Staefa Interface Device"]["enum"]) {
-
-                // If not a Smart II Remote Unit, or no RMU defined
-                if ((point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["Smart II Remote Unit"]["enum"]) || (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0)) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // Valid RMU
-                else {
-
-                    point["Same State Test"].isDisplayable = true;
-                    point.Polarity.isDisplayable = true;
-
-                    point["Output Type"].isDisplayable = true;
-                    point["Output Type"].ValueOptions = {
-                        "Latch": 0,
-                        "Momentary": 1
-                    };
-
-                    point.Channel.Max = 7;
-                    point.Channel.Min = 0;
-
-                    point["On Channel"].Max = 7;
-                    point["On Channel"].Min = 0;
-
-                    point["Off Channel"].Max = 7;
-                    point["Off Channel"].Min = 0;
-
-                    point["Feedback Type"].ValueOptions = {
-                        "None": 0,
-                        "Single": 1,
-                        "Point": 3
-                    };
-
-                    point["Feedback Channel"].Max = 7;
-                    point["Feedback Channel"].Min = 0;
-
-                    data.point = point;
-                    point = this.applyBinaryOutputTypeOutputType(data); // Apply output type logic
-                }
-            }
-            // Invalid Device
-            else {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
-            }
-            data.point = point;
-            data.point = this.applyBinaryOutputTypeFeedbackType(data); // Apply output type logic
-
-            return data.point;
-        },
-
-        applyMultiStateValueTypeDevModel: function(data) {
-            var point = data.point;
-
-            // If Unknown or Central Device
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"])) {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
-            } else {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"];
-            }
-
-            point.Instance.isDisplayable = false;
-            point["Input Type"].isDisplayable = false;
-            point["Modbus Order"].isDisplayable = false;
-            point["Control Data Type"].isDisplayable = false;
-            point["Control Function"].isDisplayable = false;
-            point["Control Register"].isDisplayable = false;
-            point["Poll Function"].isDisplayable = false;
-            point["Poll Register"].isDisplayable = false;
-            point["Poll Data Type"].isDisplayable = false;
-
-            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, SCADA IO
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
-
-                // If BACnet
-                if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                    point["Input Type"].isDisplayable = true;
-                }
-                // If Liebert, Sierra Steam Meter, Siemens Power Meter, Ingersol Rand Intellysis, PowerLogics 3000, Generic Modbus, PowerTraks 9000, Programmable Modbus
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Liebert"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerLogic 3000 Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Generic Modbus"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerTraks 9000"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"])) {
-
-                    point["Modbus Order"].isDisplayable = true;
-                    point["Control Data Type"].isDisplayable = true;
-                    point["Control Function"].isDisplayable = true;
-                    point["Control Register"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                    point["Poll Data Type"].isDisplayable = true;
-                }
-                // For all other RMU's
-                else if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If MicroScan 4 UNV, MicroScan 4 xTalk, or MicroScan 4 Digital
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"])) {
-
-                // If BACnet RMU
-                if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                    point["Input Type"].isDisplayable = true;
-                }
-                // If Liebert, Sierra Steam Meter, Siemens Power Meter, Ingersol Rand Intellysis, PowerLogics 3000, Generic Modbus, PowerTraks 9000, Programmable Modbus
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Liebert"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerLogic 3000 Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Generic Modbus"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerTraks 9000"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"])) {
-
-                    point["Control Data Type"].isDisplayable = true;
-                    point["Control Function"].isDisplayable = true;
-                    point["Control Register"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                    point["Poll Data Type"].isDisplayable = true;
-                }
-                // For all other RMU's
-                else if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Staefa Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Staefa Interface Device"]["enum"]) {
-
-                // If Smart II RMU
-                if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Smart II Remote Unit"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // For all other RMU's
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst !== 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-
-            // Invalid Device
-            else {
-
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
             }
             return point;
         },
 
-        applyAccumulatorTypeDevModel: function(data) {
+        applyAnalogValueDevModel: function(data) {
+            var point = data.point,
+                enums = enumsTemplatesJson.Enums,
+                mp = false;
+
+            obj.Utility.setPropsDisplayable(point, ["Instance", "Read Only"], false);
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if (point._relPoint === enums.Reliabilities["No Fault"]["enum"]) {
+                switch (point._rmuModel) {
+                    case enums["Remote Unit Model Types"]["BACnet"]["enum"]:
+                        point.Instance.isDisplayable = true;
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Read Only"].isDisplayable = true;
+                        }
+                        break;
+
+                    case enums["Remote Unit Model Types"]["N2 Device"]["enum"]:
+                        point.Instance.isDisplayable = true;
+                        break;
+
+                    default: // Unknown, no RMU
+                        mp = true;
+                        break;
+                }
+            }
+            obj.Utility.getPropertyObject("Monitor Point", point).isDisplayable = mp;
+            obj.Utility.setPropsDisplayable(point, ["Demand Interval", "Demand Enable", "Fail Action"], mp);
+            return point;
+        },
+
+        applyBinaryValueDevModel: function(data) {
+            return obj.EditChanges.applyAnalogValueDevModel(data);
+        },
+
+        applyMultiStateValueDevModel: function(data) {
+            var point = data.point,
+                eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
+                setDisp = obj.Utility.setPropsDisplayable;
+
+            setDisp(point, ["Instance", "Read Only", "Input Type", "Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "Control Data Type", "Control Function", "Control Register"], false);
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
+                switch (point._rmuModel) {
+                    case eRmu["Programmable Modbus"]["enum"]:
+                        setDisp(point, ["Modbus Order", "Poll Data Type", "Poll Function", "Poll Register", "Control Data Type", "Control Function", "Control Register"], true);
+                        break;
+
+                    case eRmu["Liebert"]["enum"]:
+                    case eRmu["Sierra Steam Meter"]["enum"]:
+                    case eRmu["Siemens Power Meter"]["enum"]:
+                    case eRmu["Ingersol Rand Intellysis"]["enum"]:
+                    case eRmu["PowerLogic 3000 Meter"]["enum"]:
+                    case eRmu["Generic Modbus"]["enum"]:
+                    case eRmu["PowerTraks 9000"]["enum"]:
+                        setDisp(point, ["Modbus Order", "Poll Data Type"], true);
+                        break;
+
+                    case eRmu["BACnet"]["enum"]:
+                        obj.Utility.setupPropValueOptions(point["Input Type"], {
+                            "Input": 13,
+                            "Output": 14,
+                            "Value": 19
+                        });
+                        point.Instance.isDisplayable = true;
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Read Only"].isDisplayable = true;
+                        }
+                        break;
+
+                    case eRmu["Smart II Remote Unit"]["enum"]:
+                        point.Instance.isDisplayable = true;
+                        break;
+
+                    default: // Unknown, no RMU
+                        break;
+                }
+            }
+            return point;
+        },
+
+        applyAccumulatorDevModel: function(data) {
+            var point = data.point,
+                eRmu = enumsTemplatesJson.Enums["Remote Unit Model Types"],
+                eDev = enumsTemplatesJson.Enums["Device Model Types"],
+                setDisp = obj.Utility.setPropsDisplayable,
+                setValOpt = obj.Utility.setupPropValueOptions,
+                setCh = obj.Utility.setChannelOptions,
+                ch = point.Channel;
+
+            setDisp(point, ["Pulse Weight", "Channel", "Instance", "Read Only", "Modbus Order", "Poll Register", "Poll Data Type", "Poll Function", "Fast Pulse", "Rate Period"], false);
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if (point._relPoint === enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"]) {
+                switch (point._rmuModel) {
+                    case eRmu["Programmable Modbus"]["enum"]:
+                        setDisp(point, ["Pulse Weight", "Modbus Order", "Poll Register", "Poll Data Type", "Poll Function"], true);
+                        break;
+
+                    case eRmu["Liebert"]["enum"]:
+                    case eRmu["Sierra Steam Meter"]["enum"]:
+                    case eRmu["Siemens Power Meter"]["enum"]:
+                    case eRmu["Ingersol Rand Intellysis"]["enum"]:
+                    case eRmu["PowerLogic 3000 Meter"]["enum"]:
+                    case eRmu["Generic Modbus"]["enum"]:
+                    case eRmu["PowerTraks 9000"]["enum"]:
+                        setDisp(point, ["Pulse Weight", "Modbus Order", "Poll Data Type"], true);
+                        break;
+
+                    case eRmu["BACnet"]["enum"]:
+                        setDisp(point, ["Pulse Weight", "Instance"], true);
+                        if (obj.Utility.checkMicroScan5Device(point)) {
+                            point["Read Only"].isDisplayable = true;
+                        }
+                        break;
+
+                    case eRmu["MS3 RT"]["enum"]:
+                    case eRmu["MS 3 EEPROM"]["enum"]:
+                    case eRmu["MS 3 Flash"]["enum"]:
+                        setDisp(point, ["Pulse Weight", "Rate Period"], true);
+                        setCh(ch, 0, 7);
+                        break;
+
+                    case eRmu["N2 Device"]["enum"]:
+                        setDisp(point, ["Pulse Weight", "Instance"], true);
+                        break;
+
+                    case eRmu["IFC Remote Unit"]["enum"]:
+                        point["Pulse Weight"].isDisplayable = true;
+                        setCh(ch, 0, 15);
+                        break;
+
+                    case eRmu["Smart II Remote Unit"]["enum"]:
+                        point["Pulse Weight"].isDisplayable = true;
+                        setCh(ch, 0, 7);
+                        break;
+
+                    default: // Unknown, no RMU
+                        switch (point._devModel) {
+                            case eDev["MicroScan 5 UNV"]["enum"]:
+                                setDisp(point, ["Pulse Weight", "Channel", "Fast Pulse", "Rate Period"], true);
+                                setCh(ch, 1, 16);
+                                break;
+                            case eDev["SCADA Vio"]["enum"]:
+                                setDisp(point, ["Pulse Weight", "Channel", "Fast Pulse", "Rate Period"], true);
+                                setCh(ch, 6, 9);
+                                break;
+                            case eDev["SCADA IO"]["enum"]:
+                                setDisp(point, ["Pulse Weight", "Channel", "Fast Pulse", "Rate Period"], true);
+                                setValOpt(ch, {
+                                    "I/O 1": 1,
+                                    "I/O 2": 2,
+                                    "I/O 3": 3,
+                                    "I/O 4": 4,
+                                    "I/O 5": 5,
+                                    "I/O 6": 6,
+                                    "I/O 7": 7,
+                                    "I/O 8": 8
+                                });
+                                break;
+                            case eDev["MicroScan 4 UNV"]["enum"]:
+                                setDisp(point, ["Pulse Weight", "Channel", "Rate Period"], true);
+                                setCh(ch, 1, 16);
+                                break;
+                            default: // MicroScan 4 Digital
+                                setDisp(point, ["Pulse Weight", "Channel", "Rate Period"], true);
+                                setCh(ch, 1, 32);
+                                break;
+                        }
+                        break;
+                }
+            }
+            return point;
+        },
+
+        applyCpcPointDevModel: function(point) {
+            var disp;
+
+            if ((obj.Utility.checkMicroScan5Device(point) || obj.Utility.checkMicroScan4Device(point)) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+                disp = true;
+            } else {
+                disp = false;
+            }
+            point["Maximum Change"].isDisplayable = disp;
+        },
+
+        applyEnthalpyDevModel: function(data) {
             var point = data.point;
 
-            // If Unkonwn or Central Device type
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"])) {
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Device Model Type"]["enum"];
-            } else
-                point._relPoint = enumsTemplatesJson.Enums.Reliabilities["No Fault"]["enum"];
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            obj.EditChanges.applyCpcPointDevModel(point);
+            return point;
+        },
 
-            point.Instance.isDisplayable = false;
-            point.Channel.isDisplayable = false;
-            point["Fast Pulse"].isDisplayable = false;
-            point["Modbus Order"].isDisplayable = false;
-            point["Poll Data Type"].isDisplayable = false;
-            point["Poll Function"].isDisplayable = false;
-            point["Poll Register"].isDisplayable = false;
-            point["Rate Period"].isDisplayable = false;
-            point["Pulse Weight"].isDisplayable = false;
+        applyEconomizerDevModel: function(data) {
+            return obj.EditChanges.applyEnthalpyDevModel(data);
+        },
 
-            // If Uknown, Central Device, MicroScan 5 xTalk, MicroScan 5 UNV, SCADA Vio, SCADA IO
-            if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Unknown"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Central Device"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"])) {
+        applySelectValueDevModel: function(data) {
+            return obj.EditChanges.applyEnthalpyDevModel(data);
+        },
 
-                // If no RMU defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
+        applyAverageDevModel: function(data) {
+            return obj.EditChanges.applyEnthalpyDevModel(data);
+        },
 
-                    // If MicroScan 5 xTalk
-                    if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 5 xTalk"]["enum"]) {
+        applySetpointAdjustDevModel: function(data) {
+            return obj.EditChanges.applyEnthalpyDevModel(data);
+        },
 
-                        point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                    }
-                    // If SCADA Vio
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA Vio"]["enum"]) {
+        applyProportionalDevModel: function(data) {
+            var point = data.point,
+                opts,
+                disp;
 
-                        point["Channel"].isDisplayable = true;
-                        point["Channel"].Max = 9;
-                        point["Channel"].Min = 6;
-                        point["Fast Pulse"].isDisplayable = true;
-                        point["Rate Period"].isDisplayable = true;
-                        point["Pulse Weight"].isDisplayable = true;
-                    }
-                    // If SCADA IO
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["SCADA IO"]["enum"]) {
-                        point["Channel"].isDisplayable = true;
-                        point["Channel"].Max = 8;
-                        point["Channel"].Min = 1;
-                        point["Fast Pulse"].isDisplayable = true;
-                        point["Rate Period"].isDisplayable = true;
-                        point["Pulse Weight"].isDisplayable = true;
-                    }
-                    // Must be MS5-UNV, Unknown, or Central
-                    else {
-
-                        point["Channel"].isDisplayable = true;
-                        point["Channel"].Max = 16;
-                        point["Channel"].Min = 1;
-                        point["Fast Pulse"].isDisplayable = true;
-                        point["Rate Period"].isDisplayable = true;
-                        point["Pulse Weight"].isDisplayable = true;
-                    }
-                }
-                // RMU defined. If BACnet or N2,
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // If Liebert, Sierra Steam Meter, Siemens Power Meter, Ingersol Rand Intellysis, PowerLogics 3000, Generic Modbus, PowerTraks 9000, Programmable Modbus
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Liebert"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerLogic 3000 Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Generic Modbus"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerTraks 9000"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"])) {
-
-                    point["Modbus Order"].isDisplayable = true;
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                    point["Pulse Weight"].isDisplayable = true;
-                }
-                // If MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point["Channel"].isDisplayable = true;
-                    point["Channel"].Max = 7;
-                    point["Channel"].Min = 0;
-                    point["Pulse Weight"].isDisplayable = true;
-                }
-                // For all other RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if ((obj.Utility.checkMicroScan5Device(point) || obj.Utility.checkMicroScan4Device(point)) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+                opts = {
+                    "P Only": 1,
+                    "PI": 2,
+                    "PID": 3
+                };
+                disp = true;
+            } else {
+                opts = {
+                    "P Only": 1,
+                    "PI": 2
+                };
+                disp = false;
             }
-            // If MicroScan 4 UNV, MicroScan 4 xTalk, or MicroScan 4 Digital
-            else if ((point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 UNV"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) || (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"])) {
+            obj.Utility.setupPropValueOptions(point["Calculation Type"], opts);
+            point["Maximum Change"].isDisplayable = disp;
+            return obj.EditChanges["Calculation Type"](data);
+        },
 
-                // If no RMU defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
+        applyMathDevModel: function(data) {
+            var point = data.point,
+                disp;
 
-                    // If MicroScan 4 xTalk
-                    if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 xTalk"]["enum"]) {
-
-                        point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                    }
-                    // If MicroScan 4 Digital
-                    else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan 4 Digital"]["enum"]) {
-
-                        point["Channel"].isDisplayable = true;
-                        point["Channel"].Max = 32;
-                        point["Channel"].Min = 1;
-                        point["Rate Period"].isDisplayable = true;
-                        point["Pulse Weight"].isDisplayable = true;
-                    }
-                    // Must be MS4-UNV, Unknown, or Central
-                    else {
-
-                        point["Channel"].isDisplayable = true;
-                        point["Channel"].Max = 16;
-                        point["Channel"].Min = 1;
-                        point["Rate Period"].isDisplayable = true;
-                        point["Pulse Weight"].isDisplayable = true;
-                    }
-                }
-                // RMU defined. If BACnet or N2,
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["BACnet"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"])) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // If Liebert, Sierra Steam Meter, Siemens Power Meter, Ingersol Rand Intellysis, PowerLogics 3000, Generic Modbus, PowerTraks 9000, Programmable Modbus
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Liebert"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Siemens Power Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Ingersol Rand Intellysis"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerLogic 3000 Meter"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Generic Modbus"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["PowerTraks 9000"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Programmable Modbus"]["enum"])) {
-
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                    point["Pulse Weight"].isDisplayable = true;
-                }
-                // If MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point["Channel"].isDisplayable = true;
-                    point["Channel"].Max = 7;
-                    point["Channel"].Min = 0;
-                    point["Pulse Weight"].isDisplayable = true;
-                }
-                // For all other RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if (point._rmuModel !== enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"]) {
+                disp = true;
+            } else {
+                disp = false;
             }
-            // If Sierra Steam Meter Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Sierra Steam Meter Device"]["enum"]) {
+            point["Rate"].isDisplayable = disp;
+            return obj.EditChanges.applyEnthalpyDevModel(data);
+        },
 
-                // If no RMU defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
+        applyMultiplexerDevModel: function(data) {
+            var point = data.point;
 
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // RMU defined. If Sierra Steam Meter
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Sierra Steam Meter"]["enum"]) {
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            return point;
+        },
 
-                    point["Poll Data Type"].isDisplayable = true;
-                    point["Poll Function"].isDisplayable = true;
-                    point["Poll Register"].isDisplayable = true;
-                    point["Pulse Weight"].isDisplayable = true;
-                }
-                // For all other RMU
-                else {
+        applyRampDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
 
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
+        applyTotalizerDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyAnalogSelectorDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyBinarySelectorDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyAlarmStatusDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyComparatorDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyDigitalLogicDevModel: function(data) {
+            return obj.EditChanges.applyMultiplexerDevModel(data);
+        },
+
+        applyDelayDevModel: function(data) {
+            var point = data.point,
+                opts;
+
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if ((obj.Utility.checkMicroScan5Device(point) || obj.Utility.checkMicroScan4Device(point)) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+                opts = {
+                    "Delay": 0,
+                    "Pulsed": 1
+                };
+            } else {
+                opts = {
+                    "Delay": 0
+                };
             }
-            // If MicroScan Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["MicroScan Interface Device"]["enum"]) {
+            obj.Utility.setupPropValueOptions(point["Calculation Type"], opts);
+            return point;
+        },
 
-                // If no RMU defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
+        applyLogicDevModel: function(data) {
+            var point = data.point,
+                opts,
+                i;
 
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // RMU defined. If MS3 RT, MS 3 EEPROM, MS 3 Flash
-                else if ((point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS3 RT"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 EEPROM"]["enum"]) || (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["MS 3 Flash"]["enum"])) {
-
-                    point["Channel"].isDisplayable = true;
-                    point["Channel"].Max = 7;
-                    point["Channel"].Min = 0;
-                    point["Pulse Weight"].isDisplayable = true;
-                }
-                // For all other RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
+            point._relPoint = obj.Utility.checkPointDeviceRMU(point);
+            if (obj.Utility.checkMicroScan5Device(point) && (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Unknown"]["enum"])) {
+                opts = {
+                    "<>": 0,
+                    "=": 1,
+                    ">": 2,
+                    ">=": 3,
+                    "<": 4,
+                    "<=": 5
+                };
+            } else {
+                opts = {
+                    "<>": 0,
+                    "=": 1
+                };
             }
-            // If N2 Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["N2 Interface Device"]["enum"]) {
-
-                // If no RMU defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // RMU defined. If N2
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["N2 Device"]["enum"]) {
-
-                    point.Instance.isDisplayable = true;
-                }
-                // For all other RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
+            for (i = 0; i <= 5; i++) {
+                obj.Utility.setupPropValueOptions(point["If Compare " + i], opts);
             }
-            // If Field Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Field Interface Device"]["enum"]) {
-
-                // If no RMU defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // RMU defined. If IFC RMU
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["IFC Remote Unit"]["enum"]) {
-
-                    point["Channel"].isDisplayable = true;
-                    point["Channel"].Max = 15;
-                    point["Channel"].Min = 0;
-                    point["Pulse Weight"].isDisplayable = true;
-                }
-                // For all other RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            // If Staefa Interface Device
-            else if (point._devModel === enumsTemplatesJson.Enums["Device Model Types"]["Staefa Interface Device"]["enum"]) {
-
-                // If no RMU defined
-                if (obj.Utility.getPropertyObject("Remote Unit Point", point).PointInst === 0) {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-                // RMU defined. If Smart II RMU
-                else if (point._rmuModel === enumsTemplatesJson.Enums["Remote Unit Model Types"]["Smart II Remote Unit"]["enum"]) {
-
-                    point["Channel"].isDisplayable = true;
-                    point["Channel"].Max = 7;
-                    point["Channel"].Min = 0;
-                    point["Pulse Weight"].isDisplayable = true;
-                }
-                // For all other RMU
-                else {
-
-                    point._relPoint = enumsTemplatesJson.Enums.Reliabilities["Invalid Remote Unit Model Type"]["enum"];
-                }
-            }
-            return data.point;
-        }
+            return point;
+        },
     };
 
     obj.Templates = {

@@ -1,4 +1,5 @@
 var mongo = require('mongodb');
+var Utility = require('../../models/utility');
 var pointsCollection = "points";
 var Config = require('./lib/config.js');
 var async = require('async');
@@ -10,7 +11,7 @@ ModelUtil = (function() {
 
 	// DeviceUtilures properties for a device
 	obj.Device = {
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 
 			this.applyModelType(data, function(err, device) {
 
@@ -21,27 +22,27 @@ ModelUtil = (function() {
 
 		applyModelType: function(data, callback) {
 
-			callback(null, Config.EditChanges.applyDeviceTypeModelType(data));
+			callback(null, Config.EditChanges.applyDeviceDevModel(data));
 		},
 
 		applyUplinkPort: function(data, callback) {
 
-			callback(null, Config.EditChanges.applyDeviceTypeUplinkPort(data));
+			callback(null, Config.EditChanges.applyDeviceUplinkPort(data));
 		},
 
 		applyEthernetProtocol: function(data, callback) {
 
-			callback(null, Config.EditChanges.applyDeviceTypeEthernetProtocol(data));
+			callback(null, Config.EditChanges.applyDeviceEthernetProtocol(data));
 		},
 
 		applyPortNProtocol: function(data, callback) {
 
-			callback(null, Config.EditChanges.applyDeviceTypePortNProtocol(data));
+			callback(null, Config.EditChanges.applyDevicePortNProtocol(data));
 		}
 	};
 
 	obj["Remote Unit"] = {
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			this.applyModelType(data, function(err, rmu) {
 				callback(null, rmu);
 			});
@@ -49,20 +50,20 @@ ModelUtil = (function() {
 
 		applyModelType: function(data, callback) {
 
-			callback(null, Config.EditChanges.applyRemoteUnitTypeModelType(data));
+			callback(null, Config.EditChanges.applyRemoteUnitDevModel(data));
 		},
 
 		applyNetworkType: function(data) {
-			callback(null, Config.EditChanges.applyRemoteUnitTypeNetworkType(data));
+			callback(null, Config.EditChanges.applyRemoteUnitNetworkType(data));
 		}
 	};
 
 	obj["Analog Input"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			obj["Analog Input"].applyDevModel(data, function(err, aiPoint) {
 				data.point = aiPoint;
-				obj["Analog Input"].applySensorPoint(data, db, function(err, aiPoint) {
+				obj["Analog Input"].applySensorPoint(data, function(err, aiPoint) {
 					callback(null, aiPoint);
 				});
 			});
@@ -77,12 +78,14 @@ ModelUtil = (function() {
 		//       Notes:
 		// Rev.  1.00	08/12/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
-		applySensorPoint: function(data, db, callback) {
+		applySensorPoint: function(data, callback) {
 			//console.log("applySensorPoint");
 			aiPoint = data.point;
-
-			db.collection("points").findOne({
-				_id: Config.Utility.getPropertyObject("Sensor Point", aiPoint).Value
+			Utility.getOne({
+				collection: 'points',
+				query: {
+					_id: Config.Utility.getPropertyObject("Sensor Point", aiPoint).Value
+				}
 			}, function(err, refPoint) {
 
 				data = {
@@ -94,7 +97,7 @@ ModelUtil = (function() {
 					console.log("refpoint", refPoint);*/
 				data.propertyObject = Config.Utility.getPropertyObject(data.property, data.point);
 				if ([7, 8].indexOf(data.point._rmuModel) === -1) {
-					callback(null, Config.EditChanges.applyAnalogInputTypeSensorPoint(data));
+					callback(null, Config.EditChanges.applyAnalogInputSensorPoint(data));
 				} else {
 					callback(null, data.point);
 				}
@@ -108,7 +111,7 @@ ModelUtil = (function() {
 					refPoint: refPoint,
 					property: "Sensor Point"
 				};
-				callback(null, Config.EditChanges.applyAnalogInputTypeSensorPoint(data));
+				callback(null, Config.EditChanges.applyAnalogInputSensorPoint(data));
 
 			});*/
 
@@ -127,21 +130,21 @@ ModelUtil = (function() {
 		//--------------------------------------------------------------------------------------------
 		applyDevModel: function(data, callback) {
 				//console.log("applyDevModel");
-				callback(null, Config.EditChanges.applyAnalogInputTypeDevModel(data));
+				callback(null, Config.EditChanges.applyAnalogInputDevModel(data));
 			} // End applyDevModel()
 
 	}; // end obj.AIPoint
 
 	obj["Analog Output"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			/*for (var m in obj.AOPoint) {
 				console.log(typeof obj.AOPoint[m], " %%%%%", m);
 			}*/
 
 			obj["Analog Output"].applyDevModel(data, function(err, aoPoint) {
 				data.point = aoPoint;
-				obj["Analog Output"].applySensorPoint(data, db, function(err, aoPoint) {
+				obj["Analog Output"].applySensorPoint(data, function(err, aoPoint) {
 
 					callback(null, aoPoint);
 				});
@@ -158,10 +161,13 @@ ModelUtil = (function() {
 		//       Notes:
 		// Rev.  1.00	08/14/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
-		applySensorPoint: function(data, db, callback) {
+		applySensorPoint: function(data, callback) {
 			aoPoint = data.point;
-			db.collection("points").findOne({
-				_id: Config.Utility.getPropertyObject("Sensor Point", aoPoint).Value
+			Utility.getOne({
+				collection: 'points',
+				query: {
+					_id: Config.Utility.getPropertyObject("Sensor Point", aoPoint).Value
+				}
 			}, function(err, refPoint) {
 
 				data = {
@@ -170,7 +176,7 @@ ModelUtil = (function() {
 					property: "Sensor Point"
 				};
 				data.propertyObject = Config.Utility.getPropertyObject(data.property, data.point);
-				callback(null, Config.EditChanges.applyAnalogOutputTypeSensorPoint(data));
+				callback(null, Config.EditChanges.applyAnalogOutputSensorPoint(data));
 
 			});
 
@@ -186,7 +192,7 @@ ModelUtil = (function() {
 		// Rev.  1.00	08/14/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
 		applyOutputType: function(data, callback) {
-			callback(null, Config.EditChanges.applyAnalogOutputTypeOutputType(data));
+			callback(null, Config.EditChanges.applyAnalogOutputOutputType(data));
 
 
 		}, // end applyOutputType()
@@ -225,7 +231,7 @@ ModelUtil = (function() {
 		//--------------------------------------------------------------------------------------------
 		applyDevModel: function(data, callback) {
 
-				callback(null, Config.EditChanges.applyAnalogOutputTypeDevModel(data));
+				callback(null, Config.EditChanges.applyAnalogOutputDevModel(data));
 
 			} // end applyDevModel()
 
@@ -233,7 +239,7 @@ ModelUtil = (function() {
 
 	obj["Analog Value"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			obj["Analog Value"].applyDevModel(data, function(err, avPoint) {
 				callback(null, avPoint);
 			});
@@ -251,7 +257,7 @@ ModelUtil = (function() {
 		//--------------------------------------------------------------------------------------------
 		applyDevModel: function(data, callback) {
 
-			callback(null, Config.EditChanges.applyAnalogValueTypeDevModel(data));
+			callback(null, Config.EditChanges.applyAnalogValueDevModel(data));
 
 		}, // end applyDevModel()
 
@@ -279,10 +285,10 @@ ModelUtil = (function() {
 
 	obj["Binary Value"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			obj["Binary Value"].applyDevModel(data, function(err, bvPoint) {
 				data.point = bvPoint;
-				obj["Binary Value"].applyFeedback(data, db, function(err, bvPoint) {
+				obj["Binary Value"].applyFeedback(data, function(err, bvPoint) {
 
 					callback(null, bvPoint);
 				});
@@ -300,7 +306,7 @@ ModelUtil = (function() {
 		// Rev.  1.00	08/15/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
 		applyDevModel: function(data, callback) {
-			callback(null, Config.EditChanges.applyBinaryValueTypeDevModel(data));
+			callback(null, Config.EditChanges.applyBinaryValueDevModel(data));
 		}, // end applyDevModel()
 
 		//--------------------------------------------------------------------------------------------
@@ -332,12 +338,15 @@ ModelUtil = (function() {
 		//       Notes:
 		// Rev.  1.00	08/15/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
-		applyFeedback: function(data, db, callback) {
+		applyFeedback: function(data, callback) {
 
 				bvPoint = data.point;
-				db.collection("points").findOne({
+			Utility.getOne({
+				collection: 'points',
+				query: {
 					_id: Config.Utility.getPropertyObject("Feedback Point", bvPoint).Value
-				}, function(err, refPoint) {
+				}
+			}, function(err, refPoint) {
 
 					data = {
 						point: bvPoint,
@@ -345,7 +354,7 @@ ModelUtil = (function() {
 						property: "Feedback Point"
 					};
 					data.propertyObject = Config.Utility.getPropertyObject(data.property, data.point);
-					callback(null, Config.EditChanges.applyBinaryInputTypeFeedbackPoint(data));
+					callback(null, Config.EditChanges.applyBinaryInputFeedbackPoint(data));
 
 				});
 
@@ -356,10 +365,10 @@ ModelUtil = (function() {
 
 	obj["Binary Input"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			obj["Binary Input"].applyDevModel(data, function(err, biPoint) {
 				data.point = biPoint;
-				obj["Binary Input"].applyFeedback(data, db, function(err, biPoint) {
+				obj["Binary Input"].applyFeedback(data, function(err, biPoint) {
 
 					callback(null, biPoint);
 				});
@@ -375,11 +384,14 @@ ModelUtil = (function() {
 		//       Notes:
 		// Rev.  1.00	08/15/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
-		applyFeedback: function(data, db, callback) {
+		applyFeedback: function(data, callback) {
 
 			biPoint = data.point;
-			db.collection("points").findOne({
-				_id: Config.Utility.getPropertyObject("Feedback Point", biPoint).Value
+			Utility.getOne({
+				collection: 'points',
+				query: {
+					_id: Config.Utility.getPropertyObject("Feedback Point", biPoint).Value
+				}
 			}, function(err, refPoint) {
 
 				data = {
@@ -388,7 +400,7 @@ ModelUtil = (function() {
 					property: "Feedback Point"
 				};
 				data.propertyObject = Config.Utility.getPropertyObject(data.property, data.point);
-				callback(null, Config.EditChanges.applyBinaryInputTypeFeedbackPoint(data));
+				callback(null, Config.EditChanges.applyBinaryInputFeedbackPoint(data));
 
 			});
 
@@ -405,7 +417,7 @@ ModelUtil = (function() {
 		//--------------------------------------------------------------------------------------------
 		applyInputType: function(data) {
 
-			callback(null, Config.EditChanges.applyBinaryInputTypeInputType(data));
+			callback(null, Config.EditChanges.applyBinaryInputInputType(data));
 
 		}, // end applyInputType()
 
@@ -420,14 +432,14 @@ ModelUtil = (function() {
 		// Rev.  1.00	08/15/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
 		applyDevModel: function(data, callback) {
-				callback(null, Config.EditChanges.applyBinaryInputTypeDevModel(data));
+				callback(null, Config.EditChanges.applyBinaryInputDevModel(data));
 			} // end applyDevModel()
 
 	}; // end obj.BIPoint
 
 	obj["Binary Output"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			this.applyDevModel(data, function(err, boPoint) {
 				callback(null, boPoint);
 			});
@@ -444,7 +456,7 @@ ModelUtil = (function() {
 		// Rev.  1.00	08/15/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
 		applyFeedbackType: function(data) {
-			callback(null, Config.EditChanges.applyBinaryOutputTypeFeedbackType(data));
+			callback(null, Config.EditChanges.applyBinaryOutputFeedbackType(data));
 
 		}, // end applyFeedbackType()
 
@@ -460,7 +472,7 @@ ModelUtil = (function() {
 		//--------------------------------------------------------------------------------------------
 		applyOutputType: function(data) {
 
-			callback(null, Config.EditChanges.applyBinaryOutputTypeOutputType(data));
+			callback(null, Config.EditChanges.applyBinaryOutputOutputType(data));
 
 		}, // end applyOutputType()
 
@@ -495,14 +507,14 @@ ModelUtil = (function() {
 		// Rev.  1.00	08/15/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
 		applyDevModel: function(data, callback) {
-				callback(null, Config.EditChanges.applyBinaryOutputTypeDevModel(data));
+				callback(null, Config.EditChanges.applyBinaryOutputDevModel(data));
 			} // end applyDevModel()
 
 	}; // end obj.BOPoint
 
 	obj["MultiState Value"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			this.applyDevModel(data, function(err, msvPoint) {
 				callback(null, msvPoint);
 			});
@@ -533,14 +545,14 @@ ModelUtil = (function() {
 		// Rev.  1.00	08/16/2013	JDR	Original Issue
 		//--------------------------------------------------------------------------------------------
 		applyDevModel: function(data, callback) {
-			callback(null, Config.EditChanges.applyMultiStateValueTypeDevModel(data));
+			callback(null, Config.EditChanges.applyMultiStateValueDevModel(data));
 
 		}
 	}; // end obj.MSVPoint
 
 	obj["Accumulator"] = {
 
-		updateAll: function(data, db, callback) {
+		updateAll: function(data, callback) {
 			this.applyDevModel(data, function(err, accPoint) {
 				callback(null, accPoint);
 			});
@@ -574,7 +586,7 @@ ModelUtil = (function() {
 		//--------------------------------------------------------------------------------------------
 		applyDevModel: function(data, callback) {
 
-				callback(null, Config.EditChanges.applyAccumulatorTypeDevModel(data));
+				callback(null, Config.EditChanges.applyAccumulatorDevModel(data));
 			} // end applyDevModel()
 
 	}; // end obj.ACCPoint
