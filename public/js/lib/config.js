@@ -1501,11 +1501,6 @@ var Config = (function(obj) {
 
             if (point._devModel !== data.oldPoint._devModel) {
                 obj.Utility.updDevModel(data);
-
-                if (!!~['Analog Input', 'Analog Output'].indexOf(point['Point Type'].Value)) {
-                    // Update Conversion Type and Conversion Coefficient isDisplayable flags based on Sensor Point property's isDisplayable flag
-                    obj.EditChanges.updateConversionIsDisplayable(point, obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable);
-                }
             }
             return data;
         },
@@ -2092,11 +2087,6 @@ var Config = (function(obj) {
 
             if (point._rmuModel !== data.oldPoint._rmuModel) {
                 obj.Utility.updDevModel(data);
-
-                if (!!~['Analog Input', 'Analog Output'].indexOf(point['Point Type'].Value)) {
-                    // Update Conversion Type and Conversion Coefficient isDisplayable flags based on Sensor Point property's isDisplayable flag
-                    obj.EditChanges.updateConversionIsDisplayable(point, obj.Utility.getPropertyObject("Sensor Point", point).isDisplayable);
-                }
             }
             return data;
         },
@@ -2787,24 +2777,6 @@ var Config = (function(obj) {
                 fanStrategy.eValue = enumsTemplatesJson.Enums["Fan Control Strategies"][strategy].enum;
             } else {
                 fanStrategy.isDisplayable = false;
-            }
-        },
-
-        updateConversionIsDisplayable: function(point, isDisplayable) {
-            // Make sure isDisplayable is a boolean (it could be null if something went wrong)
-            isDisplayable = !!isDisplayable;
-
-            // Make sure property exists on point (AO's don't use Conversion Type)
-            if (point.hasOwnProperty("Conversion Type"))
-                point["Conversion Type"].isDisplayable = isDisplayable;
-
-            for (var i = 1; i < 5; i++) {
-                var prop = "Conversion Coefficient " + i;
-
-                // Make sure property exists on point (AO's don't use Conversion Coefficients 3 or 4)
-                if (point.hasOwnProperty(prop)) {
-                    point[prop].isDisplayable = isDisplayable;
-                }
             }
         },
 
