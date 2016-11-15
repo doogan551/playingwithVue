@@ -178,7 +178,7 @@ html
                         // /ko
                         // /ko
 
-                    .recentItems
+                    //- .recentItems
                         .col.s12.blue-grey-text Recent Items
                             //- .recentHeader.collection-item.blue-grey-text
                             //-     .center-align Recent Items
@@ -191,7 +191,7 @@ html
                         a.blue-grey-text.collection-item(href="javascript://")
                             span.title DEVICE ADDRESS REPORT
                                 i.left.material-icons assignment
-                    .settings.blue-grey-text
+                    //- .settings.blue-grey-text
                         //- a.branding(href='javascript://')
                         //-     i.material-icons.blue-grey-text settings
                         .left
@@ -478,16 +478,16 @@ html
                         a.btn-flat.pointTypeDropdownButton(href="#", data-bind="click: togglePointTypeDropdown, attr: { id : id() + '_pointTypeDropdownButton' }, css: { disabled: restrictCreate }")
                             span(data-bind="text: pointTypeText")
                             i.material-icons.dropdownCaret arrow_drop_down
-                        ul.dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }")
+                        .dropdown-content.grid-dropdown.animates(data-bind="fadeVisible: dropdownOpen, attr: { id : id() + '_pointTypeDropdown' }, style: { 'column-count': dropdownColumnCount }")
                             // ko if: (mode() === 'default' || mode() === 'filter')
                             // ko if: restrictPointTypes() !== true
-                            li
+                            span
                                 input.filled-in(type='checkbox', data-bind="click: toggleAllPointTypes, checked: allTypesSelected, attr: {id : id() + '_allPointTypes'}")
                                 label.label-tight(data-bind="attr: { for: id() + '_allPointTypes' }") All
                             // /ko
                             // ko foreach: pointTypes
                             // ko if: visible() === true
-                            li(data-bind="click: function () { $parent.togglePointType($index()) } ")
+                            span(data-bind="click: function () { $parent.togglePointType($index()) } ")
                                 input.filled-in(type='checkbox', data-bind="checked: selected, attr: {id : $parent.id() + '_pointType_' + $index() }")
                                 label.label-tight(data-bind="text: key, attr: { for: $parent.id() + '_pointType_' + $index() }")
                             // /ko
@@ -497,10 +497,9 @@ html
                             // ko if: mode() === 'create'
                             // ko foreach: explodedPointTypes
                             // ko if: visible() === true
-                            li(data-bind="click: function () { $parent.newPointType($data.key()); $parent.storePointType($data); return false; }")
+                            span(data-bind="click: function () { $parent.newPointType($data.key()); $parent.storePointType($data); return false; }")
                                 input(type='radio', data-bind="checked: $parent.newPointType, click: $parent.storePointType, attr: {value: key(), id : $parent.id() + '_pointTypeRadio_' + $index(), name : $parent.id() + '_pointTypeRadio' }")
                                 label(data-bind="text: key, attr: { for: $parent.id() + '_pointTypeRadio_' + $index() }")
-
                             // /ko
                             // /ko
                             // /ko
@@ -586,7 +585,7 @@ html
     script(type='text/javascript', src='/js/lib/lodash.min.js')
     script(type='text/javascript', src='/js/lib/config.js')
     script(type='text/javascript', src='/js/lib/moment.js')
-    script(type='text/javascript', src='/js/lib/store.min.js')
+    script(type='text/javascript', src='/js/lib/store2.min.js')
     script(type='text/javascript', src='/js/lib/jstree.js')
     script(type='text/javascript', src='/js/lib/jquery.hotkeys.js')
     //- script(type='text/javascript', src='/js/lib/typeahead.bundle.js')

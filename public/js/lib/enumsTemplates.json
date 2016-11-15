@@ -1161,7 +1161,7 @@
         "Point Types": {
             "Accumulator": {
                 "enum": 128,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math"],
+                "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point"],
                 "schedProps": ["Out of Service", "Value"]
@@ -1175,14 +1175,14 @@
             },
             "Analog Input": {
                 "enum": 0,
-                "lists": ["ai", "default", "value", "dynamic", "register", "schedEntry", "float", "math"],
+                "lists": ["ai", "default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Sensor Point", "Alarm Adjust Point", "Alarm Display Point", "Interlock Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
             },
             "Analog Output": {
                 "enum": 1,
-                "lists": ["ao", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
+                "lists": ["ao", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Sensor Point", "Alarm Adjust Point", "Alarm Display Point", "Interlock Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
@@ -1196,7 +1196,7 @@
             },
             "Analog Value": {
                 "enum": 2,
-                "lists": ["av", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
+                "lists": ["av", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Monitor Point", "Alarm Adjust Point", "Alarm Display Point", "Interlock Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
@@ -1210,14 +1210,14 @@
             },
             "Binary Input": {
                 "enum": 3,
-                "lists": ["bi", "default", "value", "dynamic", "register", "schedEntry", "enum", "math"],
+                "lists": ["bi", "default", "value", "dynamic", "register", "schedEntry", "enum", "math", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Alarm Display Point", "Interlock Point", "Feedback Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Alarm Value"]
             },
             "Binary Output": {
                 "enum": 4,
-                "lists": ["bo", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "math"],
+                "lists": ["bo", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "math", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Alarm Display Point", "Interlock Point", "Feedback Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off"]
@@ -1231,7 +1231,7 @@
             },
             "Binary Value": {
                 "enum": 5,
-                "lists": ["bv", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control"],
+                "lists": ["bv", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Alarm Display Point", "Interlock Point", "Monitor Point", "Feedback Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Alarm Value"]
@@ -1315,7 +1315,7 @@
             },
             "MultiState Value": {
                 "enum": 142,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control"],
+                "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point"],
                 "schedProps": ["Out of Service", "Value"]

@@ -333,6 +333,8 @@ module.exports = {
             oldVersion = ce.clone(d[0]);
             delete oldVersion._id;
 
+            displayObject._pStatus = 1;
+
             Utility.update({
                     collection: pointsCollection,
                     query: { //update the display
