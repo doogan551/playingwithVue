@@ -179,6 +179,11 @@ body {
     margin-bottom: 0;
 }
 
+.subtitle.editSection .input-row .checkbox input[type="checkbox"]  {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
 .devicePoint button,
 .pointName button {
     margin-right: 10px;

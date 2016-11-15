@@ -2899,7 +2899,7 @@ function updateNameSegments(point, callback) {
 }
 
 function updateSequences(point, callback) {
-	if (point['Point Type.Value'] === 'Sequence') {
+	if (point['Point Type'].Value === 'Sequence') {
 		point._parentUpi = 0;
 	}
 	callback();
