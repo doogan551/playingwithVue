@@ -600,25 +600,26 @@ html.direports
                             label Months
                     .row.flex.flex-center.flex-start.inlineInputs
                         .input-field
-                            select#reportDuration(data-bind='options: availableReportDurations, optionsText: "text", value: selectedReportDuration, event: { "change": handleDurationChange }')
+                            select#reportDuration(data-bind='options: availableReportRanges, optionsText: "text", value: selectedReportRange, event: { "change": handleDurationChange }')
                             label(for='reportDuration') Report Duration
-                        //- .input-field
+                        .input-field
                             //- The active class on our label resolves the conflict of label overlapping initial value
-                            label.active(for='reportStartTime') Start Time
-                            input#reportStartTime(type='time', data-bind='value: reportStartTime')
-                        //- .input-field
+                            label.active(for='reportStartTimeOffset') Report Start Time
+                            input#reportStartTimeOffset.timepicker(type='time', data-bind='value: selectedReportStartTimeOffset')
+                        .input-field
                             //- The active class on our label resolves the conflict of label overlapping initial value
-                            label.active(for='reportEndTime') Start Time
-                            input#reportEndTime(type='time', data-bind='value: reportEndTime')
+                            label.active(for='reportEndTimeOffset') Report End Time
+                            input#reportEndTimeOffset.timepicker(type='time', data-bind='value: selectedReportEndTimeOffset')
                     .row.flex.flex-center.flex-start.inlineInputs
                         .input-field
-                            label(for='inputInterval') Report Interval
-                            input#inputInterval.active(type='number')
+                            label.active(for='inputInterval') Report Interval
+                            input#inputInterval.active(type='number', data-bind='value: selectedReportIntervalValue')
                         .input-field
-                            select#selectInterval(data-bind='options: selectedReportDuration().intervals, value: selectedReportInterval')
+                            label.active(for='selectInterval') Report Period
+                            select#selectInterval(data-bind='options: selectedReportRange().intervals, value: selectedReportIntervalPeriod')
                 .chips
             .modal-footer
-                a.btn.waves-effect.blue-grey(data-bind="click: save") Save
+                a.btn.waves-effect.blue-grey(data-bind="click: update") Update
                 a.btn.waves-effect.grey(data-bind="click: cancel") Cancel
                 a.btn.wafes-effect.red.darken-4.left(data-bind="visible: !isNew, click: deleteScheduleEntry") Delete
 

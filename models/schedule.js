@@ -17,8 +17,8 @@ module.exports = self = {
         //     type: int, (1, reports)
         //     referencePointUpi: int,
         //     optionalParameters: {
-        //         duration: string,
-        //         interval: string
+        //         duration: object,
+        //         interval: object
         //     },
         //     users: array of user ids,
         //     emails: array of email strings,
@@ -108,7 +108,7 @@ module.exports = self = {
 
         async.eachSeries(data.schedules, processSchedule, callback);
     },
-    runNow: function (data, callback) {
+    runSchedule: function (data, callback) {
         // data = {
         //     user: user,
         //     schedule: {} (schedule object)

@@ -34,11 +34,11 @@ router.post('/saveSchedules', function (req, res, next) {
     });
 });
 
-router.post('/runNow', function (req, res, next) {
+router.post('/runSchedule', function (req, res, next) {
     var data = _.merge(req.params, req.body);
     data.user = req.user;
 
-    schedule.runNow(data, function (err) {
+    schedule.runSchedule(data, function (err) {
         if (err) {
             return utils.sendResponse(res, {
                 err: err

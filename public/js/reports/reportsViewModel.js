@@ -5173,7 +5173,7 @@ var reportsViewModel = function () {
     self.currentColumnEdit = ko.observable(getNewColumnTemplate());
 
     self.scheduler = {
-        reportDurations: (function buildReportDateRanges () {
+        availableReportRanges: (function buildReportDateRanges () {
             var intervals = ['Minute', 'Hour', 'Day', 'Week', 'Month'],
                 dayInterval = intervals.slice(0, 2),
                 weekInterval = intervals.slice(0, 3),
@@ -5280,7 +5280,11 @@ var reportsViewModel = function () {
                     var _val;
 
                     if (index < 2) { // If hour or minute
+                        if (val.length === 1) {
+                            val = '0' + val;
+                        }
                         _val = val;
+
                     } else {
                         _val = ko.observableArray([]);
 
@@ -5328,7 +5332,9 @@ var reportsViewModel = function () {
             build: function (parsed) {
                 var _parsed = ko.toJS(parsed),
                     interval = _parsed.interval,
-                    time = _parsed.time.split(':').reverse().join(' '),
+                    time = _parsed.time.split(':'),
+                    hour = time[0],
+                    minute = time[1],
                     dates = _parsed.dates.join(','),
                     months = _parsed.months.join(','),
                     daysOfWeek = _parsed.daysOfWeek.join(',');
@@ -5337,8 +5343,7 @@ var reportsViewModel = function () {
                     daysOfWeek = '*';
                     dates = '*';
                     months = '*';
-                }
-                if (interval === 'Weekly') {
+                } else if (interval === 'Weekly') {
                     dates = '*';
                     months = '*';
                 } else if (interval === 'Monthly') {
@@ -5348,7 +5353,14 @@ var reportsViewModel = function () {
                     daysOfWeek = '*';
                 }
 
-                return [time, dates, months, daysOfWeek].join(' ');
+                if (hour.charAt(0) === '0') {
+                    hour = hour[1];
+                }
+                if (minute.charAt(0) === '0') {
+                    minute = minute[1];
+                }
+
+                return [minute, hour, dates, months, daysOfWeek].join(' ');
             },
             explain: function (cfg) {
                 var str = '',
@@ -5515,7 +5527,7 @@ var reportsViewModel = function () {
                     })(),
                     bindings = {
                         isNew: false,
-                        availableReportDurations: self.scheduler.reportDurations.asArray,
+                        availableReportRanges: self.scheduler.availableReportRanges.asArray,
                         availableIntervals: self.scheduler.availableIntervals,
                         availableDaysOfWeek: self.scheduler.availableDaysOfWeek,
                         availableMonths: self.scheduler.availableMonths,
@@ -5528,11 +5540,12 @@ var reportsViewModel = function () {
                         selectedDates: ko.observableArray([]),
                         selectedDayOfWeek: ko.observable(),
                         selectedDaysOfWeek: ko.observableArray([]),
-                        selectedReportDuration: ko.observable(),
-                        selectedReportInterval: ko.observable(),
-                        selectedReportStartTime: ko.observable('00:00'),
-                        selectedReportEndTime: ko.observable('00:00'),
-                        save: function () {
+                        selectedReportRange: ko.observable(),
+                        selectedReportIntervalPeriod: ko.observable(),
+                        selectedReportIntervalValue: ko.observable(1),
+                        selectedReportStartTimeOffset: ko.observable('00:00'),
+                        selectedReportEndTimeOffset: ko.observable('00:00'),
+                        update: function () {
                             var parsed,
                                 len;
 
@@ -5546,8 +5559,17 @@ var reportsViewModel = function () {
                             }));
                             data.emails(recipientEmails);
 
-                            data.optionalParameters.duration(bindings.selectedReportDuration().value);
-                            data.optionalParameters.interval(bindings.selectedReportInterval());
+                            data.optionalParameters.duration({
+                                selectedRange: bindings.selectedReportRange().value,
+                                startTimeOffSet: bindings.selectedReportStartTimeOffset(),
+                                endTimeOffset: bindings.selectedReportEndTimeOffset(),
+                                startDate: null,
+                                endDate: null
+                            });
+                            data.optionalParameters.interval({
+                                period: bindings.selectedReportIntervalPeriod(),
+                                value: bindings.selectedReportIntervalValue()
+                            });
 
                             parsed = data.parsed; // Shortcut
 
@@ -5642,8 +5664,11 @@ var reportsViewModel = function () {
                         bindings.selectedDayOfWeek(_parsed.daysOfWeek[0]);
                     }
 
-                    bindings.selectedReportDuration(self.scheduler.reportDurations.asObject[data.optionalParameters.duration()]);
-                    bindings.selectedReportInterval(data.optionalParameters.interval());
+                    bindings.selectedReportRange(self.scheduler.availableReportRanges.asObject[data.optionalParameters.duration().selectedRange]);
+                    bindings.selectedReportStartTimeOffset(data.optionalParameters.duration().startTimeOffSet);
+                    bindings.selectedReportEndTimeOffset(data.optionalParameters.duration().endTimeOffset);
+                    bindings.selectedReportIntervalPeriod(data.optionalParameters.interval().period);
+                    bindings.selectedReportIntervalValue(data.optionalParameters.interval().value);
                 }
 
                 // Apply bindings and add our markup
@@ -5656,13 +5681,13 @@ var reportsViewModel = function () {
 
                 // Init our timepickers
                 timepickerOpts.default = bindings.selectedTime();
-                dti.pickatime($modal.find('.timepicker'), timepickerOpts);
+                dti.pickatime($modal.find('#timepicker, #timepicker2'), timepickerOpts);
 
-                timepickerOpts.default = bindings.selectedReportStartTime();
-                dti.pickatime($modal.find('#reportStartTime', timepickerOpts));
+                timepickerOpts.default = bindings.selectedReportStartTimeOffset();
+                dti.pickatime($modal.find('#reportStartTimeOffset'), timepickerOpts);
 
-                timepickerOpts.default = bindings.selectedReportEndTime();
-                dti.pickatime($modal.find('#reportEndTime', timepickerOpts));
+                timepickerOpts.default = bindings.selectedReportEndTimeOffset();
+                dti.pickatime($modal.find('#reportEndTimeOffset'), timepickerOpts);
 
                 // Init our chips element
                 $chips.material_chip({
@@ -5742,7 +5767,7 @@ var reportsViewModel = function () {
                 $modal.closeModal({
                     complete: function () {
                         ko.cleanNode($modal[0]);
-                        $modal.find('select').material_select('destroy'); // TODO - Necessary?
+                        $modal.find('select').material_select('destroy');
                         $modal.find('.tooltipped').tooltip('remove');
                         $modal.find('.chips').off(); // Detach event listeners
                         $modal.remove();
@@ -5791,16 +5816,26 @@ var reportsViewModel = function () {
         },
         getNewScheduleObject: function (cfg) {
             var defaults = {
-                    runTime: '00 08 * * *',
+                    runTime: '0 8 * * *',
                     type: 1, // TODO this should come from enumsTemplate - 1 means reports
                     referencePointUpi: point._id,
                     optionalParameters: {
-                        duration: ko.observable(),
-                        interval: ko.observable()
+                        duration: ko.observable({
+                            startDate: null,
+                            endDate: null,
+                            startTimeOffSet: '',
+                            endTimeOffset: '',
+                            selectedRange: ''
+                        }),
+                        interval: ko.observable({
+                            period: '',
+                            value: 1
+                        })
                     },
                     users: ko.observableArray([]),
                     emails: ko.observableArray([]),
                     enabled: ko.observable(true),
+                    transport: ko.observable('email'),
                     // Following are keys used by UI but removed before the object is sent to the server
                     isDirty: true,
                     parsed: null
@@ -5876,7 +5911,6 @@ var reportsViewModel = function () {
             });
 
             if (schedulesToSave.length) {
-                // todo here
                 $.ajax({
                     type: 'post',
                     url: dti.settings.apiEndpoint + 'schedules/saveSchedules',
