@@ -833,7 +833,12 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                     log: "Slide Show edited",
                     activity: actLogsEnums["Slideshow Edit"].enum
                   })));
-                } else {
+                } else if (newPoint["Point Type"].Value === "Program"){
+                  activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
+                    log: "Program edited",
+                    activity: actLogsEnums["Program Edit"].enum
+                  })));
+                }else{
                   compareArrays(newPoint[prop], oldPoint[prop], activityLogObjects);
                 }
               } else if (prop === "Alarm Messages" || prop === "Occupancy Schedule" || prop === "Sequence Details" || prop === "Security" || prop === "Script Source File") {

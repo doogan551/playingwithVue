@@ -154,6 +154,9 @@
             },
             "Firmware Load": {
                 "enum": 40
+            },
+            "Program Edit": {
+                "enum": 41
             }
         },
         "Alarm Classes": {

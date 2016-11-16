@@ -1,5 +1,6 @@
 var tmp = require('tmp');
 var fs = require('fs');
+var rimraf = require('rimraf');
 
 var Utility = require('../models/utility');
 var compiler = require('../helpers/scriptCompiler.js');
