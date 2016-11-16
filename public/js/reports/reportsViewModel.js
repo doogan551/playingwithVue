@@ -198,8 +198,8 @@ var dti = {
                     return $target;
                 },
                 sortArray = function (arr) {
-                    arr.sort(function (a,b) {
-                        return a.text.toLowerCase() > b.text.toLowerCase() ? 1:-1;
+                    arr.sort(function (a, b) {
+                        return a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
                     });
                 },
                 getOperator = function (str) {
@@ -294,7 +294,7 @@ var dti = {
                                             data = data._private.values;
                                         } else {
                                             // Update our regex; continuing the example above, we want to test against 'stillWorkingOnThisOne' instead of 'Part1.Sub2.stillWorkingOnThisOne'
-                                            regex = new RegExp(chain[chain.length-1], 'ig');
+                                            regex = new RegExp(chain[chain.length - 1], 'ig');
                                         }
                                         return false;
                                     }
@@ -360,7 +360,7 @@ var dti = {
                         if (!data.parent) {
                             inputValue = data.text;
                         } else {
-                            inputValue = inputValue.slice(0, inputValue.lastIndexOf(cfg.chainCharacter)+1) + data.text;
+                            inputValue = inputValue.slice(0, inputValue.lastIndexOf(cfg.chainCharacter) + 1) + data.text;
                         }
                     }
 
@@ -456,11 +456,11 @@ var dti = {
 
             self.addSource = function (src) {
                 var source = {
-                        name: ko.observable(src.name || dti.makeId()),
-                        nameShown: ko.observable(src.nameShown),
-                        data: Array.isArray(src.data) ? []:{},
-                        matches: ko.observableArray([])
-                    };
+                    name: ko.observable(src.name || dti.makeId()),
+                    nameShown: ko.observable(src.nameShown),
+                    data: Array.isArray(src.data) ? []:{},
+                    matches: ko.observableArray([])
+                };
 
                 self.bindings.sources.push(source);
 
@@ -506,18 +506,18 @@ var dti = {
                         //     text: object key
                         // }
                         var item = {
-                                // autosuggestMOD - use param._____
-                                _private: {
-                                    parent: param.parent,
-                                    text: param.text,
-                                    html: ko.observable(param.text),
-                                    values: [],
-                                    // autosuggestMOD
-                                    // isTopLevel: !!!parent._private
-                                    hasChildren: false,
-                                    hasValues: false
-                                }
-                            };
+                            // autosuggestMOD - use param._____
+                            _private: {
+                                parent: param.parent,
+                                text: param.text,
+                                html: ko.observable(param.text),
+                                values: [],
+                                // autosuggestMOD
+                                // isTopLevel: !!!parent._private
+                                hasChildren: false,
+                                hasValues: false
+                            }
+                        };
 
                         // autosuggestMOD
                         if (!param.parent) { //  If we don't have a parent
@@ -758,7 +758,7 @@ var dti = {
             $markup = dti.utility.getTemplate('#autosuggestTemplate');
 
             // Change default class names if needed
-            dti.forEach(defaults.classNames, function changeDefaultClassName (defaultClassName, key) {
+            dti.forEach(defaults.classNames, function changeDefaultClassName(defaultClassName, key) {
                 var defaultSelector = '.' + defaultClassName,
                     requestedClassName = cfg.classNames[key];
 
@@ -785,7 +785,7 @@ var dti = {
                 });
             }
 
-            cfg.$resultsContainer.click(function handleClick (e) {
+            cfg.$resultsContainer.click(function handleClick(e) {
                 var $target = $(e.target),
                     $parents = $target.parents();
 
@@ -847,7 +847,7 @@ var dti = {
             dti.animations._fade($el, 1, cb);
         },
         fadeOut: function ($el, cb) {
-            dti.animations._fade($el, 0, function finishFadeOut () {
+            dti.animations._fade($el, 0, function finishFadeOut() {
                 $el.css('display', 'none');
                 $el[0].style.willChange = '';
                 if (cb) {
@@ -867,7 +867,7 @@ var dti = {
                 queue: false,
                 duration: 300,
                 easing: 'easeOutSine',
-                complete: function finishSlideUp () {
+                complete: function finishSlideUp() {
                     $el.css('display', 'none');
                     $el[0].style.willChange = '';
                     if (cb) {
@@ -1145,8 +1145,8 @@ var initKnockout = function () {
                     if (keyCode === 16 || keyCode === 17) {
                         return false;
                     } else {
-                        if((((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105)) && !shiftKey)) {
-                            appendedValue = parseInt(appendedValue + String.fromCharCode((96 <= keyCode && keyCode <= 105)? keyCode-48 : keyCode), 10);
+                        if ((((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105)) && !shiftKey)) {
+                            appendedValue = parseInt(appendedValue + String.fromCharCode((96 <= keyCode && keyCode <= 105) ? keyCode - 48 : keyCode), 10);
                             return (appendedValue <= maxNumber && appendedValue >= minNumber);
                         } else {
                             return keyCode === 8 ||  // backspace
@@ -1285,7 +1285,7 @@ var initKnockout = function () {
 
             $liList = $element.find('li');
 
-            dti.forEachArray(list, function syncDropdownStatus (item, idx) {
+            dti.forEachArray(list, function syncDropdownStatus(item, idx) {
                 if (item.selected() && item.visible()) {
                     $($liList[idx]).addClass('active');
                     $($liList[idx]).find('input').prop('checked', true);
@@ -1300,7 +1300,7 @@ var initKnockout = function () {
             //     $select.material_select();
             // });
 
-            $select.on('change', function handleMaterialSelectChange (event, target) {
+            $select.on('change', function handleMaterialSelectChange(event, target) {
                 var $target = $(target),
                     index = $target.index(),
                     selected = $target.hasClass('active');
@@ -1312,7 +1312,7 @@ var initKnockout = function () {
                 }
             });
 
-            $select.siblings('input.select-dropdown').on('close', function doHide () {
+            $select.siblings('input.select-dropdown').on('close', function doHide() {
                 hideEvent();
             });
 
@@ -1328,7 +1328,7 @@ var initKnockout = function () {
 
             // $element.material_select('destroy');
             $element.material_select();
-            $element.on('change', function() {
+            $element.on('change', function () {
                 // console.log("material_select change() fired....");
                 if (ko.isObservable(boundField)) {
                     boundField(this.selectedOptions[0].value);
@@ -1492,7 +1492,9 @@ var reportsViewModel = function () {
                 });
                 isSystemAdmin = currentUser["System Admin"].Value;
 
-                if (isSystemAdmin) { return true; }
+                if (isSystemAdmin) {
+                    return true;
+                }
 
                 for (var i = 0, last = groups.length; i < last; i++) {
                     cumulativePermissions |= groups[i]._pAccess;
@@ -1913,7 +1915,7 @@ var reportsViewModel = function () {
                     callback.call(self, returnData);
                 }
             }).fail(function (jqXHR, textStatus, errorThrown) {
-                console.log( "Request failed: " + textStatus );
+                console.log("Request failed: " + textStatus);
                 self.activeRequestDataDrawn(true);
                 //self.errorWithRequest(true);
             }).always(function () {
@@ -2996,9 +2998,9 @@ var reportsViewModel = function () {
                             var temp = result.Value.toString().toLowerCase();
                             //result.Value = temp[0].toUpperCase() + temp.substring(1);
                             if (result.Value == true) {
-                                result.Value = "On";
+                                result.Value = "Yes";
                             } else {
-                                result.Value = "Off";
+                                result.Value = "No";
                             }
                         }
                         break;
@@ -3511,7 +3513,7 @@ var reportsViewModel = function () {
                                 //     $messageHolder.text("");
                                 // }, 3000);  // display success message
                             } else {
-                                point._pStatus = 0; // Update 
+                                point._pStatus = 0; // Update
                                 self.unSavedDesignChange(true);
                                 originalPoint = _.clone(newPoint, true);
                                 self.reportDisplayTitle(originalPoint.Name.replace("_", " "));
@@ -4593,9 +4595,9 @@ var reportsViewModel = function () {
                         },
                         getColumnHeaderWidthAndHeight = function (colIndex) {
                             var fieldDimensions = {
-                                    width: 0,
-                                    height: 0
-                                };
+                                width: 0,
+                                height: 0
+                            };
 
                             if (columnsArray[colIndex].dataColumnName !== undefined) {
                                 fieldDimensions = getCurrentCellWidthAndHeight(columnsArray[colIndex].colDisplayName);
@@ -5177,7 +5179,7 @@ var reportsViewModel = function () {
     self.currentColumnEdit = ko.observable(getNewColumnTemplate());
 
     self.scheduler = {
-        availableReportRanges: (function buildReportDateRanges () {
+        availableReportRanges: (function buildReportDateRanges() {
             var intervals = ['Minute', 'Hour', 'Day', 'Week', 'Month'],
                 dayInterval = intervals.slice(0, 2),
                 weekInterval = intervals.slice(0, 3),
@@ -5231,14 +5233,14 @@ var reportsViewModel = function () {
             };
         })(),
         availableIntervals: ['Daily', 'Weekly', 'Monthly', 'Yearly', 'Advanced'],
-        availableDates: (function buildAvailableDates () {
+        availableDates: (function buildAvailableDates() {
             var arr = [],
                 j = 0,
                 suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'],
                 suffix;
 
             while (j++ < 31) {
-                suffix = (j > 9 && j < 14) ? 'th' : suffixes[j%10];
+                suffix = (j > 9 && j < 14) ? 'th' : suffixes[j % 10];
                 arr.push({
                     text: j + suffix,
                     value: j
@@ -5246,11 +5248,11 @@ var reportsViewModel = function () {
             }
             return arr;
         })(),
-        availableMonths: (function buildAvailableMonths () {
+        availableMonths: (function buildAvailableMonths() {
             var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
                 arr = [];
 
-            dti.forEachArray(months, function addMonth (month, index) {
+            dti.forEachArray(months, function addMonth(month, index) {
                 arr.push({
                     text: month,
                     value: index + 1
@@ -5258,11 +5260,11 @@ var reportsViewModel = function () {
             });
             return arr;
         })(),
-        availableDaysOfWeek: (function buildAvailableDaysOfWeek () {
+        availableDaysOfWeek: (function buildAvailableDaysOfWeek() {
             var dow = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
                 arr = [];
 
-            dti.forEachArray(dow, function addDay (day, index) {
+            dti.forEachArray(dow, function addDay(day, index) {
                 arr.push({
                     text: day,
                     value: index
@@ -5753,7 +5755,7 @@ var reportsViewModel = function () {
                         name: 'All users',
                         nameShown: true,
                         data: Object.keys(self.scheduler.availableUsersObj).filter(function (name) {
-                            return recipientUsers.indexOf(name) > -1 ? false:true;
+                            return recipientUsers.indexOf(name) > -1 ? false : true;
                         })
                     }],
                     autoselect: true,
@@ -5876,19 +5878,19 @@ var reportsViewModel = function () {
                 }),
                 contentType: 'application/json'
             }).done(
-                function handleData (data) {
+                function handleData(data) {
                     if (data.err) {
                         dti.log('schedules/runSchedule error', data.err);
                     }
                     toast(data.err);
                 }
             ).fail(
-                function handleFail (jqXHR, textStatus, errorThrown) {
+                function handleFail(jqXHR, textStatus, errorThrown) {
                     dti.log('schedules/runSchedule fail', jqXHR, textStatus, errorThrown);
                     toast(true);
                 }
-            ).always (
-                function finished () {
+            ).always(
+                function finished() {
                     $btn.attr('disabled', false);
                     $btn.addClass('waves-effect');
                 }
@@ -5900,7 +5902,7 @@ var reportsViewModel = function () {
                 haveNewEntries = false,
                 err = false;
 
-            dti.forEachArray(self.scheduler.scheduleEntries(), function addToSaveList (schedule) {
+            dti.forEachArray(self.scheduler.scheduleEntries(), function addToSaveList(schedule) {
                 if (schedule.isDirty) {
                     // Get a shallow copy of the source so we can remove the UI-only keys
                     schedule = $.extend({}, ko.toJS(schedule));
@@ -5928,19 +5930,19 @@ var reportsViewModel = function () {
                     }),
                     contentType: 'application/json'
                 }).done(
-                    function handleData (data) {
+                    function handleData(data) {
                         if (data.err) {
                             err = data.err;
                             return dti.log('schedules/saveSchedules error', data.err);
                         }
                     }
                 ).fail(
-                    function handleFail (jqXHR, textStatus, errorThrown) {
+                    function handleFail(jqXHR, textStatus, errorThrown) {
                         err = textStatus + ' ' + errorThrown;
                         dti.log('schedules/saveSchedules fail', jqXHR, textStatus, errorThrown);
                     }
-                ).always (
-                    function finished () {
+                ).always(
+                    function finished() {
                         if (!err) {
                             if (haveNewEntries) {
                                 // Refetch all the entries to get the _id fields on the newly added ones - we use the
@@ -5948,7 +5950,7 @@ var reportsViewModel = function () {
                                 return self.scheduler.getScheduleEntries(callback);
                             }
                             // Clear our isDirty flags
-                            dti.forEachArray(self.scheduler.scheduleEntries(), function clearDirtyFlag (schedule) {
+                            dti.forEachArray(self.scheduler.scheduleEntries(), function clearDirtyFlag(schedule) {
                                 schedule.isDirty = false;
                             });
                         }
@@ -5973,7 +5975,7 @@ var reportsViewModel = function () {
                 }),
                 contentType: 'application/json'
             }).done(
-                function handleData (data) {
+                function handleData(data) {
                     if (data.err) {
                         err = data.err;
                         return dti.log('schedules/getSchedules error', data.err);
@@ -5981,7 +5983,7 @@ var reportsViewModel = function () {
 
                     self.scheduler.scheduleEntries.removeAll();
 
-                    dti.forEachArray(data.schedules, function addSchedule (schedule) {
+                    dti.forEachArray(data.schedules, function addSchedule(schedule) {
                         // Add UI-only keys
                         schedule.isDirty = false;
                         schedule.parsed = self.scheduler.cron.parse(schedule.runTime);
@@ -5997,12 +5999,12 @@ var reportsViewModel = function () {
                     });
                 }
             ).fail(
-                function handleFail (jqXHR, textStatus, errorThrown) {
+                function handleFail(jqXHR, textStatus, errorThrown) {
                     err = textStatus + ' ' + errorThrown;
                     dti.log('schedules/getSchedules fail', jqXHR, textStatus, errorThrown);
                 }
-            ).always (
-                function finished () {
+            ).always(
+                function finished() {
                     self.scheduler.gettingDataSemaphore.decrement();
 
                     if (callback) { // Let callback handle/report error
@@ -6023,7 +6025,7 @@ var reportsViewModel = function () {
                 url: dti.settings.apiEndpoint + 'security/users/getallusers',
                 contentType: 'application/json'
             }).done(
-                function handleData (data) {
+                function handleData(data) {
                     if (data.err) {
                         err = data.err;
                         return dti.log('security/users/getallusers error', data.err);
@@ -6035,12 +6037,12 @@ var reportsViewModel = function () {
                     });
                 }
             ).fail(
-                function handleFail (jqXHR, textStatus, errorThrown) {
+                function handleFail(jqXHR, textStatus, errorThrown) {
                     err = textStatus + ' ' + errorThrown;
                     dti.log('security/users/getallusers fail', jqXHR, textStatus, errorThrown);
                 }
-            ).always (
-                function finished () {
+            ).always(
+                function finished() {
                     self.scheduler.gettingDataSemaphore.decrement();
                     if (err) {
                         dti.toast('Error: ' + err);
@@ -6387,12 +6389,12 @@ var reportsViewModel = function () {
             case true:
             case "True":
             case 1:
-                answer = "On";
+                answer = "Yes";
                 break;
             case false:
             case "False":
             case 0:
-                answer = "Off";
+                answer = "No";
                 break;
             default:
                 answer = val;

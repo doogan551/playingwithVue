@@ -37,9 +37,9 @@ div.pointreference(data-bind="css: {softDeleted: (!!$data.softDeleted)}")
 .availablefilterValues(data-bind="css: {disabled: !$root.canEdit()}")
     ul.dropdown-content(data-bind="attr: { 'id': 'boolValueList' + $index() }")
         li
-            a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'True'}, 'value') }, text: 'On'", required)
+            a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'True'}, 'value') }, text: 'Yes'", required)
         li
-            a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'False'}, 'value') }, text: 'Off'", required)
+            a.filterContainer(data-bind="click: function(){ $root.setFilterConfig($index(), {value: 'False'}, 'value') }, text: 'No'", required)
     a.dropdown-button.btn.waves-effect.waves-light.blue-grey(href="#", data-bind="attr: { 'data-activates': 'boolValueList' + $index() }, dtiReportsMaterializeDropdown")
         span.text(data-bind="text: $root.displayBool(value)")
 // /ko
