@@ -812,6 +812,71 @@ var dti = {
             dti.forEachArray(cfg.sources, self.addSource);
         }
     },
+    toast: function () {
+        var $closeMarkup = $('<i class="material-icons">close</i>');
+        
+        $closeMarkup.click(function (e) {
+            var $toast = $(e.target).parent();
+
+            dti.animations.fadeOut($toast, function () {
+                $toast.remove();
+            });
+        });
+
+        Materialize.toast.apply(window, arguments);
+
+        $('#toast-container').find('.toast').last().append($closeMarkup);
+    },
+    animations: {
+        _fade: function ($el, opacity, cb) {
+            $el.velocity('stop');
+            $el.velocity({
+                opacity: opacity
+            }, {
+                queue: false,
+                duration: 300,
+                easing: 'easeOutSine',
+                complete: cb
+            });
+        },
+        fadeIn: function ($el, cb) {
+            if (!!$el[0]) {
+                $el[0].style.willChange = 'opacity, display';
+            }
+            $el.css('display', 'block');
+            dti.animations._fade($el, 1, cb);
+        },
+        fadeOut: function ($el, cb) {
+            dti.animations._fade($el, 0, function finishFadeOut () {
+                $el.css('display', 'none');
+                $el[0].style.willChange = '';
+                if (cb) {
+                    cb();
+                }
+            });
+        },
+        slideUp: function ($el, cb) {
+            $el[0].style.willChange = 'height, padding-top, padding-bottom';
+            $el.css('overflow', 'hidden');
+            $el.velocity('stop');
+            $el.velocity({
+                height: 0,
+                'padding-top': 0,
+                'padding-bottom': 0
+            }, {
+                queue: false,
+                duration: 300,
+                easing: 'easeOutSine',
+                complete: function finishSlideUp () {
+                    $el.css('display', 'none');
+                    $el[0].style.willChange = '';
+                    if (cb) {
+                        cb();
+                    }
+                }
+            });
+        }
+    }
 };
 
 var reportsVM,
@@ -1856,11 +1921,13 @@ var reportsViewModel = function () {
             });
         },
         displayError = function (errorMessage) {
-            var $errorMessageholder = $tabConfiguration.find(".screenMessages").find(".errorMessage");
-            $errorMessageholder.text(errorMessage);
-            setTimeout(function () {
-                $errorMessageholder.text("");
-            }, 6000);  // display error message
+            dti.toast(errorMessage, 6000);
+
+            // var $errorMessageholder = $tabConfiguration.find(".screenMessages").find(".errorMessage");
+            // $errorMessageholder.text(errorMessage);
+            // setTimeout(function () {
+            //     $errorMessageholder.text("");
+            // }, 6000);  // display error message
         },
         openPointSelectorForModalColumn = function () {
             var tempPoint,
@@ -2020,15 +2087,15 @@ var reportsViewModel = function () {
                     }
                 };
 
-            dtiUtility.showPointFilter({
-                name1: self.name1Filter(),
-                name2: self.name2Filter(),
-                name3: self.name3Filter(),
-                name4: self.name4Filter(),
-                pointTypes: self.selectedPointTypesFilter()
-            });
-            dtiUtility.onPointSelect(pointSelectedCallback);
-        }
+                dtiUtility.showPointFilter({
+                    name1: self.name1Filter(),
+                    name2: self.name2Filter(),
+                    name3: self.name3Filter(),
+                    name4: self.name4Filter(),
+                    pointTypes: self.selectedPointTypesFilter()
+                });
+                dtiUtility.onPointSelect(pointSelectedCallback);
+            }
         },
         getFilterAdjustedDatetime = function (filter) {
             return getAdjustedDatetimeUnix(moment.unix(filter.date), filter.time.toString());
@@ -3402,12 +3469,10 @@ var reportsViewModel = function () {
                     });
 
                     $saveReportButton.on("click", function () {
-                        var $screenMessages = $tabConfiguration.find(".screenMessages");
-                        blockUI($tabConfiguration, true, " Saving Report...");
-                        $screenMessages.find(".errorMessage").text(""); // clear messages
-                        $screenMessages.find(".successMessage").text(""); // clear messages
-                        saveReportConfig();
-                        $(this).blur();
+                        if (!self.activeSaveRequest()) {
+                            saveManager.doSave();
+                        }
+                        // $(this).blur(); why do this?
                     });
 
                     $direports.find(".runReportButton").on("click", function (e) {
@@ -3433,21 +3498,22 @@ var reportsViewModel = function () {
 
                     if (!!reportSocket) {
                         reportSocket.on("pointUpdated", function (data) {
-                            var $messageHolder = $tabConfiguration.find(".screenMessages").find(".successMessage");
+                            // var $messageHolder = $tabConfiguration.find(".screenMessages").find(".successMessage");
                             // console.log(" -  -  - reportSocket() 'pointUpdated' returned");
                             if (data.err === null || data.err === undefined) {
                                 self.unSavedDesignChange(false);
-                                $messageHolder.text("Report Saved");
-                                setTimeout(function () {
-                                    $messageHolder.text("");
-                                }, 3000);  // display success message
+                                // $messageHolder.text("Report Saved");
+                                // setTimeout(function () {
+                                //     $messageHolder.text("");
+                                // }, 3000);  // display success message
                             } else {
+                                point._pStatus = 0; // Update 
                                 self.unSavedDesignChange(true);
                                 originalPoint = _.clone(newPoint, true);
                                 self.reportDisplayTitle(originalPoint.Name.replace("_", " "));
-                                $tabConfiguration.find(".screenMessages").find(".errorMessage").text(data.err);
+                                // $tabConfiguration.find(".screenMessages").find(".errorMessage").text(data.err);
                             }
-                            blockUI($tabConfiguration, false);
+                            saveManager.saveReportCallback(data.err);
                         });
                     }
 
@@ -4904,7 +4970,73 @@ var reportsViewModel = function () {
                 $reportChartDiv.html("Chart data not available");
                 self.activeRequestForChart(false);
             }
-        };
+        },
+        saveManager = (function () {
+            var remainingResponses = 0,
+                errList = [],
+                _pStatus,
+                doSave = function () {
+                    _pStatus = point._pStatus;
+
+                    self.activeSaveRequest(true);
+
+                    // var $screenMessages = $tabConfiguration.find(".screenMessages");
+                    blockUI($tabConfiguration, true, " Saving Report...");
+
+                    // $screenMessages.find(".errorMessage").text(""); // clear messages
+                    // $screenMessages.find(".successMessage").text(""); // clear messages
+                    errList = [];
+                    remainingResponses = 0;
+
+                    remainingResponses++;
+                    saveReportConfig();
+
+                    if (_pStatus === 0) { // If report point status is Active
+                        remainingResponses++;
+                        self.scheduler.saveScheduleEntries(itemFinished); // Save schedule entries
+                    }
+                },
+                saveReportCallback = function (err) { // This routine called in the socket.on 'pointUpdated' handler
+                    if (_pStatus === 1 && !err) { // If report point status was previously inactive & it saved without error
+                        remainingResponses++;
+                        self.scheduler.saveScheduleEntries(itemFinished);
+                    }
+                    itemFinished(err);
+                },
+                itemFinished = function (err) {
+                    var msg,
+                        duration = 3000;
+
+                    if (remainingResponses) {
+                        if (err) {
+                            errList.push(err);
+                        }
+
+                        remainingResponses--;
+
+                        if (!remainingResponses) {
+                            if (errList.length) {
+                                msg = 'Error: ' + errList.join('. ');
+                                duration = undefined; // Show toast until user manually closes it
+                            } else {
+                                msg = 'Report Saved';
+                            }
+                            dti.toast(msg, duration);
+
+                            self.activeSaveRequest(false);
+
+                            blockUI($tabConfiguration, false);
+                        }
+                    }
+                };
+
+            return {
+                doSave: doSave,
+                itemFinished: itemFinished,
+                saveReportCallback: saveReportCallback,
+                remainingResponses: remainingResponses
+            };
+        })();
 
     self.reportType = ko.observable("");
 
@@ -5000,6 +5132,8 @@ var reportsViewModel = function () {
     self.unSavedDesignChange = ko.observable(false);
 
     self.refreshData = ko.observable(true);
+
+    self.activeSaveRequest = ko.observable(false);
 
     self.activeDataRequest = ko.observable(false);
 
@@ -5396,23 +5530,14 @@ var reportsViewModel = function () {
                         selectedDaysOfWeek: ko.observableArray([]),
                         selectedReportDuration: ko.observable(),
                         selectedReportInterval: ko.observable(),
+                        selectedReportStartTime: ko.observable('00:00'),
+                        selectedReportEndTime: ko.observable('00:00'),
                         save: function () {
                             var parsed,
                                 len;
 
                             if (data === 'new') {
-                                data = {
-                                    isDirty: true,
-                                    enable: ko.observable(true),
-                                    users: ko.observableArray([]),
-                                    emails: ko.observableArray([]),
-                                    parsed: self.scheduler.cron.parse('00 08 * * *'),
-                                    optionalParameters: {
-                                        duration: ko.observable(),
-                                        interval: ko.observable()
-                                    }
-                                };
-
+                                data = self.scheduler.getNewScheduleObject();
                                 self.scheduler.scheduleEntries.push(data);
                             }
                             
@@ -5457,7 +5582,7 @@ var reportsViewModel = function () {
                             }
 
                             parsed.plainEnglish(self.scheduler.cron.explain(parsed));
-                            parsed.cron = self.scheduler.cron.build(parsed);
+                            data.runTime = self.scheduler.cron.build(parsed);
 
                             self.scheduler.setDirty(data);
 
@@ -5496,6 +5621,9 @@ var reportsViewModel = function () {
                     bindings.selectedInterval(_parsed.interval);
                     bindings.selectedTime(_parsed.time);
 
+                    // bindings.selectedReportStartTime(data.selectedReportStartTime());
+                    // bindings.selectedReportEndTime(data.selectedReportEndTime());
+
                     if (bindings.selectedInterval() === 'Advanced') {
                         // Our view indicates all months/dates/daysOfWeek if the array is empty
                         // Extend the source arrays so we don't manipulate the original in case the user cancels changes
@@ -5526,9 +5654,15 @@ var reportsViewModel = function () {
                 $modal.find('.dropdown-button').dropdown();
                 $modal.find('select').material_select();
 
-                // Init our timepicker
+                // Init our timepickers
                 timepickerOpts.default = bindings.selectedTime();
                 dti.pickatime($modal.find('.timepicker'), timepickerOpts);
+
+                timepickerOpts.default = bindings.selectedReportStartTime();
+                dti.pickatime($modal.find('#reportStartTime', timepickerOpts));
+
+                timepickerOpts.default = bindings.selectedReportEndTime();
+                dti.pickatime($modal.find('#reportEndTime', timepickerOpts));
 
                 // Init our chips element
                 $chips.material_chip({
@@ -5616,6 +5750,15 @@ var reportsViewModel = function () {
                 });
             }
         },
+        gettingDataSemaphore: {
+            value: ko.observable(0),
+            increment: function () {
+                self.scheduler.gettingDataSemaphore.value(self.scheduler.gettingDataSemaphore.value() + 1);
+            },
+            decrement: function () {
+                self.scheduler.gettingDataSemaphore.value(self.scheduler.gettingDataSemaphore.value() - 1);
+            }
+        },
         buildRecipients: function (data) {
             var arr = [],
                 str,
@@ -5646,33 +5789,190 @@ var reportsViewModel = function () {
             data.isDirty = true;
             return true;
         },
-        init: function () {
-            // Async call to db to get distinct values
-            var runTime = ['30 10 * * *', '00 08 1 * *'];
-            self.scheduler.scheduleEntries.push({
-                isDirty: false,
-                runTime: runTime[0],
-                enable: ko.observable(false),
-                parsed: self.scheduler.cron.parse(runTime[0]),
-                users: ko.observableArray([]),
-                emails: ko.observableArray([]),
-                optionalParameters: {
-                    duration: ko.observable('Last 7 Days'),
-                    interval: ko.observable('1 Hour')
+        getNewScheduleObject: function (cfg) {
+            var defaults = {
+                    runTime: '00 08 * * *',
+                    type: 1, // TODO this should come from enumsTemplate - 1 means reports
+                    referencePointUpi: point._id,
+                    optionalParameters: {
+                        duration: ko.observable(),
+                        interval: ko.observable()
+                    },
+                    users: ko.observableArray([]),
+                    emails: ko.observableArray([]),
+                    enabled: ko.observable(true),
+                    // Following are keys used by UI but removed before the object is sent to the server
+                    isDirty: true,
+                    parsed: null
+                },
+                schedule = $.extend(defaults, cfg);
+
+            schedule.parsed = self.scheduler.cron.parse(schedule.runTime);
+
+            return schedule;
+        },
+        runNow: function (data, e) {
+            var $btn = $(e.target),
+                toast = function (err) {
+                    var msg;
+
+                    if (err) {
+                        msg = 'An unexpected error occurred';
+                    } else {
+                        msg = 'Success. Your report will be emailed shortly.';
+                    }
+                    dti.toast(msg, 4000);
+                };
+
+            $btn.attr('disabled', true);
+            $btn.removeClass('waves-effect');
+
+            $.ajax({
+                type: 'post',
+                url: dti.settings.apiEndpoint + 'schedules/runSchedule',
+                data: JSON.stringify({
+                    _id: data._id
+                }),
+                contentType: 'application/json'
+            }).done(
+                function handleData (data) {
+                    if (data.err) {
+                        dti.log('schedules/runSchedule error', data.err);
+                    }
+                    toast(data.err);
+                }
+            ).fail(
+                function handleFail (jqXHR, textStatus, errorThrown) {
+                    dti.log('schedules/runSchedule fail', jqXHR, textStatus, errorThrown);
+                    toast(true);
+                }
+            ).always (
+                function finished () {
+                    $btn.attr('disabled', false);
+                    $btn.addClass('waves-effect');
+                }
+            );
+        },
+        saveScheduleEntries: function (callback) {
+            // callback is required
+            var schedulesToSave = [],
+                haveNewEntries = false,
+                err = false;
+
+            dti.forEachArray(self.scheduler.scheduleEntries(), function addToSaveList (schedule) {
+                if (schedule.isDirty) {
+                    // Get a shallow copy of the source so we can remove the UI-only keys
+                    schedule = $.extend({}, ko.toJS(schedule));
+                    delete schedule.isDirty;
+                    delete schedule.parsed;
+
+                    // If this is a new schedule entry, set a flag
+                    if (!schedule._id) {
+                        haveNewEntries = true;
+                    }
+
+                    schedulesToSave.push(schedule);
                 }
             });
-            self.scheduler.scheduleEntries.push({
-                isDirty: false,
-                runTime: runTime[1],
-                enable: ko.observable(true),
-                parsed: self.scheduler.cron.parse(runTime[1]),
-                users: ko.observableArray([]),
-                emails: ko.observableArray([]),
-                optionalParameters: {
-                    duration: ko.observable('Last 7 Days'),
-                    interval: ko.observable('1 Hour')
+
+            if (schedulesToSave.length) {
+                // todo here
+                $.ajax({
+                    type: 'post',
+                    url: dti.settings.apiEndpoint + 'schedules/saveSchedules',
+                    data: JSON.stringify({
+                        schedules: schedulesToSave
+                    }),
+                    contentType: 'application/json'
+                }).done(
+                    function handleData (data) {
+                        if (data.err) {
+                            err = data.err;
+                            return dti.log('schedules/saveSchedules error', data.err);
+                        }
+                    }
+                ).fail(
+                    function handleFail (jqXHR, textStatus, errorThrown) {
+                        err = textStatus + ' ' + errorThrown;
+                        dti.log('schedules/saveSchedules fail', jqXHR, textStatus, errorThrown);
+                    }
+                ).always (
+                    function finished () {
+                        if (!err) {
+                            if (haveNewEntries) {
+                                // Refetch all the entries to get the _id fields on the newly added ones - we use the
+                                // absence of the _id field to indicate a new entry
+                                return self.scheduler.getScheduleEntries(callback);
+                            }
+                            // Clear our isDirty flags
+                            dti.forEachArray(self.scheduler.scheduleEntries(), function clearDirtyFlag (schedule) {
+                                schedule.isDirty = false;
+                            });
+                        }
+                        callback(err);
+                    }
+                );
+            } else {
+                callback(null);
+            }
+        },
+        getScheduleEntries: function (callback) {
+            // callback is optional
+            var err;
+
+            self.scheduler.gettingDataSemaphore.increment();
+
+            $.ajax({
+                type: 'post',
+                url: dti.settings.apiEndpoint + 'schedules/getSchedules',
+                data: JSON.stringify({
+                    upi: point._id
+                }),
+                contentType: 'application/json'
+            }).done(
+                function handleData (data) {
+                    if (data.err) {
+                        err = data.err;
+                        return dti.log('schedules/getSchedules error', data.err);
+                    }
+
+                    self.scheduler.scheduleEntries.removeAll();
+
+                    dti.forEachArray(data.schedules, function addSchedule (schedule) {
+                        // Add UI-only keys
+                        schedule.isDirty = false;
+                        schedule.parsed = self.scheduler.cron.parse(schedule.runTime);
+                        // Convert some keys to observables
+                        schedule.optionalParameters.duration = ko.observable(schedule.optionalParameters.duration);
+                        schedule.optionalParameters.interval = ko.observable(schedule.optionalParameters.interval);
+                        schedule.users = ko.observableArray(schedule.users);
+                        schedule.emails = ko.observableArray(schedule.emails);
+                        schedule.enabled = ko.observable(schedule.enabled);
+                        // Add the schedule to our array
+                        self.scheduler.scheduleEntries.push(schedule);
+                    });
                 }
-            });
+            ).fail(
+                function handleFail (jqXHR, textStatus, errorThrown) {
+                    err = textStatus + ' ' + errorThrown;
+                    dti.log('schedules/getSchedules fail', jqXHR, textStatus, errorThrown);
+                }
+            ).always (
+                function finished () {
+                    self.scheduler.gettingDataSemaphore.decrement();
+
+                    if (callback) { // Let callback handle/report error
+                        callback(err);
+                    } else if (err) {
+                        dti.toast('Error: ' + err);
+                    }
+                }
+            );
+        },
+        getUsers: function () {
+            var err;
+
+            self.scheduler.gettingDataSemaphore.increment();
 
             $.ajax({
                 type: 'post',
@@ -5680,9 +5980,9 @@ var reportsViewModel = function () {
                 contentType: 'application/json'
             }).done(
                 function handleData (data) {
-                    dti.log(data);
                     if (data.err) {
-                        return dti.log('security/users/getallusers failed', data.err);
+                        err = data.err;
+                        return dti.log('security/users/getallusers error', data.err);
                     }
 
                     dti.forEachArray(data.Users, function (user) {
@@ -5692,35 +5992,21 @@ var reportsViewModel = function () {
                 }
             ).fail(
                 function handleFail (jqXHR, textStatus, errorThrown) {
-                    dti.log('security/users/getallusers', jqXHR, textStatus, errorThrown);
+                    err = textStatus + ' ' + errorThrown;
+                    dti.log('security/users/getallusers fail', jqXHR, textStatus, errorThrown);
                 }
             ).always (
                 function finished () {
-                }
-            );
-            return;
-
-            $.ajax({
-                type: 'post',
-                url: dti.settings.apiEndpoint + 'schedules/getEntries',
-                data: JSON.stringify({
-                    // _id: reportId //
-                }),
-                contentType: 'application/json'
-            }).done(
-                function handleData (data) {
-                    if (data.err) {
-                        return dti.log('schedules/getEntries failed', data.err);
+                    self.scheduler.gettingDataSemaphore.decrement();
+                    if (err) {
+                        dti.toast('Error: ' + err);
                     }
                 }
-            ).fail(
-                function handleFail (jqXHR, textStatus, errorThrown) {
-                    dti.log('schedules/getEntries failed', jqXHR, textStatus, errorThrown);
-                }
-            ).always (
-                function finished () {
-                }
             );
+        },
+        init: function () {
+            self.scheduler.getScheduleEntries();
+            self.scheduler.getUsers();
         }
     };
 

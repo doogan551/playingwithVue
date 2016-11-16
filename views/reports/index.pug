@@ -24,7 +24,7 @@ html.direports
                                 //| Configuration
                                 i.material-icons.center settings
                         li(data-bind='if: $root.canEdit()')
-                            a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Save report")
+                            a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(data-bind='attr: {disabled: activeSaveRequest}', style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Save report")
                                 i.mdi.mdi-content-save.center
                         li.viewReportButton
                             a.waves-effect.waves-light.btn.tooltipped.blue-grey(data-bind="click: function(){ $root.requestReportData() }", style="margin-top: 2px;", data-position="bottom" data-delay="500" data-tooltip="Run report")
@@ -466,17 +466,32 @@ html.direports
                                 div#schedule.tab-pane
                                     .row
                                         h5 Scheduled Actions
+                                    // ko if: scheduler.gettingDataSemaphore.value() === 0
                                     // ko foreach: scheduler.scheduleEntries
                                     .row.flex.flex-center
-                                        input.filled-in(type='checkbox', data-bind='checked: enable, click: $root.scheduler.setDirty, attr: { "id": $root.makeId() }')
+                                        input.filled-in(type='checkbox', data-bind='checked: enabled, click: $root.scheduler.setDirty, attr: { "id": $root.makeId() }')
                                         label(data-bind='attr: { "for": $root.getLastId() }') Enable
                                         .padleft-20
                                             span(data-bind='html: parsed.plainEnglish')
                                             span , email this report to&nbsp;
                                             span(data-bind='text: $root.scheduler.buildRecipients($data)')
                                         i.padleft-20.material-icons(data-bind='click: $root.scheduler.modal.open') settings
+                                        a.marginleft-20.btn.waves-effect.waves-light.blue-grey(href='javascript://', data-bind='visible: $data.hasOwnProperty("_id"), click: $root.scheduler.runNow') Run Now
                                     // /ko
                                     a.btn.waves-effect.blue-grey(data-bind='click: scheduler.modal.open.bind($data, "new")') Add Scheduled Action
+                                    // /ko
+
+                                    // ko ifnot: scheduler.gettingDataSemaphore.value() === 0
+                                    .preloader-wrapper.small.active
+                                      .spinner-layer
+                                        .circle-clipper.left
+                                          .circle
+                                        .gap-patch
+                                          .circle
+                                        .circle-clipper.right
+                                          .circle
+                                    // /ko
+
                                 .reportButtons
                                     // ko if: ($root.canEdit())
                                     //- a.btn.tiny.waves-effect.waves-light.blue-grey.tooltipped.saveReportButton(style="margin-right: 2px;", data-position="top" data-delay="500" data-tooltip="Save report")
@@ -585,11 +600,22 @@ html.direports
                             label Months
                     .row.flex.flex-center.flex-start.inlineInputs
                         .input-field
-                            select(data-bind='options: availableReportDurations, optionsText: "text", value: selectedReportDuration, event: { "change": handleDurationChange }')
-                            label Report Duration
+                            select#reportDuration(data-bind='options: availableReportDurations, optionsText: "text", value: selectedReportDuration, event: { "change": handleDurationChange }')
+                            label(for='reportDuration') Report Duration
+                        //- .input-field
+                            //- The active class on our label resolves the conflict of label overlapping initial value
+                            label.active(for='reportStartTime') Start Time
+                            input#reportStartTime(type='time', data-bind='value: reportStartTime')
+                        //- .input-field
+                            //- The active class on our label resolves the conflict of label overlapping initial value
+                            label.active(for='reportEndTime') Start Time
+                            input#reportEndTime(type='time', data-bind='value: reportEndTime')
+                    .row.flex.flex-center.flex-start.inlineInputs
+                        .input-field
+                            label(for='inputInterval') Report Interval
+                            input#inputInterval.active(type='number')
                         .input-field
                             select#selectInterval(data-bind='options: selectedReportDuration().intervals, value: selectedReportInterval')
-                            label Report Interval
                 .chips
             .modal-footer
                 a.btn.waves-effect.blue-grey(data-bind="click: save") Save

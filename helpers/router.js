@@ -53,6 +53,7 @@ module.exports = function(controllers) {
   router.use('/api/system', controllers.system);
   router.use('/api/trenddata', controllers.trenddata);
   router.use('/api/trendplots', controllers.trendplots);
+  router.use('/api/schedules', controllers.schedules);
 
   router.use('/dashboard', controllers.dashboard);
   router.use('/displays', controllers.display);

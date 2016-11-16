@@ -1192,6 +1192,9 @@ button {
 .padleft-20 {
     padding-left: 20px;
 }
+.marginleft-20 {
+    margin-left: 20px;
+}
 
 .autosuggestContainer {
     position: absolute;
@@ -1249,7 +1252,22 @@ button {
     /*background-color: $blue-grey-lighten-1;*/
     background-color: #78909c;
 }
+#scheduleModal input:focus {
+    /*$blue-grey-lighten-1;*/
+    border-bottom: 1px solid #78909c;
+    box-shadow: 0 1px 0 0 #78909c;
+}
+
+/* Materialize addons */
 .chips .chip.err {
     /*background-color: $red-lighten-3;*/
     background-color: #ef9a9a;
+}
+#toast-container .toast i {
+    cursor: pointer;
+    padding-left: 10px;
+}
+.preloader-wrapper .spinner-layer {
+    /*border-color: $blue-grey-lighten-1;*/
+    border-color: #78909c;
 }
