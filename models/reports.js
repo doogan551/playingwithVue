@@ -1290,7 +1290,7 @@ module.exports = Rpt = {
 };
 
 var buildIntervals = function(range, interval) {
-    var intervalType = interval.text;
+    var intervalPeriod = interval.period;
     var intervalValue = interval.value;
     var intervalRanges = [];
     var intervalStart;
@@ -1302,15 +1302,15 @@ var buildIntervals = function(range, interval) {
     };
 
     intervalStart = moment.unix(range.start).unix();
-    intervalEnd = moment.unix(range.start).add(intervalValue, intervalType).unix();
+    intervalEnd = moment.unix(range.start).add(intervalValue, intervalPeriod).unix();
     fixLongerInterval();
-    while (intervalEnd <= range.end && intervalEnd <= moment().add(intervalValue, intervalType).startOf(intervalType).unix()) {
+    while (intervalEnd <= range.end && intervalEnd <= moment().add(intervalValue, intervalPeriod).startOf(intervalPeriod).unix()) {
         intervalRanges.push({
             start: intervalStart,
             end: intervalEnd
         });
-        intervalStart = moment.unix(intervalStart).add(intervalValue, intervalType).unix();
-        intervalEnd = moment.unix(intervalEnd).add(intervalValue, intervalType).unix();
+        intervalStart = moment.unix(intervalStart).add(intervalValue, intervalPeriod).unix();
+        intervalEnd = moment.unix(intervalEnd).add(intervalValue, intervalPeriod).unix();
         fixLongerInterval();
     }
 
