@@ -461,7 +461,7 @@ html.direports
                                             ul#intervals.intervals.dropdown-content(data-bind="foreach: $root.listOfIntervalsComputed()")
                                                 li
                                                     a.operator(data-bind="click: function(){ $root.selectInterval($data.text) }, text: $data.text", required)
-                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="text: $root.interval, css: { durationError: $root.durationError() }, dtiReportsMaterializeDropdown", data-activates="intervals")
+                                            a.btn.waves-effect.waves-light.blue-grey.dropdown-button(href="#", data-bind="text: $root.intervalPeriod, css: { durationError: $root.durationError() }, dtiReportsMaterializeDropdown", data-activates="intervals")
                                     // /ko
                                 div#schedule.tab-pane
                                     .row

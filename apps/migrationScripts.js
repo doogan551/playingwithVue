@@ -714,6 +714,86 @@ var scripts = {
         });
     },
 
+    // 0.4.2 - Report schema change
+    updateReportsDurationInterval: function(callback) {
+        var afterVersion = '0.4.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'updateReportsDurationInterval',
+                errors: null,
+                results: null
+            });
+        }
+        logger.info("     - - - updateReportsDurationInterval() called - - - ");
+        var collectionName = 'points',
+            query = {
+                'Point Type.Value': 'Report'
+            },
+            reportUpdateCounter = 0,
+            processDoc = function(reportDoc, cb) {
+                var reportConfig = reportDoc["Report Config"],
+                    duration,
+                    interval,
+                    updateReport = function(docToUpdate, cb) {
+                        // logger.info("Updating report ._id = " + docToUpdate._id);
+                        utility.update({
+                            collection: 'points',
+                            query: {
+                                _id: docToUpdate._id
+                            },
+                            updateObj: docToUpdate
+                        }, function(err) {
+                            if (!!err) {
+                                logger.info('Update err:' + err);
+                                cb(err);
+                            } else {
+                                // logger.info("    Report updated");
+                                reportUpdateCounter++;
+                                cb(null);
+                            }
+                        });
+                    };
+
+                if (!!reportConfig) {
+                    duration = reportConfig.duration;
+                    interval = reportConfig.interval;
+                    if (!!duration && !!interval) {
+                        delete duration.duration; // removing a reference
+                        if (!!interval.period) {
+                            interval.period = interval.text || "Day";
+                            delete interval.text;  // removing a reference
+                        }
+                        updateReport(reportDoc, cb);
+                    } else {
+                        logger.info("- - - - - No 'duration' and/or No 'interval'  reportDoc._id = " + reportDoc._id);
+                        cb(null);
+                    }
+                } else {
+                    logger.info("- - - - No 'reportConfig'  reportDoc._id = " + reportDoc._id + "  Report Name = '" + reportDoc.Name + "'");
+                    cb(null);
+                }
+            };
+
+        utility.iterateCursor({
+            collection: collectionName,
+            query: query
+        }, function processReport(err, doc, cb) {
+            if (!!err) {
+                logger.info(" ERROR  err = " + err);
+                callback(err);
+            } else {
+                processDoc(doc, cb);
+            }
+
+        }, function finishUpdatingReports(err) {
+            logger.info('Finished with updateReportsDurationInterval updated ' + reportUpdateCounter + ' reports');
+            callback(null, {
+                fn: 'updateReportsDurationInterval',
+                errors: err
+            });
+        });
+    },
+
     // 0.3.10 - new Report fields
     updateExistingReports: function(callback) {
         var afterVersion = '0.3.10';
@@ -1377,7 +1457,7 @@ db.connect(connectionString, function(err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.addDownlinkProtocol];
+    tasks = [scripts.addDownlinkProtocol, scripts.updateReportsDurationInterval];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
