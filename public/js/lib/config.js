@@ -1348,37 +1348,45 @@ var Config = (function(obj) {
             return data;
         },
 
-        "Alarm Adjust Band": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value, // Property Value
-                max = (point["High Alarm Limit"].Value - point["Low Alarm Limit"].Value) / 2;
-
-            if (val < point["Alarm Deadband"].Value) {
-                data.ok = false;
-                data.result = data.property + " must be greater than or equal to the Alarm Deadband (" + point['Alarm Deadband'].Value + ").";
-            } else if (point["Alarm Adjust Band"].Value > max) {
-                data.ok = false;
-                data.result = data.property + " must be less than or equal to the High Alarm Limit - Low Alarm Limit (" + max + ").";
-            }
-            return data;
-        },
-
-        // TODO if High Alarm Limit takes into account Alarm Deadband for min/max, shouldn't Alarm Deadband take into account High Alarm Limit? Other
-        // properties also take into account Alarm Deadband.
+        //------ Analog alarm properties validation ------------------------------------------
         "Alarm Deadband": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value, // Property Value
-                max = Math.abs(point["Maximum Value"].Value - point["Minimum Value"].Value) * obj.deadbandFactor;
 
-            if (val < 0.0) {
+            if (data.propertyObject.Value < 0.0) {
                 data.ok = false;
-                data.result = data.property + " must be greater than or equal to 0.";
-            } else if (val > max) {
-                data.ok = false;
-                data.result = data.property + " can be no more than " + obj.deadbandFactor * 100 + "% of (Maximum Value - Minimum Value), (" + max + ").";
+                data.result = data.property + " must be greater than or equal to 0.0";
             }
             return data;
         },
+
+        "Alarm Adjust Band": function(data) {
+            return obj.EditValidation["Alarm Deadband"](data);
+        },
+
+        "Warning Adjust Band": function(data) {
+            return obj.EditValidation["Alarm Deadband"](data);
+        },
+
+        "High Alarm Limit": function(data) {
+            return data;
+        },
+
+        "Low Alarm Limit": function(data) {
+            return data;
+        },
+
+        "High Warning Limit": function(data) {
+            return data;
+        },
+
+        "Low Warning Limit": function(data) {
+            return data;
+        },
+
+        "Enable Warning Alarms": function(data) {
+            data.point = obj.EditChanges.applyEnableWarningAlarms(data);
+            return data;
+        },
+        //------ End analog alarm properties validation --------------------------------------
 
         "Alarm Repeat Time": function(data) {
             if (data.propertyObject.Value < 60) {
@@ -1440,7 +1448,7 @@ var Config = (function(obj) {
 
             if (val < 0) {
                 data.ok = false;
-                data.result = data.property + " cannot be less than 0.";
+                data.result = data.property + " cannot be less than 0.0";
             }
             return data;
         },
@@ -1475,7 +1483,7 @@ var Config = (function(obj) {
         "COV Increment": function(data) {
             if (data.propertyObject.Value <= 0) {
                 data.ok = false;
-                data.result = data.property + " must be greater than 0.";
+                data.result = data.property + " must be greater than 0.0";
             }
             return data;
         },
@@ -1529,11 +1537,6 @@ var Config = (function(obj) {
 
         "Downlink IP Port": function(data) {
             return this.validateUsingTheseLimits(data, 47808, 47823);
-        },
-
-        "Enable Warning Alarms": function(data) {
-            data.point = obj.EditChanges.applyEnableWarningAlarms(data);
-            return data;
         },
 
         "End Day": function(data) {
@@ -1633,25 +1636,6 @@ var Config = (function(obj) {
             return data;
         },
 
-        "High Alarm Limit": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value, // Property Value
-                min = point["Low Alarm Limit"].Value + (2 * point["Alarm Deadband"].Value);
-
-            data.ok = false;
-
-            if (val > point["Maximum Value"].Value) {
-                data.result = data.property + " cannot be greater than the Maximum Value (" + point["Maximum Value"].Value + ").";
-            } else if ((point["Enable Warning Alarms"].Value === true) && (val < point["High Warning Limit"].Value)) {
-                data.result = data.property + " cannot be less than the High Warning Limit (" + point["High Warning Limit"].Value + ").";
-            } else if (val < min) {
-                data.result = data.property + " cannot be less than the Low Alarm Limit plus twice the Alarm Deadband (" + min + ").";
-            } else {
-                data.ok = true;
-            }
-            return data;
-        },
-
         "High Deadband": function(data) {
             var point = data.point, // Shortcut
                 val = data.propertyObject.Value; // Property Value
@@ -1671,21 +1655,6 @@ var Config = (function(obj) {
             if (val <= min) {
                 data.ok = false;
                 data.result = data.property + " must be greater than the Low Setpoint plus twice the Input Deadband (" + min + ").";
-            }
-            return data;
-        },
-
-        "High Warning Limit": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value, // Property Value
-                min = point["Low Warning Limit"].Value + (2 * point["Alarm Deadband"].Value);
-
-            if (val > point["High Alarm Limit"].Value) {
-                data.ok = false;
-                data.result = data.property + " cannot be greater than the High Alarm Limit (" + point["High Alarm Limit"].Value + ").";
-            } else if (val < min) {
-                data.ok = false;
-                data.result = data.property + " cannot be less than the Low Warning Limit plus twice the Alarm Deadband (" + min + ")";
             }
             return data;
         },
@@ -1774,25 +1743,6 @@ var Config = (function(obj) {
             return data;
         },
 
-        "Low Alarm Limit": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value, // Property Value
-                max = point["High Alarm Limit"].Value - (2 * point["Alarm Deadband"].Value);
-
-            data.ok = false; // Add 'ok' key and preset for validation fail
-
-            if (val < point["Minimum Value"].Value) {
-                data.result = data.property + " cannot be less than the Minimum Value (" + point["Minimum Value"].Value + ").";
-            } else if ((point["Enable Warning Alarms"].Value === true) && (val > point["Low Warning Limit"].Value)) {
-                data.result = data.property + " cannot be greater than the Low Warning Limit (" + point["Low Warning Limit"].Value + ").";
-            } else if (val > max) {
-                data.result = data.property + " cannot be greater than the High Alarm Limit minus twice the Alarm Deadband (" + max + ").";
-            } else {
-                data.ok = true;
-            }
-            return data;
-        },
-
         "Low Deadband": function(data) {
             var point = data.point, // Shortcut
                 val = data.propertyObject.Value; // Property value
@@ -1812,21 +1762,6 @@ var Config = (function(obj) {
             if (val >= max) {
                 data.ok = false;
                 data.result = data.property + " must be less than the High Setpoint minus twice the Input Deadband (" + max + ").";
-            }
-            return data;
-        },
-
-        "Low Warning Limit": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value, // Property Value
-                max = point["High Warning Limit"].Value - (2 * point["Alarm Deadband"].Value);
-
-            if (val < point["Low Alarm Limit"].Value) {
-                data.ok = false;
-                data.result = data.property + " cannot be less than the Low Alarm Limit (" + point["Low Alarm Limit"].Value + ").";
-            } else if (val > max) {
-                data.ok = false;
-                data.result = data.property + " cannot be greater than the High Warning Limit minus twice the Alarm Deadband (" + max + ").";
             }
             return data;
         },
@@ -2200,7 +2135,7 @@ var Config = (function(obj) {
 
             if (val <= 0) {
                 data.ok = false;
-                data.result = data.property + " must be greater than 0.";
+                data.result = data.property + " must be greater than 0.0";
             }
             return data;
         },
@@ -2252,30 +2187,10 @@ var Config = (function(obj) {
         },
 
         "Value Deadband": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value, // Property value
-                max = Math.abs(point["Maximum Value"].Value - point["Minimum Value"].Value) * obj.deadbandFactor;
 
-            if (val < 0.0) {
+            if (data.propertyObject.Value < 0.0) {
                 data.ok = false;
-                data.result = data.property + " cannot be less than 0.";
-            } else if (val > max) {
-                data.ok = false;
-                data.result = data.property + " cannot be more than " + obj.deadbandFactor * 100 + "% of (Maximum Value - Minimum Value), (" + max + ")";
-            }
-            return data;
-        },
-
-        "Warning Adjust Band": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value; // Property value
-
-            if (val < 0) {
-                data.ok = false;
-                data.result = data.property + " cannot be less than 0.";
-            } else if (val >= point["Alarm Adjust Band"].Value) {
-                data.ok = false;
-                data.result = data.property + " must be less than the Alarm Adjust Band (" + point["Alarm Adjust Band"].Value + ").";
+                data.result = data.property + " must be greater than or equal to 0.0";
             }
             return data;
         },
@@ -2496,106 +2411,32 @@ var Config = (function(obj) {
         },
 
         "Maximum Value": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value, // Property value
-                type = point["Point Type"].Value; // Point type
+            var point = data.point,
+                val = data.propertyObject.Value;
 
-            switch (type) {
-                case "Analog Input":
-                case "Analog Output":
-                case "Analog Value":
-                    if ((point["Alarms Off"].Value === true) && (val < point["Minimum Value"].Value)) {
-                        data.ok = false;
-                        data.result = data.property + " must be greater than the Minimum Value (" + point["Minimum Value"].Value + ").";
-                    } else if (val < point["High Alarm Limit"].Value) {
-                        data.ok = false;
-                        data.result = data.property + " must be greater than the High Alarm Limit (" + point["High Alarm Limit"].Value + ").";
-                    }
-                    break;
-
-                case "Accumulator":
-                    if (val <= 0) {
-                        data.ok = false;
-                        data.result = data.property + " must be greater than 0.";
-                    }
-                    break;
-
-                case "Average":
-                case "Economizer":
-                case "Enthalpy":
-                case "Math":
-                case "Multiplexer":
-                case "Proportional":
-                case "Ramp":
-                case "Select Value":
-                case "Setpoint Adjust":
-                case "Totalizer":
-                    if (val <= point["Minimum Value"].Value) {
-                        data.ok = false;
-                        data.result = data.property + " must be greater than the Minimum Value (" + point["Minimum Value"].Value + ").";
-                    }
-                    break;
-
-                default:
-                    break;
+            if (point["Point Type"].Value === "Accumulator") {
+                if (val <= 0) {
+                    data.ok = false;
+                    data.result = data.property + " must be greater than 0.0";
+                }
+			} else if (val <= point["Minimum Value"].Value) {
+                data.ok = false;
+                data.result = data.property + " must be greater than the Minimum Value (" + point["Minimum Value"].Value + ").";
             }
             return data;
         },
 
         "Minimum Value": function(data) {
-            var point = data.point, // Shortcut
-                val = data.propertyObject.Value, // Property value
-                type = point["Point Type"].Value; // Point type
+            var point = data.point;
 
-            switch (type) {
-                case "Analog Input":
-                case "Analog Output":
-                case "Analog Value":
-                    if ((point["Alarms Off"].Value === true) && (val > point["Maximum Value"].Value)) {
-                        data.ok = false;
-                        data.result = data.property + " cannot be greater than the Maximum Value (" + point["Maximum Value"].Value + ").";
-                    } else if (val > point["Low Alarm Limit"].Value) {
-                        data.ok = false;
-                        data.result = data.property + " cannot be greater than the Low Alarm Limit (" + point["Low Alarm Limit"].Value + ").";
-                    }
-                    break;
-
-                case "Average":
-                case "Economizer":
-                case "Enthalpy":
-                case "Math":
-                case "Multiplexer":
-                case "Proportional":
-                case "Ramp":
-                case "Select Value":
-                case "Setpoint Adjust":
-                case "Totalizer":
-                    if (val >= point["Maximum Value"].Value) {
-                        data.ok = false;
-                        data.result = data.property + " must be less than the Maximum Value (" + point["Maximum Value"].Value + ").";
-                    }
-                    break;
-
-                default:
-                    break;
+            if (data.propertyObject.Value >= point["Maximum Value"].Value) {
+                data.ok = false;
+                data.result = data.property + " must be less than the Maximum Value (" + point["Maximum Value"].Value + ").";
             }
             return data;
         },
 
         "Shutdown Value": function(data) {
-            var point = data.point, // Shortcut
-                type = point["Point Type"].Value, // Point type
-                val = data.propertyObject.Value; // Property value
-
-            if ((point.Value.ValueType === enumsTemplatesJson.Enums["Value Types"]["Float"]["enum"]) && (type !== "Analog Selector")) {
-                if (val < point["Minimum Value"].Value) {
-                    data.ok = false;
-                    data.result = data.property + " cannot be less than the Minimum Value (" + point["Minimum Value"].Value + ").";
-                } else if (val > point["Maximum Value"].Value) {
-                    data.ok = false;
-                    data.result = data.property + " cannot be greater than the Maximum Value (" + point["Maximum Value"].Value + ").";
-                }
-            }
             return data;
         },
 
