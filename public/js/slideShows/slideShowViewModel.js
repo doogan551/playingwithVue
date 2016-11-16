@@ -338,9 +338,14 @@ var slideShowViewModel = function () {
         screenfull.exit();
     };
     self.openPointInspector = function () {
-        var upi = parseInt(getSlideShowId(), 10);
+        var upi = parseInt(getSlideShowId(), 10),
+            config = {
+                pointType: "Slide Show",
+                upi: upi,
+            };
         dtiUtility.openWindow("/pointinspector/" + upi, "SlideShow", "SlideShow", "newwindow", upi);
-        //window.close();
+        //dtiUtility.openWindow(config);
+        window.close();
     };
     self.close = function () {
         window.close();
