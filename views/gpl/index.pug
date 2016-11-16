@@ -43,13 +43,6 @@ html
                     i.fa.fa-search
                 input.prettyInput(type="number", min="25", max="400", data-bind="value: currentZoom")
                 | &nbsp;%
-            .pull-left.pop
-                a(href="", data-bind="click: popInOut")
-                    .fa(style="display:none", data-bind="css: popInOutClass(), visible: loaded")
-                    // ko text: popInOutText()
-                    // /ko
-
-            //- button.btn.btn-primary.btn-sm.pull-left(type="button", style="display:none", data-bind="text: popInOutText(), click: popInOut, visible: loaded")
 
         #gplSequenceProperties.modal.fade(tabindex="-1", role="dialog", aria-hidden="true")
             .modal-dialog
@@ -157,9 +150,9 @@ html
                     .modal-body.clearfix
                         .subtitle.col-xs-12.center-block Numeric Format
                             .input-row  # of Characters
-                                input.pull-right(type="number", min="1", max="10", data-bind="value: editPointCharacters")
+                                input.pull-right(type="number", min="1", max="10", data-bind="numeric: editPointCharacters, value: editPointCharacters")
                             .input-row # of Decimals
-                                input.pull-right(type="number", min="1", max="10", data-bind="value: editPointDecimals")
+                                input.pull-right(type="number", min="1", max="10", data-bind="numeric: editPointDecimals, value: editPointDecimals")
                     .modal-footer
                         button.btn.btn-default.btn-sm(data-dismiss="modal") Close
                         button.btn.btn-primary.btn-sm(data-bind="click: updateBlockPrecision") Save
@@ -327,10 +320,10 @@ html
 
                             .subtitle.col-xs-5 Numeric Format
                                 .input-row  # of Characters
-                                    input.pull-right(type="number", min="1", max="10", data-bind="value: editPointCharacters")
+                                    input.pull-right(type="number", min="1", max="10", data-bind="numeric: editPointCharacters, value: editPointCharacters")
 
                                 .input-row # of Decimals
-                                    input.pull-right(type="number", min="1", max="10", data-bind="value: editPointDecimals")
+                                    input.pull-right(type="number", min="1", max="10", data-bind="numeric: editPointDecimals, value: editPointDecimals")
 
                             .subtitle.col-xs-5.pull-right Label Format
                                 .input-row
@@ -353,24 +346,26 @@ html
                                             label(for="constantlabel") Label
                                             input#constantlabel.form-control.input-sm(type="text", data-bind="value: editPointLabel")
                             .subtitle.col-md-5.editSection Numeric Format
-                                .col-md-12  # of Characters
-                                    input.pull-right.form-control.input-sm(type="number", min="1", max="10", data-bind="value: editPointCharacters")
-
-                                .col-md-12 # of Decimals
-                                    input.pull-right.form-control.input-sm(type="number", min="1", max="10", data-bind="value: editPointDecimals")
-
+                                .col-md-6
+                                    .input-row.dataField
+                                        label(for="configPointCharacters") # of Characters
+                                        input#configPointCharacters.form-control.input-sm(type="number", min="1", max="10", data-bind="numeric: editPointCharacters, value: editPointCharacters")
+                                .col-md-6
+                                    .input-row.dataField
+                                        label(for="configPointDecimals") # of Decimals
+                                        input#configPointDecimals.form-control.input-sm(type="number", min="1", max="10", data-bind="numeric: editPointDecimals, value: editPointDecimals")
                             .subtitle.col-md-5.pull-right.editSection Label Format
                                 .input-row
                                     .checkbox.dataField
                                         label Show Label
-                                            input(type="checkbox")
+                                            input(type="checkbox", data-bind="checked: editPointShowLabel")
                                     .checkbox.dataField
                                         label Show Present Value
-                                            input(type="checkbox")
+                                            input(type="checkbox", data-bind="checked: editPointShowValue")
 
                     .modal-footer
                         button.btn.btn-default.btn-sm(data-dismiss="modal") Close
-                        button.btn.btn-primary.btn-sm(data-bind="click: updatePoint") Save
+                        button.btn.btn-primary.btn-sm(data-bind="click: updatePoint, css: {disabled: ($.isNumeric(editPointValue()) === false && editPointName() === undefined)}") Save
 
         #jqxMenu.contextMenu.hideLoading
             ul.editSection

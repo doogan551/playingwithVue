@@ -95,6 +95,7 @@ var dti = {
                 iconClass: 'material-icons',
                 group: 'Point',
                 singleton: false,
+                mainMenu: false,
                 options: {
                     retainNames: false
                 }
@@ -856,6 +857,10 @@ var dti = {
                         }
                     }
 
+                    this.contentWindow.getWindowParameters = function () {
+                        return $.extend(true, {}, config);
+                    };
+
                     $(this.contentDocument).on('mousedown', handleIframeClick);
 
                     this.contentWindow.windowId = self.bindings.windowId();
@@ -1203,7 +1208,15 @@ var dti = {
     taskbar: {
         pinnedItems: ['Navigator', 'Display'],
         init: function () {
-            dti.bindings.startMenuItems(ko.viewmodel.fromModel(dti.config.itemGroups));
+            var menuItems = {};
+
+            dti.forEach(dti.config.itemGroups, function checkItemGroup (group, key) {
+                if (group.mainMenu !== false) {
+                    menuItems[key] = group;
+                }
+            });
+
+            dti.bindings.startMenuItems(ko.viewmodel.fromModel(menuItems));
             //load user preferences 
             dti.forEachArray(dti.taskbar.pinnedItems, function processPinnedItem (item) {
                 dti.bindings.openWindows[item] = ko.observableArray([]);
@@ -2821,6 +2834,10 @@ var dti = {
                     dti.navigator.temporaryCallback = null;
                 }
 
+                if (config.mode === 'create') {
+                    config.fullCreate = true;
+                }
+
                 if (config.pointType && config.property) {
                     config.pointTypes = dti.workspaceManager.config.Utility.pointTypes.getAllowedPointTypes(config.property, config.pointType);
                 }
@@ -2829,11 +2846,14 @@ var dti = {
             dti.navigator.commonNavigator.applyConfig(config);
 
             config.ready = dti.navigator.commonNavigator.bindings.handleModalOpen;
+            config.complete = dti.navigator.commonNavigator.bindings.handleModalClose;
 
             dti.navigator.$commonNavigatorModal.openModal(config);
         },
         hideNavigator: function () {
-            dti.navigator.$commonNavigatorModal.closeModal();
+            if (dti.navigator.$commonNavigatorModal) {
+                dti.navigator.$commonNavigatorModal.closeModal();
+            }
         },
         //config contains container
         Navigator: function (config) {
@@ -2852,6 +2872,7 @@ var dti = {
                             name4: '',
                             showInactive: false,
                             showDeleted: false,
+                            dropdownColumnCount: 5,
                             dropdownOpen: false,
                             restrictCreate: false,
                             fetchingPoints: false,
@@ -2913,8 +2934,24 @@ var dti = {
                         }, 100);
                     };
 
+                    bindings.handleModalClose = function () {
+                        if (self.fullCreate) {
+                            if (dti.navigator.temporaryCallback) {
+                                dti.navigator.temporaryCallback(false);
+                            }
+                            dti.navigator.temporaryCallback = null;
+                            dti.navigator.hideNavigator();
+                        }
+                    };
+
                     bindings.cancelCreatePoint = function () {
                         self.bindings.mode(self.modes.DEFAULT);
+                        if (self.fullCreate) {
+                            if (dti.navigator.temporaryCallback) {
+                                dti.navigator.temporaryCallback(false);
+                            }
+                            dti.navigator.hideNavigator();
+                        }
                     };
 
                     bindings.createPoint = function () {
@@ -2982,7 +3019,7 @@ var dti = {
 
                     bindings.pointTypeInvert = function (type) {
                         self._pauseRequest = true;
-                        self.applyPointTypes(type);
+                        self.selectSinglePointType(type);
                         self._pauseRequest = false;
                         bindings.pointTypeChanged();
                     };
@@ -3103,10 +3140,17 @@ var dti = {
                         // var uniqueName = bindings.points().length === 0,
                         var uniqueName = true,
                             disabled = bindings.disableCreatePoint(),
+                            points = ko.toJS(bindings.points()),
                             c,
                             tmpName,
                             noGaps = true,
-                            hasValue = 0;
+                            hasValue = 0,
+                            newName = [bindings.name1(), bindings.name2(), bindings.name3(), bindings.name4()].join(';;'),
+                            isSameName = function (p1) {
+                                if (newName === [p1.name1, p1.name2, p1.name3, p1.name4].join(';;')) {
+                                    uniqueName = false;
+                                }
+                            };
 
                         for (c = 4; c; c--) {
                             tmpName = bindings['name' + c]() || '';
@@ -3120,6 +3164,10 @@ var dti = {
                                 }
                             }
                         }
+
+                        dti.forEachArray(points, function checkPointName (point) {
+                            isSameName(point);
+                        });
 
                         return uniqueName && hasValue && noGaps && !disabled;
                     });
@@ -3214,10 +3262,28 @@ var dti = {
 
             self.bindings = getBindings();
 
+            self.selectSinglePointType = function (selectedType) {
+                dti.forEachArray(self.bindings.pointTypes(), function isSelectedType (type) {
+                    var isTargetType = type.key() === selectedType;
+
+                    if (isTargetType) {
+                        type.selected(true);
+                    } else {
+                        type.selected(false);
+                    }
+                });
+            };
+
             self.applyPointTypes = function (types, exclusive) {
                 self._pauseRequest = true;
                 if (types) {
                     if (types.length > 0) {
+                        if (exclusive && types.length < 5) {
+                            self.bindings.dropdownColumnCount(types.length);
+                        } else {
+                            self.bindings.dropdownColumnCount(5);
+                        }
+
                         dti.forEachArray(self.bindings.pointTypes(), function isPointTypeChecked (type) {
                             var isFound = types.indexOf(type.key()) > -1;
 
@@ -3272,6 +3338,7 @@ var dti = {
 
                 if (cfg.pointType && !cfg.pointTypes && cfg.pointType !== 'Point') {
                     config.pointTypes = [cfg.pointType];
+                    cfg.newPointType = cfg.pointType;
                 }
 
                 if (cfg.mode === 'create' && cfg.pointType) {
@@ -3286,6 +3353,8 @@ var dti = {
                     ko.viewmodel.updateFromModel(self.bindings._newPointType, config._newPointType);
                     self.bindings.newPointType(cfg.newPointType);
                 }
+
+                self.fullCreate = cfg.fullCreate || false;
 
                 config.pointTypes = self.getFlatPointTypes(config.pointTypes);
 
@@ -3316,8 +3385,9 @@ var dti = {
                 self.bindings.disableCreatePoint(false);
                 if (data.err) {
                     dti.log(data.err);
+                    dti.toast('Point Creation Error: ' + data.err, 3000);
+                    self.bindings.loading(false);
                 } else {
-
                     var params = self._createPointParameters,
                         endPoint = dti.workspaceManager.config.Utility.pointTypes.getUIEndpoint(params.pointType, data._id),
                         handoffMode = endPoint.edit || endPoint.review;
@@ -3482,8 +3552,8 @@ var dti = {
         createNavigator: function (isModal) {
             var templateMarkup = dti.utility.getTemplate('#navigatorTemplate'),
                 navigatorMarkup,
-                navigatorModalMarkup,
                 navigator,
+                navigatorModalMarkup,
                 $container = (isModal === true) ? $('main') : (isModal.$container || isModal);
 
             if (isModal === true) {
@@ -4406,7 +4476,7 @@ var dti = {
 
                     $element.contextmenu(function handleRightClick (event) {
                         var $target = $(event.target),
-                            $li = $target.is('li') ? $target : $target.parents('li'),
+                            $li = $target.is('span') ? $target : $target.parents('span'),
                             $select = $li.parent().siblings('select'),
                             text = $li.text();
 

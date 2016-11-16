@@ -834,7 +834,7 @@ module.exports = {
 
     function doInitPoint(name1, name2, name3, name4, pointType, targetUpi, subType, callback) {
 
-      buildName(name1, name2, name3, name4);
+      Utils.buildName(name1, name2, name3, name4);
 
       criteria = {
         collection: 'points',
@@ -903,7 +903,7 @@ module.exports = {
 
             if (pointType === "Schedule Entry") {
               name2 = upiObj._id.toString();
-              buildName(name1, name2, name3, name4);
+              Utils.buildName(name1, name2, name3, name4);
             }
 
             if (targetUpi && targetUpi !== 0) {
@@ -933,26 +933,6 @@ module.exports = {
         });
 
       });
-
-      function buildName(name1, name2, name3, name4) {
-        _name1 = (name1) ? name1.toLowerCase() : "";
-        _name2 = (name2) ? name2.toLowerCase() : "";
-        _name3 = (name3) ? name3.toLowerCase() : "";
-        _name4 = (name4) ? name4.toLowerCase() : "";
-
-        Name = "";
-
-        if (name1)
-          Name = Name + name1;
-        if (name2)
-          Name = Name + "_" + name2;
-        if (name3)
-          Name = Name + "_" + name3;
-        if (name4)
-          Name = Name + "_" + name4;
-
-        _Name = Name.toLowerCase();
-      }
     }
 
     function cloneGPLSequence(oldSequence, callback) {
@@ -1042,6 +1022,10 @@ module.exports = {
 
       if (template["Point Type"].Value === "Display") { // default background color for new Displays
         template["Background Color"].Value = Config.Templates.getTemplate("Display")["Background Color"];
+      }
+      if(Config.Utility.getPropertyObject('Device Point', template) === null){
+        template._cfgRequired = false;
+        template._devModel = 0;
       }
       console.log("isClone", isClone);
       if (!isClone) {

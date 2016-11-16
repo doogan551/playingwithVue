@@ -2,7 +2,7 @@ var development = {
   'Infoscan': {
     'dbConfig': {
       'host': 'localhost',
-      'dbName': 'development'
+      'dbName': 'infoscan'
     },
     'zmqConfig': {
       'server': '127.0.0.1'

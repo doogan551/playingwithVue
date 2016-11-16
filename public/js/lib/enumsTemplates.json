@@ -154,6 +154,9 @@
             },
             "Firmware Load": {
                 "enum": 40
+            },
+            "Program Edit": {
+                "enum": 41
             }
         },
         "Alarm Classes": {
@@ -443,6 +446,9 @@
             },
             "Point": {
                 "enum": 3
+            },
+            "Remote": {
+                "enum": 4
             }
         },
         "Device Model Types": {
@@ -540,7 +546,7 @@
             "Stop Scan": {
                 "enum": 66
             },
-            "Failure Pending": {
+            "Memory Full": {
                 "enum": 67
             }
         },
@@ -563,7 +569,7 @@
                 "enum": 2
             }
         },
-        "Fan Control Strategy": {
+        "Fan Control Strategies": {
             "Constant": {
                 "enum": 0
             },
@@ -1158,7 +1164,7 @@
         "Point Types": {
             "Accumulator": {
                 "enum": 128,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math"],
+                "lists": ["default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point"],
                 "schedProps": ["Out of Service", "Value"]
@@ -1172,14 +1178,14 @@
             },
             "Analog Input": {
                 "enum": 0,
-                "lists": ["ai", "default", "value", "dynamic", "register", "schedEntry", "float", "math"],
+                "lists": ["ai", "default", "value", "dynamic", "register", "schedEntry", "float", "math", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Sensor Point", "Alarm Adjust Point", "Alarm Display Point", "Interlock Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
             },
             "Analog Output": {
                 "enum": 1,
-                "lists": ["ao", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
+                "lists": ["ao", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Sensor Point", "Alarm Adjust Point", "Alarm Display Point", "Interlock Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
@@ -1193,7 +1199,7 @@
             },
             "Analog Value": {
                 "enum": 2,
-                "lists": ["av", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math"],
+                "lists": ["av", "default", "value", "dynamic", "register", "schedEntry", "float", "floatControl", "control", "math", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Monitor Point", "Alarm Adjust Point", "Alarm Display Point", "Interlock Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Low Alarm Limit", "High Alarm Limit"]
@@ -1207,14 +1213,14 @@
             },
             "Binary Input": {
                 "enum": 3,
-                "lists": ["bi", "default", "value", "dynamic", "register", "schedEntry", "enum", "math"],
+                "lists": ["bi", "default", "value", "dynamic", "register", "schedEntry", "enum", "math", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Alarm Display Point", "Interlock Point", "Feedback Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Alarm Value"]
             },
             "Binary Output": {
                 "enum": 4,
-                "lists": ["bo", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "math"],
+                "lists": ["bo", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "math", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Alarm Display Point", "Interlock Point", "Feedback Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off"]
@@ -1228,7 +1234,7 @@
             },
             "Binary Value": {
                 "enum": 5,
-                "lists": ["bv", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control"],
+                "lists": ["bv", "default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point", "Alarm Display Point", "Interlock Point", "Monitor Point", "Feedback Point"],
                 "schedProps": ["Out of Service", "Value", "Alarms Off", "Alarm Value"]
@@ -1312,7 +1318,7 @@
             },
             "MultiState Value": {
                 "enum": 142,
-                "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control"],
+                "lists": ["default", "value", "dynamic", "register", "schedEntry", "enum", "enumControl", "control", "gpl"],
                 "endpoint": "default",
                 "ptRefProps": ["Device Point", "Remote Unit Point"],
                 "schedProps": ["Out of Service", "Value"]
@@ -1652,6 +1658,12 @@
                 "valueType": "Bool",
                 "reportEnable": false
             },
+            "Configure Required": {
+                "enum": 446,
+                "valueType": "Bool",
+                "reportEnable": true,
+				"intLink": "_cfgRequired"
+            },
             "Continuous Show": {
                 "enum": 254,
                 "valueType": "Bool",
@@ -1862,6 +1874,13 @@
                 "valueType": "String",
                 "reportEnable": true
             },
+            "Device Model": {
+                "enum": 447,
+                "valueType": "Enum",
+                "reportEnable": true,
+                "enumsSet": "Device Model Types",
+				"intLink": "_devModel"
+            },
             "Device Point": {
                 "enum": 139,
                 "valueType": "UniquePID",
@@ -2070,7 +2089,7 @@
                 "enum": 389,
                 "valueType": "Enum",
                 "reportEnable": true,
-                "enumsSet": "Fan Control Strategy"
+                "enumsSet": "Fan Control Strategies"
             },
             "Fan Off CFM Setpoint": {
                 "enum": 305,
@@ -2919,6 +2938,12 @@
                 "valueType": "HourMin",
                 "reportEnable": true
             },
+            "Point Instance": {
+                "enum": 449,
+                "valueType": "Unsigned",
+                "reportEnable": true,
+				"intLink": "_id"
+            },
             "Point Refs": {
                 "enum": 277,
                 "valueType": "Array",
@@ -2994,11 +3019,6 @@
                 "reportEnable": true,
                 "enumsSet": "Port Protocols"
             },
-            "Port 1 Timeout": {
-                "enum": 390,
-                "valueType": "Unsigned",
-                "reportEnable": true
-            },
             "Port 2 Address": {
                 "enum": 173,
                 "valueType": "Unsigned",
@@ -3019,11 +3039,6 @@
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": "Port Protocols"
-            },
-            "Port 2 Timeout": {
-                "enum": 391,
-                "valueType": "Unsigned",
-                "reportEnable": true
             },
             "Port 3 Address": {
                 "enum": 176,
@@ -3046,11 +3061,6 @@
                 "reportEnable": true,
                 "enumsSet": "Port Protocols"
             },
-            "Port 3 Timeout": {
-                "enum": 392,
-                "valueType": "Unsigned",
-                "reportEnable": true
-            },
             "Port 4 Address": {
                 "enum": 179,
                 "valueType": "Unsigned",
@@ -3071,11 +3081,6 @@
                 "valueType": "Enum",
                 "reportEnable": true,
                 "enumsSet": "Port Protocols"
-            },
-            "Port 4 Timeout": {
-                "enum": 393,
-                "valueType": "Unsigned",
-                "reportEnable": true
             },
             "Power Fail Point": {
                 "enum": 414,
@@ -3185,6 +3190,13 @@
                 "enum": 134,
                 "valueType": "String",
                 "reportEnable": true
+            },
+            "Remote Unit Model": {
+                "enum": 448,
+                "valueType": "Enum",
+                "reportEnable": true,
+                "enumsSet": "Remote Unit Model Types",
+				"intLink": "_rmuModel"
             },
             "Remote Unit Point": {
                 "enum": 152,
@@ -3608,12 +3620,6 @@
                 "valueType": "Float",
                 "reportEnable": true
             },
-            "VAV Channel": {
-                "enum": 66,
-                "valueType": "Enum",
-                "reportEnable": true,
-                "enumsSet": ""
-            },
             "Velocity Flow": {
                 "enum": 402,
                 "valueType": "Float",
@@ -3992,7 +3998,7 @@
                     "Value": ""
                 },
                 "Device Address": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 2,
                     "Value": "0"
@@ -4045,9 +4051,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 65534,
-                    "Max": 65534,
-                    "Min": 1
+                    "Value": 65534
                 },
                 "Ethernet Protocol": {
                     "isDisplayable": true,
@@ -4088,7 +4092,7 @@
                     "eValue": 0
                 },
                 "Network Segment": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": true,
                     "ValueType": 4,
                     "Value": 0
@@ -4131,14 +4135,6 @@
                     "Value": "None",
                     "eValue": 0
                 },
-                "Port 1 Timeout": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 0,
-                    "Max": 10,
-                    "Min": 0
-                },
                 "Port 2 Address": {
                     "isDisplayable": false,
                     "isReadOnly": false,
@@ -4163,14 +4159,6 @@
                     "ValueType": 5,
                     "Value": "None",
                     "eValue": 0
-                },
-                "Port 2 Timeout": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 0,
-                    "Max": 10,
-                    "Min": 0
                 },
                 "Port 3 Address": {
                     "isDisplayable": false,
@@ -4197,14 +4185,6 @@
                     "Value": "None",
                     "eValue": 0
                 },
-                "Port 3 Timeout": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 0,
-                    "Max": 10,
-                    "Min": 0
-                },
                 "Port 4 Address": {
                     "isDisplayable": false,
                     "isReadOnly": false,
@@ -4229,14 +4209,6 @@
                     "ValueType": 5,
                     "Value": "None",
                     "eValue": 0
-                },
-                "Port 4 Timeout": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 0,
-                    "Max": 10,
-                    "Min": 0
                 },
                 "Quality Code Enable": {
                     "isDisplayable": true,
@@ -4494,7 +4466,7 @@
                     "ValueType": 11,
                     "Value": 0
                 },
-                "Modbus Unit Id":{
+                "Modbus Unit Id": {
                     "isDisplayable": false,
                     "isReadOnly": false,
                     "ValueType": 4,
@@ -4981,10 +4953,27 @@
                 "Channel": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 16,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8,
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12,
+                        "13": 13,
+                        "14": 14,
+                        "15": 15,
+                        "16": 16
+                    }
                 },
                 "Conversion Adjustment": {
                     "isDisplayable": true,
@@ -5320,20 +5309,6 @@
                     "ValueType": 1,
                     "Value": 0.0
                 },
-                "VAV Channel": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 5,
-                    "Value": "1 - Zone Temperature",
-                    "eValue": 1,
-                    "ValueOptions": {
-                        "1 - Zone Temperature": 1,
-                        "2 - Setpoint Adjust": 2,
-                        "3 - Supply Temperature": 3,
-                        "Auxiliary": 4,
-                        "Air Volume": 5
-                    }
-                },
                 "Warning Adjust Band": {
                     "isDisplayable": true,
                     "isReadOnly": false,
@@ -5439,18 +5414,36 @@
                 "Channel": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 8,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8
+                    }
                 },
                 "Close Channel": {
                     "isDisplayable": false,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 8,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8
+                    }
                 },
                 "Control Array": [],
                 "Control Data Type": {
@@ -5611,10 +5604,19 @@
                 "Open Channel": {
                     "isDisplayable": false,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 2,
-                    "Max": 8,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8
+                    }
                 },
                 "Out of Service": {
                     "isDisplayable": true,
@@ -5802,17 +5804,6 @@
                     "isReadOnly": true,
                     "ValueType": 1,
                     "Value": 0.0
-                },
-                "VAV Channel": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 5,
-                    "Value": "1 - Damper",
-                    "eValue": 1,
-                    "ValueOptions": {
-                        "1 - Damper": 1,
-                        "2 - Reheat": 2
-                    }
                 },
                 "Warning Adjust Band": {
                     "isDisplayable": true,
@@ -6299,10 +6290,27 @@
                 "Channel": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 16,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8,
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12,
+                        "13": 13,
+                        "14": 14,
+                        "15": 15,
+                        "16": 16
+                    }
                 },
                 "COV Enable": {
                     "isDisplayable": true,
@@ -6600,17 +6608,6 @@
                         "Off": 0,
                         "On": 1
                     }
-                },
-                "VAV Channel": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 5,
-                    "Value": "1 - Occupancy Override",
-                    "eValue": 1,
-                    "ValueOptions": {
-                        "1 - Occupancy Override": 1,
-                        "2 - Occupancy Sensor": 2
-                    }
                 }
             },
 
@@ -6717,18 +6714,44 @@
                 "Channel": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 8,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8
+                    }
                 },
                 "Close Channel": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 16,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8,
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12,
+                        "13": 13,
+                        "14": 14,
+                        "15": 15,
+                        "16": 16
+                    }
                 },
                 "Close Polarity": {
                     "isDisplayable": false,
@@ -6778,12 +6801,29 @@
                     "Value": ""
                 },
                 "Feedback Channel": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 16,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8,
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12,
+                        "13": 13,
+                        "14": 14,
+                        "15": 15,
+                        "16": 16
+                    }
                 },
                 "Feedback Polarity": {
                     "isDisplayable": false,
@@ -6879,12 +6919,21 @@
                     "Value": 0
                 },
                 "Off Channel": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 8,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8
+                    }
                 },
                 "Off Control Data Type": {
                     "isDisplayable": false,
@@ -6913,12 +6962,21 @@
                     "Value": 0
                 },
                 "On Channel": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 8,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8
+                    }
                 },
                 "On Control Data Type": {
                     "isDisplayable": false,
@@ -6947,12 +7005,29 @@
                     "Value": 0
                 },
                 "Open Channel": {
-                    "isDisplayable": false,
+                    "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 16,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8,
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12,
+                        "13": 13,
+                        "14": 14,
+                        "15": 15,
+                        "16": 16
+                    }
                 },
                 "Open Polarity": {
                     "isDisplayable": false,
@@ -7180,20 +7255,6 @@
                     "ValueOptions": {
                         "Off": 0,
                         "On": 1
-                    }
-                },
-                "VAV Channel": {
-                    "isDisplayable": false,
-                    "isReadOnly": false,
-                    "ValueType": 5,
-                    "Value": "3 - Lights",
-                    "eValue": 3,
-                    "ValueOptions": {
-                        "3 - Lights": 3,
-                        "5 - Fan": 5,
-                        "6 - Digital Heat 1": 6,
-                        "7 - Digital Heat 2": 7,
-                        "8 - Digital Heat 3": 8
                     }
                 },
                 "Verify Delay": {
@@ -7574,10 +7635,27 @@
                 "Channel": {
                     "isDisplayable": true,
                     "isReadOnly": false,
-                    "ValueType": 4,
-                    "Value": 1,
-                    "Max": 16,
-                    "Min": 1
+                    "ValueType": 5,
+                    "Value": "1",
+                    "eValue": 1,
+                    "ValueOptions": {
+                        "1": 1,
+                        "2": 2,
+                        "3": 3,
+                        "4": 4,
+                        "5": 5,
+                        "6": 6,
+                        "7": 7,
+                        "8": 8,
+                        "9": 9,
+                        "10": 10,
+                        "11": 11,
+                        "12": 12,
+                        "13": 13,
+                        "14": 14,
+                        "15": 15,
+                        "16": 16
+                    }
                 },
                 "COV Enable": {
                     "isDisplayable": true,
@@ -14734,9 +14812,7 @@
                     "isDisplayable": true,
                     "isReadOnly": false,
                     "ValueType": 4,
-                    "Value": 1,
-                    "Min": 1,
-                    "Max": 99
+                    "Value": 1
                 },
                 "Point Refs": [],
                 "Slides": []
