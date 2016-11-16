@@ -1243,7 +1243,7 @@ function testobjects() {
     console.log(err);
   });
 }
-testobjects();
+// testobjects();
 
 function testConfg() {
   var types = Object.keys(Config.Enums['Point Types']);
@@ -1255,3 +1255,45 @@ function testConfg() {
   });
 }
 // testConfg()
+
+function fixComparators() {
+  var matrix = {
+    '<': 'LT',
+    '>': 'GT',
+    '<=': 'LTEqual',
+    '>=': 'GTEqual',
+    '=': 'Equal'
+  };
+  db.connect(connectionString.join(''), function(err) {
+    var criteria = {
+      collection: 'points',
+      query: {
+        'Point Type.Value': 'Comparator',
+        _id:2929
+      }
+    };
+    Utility.iterateCursor(criteria, function(err, doc, next) {
+      var ct = doc['Calculation Type'];
+      for (var prop in matrix) {
+        if (ct.Value === matrix[prop]) {
+          ct.eValue = ct.ValueOptions[prop];
+          ct.Value = prop;
+        }
+      }
+      Utility.update({
+        collection: 'points',
+        query: {
+          _id: doc._id
+        },
+        updateObj: {
+          $set: {
+            'Calculation Type': ct
+          }
+        }
+      }, next);
+    }, function(err, count) {
+      console.log(err, count, 'done');
+    });
+  });
+}
+fixComparators();
