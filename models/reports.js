@@ -653,7 +653,9 @@ module.exports = Rpt = {
             pointFilter = reportConfig.pointFilter,
             fields = {},
             getPointRefs = false,
-            selectedPointTypes = pointFilter.selectedPointTypes,
+            selectedPointTypes = (!!pointFilter.selectedPointTypes.length) ? pointFilter.selectedPointTypes : Config.Utility.pointTypes.getAllowedPointTypes().map(function(type) {
+                return type.key;
+            }),
             uniquePIDs = [],
             properties = reportConfig.columns,
             sort = data.Sort,
@@ -681,7 +683,8 @@ module.exports = Rpt = {
         //logger.info("- - - - - - - data = " + JSON.stringify(data));
         if (properties) {
             for (var k = 0; k < properties.length; k++) {
-                var p = properties[k].colName;
+                // var p = properties[k].colName;
+                var p = utils.getDBProperty(properties[k].colName)
                 if (Config.Utility.getUniquePIDprops().indexOf(p) !== -1) {
                     fields["Point Refs"] = 1;
                     uniquePIDs.push(p);
@@ -751,6 +754,17 @@ module.exports = Rpt = {
                     delete docs[i]["Point Refs"];
                 }
             }
+            docs.forEach(function(doc) {
+                for (var prop in doc) {
+                    var newPropertyName = utils.getHumanProperty(prop);
+                    if (prop !== newPropertyName) {
+                        doc[newPropertyName] = utils.getHumanPropertyObj(prop, doc[prop]);
+                        if (prop !== '_id') {
+                            delete doc[prop];
+                        }
+                    }
+                }
+            });
             return cb(null, docs);
         });
     },
@@ -827,8 +841,11 @@ module.exports = Rpt = {
     },
     collectFilter: function(filter) {
         var searchQuery = {},
-            key = filter.filterName,
-            filterValueType = Config.Enums["Properties"][key].valueType;
+            // change key to internal property if possible.
+            key = utils.getDBProperty(filter.filterName),
+            searchKey = key,
+            filterValueType = (Config.Enums["Properties"].hasOwnProperty(key)) ? Config.Enums["Properties"][key].valueType : null;
+
 
         if (Config.Utility.getUniquePIDprops().indexOf(key) !== -1) {
             switch (filter.operator) {
@@ -874,7 +891,12 @@ module.exports = Rpt = {
                     break;
                 case "EqualTo":
                     if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
-                        searchQuery[key + ".eValue"] = filter.evalue;
+                        if (filterValueType !== null) {
+                            searchKey = key + '.eValue';
+                        } else {
+                            searchKey = key;
+                        }
+                        searchQuery[searchKey] = filter.evalue;
                     } else {
                         if (filter.value === "False") {
                             searchQuery[propertyCheckForValue(key)] = false;
@@ -912,7 +934,12 @@ module.exports = Rpt = {
                     //    $exists: true
                     //};
                     if (filter.valueType === "Enum" && filter.evalue !== undefined && filter.evalue > -1) {
-                        searchQuery[key + ".eValue"] = {
+                        if (filterValueType !== null) {
+                            searchKey = key + '.eValue';
+                        } else {
+                            searchKey = key;
+                        }
+                        searchQuery[searchKey] = {
                             $ne: filter.evalue
                         };
                     } else {
@@ -1314,7 +1341,7 @@ var buildPointRef = function(key, regex) {
 };
 
 var propertyCheckForValue = function(prop) {
-    if (prop.match(/^name/i) !== null) {
+    if (prop.match(/^name/i) !== null || Config.Enums['Internal Properties'].hasOwnProperty(prop)) {
         return prop;
     } else {
         return prop + ".Value";
