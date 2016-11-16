@@ -1457,7 +1457,7 @@ db.connect(connectionString, function(err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.addDownlinkProtocol];
+    tasks = [scripts.addDownlinkProtocol, scripts.updateReportsDurationInterval];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result
