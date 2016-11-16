@@ -3581,7 +3581,41 @@ var dti = {
 
             return navigator;
         },
+        handleContextMenuClick: function (action, opt) {
+            var $target = $(opt.$trigger),
+                data = ko.dataFor($target[0]),
+                actions = {
+                    'Delete': function () {
+                        var method = data._pStatus === 1 ? 'hard' : 'soft';
+                        dti.socket.emit('deletePoint', {
+                            upi: data._id,
+                            method: method
+                        });
+                    }
+                };
+
+            if (actions[action]) {
+                dti.log('Calling action', action);
+                actions[action]();
+            }
+        },
         init: function () {
+            $.contextMenu({
+                selector: '.listEntry',
+                //callback:
+                items: {
+                    'Delete': {
+                        name: 'Delete',
+                        icon: 'delete'
+                    },
+                    'Clone': {
+                        name: 'Clone',
+                        icon: 'copy'
+                    }
+                },
+                callback: dti.navigator.handleContextMenuClick
+            });
+
             dti.navigator.commonNavigator = dti.navigator.createNavigator(true);
         }
     },
