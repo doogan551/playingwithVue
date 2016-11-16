@@ -833,12 +833,12 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
                     log: "Slide Show edited",
                     activity: actLogsEnums["Slideshow Edit"].enum
                   })));
-                } else if (newPoint["Point Type"].Value === "Program"){
+                } else if (newPoint["Point Type"].Value === "Program") {
                   activityLogObjects.push(utils.buildActivityLog(_.merge(logData, {
                     log: "Program edited",
                     activity: actLogsEnums["Program Edit"].enum
                   })));
-                }else{
+                } else {
                   compareArrays(newPoint[prop], oldPoint[prop], activityLogObjects);
                 }
               } else if (prop === "Alarm Messages" || prop === "Occupancy Schedule" || prop === "Sequence Details" || prop === "Security" || prop === "Script Source File") {
@@ -1133,42 +1133,43 @@ function doActivityLogs(generateActivityLog, logs, callback) {
 }
 //newupdate
 function fixCfgRequired(updateCfgReq, oldPoint, newPoint, callback) {
+  if (!!updateCfgReq) {
+    var oldDevPoint = Config.Utility.getPropertyObject('Device Point', oldPoint).Value;
+    var newDevPoint = Config.Utility.getPropertyObject('Device Point', newPoint).Value;
+    // 0 > 0 - no change
+    // N > 0 - cfg old
+    // 0 > N - cfg new
+    // N > M - cfg both
+    var areBothZero = oldDevPoint === 0 && newDevPoint === 0;
+    var isNowOffDevice = oldDevPoint !== 0 && newDevPoint === 0;
+    var isNowOnDevice = oldDevPoint === 0 && newDevPoint !== 0;
+    var didChangeDevice = oldDevPoint !== 0 && newDevPoint !== 0 && oldDevPoint !== newDevPoint;
 
-  var oldDevPoint = Config.Utility.getPropertyObject('Device Point', oldPoint).Value;
-  var newDevPoint = Config.Utility.getPropertyObject('Device Point', newPoint).Value;
-  // 0 > 0 - no change
-  // N > 0 - cfg old
-  // 0 > N - cfg new
-  // N > M - cfg both
-  var areBothZero = oldDevPoint === 0 && newDevPoint === 0;
-  var isNowOffDevice = oldDevPoint !== 0 && newDevPoint === 0;
-  var isNowOnDevice = oldDevPoint === 0 && newDevPoint !== 0;
-  var didChangeDevice = oldDevPoint !== 0 && newDevPoint !== 0 && oldDevPoint !== newDevPoint;
-
-  if (!!updateCfgReq && !areBothZero && (!!isNowOffDevice || !!isNowOnDevice || !!didChangeDevice)) {
-    var upis = [];
-    if(isNowOffDevice || didChangeDevice){
-      upis.push(oldDevPoint);
-    }
-    if(isNowOnDevice || didChangeDevice){
-      upis.push(newDevPoint);
-    }
-
-    Utility.update({
-      collection: 'points',
-      query: {
-        _id: {
-          $in: upis
-        }
-      },
-      updateObj: {
-        $set: {
-          _cfgRequired: true
-        }
+    if (!areBothZero && (!!isNowOffDevice || !!isNowOnDevice || !!didChangeDevice)) {
+      var upis = [];
+      if (isNowOffDevice || didChangeDevice) {
+        upis.push(oldDevPoint);
       }
-    }, callback);
-  } else {
-    callback();
+      if (isNowOnDevice || didChangeDevice) {
+        upis.push(newDevPoint);
+      }
+
+      Utility.update({
+        collection: 'points',
+        query: {
+          _id: {
+            $in: upis
+          }
+        },
+        updateObj: {
+          $set: {
+            _cfgRequired: true
+          }
+        }
+      }, callback);
+    } else {
+      callback();
+    }
   }
 }
 //newupdate
