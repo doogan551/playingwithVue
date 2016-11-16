@@ -5614,7 +5614,8 @@ var reportsViewModel = function () {
                             done();
                         },
                         deleteScheduleEntry: function () {
-                            self.scheduler.scheduleEntries.remove(data);
+                            data.deleteMe(true);
+                            self.scheduler.setDirty(data);
                             self.scheduler.modal.close();
                         },
                         handleDurationChange: function () {
@@ -5838,7 +5839,8 @@ var reportsViewModel = function () {
                     transport: ko.observable('email'),
                     // Following are keys used by UI but removed before the object is sent to the server
                     isDirty: true,
-                    parsed: null
+                    parsed: null,
+                    deleteMe: ko.observable(false)
                 },
                 schedule = $.extend(defaults, cfg);
 
@@ -5900,6 +5902,9 @@ var reportsViewModel = function () {
                     schedule = $.extend({}, ko.toJS(schedule));
                     delete schedule.isDirty;
                     delete schedule.parsed;
+                    if (schedule.deleteMe === false) {
+                        delete schedule.deletMe;
+                    }
 
                     // If this is a new schedule entry, set a flag
                     if (!schedule._id) {
@@ -5976,6 +5981,7 @@ var reportsViewModel = function () {
                         // Add UI-only keys
                         schedule.isDirty = false;
                         schedule.parsed = self.scheduler.cron.parse(schedule.runTime);
+                        schedule.deleteMe = ko.observable(false);
                         // Convert some keys to observables
                         schedule.optionalParameters.duration = ko.observable(schedule.optionalParameters.duration);
                         schedule.optionalParameters.interval = ko.observable(schedule.optionalParameters.interval);

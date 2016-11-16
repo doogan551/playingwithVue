@@ -44,26 +44,32 @@ module.exports = self = {
                 query: {}
             },
             getOldSchedule = function (idata, cb) { // idata...'data' was already taken =/
-                if (idata.newSchedule._id) { // If this is an existing point (_id field present)
-                    idata.newSchedule._id = ObjectID(idata.newSchedule._id);
-                    criteria.query._id = idata.newSchedule._id;
-                    Utility.get(criteria, function (err, oldSchedule) {
-                        idata.oldSchedule = oldSchedule;
-                        cb(err, idata);
-                    });
-                } else {
-                    cb(null, idata);
+                if (idata.schedule._id) { // If this is an existing point
+                    idata.schedule._id = ObjectID(idata.schedule._id);
+                    criteria.query._id = idata.schedule._id;
+
+                    if (!idata.schedule.deleteMe) {
+                        Utility.get(criteria, function (err, oldSchedule) {
+                            idata.oldSchedule = oldSchedule;
+                            cb(err, idata);
+                        });
+                        return;
+                    }
                 }
+
+                cb(null, idata);
             },
             doSave = function (idata, cb) {
                 var fn;
 
-                if (idata.oldSchedule) {
+                if (idata.schedule.deleteMe) {
+                    fn = 'remove';
+                } else if (idata.oldSchedule) {
                     fn = 'update';
-                    criteria.updateObj = idata.newSchedule;
+                    criteria.updateObj = idata.schedule;
                 } else {
                     fn = 'insert';
-                    criteria.insertObj = idata.newSchedule;
+                    criteria.insertObj = idata.schedule;
                 }
                 Utility[fn](criteria, function (err) {
                     cb(err, idata);
@@ -74,24 +80,26 @@ module.exports = self = {
                     deleteCron = false,
                     modifyCron = false;
 
-                if (!idata.oldSchedule) { // If this is a new shcedule
+                if (idata.schedule.deleteMe) {
+                    deleteCron = true;
+                } else if (!idata.oldSchedule) { // If this is a new shcedule
                     createCron = true;
-                } else if (idata.oldSchedule.enable ^ idata.newSchedule.enable) { // If enable flag changed
-                    if (idata.newSchedule.enable) {
+                } else if (idata.oldSchedule.enable ^ idata.schedule.enable) { // If enable flag changed
+                    if (idata.schedule.enable) {
                         createCron = true;
                     } else {
                         deleteCron = true;
                     }
-                } else if (idata.oldSchedule.runTime !== idata.newSchedule.runTime) { // If runtime changed
+                } else if (idata.oldSchedule.runTime !== idata.schedule.runTime) { // If runtime changed
                     modifyCron = true;
                 }
 
                 if (createCron) {
-                    // TODO Install CRON @ newSchedule.runTime
+                    // TODO Install CRON @ schedule.runTime
                 } else if (deleteCron) {
-                    // TODO Delete CRON @ newSchedule.runTime
+                    // TODO Delete CRON @ schedule.runTime
                 } else if (modifyCron) {
-                    // TODO Reinstall CRON @ newSchedule.runTime
+                    // TODO Reinstall CRON @ schedule.runTime
                 }
 
                 cb(null, idata);
@@ -99,7 +107,7 @@ module.exports = self = {
             processSchedule = function (schedule, cb) {
                 var start = function (cb) {
                         cb(null, {
-                            newSchedule: schedule
+                            schedule: schedule
                         });
                     };
 
