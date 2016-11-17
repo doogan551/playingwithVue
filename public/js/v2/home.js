@@ -3107,14 +3107,15 @@ var dti = {
                                 switch (bindings.mode()) {
                                     case self.modes.DEFAULT:
                                         dti.navigator.handleNavigatorRowClick(point);
+                                        dti.navigator.hideNavigator(self);
                                         break;
                                     case self.modes.FILTER:
+                                        dti.navigator.hideNavigator(self);
+                                        break;
                                     case self.modes.CREATE:
                                         // dti.log(point);
                                         break;
                                 }
-
-                                dti.navigator.hideNavigator(self);
                             }
                         }
                     };
