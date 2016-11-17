@@ -3632,6 +3632,11 @@ var dti = {
                                 return false;
                             }
 
+                            //no menu on gpl blocks
+                            if (ko.dataFor($target[0])._parentUpi !== 0) {
+                                return false;
+                            }
+
                             $row.addClass('hovered');
                         },
                         hide: function(options) {
