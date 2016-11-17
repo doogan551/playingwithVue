@@ -2118,17 +2118,6 @@ var Config = (function(obj) {
             return data;
         },
 
-        "Startup Delay": function(data) {
-            var point = data.point,
-                rmuType = enumsTemplatesJson.Enums["Remote Unit Model Types"];
-            if (point._rmuModel !== rmuType["MS3 RT"].enum && point._rmuModel !== rmuType["MS 3 EEPROM"].enum && point._rmuModel !== rmuType["MS 3 Flash"].enum) {
-                data.ok = false;
-                data.result = data.property + " must be implemented on MS3 Remote Unit.";
-            }
-
-            return data;
-        },
-
         "Trend COV Increment": function(data) {
             var point = data.point,
                 val = data.propertyObject.Value;
