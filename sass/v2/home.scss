@@ -413,11 +413,11 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
             font-size: 16px;
             position: absolute;
             left: 50%;
+            transform: translateX(-50%);
             top: 6px;
 
             div {
                 position: relative;
-                left: -50%;
 
                 .popInOutIcon {
                     position: absolute;
@@ -1433,7 +1433,22 @@ $loaderSpeedScale: 1 / .75;
     height: 100%;
 }
 
+.context-menu-item {
+    color: $blue-grey !important;
 
+    &::before {
+        color: $blue-grey !important;
+    }
+
+    &.context-menu-hover {
+        background-color: $blue-grey !important;
+        color: #fff !important;
+
+        &::before {
+            color: #fff !important;
+        }
+    }
+}
 /* new navigator */
 
 .navigatorModal {
@@ -1576,8 +1591,10 @@ $loaderSpeedScale: 1 / .75;
         // flex-wrap: wrap;
         flex-grow: 1;
 
-        .listRow:hover {
-            background-color: $blue-grey-lighten-5;
+        .listRow:hover,
+        .listRow.hovered {
+            background-color: $blue-grey;
+            color: #fff;
             cursor: default;
         }
 
@@ -1655,6 +1672,10 @@ $loaderSpeedScale: 1 / .75;
             display: block;
         }
     }
+}
+
+.pointNavMenu {
+    display: none;
 }
 
 /* new navigator */
