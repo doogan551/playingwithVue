@@ -413,11 +413,11 @@ $cardTitleBorder: rgba(160, 160, 160, .2);
             font-size: 16px;
             position: absolute;
             left: 50%;
+            transform: translateX(-50%);
             top: 6px;
 
             div {
                 position: relative;
-                left: -50%;
 
                 .popInOutIcon {
                     position: absolute;
