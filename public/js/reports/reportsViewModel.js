@@ -3489,10 +3489,11 @@ var reportsViewModel = function () {
                     });
 
                     $dataTablePlaceHolder.on("click", ".pointInstance", function () {
-                        var data = {
-                            upi: $(this).attr("upi"),
-                            pointType: $(this).attr("pointType"),
-                            pointName: $(this).text()
+                        var $this = $(this),
+                            data = {
+                            upi: $this.attr("upi"),
+                            pointType: $this.attr("pointType"),
+                            pointName: $this.text()
                         };
 
                         self.showPointReview(data);
@@ -6432,11 +6433,10 @@ var reportsViewModel = function () {
     self.showPointReview = function (data) {
         var upi = parseInt(data.upi, 10);
         if (upi > 0) {
-            if (data.pointType === "Display") {
-                dtiUtility.openWindow("/displays/view/" + upi, "Display", "Display", "newwindow", upi);
-            } else {
-                dtiUtility.openWindow("/pointinspector/" + upi, "Point", "Point", "newwindow", upi);
-            }
+            dtiUtility.openWindow({
+                upi: upi,
+                pointType: data.pointType
+            });
         }
     };
 
