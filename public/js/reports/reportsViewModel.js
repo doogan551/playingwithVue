@@ -1982,7 +1982,12 @@ var reportsViewModel = function () {
                     case "Bool":
                         if (result.Value !== "") {
                             var temp = result.Value.toString().toLowerCase();
-                            result.Value = temp[0].toUpperCase() + temp.substring(1);
+                            //result.Value = temp[0].toUpperCase() + temp.substring(1);
+                            if (result.Value == true) {
+                                result.Value = "On";
+                            } else {
+                                result.Value = "Off";
+                            }
                         }
                         break;
                     case "BitString":

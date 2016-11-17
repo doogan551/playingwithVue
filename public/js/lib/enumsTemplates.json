@@ -1658,6 +1658,12 @@
                 "valueType": "Bool",
                 "reportEnable": false
             },
+            "Configure Required": {
+                "enum": 446,
+                "valueType": "Bool",
+                "reportEnable": true,
+				"intLink": "_cfgRequired"
+            },
             "Continuous Show": {
                 "enum": 254,
                 "valueType": "Bool",
@@ -1867,6 +1873,13 @@
                 "enum": 124,
                 "valueType": "String",
                 "reportEnable": true
+            },
+            "Device Model": {
+                "enum": 447,
+                "valueType": "Enum",
+                "reportEnable": true,
+                "enumsSet": "Device Model Types",
+				"intLink": "_devModel"
             },
             "Device Point": {
                 "enum": 139,
@@ -2925,6 +2938,12 @@
                 "valueType": "HourMin",
                 "reportEnable": true
             },
+            "Point Instance": {
+                "enum": 449,
+                "valueType": "Unsigned",
+                "reportEnable": true,
+				"intLink": "_id"
+            },
             "Point Refs": {
                 "enum": 277,
                 "valueType": "Array",
@@ -3171,6 +3190,13 @@
                 "enum": 134,
                 "valueType": "String",
                 "reportEnable": true
+            },
+            "Remote Unit Model": {
+                "enum": 448,
+                "valueType": "Enum",
+                "reportEnable": true,
+                "enumsSet": "Remote Unit Model Types",
+				"intLink": "_rmuModel"
             },
             "Remote Unit Point": {
                 "enum": 152,
