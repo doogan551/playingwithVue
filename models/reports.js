@@ -624,10 +624,13 @@ module.exports = Rpt = {
             query: {
                 _id: utils.converters.convertType(data.id)
             },
-            collection: 'points'
+            collection: 'points',
+            data: data,
+            limit: 1
         };
 
-        Utility.getOne(criteria, function(err, result) {
+        Utility.getWithSecurity(criteria, function(err, result, count) {
+            result = result[0];
             if (err) {
                 return cb(err);
             } else {

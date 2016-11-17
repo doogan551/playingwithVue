@@ -5,7 +5,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
         var self = this;
         this.actingUser = window.top.workspaceManager.user();
         this.root = params.rootContext;
-        this.security = this.root.point.data.Security;
+        this.security = ko.observableArray([]);
         this.isSystemAdmin = this.root.isSystemAdmin();
         this.allGroupsRaw = {};
         this.allGroups = {};
@@ -269,8 +269,8 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
                         // Now that we've received our group and user data, we trigger the building of our groups
                         // listings by touching the security computed
                         var security = self.security(); // Save the current security information
-                        self.root.point.data.Security([]); // Remove security information
-                        self.root.point.data.Security(security); // Re-add security information
+                        // self.root.point.data.Security([]); // Remove security information
+                        // self.root.point.data.Security(security); // Re-add security information
 
                         self.gettingData(false);
                         self.networkError(false);
