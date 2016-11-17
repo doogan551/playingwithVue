@@ -270,9 +270,10 @@ exports.getWithSecurity = function(criteria, cb) {
     if (err || permissions === false) {
       cb(err || permissions);
     }
+
     // searching can take upwards of 10 seconds with permissions and results doesn't hit a limit
     // if permissions couldn't actually exceed the returned limit, search with upis as well
-    if (_.size(permissions) <= limit) {
+    if (permissions !== true && _.size(permissions) <= limit) {
       var upis = Object.keys(permissions).map(function(upi) {
         return parseInt(upi, 10);
       });
