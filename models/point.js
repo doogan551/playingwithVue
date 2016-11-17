@@ -718,7 +718,7 @@ module.exports = {
 
     function doInitPoint(name1, name2, name3, name4, pointType, targetUpi, subType, callback) {
 
-      utils.buildName(name1, name2, name3, name4);
+      buildName(name1, name2, name3, name4);
 
       criteria = {
         collection: 'points',
@@ -731,6 +731,7 @@ module.exports = {
         if (err) {
           return callback(err);
         }
+
         if (freeName !== null && pointType !== "Schedule Entry") {
           return callback("Name already exists.");
         }
@@ -787,7 +788,7 @@ module.exports = {
 
             if (pointType === "Schedule Entry") {
               name2 = upiObj._id.toString();
-              utils.buildName(name1, name2, name3, name4);
+              buildName(name1, name2, name3, name4);
             }
 
             if (targetUpi && targetUpi !== 0) {
@@ -817,6 +818,26 @@ module.exports = {
         });
 
       });
+    }
+
+    function buildName(name1, name2, name3, name4) {
+      _name1 = (name1) ? name1.toLowerCase() : "";
+      _name2 = (name2) ? name2.toLowerCase() : "";
+      _name3 = (name3) ? name3.toLowerCase() : "";
+      _name4 = (name4) ? name4.toLowerCase() : "";
+
+      Name = "";
+
+      if (name1)
+        Name = Name + name1;
+      if (name2)
+        Name = Name + "_" + name2;
+      if (name3)
+        Name = Name + "_" + name3;
+      if (name4)
+        Name = Name + "_" + name4;
+
+      _Name = Name.toLowerCase();
     }
 
     function cloneGPLSequence(oldSequence, callback) {
