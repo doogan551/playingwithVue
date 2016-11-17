@@ -486,26 +486,7 @@ var reportsViewModel = function () {
             }
         },
         userCanEdit = function (data, requestedAccessLevel) {
-            var cumulativePermissions = 0,
-                user,
-                groups,
-                isSystemAdmin;
-
-            if (!!window.workspaceManager) {
-                user = window.workspaceManager.user();
-                groups = user.groups.filter(function (item) {
-                    return !!~data.Security.indexOf(item._id);
-                });
-                isSystemAdmin = user["System Admin"].Value;
-
-                if (isSystemAdmin) { return true; }
-
-                for (var i = 0, last = groups.length; i < last; i++) {
-                    cumulativePermissions |= groups[i]._pAccess;
-                }
-            }
-
-            return !!(cumulativePermissions & requestedAccessLevel);
+            return !!(data._pAccess & requestedAccessLevel);
         },
         cleanPointRefArray = function () {
             var i,
