@@ -1413,7 +1413,6 @@ var reportsViewModel = function () {
         reportData,
         reportChartData,
         activeDataRequests,
-        reportSocket,
         exportEventSet,
         totalizerDurationInHours = true,
         Name = "dorsett.reportUI",
@@ -1476,6 +1475,7 @@ var reportsViewModel = function () {
                 point["Point Refs"].push(tempRef);
             } else {
                 if (!!refPointUPI) {
+                    console.log("..  double check if this was a 'save' ..");
                     ajaxCall("GET", null, getPointURL + refPointUPI, pushNewReferencedPoint);
                 }
                 console.log("setNewPointReference() refPointUPI = " + refPointUPI + " property = " + property + "  refPoint = " + refPoint);
@@ -1903,6 +1903,8 @@ var reportsViewModel = function () {
             return filters;
         },
         ajaxCall = function (type, input, url, callback) {
+            var errorRaised = false;
+
             self.activeRequestDataDrawn(false);
             $.ajax({
                 url: url,
@@ -1910,14 +1912,20 @@ var reportsViewModel = function () {
                 contentType: "application/json",
                 dataType: "json",
                 data: (!!input ? JSON.stringify(input) : null)
-            }).done(function (returnData) {
-                if (callback) {
-                    callback.call(self, returnData);
+            }).done(function (data) {
+                if (data.err) {
+                    errorRaised = data.err;
+                    return dti.log("Request failed: url = " + url + "  error message " + data.err);
+                } else if (callback) {
+                    callback.call(self, data);
                 }
             }).fail(function (jqXHR, textStatus, errorThrown) {
-                console.log("Request failed: " + textStatus);
+                errorRaised = textStatus + ' ' + errorThrown;
+                dti.log("Request failed: url = " + url, jqXHR, textStatus, errorThrown);
                 self.activeRequestDataDrawn(true);
-                //self.errorWithRequest(true);
+                if (callback) {
+                    callback.call(self, errorRaised);
+                }
             }).always(function () {
                 // console.log( " . .     ajax Request complete..");
             });
@@ -1976,7 +1984,7 @@ var reportsViewModel = function () {
                     tempObject.yaxisGroup = "A";
                     updateColumnFromPointRefs(tempObject);  // sets AppIndex;
                     if (tempObject.AppIndex) {
-                        formatThePoint(selectedPoint, getPointRefByAppIndex(tempObject.AppIndex));
+                        formatPoint(selectedPoint, getPointRefByAppIndex(tempObject.AppIndex));
                     }
                     self.currentColumnEdit(tempObject);
                 },
@@ -2035,7 +2043,7 @@ var reportsViewModel = function () {
                     tempObject.yaxisGroup = "A";
                     updateColumnFromPointRefs(tempObject);  // sets AppIndex;
                     if (tempObject.AppIndex) {
-                        formatThePoint(selectedPoint, getPointRefByAppIndex(tempObject.AppIndex));
+                        formatPoint(selectedPoint, getPointRefByAppIndex(tempObject.AppIndex));
                         updateListOfColumns(updatedList);
                     }
                 },
@@ -2063,7 +2071,7 @@ var reportsViewModel = function () {
                     tempObject.pointType = selectedPoint["Point Type"].Value;
                     updateFilterFromPointRefs(tempObject);  // sets AppIndex;
                     if (tempObject.AppIndex) {
-                        formatThePoint(selectedPoint, getPointRefByAppIndex(tempObject.AppIndex));
+                        formatPoint(selectedPoint, getPointRefByAppIndex(tempObject.AppIndex));
                         updateListOfFilters(updatedList);
                     }
                 },
@@ -2484,15 +2492,22 @@ var reportsViewModel = function () {
             }
             return result;
         },
-        formatThePoint = function (selectedPoint, pRef) {
+        formatPoint = function (cb, selectedPoint, pRef) {
             var params = {
                     point: point,
-                    oldPoint: point,
+                    oldPoint: originalPoint,
                     refPoint: selectedPoint,
                     property: pRef
                 },
                 callback = function (formattedPoint) {
-                    point["Point Refs"] = formattedPoint["Point Refs"];
+                    if (!formattedPoint.err) {
+                        point = formattedPoint;
+                    }
+                    if (!!cb) {
+                        if (typeof cb === "function") {
+                            cb(formattedPoint);
+                        }
+                    }
                 };
             dtiUtility.getConfig("Update.formatPoint", [params], callback);
         },
@@ -2807,24 +2822,6 @@ var reportsViewModel = function () {
                         break;
                 }
             }
-        },
-        initSocket = function (cb) {
-            reportSocket = io.connect(window.location.origin);
-
-            reportSocket.on("connect", function () {
-                // console.log("SOCKETID:", reportSocket.id);
-                if (cb) {
-                    cb();
-                }
-            });
-
-            reportSocket.on("returnReport", function (data) {
-                if (data.err === null) {
-                    //parseReturnedData(data.results);
-                } else {
-                    console.log("Error while retrieving data");
-                }
-            });
         },
         getScreenFields = function () {
             $direports = $(document).find(".direports");
@@ -3335,7 +3332,42 @@ var reportsViewModel = function () {
                 }
             }, resizeTimer);
         },
-        saveReportConfig = function () {
+        setReportConfig = function (cb) {
+            var formattingPointRequest = 0,
+                errors,
+                handleFormatPointRequests = function (result) {
+                    if (!!result.err) {
+                        if (errors === undefined) {
+                            errors = [];
+                        }
+
+                        if (errors.indexOf(result.err) === -1) {
+                            errors.push(result.err);
+                        }
+                    }
+
+                    if (--formattingPointRequest <= 0) {
+                        console.log("MAKE CALLBACK  errors = " + errors);
+                        cb(errors);
+                    }
+                },
+                checkForNameChanges = function () {
+                    point.name1 = self.pointName1();
+                    formattingPointRequest++;
+                    formatPoint(handleFormatPointRequests, {}, "name1");
+
+                    point.name2 = self.pointName2();
+                    formattingPointRequest++;
+                    formatPoint(handleFormatPointRequests, {}, "name2");
+
+                    point.name3 = self.pointName3();
+                    formattingPointRequest++;
+                    formatPoint(handleFormatPointRequests, {}, "name3");
+
+                    point.name4 = self.pointName4();
+                    formattingPointRequest++;
+                    formatPoint(handleFormatPointRequests, {}, "name4");
+                };
             point["Report Config"].columns = validateColumns(true);
             point["Report Config"].filters = validateFilters(true);
             point["Report Config"].pointFilter = {
@@ -3370,28 +3402,8 @@ var reportsViewModel = function () {
                     console.log(" - - - DEFAULT  init()");
                     break;
             }
-            point.name1 = self.pointName1();
-            point.name2 = self.pointName2();
-            point.name3 = self.pointName3();
-            point.name4 = self.pointName4();
-            point._name1 = point.name1.toLowerCase();
-            point._name2 = point.name2.toLowerCase();
-            point._name3 = point.name3.toLowerCase();
-            point._name4 = point.name4.toLowerCase();
-            point.Name = point.name1 + "_" + point.name2 + "_" + point.name3 + "_" + point.name4;
-            point.Name = point.Name.replace(/_\s*$/, "");
-            point._Name = point.Name.toLowerCase();
 
-            if (point._pStatus !== 0) {
-                reportSocket.emit("addPoint", {
-                    point: point
-                });
-            } else {
-                reportSocket.emit("updatePoint", JSON.stringify({
-                    "newPoint": point,
-                    "oldPoint": originalPoint
-                }));
-            }
+            checkForNameChanges();
         },
         setReportEvents = function () {
             var intervals,
@@ -3502,27 +3514,6 @@ var reportsViewModel = function () {
                     $tabConfiguration.find(".toggleTab").on("shown.bs.tab", function () {
                         adjustConfigTabActivePaneHeight();
                     });
-
-                    if (!!reportSocket) {
-                        reportSocket.on("pointUpdated", function (data) {
-                            // var $messageHolder = $tabConfiguration.find(".screenMessages").find(".successMessage");
-                            // console.log(" -  -  - reportSocket() 'pointUpdated' returned");
-                            if (data.err === null || data.err === undefined) {
-                                self.unSavedDesignChange(false);
-                                // $messageHolder.text("Report Saved");
-                                // setTimeout(function () {
-                                //     $messageHolder.text("");
-                                // }, 3000);  // display success message
-                            } else {
-                                point._pStatus = 0; // Update
-                                self.unSavedDesignChange(true);
-                                originalPoint = _.clone(newPoint, true);
-                                self.reportDisplayTitle(originalPoint.Name.replace("_", " "));
-                                // $tabConfiguration.find(".screenMessages").find(".errorMessage").text(data.err);
-                            }
-                            saveManager.saveReportCallback(data.err);
-                        });
-                    }
 
                     $dataTablePlaceHolder.on("column-reorder.dt", function (event, settings, details) {
                         var columnsArray = $.extend(true, [], self.listOfColumns()),
@@ -3812,8 +3803,6 @@ var reportsViewModel = function () {
                         scroll: true,
                         handle: ".handle"
                     });
-
-                    console.log(" .... report events configured .... ");
                 }
             }, 200);
 
@@ -4982,6 +4971,14 @@ var reportsViewModel = function () {
             var remainingResponses = 0,
                 errList = [],
                 _pStatus,
+                submitSaveReportRequest = function (errors) {
+                    if (!!errors) {
+                        itemFinished(errors);
+                    } else {
+                        dtiUtility.updateWindow('updateTitle', point.Name);
+                        ajaxCall("POST", point, "saveReport", saveManager.saveReportCallback);
+                    }
+                },
                 doSave = function () {
                     _pStatus = point._pStatus;
 
@@ -4996,18 +4993,21 @@ var reportsViewModel = function () {
                     remainingResponses = 0;
 
                     remainingResponses++;
-                    saveReportConfig();
+                    setReportConfig(submitSaveReportRequest);
 
                     if (_pStatus === 0) { // If report point status is Active
                         remainingResponses++;
                         self.scheduler.saveScheduleEntries(itemFinished); // Save schedule entries
                     }
                 },
-                saveReportCallback = function (err) { // This routine called in the socket.on 'pointUpdated' handler
+                saveReportCallback = function (result) { // This routine called after Report Saved
+                    var err = result.err
                     if (_pStatus === 1 && !err) { // If report point status was previously inactive & it saved without error
                         remainingResponses++;
                         self.scheduler.saveScheduleEntries(itemFinished);
                     }
+                    self.unSavedDesignChange(!!err);  // report save returned with ERROR
+
                     itemFinished(err);
                 },
                 itemFinished = function (err) {
@@ -5016,7 +5016,11 @@ var reportsViewModel = function () {
 
                     if (remainingResponses) {
                         if (err) {
-                            errList.push(err);
+                            if (Array.isArray(err)) {
+                                Array.prototype.push.apply(errList, err);
+                            } else {
+                                errList.push(err);
+                            }
                         }
 
                         remainingResponses--;
@@ -6149,7 +6153,6 @@ var reportsViewModel = function () {
                     self.pointName4(point.name4);
 
                     if (!scheduled) {
-                        initSocket();
                         dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], self.pointTypes);
                     }
 

@@ -87,22 +87,29 @@ module.exports = Rpt = {
         var criteria = {
             collection: 'points',
             query: {
-                _id: utils.converters.convertType(data.id)
+                _id: utils.converters.convertType(data._id)
             },
             updateObj: {
                 $set: {
-                    'SVGData': data.SVGData
+                    'Point Refs': data["Point Refs"],
+                    'Report Config': data["Report Config"],
+                    name1: data.name1,
+                    name2: data.name2,
+                    name3: data.name3,
+                    name4: data.name4
                 }
             }
         };
 
-        Utility.get(criteria, function(err, result) {
+        Utility.update(criteria, function(err, result) {
             if (!err) {
                 return cb(null, {
-                    data: "Data has been saved successfully!!!"
+                    data: "Report has been saved successfully!!!"
                 });
             } else {
-                return cb(err);
+                return cb(null, {
+                    err: err
+                });
             }
         });
     },
