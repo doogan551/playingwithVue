@@ -1163,7 +1163,9 @@ var dti = {
         closeWindow: function (id) {
             var targetWindow = dti.windows.getWindowById(id);
 
-            targetWindow.close();
+            if (targetWindow) {
+                targetWindow.close();
+            }
         },
         closeAll: function (group) {
             var openWindows;
@@ -3436,7 +3438,7 @@ var dti = {
                     }
 
                     if (!config.isModal) {
-                        dti.windows.closeWindow(self.id);
+                        dti.windows.closeWindow(self.windowID);
                     }
                 }
             };
