@@ -2837,6 +2837,8 @@ var Config = (function(obj) {
                 ndx,
                 len;
 
+            point._cfgRequired = true;
+
             for (registerName in registers) {
                 if (_.isEqual(point[registerName], refPoint[registerName]) === false) {
                     point[registers[registerName]].length = 0;

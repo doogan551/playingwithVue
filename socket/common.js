@@ -882,10 +882,10 @@ function newUpdate(oldPoint, newPoint, flags, user, callback) {
           downloadPoint = false;
           updateReferences = false;
         } else if (newPoint["Point Type"].Value === "Device") {
-          var propertyNetwork = newPoint["Uplink Port"].Value + " Network",
-            propertyAddress = newPoint["Uplink Port"].Value + " Address";
-          updateObject["Network Segment.Value"] = newPoint[propertyNetwork].Value;
-          updateObject["Device Address.Value"] = newPoint[propertyAddress].Value.toString();
+          utils.updateNetworkAndAddress(newPoint);
+
+          updateObject["Network Segment.Value"] = newPoint['Network Segment'].Value;
+          updateObject["Device Address.Value"] = newPoint['Device Address'].Value.toString();
         }
 
         if (configRequired === true) {
@@ -1170,6 +1170,8 @@ function fixCfgRequired(updateCfgReq, oldPoint, newPoint, callback) {
     } else {
       callback();
     }
+  } else {
+    callback();
   }
 }
 //newupdate

@@ -254,6 +254,19 @@ var Utils = {
 		res.header("Access-Control-Allow-Headers", "Content-Type");
 
 		return res.json(data);
+	},
+	setupNonFieldPoints: function(point) {
+		if (Config.Utility.getPropertyObject('Device Point', point) === null) {
+			point._cfgRequired = false;
+			point._devModel = 0;
+		}
+	},
+	updateNetworkAndAddress: function(point) {
+		var propertyNetwork = point["Uplink Port"].Value + " Network";
+		var propertyAddress = point["Uplink Port"].Value + " Address";
+
+		point["Network Segment"].Value = point[propertyNetwork].Value;
+		point["Device Address"].Value = point[propertyAddress].Value.toString();
 	}
 };
 
