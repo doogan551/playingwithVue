@@ -1781,7 +1781,7 @@ function updateModels(db, point, cb) {
 	if (models.indexOf(point["Point Type"].Value) !== -1) {
 		modelUtil[point["Point Type"].Value].updateAll({ // change
 			point: point
-		}, db, function(err, point) {
+		}, function(err, point) {
 			if (err) cb(err);
 
 			cb(null);
