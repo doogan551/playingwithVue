@@ -3612,10 +3612,13 @@ var Config = (function(obj) {
                     if (port === "Ethernet") {
                         point["Ethernet Protocol"].Value = "IP";
                         point["Ethernet Protocol"].eValue = enums["Ethernet Protocols"]["IP"]["enum"];
+                        point["Ethernet Address"].isDisplayable = true;
                         point["Downlink Protocol"].isDisplayable = obj.Utility.checkMicroScan5Device(point);
                     } else {
                         point[ports[i] + " Protocol"].Value = "MS/TP";
                         point[ports[i] + " Protocol"].eValue = enums["Port Protocols"]["MS/TP"]["enum"];
+                        point["Ethernet Address"].isDisplayable = false;
+                        point["Downlink Protocol"].isDisplayable = false;
                     }
                 } else {
                     point[ports[i] + " Protocol"].isReadOnly = false;
@@ -3630,7 +3633,7 @@ var Config = (function(obj) {
             var point = data.point,
                 disp = ((point["Ethernet Protocol"].Value === "IP") && (point["Ethernet Protocol"].isDisplayable === true)) ? true : false;
 
-            obj.Utility.setPropsDisplayable(point, ["Ethernet Address", "Ethernet IP Port", "Ethernet Network"], disp);
+            obj.Utility.setPropsDisplayable(point, ["Ethernet IP Port", "Ethernet Network"], disp);
             return point;
         },
 
@@ -3638,6 +3641,7 @@ var Config = (function(obj) {
             var point = data.point,
                 disp = ((point["Downlink Protocol"].Value === "IP") && (point["Downlink Protocol"].isDisplayable === true)) ? true : false;
 
+            point["Downlink IP Port"].isReadOnly = (point["Downlink Network"].Value !== 0) ? true : false;
             obj.Utility.setPropsDisplayable(point, ["Downlink Broadcast Delay", "Downlink IP Port", "Downlink Network"], disp);
             return point;
         },
@@ -3701,6 +3705,7 @@ var Config = (function(obj) {
             //------ End import data checks -----------------------------------------------------------------
             point["Time Zone"].isReadOnly = true;
             point["Firmware 2 Version"].isDisplayable = false;
+            point["Ethernet IP Port"].isReadOnly = true;
 
             if (obj.Utility.checkMicroScan5Device(point)) {
                 point["Time Zone"].isReadOnly = false;
@@ -3725,11 +3730,11 @@ var Config = (function(obj) {
                 setValOpt(upPort, {
                     "Ethernet": enums["Device Ports"]["Ethernet"]["enum"]
                 });
-                point["Ethernet Protocol"].isDisplayable = true;
                 setDisp(point, ["Port 1 Protocol", "Port 2 Protocol", "Port 3 Protocol", "Port 4 Protocol"], false);
+                point["Ethernet Protocol"].isDisplayable = true;
                 point["Ethernet Address"].isReadOnly = true;
                 point["Ethernet Network"].isReadOnly = true;
-                point["Ethernet IP Port"].isReadOnly = true;
+				point._cfgRequired = false;
             } else {
                 // ROB- create a function that can do setValOpts and control isDisp based on VO
                 setValOpt(upPort, {
