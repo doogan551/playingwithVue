@@ -4,7 +4,7 @@ var Config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
 var async = require('async');
 var ObjectID = require('mongodb').ObjectID;
-var Utils = require('../helpers/utils');
+var utils = require('../helpers/utils');
 
 var distinctProperties = {}; // Temporary workaround to improve UI performance on app load
 
@@ -293,13 +293,13 @@ module.exports = {
         segment = nameSegments[i];
         if (typeof segment.value == 'string') {
           if (segment.value.length) {
-            query[segment.name] = Utils.getRegex(segment.value.toLowerCase(), {
+            query[segment.name] = utils.getRegex(segment.value.toLowerCase(), {
               matchBeginning: true
             });
             // if (segment.value.indexOf('*') < 0) {
             //   query[segment.name] = new RegExp(['^', segment.value.toLowerCase()].join(''));
             // } else {
-            //   query[segment.name] = Utils.convertRegexWildcards(segment.value.toLowerCase());
+            //   query[segment.name] = utils.convertRegexWildcards(segment.value.toLowerCase());
             // }
           }
         } else {
@@ -414,7 +414,7 @@ module.exports = {
             values: distinct
           }
         }
-      }, function(err, results){
+      }, function(err, results) {
         cb(err, distinct);
       });
     });
@@ -506,7 +506,7 @@ module.exports = {
         }
       } else {
         query._Name = {
-          $regex: Utils.getRegex(searchTerm.expression.toLowerCase())
+          $regex: utils.getRegex(searchTerm.expression.toLowerCase())
         };
       }
 
@@ -544,7 +544,7 @@ module.exports = {
     //       result.pointType = result["Point Type"].Value;
     //       cb(null);
     //     }, function(err) {
-    //       return Utils.sendResponse(res, results);
+    //       return utils.sendResponse(res, results);
     //     });
     //   });
     // }
@@ -834,7 +834,7 @@ module.exports = {
 
     function doInitPoint(name1, name2, name3, name4, pointType, targetUpi, subType, callback) {
 
-      Utils.buildName(name1, name2, name3, name4);
+      utils.buildName(name1, name2, name3, name4);
 
       criteria = {
         collection: 'points',
@@ -903,7 +903,7 @@ module.exports = {
 
             if (pointType === "Schedule Entry") {
               name2 = upiObj._id.toString();
-              Utils.buildName(name1, name2, name3, name4);
+              utils.buildName(name1, name2, name3, name4);
             }
 
             if (targetUpi && targetUpi !== 0) {
@@ -1023,10 +1023,9 @@ module.exports = {
       if (template["Point Type"].Value === "Display") { // default background color for new Displays
         template["Background Color"].Value = Config.Templates.getTemplate("Display")["Background Color"];
       }
-      if(Config.Utility.getPropertyObject('Device Point', template) === null){
-        template._cfgRequired = false;
-        template._devModel = 0;
-      }
+
+      utils.setupNonFieldPoints(template);
+
       console.log("isClone", isClone);
       if (!isClone) {
         // update device template here

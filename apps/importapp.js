@@ -10,6 +10,7 @@ var moment = require('moment');
 var config = require('config');
 var logger = require('../helpers/logger')(module);
 var importconfig = require('./importconfig.js');
+var utils = require('../helpers/utils');
 var dbModel = require('../helpers/db');
 var Utility = require('../models/utility');
 var localTZ = config.get('Infoscan.location').timezone;
@@ -202,6 +203,9 @@ function importUpdate() {
 											updateReferences(db, point, function(err) {
 												if (err)
 													logger.info("updateReferences", err);
+												// needs to be done after point refs is added to point
+												utils.setupNonFieldPoints(point);
+
 												updateTimeZones(point, function(err) {
 													if (err)
 														logger.info("updateTimeZones", err);
@@ -2714,10 +2718,7 @@ function updateDevices(point, callback) {
 			point['Firmware 2 Version'].isDisplayable = false;
 		}
 
-		var propertyNetwork = point["Uplink Port"].Value + " Network",
-			propertyAddress = point["Uplink Port"].Value + " Address";
-		point["Network Segment"].Value = point[propertyNetwork].Value;
-		point["Device Address"].Value = point[propertyAddress].Value.toString();
+		utils.updateNetworkAndAddress(point);
 
 		point["Device Status"].Value = "Stop Scan";
 		point["Device Status"].eValue = 66;
