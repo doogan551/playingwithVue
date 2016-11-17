@@ -52,7 +52,7 @@ define(['knockout', 'text!./view.html'], function(ko, view) {
     function getData(id) {
         return $.ajax(
             {
-                url        : apiEndpoint + 'points/searchdependencies2/' + id,
+                url        : apiEndpoint + 'points/searchdependencies/' + id,
                 contentType: 'application/json',
                 dataType   : 'json',
                 type       : 'get'

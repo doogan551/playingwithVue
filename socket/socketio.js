@@ -113,10 +113,11 @@ module.exports = function socketio(_common) {
     });
     // Checked
     sock.on('getRecentAlarms', function(data) {
-
       logger.debug('getRecentAlarms');
       if (typeof data === "string")
         data = JSON.parse(data);
+
+      data.user = user;
 
       maintainAlarmViews(sock.id, "Recent", data);
 
@@ -135,6 +136,7 @@ module.exports = function socketio(_common) {
       if (typeof data === "string")
         data = JSON.parse(data);
 
+      data.user = user;
       maintainAlarmViews(sock.id, "Unacknowledged", data);
 
       common.getUnacknowledged(data, function(err, alarms, count) {
@@ -152,6 +154,7 @@ module.exports = function socketio(_common) {
       if (typeof data === "string")
         data = JSON.parse(data);
 
+      data.user = user;
       maintainAlarmViews(sock.id, "Active", data);
 
       common.getActiveAlarmsNew(data, function(err, alarms, count) {
@@ -657,8 +660,8 @@ function doRefreshSequence(data, socket) {
 
 function doUpdateSequence(data, cb) {
   var name = data.sequenceName,
-      sequenceData = data.sequenceData,
-      pointRefs = data.pointRefs;
+    sequenceData = data.sequenceData,
+    pointRefs = data.pointRefs;
 
   // mydb.collection('points').findOne({
   //     "Name": name
@@ -792,138 +795,6 @@ function getVals() {
       }
     });
 
-  });
-}
-
-function getActiveAlarms(data, callback) {
-  var currentPage, itemsPerPage, numberItems, user, groups, query, sort, alarmIds;
-
-  if (typeof data === "string")
-    data = JSON.parse(data);
-
-  currentPage = parseInt(data.currentPage, 10);
-  itemsPerPage = parseInt(data.itemsPerPage, 10);
-  user = data.user;
-
-  if (!itemsPerPage) {
-    itemsPerPage = 200;
-  }
-  if (!currentPage || currentPage < 1) {
-    currentPage = 1;
-  }
-
-  numberItems = data.hasOwnProperty('numberItems') ? parseInt(data.numberItems, 10) : itemsPerPage;
-
-  sort = {};
-  sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
-
-  query = {
-    _pStatus: 0,
-    _actvAlmId: {
-      $ne: ObjectID("000000000000000000000000")
-    },
-    $or: [{
-      "Point Type.Value": "Device"
-    }, {
-      "Point Type.Value": "Remote Unit",
-      "_relDevice": 0
-    }, {
-      "_relDevice": 0,
-      "_relRMU": 0
-    }]
-  };
-
-  groups = user.groups.map(function(group) {
-    return group._id.toString();
-  });
-
-  if (!user["System Admin"].Value) {
-    query.Security = {
-      $in: groups
-    };
-  }
-
-  if (data.pointTypes) {
-    query["Point Type.eValue"] = {
-      $in: data.pointTypes
-    };
-  }
-  Utility.get({
-    collection: pointsCollection,
-    query: query,
-    fields: {
-      _actvAlmId: 1,
-      _id: 1
-    }
-  }, function(err, alarms) {
-
-    if (err) callback(err, null, null);
-
-    alarmIds = [];
-    for (var i = 0; i < alarms.length; i++) {
-      if (alarms[i]._actvAlmId !== 0)
-        alarmIds.push(alarms[i]._actvAlmId);
-    }
-    var alarmsQuery = {
-      _id: {
-        $in: alarmIds
-      }
-    };
-
-    if (data.name1 !== undefined) {
-      if (data.name1 !== null) {
-        alarmsQuery.Name1 = new RegExp("^" + data.name1, 'i');
-      } else {
-        alarmsQuery.Name1 = "";
-      }
-    }
-    if (data.name2 !== undefined) {
-      if (data.name2 !== null) {
-        alarmsQuery.Name2 = new RegExp("^" + data.name2, 'i');
-      } else {
-        alarmsQuery.Name2 = "";
-      }
-    }
-    if (data.name3 !== undefined) {
-      if (data.name3 !== null) {
-        alarmsQuery.Name3 = new RegExp("^" + data.name3, 'i');
-      } else {
-        alarmsQuery.Name3 = "";
-      }
-    }
-    if (data.name4 !== undefined) {
-      if (data.name4 !== null) {
-        alarmsQuery.Name4 = new RegExp("^" + data.name4, 'i');
-      } else {
-        alarmsQuery.Name4 = "";
-      }
-    }
-
-    if (data.msgCat) {
-      alarmsQuery.msgCat = {
-        $in: data.msgCat
-      };
-    }
-    if (data.almClass) {
-      alarmsQuery.almClass = {
-        $in: data.almClass
-      };
-    }
-    var start = new Date();
-    Utility.get({
-      collection: alarmsCollection,
-      query: alarmsQuery,
-      sort: sort,
-      skip: (currentPage - 1) * itemsPerPage,
-      limit: numberItems
-    }, function(err, recents) {
-      Utility.count({
-        collection: alarmsCollection,
-        query: alarmsQuery
-      }, function(err, count) {
-        callback(err, recents, count);
-      });
-    });
   });
 }
 
@@ -1218,7 +1089,7 @@ function checkProperties(data, callback) {
       "Trend Last Status": 1,
       "Trend Last Value": 1,
       'Filter Data': 1,
-      'Column Data':1,
+      'Column Data': 1,
       'Control Array': 1,
       'Report Config': 1
     },
@@ -1312,7 +1183,7 @@ function checkProperties(data, callback) {
               continue; // Go to next property
             } else if ((Config.Enums.Properties[prop].valueType === "Array") && (prop !== "Point Refs")) {
               continue;
-            } else if (Array.isArray(template[prop]) && template[prop].length === 0){
+            } else if (Array.isArray(template[prop]) && template[prop].length === 0) {
               continue;
             }
 

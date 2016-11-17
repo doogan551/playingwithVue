@@ -1246,7 +1246,7 @@ var scripts = {
             query: {
                 'Point Type.Value': 'Device'
             }
-        }, function (err, doc, cb) {
+        }, function(err, doc, cb) {
             doc['Downlink Protocol'] = Config.Templates.getTemplate(doc['Point Type'].Value)['Downlink Protocol'];
             if (doc['Downlink Network'].Value !== 0) {
                 doc['Downlink Protocol'].Value = 'IP'
@@ -1259,7 +1259,7 @@ var scripts = {
                     _id: doc._id
                 },
                 updateObj: doc
-            }, function (err) {
+            }, function(err) {
                 if (err) {
                     logger.debug('Update err:', err);
                 }
@@ -1267,7 +1267,7 @@ var scripts = {
                 cb(null);
             });
 
-        }, function (err) {
+        }, function(err) {
             logger.info('Finished with addDownlinkProtocol');
             callback(null, {
                 fn: 'addDownlinkProtocol',
@@ -1346,7 +1346,7 @@ var scripts = {
                         $unset: {
                             'Modbus Order': 1
                         },
-                        $set:{
+                        $set: {
                             'Modbus Unit Id': Config.Templates.getTemplate("Remote Unit")["Modbus Unit Id"]
                         }
                     },
@@ -1362,7 +1362,35 @@ var scripts = {
                 });
             });
         });
+    },
 
+    updateSecurity: function(callback) {
+        var afterVersion = '0.5.1';
+        if (!checkVersions(afterVersion)) {
+            callback(null, {
+                fn: 'fixSequenceDevicePropertyName',
+                errors: null,
+                results: null
+            });
+        }
+        utility.update({
+            collection: 'points',
+            query: {},
+            updateObj: {
+                $unset: {
+                    'Security': 1
+                },
+                $set: {
+                    _pAccess: 0
+                }
+            }
+        }, function(err) {
+            logger.info('Finished with updateSecurity');
+            callback(null, {
+                fn: 'updateSecurity',
+                errors: err
+            });
+        });
     }
 };
 

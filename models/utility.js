@@ -244,8 +244,12 @@ exports.iterateCursor = function(criteria, fx, done) {
         done(err, count);
       } else {
         ++count;
-        fx(err, doc, function(err) {
-          cursor.nextObject(processDoc);
+        fx(err, doc, function(err, stop) {
+          if (!!err || !!stop) {
+            done(err, count);
+          } else {
+            cursor.nextObject(processDoc);
+          }
         });
       }
     }
@@ -254,3 +258,58 @@ exports.iterateCursor = function(criteria, fx, done) {
 
   });
 };
+
+exports.getWithSecurity = function(criteria, cb) {
+  var skip = criteria._skip || 0;
+  var limit = criteria._limit || 200;
+  var identifier = null;
+
+  var Security = require('../models/security');
+
+  Security.Utility.getPermissions(criteria.data.user, function(err, permissions) {
+    if (err || permissions === false) {
+      cb(err || permissions);
+    }
+    var points = [];
+
+    exports.iterateCursor(criteria, function(err, doc, next) {
+      identifier = (doc.hasOwnProperty('upi')) ? 'upi' : '_id';
+      if (permissions !== true) {
+        if (permissions.hasOwnProperty(doc[identifier])) {
+          doc._pAccess = permissions[doc[identifier]];
+          if (skip > 0) {
+            skip--;
+          } else {
+            points.push(doc);
+          }
+        }
+      } else {
+        doc._pAccess = 15;
+        if (skip > 0) {
+          skip--;
+        } else {
+          points.push(doc);
+        }
+      }
+      next(err, points.length >= (limit || 50) || false);
+
+    }, function(err, count) {
+      if (permissions !== true && permissions !== false) {
+        var upis = [];
+        for (var key in permissions) {
+          upis.push(parseInt(key, 10));
+        }
+        criteria.query[identifier] = {
+          $in: upis
+        };
+        exports.count(criteria, function(err, count) {
+          cb(err, points, count);
+        });
+      } else {
+        exports.count(criteria, function(err, count) {
+          cb(err, points, count);
+        });
+      }
+    });
+  });
+}

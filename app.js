@@ -55,7 +55,7 @@ app.use(bodyParser.json({
 }));
 app.use(bodyParser.urlencoded({
   extended: true,
-  parameterLimit: 4500
+  parameterLimit: 45000
 }));
 var storage = multer.memoryStorage();
 var upload = multer({ storage: storage });
