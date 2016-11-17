@@ -221,23 +221,24 @@ window.newPoint = (function(module, ko, $) {
                     //if we have a save callback
                     if (!!window.attach && typeof window.attach.saveCallback == 'function') {
                         window.attach.saveCallback.call(undefined, data);
-                        return window.close();
+                        return dtiUtility.closeWindow();
+                        // return dtiUtility.closeWindow();
                     }
 
                     endPoint = workspaceManager.config.Utility.pointTypes.getUIEndpoint(params.pointType, data._id);
                     handoffMode = endPoint.edit || endPoint.review;
-                    dtiUtility.openWindow(handoffMode.url, data.Name, params.pointType, handoffMode.target, data._id, {
-                        callback: function() {
-                            if (window) {
-                                window.close();
-                            }
-                        }
+                    dtiUtility.openWindow({
+                        url: handoffMode.url, 
+                        title: data.Name, 
+                        pointType: params.pointType,
+                        upi: data._id
                     });
+                    dtiUtility.closeWindow();
                 });
         });
 
         $cancelBtn.on('click', function() {
-            window.close();
+            dtiUtility.closeWindow();
         });
 
 
@@ -273,7 +274,7 @@ window.newPoint = (function(module, ko, $) {
                 } else {
                     if (window.attach.point.hasValue) {
                         alert('The point name is incorrect. Blank name segments are not allowed');
-                        window.close();
+                        dtiUtility.closeWindow();
                     }
                 }
             }
