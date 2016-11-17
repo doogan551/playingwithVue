@@ -1414,15 +1414,14 @@ div.scheduleBox {
   }
 }*/
 /*Notifications and Policies*/
-.returnAlarmChecks, .policyChecks {
-    color: #777;
-}
-
 .notifications-table th:first-child, .notifications-table th:nth-child(2) {
     width: 7%;
 }
 .notifications-table th:nth-child(3) {
     width: 20%;
+}
+.notifications-table thead tr th {
+    vertical-align: middle;
 }
 /*end Notifications*/
 
