@@ -1365,10 +1365,10 @@ var scripts = {
     },
 
     updateSecurity: function(callback) {
-        var afterVersion = '0.5.1';
+        var afterVersion = '0.4.1';
         if (!checkVersions(afterVersion)) {
             callback(null, {
-                fn: 'fixSequenceDevicePropertyName',
+                fn: 'updateSecurity',
                 errors: null,
                 results: null
             });
@@ -1405,7 +1405,7 @@ db.connect(connectionString, function(err) {
         tasks.push(scripts[task]);
     }
 
-    tasks = [scripts.addDownlinkProtocol];
+    tasks = [scripts.updateSecurity];
 
     // Each task is provided a callback argument which should be called once the task completes.
     // The task callback should be called with two arguments: err, result

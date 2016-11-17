@@ -336,8 +336,7 @@ module.exports = {
         item: 'distinct'
       }
     }, function(err, results) {
-      console.log('!!!!', results.length);
-      if (!results || !results.length) {
+      if (!results || !results.values.length) {
         module.exports.getDistinctValues(data, cb);
       } else {
         cb(err, results.values);

@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var db = require('../helpers/db');
 var logger = require("../helpers/logger")(module);
 
@@ -263,12 +264,22 @@ exports.getWithSecurity = function(criteria, cb) {
   var skip = criteria._skip || 0;
   var limit = criteria._limit || 200;
   var identifier = null;
-
   var Security = require('../models/security');
 
   Security.Utility.getPermissions(criteria.data.user, function(err, permissions) {
     if (err || permissions === false) {
       cb(err || permissions);
+    }
+    // searching can take upwards of 10 seconds with permissions and results doesn't hit a limit
+    // if permissions couldn't actually exceed the returned limit, search with upis as well
+    if (_.size(permissions) <= limit) {
+      var upis = Object.keys(permissions).map(function(upi) {
+        return parseInt(upi, 10);
+      });
+
+      criteria.query._id = {
+        $in: upis
+      };
     }
     var points = [];
 
@@ -294,6 +305,7 @@ exports.getWithSecurity = function(criteria, cb) {
       next(err, points.length >= (limit || 50) || false);
 
     }, function(err, count) {
+
       if (permissions !== true && permissions !== false) {
         var upis = [];
         for (var key in permissions) {
@@ -312,4 +324,4 @@ exports.getWithSecurity = function(criteria, cb) {
       }
     });
   });
-}
+};

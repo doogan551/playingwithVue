@@ -671,7 +671,8 @@ var Groups = {
       _pAccess: parseInt(data._pAccess, 10) | READ,
       "Photo": {
         Value: ''
-      }
+      },
+      Points: {}
     };
 
     var criteria = {
