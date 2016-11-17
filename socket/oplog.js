@@ -101,6 +101,10 @@ module.exports = function(_common) {
 
         } else if (doc.ns === dbName + '.historydata') {
             // module.exports.updateDashboard(doc.o);
+        } else if (doc.ns === dbName + '.Schedules') {
+            scheduler.buildCron(doc.o, function(err, result) {
+
+            });
         }
         /* else if (doc.ns === dbName+'.ActiveAlarms') {
                     var alarm = doc.o;
@@ -329,6 +333,8 @@ module.exports = function(_common) {
                     });
                 }
             }
+        } else if (doc.ns === dbName + '.Schedules') {
+            scheduler.stopSchedule(doc);
         }
     });
 };

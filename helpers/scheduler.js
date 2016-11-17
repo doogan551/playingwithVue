@@ -48,13 +48,14 @@ var Scheduler = {
       });
       var time = schedule.runTime;
       var date = moment().format('YYYYMMDD');
-      if (scheduleContainer.hasOwnProperty(schedule._id)) {
-        scheduleContainer[schedule._id].stop();
-      }
+
+      Scheduler.stopSchedule(schedule);
+
       if (!!schedule.enabled) {
         scheduleContainer[schedule._id] = new CronJob(time, function() {
           var path = [__dirname, '/../tmp/', date, reportName.split(' ').join(''), '.pdf'].join('');
-          pageRender.renderPage(domain + '/scheduleloader/report/scheduled/' + upi, path, function(err) {
+          var uri = [domain, '/scheduleloader/report/scheduled/', upi, '/', schedule._id].join('');
+          pageRender.renderPage(uri, path, function(err) {
             fs.readFile(path, function(err, data) {
               Utility.iterateCursor({
                 collection: 'Users',
@@ -94,6 +95,11 @@ var Scheduler = {
 
       cb();
     });
+  },
+  stopSchedule: function(schedule) {
+    if (scheduleContainer.hasOwnProperty(schedule._id)) {
+      scheduleContainer[schedule._id].stop();
+    }
   }
 };
 module.exports = Scheduler;
