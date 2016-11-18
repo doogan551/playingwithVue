@@ -866,7 +866,7 @@ function convertHistoryReports(db, callback) {
 				}
 				report["Report Config"].reportTitle = report.Name;
 
-				report['Report Config'].interval.text = 'Minute';
+				report['Report Config'].interval.period = 'Minute';
 				report['Report Config'].interval.value = Math.floor(point.Interval / 60);
 				report['Report Config'].duration.selectedRange = 'Today';
 
@@ -886,7 +886,7 @@ function convertHistoryReports(db, callback) {
 								"colDisplayName": ref.Name,
 								"valueType": "None",
 								"operator": "",
-								"calculation": "Mean",
+								"calculation": [],
 								"canCalculate": true,
 								"includeInReport": true,
 								"includeInChart": true,
@@ -967,19 +967,19 @@ function convertTotalizerReports(callback) {
 
 		switch (doc['Reset Interval']) {
 			case 'Year':
-				report['Report Config'].interval.text = 'Month';
+				report['Report Config'].interval.period = 'Month';
 				report['Report Config'].interval.value = 1;
 				report['Report Config'].duration.selectedRange = 'This Year';
 				break;
 			case 'Month':
-				report['Report Config'].interval.text = 'Day';
+				report['Report Config'].interval.period = 'Day';
 				report['Report Config'].interval.value = 1;
 				report['Report Config'].duration.selectedRange = 'This Month';
 				break;
 			case 'Day':
 			case 'Hour':
 			case 'None':
-				report['Report Config'].interval.text = 'Hour';
+				report['Report Config'].interval.period = 'Hour';
 				report['Report Config'].interval.value = 1;
 				report['Report Config'].duration.selectedRange = 'Last 7 Days';
 				break;
@@ -1023,7 +1023,7 @@ function convertTotalizerReports(callback) {
 						"colDisplayName": ref.Name,
 						"valueType": "None",
 						"operator": monitor['Monitor Property'],
-						"calculation": "",
+						"calculation": [],
 						"canCalculate": true,
 						"includeInReport": true,
 						"includeInChart": true,

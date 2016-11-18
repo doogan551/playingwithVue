@@ -1,5 +1,884 @@
 "use strict";
 window.workspaceManager = window.top.workspaceManager;
+
+var dti = {
+    settings: {
+        logLinePrefix: true,
+        webEndpoint: window.location.origin,
+        socketEndPoint: window.location.origin,
+        apiEndpoint: window.location.origin + '/api/',
+        idxPrefix: 'reports_'
+    },
+    utility: {
+        getTemplate: function (id) {
+            var markup = $(id).html();
+
+            return $(markup);
+        }
+    },
+    itemIdx: 0,
+    formatDate: function (date, addSuffix) {
+        var functions = ['Hours', 'Minutes', 'Seconds', 'Milliseconds'],
+            lengths = [2, 2, 2, 3],
+            separators = [':', ':', ':', ''],
+            suffix = ' --',
+            fn,
+            out = '';
+
+        if (addSuffix) {
+            separators.push(suffix);
+        }
+
+        if (typeof date === 'number') {
+            date = new Date(date);
+        }
+
+        for (fn in functions) {
+            if (functions.hasOwnProperty(fn)) {
+                out += ('000' + date['get' + functions[fn]]()).slice(-1 * lengths[fn]) + separators[fn];
+            }
+        }
+
+        return out;
+    },
+    log: function () {
+        var stack,
+            steps,
+            lineNumber,
+            err,
+            now = new Date(),
+            args = [].splice.call(arguments, 0),
+            pad = function (num) {
+                return ('    ' + num).slice(-4);
+            },
+            formattedtime = dti.formatDate(new Date(), true);
+
+        if (dti.settings.logLinePrefix === true) {
+            err = new Error();
+            if (Error.captureStackTrace) {
+                Error.captureStackTrace(err);
+
+                stack = err.stack.split('\n')[2];
+
+                steps = stack.split(':');
+
+                lineNumber = steps[2];
+
+                args.unshift('line:' + pad(lineNumber), formattedtime);
+            }
+        }
+        // args.unshift(formattedtime);
+        if (!dti.noLog) {
+            console.log.apply(console, args);
+        }
+    },
+    makeId: function () {
+        dti.itemIdx++;
+        return dti.settings.idxPrefix + dti.itemIdx;
+    },
+    getLastId: function () {
+        return dti.settings.idxPrefix + dti.itemIdx;
+    },
+    forEach: function (obj, fn) {
+        var keys = Object.keys(obj),
+            c,
+            len = keys.length,
+            errorFree = true;
+
+        for (c = 0; c < len && errorFree; c++) {
+            errorFree = fn(obj[keys[c]], keys[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
+    forEachArray: function (arr, fn) {
+        var c,
+            list = arr || [],
+            len = list.length,
+            errorFree = true;
+
+        for (c = 0; c < len && errorFree; c++) {
+            errorFree = fn(list[c], c);
+            if (errorFree === undefined) {
+                errorFree = true;
+            }
+        }
+
+        return errorFree;
+    },
+    pickatime: function ($inputEl, config) {
+        var defaults = {
+                default: '',           // default time, 'now' or '13:14' e.g.
+                fromnow: 0,            // set default time to * milliseconds from now
+                donetext: 'Done',      // done button text
+                autoclose: true,       // auto close when minute is selected
+                ampmclickable: false,  // set am/pm button on itself
+                darktheme: false,      // set to dark theme
+                twelvehour: false,     // 12 hour AM/PM clock or 24 hour; TODO - this should come from a system setting
+                vibrate: true,         // vibrate the device when dragging clock hand
+                container: ''          // default will append clock next to input
+            },
+            options = $.extend(defaults, config);
+
+        $inputEl.pickatime(options);
+    },
+    autosuggest: {
+        init: function () {
+
+        },
+        Autosuggest: function (config) {
+            // config:
+            // {
+            //     $inputElement: $element,
+            //     $resultsContainer: $element,
+            //     $chips: $element, // Materialize chips $ element - ONLY if the autosuggest is on an input with materialize chips installed
+            //     sources: [{
+            //         data: [array of suggestion strings],
+            //         name: 'name of data source',
+            //         nameShown: bool (show name header before suggestion results)
+            //         * async data sources will require additional info TBD
+            //     }, {...}],
+            //     see 'defaults' object below for additional options
+            // }
+            var self = this,
+                defaults = {
+                    highlight: true, // If true, when suggestions are rendered, pattern matches for the current query in text nodes will be wrapped in a strong element with its class set to {{classNames.highlight}}
+                    minLength: 0, // The minimum character length needed before suggestions start getting rendered
+                    classNames: {
+                        highlight: 'autosuggestHighlight',  // Added to the element that wraps highlighted text
+                        match: 'autosuggestMatch',          // Added to suggestion elements in the suggestion container
+                        selected: 'autosuggestSelected',    // Added to selected suggestion elements
+                        header: 'autosuggestHeader',        // Added to suggestion source header (if shown)
+                        container: 'autosuggestContainer'   // Added to suggestion container
+                    },
+                    autoselect: false, // If nothing selected, autoselect the first suggestion when autosuggest renders or the suggestions change
+                    showOnFocus: false, // Show suggestions when input is focused
+                    persistAfterSelect: false,
+                    chainCharacter: '.' // Delimiter character used to separate links in an object chain
+                },
+                cfg = $.extend(defaults, config),
+                selectors = (function () {
+                    var obj = {};
+
+                    dti.forEach(cfg.classNames, function (cssClass, name) {
+                        obj[name] = '.' + cssClass;
+                    });
+
+                    return obj;
+                })(),
+                operatorsRegex = new RegExp('[<>]=|!=|<>|>|<|=|:'),
+                selectedMatches = {},
+                $markup,
+                $container,
+                scrollTo = function ($target) {
+                    if (!$target || !$target.length) {
+                        return $target;
+                    }
+
+                    var topOffset = $target.position().top,
+                        doScroll = false;
+
+                    if (topOffset < 0) {
+                        doScroll = true;
+                    } else {
+                        topOffset = (topOffset + $target.height()) - $container.height();
+
+                        if (topOffset > 0) {
+                            doScroll = true;
+                        }
+                    }
+
+                    if (doScroll) {
+                        $container.scrollTop($container.scrollTop() + topOffset);
+                    }
+
+                    return $target;
+                },
+                sortArray = function (arr) {
+                    arr.sort(function (a, b) {
+                        return a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1;
+                    });
+                },
+                getOperator = function (str) {
+                    var operator = str.match(operatorsRegex);
+
+                    return operator && operator[0];
+                },
+                parse = function (str) {
+                    var beginningWhitespaceRegex = /^\s*/,
+                        parsed = {
+                            expression: str,
+                            isEquation: false,
+                            isInvalid: false,
+                            operator: getOperator(str),
+                            value: null,
+                        },
+                        equationParts,
+                        i;
+
+                    if (parsed.operator) {
+                        parsed.isEquation = true;
+                        equationParts = str.split(parsed.operator);
+                        parsed.expression = equationParts[0].trim();
+                        parsed.value = equationParts[1].replace(beginningWhitespaceRegex, '');
+
+                        if (parsed.expression.length === 0) {
+                            parsed.isEquation = false;
+                            parsed.value = null;
+                            parsed.operator = null;
+                            parsed.expression = str;
+                        } else if (equationParts.length > 2) {
+                            parsed.isInvalid = true;
+                            // Our 'value' term is incomplete - finish it out
+                            i = 2;
+                            do {
+                                parsed.value += equationParts[i++];
+                            } while (i < parsed.expression.length);
+                        } else if (parsed.expression.match(operatorsRegex) || parsed.value.match(operatorsRegex)) {
+                            parsed.isInvalid = true;
+                        }
+                    }
+
+                    return parsed;
+                },
+                getMatches = function (inputValue) {
+                    var regex = new RegExp(inputValue, 'ig'),
+                        totalMatches = 0,
+                        parsed,
+                        matches,
+                        data,
+                        chain,
+                        stopIndex;
+
+                    dti.forEachArray(self.bindings.sources(), function (source) {
+                        matches = [];
+                        data = source.data;
+
+                        if (Array.isArray(data)) {
+                            dti.forEachArray(data, function (item) {
+                                if (regex.test(item.text)) {
+                                    if (cfg.highlight) {
+                                        item.html(item.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
+                                    }
+                                    matches.push(item);
+                                }
+                            });
+                        } else { // Must be an object
+                            parsed = parse(inputValue);
+
+                            // If our search includes a chain character
+                            if (!!~parsed.expression.indexOf(cfg.chainCharacter)) {
+                                chain = parsed.expression.split(cfg.chainCharacter);
+
+                                if (parsed.operator) {
+                                    stopIndex = chain.length - 1;
+                                } else {
+                                    stopIndex = chain.length - 2;
+                                    // Ex: Part1.Sub2.stillWorkingOnThisOne
+                                    // We want to stop on 'Sub2' so we get all of Sub2's available keys and match against string 'stillWorkingOnThisOne'
+                                }
+
+                                dti.forEachArray(chain, function (link, ndx) {
+                                    if (data.hasOwnProperty(link)) {
+                                        data = data[link];
+                                    } else {
+                                        data = null;
+                                        return false;
+                                    }
+
+                                    if (ndx === stopIndex) {
+                                        if (parsed.operator) {
+                                            data = data._private.values;
+                                        } else {
+                                            // Update our regex; continuing the example above, we want to test against 'stillWorkingOnThisOne' instead of 'Part1.Sub2.stillWorkingOnThisOne'
+                                            regex = new RegExp(chain[chain.length - 1], 'ig');
+                                        }
+                                        return false;
+                                    }
+                                });
+                            } else if (parsed.operator) {
+                                data = data[parsed.expression] && data[parsed.expression]._private.values;
+                            }
+
+                            if (data) {
+                                if (parsed.operator) {
+                                    regex = new RegExp(parsed.value, 'ig');
+
+                                    dti.forEachArray(data, function (_private, index) {
+                                        if (regex.test(_private.text)) {
+                                            if (cfg.highlight) {
+                                                _private.html(_private.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
+                                            }
+                                            matches.push(_private);
+                                        }
+                                    });
+                                } else {
+                                    dti.forEach(data, function (item, key) {
+                                        if (key === '_private') {
+                                            return;
+                                        }
+
+                                        if (regex.test(item._private.text)) {
+                                            if (cfg.highlight) {
+                                                item._private.html(item._private.text.replace(regex, ['<span class="', cfg.classNames.highlight, '">', '$&', '</span>'].join('')));
+                                            }
+                                            matches.push(item._private);
+                                        }
+                                    });
+                                }
+                            }
+                        }
+
+                        sortArray(matches);
+                        source.matches(matches);
+                        totalMatches += matches.length;
+                    });
+
+                    if (totalMatches === 0) {
+                        self.hide();
+                    } else if (!self.getSelected().length) {
+                        if (cfg.autoselect) {
+                            self.selectFirst();
+                        }
+                    } else {
+                        scrollTo(self.getSelected());   // Call scroll in case the selected item is not in view
+                    }
+
+                    self.numberOfMatches = totalMatches;
+                },
+                selectMatch = function (data, e) {
+                    var inputValue = cfg.$inputElement.val(),
+                        operator = getOperator(inputValue),
+                        isEnterKeyPress = (e.which === 10) || (e.which === 13);
+
+                    if (operator) {
+                        inputValue = inputValue.replace(new RegExp(operator + '.*'), operator + ' ' + data.text);
+                    } else {
+                        if (!data.parent) {
+                            inputValue = data.text;
+                        } else {
+                            inputValue = inputValue.slice(0, inputValue.lastIndexOf(cfg.chainCharacter) + 1) + data.text;
+                        }
+                    }
+
+                    // If materialize chips is installed on this input and the selected item has children or values to choose from
+                    if (cfg.$chips) {
+                        if (data.hasChildren || data.hasValues) {
+                            if (isEnterKeyPress) { // If we arrived her by way of the enter key
+                                e.stopImmediatePropagation(); // Stop propagation so we don't create a chip
+                            }
+                        } else {
+                            getMatches('');
+
+                            if (!isEnterKeyPress) { // If we arrived here by way of mouse click one of our suggestions
+                                cfg.$chips.addChip(cfg.$chips.data('index'), {tag: inputValue}, cfg.$chips); // Manually add the chip
+                                inputValue = '';
+                            }
+                        }
+                    }
+
+                    cfg.$inputElement.val(inputValue);
+                    cfg.$inputElement.focus();
+                },
+                handleKeyup = function (e) {
+                    var inputValue = cfg.$inputElement.val(),
+                        key = e.which,
+                        catchKeys = [27, 40, 38, 10, 13]; // escape, down, up, return, return
+
+                    if (!!~catchKeys.indexOf(key)) {
+                        if (key === 27) { // escape
+                            self.hide();
+                        }
+                        return;
+                    }
+
+                    getMatches(inputValue);
+
+                    if (self.bindings.isShown() === false) {
+                        if (inputValue.length > cfg.minLength) {
+                            self.show();
+                        }
+                    }
+                },
+                handleKeydown = function (e) {
+                    var key = e.which,
+                        koData,
+                        $selected;
+
+                    if (key === 10 || key === 13) { // return
+                        $selected = self.getSelected();
+
+                        if (self.bindings.isShown() && $selected.length) {
+                            selectMatch(ko.dataFor($selected[0]), e);
+                        } else {
+                            getMatches('');
+                            self.hide();
+                        }
+                    } else if (key === 40) { // down
+                        if (self.bindings.isShown() === false) {
+                            self.show();
+                        } else {
+                            self.selectNext();
+                        }
+                    } else if (key === 38) { // up
+                        if (self.bindings.isShown()) {
+                            self.selectPrevious();
+                        }
+                    }
+                };
+
+            if (!cfg.$inputElement || !cfg.$inputElement.length) {
+                return dti.log('Invalid $inputElement', config.$inputElement);
+            }
+            if (!cfg.$resultsContainer || !cfg.$resultsContainer.length) {
+                return dti.log('Invalid $resultsContainer', config.$resultsContainer);
+            }
+            if (cfg.$chips && !cfg.$chips.length) {
+                return dti.log('Invalid $chips', config.$chips);
+            }
+
+            self.getSource = function (name) {
+                var sources = self.bindings.sources(),
+                    source;
+
+                dti.forEachArray(sources, function (src) {
+                    if (src.name() === name) {
+                        source = src;
+                        return false;
+                    }
+                });
+
+                return source;
+            };
+
+            self.addSource = function (src) {
+                var source = {
+                    name: ko.observable(src.name || dti.makeId()),
+                    nameShown: ko.observable(src.nameShown),
+                    data: Array.isArray(src.data) ? []:{},
+                    matches: ko.observableArray([])
+                };
+
+                self.bindings.sources.push(source);
+
+                self.addData(source.name(), src.data);
+            };
+
+            self.addData = function (sourceName, data) {
+                // data: array of suggestion strings or an object
+                var source = self.getSource(sourceName),
+                    addValues = function (from, toArray, additionalProperties) {
+                        var item,
+                            fromArray;
+
+                        // autosuggestMOD - support from as array or string
+                        if (Array.isArray(from)) {
+                            fromArray = from;
+                        } else {
+                            fromArray = [from];
+                        }
+                        additionalProperties = additionalProperties || {};
+
+                        dti.forEachArray(fromArray, function (value) {
+                            value = value.toString();
+                            item = $.extend({
+                                text: value,
+                                html: ko.observable(value)
+                            }, additionalProperties);
+
+                            toArray.push(item);
+                        });
+                    },
+                    addValuesAndSort = function (fromArray, toArray, additionalProperties) {
+                        addValues(fromArray, toArray, additionalProperties);
+                        sortArray(toArray);
+                    },
+                    // autosuggestMOD
+                    // addObj = function (parent, srcItem, text) {
+                    addObj = function (param) {
+                        // param = {
+                        //     root: root object
+                        //     parent: parent object (null if top level object)
+                        //     srcItem: source object or array
+                        //     text: object key
+                        // }
+                        var item = {
+                            // autosuggestMOD - use param._____
+                            _private: {
+                                parent: param.parent,
+                                text: param.text,
+                                html: ko.observable(param.text),
+                                values: [],
+                                // autosuggestMOD
+                                // isTopLevel: !!!parent._private
+                                hasChildren: false,
+                                hasValues: false
+                            }
+                        };
+
+                        // autosuggestMOD
+                        if (!param.parent) { //  If we don't have a parent
+                            param.root[param.text] = item; // Install this item on the root
+                        } else if (param.parent[param.text]) { // Else if this item already exists
+                            item = param.parent[param.text]; // Point to the existing item
+                        } else {
+                            param.parent[param.text] = item; // Install new item on the parent
+                        }
+
+                        // autosuggestMOD - use param._____
+                        if (!!param.srcItem) {
+                            if (typeof param.srcItem === 'string') {
+                                item._private.hasValues = true;
+                                addValues(param.srcItem, item._private.values);
+                            } else if (Array.isArray(param.srcItem)) {
+                                item._private.hasValues = true;
+                                addValuesAndSort(param.srcItem, item._private.values);
+                            } else {
+                                item._private.hasChildren = true; // autosuggestMOD - set hasChildren flag
+
+                                dti.forEach(param.srcItem, function (subSource, subText) {
+                                    // Look for special keys and handle accordingly
+                                    if (subText === '_values') {
+                                        item._private.hasValues = true;
+                                        return addValuesAndSort(subSource, item._private.values);
+                                    }
+                                    if (subText === '_valuesNoSort') {
+                                        item._private.hasValues = true;
+                                        return addValues(subSource, item._private.values);
+                                    }
+
+                                    // autosuggestMOD
+                                    // addObj(item, subSource, subText);
+                                    addObj({
+                                        root: source.data,
+                                        parent: item,
+                                        srcItem: subSource,
+                                        text: subText
+                                    });
+                                });
+                            }
+                        }
+                    };
+
+                if (!source) {
+                    return dti.log('Source not found');
+                }
+
+                // If the new data is not the same type as our source
+                if (Array.isArray(data) !== Array.isArray(source.data)) {
+                    return dti.log('Invalid data');
+                }
+
+                if (Array.isArray(data)) {
+                    addValuesAndSort(data, source.data, {
+                        // autosuggestMOD
+                        // isTopLevel: true
+                        parent: null,
+                        hasChildren: false,
+                        hasValues: false
+                    });
+                } else { // data must be an object
+                    dti.forEach(data, function (item, text) {
+                        // autosuggestMOD
+                        // addObj(source.data, item, text);
+                        addObj({
+                            root: source.data,
+                            srcItem: item,
+                            text: text
+                        });
+                    });
+                }
+
+                getMatches(cfg.$inputElement.val());
+            };
+
+            self.removeAllData = function (sourceName) {
+                var source = self.getSource(sourceName);
+
+                if (!source) {
+                    return dti.log('Source not found');
+                }
+
+                if (Array.isArray(source.data)) {
+                    source.data = [];
+                } else {
+                    source.data = {};
+                }
+
+                getMatches(cfg.$inputElement.val());
+            };
+
+            self.removeData = function (sourceName, dataToRemove) {
+                // sourceName = string
+                var source = self.getSource(sourceName);
+
+                if (!source) {
+                    return dti.log('Source not found');
+                }
+
+                if (!Array.isArray(source.data)) {
+                    return dti.log('This source\'s data cannot be removed because it is not an array');
+                }
+
+                if (!Array.isArray(dataToRemove)) {
+                    dataToRemove = [dataToRemove];
+                }
+
+                dti.forEachArray(dataToRemove, function (text) {
+                    dti.forEachArray(source.data, function (sourceItem, ndx) {
+                        // sourceItem = {
+                        //     hasChildren : false,
+                        //     hasValues : false,
+                        //     html : observable,
+                        //     parent : null
+                        //     text : "Jeff Shore"
+                        // }
+                        if (sourceItem.text === text) {
+                            source.data.splice(ndx, 1);
+                            return false; // Stop iterrating the forEach array
+                        }
+                    });
+                });
+
+                getMatches(cfg.$inputElement.val());
+            };
+
+            self.show = function () {
+                if (!self.bindings.isShown() && (self.numberOfMatches > 0)) {
+                    self.selectNone();
+                    if (cfg.autoselect) {
+                        self.selectFirst();
+                    }
+                    self.bindings.isShown(true);
+                    self.reposition();
+                }
+            };
+
+            self.hide = function (clearInputValue) {
+                self.bindings.isShown(false);
+                if (clearInputValue) {
+                    cfg.$inputElement.val('');
+                }
+            };
+
+            self.reposition = function () {
+                // autosuggestMOD
+                $markup.position({
+                    my: 'left top',
+                    at: 'left bottom',
+                    of: cfg.$inputElement,
+                });
+            };
+
+            self.selectFirst = function () {
+                return $container.find(selectors.match).first().addClass(cfg.classNames.selected);
+            };
+
+            self.selectLast = function () {
+                return $container.find(selectors.match).last().addClass(cfg.classNames.selected);
+            };
+
+            self.selectNext = function () {
+                var $selected = self.getSelected(),
+                    $next = $selected.next(),
+                    topOffset;
+
+                if ($selected.length) {
+                    self.selectNone($selected);
+                    $next.addClass(cfg.classNames.selected);
+                } else {
+                    $next = self.selectFirst();
+                }
+                scrollTo($next);
+
+                return $next;
+            };
+
+            self.selectPrevious = function () {
+                var $selected = self.getSelected(),
+                    $previous = $selected.prev();
+
+                if ($selected.length) {
+                    self.selectNone($selected);
+                    $previous.addClass(cfg.classNames.selected);
+                } else {
+                    $previous = self.selectLast();
+                }
+                scrollTo($previous);
+
+                return $previous;
+            };
+
+            self.selectNone = function ($selected) {
+                if (!$selected) {
+                    $selected = self.getSelected();
+                }
+                return $selected.removeClass(cfg.classNames.selected);
+            };
+
+            self.getSelected = function () {
+                return $container.find(selectors.selected);
+            };
+
+            self.parse = function (str) {
+                return parse(str);
+            };
+
+            self.destroy = function () {
+                // Remove all event listeners
+                if (cfg.$chips) {
+                    cfg.$chips.off();
+                }
+                cfg.$resultsContainer.off();
+                cfg.$inputElement.off();
+
+                // Remove all cached DOM elements
+                delete cfg.$chips;
+                delete cfg.$inputElement;
+                delete cfg.$resultsContainer;
+
+                $markup = null;
+                $container = null;
+            };
+
+            self.numberOfMatches = 0;
+
+            self.bindings = {
+                isShown: ko.observable(false),
+                sources: ko.observableArray([]),
+                selectMatch: function (data, e) {
+                    selectMatch(data, e);
+                }
+            };
+
+            // Get autosuggest DOM template
+            $markup = dti.utility.getTemplate('#autosuggestTemplate');
+
+            // Change default class names if needed
+            dti.forEach(defaults.classNames, function changeDefaultClassName(defaultClassName, key) {
+                var defaultSelector = '.' + defaultClassName,
+                    requestedClassName = cfg.classNames[key];
+
+                if (requestedClassName !== defaultClassName) {
+                    $markup.find(defaultSelector).removeClass(defaultClassName).addClass(requestedClassName);
+                }
+            });
+
+            // Add autosuggest DOM to the document & apply bindings
+            cfg.$resultsContainer.append($markup);
+            ko.applyBindings(self.bindings, $markup[0]);
+
+            // Cache the container
+            $container = cfg.$resultsContainer.find(selectors.container);
+
+            // Add event handlers
+            cfg.$inputElement.keyup(handleKeyup);
+
+            cfg.$inputElement.keydown(handleKeydown);
+
+            if (cfg.showOnFocus) {
+                cfg.$inputElement.focus(function () {
+                    self.show();
+                });
+            }
+
+            cfg.$resultsContainer.click(function handleClick(e) {
+                var $target = $(e.target),
+                    $parents = $target.parents();
+
+                if (($target.is(cfg.$inputElement) === false) && $parents.length && ($parents.filter(selectors.container).length === 0)) {
+                    self.hide();
+                }
+            });
+
+            if (cfg.$chips) {
+                cfg.$chips.on('chip.delete', function (e, chip) {
+                    self.reposition();
+                });
+
+                cfg.$chips.on('chip.add', function (e, chip) {
+                    if (cfg.persistAfterSelect) {
+                        self.reposition();
+                    } else {
+                        self.hide();
+                    }
+                });
+            }
+
+            // Add autosuggest sources
+            dti.forEachArray(cfg.sources, self.addSource);
+        }
+    },
+    toast: function () {
+        var $closeMarkup = $('<i class="material-icons">close</i>');
+
+        $closeMarkup.click(function (e) {
+            var $toast = $(e.target).parent();
+
+            dti.animations.fadeOut($toast, function () {
+                $toast.remove();
+            });
+        });
+
+        Materialize.toast.apply(window, arguments);
+
+        $('#toast-container').find('.toast').last().append($closeMarkup);
+    },
+    animations: {
+        _fade: function ($el, opacity, cb) {
+            $el.velocity('stop');
+            $el.velocity({
+                opacity: opacity
+            }, {
+                queue: false,
+                duration: 300,
+                easing: 'easeOutSine',
+                complete: cb
+            });
+        },
+        fadeIn: function ($el, cb) {
+            if (!!$el[0]) {
+                $el[0].style.willChange = 'opacity, display';
+            }
+            $el.css('display', 'block');
+            dti.animations._fade($el, 1, cb);
+        },
+        fadeOut: function ($el, cb) {
+            dti.animations._fade($el, 0, function finishFadeOut() {
+                $el.css('display', 'none');
+                $el[0].style.willChange = '';
+                if (cb) {
+                    cb();
+                }
+            });
+        },
+        slideUp: function ($el, cb) {
+            $el[0].style.willChange = 'height, padding-top, padding-bottom';
+            $el.css('overflow', 'hidden');
+            $el.velocity('stop');
+            $el.velocity({
+                height: 0,
+                'padding-top': 0,
+                'padding-bottom': 0
+            }, {
+                queue: false,
+                duration: 300,
+                easing: 'easeOutSine',
+                complete: function finishSlideUp() {
+                    $el.css('display', 'none');
+                    $el[0].style.willChange = '';
+                    if (cb) {
+                        cb();
+                    }
+                }
+            });
+        }
+    }
+};
+
 var reportsVM,
     reportDateRanges = function (selectedRange) {
         var answer,
@@ -110,51 +989,6 @@ var initKnockout = function () {
                 return value;
             }
         };
-
-    ko.bindingHandlers.reportDateRangePicker = {
-        init: function (element, valueAccessor) {
-            var $element = $(element),
-                dateFormat = "MM/DD/YYYY",
-                durationInfo = valueAccessor(),
-                getPickerData = function (element, picker) {
-                    var pickerInfo = {};
-                    pickerInfo.startDate = picker.startDate;
-                    pickerInfo.endDate = picker.endDate;
-                    pickerInfo.duration = picker.endDate.diff(picker.startDate);
-                    pickerInfo.selectedRange = picker.chosenLabel;
-                    if (ko.isObservable(durationInfo)) {
-                        durationInfo(pickerInfo);
-                    } else {
-                        durationInfo = pickerInfo;
-                    }
-                    element.val(pickerInfo.startDate.format(dateFormat) + " - " + pickerInfo.endDate.format(dateFormat));
-                    element.attr("title", pickerInfo.selectedRange);
-                };
-            $element.attr("title", (durationInfo().selectedRange !== "" ? durationInfo().selectedRange : "Start & End Dates"));
-            $element.val(durationInfo().startDate.format(dateFormat) + " - " + durationInfo().endDate.format(dateFormat));
-
-            $element.daterangepicker({
-                startDate: durationInfo().startDate,
-                endDate: durationInfo().endDate,
-                //maxDate: moment().add(1, "day"),
-                chosenLabel: durationInfo().selectedRange,
-                alwaysShowCalendars: true,
-                autoApply: false,
-                autoUpdateInput: false,
-                timePicker: false,
-                //timePicker24Hour: true,
-                ranges: reportDateRanges()
-            });
-
-            $element.on("apply.daterangepicker", function (ev, picker) {
-                getPickerData($(this), picker);
-            });
-
-            $element.on("hide.daterangepicker", function (ev, picker) {
-                getPickerData($(this), picker);
-            });
-        }
-    };
 
     ko.bindingHandlers.reportDatePicker = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
@@ -311,8 +1145,8 @@ var initKnockout = function () {
                     if (keyCode === 16 || keyCode === 17) {
                         return false;
                     } else {
-                        if((((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105)) && !shiftKey)) {
-                            appendedValue = parseInt(appendedValue + String.fromCharCode((96 <= keyCode && keyCode <= 105)? keyCode-48 : keyCode), 10);
+                        if ((((keyCode >= 48 && keyCode <= 57) || (keyCode >= 96 && keyCode <= 105)) && !shiftKey)) {
+                            appendedValue = parseInt(appendedValue + String.fromCharCode((96 <= keyCode && keyCode <= 105) ? keyCode - 48 : keyCode), 10);
                             return (appendedValue <= maxNumber && appendedValue >= minNumber);
                         } else {
                             return keyCode === 8 ||  // backspace
@@ -377,6 +1211,163 @@ var initKnockout = function () {
         }
 
     };
+
+    ko.bindingHandlers.dtiReportsMaterializeDropdown = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var $element = $(element),
+                $ul = $(element).siblings(),
+                $parentDiv = $element.parent(),
+                focusoutEventsSet = false;
+
+            $element.dropdown();
+
+            // if ($parentDiv.hasClass("availableCalculations")) {
+            //     $element.on("click", function (clickEvent) {
+            //         if (!focusoutEventsSet) {
+            //             focusoutEventsSet = true;
+            //             $parentDiv.on("focusout", function (outEvent) {
+            //                 outEvent.preventDefault();
+            //                 outEvent.stopPropagation();
+            //                 if ($parentDiv.has($(outEvent.target)).length > 0) {
+            //                     console.log("still in focus " + $(outEvent.target).attr("class"));
+            //
+            //                     $element.dropdown('open');
+            //                     // $element.addClass("active");
+            //                     // $ul.addClass("active");
+            //                     // $ul.css("display", "block");
+            //                     // $ul.css("opacity", 1);
+            //                 } else {
+            //                     console.log("lost focus to " + $(outEvent.target).attr("class"));
+            //                     focusoutEventsSet = false;
+            //                     $parentDiv.off("focusout");
+            //
+            //                     $element.dropdown('close');
+            //                     // $element.removeClass("active");
+            //                     // $ul.removeClass("active");
+            //                     // $ul.css("display", "none");
+            //                     // $ul.css("opacity", 0);
+            //                 }
+            //             });
+            //         }
+            //     });
+            // }
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
+
+    ko.bindingHandlers.dtiReportsMaterializeSelect2 = {
+        init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+            var $element = $(element),
+                $select = $element.children('select'),
+                config = valueAccessor(),
+                list = config.options(),
+                notifier = config.notifier,
+                hideEvent = config.hideEvent,
+                $liList;
+
+            $select.addClass('select-processed');
+
+            dti.forEachArray(list, function addItemToSelect(item) {
+                $select.append($('<option>', {
+                        value: item.key(),
+                        selected: true
+                    })
+                        .text(item.key())
+                );
+            });
+            // Initial initialization:
+            $select.material_select({
+                belowOrigin: true,
+                showCount: true,
+                countSuffix: 'Types'
+            });
+
+            $liList = $element.find('li');
+
+            dti.forEachArray(list, function syncDropdownStatus(item, idx) {
+                if (item.selected() && item.visible()) {
+                    $($liList[idx]).addClass('active');
+                    $($liList[idx]).find('input').prop('checked', true);
+                }
+            });
+
+            // Find the "options" sub-binding:
+            var boundValue = valueAccessor();
+
+            // Register a callback for when "options" changes:
+            // boundValue.options.subscribe(function () {
+            //     $select.material_select();
+            // });
+
+            $select.on('change', function handleMaterialSelectChange(event, target) {
+                var $target = $(target),
+                    index = $target.index(),
+                    selected = $target.hasClass('active');
+
+                if (!target.skipNofity) {
+                    notifier();
+
+                    list[index].selected(selected);
+                }
+            });
+
+            $select.siblings('input.select-dropdown').on('close', function doHide() {
+                hideEvent();
+            });
+
+        }
+    };
+
+    ko.bindingHandlers.dtiReportsMaterializeSelect = {
+        suspend: false,
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var suspend = false,
+                boundField = valueAccessor(),
+                $element = $(element);
+
+            // $element.material_select('destroy');
+            $element.material_select();
+            $element.on('change', function () {
+                // console.log("material_select change() fired....");
+                if (ko.isObservable(boundField)) {
+                    boundField(this.selectedOptions[0].value);
+                } else {
+                    boundField = this.selectedOptions[0].value;
+                }
+
+                if (!suspend) {
+                    suspend = true;
+                    var event = new CustomEvent('change', {
+                        detail: 'change',
+                        bubbles: true
+                    });
+                    $(this).get(0).dispatchEvent(event);
+                } else {
+                    suspend = false;
+                }
+            });
+        },
+        update: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            // $(element).material_select();
+        }
+    };
+
+    ko.bindingHandlers.dtiReportsMaterializePickadate = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            $(element).pickadate();
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
+
+    ko.bindingHandlers.dtiReportsMaterializePickatime = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            $(element).pickatime();
+        },
+        update: function (element, valueAccessor, allBindings) {
+        }
+    };
 };
 
 var reportsViewModel = function () {
@@ -399,6 +1390,7 @@ var reportsViewModel = function () {
         $gridColumnConfigTable,
         $filtersGrid,
         $columnsTbody,
+        $gridColumnsTbody,
         $filtersTbody,
         $filterByPoint,
         $reportTitleInput,
@@ -421,7 +1413,6 @@ var reportsViewModel = function () {
         reportData,
         reportChartData,
         activeDataRequests,
-        reportSocket,
         exportEventSet,
         totalizerDurationInHours = true,
         Name = "dorsett.reportUI",
@@ -449,6 +1440,9 @@ var reportsViewModel = function () {
         resizeTimer = 400,
         lastResize = null,
         decimalPadding = "0000000000000000000000000000000000000000",
+        currentUser,
+        ENUMSTEMPLATESTEMPLATES,
+        ENUMSTEMPLATESENUMS,
         setNewPointReference = function (refPointUPI, property) {
             // console.log("- - - - setNewPointReference() called....   refPointUPI = " + refPointUPI + " property = " + property);
             var refPoint,
@@ -469,17 +1463,19 @@ var reportsViewModel = function () {
             if (!!refPoint) {
                 var pointType = refPoint["Point Type"].Value;
                 tempRef = {};
-                tempRef.PropertyEnum = Config.Enums.Properties["Column Point"].enum;
+                tempRef.PropertyEnum = (!!ENUMSTEMPLATESENUMS.Properties ? ENUMSTEMPLATESENUMS.Properties[property].enum : "");
                 tempRef.PropertyName = property;
                 tempRef.Value = refPoint._id;
+                tempRef.PointInst = refPoint._id;
                 tempRef.AppIndex = ++appIndex;
                 tempRef.isDisplayable = true;
                 tempRef.isReadOnly = false;
                 tempRef.PointName = refPoint.Name;
-                tempRef.PointType = Config.Enums["Point Types"][pointType].enum;
+                tempRef.PointType = (!!ENUMSTEMPLATESENUMS["Point Types"] ? ENUMSTEMPLATESENUMS["Point Types"][pointType].enum : "");
                 point["Point Refs"].push(tempRef);
             } else {
                 if (!!refPointUPI) {
+                    console.log("..  double check if this was a 'save' ..");
                     ajaxCall("GET", null, getPointURL + refPointUPI, pushNewReferencedPoint);
                 }
                 console.log("setNewPointReference() refPointUPI = " + refPointUPI + " property = " + property + "  refPoint = " + refPoint);
@@ -558,7 +1554,11 @@ var reportsViewModel = function () {
 
             if (!!appIndex || !!upi) {
                 result = point["Point Refs"].filter(function (pointRef) {
-                    return (pointRef.AppIndex === appIndex || pointRef.Value === upi) && pointRef.PropertyName === referenceType;
+                    if (appIndex !== undefined && upi !== undefined) {
+                        return pointRef.AppIndex === appIndex && pointRef.Value === upi && pointRef.PropertyName === referenceType;
+                    } else {
+                        return (pointRef.AppIndex === appIndex || pointRef.Value === upi) && pointRef.PropertyName === referenceType;
+                    }
                 });
 
                 if (result.length === 0) {
@@ -720,10 +1720,10 @@ var reportsViewModel = function () {
                 return "";
             }
         },
-        columnCanBeCalculated = function (column) {
+        columnCanBeCalculated = function (column) { // TODO needs investigation
             var result = false,
                 valueOptions;
-            if (self.reportType === "Totalizer") {
+            if (self.reportType() === "Totalizer") {
                 result = true;
             } else {
                 switch (column.valueType) {
@@ -744,7 +1744,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = Config.Templates.getTemplate(column.pointType).Value.ValueOptions;
+                        valueOptions = (!scheduled ? ENUMSTEMPLATESTEMPLATES[column.pointType] : undefined);
                         result = (valueOptions === undefined);
                         break;
                 }
@@ -771,7 +1771,7 @@ var reportsViewModel = function () {
                     case "Binary Value":
                     case "Math":
                     case "Totalizer":
-                        valueOptions = Config.Templates.getTemplate(column.pointType).Value.ValueOptions;
+                        valueOptions = ENUMSTEMPLATESTEMPLATES[column.pointType];
                         result = (valueOptions !== undefined);
                         break;
                 }
@@ -792,7 +1792,7 @@ var reportsViewModel = function () {
                 column,
                 canCalculate = false;
 
-            for (i = 0; i < self.listOfColumns().length; i++) {
+            for (i = 1; i < self.listOfColumns().length; i++) {
                 column = self.listOfColumns()[i];
                 if (columnCanBeCalculated(column)) {
                     canCalculate = true;
@@ -806,7 +1806,7 @@ var reportsViewModel = function () {
                 activateCharting = false,
                 allChecked = true;
 
-            for (var i = 0; i < self.listOfColumns().length; i++) {
+            for (var i = 1; i < self.listOfColumns().length; i++) {
                 if (columnCanBeCharted(self.listOfColumns()[i])) {
                     displayChartingHeader = true;
                     if (!activateCharting && self.listOfColumns()[i].includeInChart) {
@@ -824,10 +1824,14 @@ var reportsViewModel = function () {
 
             self.chartable(activateCharting);
             self.allChartCheckboxChecked(allChecked);
+
+            if (!self.chartable()) {
+                self.selectViewReportTabSubTab("gridData");
+            }
         },
         updateListOfFilters = function (newArray) {
             self.listOfFilters([]);
-            if (self.reportType === "Property") {
+            if (self.reportType() === "Property") {
                 self.listOfFilters(setFiltersParentChildLogic(newArray));
             } else {
                 self.listOfFilters(newArray);
@@ -880,6 +1884,8 @@ var reportsViewModel = function () {
             return filters;
         },
         ajaxCall = function (type, input, url, callback) {
+            var errorRaised = false;
+
             self.activeRequestDataDrawn(false);
             $.ajax({
                 url: url,
@@ -887,27 +1893,36 @@ var reportsViewModel = function () {
                 contentType: "application/json",
                 dataType: "json",
                 data: (!!input ? JSON.stringify(input) : null)
-            }).done(function (returnData) {
-                if (callback) {
-                    callback.call(self, returnData);
+            }).done(function (data) {
+                if (data.err) {
+                    errorRaised = data.err;
+                    return dti.log("Request failed: url = " + url + "  error message " + data.err);
+                } else if (callback) {
+                    callback.call(self, data);
                 }
             }).fail(function (jqXHR, textStatus, errorThrown) {
-                console.log( "Request failed: " + textStatus );
+                errorRaised = textStatus + ' ' + errorThrown;
+                dti.log("Request failed: url = " + url, jqXHR, textStatus, errorThrown);
                 self.activeRequestDataDrawn(true);
-                //self.errorWithRequest(true);
+                if (callback) {
+                    callback.call(self, errorRaised);
+                }
             }).always(function () {
                 // console.log( " . .     ajax Request complete..");
             });
         },
         displayError = function (errorMessage) {
-            var $errorMessageholder = $tabConfiguration.find(".screenMessages").find(".errorMessage");
-            $errorMessageholder.text(errorMessage);
-            setTimeout(function () {
-                $errorMessageholder.text("");
-            }, 6000);  // display error message
+            dti.toast(errorMessage, 6000);
+
+            // var $errorMessageholder = $tabConfiguration.find(".screenMessages").find(".errorMessage");
+            // $errorMessageholder.text(errorMessage);
+            // setTimeout(function () {
+            //     $errorMessageholder.text("");
+            // }, 6000);  // display error message
         },
         openPointSelectorForModalColumn = function () {
             var tempPoint,
+                valueoptions,
                 tempObject = getNewColumnTemplate(),
                 setColumnPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
@@ -931,32 +1946,26 @@ var reportsViewModel = function () {
                     tempObject.calculation = [];
                     tempObject.multiplier = 1;
                     delete tempObject.valueOptions;
-                    if (self.reportType === "Totalizer") {
+                    if (self.reportType() === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
-                        tempObject.operator = tempObject.valueList[0].text;
+                        tempObject.operator = tempObject.valueList[0];
                         tempObject.dataColumnName = tempObject.upi + " - " + tempObject.operator.toLowerCase();
                     } else {
-                        if (self.reportType === "History") {
+                        if (self.reportType() === "History") {
                             tempObject.dataColumnName = tempObject.upi;
                         }
                         if (!!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
-                            tempObject.valueOptions = Config.Templates.getTemplate(tempObject.pointType).Value.ValueOptions;
+                            valueoptions = ENUMSTEMPLATESTEMPLATES[tempObject.pointType];
+                            tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
                         }
                     }
                     tempObject.canBeCharted = columnCanBeCharted(tempObject);
                     tempObject.yaxisGroup = "A";
                     updateColumnFromPointRefs(tempObject);  // sets AppIndex;
                     if (tempObject.AppIndex) {
-                        tempPoint = Config.Update.formatPoint({
-                            point: point,
-                            oldPoint: point,
-                            refPoint: selectedPoint,
-                            property: getPointRefByAppIndex(tempObject.AppIndex)
-                        });
-                    } else {
-                        console.log("openPointSelectorForModalColumn() couldn't find AppIndex.........");
+                        formatPoint(selectedPoint, getPointRefByAppIndex(tempObject.AppIndex));
                     }
                     self.currentColumnEdit(tempObject);
                 },
@@ -971,7 +1980,7 @@ var reportsViewModel = function () {
             dtiUtility.onPointSelect(pointSelectedCallback);
         },
         openPointSelectorForColumn = function (selectObjectIndex) {
-            var tempPoint,
+            var valueoptions,
                 updatedList = $.extend(true, [], self.listOfColumns()),
                 tempObject = updatedList[selectObjectIndex],
                 setColumnPoint = function (selectedPoint) {
@@ -996,31 +2005,26 @@ var reportsViewModel = function () {
                     tempObject.calculation = [];
                     tempObject.multiplier = 1;
                     delete tempObject.valueOptions;
-                    if (self.reportType === "Totalizer") {
+                    if (self.reportType() === "Totalizer") {
                         tempObject.valueList = getTotalizerValueList(tempObject.pointType);
-                        tempObject.operator = tempObject.valueList[0].text;
+                        tempObject.operator = tempObject.valueList[0];
                         tempObject.dataColumnName = tempObject.upi + " - " + tempObject.operator.toLowerCase();
                     } else {
-                        if (self.reportType === "History") {
+                        if (self.reportType() === "History") {
                             tempObject.dataColumnName = tempObject.upi;
                         }
                         if (!!selectedPoint.Value && !!selectedPoint.Value.ValueOptions) {
                             tempObject.valueOptions = selectedPoint.Value.ValueOptions;
                         } else {
-                            tempObject.valueOptions = Config.Templates.getTemplate(tempObject.pointType).Value.ValueOptions;
+                            valueoptions = ENUMSTEMPLATESTEMPLATES[tempObject.pointType];
+                            tempObject.valueOptions = valueoptions.Value.ValueOptions || "";
                         }
                     }
                     tempObject.canBeCharted = columnCanBeCharted(tempObject);
                     tempObject.yaxisGroup = "A";
                     updateColumnFromPointRefs(tempObject);  // sets AppIndex;
                     if (tempObject.AppIndex) {
-                        tempPoint = Config.Update.formatPoint({
-                            point: point,
-                            oldPoint: point,
-                            refPoint: selectedPoint,
-                            property: getPointRefByAppIndex(tempObject.AppIndex)
-                        });
-                        updatedList[selectObjectIndex] = tempObject;
+                        formatPoint(selectedPoint, getPointRefByAppIndex(tempObject.AppIndex));
                         updateListOfColumns(updatedList);
                     }
                 },
@@ -1035,25 +2039,20 @@ var reportsViewModel = function () {
             dtiUtility.onPointSelect(pointSelectedCallback);
         },
         openPointSelectorForFilter = function (selectObjectIndex) {
-            var tempPoint,
-                objIndex = selectObjectIndex,
-                updatedList = $.extend(true, [], self.listOfFilters()),
+            var updatedList = $.extend(true, [], self.listOfFilters()),
                 tempObject = updatedList[selectObjectIndex],
                 setFilterPoint = function (selectedPoint) {
                     newlyReferencedPoints.push(selectedPoint);
+                    if (!!tempObject.AppIndex) {
+                        delete tempObject.AppIndex;
+                    }
                     tempObject.upi = selectedPoint._id;
                     tempObject.valueType = "UniquePID";
                     tempObject.value = selectedPoint.Name;
                     tempObject.pointType = selectedPoint["Point Type"].Value;
                     updateFilterFromPointRefs(tempObject);  // sets AppIndex;
                     if (tempObject.AppIndex) {
-                        tempPoint = Config.Update.formatPoint({
-                            point: point,
-                            oldPoint: point,
-                            refPoint: selectedPoint,
-                            property: getPointRefByAppIndex(tempObject.AppIndex)
-                        });
-                        updatedList[objIndex] = tempObject;
+                        formatPoint(selectedPoint, getPointRefByAppIndex(tempObject.AppIndex));
                         updateListOfFilters(updatedList);
                     }
                 },
@@ -1079,15 +2078,15 @@ var reportsViewModel = function () {
                     }
                 };
 
-            dtiUtility.showPointFilter({
-                name1: self.name1Filter(),
-                name2: self.name2Filter(),
-                name3: self.name3Filter(),
-                name4: self.name4Filter(),
-                pointTypes: self.selectedPointTypesFilter()
-            });
-            dtiUtility.onPointSelect(pointSelectedCallback);
-        }
+                dtiUtility.showPointFilter({
+                    name1: self.name1Filter(),
+                    name2: self.name2Filter(),
+                    name3: self.name3Filter(),
+                    name4: self.name4Filter(),
+                    pointTypes: self.selectedPointTypesFilter()
+                });
+                dtiUtility.onPointSelect(pointSelectedCallback);
+            }
         },
         getFilterAdjustedDatetime = function (filter) {
             return getAdjustedDatetimeUnix(moment.unix(filter.date), filter.time.toString());
@@ -1116,42 +2115,42 @@ var reportsViewModel = function () {
             result = getAdjustedDatetimeMoment(validatedDate, time.toString());
             return result.unix();
         },
-        initializeNewFilter = function (selectedItem, filter) {
-            var localFilter = filter,
-                prop = getProperty(selectedItem.name);
+        initializeNewFilter = function (selectedItem, indexOfFilter) {
+            var filter = self.listOfFilters()[indexOfFilter],
+                prop = ENUMSTEMPLATESENUMS.Properties[selectedItem.name];
 
-            localFilter.filterName = selectedItem.name;
-            localFilter.condition = "$and";
-            localFilter.operator = "EqualTo";
-            localFilter.childLogic = false;
-            localFilter.valueType = prop.valueType;
-            localFilter.upi = 0;
-            delete localFilter.AppIndex;
-            localFilter.value = setDefaultFilterValue(localFilter.valueType);
-            localFilter.valueList = getValueList(selectedItem.name, selectedItem.name);
-            switch (localFilter.valueType) {
+            filter.filterName = selectedItem.name;
+            filter.condition = "$and";
+            filter.operator = "EqualTo";
+            filter.childLogic = false;
+            filter.valueType = prop.valueType;
+            filter.upi = 0;
+            delete filter.AppIndex;
+            filter.value = setDefaultFilterValue(filter.valueType);
+            filter.valueList = [];
+            setValueList(selectedItem.name, selectedItem.name, indexOfFilter);
+            switch (filter.valueType) {
                 case "Timet":
                 case "DateTime":
-                    localFilter.date = moment().unix();
-                    localFilter.value = localFilter.date;
-                    localFilter.time = 0;
+                    filter.date = moment().unix();
+                    filter.value = filter.date;
+                    filter.time = 0;
                     break;
                 case "HourMinSec":
                 case "HourMin":
                 case "MinSec":
-                    localFilter.hours = 0;
-                    localFilter.minutes = 0;
-                    localFilter.seconds = 0;
+                    filter.hours = 0;
+                    filter.minutes = 0;
+                    filter.seconds = 0;
                     break;
                 case "Enum":
-                    localFilter.evalue = -1;
+                    filter.evalue = -1;
                     break;
                 case "BitString":
-                    localFilter.bitStringEnumsArray = getBitStringEnumsArray(Config.Enums[localFilter.filterName + " Bits"]);
+                    filter.bitStringEnumsArray = getBitStringEnumsArray(ENUMSTEMPLATESENUMS["Enums." + filter.filterName + " Bits"]);
                     break;
             }
-
-            return localFilter;
+            // self.listOfFilters.valueHasMutated();
         },
         setDefaultFilterValue = function (valueType) {
             var result;
@@ -1221,7 +2220,7 @@ var reportsViewModel = function () {
             } else if (column.colName === "Choose Property") {
                 answer.valid = false;
                 answer.error = "Missing Column property at index " + colIndex;
-            } else if ((self.reportType === "Totalizer") || (self.reportType === "History")) {
+            } else if ((self.reportType() === "Totalizer") || (self.reportType() === "History")) {
                 if (column.colName !== "Date" && !!column.AppIndex) { //  skip first column  "Date"
                     pointRef = getPointRef(column, "Column Point");
                     if (pointRef === undefined) {
@@ -1256,14 +2255,15 @@ var reportsViewModel = function () {
                 localArray[i].error = col.error;
                 results.push(localArray[i]);
 
-                if (cleanup && col.valid && results.length > 0) {
-                    delete results[results.length - 1].valueList;  // valuelist is only used in UI
-                    delete results[results.length - 1].dataColumnName; // dataColumnName is only used in UI
-                    delete results[results.length - 1].rawValue; // rawValue is only used in UI
-                    delete results[results.length - 1].error; // error is only used in UI
-                    delete results[results.length - 1].softDeleted; // error is only used in UI
-                    delete results[results.length - 1].bitstringEnums; // error is only used in UI
-                    delete results[results.length - 1].upi; // error is only used in UI
+                if (cleanup && col.valid && results.length > 0) { // these fields are only used in UI
+                    delete results[results.length - 1].valueList;
+                    delete results[results.length - 1].valueType;
+                    delete results[results.length - 1].dataColumnName;
+                    delete results[results.length - 1].rawValue;
+                    delete results[results.length - 1].error;
+                    delete results[results.length - 1].softDeleted;
+                    delete results[results.length - 1].bitstringEnums;
+                    delete results[results.length - 1].upi;
                 }
             }
 
@@ -1365,9 +2365,10 @@ var reportsViewModel = function () {
 
                     if (cleanup && valid && results.length > 0) {  // clean fields only used during UI
                         delete results[results.length - 1].valueList;
+                        delete results[results.length - 1].valueType;
                         delete results[results.length - 1].error;
                         delete results[results.length - 1].softDeleted;
-                        delete results[results.length - 1].upi; // error is only used in UI
+                        delete results[results.length - 1].upi;
                     }
                 }
             }
@@ -1402,7 +2403,9 @@ var reportsViewModel = function () {
                 }
 
                 if (validFilter) {
-                    currentFilter.valueList = getValueList(currentFilter.filterName, currentFilter.filterName);
+                    currentFilter.valueType = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS.Properties[currentFilter.filterName].valueType : "");
+                    currentFilter.valueList = [];
+                    setValueList(currentFilter.filterName, currentFilter.filterName, result.length);
                     result.push(currentFilter);
                 }
             }
@@ -1435,11 +2438,12 @@ var reportsViewModel = function () {
 
                 if (valid) {
                     currentColumn.canCalculate = columnCanBeCalculated(currentColumn);
-                    switch (self.reportType) {
+                    switch (self.reportType()) {
                         case "Property":
                             currentColumn.canBeCharted = columnCanBeCharted(currentColumn);
+                            currentColumn.valueType = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS.Properties[currentColumn.colName].valueType : "");
                             if (currentColumn.valueType === "BitString") {
-                                currentColumn.bitstringEnums = Config.Enums[currentColumn.colName + " Bits"];
+                                currentColumn.bitstringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[currentColumn.colName + " Bits"] : "");
                             }
                             currentColumn.dataColumnName = currentColumn.colName;
                             break;
@@ -1469,20 +2473,44 @@ var reportsViewModel = function () {
             }
             return result;
         },
-        getValueList = function (property, pointType) {
+        formatPoint = function (cb, selectedPoint, pRef) {
+            var params = {
+                    point: point,
+                    oldPoint: originalPoint,
+                    refPoint: selectedPoint,
+                    property: pRef
+                },
+                callback = function (formattedPoint) {
+                    if (!formattedPoint.err) {
+                        point = formattedPoint;
+                    }
+                    if (!!cb) {
+                        if (typeof cb === "function") {
+                            cb(formattedPoint);
+                        }
+                    }
+                };
+            dtiUtility.getConfig("Update.formatPoint", [params], callback);
+        },
+        setValueList = function (property, pointType, index) {
             var result = [],
                 i,
-                options = Config.Utility.pointTypes.getEnums(property, pointType),
-                len = (options && options.length ? options.length : 0);
+                setOptions = function (options) {
+                    if (!!options && Array.isArray(options)) {
+                        for (i = 0; i < options.length; i++) {
+                            result.push({
+                                value: options[i].name,
+                                evalue: options[i].value
+                            });
+                        }
+                    }
+                    if (!!self.listOfFilters()[index]) {
+                        self.listOfFilters()[index].valueList = result;
+                        updateListOfFilters(self.listOfFilters());
+                    }
+                };
 
-            for (i = 0; i < len; i++) {
-                result.push({
-                    value: options[i].name,
-                    evalue: options[i].value
-                });
-            }
-
-            return result;
+            dtiUtility.getConfig("Utility.pointTypes.getEnums", [property, pointType], setOptions);
         },
         getTotalizerValueList = function (pointType) {
             var result = [];
@@ -1492,30 +2520,28 @@ var reportsViewModel = function () {
                     case "Binary Input":
                     case "Binary Output":
                     case "Binary Value":
-                        result.push({text: "Starts"});
-                        result.push({text: "Runtime"});
+                        result.push("Starts");
+                        result.push("Runtime");
                         break;
                     default:
-                        result.push({text: "Total"});
+                        result.push("Total");
                         break;
                 }
             }
 
             return result;
         },
-        getProperty = function (key) {
-            return Config.Enums.Properties[key];
-        },
         collectEnumProperties = function () {
             getPointPropertiesForFilters();
             getPointPropertiesForColumns();
         },
         getPointPropertiesForFilters = function () {
-            var props = Config.Enums.Properties,
+            var props,
                 listOfKeysToSkip = [],
                 prop,
                 key;
 
+            props = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS.Properties : {});
             for (key in props) {
                 if (props.hasOwnProperty(key)) {
                     if (props[key].reportEnable === true && $.inArray(key, listOfKeysToSkip) === -1) {
@@ -1536,6 +2562,15 @@ var reportsViewModel = function () {
             });
             self.listOfColumnPropertiesLength = columnsPropertyFields.length;
         },
+        getKeyBasedOnEnum = function (obj, enumValue) {
+            for (var key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    if (obj[key].enum === parseInt(enumValue, 10)) {
+                        return key;
+                    }
+                }
+            }
+        },
         getKeyBasedOnValue = function (obj, value) {
             for (var key in obj) {
                 if (obj.hasOwnProperty(key)) {
@@ -1555,21 +2590,21 @@ var reportsViewModel = function () {
             }
             return answer;
         },
-        configureSelectedDuration = function (durationObject) {
-            if (!!durationObject) {
+        configureSelectedDuration = function (configObject) {
+            if (!!configObject && !!configObject.duration) {
                 self.selectedDuration({
-                    startDate: $.isNumeric(durationObject.startDate) ? moment.unix(durationObject.startDate) : durationObject.startDate,
-                    startTimeOffSet: durationObject.startTimeOffSet,
-                    endDate: $.isNumeric(durationObject.endDate) ? moment.unix(durationObject.endDate) : durationObject.endDate,
-                    endTimeOffSet: durationObject.endTimeOffSet,
-                    selectedRange: (!!durationObject.selectedRange ? durationObject.selectedRange : "")
+                    startDate: $.isNumeric(configObject.duration.startDate) ? moment.unix(configObject.duration.startDate) : configObject.duration.startDate,
+                    startTimeOffSet: configObject.duration.startTimeOffSet,
+                    endDate: $.isNumeric(configObject.duration.endDate) ? moment.unix(configObject.duration.endDate) : configObject.duration.endDate,
+                    endTimeOffSet: configObject.duration.endTimeOffSet,
+                    selectedRange: (!!configObject.duration.selectedRange ? configObject.duration.selectedRange : "")
                 });
 
-                self.durationStartTimeOffSet(durationObject.startTimeOffSet);
-                self.durationEndTimeOffSet(durationObject.endTimeOffSet);
-                if (!!durationObject.interval) {
-                    self.interval(durationObject.interval.text);
-                    self.intervalValue(durationObject.interval.value);
+                self.durationStartTimeOffSet(!!configObject.duration.startTimeOffSet ? configObject.duration.startTimeOffSet : "00:00");
+                self.durationEndTimeOffSet(!!configObject.duration.endTimeOffSet ? configObject.duration.endTimeOffSet : "00:00");
+                if (!!configObject.interval) {
+                    self.intervalPeriod(configObject.interval.period);
+                    self.intervalValue(configObject.interval.value);
                 }
             }
 
@@ -1578,16 +2613,15 @@ var reportsViewModel = function () {
                 self.selectedDuration().endTimeOffSet = self.durationEndTimeOffSet();
 
                 if (self.selectedDuration().selectedRange === "Custom Range") {
-                    self.startDate = getAdjustedDatetimeUnix(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet());
-                    self.endDate = getAdjustedDatetimeUnix(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet());
+                    self.startDate(getAdjustedDatetimeUnix(self.selectedDuration().startDate.unix(), self.durationStartTimeOffSet()));
+                    self.endDate(getAdjustedDatetimeUnix(self.selectedDuration().endDate.unix(), self.durationEndTimeOffSet()));
                 } else {
                     var dateRange = reportDateRanges(self.selectedDuration().selectedRange);
                     self.selectedDuration().startDate = getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
                     self.selectedDuration().endDate = getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
-                    self.startDate = self.selectedDuration().startDate.unix();
-                    self.endDate = self.selectedDuration().endDate.unix();
+                    self.startDate(self.selectedDuration().startDate.unix());
+                    self.endDate(self.selectedDuration().endDate.unix());
                 }
-                self.selectedDuration().duration = self.selectedDuration().endDate.diff(self.selectedDuration().startDate);
             }
 
             self.selectedDuration.valueHasMutated();
@@ -1615,7 +2649,7 @@ var reportsViewModel = function () {
                         if (filter.valueType === "BitString") {
                             var total = 0,
                                 key,
-                                bitStringEnums = Config.Enums[filter.filterName + " Bits"];
+                                bitStringEnums = (!!ENUMSTEMPLATESENUMS ? ENUMSTEMPLATESENUMS[filter.filterName + " Bits"] : {});
 
                             for (key in bitStringEnums) {
                                 if (bitStringEnums.hasOwnProperty(key)) {
@@ -1671,13 +2705,13 @@ var reportsViewModel = function () {
                     if (!!columns[i].error) {
                         displayError(columns[i].error);
                         activeError = true;
-                        $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("danger");
-                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("danger");
-                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").addClass("danger");
+                        $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
+                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").addClass("red lighten-4");
                     } else {
-                        $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("danger");
-                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("danger");
-                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("danger");
+                        $columnsGrid.find("tr:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                        $gridColumnConfigTable.find("th:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
+                        $gridColumnConfigTable.find("td:nth-child(" + (i + 1) + ")").removeClass("red lighten-4");
                         if (columns[i].upi > 0) {
                             upis.push({
                                 upi: parseInt(columns[i].upi, 10),
@@ -1687,7 +2721,7 @@ var reportsViewModel = function () {
                     }
                 }
 
-                if (self.reportType === "Totalizer" || self.reportType === "History") {
+                if (self.reportType() === "Totalizer" || self.reportType() === "History") {
                     configureSelectedDuration();
                 } else {
                     if (filters.length > 0) {
@@ -1696,11 +2730,11 @@ var reportsViewModel = function () {
                 }
 
                 if (!activeError) {
-                    switch (self.reportType) {
+                    switch (self.reportType()) {
                         case "History":
                         case "Totalizer":
                             point["Report Config"].interval = {
-                                text: self.interval(),
+                                period: self.intervalPeriod(),
                                 value: self.intervalValue()
                             };
                             point["Report Config"].duration = {
@@ -1720,11 +2754,11 @@ var reportsViewModel = function () {
                     }
 
                     point["Report Config"].pointFilter = {
-                        "name1" : self.name1Filter(),
-                        "name2" : self.name2Filter(),
-                        "name3" : self.name3Filter(),
-                        "name4" : self.name4Filter(),
-                        "selectedPointTypes" : self.selectedPointTypesFilter()
+                        "name1": self.name1Filter(),
+                        "name2": self.name2Filter(),
+                        "name3": self.name3Filter(),
+                        "name4": self.name4Filter(),
+                        "selectedPointTypes": self.selectedPointTypesFilter()
                     };
                     point["Report Config"].columns = columns;
                     point["Report Config"].filters = filters;
@@ -1736,8 +2770,8 @@ var reportsViewModel = function () {
                         requestID: uuid,
                         upis: upis,
                         range: {
-                            start: self.startDate,
-                            end: self.endDate
+                            start: self.startDate(),
+                            end: self.endDate()
                         },
                         reportConfig: cleanUpReportConfig(point["Report Config"]),
                         reportType: point["Report Type"].Value,
@@ -1763,30 +2797,12 @@ var reportsViewModel = function () {
                         $tabViewReport.hide();
                         break;
                     case 2:
+                        $tabViewReport.addClass("active");
                         $tabConfiguration.removeClass("active");
                         $tabConfiguration.hide();
-                        $tabViewReport.addClass("active");
                         break;
                 }
             }
-        },
-        initSocket = function (cb) {
-            reportSocket = io.connect(window.location.origin);
-
-            reportSocket.on("connect", function () {
-                // console.log("SOCKETID:", reportSocket.id);
-                if (cb) {
-                    cb();
-                }
-            });
-
-            reportSocket.on("returnReport", function (data) {
-                if (data.err === null) {
-                    //parseReturnedData(data.results);
-                } else {
-                    console.log("Error while retrieving data");
-                }
-            });
         },
         getScreenFields = function () {
             $direports = $(document).find(".direports");
@@ -1811,17 +2827,12 @@ var reportsViewModel = function () {
             $saveReportButton = $direports.find(".saveReportButton");
             $pointSelectorIframe = $filterByPoint.find(".pointLookupFrame");
             $reportTitleInput = $direports.find(".reporttitle").find("input");
-            $filtersTbody = $direports.find(".filtersGrid tbody");
-            $columnsTbody = $direports.find(".columnsGrid .sortablecolums");
+            $filtersTbody = $direports.find(".filtersGrid .sortableFilters");
+            $columnsTbody = $columnsGrid.find(".sortablecolumns");
+            $gridColumnsTbody = $gridColumnConfigTable.find(".sortablecolumns");
             $reportColumns = $direports.find("#reportColumns");
             $additionalFilters = $direports.find("#additionalFilters");
             $hiddenPlaceholder = $direports.find(".hiddenPlaceholder");
-            $globalPrecisionText = $columnsGrid.find("th .precisionColumn .columnText");
-            $globalPrecision = $columnsGrid.find("th .precisionColumn .globalPrecision");
-            $globalIncludeInChartText = $columnsGrid.find("th .includeInChartColumn .columnText");
-            $globalIncludeInChart = $columnsGrid.find("th .includeInChartColumn .globalIncludeInChart");
-            $globalCalculateText = $columnsGrid.find("th .calculateColumn .columnText");
-            $globalCalculate = $columnsGrid.find("th .globalCalculate");
             $availableChartTypesChartTab = $direports.find(".availableChartTypes.chartTab");
             $reportChartDiv = $direports.find(".reportChartDiv");
         },
@@ -1874,7 +2885,7 @@ var reportsViewModel = function () {
                                 if (result.width < key.length) {
                                     result.width = key.length;
                                 }
-                                if (key.toLowerCase() !== "all" ) { // special case for Bitstring  "All" not displayed
+                                if (key.toLowerCase() !== "all") { // special case for Bitstring  "All" not displayed
                                     result.height++;
                                 }
                             }
@@ -1965,9 +2976,9 @@ var reportsViewModel = function () {
                             var temp = result.Value.toString().toLowerCase();
                             //result.Value = temp[0].toUpperCase() + temp.substring(1);
                             if (result.Value == true) {
-                                result.Value = "On";
+                                result.Value = "Yes";
                             } else {
-                                result.Value = "Off";
+                                result.Value = "No";
                             }
                         }
                         break;
@@ -2137,7 +3148,7 @@ var reportsViewModel = function () {
         },
         parseNumberValue = function (theValue, rawValue, eValue) {
             var result;
-            result = parseFloat(theValue.toString().replace(",",""));
+            result = parseFloat(theValue.toString().replace(",", ""));
             if (isNaN(result)) {
                 result = (eValue !== undefined ? parseFloat(eValue) : parseFloat(rawValue));
                 if (isNaN(result)) {
@@ -2194,7 +3205,7 @@ var reportsViewModel = function () {
                         columnDataFound = (data[i][columnName] !== undefined);
                         if (columnDataFound) {
                             fieldValue = parseNumberValue(data[i][columnName].Value, data[i][columnName].rawValue, data[i][columnName].eValue);
-                            switch (self.reportType) {
+                            switch (self.reportType()) {
                                 case "History":
                                 case "Totalizer":
                                     if (self.selectedChartType() === "Pie") {
@@ -2254,49 +3265,44 @@ var reportsViewModel = function () {
             return setYaxisValues(result);
         },
         adjustViewReportTabHeightWidth = function () {
-            var infoscanHeader = 95,
+            var bottomPadding = 10,
                 adjustHeight,
+                currentWindowHeight = window.innerHeight,
                 $dataTablesScrollHead,
                 $dataTablesScrollBody,
                 $dataTablesScrollFoot,
                 $dataTablesWrapper,
-                $activePane = $tabViewReport.find(".tab-pane.active");
-
-            $tabViewReport.css("width", window.innerWidth - 83);
-            $tabViewReport.css("height", window.innerHeight);
-            $tabViewReport.find(".tab-content").css("width", $tabViewReport.width());
-            $tabViewReport.find(".tab-content").css("height", $tabViewReport.height() - 45);
+                $activePane = $tabViewReport.find(".tab-pane:visible");
 
             if ($activePane.attr("id") === "chartData") {
                 $activePane.css("height", (window.innerHeight - 90));
                 $activePane.css("width", (window.innerWidth - 130));
-                $activePane.css("margin-top", "-22px");
             } else if ($activePane.attr("id") === "gridData") {
                 $dataTablesScrollHead = $tabViewReport.find(".dataTables_scrollHead");
                 $dataTablesScrollBody = $tabViewReport.find(".dataTables_scrollBody");
                 $dataTablesScrollFoot = $tabViewReport.find(".dataTables_scrollFoot");
                 $dataTablesWrapper = $tabViewReport.find(".dataTables_wrapper");
 
-                setInfoBarDateTime();
-                adjustHeight = $dataTablesScrollBody.height() - (($dataTablesWrapper.height() + infoscanHeader) - window.innerHeight);
+                setDatatableInfoBar();
+                adjustHeight = $dataTablesScrollBody.height() - (($tabViewReport.height() + bottomPadding) - currentWindowHeight);
                 $dataTablesScrollHead.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
                 $dataTablesScrollBody.css("height", adjustHeight);
-                $dataTablesScrollBody.css("width", $dataTablesWrapper.width());
+                $dataTablesScrollBody.css("width", $dataTablesWrapper.width() - 17);
                 $dataTablesScrollFoot.css("width", $dataTablesWrapper.width() - 17); // allow for scrolly in body
                 $.fn.dataTable.tables({visible: true, api: true}).columns.adjust().draw;  // original way
                 //$dataTablePlaceHolder.DataTable().columns.adjust();
             }
         },
         adjustConfigTabActivePaneHeight = function () {
-            var $activePane = $tabConfiguration.find(".tab-pane.active");
-            $activePane.css("height", (window.innerHeight - 160));
+            var $configPanes = $tabConfiguration.find(".tab-content div.tab-pane");
+            $configPanes.css("height", (window.innerHeight - 150));
         },
         handleResize = function () {
             lastResize = new Date();
             setTimeout(function () {
                 if (new Date() - lastResize >= resizeTimer) {
                     if (self.currentTab() === 2) {
-                        if ($tabViewReport.find(".tab-pane.active").attr("id") === "chartData") {
+                        if ($tabViewReport.find(".tab-pane:visible").attr("id") === "chartData") {
                             renderChart();
                         } else {
                             adjustViewReportTabHeightWidth();
@@ -2307,24 +3313,59 @@ var reportsViewModel = function () {
                 }
             }, resizeTimer);
         },
-        saveReportConfig = function () {
+        setReportConfig = function (cb) {
+            var formattingPointRequest = 0,
+                errors,
+                handleFormatPointRequests = function (result) {
+                    if (!!result.err) {
+                        if (errors === undefined) {
+                            errors = [];
+                        }
+
+                        if (errors.indexOf(result.err) === -1) {
+                            errors.push(result.err);
+                        }
+                    }
+
+                    if (--formattingPointRequest <= 0) {
+                        console.log("handleFormatPointRequests()  errors = " + errors);
+                        cb(errors);
+                    }
+                },
+                checkForNameChanges = function () {
+                    point.name1 = self.pointName1();
+                    formattingPointRequest++;
+                    formatPoint(handleFormatPointRequests, {}, "name1");
+
+                    point.name2 = self.pointName2();
+                    formattingPointRequest++;
+                    formatPoint(handleFormatPointRequests, {}, "name2");
+
+                    point.name3 = self.pointName3();
+                    formattingPointRequest++;
+                    formatPoint(handleFormatPointRequests, {}, "name3");
+
+                    point.name4 = self.pointName4();
+                    formattingPointRequest++;
+                    formatPoint(handleFormatPointRequests, {}, "name4");
+                };
             point["Report Config"].columns = validateColumns(true);
             point["Report Config"].filters = validateFilters(true);
-            point["Report Config"].pointFilter =  {
-                "name1" : self.name1Filter(),
-                "name2" : self.name2Filter(),
-                "name3" : self.name3Filter(),
-                "name4" : self.name4Filter(),
-                "selectedPointTypes" : self.selectedPointTypesFilter()
+            point["Report Config"].pointFilter = {
+                "name1": self.name1Filter(),
+                "name2": self.name2Filter(),
+                "name3": self.name3Filter(),
+                "name4": self.name4Filter(),
+                "selectedPointTypes": self.selectedPointTypesFilter()
             };
             point["Report Config"].selectedPageLength = self.selectedPageLength();
             point["Report Config"].selectedChartType = self.selectedChartType();
             point["Report Config"].reportTitle = self.reportDisplayTitle();
-            switch (self.reportType) {
+            switch (self.reportType()) {
                 case "History":
                 case "Totalizer":
                     point["Report Config"].interval = {
-                        text: self.interval(),
+                        period: self.intervalPeriod(),
                         value: self.intervalValue()
                     };
                     point["Report Config"].duration = {
@@ -2342,28 +3383,8 @@ var reportsViewModel = function () {
                     console.log(" - - - DEFAULT  init()");
                     break;
             }
-            point.name1 = self.pointName1();
-            point.name2 = self.pointName2();
-            point.name3 = self.pointName3();
-            point.name4 = self.pointName4();
-            point._name1 = point.name1.toLowerCase();
-            point._name2 = point.name2.toLowerCase();
-            point._name3 = point.name3.toLowerCase();
-            point._name4 = point.name4.toLowerCase();
-            point.Name = point.name1 + "_" + point.name2 + "_" + point.name3 + "_" + point.name4;
-            point.Name = point.Name.replace(/_\s*$/, "");
-            point._Name = point.Name.toLowerCase();
 
-            if (point._pStatus !== 0) {
-                reportSocket.emit("addPoint", {
-                    point: point
-                });
-            } else {
-                reportSocket.emit("updatePoint", JSON.stringify({
-                    "newPoint": point,
-                    "oldPoint": originalPoint
-                }));
-            }
+            checkForNameChanges();
         },
         setReportEvents = function () {
             var intervals,
@@ -2378,368 +3399,351 @@ var reportsViewModel = function () {
                 handleResize();
             });
 
-            if (!scheduled) {
-                $direports.find(".addColumnButton").on("click", function (e) {
-                    var rowTemplate = getNewColumnTemplate(),
-                        $newRow;
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (self.listOfColumns.indexOf(rowTemplate) === -1) {
-                        self.listOfColumns.push(rowTemplate);
-                        updateListOfColumns(self.listOfColumns());
-                        $newRow = $columnsTbody.find("tr:last");
-                        $newRow.addClass("ui-sortable-handle");
-                        $newRow.addClass("danger");
-                        if (self.reportType !== "Property") {
-                            self.selectPointForColumn(rowTemplate, (self.listOfColumns().length - 1));
+            setTimeout(function () {
+                if (!scheduled) {
+                    $direports.find(".addColumnButton").on("click", function (e) {
+                        var rowTemplate = getNewColumnTemplate(),
+                            $newRow;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (self.listOfColumns.indexOf(rowTemplate) === -1) {
+                            self.listOfColumns.push(rowTemplate);
+                            updateListOfColumns(self.listOfColumns());
+                            $newRow = $columnsTbody.find("tr:last");
+                            $newRow.addClass("ui-sortable-handle");
+                            $newRow.addClass("red lighten-4");
+                            if (self.reportType() !== "Property") {
+                                self.selectPointForColumn(rowTemplate, (self.listOfColumns().length - 1));
+                            }
                         }
-                    }
-                    handleResize();
-                    $reportColumns.stop().animate({
-                        scrollTop: $reportColumns.get(0).scrollHeight
-                    }, 700);
-                });
-
-                $direports.find(".addFilterbutton").on("click", function (e) {
-                    var rowTemplate = {
-                        filterName: "",
-                        condition: "$and",
-                        childLogic: false,
-                        beginGroup: false,
-                        endGroup: false,
-                        operator: "EqualTo",
-                        valueType: "String",
-                        value: "",
-                        valueList: ""
-                    };
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (self.listOfFilters.indexOf(rowTemplate) === -1) {
-                        self.listOfFilters.push(rowTemplate);
-                        updateListOfFilters(self.listOfFilters());
-                    }
-                    handleResize();
-                    $additionalFilters.stop().animate({
-                        scrollTop: $additionalFilters.get(0).scrollHeight
-                    }, 700);
-                });
-
-                $saveReportButton.on("click", function () {
-                    var $screenMessages = $tabConfiguration.find(".screenMessages");
-                    blockUI($tabConfiguration, true, " Saving Report...");
-                    $screenMessages.find(".errorMessage").text(""); // clear messages
-                    $screenMessages.find(".successMessage").text(""); // clear messages
-                    saveReportConfig();
-                    $(this).blur();
-                });
-
-                $direports.find(".runReportButton").on("click", function (e) {
-                    $(this).focus();
-                    e.preventDefault();
-                    e.stopPropagation();
-                    self.requestReportData();
-                });
-
-                $dataTablePlaceHolder.on("click", ".pointInstance", function () {
-                    var data = {
-                        upi: $(this).attr("upi"),
-                        pointType: $(this).attr("pointType"),
-                        pointName: $(this).text()
-                    };
-
-                    self.showPointReview(data);
-                });
-
-                $tabConfiguration.find(".toggleTab").on("shown.bs.tab", function () {
-                    adjustConfigTabActivePaneHeight();
-                });
-
-                if (!!reportSocket) {
-                    reportSocket.on("pointUpdated", function (data) {
-                        var $messageHolder = $tabConfiguration.find(".screenMessages").find(".successMessage");
-                        // console.log(" -  -  - reportSocket() 'pointUpdated' returned");
-                        if (data.err === null || data.err === undefined) {
-                            self.unSavedDesignChange(false);
-                            $messageHolder.text("Report Saved");
-                            setTimeout(function () {
-                                $messageHolder.text("");
-                            }, 3000);  // display success message
-                        } else {
-                            self.unSavedDesignChange(true);
-                            originalPoint = _.clone(newPoint, true);
-                            self.reportDisplayTitle(originalPoint.Name.replace("_", " "));
-                            $tabConfiguration.find(".screenMessages").find(".errorMessage").text(data.err);
-                        }
-                        blockUI($tabConfiguration, false);
+                        handleResize();
+                        $reportColumns.stop().animate({
+                            scrollTop: $reportColumns.get(0).scrollHeight
+                        }, 700);
                     });
-                }
 
-                $dataTablePlaceHolder.on("column-reorder.dt", function (event, settings, details) {
-                    var columnsArray = $.extend(true, [], self.listOfColumns()),
-                        swapColumnFrom = $.extend(true, {}, columnsArray[details.iFrom]);  // clone from field
-                    columnsArray.splice(details.iFrom, 1);
-                    columnsArray.splice(details.iTo, 0, swapColumnFrom);
-                    updateListOfColumns(columnsArray);
-                    $dataTablePlaceHolder.DataTable().draw("current");
-                    console.log("moved column '" + details.from + "' to column '" + details.to + "'");
-                    return true;
-                });
-
-                $dataTablePlaceHolder.on("length.dt", function (e, settings, len) {
-                    self.selectedPageLength(len);
-                    setTimeout(function () {
-                        adjustViewReportTabHeightWidth();
-                    }, 10);
-                });
-
-                $dataTablePlaceHolder.on("page.dt", function (e, settings) {
-                    setTimeout(function () {
-                        adjustViewReportTabHeightWidth();
-                    }, 10);
-                });
-
-                $dataTablePlaceHolder.on("search.dt", function (e, settings) {
-                    setTimeout(function () {
-                        adjustViewReportTabHeightWidth();
-                    }, 10);
-                });
-
-                // $dataTablePlaceHolder.on( "buttons-action", function ( e, buttonApi, dataTable, node, config ) {
-                //     console.log( 'Button '+buttonApi.text()+' was activated' );
-                // });
-
-                $columnsGrid.find("th .precisionColumn").on("mousedown", function (e) {
-                    if (self.canEdit()) {
-                        longClickStart = moment();
-                    }
-                });
-
-                $columnsGrid.find("th .precisionColumn").on("click", function (e) {
-                    var $precisionColumnDiv = $(this),
-                        $precisionInputField = $precisionColumnDiv.find("input"),
-                        toggleField = function (displayInput) {
-                        if (displayInput) {
-                            $globalPrecisionText.addClass("hideDiv");
-                            $precisionInputField.focus();
-                            $precisionInputField.removeClass("hideDiv");
-                            $globalPrecision.removeClass("hideDiv");
-                        } else {
-                            $globalPrecisionText.removeClass("hideDiv");
-                            $precisionInputField.addClass("hideDiv");
-                            $globalPrecision.addClass("hideDiv");
-                        }
-                    };
-                    if (self.canEdit()) {
-                        if (moment().diff(longClickStart) > longClickTimer) {
-                            toggleField(true);
-
-                            if (!precisionEventsSet) {
-                                toggleField(true);
-                                precisionEventsSet = true;
-                                $precisionInputField.on( "focusout", function (outEvent) {
-                                    if (!$precisionInputField.is(":focus")) {  // clicked outside of div
-                                        toggleField(false);
-                                        precisionEventsSet = false;
-                                        $(outEvent.target).off("focusout");
-                                    }
-                                });
-
-                                $(this).keyup(function (event) {
-                                    if (event.keyCode === 13) {
-                                        var precision;
-                                        if (isNaN($(this).find("input").val()) || $(this).find("input").val() === "") {
-                                            $(this).find("input").val(0);
-                                        }
-                                        precision = $(this).find("input").val();
-                                        self.globalPrecisionValue(parseInt(precision, 10));
-                                        globalSetAllColumnValues("precision", self.globalPrecisionValue());
-                                    }
-                                });
-                            }
-                        }
-                    }
-                });
-
-                $columnsGrid.find("th .includeInChartColumn").on("mousedown", function (e) {
-                    if (self.canEdit()) {
-                        longClickStart = moment();
-                    }
-                });
-
-                $columnsGrid.find("th .includeInChartColumn").on("click", function (e) {
-                    var $includeInChartColumnDiv = $(this),
-                        $includeInChartInputField = $includeInChartColumnDiv.find("input"),
-                        toggleField = function (displayInput) {
-                            if (displayInput) {
-                                $globalIncludeInChartText.addClass("hideDiv");
-                                $includeInChartColumnDiv.focus();
-                                $includeInChartInputField.removeClass("hideDiv");
-                                $globalIncludeInChart.removeClass("hideDiv");
-                            } else {
-                                $globalIncludeInChartText.removeClass("hideDiv");
-                                $includeInChartInputField.addClass("hideDiv");
-                                $globalIncludeInChart.addClass("hideDiv");
-                            }
+                    $direports.find(".addFilterbutton").on("click", function (e) {
+                        var rowTemplate = {
+                            filterName: "",
+                            condition: "$and",
+                            childLogic: false,
+                            beginGroup: false,
+                            endGroup: false,
+                            operator: "EqualTo",
+                            valueType: "String",
+                            value: "",
+                            valueList: ""
                         };
-                    if (self.canEdit()) {
-                        if (moment().diff(longClickStart) > longClickTimer) {
-                            toggleField(true);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (self.listOfFilters.indexOf(rowTemplate) === -1) {
+                            self.listOfFilters.push(rowTemplate);
+                            updateListOfFilters(self.listOfFilters());
+                        }
+                        handleResize();
+                        $additionalFilters.stop().animate({
+                            scrollTop: $additionalFilters.get(0).scrollHeight
+                        }, 700);
+                    });
 
-                            if (!includeInChartEventsSet) {
-                                includeInChartEventsSet = true;
-                                toggleField(true);
-                                $includeInChartColumnDiv.on( "focusout", function (outEvent) {
-                                    if (!$includeInChartColumnDiv.is(":focus")) {  // clicked outside of div
-                                        toggleField(false);
-                                        includeInChartEventsSet = false;
-                                        $includeInChartColumnDiv.off("focusout");
-                                    }
-                                });
+                    $additionalFilters.find('.reportRangePicker select').on('change', function (e) {
+                        var selectedRange = self.reportDateRangeCollection()[e.target.selectedIndex],
+                            dateRange;
+                        self.selectedDuration().selectedRange = selectedRange;
+                        if (self.selectedDuration().selectedRange !== "Custom Range") {
+                            dateRange = reportDateRanges(self.selectedDuration().selectedRange);
+                            self.selectedDuration().startDate = getAdjustedDatetimeMoment(dateRange[0], self.durationStartTimeOffSet());
+                            self.selectedDuration().endDate = getAdjustedDatetimeMoment(dateRange[1], self.durationEndTimeOffSet());
+                            self.startDate(self.selectedDuration().startDate.unix());
+                            self.endDate(self.selectedDuration().endDate.unix());
+                            $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
+                            $additionalFilters.find("#reportEndDate").pickadate('picker').set('select', self.endDate() * 1000);
 
-                                $includeInChartInputField.click(function (event) {
-                                    if (event.target.checked !== undefined) {
-                                        globalSetAllColumnValues("includeInChart", event.target.checked);
-                                        setTimeout(function () {
+                            // $additionalFilters.find("#startTimepicker").pickatime('picker').set('select', self.durationStartTimeOffSet());
+                            // $additionalFilters.find("#endTimepicker").pickatime('picker').set('select', self.durationEndTimeOffSet());
+                            self.selectedDuration.valueHasMutated();
+                        }
+                        // this.material_select();
+                        //alert('Select Changed to ' + selectedRange);
+                    });
+
+                    $saveReportButton.on("click", function () {
+                        if (!self.activeSaveRequest()) {
+                            saveManager.doSave();
+                        }
+                        // $(this).blur(); why do this?
+                    });
+
+                    $direports.find(".runReportButton").on("click", function (e) {
+                        $(this).focus();
+                        e.preventDefault();
+                        e.stopPropagation();
+                        self.requestReportData();
+                    });
+
+                    $dataTablePlaceHolder.on("click", ".pointInstance", function () {
+                        var $this = $(this),
+                            data = {
+                            upi: $this.attr("upi"),
+                            pointType: $this.attr("pointType"),
+                            pointName: $this.text()
+                        };
+
+                        self.showPointReview(data);
+                    });
+
+                    $tabConfiguration.find(".toggleTab").on("shown.bs.tab", function () {
+                        adjustConfigTabActivePaneHeight();
+                    });
+
+                    $dataTablePlaceHolder.on("column-reorder.dt", function (event, settings, details) {
+                        var columnsArray = $.extend(true, [], self.listOfColumns()),
+                            swapColumnFrom = $.extend(true, {}, columnsArray[details.iFrom]);  // clone from field
+                        columnsArray.splice(details.iFrom, 1);
+                        columnsArray.splice(details.iTo, 0, swapColumnFrom);
+                        updateListOfColumns(columnsArray);
+                        $dataTablePlaceHolder.DataTable().draw("current");
+                        console.log("moved column '" + details.from + "' to column '" + details.to + "'");
+                        return true;
+                    });
+
+                    $dataTablePlaceHolder.on("length.dt", function (e, settings, len) {
+                        self.selectedPageLength(len);
+                        setTimeout(function () {
+                            adjustViewReportTabHeightWidth();
+                        }, 10);
+                    });
+
+                    $dataTablePlaceHolder.on("page.dt", function (e, settings) {
+                        setTimeout(function () {
+                            adjustViewReportTabHeightWidth();
+                        }, 10);
+                    });
+
+                    $dataTablePlaceHolder.on("search.dt", function (e, settings) {
+                        setTimeout(function () {
+                            adjustViewReportTabHeightWidth();
+                        }, 10);
+                    });
+
+                    // $dataTablePlaceHolder.on( "buttons-action", function ( e, buttonApi, dataTable, node, config ) {
+                    //     console.log( 'Button '+buttonApi.text()+' was activated' );
+                    // });
+
+                    $columnsGrid.find("th .calculateColumn").on("mousedown", function (e) {
+                        if (self.canEdit()) {
+                            longClickStart = moment();
+                        }
+                    });
+
+                    $columnsGrid.find("th .calculateColumn").on("click", function (parentEvent) {
+                        var $calculateColumnDiv = $(this),
+                            toggleField = function (displayGlobalButton) {
+                                var forElementId = $globalCalculate.find("a").attr("data-activates"),
+                                    $forElement = $globalCalculate.find("#" + forElementId);
+
+                                if (displayGlobalButton) {
+                                    $globalCalculateText.removeClass("displayDiv");
+                                    $globalCalculateText.addClass("hideDiv");
+                                    $globalCalculate.removeClass("hideDiv");
+                                    $globalCalculate.addClass("displayDiv");
+                                    $globalCalculate.find("a").addClass("active");
+                                    $forElement.addClass("active");
+                                    $forElement.css("display", "block");
+                                    $forElement.css("opacity", 1);
+                                    $calculateColumnDiv.focus();
+                                } else if (!displayGlobalButton) {
+                                    $globalCalculateText.addClass("displayDiv");
+                                    $globalCalculateText.removeClass("hideDiv");
+                                    $globalCalculate.addClass("hideDiv");
+                                    $globalCalculate.removeClass("displayDiv");
+                                    $globalCalculate.find("a").removeClass("active");
+                                    $forElement.removeClass("active");
+                                    $forElement.css("display", "none");
+                                    $forElement.css("opacity", 0);
+                                }
+                                // $availableCalcs.removeClass("open");
+                                // $availableCalcs.find("a").removeClass("active");
+                                // $availableCalcs.find("a").attr("aria-expanded", false);
+                            };
+
+                        if (self.canEdit()) {
+                            parentEvent.stopPropagation();
+                            if (moment().diff(longClickStart) > longClickTimer) {
+                                $globalCalculateText = $columnsGrid.find("th .calculateColumn .columnText");
+                                $globalCalculate = $columnsGrid.find("th .globalCalculate");
+
+                                if (calculateEventsSet) {
+                                    toggleField($globalCalculate.has($(parentEvent.target)).length > 0);
+                                } else {
+                                    calculateEventsSet = true;
+                                    toggleField(true);
+                                    $calculateColumnDiv.on("focusout", function (outEvent) {
+                                        if (!$calculateColumnDiv.is(":focus")) {  // clicked outside of div
                                             toggleField(false);
-                                            $includeInChartColumnDiv.blur();
-                                            $includeInChartColumnDiv.off("focusout");
-                                        }, 800);
-                                        return true;
-                                    }
-                                });
+                                            calculateEventsSet = false;
+                                            $(outEvent.target).off("focusout");
+                                        }
+                                    });
+                                }
                             }
                         }
-                    }
-                    return true;
-                });
+                        return true;
+                    });
 
-                $columnsGrid.find("th .calculateColumn").on("mousedown", function (e) {
-                    if (self.canEdit()) {
-                        longClickStart = moment();
-                    }
-                });
+                    $columnsGrid.find("th .precisionColumn").on("mousedown", function (e) {
+                        if (self.canEdit()) {
+                            longClickStart = moment();
+                        }
+                    });
 
-                $columnsGrid.find("th .calculateColumn").on("click", function (parentEvent) {
-                    var $calculateColumnDiv = $(this),
-                        toggleField = function (displayGlobalButton) {
-                            var $globalChangeCalcs = $globalCalculate.find(".availableCalculations"),
-                                $availableCalcs = $columnsGrid.find("tbody .availableCalculations");
+                    $columnsGrid.find("th .precisionColumn").on("click", function (e) {
+                        var $precisionColumnDiv = $(this),
+                            $precisionInputField = $precisionColumnDiv.find("input"),
+                            toggleField = function (displayInput) {
+                                if (displayInput) {
+                                    $globalPrecisionText.addClass("hideDiv");
+                                    $precisionInputField.focus();
+                                    $precisionInputField.removeClass("hideDiv");
+                                    $globalPrecision.removeClass("hideDiv");
+                                } else {
+                                    $globalPrecisionText.removeClass("hideDiv");
+                                    $precisionInputField.addClass("hideDiv");
+                                    $globalPrecision.addClass("hideDiv");
+                                }
+                            };
+                        if (self.canEdit()) {
+                            if (moment().diff(longClickStart) > longClickTimer) {
+                                $globalPrecisionText = $columnsGrid.find("th .precisionColumn .columnText");
+                                $globalPrecision = $columnsGrid.find("th .precisionColumn .globalPrecision");
 
-                            if (displayGlobalButton) {
-                                $calculateColumnDiv.focus();
-                                $globalCalculateText.removeClass("displayDiv");
-                                $globalCalculateText.addClass("hideDiv");
-                                $globalCalculate.removeClass("hideDiv");
-                                $globalCalculate.addClass("displayDiv");
-                                $globalChangeCalcs.addClass("open");
-                                $globalChangeCalcs.find("a").addClass("active");
-                                $globalChangeCalcs.find("a").attr("aria-expanded", true);
-                            } else if (!displayGlobalButton) {
-                                $globalCalculateText.addClass("displayDiv");
-                                $globalCalculateText.removeClass("hideDiv");
-                                $globalCalculate.addClass("hideDiv");
-                                $globalCalculate.removeClass("displayDiv");
-                                $globalChangeCalcs.removeClass("open");
-                                $globalChangeCalcs.find("a").removeClass("active");
-                                $globalChangeCalcs.find("a").attr("aria-expanded", false);
-                            }
-                            $availableCalcs.removeClass("open");
-                            $availableCalcs.find("a").removeClass("active");
-                            $availableCalcs.find("a").attr("aria-expanded", false);
-                        };
-
-                    if (self.canEdit()) {
-                        parentEvent.stopPropagation();
-                        if (moment().diff(longClickStart) > longClickTimer) {
-
-                            toggleField($globalCalculate.has($(parentEvent.target)).length > 0);
-
-                            if (!calculateEventsSet) {
-                                calculateEventsSet = true;
                                 toggleField(true);
-                                $calculateColumnDiv.on( "focusout", function (outEvent) {
-                                    if (!$calculateColumnDiv.is(":focus")) {  // clicked outside of div
-                                        toggleField(false);
-                                        calculateEventsSet = false;
-                                        $(outEvent.target).off("focusout");
-                                    }
-                                });
+
+                                if (!precisionEventsSet) {
+                                    toggleField(true);
+                                    precisionEventsSet = true;
+                                    $precisionInputField.on("focusout", function (outEvent) {
+                                        if (!$precisionInputField.is(":focus")) {  // clicked outside of div
+                                            toggleField(false);
+                                            precisionEventsSet = false;
+                                            $(outEvent.target).off("focusout");
+                                        }
+                                    });
+
+                                    $(this).keyup(function (event) {
+                                        if (event.keyCode === 13) {
+                                            var precision;
+                                            if (isNaN($(this).find("input").val()) || $(this).find("input").val() === "") {
+                                                $(this).find("input").val(0);
+                                            }
+                                            precision = $(this).find("input").val();
+                                            self.globalPrecisionValue(parseInt(precision, 10));
+                                            globalSetAllColumnValues("precision", self.globalPrecisionValue());
+                                        }
+                                    });
+                                }
                             }
                         }
-                    }
-                    return true;
-                });
+                    });
 
-                $filtersGrid.sortable({
-                    appendTo: $filtersTbody,
-                    disabled: false,
-                    items: "tr",
-                    forceHelperSize: true,
-                    helper: "original",
-                    stop: function (event, ui) {
-                        var tempArray,
-                            item = ko.dataFor(ui.item[0]),
-                            newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
-                        if (newIndex >= self.listOfFilters().length) {
-                            newIndex = self.listOfFilters().length - 1;
+                    $columnsGrid.find("th .includeInChartColumn").on("mousedown", function (e) {
+                        if (self.canEdit()) {
+                            longClickStart = moment();
                         }
-                        if (newIndex < 0) {
-                            newIndex = 0;
+                    });
+
+                    $columnsGrid.find("th .includeInChartColumn").on("click", function (e) {
+                        var $includeInChartColumnDiv = $(this),
+                            $includeInChartInputField = $includeInChartColumnDiv.find("input"),
+                            toggleField = function (displayInput) {
+                                if (displayInput) {
+                                    $globalIncludeInChartText.addClass("hideDiv");
+                                    $includeInChartColumnDiv.focus();
+                                    $includeInChartInputField.removeClass("hideDiv");
+                                    $globalIncludeInChart.removeClass("hideDiv");
+                                } else {
+                                    $globalIncludeInChartText.removeClass("hideDiv");
+                                    $includeInChartInputField.addClass("hideDiv");
+                                    $globalIncludeInChart.addClass("hideDiv");
+                                }
+                            };
+                        if (self.canEdit()) {
+                            if (moment().diff(longClickStart) > longClickTimer) {
+                                $globalIncludeInChartText = $columnsGrid.find("th .includeInChartColumn .columnText");
+                                $globalIncludeInChart = $columnsGrid.find("th .includeInChartColumn .globalIncludeInChart");
+
+                                toggleField(true);
+
+                                if (!includeInChartEventsSet) {
+                                    includeInChartEventsSet = true;
+                                    toggleField(true);
+                                    $includeInChartColumnDiv.on("focusout", function (outEvent) {
+                                        if (!$includeInChartColumnDiv.is(":focus")) {  // clicked outside of div
+                                            toggleField(false);
+                                            includeInChartEventsSet = false;
+                                            $includeInChartColumnDiv.off("focusout");
+                                        }
+                                    });
+
+                                    $includeInChartInputField.click(function (event) {
+                                        if (event.target.checked !== undefined) {
+                                            globalSetAllColumnValues("includeInChart", event.target.checked);
+                                            setTimeout(function () {
+                                                toggleField(false);
+                                                $includeInChartColumnDiv.blur();
+                                                $includeInChartColumnDiv.off("focusout");
+                                            }, 800);
+                                            return true;
+                                        }
+                                    });
+                                }
+                            }
                         }
+                        return true;
+                    });
 
-                        ui.item.remove();
-                        self.listOfFilters.remove(item);
-                        self.listOfFilters.splice(newIndex, 0, item);
-                        tempArray = self.listOfFilters();
-                        updateListOfFilters(tempArray);
-                    },
-                    scroll: true,
-                    handle: ".handle"
-                });
-
-                $columnsGrid.sortable({
-                    appendTo: $columnsTbody,
-                    disabled: false,
-                    items: "tr",
-                    forceHelperSize: true,
-                    helper: "original",
-                    stop: function (event, ui) {
-                        var tempArray,
-                            item = ko.dataFor(ui.item[0]),
-                            newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
-                        if (newIndex >= self.listOfColumns().length) {
-                            newIndex = self.listOfColumns().length - 1;
-                        }
-                        if (newIndex < 0) {
-                            newIndex = 0;
-                        }
-
-                        ui.item.remove();
-                        self.listOfColumns.remove(item);
-                        self.listOfColumns.splice(newIndex, 0, item);
-                        tempArray = self.listOfColumns();
-                        updateListOfColumns(tempArray);
-                    },
-                    scroll: true,
-                    handle: ".handle"
-                });
-
-                $gridColumnConfigTable.sortable({
-                    appendTo: $columnsTbody,
-                    disabled: false,
-                    items: "th:not(.fixed)",
-                    forceHelperSize: true,
-                    helper: "original",
-                    stop: function (event, ui) {
-                        var tempArray,
-                            item = ko.dataFor(ui.item[0]),
-                            newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
-                        if (newIndex > 0) {
-                            if (newIndex >= self.listOfColumns().length) {
-                                newIndex = self.listOfColumns().length - 1;
+                    $filtersGrid.sortable({
+                        appendTo: $filtersTbody,
+                        disabled: false,
+                        items: "tr",
+                        forceHelperSize: true,
+                        helper: "original",
+                        stop: function (event, ui) {
+                            var tempArray,
+                                item = ko.dataFor(ui.item[0]),
+                                newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                            if (newIndex >= self.listOfFilters().length) {
+                                newIndex = self.listOfFilters().length - 1;
                             }
                             if (newIndex < 0) {
                                 newIndex = 0;
+                            }
+
+                            ui.item.remove();
+                            self.listOfFilters.remove(item);
+                            self.listOfFilters.splice(newIndex, 0, item);
+                            tempArray = self.listOfFilters();
+                            updateListOfFilters(tempArray);
+                        },
+                        scroll: true,
+                        handle: ".handle"
+                    });
+
+                    $columnsGrid.sortable({
+                        appendTo: $columnsTbody,
+                        disabled: false,
+                        items: "tr:not(.fixed)",
+                        forceHelperSize: true,
+                        helper: "original",
+                        stop: function (event, ui) {
+                            var tempArray,
+                                item = ko.dataFor(ui.item[0]),
+                                newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                            if (newIndex >= self.listOfColumns().length) {
+                                newIndex = self.listOfColumns().length - 1;
+                                if (newIndex < 0) {
+                                    newIndex = 0;
+                                }
                             }
 
                             ui.item.remove();
@@ -2747,28 +3751,41 @@ var reportsViewModel = function () {
                             self.listOfColumns.splice(newIndex, 0, item);
                             tempArray = self.listOfColumns();
                             updateListOfColumns(tempArray);
-                        }
-                    },
-                    scroll: true,
-                    handle: ".handle"
-                });
-            }
+                        },
+                        scroll: true,
+                        handle: ".handle"
+                    });
 
-            $dataTablePlaceHolder.on("draw.dt", function (e, settings) {
-                // console.log(". . . . . . . . .    draw.dt   . . . . . . . . .");
-                var numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
-                    $tablePagination,
-                    $pagination,
-                    $paginate_buttons;
+                    $gridColumnConfigTable.sortable({
+                        appendTo: $gridColumnsTbody,
+                        disabled: false,
+                        items: "th:not(.fixed)",
+                        forceHelperSize: true,
+                        helper: "original",
+                        stop: function (event, ui) {
+                            var tempArray,
+                                item = ko.dataFor(ui.item[0]),
+                                newIndex = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                            if (newIndex > 0) {
+                                if (newIndex >= self.listOfColumns().length) {
+                                    newIndex = self.listOfColumns().length - 1;
+                                }
+                                if (newIndex < 0) {
+                                    newIndex = 0;
+                                }
 
-                if (numberOfPages === 1) {
-                    $tablePagination = $tabViewReport.find(".dataTables_paginate");
-                    $pagination = $tablePagination.find("ul.pagination");
-                    $paginate_buttons = $pagination.find(".paginate_button");
-                    $paginate_buttons = $paginate_buttons.not("li.active");
-                    $paginate_buttons.hide();
+                                ui.item.remove();
+                                self.listOfColumns.remove(item);
+                                self.listOfColumns.splice(newIndex, 0, item);
+                                tempArray = self.listOfColumns();
+                                updateListOfColumns(tempArray);
+                            }
+                        },
+                        scroll: true,
+                        handle: ".handle"
+                    });
                 }
-            });
+            }, 200);
 
             intervals = [
                 {
@@ -2815,6 +3832,10 @@ var reportsViewModel = function () {
 
             chartTypes = [
                 {
+                    text: "Area",
+                    value: "area"
+                },
+                {
                     text: "Line",
                     value: "line"
                 }, {
@@ -2831,10 +3852,8 @@ var reportsViewModel = function () {
 
             self.listOfIntervals(intervals);
             self.listOfCalculations(calculations);
-            self.listOfEntriesPerPage = entriesPerPage;
-            self.listOfChartTypes = chartTypes;
-            checkForColumnCalculations();
-            checkForIncludeInChart();
+            self.listOfEntriesPerPage(entriesPerPage);
+            self.listOfChartTypes(chartTypes);
         },
         getVariance = function (columnData) {
             var i,
@@ -2886,7 +3905,15 @@ var reportsViewModel = function () {
                 i,
                 columnsArray = $.extend(true, [], self.listOfColumns()),
                 setTdAttribs = function (tdField, columnConfig, data, columnIndex) {
-                    switch (self.reportType) {
+
+                    if (data[columnConfig.colName] && data[columnConfig.colName].PointInst) {
+                        var pointType = getKeyBasedOnEnum(ENUMSTEMPLATESENUMS["Point Types"], data[columnConfig.colName].PointType);
+                        $(tdField).addClass("pointInstance");
+                        $(tdField).attr("upi", data[columnConfig.colName].PointInst);
+                        $(tdField).attr("pointType", pointType);
+                    }
+
+                    switch (self.reportType()) {
                         case "History":
                             if (columnIndex === 0 && columnConfig.dataColumnName === "Date") {
                                 $(tdField).attr("title", moment.unix(data[columnConfig.dataColumnName].rawValue).format("dddd"));
@@ -2917,19 +3944,11 @@ var reportsViewModel = function () {
                             console.log(" - - - DEFAULT  setTdAttribs()");
                             break;
                     }
-
-                    if (data[columnConfig.colName] && data[columnConfig.colName].PointInst) {
-                        var pointType;
-                        pointType = Config.Utility.pointTypes.getPointTypeNameFromEnum(data[columnConfig.colName].PointType);
-                        $(tdField).addClass("pointInstance");
-                        $(tdField).attr("upi", data[columnConfig.colName].PointInst);
-                        $(tdField).attr("pointType", pointType);
-                    }
                 },
                 setColumnClasses = function (columnConfig, columnIndex) {
                     var result = "";
                     if (columnConfig.colName === "Name") {
-                        switch (self.reportType) {
+                        switch (self.reportType()) {
                             case "History":
                             case "Totalizer":
                                 break;
@@ -2970,7 +3989,7 @@ var reportsViewModel = function () {
                         columnTitle = columnConfig.colDisplayName,
                         sortAbleColumn = true;
 
-                    switch (self.reportType) {
+                    switch (self.reportType()) {
                         case "History":
                             break;
                         case "Totalizer":
@@ -3113,11 +4132,12 @@ var reportsViewModel = function () {
                         {
                             extend: "collection",
                             text: "Export",
-                            className: "blue-grey",
+                            className: "btn blue-grey dropdown-button",
                             buttons: [
                                 {
                                     extend: "copyHtml5",
-                                    text: '<i class="fa fa-files-o"></i> Copy',
+                                    className: "white blue-grey-text center",
+                                    text: '<div>Copy</div>',
                                     key: {
                                         altKey: true,
                                         key: "1"
@@ -3125,7 +4145,8 @@ var reportsViewModel = function () {
                                 },
                                 {
                                     extend: "csvHtml5",
-                                    text: '<i class="fa fa-file-o"></i> CSV',
+                                    className: "white blue-grey-text center",
+                                    text: '<div>CSV</div>',
                                     key: {
                                         altKey: true,
                                         key: "2"
@@ -3133,7 +4154,8 @@ var reportsViewModel = function () {
                                 },
                                 {
                                     extend: "excelHtml5",
-                                    text: '<i class="fa fa-file-excel-o"></i> Excel',
+                                    className: "white blue-grey-text center",
+                                    text: '<div>Excel</div>',
                                     key: {
                                         altKey: true,
                                         key: "3"
@@ -3141,7 +4163,8 @@ var reportsViewModel = function () {
                                 },
                                 {
                                     extend: "pdfHtml5",
-                                    text: '<i class="fa fa-file-pdf-o"></i> PDF',
+                                    className: "white blue-grey-text center",
+                                    text: '<div>PDF</div>',
                                     footer: true,
                                     orientation: (aoColumns.length > 4 ? "landscape" : "portrait"),
                                     key: {
@@ -3152,12 +4175,16 @@ var reportsViewModel = function () {
                                         // could insert TrendPlots here
                                     }
                                 }
-                            ]
+                            ],
+                            customize: function (doc, thisButton) {
+                                $(thisButton).attr("data-activates", "dtButtonActions");
+                                // could insert TrendPlots here
+                            }
                         },
                         {
                             extend: "print",
                             text: '<i class="fa fa-print"></i> Print',
-                            className: "blue-grey",
+                            className: "btn blue-grey",
                             key: {
                                 altKey: true,
                                 key: "5"
@@ -3182,7 +4209,7 @@ var reportsViewModel = function () {
                         }
                     ] : undefined),
                     drawCallback: function (settings) {
-                        setInfoBarDateTime();
+                        setDatatableInfoBar();
                     },
                     headerCallback: function (thead, data, start, end, display) {
                         var reportColumns = $.extend(true, [], self.listOfColumns()),
@@ -3197,7 +4224,7 @@ var reportsViewModel = function () {
                             $(thead).find("th").eq(i).removeClass("small");
                         }
 
-                        switch (self.reportType) {
+                        switch (self.reportType()) {
                             case "History":
                             case "Totalizer":
                                 $theads = $(thead).find("th");
@@ -3256,12 +4283,12 @@ var reportsViewModel = function () {
                             sameDataSet = (currentPageData.length === allData.length);
                             calcs = getCalcForColumn(currentPageData, allData, columnConfig);
                             $tdFooter = $(tfoot).find("td[colindex='" + columnIndex + "']");
-                            $tdFooter.popover("destroy");
+                            // TODO to Materialize $tdFooter.popover("destroy");
 
                             for (j = 0; j < columnConfig.calculation.length; j++) {
                                 calc = calcs[j];
 
-                                switch (self.reportType) {
+                                switch (self.reportType()) {
                                     case "History":
                                         if (!sameDataSet) {
                                             pageFooterText = "<span>Page " + columnConfig.calculation[j] + ": " + toFixedComma(calc.pageCalc, columnConfig.precision) + (columnConfig.units ? " " + columnConfig.units : "") + "</span>";
@@ -3304,7 +4331,7 @@ var reportsViewModel = function () {
                                 $tdFooter.attr("data-html", "true");
                                 $tdFooter.attr("title", "Entire column");
                                 $tdFooter.attr("data-content", footerTitle);
-                                $tdFooter.popover({placement: "top"});
+                                //TODO  $tdFooter.popover({placement: "top"});
                             }
                         }
 
@@ -3340,9 +4367,26 @@ var reportsViewModel = function () {
 
             self.designChanged(false);
         },
-        setInfoBarDateTime = function () {
-            var $tablePagination = $tabViewReport.find(".dataTables_paginate"),
-                $currentDateTimeDiv = $tablePagination.find(".reportDisplayFooter");
+        setDatatableInfoBar = function () {
+            var numberOfPages = $dataTablePlaceHolder.DataTable().page.info().pages,
+                currentPageNumber = $dataTablePlaceHolder.DataTable().page.info().page + 1,
+                $tablePagination = $tabViewReport.find(".dataTables_paginate"),
+                $currentDateTimeDiv = $tablePagination.find(".reportDisplayFooter"),
+                $pagination = $tablePagination.find(".pagination"),
+                $paginate_buttons = $pagination.find("button"),
+                $datatablesLength = $tabViewReport.find(".dataTables_length"),
+                $datatablesLengthSelect = $datatablesLength.find("select");
+
+            // $pagination.hide();
+            if (numberOfPages <= 1) {
+                $paginate_buttons = $paginate_buttons.not("li.active");
+                $paginate_buttons.hide();
+            } else {
+                $paginate_buttons.removeClass("mdl-button");
+                $paginate_buttons.addClass("btn blue-grey");
+                $paginate_buttons.eq(currentPageNumber).addClass("lighten-2");
+                // $pagination.show();
+            }
 
             if ($currentDateTimeDiv.length > 0) {
                 $currentDateTimeDiv.text(self.currentTimeStamp);
@@ -3350,11 +4394,16 @@ var reportsViewModel = function () {
                 $currentDateTimeDiv = $("<div class='small reportDisplayFooter'>" + self.currentTimeStamp + "</div>");
                 $currentDateTimeDiv.prependTo($tablePagination);
             }
+
+            if (!$datatablesLengthSelect.hasClass("blue-grey-text")) {
+                $datatablesLengthSelect.addClass("blue-grey-text");
+            }
+            $datatablesLengthSelect.show();
         },
         breakReportDataIntoPrintablePages = function () {
             // widthOfA4Portrait300PPI = 2480,
             // heightOfA4Portrait300PPI = 3508,
-            // maxNumberOfCharsPerRow = (self.reportType === "Property" ? 150 : 146),
+            // maxNumberOfCharsPerRow = (self.reportType() === "Property" ? 150 : 146),
             var maxNumberOfCharsPerRow = 146,
                 dataIndex = {
                     columnStartIdx: 0,
@@ -3373,7 +4422,7 @@ var reportsViewModel = function () {
                 maxRowsOnPDFPage = function () {
                     var answer;
 
-                    if (self.reportType === "Property") {
+                    if (self.reportType() === "Property") {
                         answer = 28;
                     } else {  // History & Totalizer
                         answer = 24;
@@ -3382,7 +4431,7 @@ var reportsViewModel = function () {
                     return answer;
                 },
                 sortPropertyReportDataForExport = function () {
-                    reportData.sort(function(a, b){
+                    reportData.sort(function (a, b) {
                         var result,
                             aName = a.Name.Value.toLowerCase(),
                             bName = b.Name.Value.toLowerCase();
@@ -3492,7 +4541,7 @@ var reportsViewModel = function () {
                                 wordsInCell,
                                 wordSizes = [];
 
-                            if (typeof cellData !== "string" ) {
+                            if (typeof cellData !== "string") {
                                 wordsInCell = cellData.toString().split(" ");
                             } else {
                                 wordsInCell = cellData.split(" ");
@@ -3517,9 +4566,9 @@ var reportsViewModel = function () {
                         },
                         getColumnHeaderWidthAndHeight = function (colIndex) {
                             var fieldDimensions = {
-                                    width: 0,
-                                    height: 0
-                                };
+                                width: 0,
+                                height: 0
+                            };
 
                             if (columnsArray[colIndex].dataColumnName !== undefined) {
                                 fieldDimensions = getCurrentCellWidthAndHeight(columnsArray[colIndex].colDisplayName);
@@ -3618,7 +4667,7 @@ var reportsViewModel = function () {
                 dataIndex.rowStartIdx = 0;
                 dataIndex.rowStopIdx = (reportData.length - 1);
 
-                if (self.reportType === "Property") {
+                if (self.reportType() === "Property") {
                     sortPropertyReportDataForExport();
                 }
 
@@ -3632,7 +4681,7 @@ var reportsViewModel = function () {
         },
         getNewColumnTemplate = function () {
             return {
-                colName: ((self.reportType === "Totalizer") || (self.reportType === "History") ? "Choose Point" : "Choose Property"),
+                colName: ((self.reportType() === "Totalizer") || (self.reportType() === "History") ? "Choose Point" : "Choose Property"),
                 colDisplayName: "",
                 valueType: "String",
                 upi: 0,
@@ -3741,7 +4790,7 @@ var reportsViewModel = function () {
                     } else if (!!isScheduled) {
                         answer = 1050;
                     } else {
-                        answer = $reportChartDiv.parent().width();
+                        answer = $reportChartDiv.parent().parent().width();
                     }
 
                     return answer;
@@ -3754,7 +4803,7 @@ var reportsViewModel = function () {
                     } else if (!!isScheduled) {
                         answer = 680;
                     } else {
-                        answer = $reportChartDiv.parent().height();
+                        answer = $reportChartDiv.parent().parent().height();
                     }
 
                     return answer;
@@ -3770,14 +4819,14 @@ var reportsViewModel = function () {
             $reportChartDiv.html("");
             adjustViewReportTabHeightWidth();
 
-            chartType = getValueBasedOnText(self.listOfChartTypes, self.selectedChartType());
+            chartType = getValueBasedOnText(self.listOfChartTypes(), self.selectedChartType());
             chartWidth = getChartWidth();
             chartHeight = getChartHeight();
             reportChartData = getOnlyChartData(reportData);
 
             if (!!reportChartData && !!reportChartData[0]) {
                 if (reportChartData[0].data.length < maxDataRowsForChart) {
-                    switch (self.reportType) {
+                    switch (self.reportType()) {
                         case "History":
                             subTitle = self.selectedDuration().startDate.format("MM/DD/YYYY hh:mm a") + " - " + self.selectedDuration().endDate.format("MM/DD/YYYY hh:mm a");
                             yAxisTitle = "Totals";
@@ -3898,9 +4947,90 @@ var reportsViewModel = function () {
                 $reportChartDiv.html("Chart data not available");
                 self.activeRequestForChart(false);
             }
-        };
+        },
+        saveManager = (function () {
+            var remainingResponses = 0,
+                errList = [],
+                _pStatus,
+                submitSaveReportRequest = function (errors) {
+                    if (!!errors) {
+                        itemFinished(errors);
+                    } else {
+                        dtiUtility.updateWindow('updateTitle', point.Name);
+                        ajaxCall("POST", point, "saveReport", saveManager.saveReportCallback);
+                    }
+                },
+                doSave = function () {
+                    _pStatus = point._pStatus;
 
-    self.reportType = "";
+                    self.activeSaveRequest(true);
+
+                    // var $screenMessages = $tabConfiguration.find(".screenMessages");
+                    blockUI($tabConfiguration, true, " Saving Report...");
+
+                    // $screenMessages.find(".errorMessage").text(""); // clear messages
+                    // $screenMessages.find(".successMessage").text(""); // clear messages
+                    errList = [];
+                    remainingResponses = 0;
+
+                    remainingResponses++;
+                    setReportConfig(submitSaveReportRequest);
+
+                    if (_pStatus === 0) { // If report point status is Active
+                        remainingResponses++;
+                        self.scheduler.saveScheduleEntries(itemFinished); // Save schedule entries
+                    }
+                },
+                saveReportCallback = function (result) { // This routine called after Report Saved
+                    var err = result.err
+                    if (_pStatus === 1 && !err) { // If report point status was previously inactive & it saved without error
+                        remainingResponses++;
+                        self.scheduler.saveScheduleEntries(itemFinished);
+                    }
+                    self.unSavedDesignChange(!!err);  // report save returned with ERROR
+
+                    itemFinished(err);
+                },
+                itemFinished = function (err) {
+                    var msg,
+                        duration = 3000;
+
+                    if (remainingResponses) {
+                        if (err) {
+                            if (Array.isArray(err)) {
+                                Array.prototype.push.apply(errList, err);
+                            } else {
+                                errList.push(err);
+                            }
+                        }
+
+                        remainingResponses--;
+
+                        if (!remainingResponses) {
+                            if (errList.length) {
+                                msg = 'Error: ' + errList.join('. ');
+                                duration = undefined; // Show toast until user manually closes it
+                            } else {
+                                msg = 'Report Saved';
+                            }
+                            dti.toast(msg, duration);
+
+                            self.activeSaveRequest(false);
+
+                            blockUI($tabConfiguration, false);
+                        }
+                    }
+                };
+
+            return {
+                doSave: doSave,
+                itemFinished: itemFinished,
+                saveReportCallback: saveReportCallback,
+                remainingResponses: remainingResponses
+            };
+        })();
+
+    self.reportType = ko.observable("");
 
     self.selectedPageLength = ko.observable("24");
 
@@ -3908,9 +5038,9 @@ var reportsViewModel = function () {
 
     self.currentTimeStamp = "";
 
-    self.startDate = "";
+    self.startDate = ko.observable("");
 
-    self.endDate = "";
+    self.endDate = ko.observable("");
 
     self.yaxisGroups = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 
@@ -3918,7 +5048,7 @@ var reportsViewModel = function () {
 
     self.canEdit = ko.observable(true);
 
-    self.interval = ko.observable("Day");
+    self.intervalPeriod = ko.observable("Day");
 
     self.intervalValue = ko.observable(1);
 
@@ -3930,7 +5060,7 @@ var reportsViewModel = function () {
 
     self.activeRequestDataDrawn = ko.observable(true);
 
-    self.pointTypes = ko.observableArray($.extend(true, [], Config.Utility.pointTypes.getAllowedPointTypes()));
+    self.pointTypes = ko.observableArray([]);
 
     self.pointName1 = ko.observable("");
 
@@ -3949,6 +5079,8 @@ var reportsViewModel = function () {
     self.name4Filter = ko.observable("");
 
     self.selectedPointTypesFilter = ko.observableArray([]);
+
+    self.reportDateRangeCollection = ko.observableArray([]);
 
     self.selectedDuration = ko.observable({
         startDate: moment(),
@@ -3971,9 +5103,9 @@ var reportsViewModel = function () {
 
     self.numberOfScheduledReportTables = ko.observable(0);
 
-    self.listOfEntriesPerPage = [];
+    self.listOfEntriesPerPage = ko.observableArray([]);
 
-    self.listOfChartTypes = [];
+    self.listOfChartTypes = ko.observableArray([]);
 
     self.listOfFilterPropertiesLength = 0;
 
@@ -3992,6 +5124,8 @@ var reportsViewModel = function () {
     self.unSavedDesignChange = ko.observable(false);
 
     self.refreshData = ko.observable(true);
+
+    self.activeSaveRequest = ko.observable(false);
 
     self.activeDataRequest = ko.observable(false);
 
@@ -4030,6 +5164,884 @@ var reportsViewModel = function () {
 
     self.currentColumnEdit = ko.observable(getNewColumnTemplate());
 
+    self.scheduler = {
+        availableReportRanges: (function buildReportDateRanges() {
+            var intervals = ['Minute', 'Hour', 'Day', 'Week', 'Month'],
+                dayInterval = intervals.slice(0, 2),
+                weekInterval = intervals.slice(0, 3),
+                monthInterval = intervals.slice(0, 4),
+                arr = [{
+                    value: 'Today',
+                    text: 'Current Day',
+                    intervals: dayInterval
+                }, {
+                    value: 'Yesterday',
+                    text: 'Previous Day',
+                    intervals: dayInterval
+                }, {
+                    value: 'Last 7 Days',
+                    text: 'Previous 7 Days',
+                    intervals: weekInterval
+                }, {
+                    value: 'Last Week',
+                    text: 'Previous Week',
+                    intervals: weekInterval
+                }, {
+                    value: 'Last 4 Weeks',
+                    text: 'Previous 4 Weeks',
+                    intervals: monthInterval
+                }, {
+                    value: 'This Month',
+                    text: 'Current Month',
+                    intervals: monthInterval
+                }, {
+                    value: 'Last Month',
+                    text: 'Previous Month',
+                    intervals: monthInterval
+                }, {
+                    value: 'This Year',
+                    text: 'Current Year',
+                    intervals: intervals
+                }, {
+                    value: 'Last Year',
+                    text: 'Previous Year',
+                    intervals: intervals
+                }],
+                obj = {};
+
+            dti.forEachArray(arr, function (durationObj) {
+                obj[durationObj.value] = durationObj;
+            });
+
+            return {
+                asObject: obj,
+                asArray: arr
+            };
+        })(),
+        availableIntervals: ['Daily', 'Weekly', 'Monthly', 'Yearly', 'Advanced'],
+        availableDates: (function buildAvailableDates() {
+            var arr = [],
+                j = 0,
+                suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'],
+                suffix;
+
+            while (j++ < 31) {
+                suffix = (j > 9 && j < 14) ? 'th' : suffixes[j % 10];
+                arr.push({
+                    text: j + suffix,
+                    value: j
+                });
+            }
+            return arr;
+        })(),
+        availableMonths: (function buildAvailableMonths() {
+            var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                arr = [];
+
+            dti.forEachArray(months, function addMonth(month, index) {
+                arr.push({
+                    text: month,
+                    value: index + 1
+                });
+            });
+            return arr;
+        })(),
+        availableDaysOfWeek: (function buildAvailableDaysOfWeek() {
+            var dow = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                arr = [];
+
+            dti.forEachArray(dow, function addDay(day, index) {
+                arr.push({
+                    text: day,
+                    value: index
+                });
+            });
+            return arr;
+        })(),
+        availableUsersObj: {}, // initialized in self.scheduler.init
+        availableUsersLookup: {},
+        scheduleEntries: ko.observableArray([]),
+        cron: {
+            parse: function (cron) {
+                var name = ['minute', 'hour', 'dates', 'months', 'daysOfWeek'],
+                    parsed = {},
+                    advanced = false,
+                    interval;
+
+                dti.forEachArray(cron.split(' '), function (val, index) {
+                    var _val;
+
+                    if (index < 2) { // If hour or minute
+                        if (val.length === 1) {
+                            val = '0' + val;
+                        }
+                        _val = val;
+
+                    } else {
+                        _val = ko.observableArray([]);
+
+                        if (!!~val.indexOf(',')) {
+                            advanced = true;
+
+                            dti.forEachArray(val.split(','), function (val, index) {
+                                _val.push(val);
+                            });
+                        } else {
+                            _val.push(val);
+                        }
+                    }
+                    parsed[name[index]] = _val;
+                });
+
+                if (advanced) {
+                    interval = 'Advanced';
+                } else if (parsed.daysOfWeek()[0] !== '*') {
+                    interval = 'Weekly';
+                } else if (parsed.dates()[0] !== '*') {
+                    interval = 'Monthly';
+                } else if (parsed.months()[0] !== '*') {
+                    interval = 'Yearly';
+                } else {
+                    interval = 'Daily';
+                }
+                parsed.interval = ko.observable(interval);
+                parsed.time = ko.observable(parsed.hour + ':' + parsed.minute);
+                parsed.plainEnglish = ko.observable(self.scheduler.cron.explain(parsed));
+
+                delete parsed.minute;
+                delete parsed.hour;
+
+                // parsed = { // all keys are ko observable or observableArray
+                //     interval: observable(string),
+                //     plainEnglish: observable(string),
+                //     time: observable(string),
+                //     dates: observableArray(array),
+                //     months: observableArray(array),
+                //     daysOfWeek: observableArray(array)
+                // }
+                return parsed;
+            },
+            build: function (parsed) {
+                var _parsed = ko.toJS(parsed),
+                    interval = _parsed.interval,
+                    time = _parsed.time.split(':'),
+                    hour = time[0],
+                    minute = time[1],
+                    dates = _parsed.dates.join(','),
+                    months = _parsed.months.join(','),
+                    daysOfWeek = _parsed.daysOfWeek.join(',');
+
+                if (interval === 'Daily') {
+                    daysOfWeek = '*';
+                    dates = '*';
+                    months = '*';
+                } else if (interval === 'Weekly') {
+                    dates = '*';
+                    months = '*';
+                } else if (interval === 'Monthly') {
+                    daysOfWeek = '*';
+                    months = '*';
+                } else if (interval === 'Yearly') {
+                    daysOfWeek = '*';
+                }
+
+                if (hour.charAt(0) === '0') {
+                    hour = hour[1];
+                }
+                if (minute.charAt(0) === '0') {
+                    minute = minute[1];
+                }
+
+                return [minute, hour, dates, months, daysOfWeek].join(' ');
+            },
+            explain: function (cfg) {
+                var str = '',
+                    allDaysOfWeek = false,
+                    allDates = false,
+                    allMonths = false,
+                    monthsText = [], // Starts as array, ends as string
+                    daysOfWeekText = [], // Starts as array, ends as string
+                    datesText = [], // Starts as array, ends as string
+                    joinString,
+                    months,
+                    daysOfWeek,
+                    dates,
+                    interval,
+                    time,
+                    len;
+
+                if (typeof cfg === 'object') {
+                    interval = ko.unwrap(cfg.interval);
+                    time = ko.unwrap(cfg.time);
+                    daysOfWeek = ko.unwrap(cfg.daysOfWeek);
+                    dates = ko.unwrap(cfg.dates);
+                    months = ko.unwrap(cfg.months);
+
+                    if (interval === 'Daily') {
+                        str = ['Daily at', time].join(' ');
+                    } else if (interval === 'Weekly') {
+                        str = ['Weekly on', self.scheduler.availableDaysOfWeek[daysOfWeek[0]].text, 'at', time].join(' ');
+                    } else if (interval === 'Monthly') {
+                        str = ['Monthly on the', self.scheduler.availableDates[dates[0] - 1].text, 'at', time].join(' ');
+                    } else if (interval === 'Yearly') {
+                        str = ['Yearly on', self.scheduler.availableMonths[months[0] - 1].text, self.scheduler.availableDates[dates[0] - 1].text, 'at', time].join(' ');
+                    } else { // Advanced
+                        len = months.length;
+                        if (months[0] === '*') {
+                            allMonths = true;
+                        } else {
+                            dti.forEachArray(months, function (val, index) {
+                                monthsText.push(self.scheduler.availableMonths[val - 1].text);
+                            });
+
+                            if (len > 1) {
+                                monthsText[len - 1] = 'and ' + monthsText[len - 1];
+                            }
+
+                            if (len > 2) {
+                                joinString = ', ';
+                            } else {
+                                joinString = ' ';
+                            }
+
+                            monthsText = monthsText.join(joinString);
+                        }
+
+                        if (daysOfWeek[0] === '*') {
+                            allDaysOfWeek = true;
+                        } else {
+                            dti.forEachArray(daysOfWeek, function (val) {
+                                daysOfWeekText.push(self.scheduler.availableDaysOfWeek[val].text);
+                            });
+
+                            len = daysOfWeek.length;
+                            if (len > 1) {
+                                daysOfWeekText[len - 1] = 'and ' + daysOfWeekText[len - 1];
+                            }
+                            if (len > 2) {
+                                joinString = ', ';
+                            } else {
+                                joinString = ' ';
+                            }
+
+                            daysOfWeekText = daysOfWeekText.join(joinString);
+                        }
+
+                        if (dates[0] === '*') {
+                            allDates = true;
+                        } else {
+                            dti.forEachArray(dates, function (val) {
+                                datesText.push(self.scheduler.availableDates[val - 1].text);
+                            });
+
+                            len = dates.length;
+                            if (len > 1) {
+                                datesText[len - 1] = 'and ' + datesText[len - 1];
+                            }
+                            if (len > 2) {
+                                joinString = ', ';
+                            } else {
+                                joinString = ' ';
+                            }
+
+                            datesText = datesText.join(joinString);
+                        }
+
+                        if (allDates && allDaysOfWeek) {
+                            if (allMonths) {
+                                str = 'Everyday at ' + time;
+                            } else {
+                                str = ['Everyday in', monthsText, 'at', time].join(' ');
+                            }
+                        } else if (allDaysOfWeek) {
+                            if (allMonths) {
+                                str = ['Every month on the', datesText, 'at', time].join(' ');
+                            } else {
+                                str = ['Every', datesText, 'day of', monthsText, 'at', time].join(' ');
+                            }
+                        } else if (allDates) {
+                            if (allMonths) {
+                                str = ['Every', daysOfWeekText, 'at', time].join(' ');
+                            } else {
+                                str = ['Every', daysOfWeekText, 'in', monthsText].join(' ');
+                            }
+                        } else { // allDates -> false, allDaysOfWeek -> false
+                            if (allMonths) {
+                                str = ['Every week on', daysOfWeekText + ',', 'and on the', datesText, 'of every month'].join(' ');
+                            } else {
+                                str = ['In the month(s) of', monthsText + ',', 'every', daysOfWeekText, 'and on the', datesText].join(' ');
+                            }
+                        }
+                    }
+                } else { // cfg is cron string
+                    // design space
+                }
+                return str;
+            }
+        },
+        modal: {
+            init: function () {
+
+            },
+            open: function (data) {
+                var _parsed,
+                    autosuggest,
+                    isValidEmailRegex = /^[-a-z0-9~!$%^&*_=+}{\'?]+(\.[-a-z0-9~!$%^&*_=+}{\'?]+)*@([a-z0-9_][-a-z0-9_]*(\.[-a-z0-9_]+)*\.(aero|arpa|biz|com|coop|edu|gov|info|int|mil|museum|name|net|org|pro|travel|mobi|[a-z][a-z])|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?$/i,
+                    $modal = dti.utility.getTemplate('#scheduleModalTemplate'),
+                    $chips = $modal.find('.chips'),
+                    $input = null,
+                    $selectInterval = null,
+                    timepickerOpts = {
+                        container: $('body')
+                    },
+                    recipientUsers = (function () {
+                        var arr = [];
+
+                        if (data !== 'new') {
+                            dti.forEachArray(data.users(), function (userId) {
+                                var user = self.scheduler.availableUsersLookup[userId];
+
+                                if (user) {
+                                    user = user['First Name'].Value + ' ' + user['Last Name'].Value;
+                                }
+                                arr.push(user || userId);
+                            });
+                        }
+                        return arr;
+                    })(),
+                    recipientEmails = (function () {
+                        var arr = [];
+
+                        if (data !== 'new') {
+                            $.extend(arr, data.emails());
+                        }
+                        return arr;
+                    })(),
+                    bindings = {
+                        isNew: false,
+                        availableReportRanges: self.scheduler.availableReportRanges.asArray,
+                        availableIntervals: self.scheduler.availableIntervals,
+                        availableDaysOfWeek: self.scheduler.availableDaysOfWeek,
+                        availableMonths: self.scheduler.availableMonths,
+                        availableDates: self.scheduler.availableDates,
+                        selectedInterval: ko.observable(),
+                        selectedTime: ko.observable('08:00'),
+                        selectedMonth: ko.observable(),
+                        selectedMonths: ko.observableArray([]),
+                        selectedDate: ko.observable(),
+                        selectedDates: ko.observableArray([]),
+                        selectedDayOfWeek: ko.observable(),
+                        selectedDaysOfWeek: ko.observableArray([]),
+                        selectedReportRange: ko.observable(),
+                        selectedReportIntervalPeriod: ko.observable(),
+                        selectedReportIntervalValue: ko.observable(1),
+                        selectedReportStartTimeOffset: ko.observable('00:00'),
+                        selectedReportEndTimeOffset: ko.observable('00:00'),
+                        update: function () {
+                            var parsed,
+                                len;
+
+                            if (data === 'new') {
+                                data = self.scheduler.getNewScheduleObject();
+                                self.scheduler.scheduleEntries.push(data);
+                            }
+
+                            data.users(recipientUsers.map(function (name) {
+                                return self.scheduler.availableUsersObj[name]._id;
+                            }));
+                            data.emails(recipientEmails);
+
+                            data.optionalParameters.duration({
+                                selectedRange: bindings.selectedReportRange().value,
+                                startTimeOffSet: bindings.selectedReportStartTimeOffset(),
+                                endTimeOffset: bindings.selectedReportEndTimeOffset(),
+                                startDate: null,
+                                endDate: null
+                            });
+                            data.optionalParameters.interval({
+                                period: bindings.selectedReportIntervalPeriod(),
+                                value: bindings.selectedReportIntervalValue()
+                            });
+
+                            parsed = data.parsed; // Shortcut
+
+                            parsed.interval(bindings.selectedInterval());
+                            parsed.time(bindings.selectedTime());
+
+                            if (bindings.selectedInterval() === 'Advanced') {
+                                len = bindings.selectedMonths().length;
+                                if (len === 0 || len === 12) {
+                                    parsed.months(['*']);
+                                } else {
+                                    parsed.months(bindings.selectedMonths());
+                                }
+
+                                len = bindings.selectedDates().length;
+                                if (len === 0 || len === 31) {
+                                    parsed.dates(['*']);
+                                } else {
+                                    parsed.dates(bindings.selectedDates());
+                                }
+
+                                len = bindings.selectedDaysOfWeek().length;
+                                if (len === 0 || len === 7) {
+                                    parsed.daysOfWeek(['*']);
+                                } else {
+                                    parsed.daysOfWeek(bindings.selectedDaysOfWeek());
+                                }
+                            } else {
+                                parsed.months([bindings.selectedMonth()]);
+                                parsed.dates([bindings.selectedDate()]);
+                                parsed.daysOfWeek([bindings.selectedDayOfWeek()]);
+                            }
+
+                            parsed.plainEnglish(self.scheduler.cron.explain(parsed));
+                            data.runTime = self.scheduler.cron.build(parsed);
+
+                            self.scheduler.setDirty(data);
+
+                            done();
+                        },
+                        cancel: function () {
+                            done();
+                        },
+                        deleteScheduleEntry: function () {
+                            data.deleteMe(true);
+                            self.scheduler.setDirty(data);
+                            self.scheduler.modal.close();
+                        },
+                        handleDurationChange: function () {
+                            // Re-run material_select on our interval select element because our options have changed
+                            $selectInterval.material_select();
+                        }
+                    },
+                    done = function () {
+                        autosuggest.destroy();
+                        autosuggest = null;
+                        $modal = null;
+                        $chips = null;
+                        $input = null;
+                        $selectInterval = null;
+
+                        self.scheduler.modal.close();
+                    };
+
+                if (data === 'new') {
+                    bindings.isNew = true;
+                    bindings.selectedInterval('Daily');
+                } else {
+                    _parsed = ko.toJS(data.parsed);
+
+                    // 'Interval' and 'time' are immutable (strings) so we don't have to worry about them changing
+                    bindings.selectedInterval(_parsed.interval);
+                    bindings.selectedTime(_parsed.time);
+
+                    // bindings.selectedReportStartTime(data.selectedReportStartTime());
+                    // bindings.selectedReportEndTime(data.selectedReportEndTime());
+
+                    if (bindings.selectedInterval() === 'Advanced') {
+                        // Our view indicates all months/dates/daysOfWeek if the array is empty
+                        // Extend the source arrays so we don't manipulate the original in case the user cancels changes
+                        if (_parsed.months[0] !== '*') {
+                            bindings.selectedMonths($.extend([], _parsed.months));
+                        }
+                        if (_parsed.dates[0] !== '*') {
+                            bindings.selectedDates($.extend([], _parsed.dates));
+                        }
+                        if (_parsed.daysOfWeek[0] !== '*') {
+                            bindings.selectedDaysOfWeek($.extend([], _parsed.daysOfWeek));
+                        }
+                    } else {
+                        bindings.selectedMonth(_parsed.months[0]);
+                        bindings.selectedDate(_parsed.dates[0]);
+                        bindings.selectedDayOfWeek(_parsed.daysOfWeek[0]);
+                    }
+
+                    bindings.selectedReportRange(self.scheduler.availableReportRanges.asObject[data.optionalParameters.duration().selectedRange]);
+                    bindings.selectedReportStartTimeOffset(data.optionalParameters.duration().startTimeOffSet);
+                    bindings.selectedReportEndTimeOffset(data.optionalParameters.duration().endTimeOffset);
+                    bindings.selectedReportIntervalPeriod(data.optionalParameters.interval().period);
+                    bindings.selectedReportIntervalValue(data.optionalParameters.interval().value);
+                }
+
+                // Apply bindings and add our markup
+                ko.applyBindings(bindings, $modal[0]);
+                $('body').append($modal);
+
+                // Init our materialize form elements
+                $modal.find('.dropdown-button').dropdown();
+                $modal.find('select').material_select();
+
+                // Init our timepickers
+                timepickerOpts.default = bindings.selectedTime();
+                dti.pickatime($modal.find('#timepicker, #timepicker2'), timepickerOpts);
+
+                timepickerOpts.default = bindings.selectedReportStartTimeOffset();
+                dti.pickatime($modal.find('#reportStartTimeOffset'), timepickerOpts);
+
+                timepickerOpts.default = bindings.selectedReportEndTimeOffset();
+                dti.pickatime($modal.find('#reportEndTimeOffset'), timepickerOpts);
+
+                // Init our chips element
+                $chips.material_chip({
+                    placeholder: '+Recepient',
+                    secondaryPlaceholder: 'Email Recepients',
+                    data: recipientUsers.concat(recipientEmails).map(function (text) {
+                        return {
+                            tag: text
+                        };
+                    })
+                });
+
+                $input = $chips.find('input');
+                $selectInterval = $modal.find('#selectInterval');
+
+                $chips.addClass('tooltipped');
+                $chips.tooltip({
+                    delay: 500,
+                    tooltip: 'Select a user and/or enter an email address manually',
+                    position: 'top'
+                });
+
+                $chips.on('chip.add', function (e, chip) {
+                    if (self.scheduler.availableUsersObj[chip.tag]) {
+                        recipientUsers.push(chip.tag);
+
+                        // This event is fired before the input element's value is cleared. We need to manually clear the input
+                        // value before calling autosuggest.remove because it re-filters the list based on the input value
+                        $input.val('');
+                        autosuggest.removeData('All users', chip.tag);
+                    } else if (isValidEmailRegex.test(chip.tag)) {
+                        recipientEmails.push(chip.tag);
+                    } else {
+                        $chips.find('.chip').last().addClass('err');
+                    }
+                });
+
+                $chips.on('chip.delete', function (e, chip) {
+                    var ndx;
+
+                    if (self.scheduler.availableUsersObj[chip.tag]) {
+                        recipientUsers.splice(recipientUsers.indexOf(chip.tag), 1);
+                        autosuggest.addData('All users', [chip.tag]);
+                    } else {
+                        // Search for this in recipientEmails because it may not exist (i.e. if the email was invalid)
+                        ndx = recipientEmails.indexOf(chip.tag);
+                        if (ndx > -1) {
+                            recipientEmails.splice(ndx, 1);
+                        }
+                    }
+                });
+
+                autosuggest = new dti.autosuggest.Autosuggest({
+                    $inputElement: $input,
+                    $resultsContainer: $modal,
+                    $chips: $chips,
+                    sources: [{
+                        name: 'All users',
+                        nameShown: true,
+                        data: Object.keys(self.scheduler.availableUsersObj).filter(function (name) {
+                            return recipientUsers.indexOf(name) > -1 ? false : true;
+                        })
+                    }],
+                    autoselect: true,
+                    showOnFocus: true,
+                    persistAfterSelect: true
+                });
+
+                // Launch the miss-aisles!
+                $modal.openModal({
+                    dismissible: false
+                });
+            },
+            close: function () {
+                var $modal = $('#scheduleModal');
+
+                $modal.closeModal({
+                    complete: function () {
+                        ko.cleanNode($modal[0]);
+                        $modal.find('select').material_select('destroy');
+                        $modal.find('.tooltipped').tooltip('remove');
+                        $modal.find('.chips').off(); // Detach event listeners
+                        $modal.remove();
+                    }
+                });
+            }
+        },
+        gettingDataSemaphore: {
+            value: ko.observable(0),
+            increment: function () {
+                self.scheduler.gettingDataSemaphore.value(self.scheduler.gettingDataSemaphore.value() + 1);
+            },
+            decrement: function () {
+                self.scheduler.gettingDataSemaphore.value(self.scheduler.gettingDataSemaphore.value() - 1);
+            }
+        },
+        buildRecipients: function (data) {
+            var arr = [],
+                str,
+                i;
+
+            dti.forEachArray(data.users(), function (userId) {
+                var user = self.scheduler.availableUsersLookup[userId];
+
+                if (user) {
+                    user = user['First Name'].Value + ' ' + user['Last Name'].Value;
+                }
+                arr.push(user || userId);
+            });
+            arr = arr.concat(data.emails());
+
+            if (!arr.length) {
+                str = 'no one';
+            } else if (arr.length <= 2) {
+                str = arr.join(' and ');
+            } else {
+                str = arr.join(', ');
+                i = str.lastIndexOf(',') + 1;
+                str = str.substring(0, i) + ' and ' + str.slice(i);
+            }
+            return str;
+        },
+        setDirty: function (data) {
+            data.isDirty = true;
+            return true;
+        },
+        getNewScheduleObject: function (cfg) {
+            var defaults = {
+                    runTime: '0 8 * * *',
+                    type: 1, // TODO this should come from enumsTemplate - 1 means reports
+                    referencePointUpi: point._id,
+                    optionalParameters: {
+                        duration: ko.observable({
+                            startDate: null,
+                            endDate: null,
+                            startTimeOffSet: '',
+                            endTimeOffset: '',
+                            selectedRange: ''
+                        }),
+                        interval: ko.observable({
+                            period: '',
+                            value: 1
+                        })
+                    },
+                    users: ko.observableArray([]),
+                    emails: ko.observableArray([]),
+                    enabled: ko.observable(true),
+                    transport: ko.observable('email'),
+                    // Following are keys used by UI but removed before the object is sent to the server
+                    isDirty: true,
+                    parsed: null,
+                    deleteMe: ko.observable(false)
+                },
+                schedule = $.extend(defaults, cfg);
+
+            schedule.parsed = self.scheduler.cron.parse(schedule.runTime);
+
+            return schedule;
+        },
+        runNow: function (data, e) {
+            var $btn = $(e.target),
+                toast = function (err) {
+                    var msg;
+
+                    if (err) {
+                        msg = 'An unexpected error occurred';
+                    } else {
+                        msg = 'Success. Your report will be emailed shortly.';
+                    }
+                    dti.toast(msg, 4000);
+                };
+
+            $btn.attr('disabled', true);
+            $btn.removeClass('waves-effect');
+
+            $.ajax({
+                type: 'post',
+                url: dti.settings.apiEndpoint + 'schedules/runSchedule',
+                data: JSON.stringify({
+                    _id: data._id
+                }),
+                contentType: 'application/json'
+            }).done(
+                function handleData(data) {
+                    if (data.err) {
+                        dti.log('schedules/runSchedule error', data.err);
+                    }
+                    toast(data.err);
+                }
+            ).fail(
+                function handleFail(jqXHR, textStatus, errorThrown) {
+                    dti.log('schedules/runSchedule fail', jqXHR, textStatus, errorThrown);
+                    toast(true);
+                }
+            ).always(
+                function finished() {
+                    $btn.attr('disabled', false);
+                    $btn.addClass('waves-effect');
+                }
+            );
+        },
+        saveScheduleEntries: function (callback) {
+            // callback is required
+            var schedulesToSave = [],
+                haveNewEntries = false,
+                err = false;
+
+            dti.forEachArray(self.scheduler.scheduleEntries(), function addToSaveList(schedule) {
+                if (schedule.isDirty) {
+                    // Get a shallow copy of the source so we can remove the UI-only keys
+                    schedule = $.extend({}, ko.toJS(schedule));
+                    delete schedule.isDirty;
+                    delete schedule.parsed;
+                    if (schedule.deleteMe === false) {
+                        delete schedule.deletMe;
+                    }
+
+                    // If this is a new schedule entry, set a flag
+                    if (!schedule._id) {
+                        haveNewEntries = true;
+                    }
+
+                    schedulesToSave.push(schedule);
+                }
+            });
+
+            if (schedulesToSave.length) {
+                $.ajax({
+                    type: 'post',
+                    url: dti.settings.apiEndpoint + 'schedules/saveSchedules',
+                    data: JSON.stringify({
+                        schedules: schedulesToSave
+                    }),
+                    contentType: 'application/json'
+                }).done(
+                    function handleData(data) {
+                        if (data.err) {
+                            err = data.err;
+                            return dti.log('schedules/saveSchedules error', data.err);
+                        }
+                    }
+                ).fail(
+                    function handleFail(jqXHR, textStatus, errorThrown) {
+                        err = textStatus + ' ' + errorThrown;
+                        dti.log('schedules/saveSchedules fail', jqXHR, textStatus, errorThrown);
+                    }
+                ).always(
+                    function finished() {
+                        if (!err) {
+                            if (haveNewEntries) {
+                                // Refetch all the entries to get the _id fields on the newly added ones - we use the
+                                // absence of the _id field to indicate a new entry
+                                return self.scheduler.getScheduleEntries(callback);
+                            }
+                            // Clear our isDirty flags
+                            dti.forEachArray(self.scheduler.scheduleEntries(), function clearDirtyFlag(schedule) {
+                                schedule.isDirty = false;
+                            });
+                        }
+                        callback(err);
+                    }
+                );
+            } else {
+                callback(null);
+            }
+        },
+        getScheduleEntries: function (callback) {
+            // callback is optional
+            var err;
+
+            self.scheduler.gettingDataSemaphore.increment();
+
+            $.ajax({
+                type: 'post',
+                url: dti.settings.apiEndpoint + 'schedules/getSchedules',
+                data: JSON.stringify({
+                    upi: point._id
+                }),
+                contentType: 'application/json'
+            }).done(
+                function handleData(data) {
+                    if (data.err) {
+                        err = data.err;
+                        return dti.log('schedules/getSchedules error', data.err);
+                    }
+
+                    self.scheduler.scheduleEntries.removeAll();
+
+                    dti.forEachArray(data.schedules, function addSchedule(schedule) {
+                        // Add UI-only keys
+                        schedule.isDirty = false;
+                        schedule.parsed = self.scheduler.cron.parse(schedule.runTime);
+                        schedule.deleteMe = ko.observable(false);
+                        // Convert some keys to observables
+                        schedule.optionalParameters.duration = ko.observable(schedule.optionalParameters.duration);
+                        schedule.optionalParameters.interval = ko.observable(schedule.optionalParameters.interval);
+                        schedule.users = ko.observableArray(schedule.users);
+                        schedule.emails = ko.observableArray(schedule.emails);
+                        schedule.enabled = ko.observable(schedule.enabled);
+                        // Add the schedule to our array
+                        self.scheduler.scheduleEntries.push(schedule);
+                    });
+                }
+            ).fail(
+                function handleFail(jqXHR, textStatus, errorThrown) {
+                    err = textStatus + ' ' + errorThrown;
+                    dti.log('schedules/getSchedules fail', jqXHR, textStatus, errorThrown);
+                }
+            ).always(
+                function finished() {
+                    self.scheduler.gettingDataSemaphore.decrement();
+
+                    if (callback) { // Let callback handle/report error
+                        callback(err);
+                    } else if (err) {
+                        dti.toast('Error: ' + err);
+                    }
+                }
+            );
+        },
+        getUsers: function () {
+            var err;
+
+            self.scheduler.gettingDataSemaphore.increment();
+
+            $.ajax({
+                type: 'post',
+                url: dti.settings.apiEndpoint + 'security/users/getallusers',
+                contentType: 'application/json'
+            }).done(
+                function handleData(data) {
+                    if (data.err) {
+                        err = data.err;
+                        return dti.log('security/users/getallusers error', data.err);
+                    }
+
+                    dti.forEachArray(data.Users, function (user) {
+                        self.scheduler.availableUsersObj[user['First Name'].Value + ' ' + user['Last Name'].Value] = user;
+                        self.scheduler.availableUsersLookup[user._id] = user;
+                    });
+                }
+            ).fail(
+                function handleFail(jqXHR, textStatus, errorThrown) {
+                    err = textStatus + ' ' + errorThrown;
+                    dti.log('security/users/getallusers fail', jqXHR, textStatus, errorThrown);
+                }
+            ).always(
+                function finished() {
+                    self.scheduler.gettingDataSemaphore.decrement();
+                    if (err) {
+                        dti.toast('Error: ' + err);
+                    }
+                }
+            );
+        },
+        init: function () {
+            self.scheduler.getScheduleEntries();
+            self.scheduler.getUsers();
+        }
+    };
+
     self.printChartDiv = function () {
         renderChart(true);
         setTimeout(function () {
@@ -4053,123 +6065,191 @@ var reportsViewModel = function () {
 
     self.init = function (externalConfig) {
         var columns,
-            reportConfig;
+            reportConfig,
+            initializeForMaterialize = function () {
+                updateListOfColumns(self.listOfColumns());
+                updateListOfFilters(self.listOfFilters());
+                self.startDate.valueHasMutated();
+                self.endDate.valueHasMutated();
+                if (self.reportType() !== "Property" && !scheduled) {
+                    $additionalFilters.find(".reportRangePicker select").material_select();
+                    $additionalFilters.find("#reportStartDate").pickadate('picker').set('select', self.startDate() * 1000);
+                    $additionalFilters.find("#reportEndDate").pickadate('picker').set('select', self.endDate() * 1000);
+                    // $additionalFilters.find("#startTimepicker").pickatime('picker').set('select', self.durationStartTimeOffSet());
+                    // $additionalFilters.find("#endTimepicker").pickatime('picker').set('select', self.durationEndTimeOffSet());
+                }
+                Materialize.updateTextFields();
+                // too late  initKnockout();
+            },
+            setCurrentUser = function (results) {
+                currentUser = results;
+            },
+            initComplete = function () {
+                return (!!ENUMSTEMPLATESTEMPLATES && !!ENUMSTEMPLATESENUMS);
+            },
+            setGlobalEnumsTemplates = function (results) {
+                ENUMSTEMPLATESTEMPLATES = results;
+                if (initComplete()) {
+                    postConfigInit();
+                }
+            },
+            setGlobalEnums = function (results) {
+                ENUMSTEMPLATESENUMS = results;
+                if (initComplete()) {
+                    postConfigInit();
+                }
+            },
+            initGlobals = function () {
+                var dateRanges = reportDateRanges(),
+                    dateRangeCollection = [],
+                    key;
+
+                for (key in dateRanges) {
+                    if (dateRanges.hasOwnProperty(key)) {
+                        dateRangeCollection.push(key);
+                    }
+                }
+                if (dateRangeCollection.length > 0) {
+                    dateRangeCollection.push("Custom Range");
+                }
+
+                self.reportDateRangeCollection(dateRangeCollection);
+                dtiUtility.getConfig("Enums", null, setGlobalEnums);
+                dtiUtility.getConfig("PointTemplates.Points", null, setGlobalEnumsTemplates);
+            },
+            postConfigInit = function () {
+                if (!!point) {
+                    self.canEdit(userCanEdit(point, permissionLevels.WRITE));
+                    originalPoint = JSON.parse(JSON.stringify(point));
+                    windowUpi = point._id; // required or pop-in/pop-out will not work
+                    if (point["Report Config"] === undefined) {
+                        point["Report Config"] = {};
+                    }
+                    self.reportType(point["Report Type"].Value);
+                    reportConfig = (point["Report Config"] ? point["Report Config"] : undefined);
+                    columns = (reportConfig ? reportConfig.columns : undefined);
+                    self.pointName1(point.name1);
+                    self.pointName2(point.name2);
+                    self.pointName3(point.name3);
+                    self.pointName4(point.name4);
+
+                    if (!scheduled) {
+                        dtiUtility.getConfig("Utility.pointTypes.getAllowedPointTypes", [], self.pointTypes);
+                    }
+
+                    if (columns) {
+                        self.reportDisplayTitle((!!point["Report Config"].reportTitle ? point["Report Config"].reportTitle : point.Name.replace(/_/g, " ")));
+                        self.listOfColumns(initColumns(reportConfig.columns));
+                        self.listOfFilters(initFilters(reportConfig.filters));
+                        if (!!reportConfig.pointFilter) {
+                            self.name1Filter(reportConfig.pointFilter.name1);
+                            self.name2Filter(reportConfig.pointFilter.name2);
+                            self.name3Filter(reportConfig.pointFilter.name3);
+                            self.name4Filter(reportConfig.pointFilter.name4);
+                            self.selectedPointTypesFilter(reportConfig.pointFilter.selectedPointTypes);
+                        }
+                        self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
+                        self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
+                        switch (self.reportType()) {
+                            case "History":
+                            case "Totalizer":
+                                if (!!point["Report Config"].duration) { // have to set each manually because of computed relationship
+                                    configureSelectedDuration(point["Report Config"]);
+                                }
+                                break;
+                            case "Property":
+                                collectEnumProperties();
+                                break;
+                            default:
+                                console.log(" - - - DEFAULT  init()");
+                                break;
+                        }
+                    } else { // Initial config
+                        self.reportDisplayTitle(point.Name.replace(/_/g, " "));
+                        point["Point Refs"] = [];  // new report, clear out initial Report create data
+                        point["Report Config"].columns = [];
+                        point["Report Config"].filters = [];
+                        point["Report Config"].pointFilter = {
+                            "name1": self.name1Filter(),
+                            "name2": self.name2Filter(),
+                            "name3": self.name3Filter(),
+                            "name4": self.name4Filter(),
+                            "selectedPointTypes": self.selectedPointTypesFilter()
+                        };
+                        switch (self.reportType()) {
+                            case "History":
+                            case "Totalizer":
+                                point["Report Config"].returnLimit = 2000;
+                                self.listOfColumns.push(getNewColumnTemplate());
+                                self.listOfColumns()[0].colName = "Date";
+                                self.listOfColumns()[0].colDisplayName = "Date";
+                                self.listOfColumns()[0].dataColumnName = "Date";
+                                self.listOfColumns()[0].valueType = "DateTime";
+                                self.listOfColumns()[0].AppIndex = -1;
+                                configureSelectedDuration();
+                                break;
+                            case "Property":
+                                collectEnumProperties();
+                                point["Report Config"].returnLimit = 4000;
+                                self.listOfColumns.push(getNewColumnTemplate());
+                                self.listOfColumns()[0].colName = "Name";
+                                self.listOfColumns()[0].colDisplayName = "Name";
+                                self.listOfColumns()[0].dataColumnName = "Name";
+                                self.listOfColumns()[0].valueType = "String";
+                                self.listOfColumns()[0].AppIndex = -1;
+                                break;
+                            default:
+                                console.log(" - - - DEFAULT  init() null columns");
+                                break;
+                        }
+                    }
+
+                    $direports.find("#wrapper").show();
+                    tabSwitch(1);
+
+                    updateListOfFilters(self.listOfFilters());
+                    setTimeout(function () {
+                        $reportTitleInput.focus();
+                    }, 1500);
+                    setReportEvents();
+                    checkForColumnCalculations();
+                    checkForIncludeInChart();
+                    adjustConfigTabActivePaneHeight();
+
+                    if (scheduled && !!scheduledConfig) {
+                        configureSelectedDuration(scheduledConfig);
+                        self.requestReportData();
+                    } else if (!!externalConfig) {
+                        if (self.reportType() === "History" || self.reportType() === "Totalizer") {
+                            configureSelectedDuration(externalConfig);
+                        }
+                        self.requestReportData();
+                    }
+
+                    self.filterPropertiesSearchFilter(""); // computed props jolt
+                    self.columnPropertiesSearchFilter(""); // computed props jolt
+                    self.filterPropertiesSearchFilter.valueHasMutated();
+                    self.columnPropertiesSearchFilter.valueHasMutated();
+                    initializeForMaterialize();
+                }
+
+                window.setTimeout(function () {
+                    $tabConfiguration.find('ul.tabs').tabs();
+                    $tabViewReport.find('ul.tabs').tabs();
+                }, 200);
+            };
+
+        getScreenFields();
+        initKnockout();
+        dtiUtility.getUser(setCurrentUser);
 
         exportEventSet = false;
         activeDataRequests = [];
-        getScreenFields();
-        initKnockout();
-
-        if (!!point) {
-            self.canEdit(userCanEdit(point, permissionLevels.WRITE));
-            originalPoint = JSON.parse(JSON.stringify(point));
-            windowUpi = point._id; // required or pop-in/pop-out will not work
-            if (point["Report Config"] === undefined) {
-                point["Report Config"] = {};
-            }
-            self.reportType = point["Report Type"].Value;
-            reportConfig = (point["Report Config"] ? point["Report Config"] : undefined);
-            columns = (reportConfig ? reportConfig.columns : undefined);
-            self.pointName1(point.name1);
-            self.pointName2(point.name2);
-            self.pointName3(point.name3);
-            self.pointName4(point.name4);
-
-            if (!scheduled) {
-                initSocket();
-            }
-
-            if (columns) {
-                self.reportDisplayTitle((!!point["Report Config"].reportTitle ? point["Report Config"].reportTitle : point.Name.replace(/_/g, " ")));
-                self.listOfColumns(initColumns(reportConfig.columns));
-                self.listOfFilters(initFilters(reportConfig.filters));
-                if (!!reportConfig.pointFilter) {
-                    self.name1Filter(reportConfig.pointFilter.name1);
-                    self.name2Filter(reportConfig.pointFilter.name2);
-                    self.name3Filter(reportConfig.pointFilter.name3);
-                    self.name4Filter(reportConfig.pointFilter.name4);
-                    self.selectedPointTypesFilter(reportConfig.pointFilter.selectedPointTypes);
-                }
-                self.selectedPageLength((reportConfig.selectedPageLength ? reportConfig.selectedPageLength : self.selectedPageLength()));
-                self.selectedChartType((reportConfig.selectedChartType ? reportConfig.selectedChartType : self.selectedChartType()));
-                switch (self.reportType) {
-                    case "History":
-                    case "Totalizer":
-                        if (!!point["Report Config"].duration.duration) { // have to set each manually because of computed relationship
-                            configureSelectedDuration(point["Report Config"].duration);
-                        }
-                        self.interval(point["Report Config"].interval.text);
-                        self.intervalValue(point["Report Config"].interval.value);
-                        break;
-                    case "Property":
-                        collectEnumProperties();
-                        break;
-                    default:
-                        console.log(" - - - DEFAULT  init()");
-                        break;
-                }
-            } else { // Initial config
-                self.reportDisplayTitle(point.Name.replace(/_/g, " "));
-                point["Point Refs"] = [];  // new report, clear out initial Report create data
-                point["Report Config"].columns = [];
-                point["Report Config"].filters = [];
-                point["Report Config"].pointFilter = {
-                    "name1" : self.name1Filter(),
-                    "name2" : self.name2Filter(),
-                    "name3" : self.name3Filter(),
-                    "name4" : self.name4Filter(),
-                    "selectedPointTypes" : self.selectedPointTypesFilter()
-                };
-                switch (self.reportType) {
-                    case "History":
-                    case "Totalizer":
-                        point["Report Config"].returnLimit = 2000;
-                        self.listOfColumns.push(getNewColumnTemplate());
-                        self.listOfColumns()[0].colName = "Date";
-                        self.listOfColumns()[0].colDisplayName = "Date";
-                        self.listOfColumns()[0].dataColumnName = "Date";
-                        self.listOfColumns()[0].valueType = "DateTime";
-                        self.listOfColumns()[0].AppIndex = -1;
-                        configureSelectedDuration();
-                        break;
-                    case "Property":
-                        // openPointSelectorFilterMode($filterByPoint);
-                        collectEnumProperties();
-                        point["Report Config"].returnLimit = 4000;
-                        self.listOfColumns.push(getNewColumnTemplate());
-                        self.listOfColumns()[0].colName = "Name";
-                        self.listOfColumns()[0].colDisplayName = "Name";
-                        self.listOfColumns()[0].dataColumnName = "Name";
-                        self.listOfColumns()[0].valueType = "String";
-                        self.listOfColumns()[0].AppIndex = -1;
-                        break;
-                    default:
-                        console.log(" - - - DEFAULT  init() null columns");
-                        break;
-                }
-            }
-
-            $direports.find("#wrapper").show();
-            tabSwitch(1);
-
-            updateListOfFilters(self.listOfFilters());
-            setTimeout(function () {
-                $reportTitleInput.focus();
-            }, 1500);
-            setReportEvents();
-            adjustConfigTabActivePaneHeight();
-            // myWindowID = window.frameElement.id;
-            self.filterPropertiesSearchFilter(""); // computed props jolt
-            self.columnPropertiesSearchFilter(""); // computed props jolt
-
-            if (scheduled) {
-                self.requestReportData();
-            } else if (!!externalConfig) {
-                if (self.reportType === "History" || self.reportType === "Totalizer") {
-                    configureSelectedDuration(externalConfig);
-                }
-                self.requestReportData();
-            }
+        // initKnockout();
+        if (!scheduled) {
+            initGlobals();
+        } else {
+            postConfigInit();
         }
     };
 
@@ -4292,11 +6372,13 @@ var reportsViewModel = function () {
         switch (val) {
             case true:
             case "True":
-                answer = "On";
+            case 1:
+                answer = "Yes";
                 break;
             case false:
             case "False":
-                answer = "Off";
+            case 0:
+                answer = "No";
                 break;
             default:
                 answer = val;
@@ -4334,11 +6416,10 @@ var reportsViewModel = function () {
     self.showPointReview = function (data) {
         var upi = parseInt(data.upi, 10);
         if (upi > 0) {
-            if (data.pointType === "Display") {
-                dtiUtility.openWindow("/displays/view/" + upi, "Display", "Display", "newwindow", upi);
-            } else {
-                dtiUtility.openWindow("/pointinspector/" + upi, "Point", "Point", "newwindow", upi);
-            }
+            dtiUtility.openWindow({
+                upi: upi,
+                pointType: data.pointType
+            });
         }
     };
 
@@ -4348,39 +6429,37 @@ var reportsViewModel = function () {
 
     self.requestReportData = function () {
         if (!self.durationError()) {
-            if (self.currentTab() !== 2) {
-                $(".tableFooter > td").popover("destroy");
-                var requestObj = buildReportDataRequest();
-                if (!!requestObj) {
+            // TODO to Materialize  $(".tableFooter > td").popover("destroy");
+            var requestObj = buildReportDataRequest();
+            if (!!requestObj) {
+                if (self.currentTab() !== 2) {
                     tabSwitch(2);
                     self.selectViewReportTabSubTab("gridData");
-                    if (self.reportResultViewed()) {
-                        self.activeDataRequest(true);
-                        self.reportResultViewed(false);
-                        if (!scheduled) {
-                            configureDataTable(true, true);
-                        }
-                        reportData = undefined;
-                        switch (self.reportType) {
-                            case "History":
-                                ajaxCall("POST", requestObj, dataUrl + "/report/historyDataSearch", renderHistoryReport);
-                                //reportSocket.emit("historyDataSearch", {options: requestObj});
-                                break;
-                            case "Totalizer":
-                                ajaxCall("POST", requestObj, dataUrl + "/report/totalizerReport", renderTotalizerReport);
-                                //reportSocket.emit("totalizerReport", {options: requestObj});
-                                break;
-                            case "Property":
-                                ajaxCall("POST", requestObj, dataUrl + "/report/reportSearch", renderPropertyReport);
-                                //reportSocket.emit("reportSearch", {options: requestObj});
-                                break;
-                            default:
-                                console.log(" - - - DEFAULT  viewReport()");
-                                break;
-                        }
-                    } else {
-                        renderReport();
+                }
+                if (self.reportResultViewed()) {
+                    self.activeDataRequest(true);
+                    self.reportResultViewed(false);
+                    $tabViewReport.hide();
+                    if (!scheduled) {
+                        configureDataTable(true, true);
                     }
+                    reportData = undefined;
+                    switch (self.reportType()) {
+                        case "History":
+                            ajaxCall("POST", requestObj, dataUrl + "/report/historyDataSearch", renderHistoryReport);
+                            break;
+                        case "Totalizer":
+                            ajaxCall("POST", requestObj, dataUrl + "/report/totalizerReport", renderTotalizerReport);
+                            break;
+                        case "Property":
+                            ajaxCall("POST", requestObj, dataUrl + "/report/reportSearch", renderPropertyReport);
+                            break;
+                        default:
+                            console.log(" - - - DEFAULT  viewReport()");
+                            break;
+                    }
+                } else {
+                    renderReport();
                 }
             }
         } else {
@@ -4398,19 +6477,19 @@ var reportsViewModel = function () {
     };
 
     self.focusChartView = function (element) {
-        self.selectViewReportTabSubTab("chartData");
+        // self.selectViewReportTabSubTab("chartData");
         $reportChartDiv.html("");
         $reportChartDiv.parent().css("overflow", "");
-        $viewReportNav.find("chartData a").addClass("active");
-        $viewReportNav.find("gridData a").removeClass("active");
+        // $viewReportNav.find("chartData a").addClass("active");
+        // $viewReportNav.find("gridData a").removeClass("active");
         renderChart(null, scheduled);
     };
 
     self.focusGridView = function (element) {
-        self.selectViewReportTabSubTab("gridData");
-        $viewReportNav.find("gridData a").addClass("active");
-        $viewReportNav.find("chartData a").removeClass("active");
-        adjustViewReportTabHeightWidth();
+        // self.selectViewReportTabSubTab("gridData");
+        // $viewReportNav.find("gridData a").addClass("active");
+        // $viewReportNav.find("chartData a").removeClass("active");
+        //adjustViewReportTabHeightWidth();
     };
 
     self.clearColumnPoint = function (indexOfColumn) {
@@ -4485,8 +6564,8 @@ var reportsViewModel = function () {
     self.calculationClick = function (element, calc, indexOfColumn) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn],
-            $dropdownButton = $(element).parent().parent().parent().parent().find("a"),
-            $dropdown = $dropdownButton.parent();
+            $ul = $(element).parent().parent(),
+            $dropdown = $ul.siblings();
 
         if (element.checked === true) {
             if (column.calculation.indexOf(calc) === -1) {
@@ -4499,8 +6578,6 @@ var reportsViewModel = function () {
         }
 
         // updateListOfColumns(tempArray);
-        $dropdownButton.attr("aria-expanded", true);
-        $dropdown.addClass("open");
         return true;
     };
 
@@ -4608,7 +6685,7 @@ var reportsViewModel = function () {
     self.selectPropertyColumn = function (element, indexOfColumn, selectedItem) {
         var tempArray = self.listOfColumns(),
             column = tempArray[indexOfColumn],
-            prop = getProperty(selectedItem.name);
+            prop = ENUMSTEMPLATESENUMS.Properties[selectedItem.name];
         column.colName = selectedItem.name;
         column.colDisplayName = selectedItem.name;
         column.dataColumnName = column.colName;
@@ -4626,11 +6703,7 @@ var reportsViewModel = function () {
     };
 
     self.selectPropertyFilter = function (element, indexOfFilter, selectedItem) {
-        var tempArray = self.listOfFilters(),
-            $elementRow = $(element).parent().parent().parent().parent().parent();
-        //$inputField = $elementRow.find(".filterValue").find("input");  // in case we need to validate input field
-        tempArray[indexOfFilter] = initializeNewFilter(selectedItem, tempArray[indexOfFilter]);
-        updateListOfFilters(tempArray);
+        initializeNewFilter(selectedItem, indexOfFilter);
     };
 
     self.selectTotalizerOperator = function (element, indexOfColumn, selectedItem) {
@@ -4657,9 +6730,9 @@ var reportsViewModel = function () {
     };
 
     self.selectNumberOfEntries = function (element, selectedItem) {
-        for (var i = 0; i < self.listOfEntriesPerPage.length; i++) {
-            if (self.listOfEntriesPerPage[i].value === selectedItem) {
-                self.selectedPageLength(self.listOfEntriesPerPage[i].unit);
+        for (var i = 0; i < self.listOfEntriesPerPage().length; i++) {
+            if (self.listOfEntriesPerPage()[i].value === selectedItem) {
+                self.selectedPageLength(self.listOfEntriesPerPage()[i].unit);
                 self.designChanged(true);
                 self.unSavedDesignChange(true);
                 break;
@@ -4668,9 +6741,9 @@ var reportsViewModel = function () {
     };
 
     self.selectChartType = function (element, selectedItem, drawChart) {
-        for (var i = 0; i < self.listOfChartTypes.length; i++) {
-            if (self.listOfChartTypes[i].value === selectedItem) {
-                self.selectedChartType(self.listOfChartTypes[i].text);
+        for (var i = 0; i < self.listOfChartTypes().length; i++) {
+            if (self.listOfChartTypes()[i].value === selectedItem) {
+                self.selectedChartType(self.listOfChartTypes()[i].text);
                 self.designChanged(true);
                 self.unSavedDesignChange(true);
                 break;
@@ -4687,6 +6760,8 @@ var reportsViewModel = function () {
         column.includeInChart = element.checked;
         updateListOfColumns(tempArray);
         return true;
+        // self.listOfColumns()[indexOfColumn].includeInChart = element.checked;
+        // return true;
     };
 
     self.globalColumnIncludeInChartClick = function () {
@@ -4695,7 +6770,7 @@ var reportsViewModel = function () {
     };
 
     self.selectInterval = function (selectedInterval) {
-        self.interval(selectedInterval);
+        self.intervalPeriod(selectedInterval);
     };
 
     self.setFilterConfig = function (indexOfCondition, selectedItem, field) {
@@ -4705,6 +6780,10 @@ var reportsViewModel = function () {
             filter[field] = selectedItem.value;
             updateListOfFilters(tempArray);
         }
+    };
+
+    self.setDateRange = function (element, selectedItem) {
+        console.log("selectedItem = " + selectedItem);
     };
 
     self.selectedFilterEValue = function (indexOfValue, selectedItem) {
@@ -4724,18 +6803,31 @@ var reportsViewModel = function () {
         }, 50);
     };
 
-    self.selectConfigTabSubTab = function (subTabName) {
-        $tabConfiguration.find("ul.nav-tabs").find("li.active").removeClass("active");
-        $tabConfiguration.find("ul.nav-tabs").find("li." + subTabName).addClass("active");
-        $tabConfiguration.find(".tab-content > .active").removeClass("active");
-        $tabConfiguration.find("#" + subTabName).addClass("active");
+    self.selectViewReportTabSubTab = function (subTabName) {
+        $tabViewReport.find('ul.tabs').tabs('select_tab', subTabName);
     };
 
-    self.selectViewReportTabSubTab = function (subTabName) {
-        $tabViewReport.find("ul.nav-tabs").find("li.active").removeClass("active");
-        $tabViewReport.find("ul.nav-tabs").find("li." + subTabName).addClass("active");
-        $tabViewReport.find(".tab-content > .active").removeClass("active");
-        $tabViewReport.find("#" + subTabName).addClass("active");
+    self.materialDropdownClick = function (element) {
+        var $element = $(element),
+            forElementId = $element.attr("data-activates"),
+            $availableAxisGroupsContainer = $element.parent(),
+            $forElement = $availableAxisGroupsContainer.find("#" + forElementId);
+
+        if ($forElement.hasClass("active")) {
+            $element.removeClass("active");
+            $forElement.removeClass("active");
+            $forElement.css("display", "none");
+            $forElement.css("opacity", 0);
+            // $element.dropdown('close');
+        } else {
+            $element.addClass("active");
+            $forElement.addClass("active");
+            $forElement.css("display", "block");
+            $forElement.css("opacity", 1);
+            // $element.dropdown('open');
+        }
+
+        return true;
     };
 
     self.editColumn = function (column, index) {
@@ -4780,16 +6872,16 @@ var reportsViewModel = function () {
 
                 if (result.length > 0) {
                     result.forEach(function (interval) {
-                        if (self.interval().toLowerCase() === interval.text.toLowerCase()) {
+                        if (self.intervalPeriod().toLowerCase() === interval.text.toLowerCase()) {
                             resetInterval = false;
                         }
                     });
 
                     if (resetInterval) {
-                        self.interval(result[result.length - 1].text);
+                        self.intervalPeriod(result[result.length - 1].text);
                         self.intervalValue(1);
                     } else {
-                        intervalDuration = moment.duration(1, self.interval()).asMilliseconds();
+                        intervalDuration = moment.duration(1, self.intervalPeriod()).asMilliseconds();
                         if ((intervalDuration * self.intervalValue()) > currentDuration) {
                             self.intervalValue(1);
                         }
@@ -4856,28 +6948,21 @@ var reportsViewModel = function () {
         return answer;
     }, self);
 
-    // self.allTypesSelected = ko.computed(function () {
-    //     var i,
-    //         answer = true;
-    //
-    //     for (i = 0; i < self.pointTypes().length; i++) {
-    //         if (self.pointTypes()[i].selected === false) {
-    //             answer = false;
-    //             break;
-    //         }
-    //     }
-    //
-    //     return answer;
-    // }, self);
+    self.scheduler.init();
+
+    self.makeId = dti.makeId;
+    self.getLastId = dti.getLastId;
 };
 
 function applyBindings(extConfig) {
     if (window.top === undefined) {
         window.setTimeout(applyBindings, 2);
     } else {
-        reportsVM = new reportsViewModel();
-        reportsVM.init(extConfig);
-        ko.applyBindings(reportsVM);
+        window.setTimeout(function () {
+            reportsVM = new reportsViewModel();
+            reportsVM.init(extConfig);
+            ko.applyBindings(reportsVM);
+        }, 150);
     }
 }
 
