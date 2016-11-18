@@ -2609,21 +2609,21 @@ var reportsViewModel = function () {
             }
             return answer;
         },
-        configureSelectedDuration = function (durationObject) {
-            if (!!durationObject) {
+        configureSelectedDuration = function (configObject) {
+            if (!!configObject && !!configObject.duration) {
                 self.selectedDuration({
-                    startDate: $.isNumeric(durationObject.startDate) ? moment.unix(durationObject.startDate) : durationObject.startDate,
-                    startTimeOffSet: durationObject.startTimeOffSet,
-                    endDate: $.isNumeric(durationObject.endDate) ? moment.unix(durationObject.endDate) : durationObject.endDate,
-                    endTimeOffSet: durationObject.endTimeOffSet,
-                    selectedRange: (!!durationObject.selectedRange ? durationObject.selectedRange : "")
+                    startDate: $.isNumeric(configObject.duration.startDate) ? moment.unix(configObject.duration.startDate) : configObject.duration.startDate,
+                    startTimeOffSet: configObject.duration.startTimeOffSet,
+                    endDate: $.isNumeric(configObject.duration.endDate) ? moment.unix(configObject.duration.endDate) : configObject.duration.endDate,
+                    endTimeOffSet: configObject.duration.endTimeOffSet,
+                    selectedRange: (!!configObject.duration.selectedRange ? configObject.duration.selectedRange : "")
                 });
 
-                self.durationStartTimeOffSet(durationObject.startTimeOffSet);
-                self.durationEndTimeOffSet(durationObject.endTimeOffSet);
-                if (!!durationObject.interval) {
-                    self.intervalPeriod(durationObject.interval.period);
-                    self.intervalValue(durationObject.interval.value);
+                self.durationStartTimeOffSet(!!configObject.duration.startTimeOffSet ? configObject.duration.startTimeOffSet : "00:00");
+                self.durationEndTimeOffSet(!!configObject.duration.endTimeOffSet ? configObject.duration.endTimeOffSet : "00:00");
+                if (!!configObject.interval) {
+                    self.intervalPeriod(configObject.interval.period);
+                    self.intervalValue(configObject.interval.value);
                 }
             }
 
@@ -3347,7 +3347,7 @@ var reportsViewModel = function () {
                     }
 
                     if (--formattingPointRequest <= 0) {
-                        console.log("MAKE CALLBACK  errors = " + errors);
+                        console.log("handleFormatPointRequests()  errors = " + errors);
                         cb(errors);
                     }
                 },
@@ -6173,10 +6173,8 @@ var reportsViewModel = function () {
                             case "History":
                             case "Totalizer":
                                 if (!!point["Report Config"].duration) { // have to set each manually because of computed relationship
-                                    configureSelectedDuration(point["Report Config"].duration);
+                                    configureSelectedDuration(point["Report Config"]);
                                 }
-                                self.intervalPeriod(point["Report Config"].interval.period);
-                                self.intervalValue(point["Report Config"].interval.value);
                                 break;
                             case "Property":
                                 collectEnumProperties();
@@ -6237,7 +6235,8 @@ var reportsViewModel = function () {
                     checkForIncludeInChart();
                     adjustConfigTabActivePaneHeight();
 
-                    if (scheduled) {
+                    if (scheduled && !!scheduledConfig) {
+                        configureSelectedDuration(scheduledConfig);
                         self.requestReportData();
                     } else if (!!externalConfig) {
                         if (self.reportType() === "History" || self.reportType() === "Totalizer") {
@@ -6467,15 +6466,12 @@ var reportsViewModel = function () {
                     switch (self.reportType()) {
                         case "History":
                             ajaxCall("POST", requestObj, dataUrl + "/report/historyDataSearch", renderHistoryReport);
-                            //reportSocket.emit("historyDataSearch", {options: requestObj});
                             break;
                         case "Totalizer":
                             ajaxCall("POST", requestObj, dataUrl + "/report/totalizerReport", renderTotalizerReport);
-                            //reportSocket.emit("totalizerReport", {options: requestObj});
                             break;
                         case "Property":
                             ajaxCall("POST", requestObj, dataUrl + "/report/reportSearch", renderPropertyReport);
-                            //reportSocket.emit("reportSearch", {options: requestObj});
                             break;
                         default:
                             console.log(" - - - DEFAULT  viewReport()");

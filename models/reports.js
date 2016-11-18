@@ -6,6 +6,7 @@ var utils = require('../helpers/utils.js');
 var historyCollection = utils.CONSTANTS("HISTORYCOLLECTION"); // points to "historydata"
 var Config = require('../public/js/lib/config');
 var logger = require('../helpers/logger')(module);
+var ObjectID = require('mongodb').ObjectID;
 
 module.exports = Rpt = {
 
@@ -627,33 +628,71 @@ module.exports = Rpt = {
         }
     },
     reportMain: function(data, cb) {
-        var criteria = {
-            query: {
-                _id: utils.converters.convertType(data.id)
+        var reportCriteria = {
+                query: {
+                    _id: utils.converters.convertType(data.id)
+                },
+                collection: 'points'
             },
-            collection: 'points'
-        };
+            scheduleCriteria = {
+                query: {
+                    _id: new ObjectID(data.scheduleID)
+                },
+                collection: 'Schedules'
+            },
+            scheduled = (!!data.scheduleID),
+            reportResults = {},
+            reportRequestComplete = false,
+            scheduleRequestComplete = false,
+            reportData,
+            handleResults = function () {
+            "use strict";
+                if (scheduled) {
+                    if (scheduleRequestComplete && reportRequestComplete) {
+                        reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);;
+                        return cb(null, reportResults, reportData);
+                    }
+                } else {
+                    return cb(null, reportResults, reportData);
+                }
+            };
 
-        Utility.getOne(criteria, function(err, result) {
+        Utility.getOne(reportCriteria, function(err, result) {
             if (err) {
                 return cb(err);
             } else {
                 if (result === null) {
                     return cb();
                 } else {
-                    return cb(null, {
-                        id: data.id,
-                        scheduled: data.scheduled,
-                        scheduledIncludeChart: data.scheduledIncludeChart,
-                        point: JSON.stringify(result),
-                        title: result.Name
-                    }, result);
+                    reportResults.id = data.id;
+                    reportResults.point = JSON.stringify(result);
                 }
+                reportData = result;
+                reportRequestComplete = true;
+                handleResults();
             }
         });
+
+        if (scheduled) {
+            Utility.getOne(scheduleCriteria, function (err, scheduleData) {
+                if (err) {
+                    return cb(err);
+                } else {
+                    if (scheduleData === null) {
+                        return cb();
+                    } else {
+                        reportResults.scheduledConfig = {};
+                        reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
+                        reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
+                        reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
+                    }
+                    scheduleRequestComplete = true;
+                    handleResults();
+                }
+            });
+        }
     },
     reportSearch: function(data, cb) {
-        logger.info("- - - reportSearch() called");
         var reportConfig = data.reportConfig,
             reportType = data.reportType,
             filters = reportConfig.filters,
