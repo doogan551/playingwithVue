@@ -2081,7 +2081,7 @@ var AlarmManager = function (conf) {
     };
 
     self.userHasPermissionToAck = function (alarm) {
-        var hasAckPermission = user['System Admin'].Value || userHasPermission(alarm, permissionLevels.ACKNOWLEDGE);
+        var hasAckPermission = userHasPermission(alarm, permissionLevels.ACKNOWLEDGE);
         return hasAckPermission;
     };
 

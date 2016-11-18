@@ -1377,11 +1377,9 @@ var scripts = {
             collection: 'points',
             query: {},
             updateObj: {
-                $unset: {
-                    'Security': 1
-                },
                 $set: {
-                    _pAccess: 0
+                    _pAccess: 0,
+                    'Security': []
                 }
             }
         }, function(err) {
