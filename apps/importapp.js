@@ -2635,11 +2635,10 @@ function updateDevices(point, callback) {
 		point["Network Segment"] = Config.Templates.getTemplate("Device")["Network Segment"];
 		point['Firmware 2 Version'] = Config.Templates.getTemplate("Device")["Firmware 2 Version"];
 
-		if ([Config.Enums['Device Model Types']['MicroScan 5 UNV'].enum, Config.Enums['Device Model Types']['SCADA Vio'].enum].indexOf(point['Model Type'].eValue) >= 0) {
-			point['Firmware 2 Version'].isDisplayable = true;
-		} else {
-			point['Firmware 2 Version'].isDisplayable = false;
-		}
+        if (typeof point["Ethernet Address"].Value !== "string") {
+            point["Ethernet Address"].Value = "0.0.0.0";
+            point["Ethernet Address"].ValueType = 2;
+        }
 
 		utils.updateNetworkAndAddress(point);
 
