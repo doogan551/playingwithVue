@@ -65,8 +65,8 @@ $(document).on('pageinit', function() {
                 el.html(newVal + ' ' + displays.qualityCodes[code].label);
             }
         },
-        userHasPermission = function(pointGroups, requestedAccessLevel) {
-            return !!(data._pAccess & requestedAccessLevel);
+        userHasPermission = function(point, requestedAccessLevel) {
+            return !!(point._pAccess & requestedAccessLevel);
         },
         userHasPermissionToEdit = function(point) {
             return userHasPermission(point, permissionLevels.WRITE);
