@@ -112,7 +112,6 @@ var dtiUtility =  {
         }
 
         store.remove(e.key); // memory cleanup
-
         // console.log({
         //     'Storage Key': e.key,
         //     'Old Value': e.oldValue,

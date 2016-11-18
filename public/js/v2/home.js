@@ -428,7 +428,9 @@ var dti = {
             });
         },
         fadeIn: function ($el, cb) {
-            $el[0].style.willChange = 'opacity, display';
+            if (!!$el[0]) {
+                $el[0].style.willChange = 'opacity, display';
+            }
             $el.css('display', 'block');
             dti.animations._fade($el, 1, cb);
         },
@@ -4114,28 +4116,32 @@ var dti = {
 
                         ret = dti.utility.getConfig(path, parameters);
 
-                        dti.messaging.sendMessage({
-                            messageID: messageID,
-                            key: winId,
-                            value: {
-                                _getCfgID: id,
-                                message: 'getConfig',
-                                value: ret
-                            }     
-                        });
+                        setTimeout(function sendConfigInfo () {
+                            dti.messaging.sendMessage({
+                                messageID: messageID,
+                                key: winId,
+                                value: {
+                                    _getCfgID: id,
+                                    message: 'getConfig',
+                                    value: ret
+                                }     
+                            });
+                        }, 1000);
                     },
                     getUser: function () {
                         var winId = config._windowId,
                             user = dti.bindings.user();
 
-                        dti.messaging.sendMessage({
-                            messageID: messageID,
-                            key: winId,
-                            value: {
-                                user: user,
-                                message: 'getUser'
-                            }
-                        });
+                        setTimeout(function sendUserInfo () {
+                            dti.messaging.sendMessage({
+                                messageID: messageID,
+                                key: winId,
+                                value: {
+                                    user: user,
+                                    message: 'getUser'
+                                }
+                            });
+                        }, 1000);
                     },
                     pointSelected: function () {
 
@@ -4177,7 +4183,6 @@ var dti = {
             dti.messaging.doProcessMessage(message);
 
             store.remove(e.key);//memory cleanup
-
             // dti.forEachArray(dti.messaging._messageCallbacks, function (cb) {
             //     cb(message);
             // });
@@ -4998,41 +5003,47 @@ var dti = {
 
 $(function initWorkspaceV2 () {
     dti.startLoad = new Date();
-    
-    dti.$loginBtn.click(function validateLogin (event) {
-        var user = $('#username').val(),
-            pw = $('#password').val();
 
-        event.preventDefault(); // Stop the form from submitting using the form params
+    if (!!dti.$loginBtn) {
+        dti.$loginBtn.click(function validateLogin (event) {
+            var user = $('#username').val(),
+                pw = $('#password').val();
 
-        dti.$loginBtn.attr('disabled', 'disabled');
-        dti.authentication.logIn(user, pw);
-    });
+            event.preventDefault(); // Stop the form from submitting using the form params
 
-    dti.$resetPasswordBtn.click(function resetPassword (event) {
-        var user = $('#username').val(),
-            oldpw = $('#password').val(),
-            newpw = $('#newPassword').val(),
-            newpwConfirm = $('#newPasswordConfirm').val(),
-            $authenticateError = $('#resetPasswordForm .authenticateError');
+            dti.$loginBtn.attr('disabled', 'disabled');
+            dti.authentication.logIn(user, pw);
+        });
+    }
 
-        event.preventDefault(); // Stop the form from submitting using the form params
+    if (!!dti.$resetPasswordBtn) {
+        dti.$resetPasswordBtn.click(function resetPassword (event) {
+            var user = $('#username').val(),
+                oldpw = $('#password').val(),
+                newpw = $('#newPassword').val(),
+                newpwConfirm = $('#newPasswordConfirm').val(),
+                $authenticateError = $('#resetPasswordForm .authenticateError');
 
-        if (newpw !== newpwConfirm) {
-            $authenticateError.text('The passwords you typed do not match. Please try again.');
-            return;
-        }
-        dti.$resetPasswordBtn.attr('disabled', 'disabled');
-        dti.authentication.resetPassword(user, oldpw, newpw);
-    });
+            event.preventDefault(); // Stop the form from submitting using the form params
+
+            if (newpw !== newpwConfirm) {
+                $authenticateError.text('The passwords you typed do not match. Please try again.');
+                return;
+            }
+            dti.$resetPasswordBtn.attr('disabled', 'disabled');
+            dti.authentication.resetPassword(user, oldpw, newpw);
+        });
+    }
 
     if (window.isAuthenticated) {
         dti.init();
         return;
     }
 
-    dti.animations.fadeIn($('#login'));
-            
+    if (!!dti.animations) {
+        dti.animations.fadeIn($('#login'));
+    }
+
     // $('#grouping').openModal();
 
     // $('.groupingBody').jstree({

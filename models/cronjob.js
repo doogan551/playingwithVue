@@ -11,7 +11,9 @@ var Cron = function(time, fx, onComplete) {
   this.job = new CronJob({
     cronTime: time,
     onTick: fx,
-    onComplete: onComplete,
+    onComplete: function(){
+      console.log(time, 'job stopped');
+    },
     start: true,
     runOnInit: false
   });

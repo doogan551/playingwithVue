@@ -3,12 +3,13 @@ var async = require('async');
 var ObjectID = require('mongodb').ObjectID;
 var _ = require('lodash');
 var moment = require('moment');
-var notifications = require('../models/notifications');
 var config = require('config');
 
 // OTHERS
 var NotifierUtility = require('../models/notifierutility');
 var notifierUtility = new NotifierUtility();
+var notifications = require('../models/notifications');
+var scheduler = require('../helpers/scheduler');
 var Utility = require('../models/utility');
 var Config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
@@ -100,6 +101,10 @@ module.exports = function(_common) {
 
         } else if (doc.ns === dbName + '.historydata') {
             // module.exports.updateDashboard(doc.o);
+        } else if (doc.ns === dbName + '.Schedules') {
+            scheduler.buildCron(doc.o, function(err, result) {
+
+            });
         }
         /* else if (doc.ns === dbName+'.ActiveAlarms') {
                     var alarm = doc.o;
@@ -271,6 +276,17 @@ module.exports = function(_common) {
             }, function(err, historyPoint) {
                 // module.exports.updateDashboard(historyPoint);
             });
+        } else if (doc.ns === dbName + '.Schedules') {
+            Utility.getOne({
+                collection: 'Schedules',
+                query: {
+                    _id: doc.o2._id
+                }
+            }, function(err, schedule) {
+                scheduler.buildCron(schedule, function(err, result) {
+
+                });
+            });
         }
 
         function updateReliability(point, callback) {
@@ -317,6 +333,8 @@ module.exports = function(_common) {
                     });
                 }
             }
+        } else if (doc.ns === dbName + '.Schedules') {
+            scheduler.stopSchedule(doc);
         }
     });
 };
