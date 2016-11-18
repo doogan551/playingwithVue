@@ -3320,11 +3320,6 @@
                 "valueType": "String",
                 "reportEnable": false
             },
-            "Security": {
-                "enum": 117,
-                "valueType": "Array",
-                "reportEnable": false
-            },
             "Select Input": {
                 "enum": 206,
                 "valueType": "UniquePID",
@@ -3738,6 +3733,9 @@
             "_parentUpi": {
                 "enum": 11
             },
+            "_pAccess": {
+                "enum": 117
+            },
             "_pollTime": {
                 "enum": 12
             },
@@ -3811,6 +3809,7 @@
             "_cfgDevice": false,
             "_forceAllCOV": false,
             "_parentUpi": 0,
+            "_pAccess": 0,
             "_pollTime": 0,
             "_updPoint": false,
             "_updTOD": false,
@@ -3833,7 +3832,6 @@
                 "Value": "",
                 "eValue": 0
             },
-            "Security": [],
             "taglist": []
         },
         "Points": {

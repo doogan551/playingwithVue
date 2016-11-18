@@ -29,13 +29,13 @@ $(document).on('pageinit', function() {
     var user = (displays.workspaceManager.user && displays.workspaceManager.user()) || displays.defaultUser,
         upiList = [],
         userPermissions = {
-            systemAdmin : user['System Admin'].Value,
-            groups      : user.groups
+            systemAdmin: user['System Admin'].Value,
+            groups: user.groups
         },
         permissionLevels = {
-            CONTROL     : 2,
-            ACKNOWLEDGE : 4,
-            WRITE       : 8
+            CONTROL: 2,
+            ACKNOWLEDGE: 4,
+            WRITE: 8
         },
         processQualityCodes = function(data) {
             var codes = {},
@@ -46,7 +46,7 @@ $(document).on('pageinit', function() {
                 code,
                 c, len = entries.length;
 
-            for(c=0; c<len; c++) {
+            for (c = 0; c < len; c++) {
                 row = entries[c];
                 codes[row['Quality Code Label']] = {
                     color: row['Quality Code Font HTML Color'],
@@ -56,7 +56,7 @@ $(document).on('pageinit', function() {
             displays.qualityCodes = codes;
 
             len = displays.qualityCodeQueue.length;
-            for(c=0; c<len; c++) {
+            for (c = 0; c < len; c++) {
                 row = displays.qualityCodeQueue[c];
                 el = row.el;
                 code = row.code;
@@ -65,23 +65,13 @@ $(document).on('pageinit', function() {
                 el.html(newVal + ' ' + displays.qualityCodes[code].label);
             }
         },
-        userHasPermission = function (pointGroups, requestedAccessLevel) {
-            var cumulativePermissions = 0,
-                i,
-                last,
-                groups = userPermissions.groups.filter(function(item) {
-                    return !!~pointGroups.indexOf(item._id);
-                });
-
-            for(i = 0, last = groups.length; i < last; i++) {
-                cumulativePermissions |= groups[i]._pAccess;
-            }
-            return !!(cumulativePermissions & requestedAccessLevel);
+        userHasPermission = function(point, requestedAccessLevel) {
+            return !!(point._pAccess & requestedAccessLevel);
         },
-        userHasPermissionToEdit = function (security) {
-            return userPermissions.systemAdmin || userHasPermission(security, permissionLevels.WRITE);
+        userHasPermissionToEdit = function(point) {
+            return userHasPermission(point, permissionLevels.WRITE);
         },
-        finish = function () {
+        finish = function() {
             displays.initAngularFilters();
             displays.initSocket();
             if (window.onLoaded) {
@@ -147,7 +137,7 @@ $(document).on('pageinit', function() {
         processQualityCodes(data);
     });
 
-    if(!window.isPreview) {
+    if (!window.isPreview) {
         $.ajax({
             url: '/api/points/' + window.upi
         }).done(function(response) {
@@ -185,7 +175,7 @@ $(document).on('pageinit', function() {
                 displays.upiNames = data.upiNames;
                 displays.pointTypes = data.pointTypes;
 
-                if(userHasPermissionToEdit(response.Security)) {
+                if (userHasPermissionToEdit(response)) {
                     $('#editDisplay').show();
                 }
 

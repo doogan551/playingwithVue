@@ -6,6 +6,7 @@ var utils = require('../helpers/utils.js');
 var historyCollection = utils.CONSTANTS("HISTORYCOLLECTION"); // points to "historydata"
 var Config = require('../public/js/lib/config');
 var logger = require('../helpers/logger')(module);
+var ObjectID = require('mongodb').ObjectID;
 
 module.exports = Rpt = {
 
@@ -87,22 +88,29 @@ module.exports = Rpt = {
         var criteria = {
             collection: 'points',
             query: {
-                _id: utils.converters.convertType(data.id)
+                _id: utils.converters.convertType(data._id)
             },
             updateObj: {
                 $set: {
-                    'SVGData': data.SVGData
+                    'Point Refs': data["Point Refs"],
+                    'Report Config': data["Report Config"],
+                    name1: data.name1,
+                    name2: data.name2,
+                    name3: data.name3,
+                    name4: data.name4
                 }
             }
         };
 
-        Utility.get(criteria, function(err, result) {
+        Utility.update(criteria, function(err, result) {
             if (!err) {
                 return cb(null, {
-                    data: "Data has been saved successfully!!!"
+                    data: "Report has been saved successfully!!!"
                 });
             } else {
-                return cb(err);
+                return cb(null, {
+                    err: err
+                });
             }
         });
     },
@@ -620,33 +628,78 @@ module.exports = Rpt = {
         }
     },
     reportMain: function(data, cb) {
-        var criteria = {
-            query: {
-                _id: utils.converters.convertType(data.id)
+        var reportCriteria = {
+                query: {
+                    _id: utils.converters.convertType(data.id)
+                },
+                collection: 'points',
+                data: data,
+                limit: 1
             },
-            collection: 'points'
-        };
+            scheduleCriteria = {
+                query: {
+                    _id: new ObjectID(data.scheduleID)
+                },
+                collection: 'Schedules',
+                data: data,
+                limit: 1
+            },
+            scheduled = (!!data.scheduleID),
+            reportResults = {},
+            reportRequestComplete = false,
+            scheduleRequestComplete = false,
+            reportData,
+            handleResults = function() {
+                "use strict";
+                if (scheduled) {
+                    if (scheduleRequestComplete && reportRequestComplete) {
+                        reportResults.scheduledConfig = JSON.stringify(reportResults.scheduledConfig);;
+                        return cb(null, reportResults, reportData);
+                    }
+                } else {
+                    return cb(null, reportResults, reportData);
+                }
+            };
 
-        Utility.getOne(criteria, function(err, result) {
+
+        Utility.getWithSecurity(reportCriteria, function(err, result, count) {
             if (err) {
                 return cb(err);
             } else {
+                result = result[0];
                 if (result === null) {
                     return cb();
                 } else {
-                    return cb(null, {
-                        id: data.id,
-                        scheduled: data.scheduled,
-                        scheduledIncludeChart: data.scheduledIncludeChart,
-                        point: JSON.stringify(result),
-                        title: result.Name
-                    }, result);
+                    reportResults.id = data.id;
+                    reportResults.point = JSON.stringify(result);
                 }
+                reportData = result;
+                reportRequestComplete = true;
+                handleResults();
             }
         });
+
+        if (scheduled) {
+            Utility.getWithSecurity(scheduleCriteria, function(err, scheduleData, count) {
+                if (err) {
+                    return cb(err);
+                } else {
+                    scheduleData = scheduleData[0];
+                    if (scheduleData === null) {
+                        return cb();
+                    } else {
+                        reportResults.scheduledConfig = {};
+                        reportResults.scheduledConfig.duration = scheduleData.optionalParameters.duration;
+                        reportResults.scheduledConfig.interval = scheduleData.optionalParameters.interval;
+                        reportResults.scheduledConfig.scheduledIncludeChart = data.scheduledIncludeChart;
+                    }
+                    scheduleRequestComplete = true;
+                    handleResults();
+                }
+            });
+        }
     },
     reportSearch: function(data, cb) {
-        logger.info("- - - reportSearch() called");
         var reportConfig = data.reportConfig,
             reportType = data.reportType,
             filters = reportConfig.filters,
@@ -686,15 +739,14 @@ module.exports = Rpt = {
                 // var p = properties[k].colName;
                 var p = utils.getDBProperty(properties[k].colName)
                 if (Config.Utility.getUniquePIDprops().indexOf(p) !== -1) {
-                    fields["Point Refs"] = 1;
+                    fields["Point Refs"] = true;
                     uniquePIDs.push(p);
                     getPointRefs = true;
-
                 } else {
-                    fields[propertyCheckForValue(p)] = 1;
+                    fields[propertyCheckForValue(p)] = true;
                 }
             }
-            fields["Point Type.Value"] = 1;
+            fields["Point Type.Value"] = true;
         }
 
         if (selectedPointTypes && selectedPointTypes.length > 0) {
@@ -728,9 +780,8 @@ module.exports = Rpt = {
         if (searchCriteria["$and"].length === 0) {
             searchCriteria = {};
         }
-        //logger.info(JSON.stringify(searchCriteria));
-        //logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
 
+        // logger.info("--- Report Search Criteria = " + JSON.stringify(searchCriteria) + " --- fields = " + JSON.stringify(fields));
         var criteria = {
             query: searchCriteria,
             collection: 'points',
@@ -738,6 +789,7 @@ module.exports = Rpt = {
             fields: fields
         };
 
+        // logger.info("--- Report criteria = " + JSON.stringify(criteria));
         Utility.get(criteria, function(err, docs) {
 
             if (err) {
@@ -769,6 +821,7 @@ module.exports = Rpt = {
         });
     },
     collectFilters: function(theFilters) {
+
         var grouping = "$and",
             currentFilter,
             localSearchCriteria = {},
@@ -898,12 +951,18 @@ module.exports = Rpt = {
                         }
                         searchQuery[searchKey] = filter.evalue;
                     } else {
-                        if (filter.value === "False") {
-                            searchQuery[propertyCheckForValue(key)] = false;
-                        } else if (filter.value === "True") {
-                            searchQuery[propertyCheckForValue(key)] = true;
+                        if (filter.valueType === "Bool") {
+                            if (utils.converters.isNumber(filter.value)) {
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $in: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
+                                };
+                            } else {
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $eq: filter.value
+                                };
+                            }
                         } else if (utils.converters.isNumber(filter.value)) {
-                            searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filterValueType);
+                            searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
                         } else if (filter.value.indexOf(",") > -1) {
                             var splitValues = filter.value.split(",");
                             //if (!searchCriteria.$or)
@@ -921,7 +980,7 @@ module.exports = Rpt = {
                             }
                         } else {
                             if (utils.converters.isNumber(filter.value))
-                                searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filterValueType);
+                                searchQuery[propertyCheckForValue(key)] = utils.converters.convertType(filter.value, filter.valueType);
                             else
                                 searchQuery[propertyCheckForValue(key)] = {
                                     $regex: '(?i)^' + filter.value
@@ -943,36 +1002,46 @@ module.exports = Rpt = {
                             $ne: filter.evalue
                         };
                     } else {
-                        if (utils.converters.isNumber(filter.value)) {
+                        if (filter.valueType === "Bool") {
+                            if (utils.converters.isNumber(filter.value)) {
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $nin: [utils.converters.convertType(filter.value, filter.valueType), (filter.value === 1)]
+                                };
+                            } else {
+                                searchQuery[propertyCheckForValue(key)] = {
+                                    $ne: filter.value
+                                };
+                            }
+                        } else if (utils.converters.isNumber(filter.value)) {
                             searchQuery[propertyCheckForValue(key)] = {
-                                $ne: utils.converters.convertType(filter.value, filterValueType)
+                                $ne: utils.converters.convertType(filter.value, filter.valueType)
                             };
                         } else {
                             searchQuery[propertyCheckForValue(key)] = {
                                 $regex: '(?i)^(?!' + filter.value + ")"
-                                    //$ne: utils.converters.convertType(filter.value, filterValueType)
+                                    //$ne: utils.converters.convertType(filter.value, filter.valueType)
                             };
                         }
                     }
                     break;
                 case "LessThan":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $lt: utils.converters.convertType(filter.value, filterValueType)
+                        $lt: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "LessThanOrEqualTo":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $lte: utils.converters.convertType(filter.value, filterValueType)
+                        $lte: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "GreaterThan":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $gt: utils.converters.convertType(filter.value, filterValueType)
+                        $gt: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "GreaterThanOrEqualTo":
                     searchQuery[propertyCheckForValue(key)] = {
-                        $gte: utils.converters.convertType(filter.value, filterValueType)
+                        $gte: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "BeginningWith":
@@ -990,8 +1059,8 @@ module.exports = Rpt = {
                         $exists: true
                     };
                     searchQuery[propertyCheckForValue(key)] = {
-                        $gte: utils.converters.convertType(filter.value, filterValueType),
-                        $lte: utils.converters.convertType(filter.value, filterValueType)
+                        $gte: utils.converters.convertType(filter.value, filter.valueType),
+                        $lte: utils.converters.convertType(filter.value, filter.valueType)
                     };
                     break;
                 case "NotBetween":
@@ -1001,8 +1070,8 @@ module.exports = Rpt = {
                     //{$nin:{$gte:2,$lt:5}}
                     searchQuery[propertyCheckForValue(key)] = {
                         $nin: {
-                            $gte: utils.converters.convertType(filter.value, filterValueType),
-                            $lt: utils.converters.convertType(filter.value, filterValueType)
+                            $gte: utils.converters.convertType(filter.value, filter.valueType),
+                            $lt: utils.converters.convertType(filter.value, filter.valueType)
                         }
                     };
                     break;
@@ -1302,7 +1371,7 @@ module.exports = Rpt = {
 };
 
 var buildIntervals = function(range, interval) {
-    var intervalType = interval.text;
+    var intervalPeriod = interval.period;
     var intervalValue = interval.value;
     var intervalRanges = [];
     var intervalStart;
@@ -1314,15 +1383,15 @@ var buildIntervals = function(range, interval) {
     };
 
     intervalStart = moment.unix(range.start).unix();
-    intervalEnd = moment.unix(range.start).add(intervalValue, intervalType).unix();
+    intervalEnd = moment.unix(range.start).add(intervalValue, intervalPeriod).unix();
     fixLongerInterval();
-    while (intervalEnd <= range.end && intervalEnd <= moment().add(intervalValue, intervalType).startOf(intervalType).unix()) {
+    while (intervalEnd <= range.end && intervalEnd <= moment().add(intervalValue, intervalPeriod).startOf(intervalPeriod).unix()) {
         intervalRanges.push({
             start: intervalStart,
             end: intervalEnd
         });
-        intervalStart = moment.unix(intervalStart).add(intervalValue, intervalType).unix();
-        intervalEnd = moment.unix(intervalEnd).add(intervalValue, intervalType).unix();
+        intervalStart = moment.unix(intervalStart).add(intervalValue, intervalPeriod).unix();
+        intervalEnd = moment.unix(intervalEnd).add(intervalValue, intervalPeriod).unix();
         fixLongerInterval();
     }
 

@@ -428,7 +428,9 @@ var dti = {
             });
         },
         fadeIn: function ($el, cb) {
-            $el[0].style.willChange = 'opacity, display';
+            if (!!$el[0]) {
+                $el[0].style.willChange = 'opacity, display';
+            }
             $el.css('display', 'block');
             dti.animations._fade($el, 1, cb);
         },
@@ -924,6 +926,7 @@ var dti = {
             // });
             self.initFn({
                 $container: self.$windowEl.find('.markupContent'),
+                windowID: self.$windowEl.attr('id'),
                 onActive: self.bindings.active,
                 id: windowId
             });
@@ -1151,7 +1154,7 @@ var dti = {
 
             config = dti.windows.processOpenWindowParameters(config);
 
-            dti.navigator.hideNavigator();
+            // dti.navigator.hideNavigator();
             dti.windows.create(config);
         },
         getWindowsByType: function (type) {
@@ -1162,7 +1165,9 @@ var dti = {
         closeWindow: function (id) {
             var targetWindow = dti.windows.getWindowById(id);
 
-            targetWindow.close();
+            if (targetWindow) {
+                targetWindow.close();
+            }
         },
         closeAll: function (group) {
             var openWindows;
@@ -1304,34 +1309,34 @@ var dti = {
     },
     startMenu: {
         init: function () {
-            $.contextMenu({
-                selector: '.dti-menu-tile',
-                items: {
-                    pin: {
-                        name: 'Pin to taskbar',
-                        callback: function (key, opt) {
-                            var $target = opt.$trigger,
-                                text = $target.children('span').text(),
-                                icon = $target.children('i').html(),
-                                $el,
-                                template = '<li class="taskbarItem active"><a href="javascript://" data-position="bottom" data-tooltip="' + text + '" data-delay="10" class="taskbarButton testHover hoverButton2 waves-effect"><i class="material-icons">' + icon + '</i><span>' + text + '</span></a></li>';
+            // $.contextMenu({
+            //     selector: '.dti-menu-tile',
+            //     items: {
+            //         pin: {
+            //             name: 'Pin to taskbar',
+            //             callback: function (key, opt) {
+            //                 var $target = opt.$trigger,
+            //                     text = $target.children('span').text(),
+            //                     icon = $target.children('i').html(),
+            //                     $el,
+            //                     template = '<li class="taskbarItem active"><a href="javascript://" data-position="bottom" data-tooltip="' + text + '" data-delay="10" class="taskbarButton testHover hoverButton2 waves-effect"><i class="material-icons">' + icon + '</i><span>' + text + '</span></a></li>';
 
-                            if (!dti.taskbar.pinnedItems[text]) {
-                                $el = $('.taskbar .left').append(template);
+            //                 if (!dti.taskbar.pinnedItems[text]) {
+            //                     $el = $('.taskbar .left').append(template);
 
-                                dti.taskbar.pinnedItems[text] = {
-                                    text: text,
-                                    icon: icon,
-                                    template: template,
-                                    $el: $el
-                                };
-                            }
+            //                     dti.taskbar.pinnedItems[text] = {
+            //                         text: text,
+            //                         icon: icon,
+            //                         template: template,
+            //                         $el: $el
+            //                     };
+            //                 }
 
-                            console.log($target);
-                        }
-                    }
-                }
-            });
+            //                 console.log($target);
+            //             }
+            //         }
+            //     }
+            // });
 
             $('#showOpenItems').click(function showOpenItems (event) {
                 $('#openItemsModal').openModal();
@@ -2848,10 +2853,30 @@ var dti = {
 
             dti.navigator.$commonNavigatorModal.openModal(config);
         },
-        hideNavigator: function () {
+        hideNavigator: function (nav) {
+            var wind;
+
+            if (nav) {
+                if (nav.windowID) {
+                    wind = dti.windows.getWindowById(nav.windowID);
+                    wind.minimize();
+                    return;
+                }
+            }
+
+
             if (dti.navigator.$commonNavigatorModal) {
                 dti.navigator.$commonNavigatorModal.closeModal();
             }
+
+                // dti.forEach(dti.navigator._navigators, function minimizeNavigator (nav) {
+                //     var wind;
+                //     if (nav.windowID) {
+                //         wind = dti.windows.getWindowById(nav.windowID);
+                //         wind.minimize();
+                //     }
+                // });
+            // }
         },
         //config contains container
         Navigator: function (config) {
@@ -2938,7 +2963,7 @@ var dti = {
                                 dti.navigator.temporaryCallback(false);
                             }
                             dti.navigator.temporaryCallback = null;
-                            dti.navigator.hideNavigator();
+                            dti.navigator.hideNavigator(self);
                         }
                     };
 
@@ -2948,7 +2973,7 @@ var dti = {
                             if (dti.navigator.temporaryCallback) {
                                 dti.navigator.temporaryCallback(false);
                             }
-                            dti.navigator.hideNavigator();
+                            dti.navigator.hideNavigator(self);
                         }
                     };
 
@@ -2996,6 +3021,7 @@ var dti = {
 
                         // dti.log(ko.toJS(filterObj));
                         dti.navigator.handleNavigatorRowClick(filterObj);
+                        dti.navigator.hideNavigator(self);
                     };
 
                     bindings.togglePointTypeDropdown = function (obj, event) {
@@ -3085,8 +3111,11 @@ var dti = {
                                 switch (bindings.mode()) {
                                     case self.modes.DEFAULT:
                                         dti.navigator.handleNavigatorRowClick(point);
+                                        dti.navigator.hideNavigator(self);
                                         break;
                                     case self.modes.FILTER:
+                                        dti.navigator.hideNavigator(self);
+                                        break;
                                     case self.modes.CREATE:
                                         // dti.log(point);
                                         break;
@@ -3246,6 +3275,10 @@ var dti = {
 
             $.extend(self, config);
 
+            if (!self.$container.attr('id')) {
+                self.$container.attr('id', dti.makeId());
+            }
+
             self.modes = {
                 CREATE: 'create',
                 FILTER: 'filter',
@@ -3391,7 +3424,7 @@ var dti = {
                         handoffMode = endPoint.edit || endPoint.review;
 
                     if (dti.navigator.temporaryCallback) {
-                        dti.navigator.hideNavigator();
+                        dti.navigator.hideNavigator(self);
                         dti.navigator.temporaryCallback(data);
                     } else {
                         dti.windows.openWindow({
@@ -3407,7 +3440,7 @@ var dti = {
                     }
 
                     if (!config.isModal) {
-                        dti.windows.closeWindow(self.id);
+                        dti.windows.closeWindow(self.windowID);
                     }
                 }
             };
@@ -3450,7 +3483,7 @@ var dti = {
                 return same;
             };
 
-            self.getPoints = function (fromTimer, id) {
+            self._getPoints = function () {
                 var bindings = ko.toJS(self.bindings),
                     parameters = {
                         pointTypes: bindings.pointTypes,
@@ -3462,8 +3495,41 @@ var dti = {
                         name2: bindings.name2,
                         name3: bindings.name3,
                         name4: bindings.name4
-                    },
-                    now = new Date(),
+                    };
+
+
+                parameters.pointTypes = self.getFlatPointTypes(parameters.pointTypes);
+
+                // if (!!module.DEVICEID) {
+                //     params.deviceId = module.DEVICEID;
+                // }
+
+                // if (!!module.REMOTEUNITID) {
+                //     params.remoteUnitId = module.REMOTEUNITID;
+                // }
+
+                // if (!!module.POINTTYPE) {
+                //     params.pointType = module.POINTTYPE;
+                // }
+
+                if (!self.isSameRequest(parameters)) {
+                    self.lastParameters = ajaxParameters.data = parameters;
+
+                    self._pauseRequest = true;
+                    self.bindings.fetchingPoints(true);
+
+                    if (self._request) {
+                        self._request.abort();
+                    }
+
+                    self._request = $.ajax(ajaxParameters);
+
+                    self._request.done(self.handleDataReturn);
+                }
+            };
+
+            self.getPoints = function (fromTimer, id) {
+                var now = new Date(),
                     fetchDelay = 500,
                     tmpId = dti.makeId(),
                     longEnough = now - self.lastFetchCall >= fetchDelay;
@@ -3474,34 +3540,7 @@ var dti = {
                 }
 
                 if (fromTimer && longEnough && !self._pauseRequest) {
-                    parameters.pointTypes = self.getFlatPointTypes(parameters.pointTypes);
-
-                    // if (!!module.DEVICEID) {
-                    //     params.deviceId = module.DEVICEID;
-                    // }
-
-                    // if (!!module.REMOTEUNITID) {
-                    //     params.remoteUnitId = module.REMOTEUNITID;
-                    // }
-
-                    // if (!!module.POINTTYPE) {
-                    //     params.pointType = module.POINTTYPE;
-                    // }
-
-                    if (!self.isSameRequest(parameters)) {
-                        self.lastParameters = ajaxParameters.data = parameters;
-
-                        self._pauseRequest = true;
-                        self.bindings.fetchingPoints(true);
-
-                        if (self._request) {
-                            self._request.abort();
-                        }
-
-                        self._request = $.ajax(ajaxParameters);
-
-                        self._request.done(self.handleDataReturn);
-                    }
+                    self._getPoints();
                 } else {
                     if (!fromTimer) {
                         setTimeout(function doDelayedFetch () {
@@ -3531,6 +3570,90 @@ var dti = {
                 });
             };
 
+            self.processPointUpdate = function (response) {
+                var result = JSON.parse(response),
+                    point = this.contextPoint;
+
+                if (result.message === 'success') {
+                    this.bindings.points.remove(point);
+                    dti.toast('Point Successfully Deleted', 3000);
+                }
+
+                // dti.log(result.message);
+            };
+
+            self.handleContextMenuClick = function(action, opt) {
+                var $target = opt.$trigger,
+                    data = ko.dataFor($target[0]),
+                    actions = {
+                        'Delete': function() {
+                            var method = data._pStatus === 1 ? 'hard' : 'soft';
+
+                            self.contextPoint = data;
+
+                            dti.socket.once('pointUpdated', self.processPointUpdate.bind(self));
+
+                            dti.socket.emit('deletePoint', {
+                                upi: data._id,
+                                method: method
+                            });
+                        },
+                        'Clone': function () {
+                            dti.windows.openWindow({
+                                url: '/api/points/newPoint/' + data._id,
+                                title: 'Clone Point'
+                            });
+                            dti.navigator.hideNavigator(self);
+                        }
+                    };
+
+                if (actions[action]) {
+                    // dti.log('Calling action', action);
+                    actions[action]();
+                }
+            };
+
+            self.initContextMenu = function () {
+                $.contextMenu({
+                    selector: '#' + self.$container.attr('id') + ' .listEntry',
+                    //callback:
+                    items: {
+                        'Delete': {
+                            name: 'Delete'
+                                // icon: 'delete'
+                        },
+                        'Clone': {
+                            name: 'Clone'
+                                // icon: 'copy'
+                        }
+                    },
+                    events: {
+                        show: function(options) {
+                            var $target = options.$trigger,
+                                $row = $target.is('.listEntry') ? $target.parent() : $target;
+
+                            if (self.bindings.mode() === self.modes.CREATE) {
+                                return false;
+                            }
+
+                            //no menu on gpl blocks
+                            if (ko.dataFor($target[0])._parentUpi !== 0) {
+                                return false;
+                            }
+
+                            $row.addClass('hovered');
+                        },
+                        hide: function(options) {
+                            var $target = options.$trigger,
+                                $row = $target.is('.listEntry') ? $target.parent() : $target;
+
+                            $row.removeClass('hovered');
+                        }
+                    },
+                    callback: self.handleContextMenuClick
+                });
+            };
+
             dti.events.bodyClick(function checkNavigatorOpenMenu (event, $target) {
                 var buttonClass = 'pointTypeDropdownButton';
 
@@ -3545,6 +3668,8 @@ var dti = {
 
             ko.applyBindings(self.bindings, self.$container[0]);
 
+            self.initContextMenu();
+
             // self.$container.find('select').material_select();
         },
         createNavigator: function (isModal) {
@@ -3552,6 +3677,7 @@ var dti = {
                 navigatorMarkup,
                 navigator,
                 navigatorModalMarkup,
+                winID,
                 $container = (isModal === true) ? $('main') : (isModal.$container || isModal);
 
             if (isModal === true) {
@@ -3561,11 +3687,13 @@ var dti = {
                 dti.navigator.$commonNavigatorModal = $container;
                 $container.find('.modal-content').append(templateMarkup);
             } else {
+                winID = isModal.windowID;
                 $container.append(templateMarkup);
             }
 
             navigator = new dti.navigator.Navigator({
                 $container: $container,
+                windowID: winID,
                 isModal: (isModal === true)
             });
 
@@ -3582,6 +3710,36 @@ var dti = {
             return navigator;
         },
         init: function () {
+            // $.contextMenu({
+            //     selector: '.listEntry',
+            //     //callback:
+            //     items: {
+            //         'Delete': {
+            //             name: 'Delete'
+            //             // icon: 'delete'
+            //         },
+            //         'Clone': {
+            //             name: 'Clone'
+            //             // icon: 'copy'
+            //         }
+            //     },
+            //     events: {
+            //         show: function (options) {
+            //             var $target = options.$trigger,
+            //                 $row = $target.is('.listEntry') ? $target.parent() : $target;
+
+            //             $row.addClass('hovered');
+            //         },
+            //         hide: function (options) {
+            //             var $target = options.$trigger,
+            //                 $row = $target.is('.listEntry') ? $target.parent() : $target;
+
+            //             $row.removeClass('hovered');
+            //         }
+            //     },
+            //     callback: dti.navigator.handleContextMenuClick
+            // });
+
             dti.navigator.commonNavigator = dti.navigator.createNavigator(true);
         }
     },
@@ -3958,28 +4116,32 @@ var dti = {
 
                         ret = dti.utility.getConfig(path, parameters);
 
-                        dti.messaging.sendMessage({
-                            messageID: messageID,
-                            key: winId,
-                            value: {
-                                _getCfgID: id,
-                                message: 'getConfig',
-                                value: ret
-                            }     
-                        });
+                        setTimeout(function sendConfigInfo () {
+                            dti.messaging.sendMessage({
+                                messageID: messageID,
+                                key: winId,
+                                value: {
+                                    _getCfgID: id,
+                                    message: 'getConfig',
+                                    value: ret
+                                }     
+                            });
+                        }, 1000);
                     },
                     getUser: function () {
                         var winId = config._windowId,
                             user = dti.bindings.user();
 
-                        dti.messaging.sendMessage({
-                            messageID: messageID,
-                            key: winId,
-                            value: {
-                                user: user,
-                                message: 'getUser'
-                            }
-                        });
+                        setTimeout(function sendUserInfo () {
+                            dti.messaging.sendMessage({
+                                messageID: messageID,
+                                key: winId,
+                                value: {
+                                    user: user,
+                                    message: 'getUser'
+                                }
+                            });
+                        }, 1000);
                     },
                     pointSelected: function () {
 
@@ -4021,7 +4183,6 @@ var dti = {
             dti.messaging.doProcessMessage(message);
 
             store.remove(e.key);//memory cleanup
-
             // dti.forEachArray(dti.messaging._messageCallbacks, function (cb) {
             //     cb(message);
             // });
@@ -4749,7 +4910,7 @@ var dti = {
         emit: function () {
             dti.socket.manager.emit.apply(dti.socket.manager, arguments);
         },
-        on: function (event, fn) {
+        on: function (event, fn, once) {
             var addEventHandler = function () {
                     dti.socket.manager.on(event, function handleEvent () {
                         var _arguments = arguments;
@@ -4768,6 +4929,9 @@ var dti = {
                 };
 
             addEventListener();
+        },
+        once: function (event, fn) {
+            dti.socket.manager.once(event, fn);
         },
         events: {}
     },
@@ -4839,41 +5003,47 @@ var dti = {
 
 $(function initWorkspaceV2 () {
     dti.startLoad = new Date();
-    
-    dti.$loginBtn.click(function validateLogin (event) {
-        var user = $('#username').val(),
-            pw = $('#password').val();
 
-        event.preventDefault(); // Stop the form from submitting using the form params
+    if (!!dti.$loginBtn) {
+        dti.$loginBtn.click(function validateLogin (event) {
+            var user = $('#username').val(),
+                pw = $('#password').val();
 
-        dti.$loginBtn.attr('disabled', 'disabled');
-        dti.authentication.logIn(user, pw);
-    });
+            event.preventDefault(); // Stop the form from submitting using the form params
 
-    dti.$resetPasswordBtn.click(function resetPassword (event) {
-        var user = $('#username').val(),
-            oldpw = $('#password').val(),
-            newpw = $('#newPassword').val(),
-            newpwConfirm = $('#newPasswordConfirm').val(),
-            $authenticateError = $('#resetPasswordForm .authenticateError');
+            dti.$loginBtn.attr('disabled', 'disabled');
+            dti.authentication.logIn(user, pw);
+        });
+    }
 
-        event.preventDefault(); // Stop the form from submitting using the form params
+    if (!!dti.$resetPasswordBtn) {
+        dti.$resetPasswordBtn.click(function resetPassword (event) {
+            var user = $('#username').val(),
+                oldpw = $('#password').val(),
+                newpw = $('#newPassword').val(),
+                newpwConfirm = $('#newPasswordConfirm').val(),
+                $authenticateError = $('#resetPasswordForm .authenticateError');
 
-        if (newpw !== newpwConfirm) {
-            $authenticateError.text('The passwords you typed do not match. Please try again.');
-            return;
-        }
-        dti.$resetPasswordBtn.attr('disabled', 'disabled');
-        dti.authentication.resetPassword(user, oldpw, newpw);
-    });
+            event.preventDefault(); // Stop the form from submitting using the form params
+
+            if (newpw !== newpwConfirm) {
+                $authenticateError.text('The passwords you typed do not match. Please try again.');
+                return;
+            }
+            dti.$resetPasswordBtn.attr('disabled', 'disabled');
+            dti.authentication.resetPassword(user, oldpw, newpw);
+        });
+    }
 
     if (window.isAuthenticated) {
         dti.init();
         return;
     }
 
-    dti.animations.fadeIn($('#login'));
-            
+    if (!!dti.animations) {
+        dti.animations.fadeIn($('#login'));
+    }
+
     // $('#grouping').openModal();
 
     // $('.groupingBody').jstree({

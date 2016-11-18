@@ -266,6 +266,7 @@ router.get('/scheduled/:id', function(req, res, next) {
   var data = _.merge(req.params, req.body);
   data.user = req.user;
   data.scheduled = true;
+  data.scheduleID = req.query.scheduleID;
   data.scheduledIncludeChart = true;  // this could be a passed param from scheduler
 
   Reports.reportMain(data, function(err, locals, result) {

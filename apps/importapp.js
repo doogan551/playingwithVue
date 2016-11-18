@@ -2,7 +2,6 @@ process.setMaxListeners(0);
 var mongo = require('mongodb');
 var async = require('async');
 var Config = require('../public/js/lib/config.js');
-var modelUtil = require('../public/js/modelUtil.js');
 var ObjectID = mongo.ObjectID;
 var util = require('util');
 var lodash = require('lodash');
@@ -867,7 +866,7 @@ function convertHistoryReports(db, callback) {
 				}
 				report["Report Config"].reportTitle = report.Name;
 
-				report['Report Config'].interval.text = 'Minute';
+				report['Report Config'].interval.period = 'Minute';
 				report['Report Config'].interval.value = Math.floor(point.Interval / 60);
 				report['Report Config'].duration.selectedRange = 'Today';
 
@@ -887,7 +886,7 @@ function convertHistoryReports(db, callback) {
 								"colDisplayName": ref.Name,
 								"valueType": "None",
 								"operator": "",
-								"calculation": "Mean",
+								"calculation": [],
 								"canCalculate": true,
 								"includeInReport": true,
 								"includeInChart": true,
@@ -968,19 +967,19 @@ function convertTotalizerReports(callback) {
 
 		switch (doc['Reset Interval']) {
 			case 'Year':
-				report['Report Config'].interval.text = 'Month';
+				report['Report Config'].interval.period = 'Month';
 				report['Report Config'].interval.value = 1;
 				report['Report Config'].duration.selectedRange = 'This Year';
 				break;
 			case 'Month':
-				report['Report Config'].interval.text = 'Day';
+				report['Report Config'].interval.period = 'Day';
 				report['Report Config'].interval.value = 1;
 				report['Report Config'].duration.selectedRange = 'This Month';
 				break;
 			case 'Day':
 			case 'Hour':
 			case 'None':
-				report['Report Config'].interval.text = 'Hour';
+				report['Report Config'].interval.period = 'Hour';
 				report['Report Config'].interval.value = 1;
 				report['Report Config'].duration.selectedRange = 'Last 7 Days';
 				break;
@@ -1024,7 +1023,7 @@ function convertTotalizerReports(callback) {
 						"colDisplayName": ref.Name,
 						"valueType": "None",
 						"operator": monitor['Monitor Property'],
-						"calculation": "",
+						"calculation": [],
 						"canCalculate": true,
 						"includeInReport": true,
 						"includeInChart": true,
@@ -1621,66 +1620,6 @@ function updateIndexes(callback) {
 	});
 }
 
-/**
- * This function runs through the different point types that needs updating and updates the db.
- *
- * @class devModelLogic
- * @constructor
- * @param {Object} db the db connection being passed in.
- * @param {Function} callback the callback function.
- * @return {String} console messages. "inside 4" is the final message.
- */
-function devModelLogic(point, db, callback) {
-	logger.info("starting devModelLogic");
-	var currentModel = null;
-
-	models = [{
-		value: "Device",
-		model: "Device"
-	}, {
-		value: "Remote Unit",
-		model: "Remote"
-	}, {
-		value: "Analog Input",
-		model: "AIPoint"
-	}, {
-		value: "Analog Output",
-		model: "AOPoint"
-	}, {
-		value: "Analog Value",
-		model: "AVPoint"
-	}, {
-		value: "Binary Input",
-		model: "BIPoint"
-	}, {
-		value: "Binary Output",
-		model: "BOPoint"
-	}, {
-		value: "Binary Value",
-		model: "BVPoint"
-	}, {
-		value: "Accumulator",
-		model: "ACCPoint"
-	}, {
-		value: "MultiState Value",
-		model: "MSVPoint"
-	}];
-
-	async.forEachSeries(models, function(model, asyncNext) {
-		count = 0;
-		logger.info("working on", model.value);
-		updateModels(model.value, model.model, db, function(err, result) {
-			if (result)
-				asyncNext(err);
-		});
-	}, function(err) {
-		if (err)
-			logger.info("err", err);
-
-		callback(null);
-	});
-}
-
 function updateMultiplexer(point, callback) {
 	if (point['Point Type'].Value === 'Multiplexer') {
 		point['Select State'].eValue = 1;
@@ -1774,24 +1713,8 @@ function updateTimeZones(point, cb) {
  * @return {String} console messages. "inside 4" is the final message.
  */
 function updateModels(db, point, cb) {
-	//logger.info("updateModels", point["Point Type"].Value);
-	var models = ["Device", "Remote Unit", "Analog Input", "Analog Output", "Analog Value", "Binary Input", "Binary Output", "Binary Value", "Accumulator", "MultiState Value"];
-	//logger.info(point._id);
-
-	if (models.indexOf(point["Point Type"].Value) !== -1) {
-		modelUtil[point["Point Type"].Value].updateAll({ // change
-			point: point
-		}, db, function(err, point) {
-			if (err) cb(err);
-
-			cb(null);
-		});
-	} else {
-		cb(null);
-	}
-
-
-
+	Config.Utility.updDevModel({point:point})
+	cb();
 }
 
 function updateCfgRequired(point, callback) {

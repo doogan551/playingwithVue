@@ -16,7 +16,7 @@
         "comparePoints": true,
         "fabric": true,
         "define": true,
-        "CustomColorsPicker": true
+        "CustomColorsPicker": true,
         "checkValues": true
     }
 }

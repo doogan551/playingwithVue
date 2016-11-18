@@ -105,32 +105,18 @@ exports.getRecentAlarms = function(data, cb) {
     };
   }
 
-  groups = user.groups.map(function(group) {
-    return group._id.toString();
-  });
-
-  if (!user["System Admin"].Value) {
-    query.Security = {
-      $in: groups
-    };
-  }
-
   sort.msgTime = (data.sort !== 'desc') ? -1 : 1;
 
   var criteria = {
     collection: 'Alarms',
     query: query,
-    skip: (currentPage - 1) * itemsPerPage,
-    limit: numberItems,
-    sort: sort
+    _skip: (currentPage - 1) * itemsPerPage,
+    _limit: numberItems,
+    sort: sort,
+    data: data
   };
 
-  Utility.findAndCount(criteria, function(err, alarms, count) {
-    if (err) {
-      return cb(err);
-    }
-    return cb(err, alarms, count);
-  });
+  Utility.getWithSecurity(criteria, cb);
 };
 
 exports.acknowledgeAlarm = function(data, cb) {

@@ -2,31 +2,34 @@ var Utility = require('../models/utility');
 var logger = require('../helpers/logger')(module);
 
 module.exports = {
-    getGplInfo: function (upi, cb) {
+    getGplInfo: function(data, cb) {
         var seqData,
-            sendToJade = function (err, pointdata) {
+            sendToJade = function(err, pointdata) {
                 // console.log('GPL:', 'got points');
                 cb({
                     data: seqData,
                     pointdata: pointdata
                 });
             },
-            getPointData = function () {
-                getGplPoints(seqData, sendToJade);
+            getPointData = function() {
+                getGplPoints({
+                    seq: seqData,
+                    user: data.user
+                }, sendToJade);
             };
 
         Utility.getOne({
             collection: 'points',
             query: {
-                _id: upi
+                _id: data.upi
             }
-        }, function (err, result) {
+        }, function(err, result) {
             // console.log('GPL:', 'got point');
             seqData = result;
             getPointData();
         });
     },
-    getReferences: function (data, cb) {
+    getReferences: function(data, cb) {
 
         var upoint = parseInt(data.upoint, 10);
 
@@ -42,8 +45,9 @@ module.exports = {
     }
 };
 
-var getGplPoints = function (seq, cb) {
+var getGplPoints = function(data, cb) {
     var c,
+        seq = data.seq,
         list = seq.SequenceData,
         blocks,
         dynamics,
@@ -53,10 +57,10 @@ var getGplPoints = function (seq, cb) {
         dynamic,
         pointref,
         upis = [],
-        getPointRef = function (pointRefIndex, referenceType) {
+        getPointRef = function(pointRefIndex, referenceType) {
             var answer;
             if (pointRefIndex > -1) {
-                answer = pointRefs.filter(function (pointRef) {
+                answer = pointRefs.filter(function(pointRef) {
                     return pointRef.AppIndex === pointRefIndex && pointRef.PropertyName === referenceType;
                 });
             }
@@ -88,12 +92,15 @@ var getGplPoints = function (seq, cb) {
             }
         }
 
-        Utility.get({
+        Utility.getWithSecurity({
             collection: 'points',
             query: {
                 _id: {
                     $in: upis
                 }
+            },
+            data: {
+                user: data.user
             }
         }, cb);
     } else {

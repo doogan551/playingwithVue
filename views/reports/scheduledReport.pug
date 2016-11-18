@@ -3,7 +3,21 @@ html.direports
     head
         title #{title}
         meta(charset="utf-8")
-        include scheduledReportsScripts
+        link(rel='stylesheet', href='/css/lib/jquery-ui.min.css')
+        link(rel='stylesheet', href='/css/reports/reportprinting.css')
+        link(rel='stylesheet', href='/css/lib/DataTables-1.10.12/media/css/dataTables.material.css')
+        script(type="text/javascript" src="/js/lib/jquery-2.2.4.js")
+        script(type="text/javascript" src='/js/lib/moment.js')
+        script(type="text/javascript" src='/js/lib/knockout-3.4.0.js')
+        script(type="text/javascript" src='/js/lib/ko.validation.js')
+        script(type="text/javascript" src='/js/lib/store.min.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.12/media/js/jquery.dataTables.min.js')
+        script(type="text/javascript" src='/js/lib/DataTables-1.10.12/media/js/dataTables.material.min.js')
+        script(type="text/javascript" src='/js/lib/highcharts.src.js')
+        script(type="text/javascript" src='/js/trendPlots/trendplot.js')
+        script(type="text/javascript" src='/js/lib/materialize.js')
+        script(type="text/javascript" src="/js/v2/dorsettUtility.js")
+        script(type="text/javascript" src="/js/reports/reportsViewModel.js")
     body
 block content
     #window
@@ -19,8 +33,8 @@ block content
                             th(data-bind="text: Value")
                     tbody(data-bind="foreach: rows")
                         tr(data-bind="foreach: cells")
-                            td(data-bind="css: { nowrap: ($root.reportType !== 'Property' && $index() === 0) }")
-                                div(data-bind="html: Value, css: { small: $index() === 0 && $root.reportType !== 'Property'} ")
+                            td(data-bind="css: { nowrap: ($root.reportType() !== 'Property' && $index() === 0) }")
+                                div(data-bind="html: Value, css: { small: $index() === 0 && $root.reportType() !== 'Property'} ")
                 div.pageNumbering(data-bind="text: ($index()+1) + ' of ' + ($root.chartable() && scheduledIncludeChart ? $root.numberOfScheduledReportTables() + 1 : $root.numberOfScheduledReportTables())")
                 //div.pageNumbering(data-bind="text: ($index()+1)")
                 div(data-bind="css: { pageBreakAfter: (($index()+1) < $root.numberOfScheduledReportTables() || ($root.chartable() && scheduledIncludeChart)) }")

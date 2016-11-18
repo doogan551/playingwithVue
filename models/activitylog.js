@@ -4,13 +4,12 @@ var config = require('../public/js/lib/config.js');
 var logger = require('../helpers/logger')(module);
 
 module.exports = {
-  get: function (data, cb) {
+  get: function(data, cb) {
     var currentPage = parseInt(data.currentPage, 10);
     var itemsPerPage = parseInt(data.itemsPerPage, 10);
     var startDate = (typeof parseInt(data.startDate, 10) === "number") ? data.startDate : 0;
     var endDate = (parseInt(data.endDate, 10) === 0) ? Math.floor(new Date().getTime()) : data.endDate;
     var usernames = data.usernames;
-    var groups = [];
     var sort = {};
 
     if (!itemsPerPage) {
@@ -82,16 +81,6 @@ module.exports = {
       };
     }
 
-    groups = user.groups.map(function (group) {
-      return group._id.toString();
-    });
-
-    if (!user["System Admin"].Value) {
-      query.Security = {
-        $in: groups
-      };
-    }
-
     if (!!usernames && usernames.length > 0) {
       query.username = {
         $in: usernames
@@ -104,10 +93,10 @@ module.exports = {
       query: query,
       collection: 'Activity Logs',
       sort: sort,
-      skip: skip,
-      limit: numberItems
+      _skip: skip,
+      _limit: numberItems,
+      data: data
     };
-
-    Utility.findAndCount(criteria, cb);
+    Utility.getWithSecurity(criteria, cb);
   }
 };

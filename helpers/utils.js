@@ -55,25 +55,6 @@ var Utils = {
 
 		return log;
 	},
-	buildName: function(name1, name2, name3, name4) {
-		_name1 = (name1) ? name1.toLowerCase() : "";
-		_name2 = (name2) ? name2.toLowerCase() : "";
-		_name3 = (name3) ? name3.toLowerCase() : "";
-		_name4 = (name4) ? name4.toLowerCase() : "";
-
-		Name = "";
-
-		if (name1)
-			Name = Name + name1;
-		if (name2)
-			Name = Name + "_" + name2;
-		if (name3)
-			Name = Name + "_" + name3;
-		if (name4)
-			Name = Name + "_" + name4;
-
-		_Name = Name.toLowerCase();
-	},
 	buildNameSegmentQuery: function(segment, name) {
 		var beginStr, nameStr;
 		beginStr = '';
